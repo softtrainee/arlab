@@ -1,0 +1,295 @@
+#===============================================================================
+# Copyright 2011 Jake Ross
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
+#============= enthought library imports =======================
+from traits.api import Str
+from traitsui.api import View, Group, Item
+from envisage.core_plugin import CorePlugin
+# from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin as ETSWorkbenchPlugin
+# from envisage.ui.workbench.workbench_preferences_page import WorkbenchPreferencesPage as ETSWorkbenchPreferencesPage
+from envisage.api import Plugin
+#============= standard library imports ========================
+#============= local library imports  ==========================
+# from pychron_application import Pychron
+
+# from plugins.pychron_workbench_plugin import PychronWorkbenchPlugin
+# from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
+
+# from src.helpers.paths import plugins_dir
+
+
+# from src.helpers.logger_setup import add_console
+from src.displays.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay, \
+    gMessageDisplay
+from src.globals import globalv
+# import logging
+from src.helpers.logger_setup import new_logger
+from envisage.ui.tasks.tasks_plugin import TasksPlugin
+# from src.envisage.tasks.pychron_application import Pychron
+import os
+from src.logger.tasks.logger_plugin import LoggerPlugin
+from pyface.tasks.task_window_layout import TaskWindowLayout
+
+logger = new_logger('launcher')
+# logger = logging.getLogger('launcher')
+# logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
+
+PACKAGE_DICT = dict(
+#                   DatabasePlugin='src.database.plugins.database_plugin',
+                   ExperimentPlugin='src.experiment.tasks.experiment_plugin',
+                   ExtractionLinePlugin='src.extraction_line.tasks.extraction_line_plugin',
+                   VideoPlugin='src.image.tasks.video_plugin',
+#                   CanvasDesignerPlugin='src.canvas.plugins.canvas_designer_plugin',
+#                   MDDModelerPlugin='src.modeling.plugins.mdd_modeler_plugin',
+
+#                   SVNPlugin='src.svn.plugins.svn_plugin',
+
+                   FusionsDiodePlugin='src.lasers.tasks.laser_plugin',
+                   FusionsCO2Plugin='src.lasers.tasks.laser_plugin',
+#                   FusionsDiodePlugin='src.lasers.plugins.fusions.diode.plugin',
+#                   FusionsCO2Plugin='src.lasers.plugins.fusions.co2.plugin',
+#                   FusionsUVPlugin='src.lasers.plugins.fusions.uv.plugin',
+
+#                   SynradCO2Plugin='src.lasers.plugins.synrad_co2_plugin',
+
+                   SpectrometerPlugin='src.spectrometer.tasks.spectrometer_plugin',
+
+#                   GraphPlugin='src.graph.plugins.graph_plugin',
+
+#                   TwitterPlugin='src.social.plugins.twitter_plugin',
+#                   EmailPlugin='src.social.plugins.email_plugin',
+
+                   ProcessingPlugin='src.processing.tasks.processing_plugin',
+
+                   MediaServerPlugin='src.media_server.tasks.media_server_plugin',
+                   PyScriptPlugin='src.pyscripts.tasks.pyscript_plugin',
+
+
+                 )
+
+def get_module_name(klass):
+    words = []
+    wcnt = 0
+    for c in klass:
+        if c.upper() == c:
+            words.append(c.lower())
+            wcnt += 1
+        else:
+            words[wcnt - 1] += c
+
+    return '_'.join(words)
+
+def get_hardware_plugins():
+    from src.helpers.parsers.initialization_parser import InitializationParser
+    ip = InitializationParser()
+
+    ps = []
+    if 'hardware' in ip.get_categories():
+        from src.hardware.tasks.hardware_plugin import HardwarePlugin
+        if ip.get_plugins('hardware'):
+            ps = [HardwarePlugin(), ]
+    return ps
+
+
+def get_user_plugins():
+    '''
+    '''
+    def get_klass(package, name):
+        try:
+            m = __import__(package, gdict, locals(), [name], -1)
+            klass = getattr(m, name)
+
+        except ImportError, e:
+            import traceback
+            traceback.print_exc()
+            klass = None
+            logger.warning('****** {} could not be imported {} ******'.format(name, e),
+                           extra={'threadName_':'Launcher'}
+                           )
+        return klass
+
+    # append plugins dir to the sys path
+#    sys.path.append(plugins_dir)
+    from src.helpers.parsers.initialization_parser import InitializationParser
+    plugins = []
+    ps = InitializationParser().get_plugins()
+    for p in ps:
+        pp = []
+        gdict = globals()
+        pp.append(p + 'Plugin')
+        # add UI
+#        uip = p + 'UIPlugin'
+#        pp.append(uip)
+
+        for pname in pp:
+            klass = None
+            if pname in gdict:
+                klass = gdict[pname]
+            elif pname in PACKAGE_DICT:
+                package = PACKAGE_DICT[pname]
+                klass = get_klass(package, pname)
+            elif not pname.endswith('UIPlugin'):
+                # dont warn if uiplugin not available
+                logger.warning('***** {} not available ******'.format(pname),
+                               extra={'threadName_':'Launcher'}
+                               )
+
+            if klass is not None:
+                plugin = klass()
+                if isinstance(plugin, Plugin):
+
+                    check = plugin.check()
+                    if check is True:
+                        plugins.append(plugin)
+                    else:
+                        logger.warning('****** {} not available {}******'.format(klass, check),
+                                       extra={'threadName_':'Launcher'})
+                else:
+                    logger.warning('***** Invalid {} needs to be a subclass of Plugin ******'.format(klass),
+                                   extra={'threadName_':'Launcher'})
+
+    return plugins
+
+def app_factory(klass):
+    '''
+        assemble the plugins 
+        return a Pychron WorkbenchApplication
+    '''
+    plugins = [
+               CorePlugin(),
+               TasksPlugin(),
+               LoggerPlugin()
+               ]
+
+    plugins += get_hardware_plugins()
+    plugins += get_user_plugins()
+
+#    print plugins
+    app = klass(plugins=plugins)
+#
+#     gLoggerDisplay.application = app
+#     gMessageDisplay.application = app
+#     gWarningDisplay.application = app
+#     gTraceDisplay.application = app
+#
+#     if globalv.open_logger_on_launch:
+#         win = app.create_window(TaskWindowLayout('pychron.logger'))
+#         win.open()
+
+#         gLoggerDisplay.open_view(gLoggerDisplay)
+
+    return app
+
+def check_dependencies():
+    '''
+        check the dependencies and 
+    '''
+    from pyface.api import warning
+    try:
+        mod = __import__('uncertainties',
+                         fromlist=['__version__']
+                         )
+        __version__ = mod.__version__
+    except ImportError:
+        warning(None, 'Install "{}" package. required version>={} '.format('uncertainties', '2.1'))
+        return
+
+    vargs = __version__.split('.')
+    maj = vargs[0]
+    if int(maj) < 2:
+        warning(None, 'Update "{}" package. your version={}. required version>={} '.format('uncertainties',
+                                                                                           __version__,
+                                                                                           '2.1'
+                                                                                           ))
+        return
+
+    return True
+
+# app = None
+def launch(klass):
+    '''
+    '''
+
+    if not check_dependencies():
+        return
+
+#     global app
+    app = app_factory(klass)
+
+    if globalv.test:
+
+        def start_test():
+            # run the test suite
+            from src.testing.testrunner import run_tests
+#            run_tests(logger)
+
+        app.on_trait_change(start_test, 'started')
+
+    try:
+        app.run()
+        logger.info('Quitting {}'.format(app.name), extra={'threadName_':'Launcher'})
+        app.exit()
+
+        # force a clean exit
+        os._exit(0)
+    except Exception, err:
+        logger.exception('Launching error')
+
+        import traceback
+
+        tb = traceback.format_exc()
+        gTraceDisplay.add_text(tb)
+        gTraceDisplay.edit_traits(kind='livemodal')
+
+#        logger.warning(err)
+#        warning(app.workbench.active_window, tb)
+        app.exit()
+
+#    for gi in [gLoggerDisplay, gTraceDisplay, gWarningDisplay]:
+#        gi.close_ui()
+
+#    logger.info('Quitting Pychron')
+#    app.exit()
+
+
+    return
+
+
+# import unittest
+# class tempTest(unittest.TestCase):
+#    def testTemp(self):
+#        global app
+#
+#        man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+#        self.assertNotEqual(man, 'ne')
+#        self.assertNotEqual(man, None)
+#        self.assertEqual(man, None)
+#
+# def run_tests():
+#    def _run():
+#        import time
+#        time.sleep(3)
+#        loader = unittest.TestLoader()
+#        suite = loader.loadTestsFromTestCase(tempTest)
+#        runner = unittest.TextTestRunner()
+#        runner.run(suite)
+#
+#    from threading import Thread
+#    t = Thread(target=_run)
+#    t.start()
+
+
+
+#============= EOF ====================================
