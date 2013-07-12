@@ -211,7 +211,7 @@ class Experimentor(IsotopeDatabaseManager):
 
             # group analyses by aliquot
             for aliquot, ais in groupby(analyses,
-                                        key=lambda x: x._aliquot):
+                                        key=lambda x: x.aliquot):
                 self._set_aliquot_step(ais, special, cln, aliquot,
                                        sample, irradiationpos
                                        )
@@ -220,13 +220,12 @@ class Experimentor(IsotopeDatabaseManager):
         db = self.db
 
         an = db.get_last_analysis(cln, aliquot=aliquot)
-
         aliquot_start = 0
         step_start = 0
         if an:
             aliquot_start = an.aliquot
-            if an.step:
-                step_start = LAlphas.index(an.step)
+            if an.step and an.aliquot == aliquot:
+                step_start = LAlphas.index(an.step) + 1
 
         if not special:
             ganalyses = groupby(ais, key=lambda x: x.extract_group)
@@ -234,7 +233,7 @@ class Experimentor(IsotopeDatabaseManager):
             ganalyses = ((0, ais),)
 
         for aliquot_cnt, (egroup, aruns) in enumerate(ganalyses):
-            step_cnt = 1
+            step_cnt = 0
             for arun in aruns:
                 arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
                 if arun.skip:
@@ -251,7 +250,7 @@ class Experimentor(IsotopeDatabaseManager):
                             aliquot_cnt += 1
 
                 if not special and egroup:
-                    arun._step = int(step_start + step_cnt)
+                    arun.step = int(step_start + step_cnt)
                     step_cnt += 1
 
     def execute_queues(self, queues, path, text, text_hash):
@@ -265,7 +264,7 @@ class Experimentor(IsotopeDatabaseManager):
 
                                 text_hash=text_hash,
                                 stats=self.stats,
-                                
+
                                 )
 
         self.executor.execute()
