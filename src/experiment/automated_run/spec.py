@@ -50,7 +50,7 @@ class AutomatedRunSpec(Loggable):
     _aliquot = Int
     assigned_aliquot = Int
     step = Property(depends_on='_step')
-    _step = Int
+    _step = Int(-1)
     user_defined_aliquot = False
 
     #===========================================================================
@@ -261,15 +261,15 @@ class AutomatedRunSpec(Loggable):
         if isinstance(v, str):
             v = v.upper()
             if v in ALPHAS:
-                self._step = list(ALPHAS).index(v) + 1
+                self._step = list(ALPHAS).index(v)
         else:
             self._step = v
 
     def _get_step(self):
-        if self._step == 0:
+        if self._step < 0:
             return ''
         else:
-            return ALPHAS[self._step - 1]
+            return ALPHAS[self._step]
 
     def _get_runid(self):
         return make_runid(self.labnumber, self.aliquot, self.step)

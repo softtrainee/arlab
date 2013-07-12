@@ -76,15 +76,17 @@ class ExperimentTest(BaseExperimentTest):
     def testAliquots(self):
         queue = self._load_queues()[0]
 #         aqs = (31, 31, 2, 32, 32, 200, 201, 3, 40, 41)
-        aqs = (46, 46, 2, 47, 47, 200, 200, 3, 40, 41)
+        aqs = (46, 46, 2, 47, 47, 45, 45, 3, 40, 41)
         for aq, an in zip(aqs, queue.automated_runs):
             self.assertEqual(an.aliquot, aq)
 
     def testSteps(self):
         queue = self._load_queues()[0]
 #         sts = ('A', 'B', '', 'A', 'B', '', '', '', '')
-        sts = ('A', 'B', '', 'A', 'B', 'A', 'B', '', '')
-        for st, an in zip(sts, queue.automated_runs):
+        sts = ('A', 'B', '', 'A', 'B', 'E', 'F', '', '')
+        for i, (st, an) in enumerate(zip(sts, queue.automated_runs)):
+#             if st in ('E', 'F'):
+            print i, an.labnumber, an.step, st, an.aliquot
             self.assertEqual(an.step, st)
 # # #
     def testSample(self):
