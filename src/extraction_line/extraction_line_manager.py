@@ -216,6 +216,7 @@ class ExtractionLineManager(Manager):
             t = Thread(target=func)
             t.start()
             self.info('starting status monitor')
+            self._monitor_thread=t
 
     def isMonitoringValveState(self):
         return self._monitoring_valve_status
@@ -275,12 +276,10 @@ class ExtractionLineManager(Manager):
 #        if self.canvas:
 #            self.canvas.update_pressure(o.name, n, o.state)
     def update_valve_state(self, *args, **kw):
-        if self.canvas:
-            self.canvas.update_valve_state(*args, **kw)
+        self.canvas.update_valve_state(*args, **kw)
 
     def update_valve_lock_state(self, *args, **kw):
-        if self.canvas:
-            self.canvas.update_valve_lock_state(*args, **kw)
+        self.canvas.update_valve_lock_state(*args, **kw)
 
 #    def update_canvas2D(self, *args):
 #        if self.canvas:

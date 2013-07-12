@@ -35,15 +35,6 @@ class ExtractionLineTask(BaseHardwareTask):
                           left=PaneItem('pychron.extraction_line.explanation')
                           )
 
-#    def _menu_bar_default(self):
-# #
-#        menus = [SMenu(
-#                       RefreshCanvasAction(),
-#                       id='ExtractionLine', name='ExtractionLine')
-#                 ]
-#        mm = self._menu_bar_factory(menus)
-#        return mm
-
     def activated(self):
         self.manager.activate()
 
