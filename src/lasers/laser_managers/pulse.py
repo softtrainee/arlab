@@ -87,12 +87,9 @@ class Pulse(HasTraits):
                 self.trait_set(duration=0, trait_change_notify=False)
                 return
 
-        self.wait_control.start(evt)
-        while not evt.isSet():
-            time.sleep(0.5)
+        self.wait_control.start()
 
         self.pulsing = False
-
 
         if man is not None:
             if self.disable_at_end:
