@@ -124,14 +124,21 @@ class ValveManager(Manager):
     def load_valve_states(self):
         elm = self.extraction_line_manager
         word = self.get_state_word()
-        #self.debug('valve state word= {}'.format(word))
+        if 'B' in word:
+            msg='B {}'.format(word['B'])
+        else:
+            msg='No B in word'
+        self.debug(msg)
+#         self.debug('valve state word= {}'.format(word))
         if word is not None:
             for k, v in self.valves.iteritems():
                 if word.has_key(k):
                     s = word[k]
                     v.set_state(s)
                     elm.update_valve_state(k, s)
-
+            
+            elm.canvas.refresh()
+            
     def load_valve_lock_states(self):
         elm = self.extraction_line_manager
         word = self.get_lock_word()
@@ -242,11 +249,11 @@ class ValveManager(Manager):
         st = time.time()
         states = []
         keys = []
-        if self._prev_keys and len(self._prev_keys) < len(self.valves.keys()):
-            prev_keys = self._prev_keys
-        else:
-            prev_keys = []
-
+        prev_keys=[]
+        if self._prev_keys:
+            clear_prev_keys=True
+            prev_keys=self._prev_keys
+            
         for k, v in self.valves.iteritems():
             '''
                 querying a lot of valves can add up hence timeout.
@@ -263,10 +270,17 @@ class ValveManager(Manager):
             states.append(state)
             if time.time() - st > timeout:
                 break
-
-        self._prev_keys = keys
+        else:
+            #if loop completes before timeout dont save keys 
+            clear_prev_keys=True
+    
+        if clear_prev_keys:
+            keys=None
+            
+        self._prev_keys=keys
         return ','.join(states)
 
+        
 #    def _get_states(self, times_up_event, sq):
 #
 #        def _gstate(ki):

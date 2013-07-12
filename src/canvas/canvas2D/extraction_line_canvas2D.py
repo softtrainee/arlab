@@ -72,15 +72,15 @@ class ExtractionLineCanvas2D(SceneCanvas):
         valve = self._get_valve_by_name(name)
         if valve is not None:
             valve.state = nstate
-
-        self.request_redraw()
-
+        
+#         self.request_redraw()
+        
     def update_valve_lock_state(self, name, lockstate):
         valve = self._get_valve_by_name(name)
         if valve is not None:
             valve.soft_lock = lockstate
 
-        self.request_redraw()
+#         self.request_redraw()
 
     def _get_valve_by_name(self, name):
         '''

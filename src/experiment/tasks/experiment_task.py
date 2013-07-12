@@ -73,6 +73,11 @@ class ExperimentEditorTask(EditorTask):
         if elm:
             elm.activate()
             
+    def prepare_destroy(self):
+        elm=self._get_el_manager()
+        if elm:
+            elm.closed(True)
+            
     def _get_el_manager(self):
         app = self.window.application
         return app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')

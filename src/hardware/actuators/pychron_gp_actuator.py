@@ -102,7 +102,7 @@ class PychronGPActuator(GPActuator):
 #
 #        return resp
 
-    def get_state_word(self, verbose=False):
+    def get_state_word(self, verbose=True):
         cmd = 'GetValveStates'
         resp = self.ask(cmd, verbose=verbose)
         return resp
