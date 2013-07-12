@@ -363,12 +363,13 @@ class ExperimentExecutor(Experimentable):
             return
 
         dbr = self._get_preceeding_blank_or_background(inform=inform)
-        if dbr is None:
-            return
-        else:
-            self.info('using {} as the previous blank'.format(dbr.record_id))
-            dbr.load_isotopes()
-            self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
+        if not dbr is True:
+            if dbr is None:
+                return
+            else:
+                self.info('using {} as the previous blank'.format(dbr.record_id))
+                dbr.load_isotopes()
+                self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
 
         if not self.massspec_importer.connect():
             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
@@ -1003,8 +1004,6 @@ class ExperimentExecutor(Experimentable):
             isok = mon.load()
 
         return mon, isok
-
-
 
     def _pyscript_runner_default(self):
         if self.mode == 'client':
