@@ -137,8 +137,6 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
         if self.sess is None:
             if self.session_factory is not None:
                 self.sess = self.new_session()
-            else:
-                self.warning_dialog('Not connected to the database {}'.format(self.name))
 
         return self.sess
 

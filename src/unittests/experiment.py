@@ -23,16 +23,42 @@ import os
 from src.unittests.database import get_test_database
 from src.experiment.tasks.experiment_editor import ExperimentEditor
 from src.experiment.tasks.experiment_task import ExperimentEditorTask
+from src.database.records.isotope_record import IsotopeRecord
 #============= standard library imports ========================
 #============= local library imports  ==========================
+class BaseExperimentTest(unittest.TestCase):
+    def _load_queues(self):
+        man = self.experimentor
+        path = self._experiment_file
+        with open(path, 'r') as fp:
+            txt = fp.read()
 
-class ExperimentTest(unittest.TestCase):
+            qtexts = self.exp_task._split_text(txt)
+            qs = []
+            for qi in qtexts:
+                editor = ExperimentEditor(path=path)
+                editor.new_queue(qi)
+                qs.append(editor.queue)
+
+        man.test_queues(qs)
+        man.experiment_queues = qs
+        man.update_info()
+        man.path = path
+        man.executor.reset()
+        return qs
+
     def setUp(self):
-        self.experimentor = Experimentor(connect=False)
-        self.experimentor.db = get_test_database().db
+        self.experimentor = Experimentor(connect=False,
+                                         unique_executor_db=False
+                                         )
+        self.experimentor.db = db = get_test_database().db
+
         self._experiment_file = './data/experiment.txt'
 
         self.exp_task = ExperimentEditorTask()
+        self._load_queues()
+
+class ExperimentTest(BaseExperimentTest):
 
     def testFile(self):
         p = self._experiment_file
@@ -43,14 +69,14 @@ class ExperimentTest(unittest.TestCase):
         self.assertEqual(len(qs), 1)
 
     def testNRuns(self):
-        n = 10
+        n = 14
         queue = self._load_queues()[0]
         self.assertEqual(len(queue.automated_runs), n)
 
     def testAliquots(self):
         queue = self._load_queues()[0]
 #         aqs = (31, 31, 2, 32, 32, 200, 201, 3, 40, 41)
-        aqs = (31, 31, 2, 32, 32, 200, 200, 3, 40, 41)
+        aqs = (46, 46, 2, 47, 47, 200, 200, 3, 40, 41)
         for aq, an in zip(aqs, queue.automated_runs):
             self.assertEqual(an.aliquot, aq)
 
@@ -76,23 +102,60 @@ class ExperimentTest(unittest.TestCase):
         for irrad, an in zip(irrads, queue.automated_runs):
             self.assertEqual(an.irradiation, irrad)
 
-    def _load_queues(self):
-        man = self.experimentor
-        path = self._experiment_file
-        with open(path, 'r') as fp:
-            txt = fp.read()
 
-            qtexts = self.exp_task._split_text(txt)
-            qs = []
-            for qi in qtexts:
-                editor = ExperimentEditor(path=path)
-                editor.new_queue(qi)
-                qs.append(editor.queue)
+class ExecutorTest(BaseExperimentTest):
 
-        man.test_queues(qs)
-        man.experiment_queues = qs
-        man.update_info()
-        man.path = path
-        man.executor.reset()
-        return qs
+    def testPreviousBlank(self):
+        exp = self.experimentor
+        ext = exp.executor
+        ext.experiment_queue = exp.experiment_queues[0]
+        result = ext._get_preceeding_blank_or_background(inform=False)
+        self.assertIsInstance(result, IsotopeRecord)
+
+    def testExecutorHumanError(self):
+        exp = self.experimentor
+        ext = exp.executor
+        ext.experiment_queue = exp.experiment_queues[0]
+        self.assertTrue(ext._check_for_human_errors())
+
+    def testPreExecuteCheck(self):
+
+        exp = self.experimentor
+        ext = exp.executor
+        ext.experiment_queue = exp.experiment_queues[0]
+
+        ext._pre_execute_check(inform=False)
+
+class HumanErrorCheckerTest(BaseExperimentTest):
+    def setUp(self):
+        super(HumanErrorCheckerTest, self).setUp()
+
+        from src.experiment.utilities.human_error_checker import HumanErrorChecker
+        hec = HumanErrorChecker()
+        self.hec = hec
+
+    def testNoLabnumber(self):
+        err = self._get_errors()
+        self.assertTrue('-01' in err.keys())
+        self.assertEqual(err['-01'], 'no labnumber')
+
+    def testNoDuration(self):
+        err = self._get_errors()
+        self.assertEqual(err['61311-101'], 'no duration')
+#
+    def testNoCleanup(self):
+        err = self._get_errors()
+        self.assertEqual(err['61311-100'], 'no cleanup')
+
+    def testPositionNoExtract(self):
+        err = self._get_errors()
+        self.assertEqual(err['61311-102'], 'position but no extract value')
+
+    def _get_errors(self):
+        hec = self.hec
+        exp = self.experimentor
+
+        q = exp.experiment_queues[0]
+        err = hec.check(q, test_all=True, inform=False)
+        return err
 #============= EOF =============================================

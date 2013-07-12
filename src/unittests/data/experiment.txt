@@ -18,4 +18,15 @@ bu-FD-J		1,4
 bu-FD-J		1,4																
 61311	NM-791				5.0					pause								
 61311	NM-791				50.0					pause
+
+##human error check runs
+##no labnumber
+	NM-791				50.0					pause
+##no cleanup
+61311-100	NM-791				50.0					pause
+##no duration
+61311-101	NM-791					50				pause
+##position but no extract
+61311-102	NM-791	1			50	50				pause
+								
 								
