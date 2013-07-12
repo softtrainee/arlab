@@ -490,7 +490,7 @@ class ExperimentExecutor(Experimentable):
             man = None
             if self.application:
                 man = self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device))
-
+            print 'mmmmm', man, extract_device, man.mode
             if not man:
                 nonfound.append(extract_device)
             elif man.mode == 'client':

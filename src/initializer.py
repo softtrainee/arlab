@@ -160,7 +160,7 @@ class Initializer(Loggable):
 
         parser = self.parser
         if manager is not None:
-            self.info('loading {}'.format(name))
+            self.info('Manager loading {}'.format(name))
             manager.application = self.application
             manager.load()
 

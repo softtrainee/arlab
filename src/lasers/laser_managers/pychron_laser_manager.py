@@ -80,6 +80,7 @@ class PychronLaserManager(BaseLaserManager):
 
     def test_connection(self):
         self.connected = self._communicator.open()
+        self.debug('test connection. connected= {}'.format(self.connected))
         return self.connected
 
     def bind_preferences(self, pref_id):
