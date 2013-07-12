@@ -132,7 +132,6 @@ class ValveManager(Manager):
                     v.set_state(s)
                     elm.update_valve_state(k, s)
             
-            elm.canvas.refresh()
             
     def load_valve_lock_states(self):
         elm = self.extraction_line_manager
