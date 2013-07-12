@@ -125,7 +125,7 @@ class EthernetCommunicator(Communicator):
         else:
             self.simulation = True
 
-        return True
+        return not self.simulation
 
     def get_handler(self):
         if self.kind.lower() == 'udp':

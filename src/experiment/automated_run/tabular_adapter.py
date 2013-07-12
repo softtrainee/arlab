@@ -115,7 +115,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         return al
 
     def _get_extract_group_text(self, trait, item):
-        return self._get_number('extract_group')
+        return self._get_number('extract_group', fmt='{:02n}')
 
     def _get_beam_diameter_text(self, trait, item):
         return self._get_number('beam_diameter')
