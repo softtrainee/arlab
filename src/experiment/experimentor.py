@@ -265,7 +265,7 @@ class Experimentor(IsotopeDatabaseManager):
 
                                 text_hash=text_hash,
                                 stats=self.stats,
-                                mode=self.mode
+                                
                                 )
 
         self.executor.execute()
@@ -396,6 +396,7 @@ class Experimentor(IsotopeDatabaseManager):
             kw['db'] = self.db
 
         e = ExperimentExecutor(
+                               mode=self.mode,
                                application=self.application,
                                **kw
                                )
