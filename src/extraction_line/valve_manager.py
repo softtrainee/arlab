@@ -124,11 +124,6 @@ class ValveManager(Manager):
     def load_valve_states(self):
         elm = self.extraction_line_manager
         word = self.get_state_word()
-        if 'B' in word:
-            msg='B {}'.format(word['B'])
-        else:
-            msg='No B in word'
-        self.debug(msg)
 #         self.debug('valve state word= {}'.format(word))
         if word is not None:
             for k, v in self.valves.iteritems():
@@ -198,7 +193,7 @@ class ValveManager(Manager):
         for k, v in self.valves.iteritems():
             s = v.get_hardware_state()
             elm.update_valve_state(k, s)
-            time.sleep(0.025)
+#             time.sleep(0.025)
 
     def _load_soft_lock_states(self):
         if self.extraction_line_manager.mode == 'client':
@@ -206,7 +201,7 @@ class ValveManager(Manager):
                 s = v.get_lock_state()
                 func = self.lock if s else self.unlock
                 func(k, save=False)
-                time.sleep(0.025)
+#                 time.sleep(0.025)
 
         else:
             p = os.path.join(paths.hidden_dir, '{}_soft_lock_state'.format(self.name))
