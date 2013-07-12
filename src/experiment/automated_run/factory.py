@@ -82,7 +82,8 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     duration = Float
     cleanup = Float
-    beam_diameter = Float
+    beam_diameter = Property(depends_on='beam_diameter')
+    _beam_diameter = Float
 
     pattern = Str
     patterns = Property
@@ -828,6 +829,20 @@ post_equilibration_script:name
 #    def _get_aliquot(self):
 #        return self._aliquot
 
+
+    def _get_beam_diameter(self):
+        bd=''
+        if self._beam_diameter:
+            bd=self._beam_diameter
+        return bd
+    
+    def _set_beam_diameter(self, v):
+        try:
+            self._beam_diameter=float(v)
+        except (ValueError, TypeError):
+            pass
+            
+            
 #============= EOF =============================================
 
 
