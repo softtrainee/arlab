@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, CInt, Int, Bool, Float, Property, Enum, Either, on_trait_change
+from traits.api import HasTraits, Str, CInt, Int, Bool, Float, Property, Enum, Either, on_trait_change, CStr
 #============= standard library imports ========================
 import uuid
 #============= local library imports  ==========================
@@ -71,7 +71,7 @@ class AutomatedRunSpec(Loggable):
     duration = Float
     cleanup = Float
     pattern = Str
-    beam_diameter = None
+    beam_diameter = CStr
     #===========================================================================
     # info
     #===========================================================================
