@@ -34,6 +34,7 @@ from src.paths import paths
 from src.experiment.script.script import Script
 from src.experiment.queue.increment_heat_template import IncrementalHeatTemplate
 from src.viewable import Viewable
+from src.ui.thread import Thread
 
 
 class AutomatedRunFactory(Viewable, ScriptMixin):
@@ -83,7 +84,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     duration = Float
     cleanup = Float
     beam_diameter = Property(depends_on='beam_diameter')
-    _beam_diameter = Float
+    _beam_diameter = Any
 
     pattern = Str
     patterns = Property
@@ -430,22 +431,11 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 
     @on_trait_change('''cleanup, duration, extract_value,
 extract_units,
-pattern,beam_diameter,
+pattern,
 position,
 weight, comment, skip, end_after, extract_group''')
     def _edit_handler(self, name, new):
-
-        if self.edit_mode and \
-            self._selected_runs and \
-                not self.suppress_update:
-
-            for si in self._selected_runs:
-                setattr(si, name, new)
-
-            if name == 'extract_group':
-                self.update_info_needed = True
-
-            self.changed = True
+        self._update_run_values(name, new)      
 
     @on_trait_change('''measurement_script:name, 
 extraction_script:name, 
@@ -832,15 +822,34 @@ post_equilibration_script:name
 
     def _get_beam_diameter(self):
         bd=''
-        if self._beam_diameter:
+        if self._beam_diameter is not None:
             bd=self._beam_diameter
         return bd
     
     def _set_beam_diameter(self, v):
         try:
             self._beam_diameter=float(v)
+            self._update_run_values('beam_diameter', self._beam_diameter)     
         except (ValueError, TypeError):
             pass
+        
+    def _update_run_values(self, attr, v):
+        def func():
+            for si in self._selected_runs:
+                setattr(si, attr, v)
+            
+            if attr == 'extract_group':
+                self.update_info_needed = True
+
+            self.changed = True
+            
+            
+        if self.edit_mode and \
+            self._selected_runs and \
+                not self.suppress_update:
+            t=Thread(target=func)
+            self._update_t=t
+            t.start()
             
             
 #============= EOF =============================================

@@ -108,7 +108,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         if it.aliquot != 0:
             al = it.aliquot
 #            if isinstance(al, int):
-            al = '{:02n}'.format(al)
+            al = '{:03n}'.format(al)
         if it.step:
             al = '{}{}'.format(al, it.step)
 
@@ -129,13 +129,16 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     def _get_cleanup_text(self, trait, item):
         return self._get_number('cleanup')
 
-    def _get_number(self, attr):
+    def _get_number(self, attr, fmt='{:0.2f}'):
         '''
             dont display 0.0's
         '''
         v = getattr(self.item, attr)
         if v:
-            return '{:02n}'.format(v)
+            if isinstance(v, str):
+                v=float(v)
+            
+            return fmt.format(v)
         else:
             return ''
 
