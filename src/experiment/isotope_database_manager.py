@@ -43,6 +43,7 @@ class IsotopeDatabaseManager(Manager):
 
     def __init__(self, bind=True, connect=True, *args, **kw):
         super(IsotopeDatabaseManager, self).__init__(*args, **kw)
+
         if bind:
             try:
                 self.bind_preferences()

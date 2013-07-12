@@ -20,7 +20,8 @@ from traits.api import HasTraits, Str, CInt, Int, Bool, Float, Property, Enum, E
 import uuid
 #============= local library imports  ==========================
 from src.experiment.automated_run.automated_run import AutomatedRun
-from src.experiment.utilities.identifier import get_analysis_type, make_rid
+from src.experiment.utilities.identifier import get_analysis_type, make_rid, \
+    make_runid
 from src.constants import SCRIPT_KEYS, SCRIPT_NAMES, ALPHAS
 from src.loggable import Loggable
 
@@ -89,6 +90,7 @@ class AutomatedRunSpec(Loggable):
     executable = Bool(True)
     frequency_added = False
 
+    runid = Property
     _estimated_duration = 0
     _changed = False
 
@@ -268,4 +270,7 @@ class AutomatedRunSpec(Loggable):
             return ''
         else:
             return ALPHAS[self._step - 1]
+
+    def _get_runid(self):
+        return make_runid(self.labnumber, self.aliquot, self.step)
 #============= EOF =============================================

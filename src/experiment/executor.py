@@ -36,7 +36,7 @@ from src.experiment.stats import StatsGroup
 from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.database.orms.isotope_orm import meas_AnalysisTable, gen_AnalysisTypeTable, \
-    meas_MeasurementTable, gen_MassSpectrometerTable, meas_ExtractionTable,\
+    meas_MeasurementTable, gen_MassSpectrometerTable, meas_ExtractionTable, \
     gen_ExtractionDeviceTable
 from src.constants import NULL_STR
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
@@ -52,6 +52,12 @@ from src.helpers.ctx_managers import no_update
 
 # @todo: display total time in iso format
 # @todo: display current exp sets mass spectrometer, extract device and tray
+
+BLANK_MESSAGE = '''First "{}" not preceeded by a blank. 
+Select from database?
+
+If "No" use last "blank_{}" 
+Last Run= {}'''
 
 class ExperimentExecutor(Experimentable):
     spectrometer_manager = Instance(Manager)
@@ -310,20 +316,6 @@ class ExperimentExecutor(Experimentable):
 
             self._was_executed = True
 
-    def check_managers(self, exp):
-        nonfound = self._check_for_managers(exp)
-        if nonfound:
-            self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
-            self.info('experiment canceled because could not find managers {}'.format(nonfound))
-            self._alive = False
-            return
-
-        return True
-
-
-
-
-
 #===============================================================================
 # stats
 #===============================================================================
@@ -345,30 +337,177 @@ class ExperimentExecutor(Experimentable):
 #    def _update_stats(self):
 #        self.stats.experiment_queues = self.experiment_queues
 #        self.stats.calculate()
+
 #===============================================================================
 # private
 #===============================================================================
-    def _pre_execute_check(self):
-        exp = self.experiment_queue
-        if self._has_preceeding_blank_or_background(exp):
-            if not self.massspec_importer.connect():
-                if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
-                    self._alive = False
-                    return
+#===============================================================================
+# pre execute checking
+#===============================================================================
+    def _check_for_human_errors(self):
+        from src.experiment.utilities.human_error_checker import HumanErrorChecker
+        hec = HumanErrorChecker()
 
-            managers_ok = self.check_managers(exp)
-            if not managers_ok:
+        '''
+            returns a dict runid:error
+        '''
+        err = hec.check(self.experiment_queue)
+        if not err:
+            return True
+
+    def _pre_execute_check(self, inform=True):
+        '''
+            check the queue for human errors
+        '''
+        if not self._check_for_human_errors():
+            return
+
+        dbr = self._get_preceeding_blank_or_background(inform=inform)
+        if dbr is None:
+            return
+        else:
+            self.info('using {} as the previous blank'.format(dbr.record_id))
+            dbr.load_isotopes()
+            self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
+
+        if not self.massspec_importer.connect():
+            if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
+                self._alive = False
                 return
 
-            else:
-                mon, isok = self._monitor_factory()
+        if not self._check_managers(inform=inform):
+            return
 
-                if mon and not isok:
-                    self.warning_dialog('Canceled! Error in the AutomatedRunMonitor configuration file')
-                    self.info('experiment canceled because automated_run_monitor is not setup properly')
-                    self._alive = False
+        mon, isok = self._monitor_factory()
+
+        if mon and not isok:
+            self.warning_dialog('Canceled! Error in the AutomatedRunMonitor configuration file')
+            self.info('experiment canceled because automated_run_monitor is not setup properly')
+            return
+
+        return True
+
+    def _get_blank(self, kind, ms, ed, last=False):
+        db = self.db
+        sel = db.selector_factory(style='single')
+        sess = db.get_session()
+        q = sess.query(meas_AnalysisTable)
+        q = q.join(meas_MeasurementTable)
+        q = q.join(meas_ExtractionTable)
+        q = q.join(gen_AnalysisTypeTable)
+        q = q.join(gen_MassSpectrometerTable)
+        q = q.join(gen_ExtractionDeviceTable)
+
+        q = q.filter(gen_AnalysisTypeTable.name == 'blank_{}'.format(kind))
+        q = q.filter(gen_MassSpectrometerTable.name == ms)
+        q = q.filter(gen_ExtractionDeviceTable.name == ed)
+
+        dbr = None
+        if last:
+            q = q.order_by(meas_AnalysisTable.aliquot.desc())
+            q = q.limit(1)
+            dbr = q.one()
+        else:
+            dbs = q.all()
+            sel.load_records(dbs, load=False)
+            sel.selected = sel.records[-1]
+            info = sel.edit_traits(kind='livemodal')
+            if info.result:
+                dbr = sel.selected
+
+        if dbr:
+            dbr = sel._record_factory(dbr)
+            return dbr
+
+    def _get_preceeding_blank_or_background(self, inform=True):
+#        if globalv.experiment_debug:
+#            return True
+        exp = self.experiment_queue
+
+        types = ['air', 'unknown', 'cocktail']
+#         btypes = ['blank_air', 'blank_unknown', 'blank_cocktail']
+        # get first air, unknown or cocktail
+        aruns = exp.cleaned_automated_runs
+        first_analysis = next(((i, a) for i, a in enumerate(aruns)
+                            if a.analysis_type in types and \
+                                not a.skip and \
+                                    a.state == 'not run'), None)
+
+        if first_analysis:
+            ind, an = first_analysis
+            if ind == 0:
+                pdbr = self._get_blank(an.analysis_type, exp.mass_spectrometer,
+                                       exp.extract_device,
+                                       last=True)
+                if pdbr:
+                    msg = BLANK_MESSAGE.format(an.analysis_type,
+                                               an.analysis_type,
+                                               pdbr.record_id)
+
+                    retval = NO
+                    if inform:
+                        retval = self.confirmation_dialog(msg,
+                                                      cancel=True,
+                                                      return_retval=True)
+
+                    if retval == CANCEL:
+                        return
+                    elif retval == NO:
+                        return pdbr
+                    else:
+                        return self._get_blank(an.analysis_type, exp.mass_spectrometer,
+                                               exp.extract_device)
+                else:
+                    self.warning_dialog('No blank for {} is in the database. Run a blank!!'.format(an.analysis_type))
                     return
-            return True
+
+        return True
+
+    def _check_managers(self, inform=True):
+        exp = self.experiment_queue
+        nonfound = self._check_for_managers(exp)
+        if nonfound:
+            if inform:
+                self.warning_dialog('Canceled! Could not find managers {}'.format(','.join(nonfound)))
+            self.info('experiment canceled because could not find managers {}'.format(nonfound))
+            return
+
+        return True
+
+    def _check_for_managers(self, exp):
+        if globalv.experiment_debug:
+            self.debug('not checking for managers')
+            return []
+
+        nonfound = []
+        if self.extraction_line_manager is None:
+            if not globalv.experiment_debug:
+                nonfound.append('extraction_line')
+
+        if exp.extract_device != NULL_STR:
+            extract_device = exp.extract_device.replace(' ', '_').lower()
+            man = None
+            if self.application:
+                man = self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device))
+
+            if not man:
+                nonfound.append(extract_device)
+            elif man.mode == 'client':
+                if not man.test_connection():
+                    nonfound.append(extract_device)
+
+        needs_spec_man = any([ai.measurement_script
+                              for ai in self._get_all_automated_runs()
+                                    if ai.state == 'not run'])
+
+        if self.spectrometer_manager is None and needs_spec_man:
+            nonfound.append('spectrometer')
+
+        return nonfound
+
+#===============================================================================
+# execution
+#===============================================================================
 
     def _execute(self):
         # test runs first
@@ -387,35 +526,7 @@ class ExperimentExecutor(Experimentable):
 #                 self.info('experiment canceled because no blank was configured')
 #                 self._alive = False
 
-    def _check_for_managers(self, exp):
-        if globalv.experiment_debug:
-            self.debug('not checking for managers')
-            return []
 
-        nonfound = []
-        if self.extraction_line_manager is None:
-            if not globalv.experiment_debug:
-                nonfound.append('extraction_line')
-
-        if exp.extract_device != NULL_STR:
-            extract_device = exp.extract_device.replace(' ', '_').lower()
-            man = self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device))
-            if not man:
-                if not globalv.experiment_debug:
-                    nonfound.append(extract_device)
-            elif man.mode == 'client':
-                if not man.test_connection():
-                    nonfound.append(extract_device)
-
-        needs_spec_man = any([ai.measurement_script
-                              for ai in self._get_all_automated_runs()
-                                    if ai.state == 'not run'])
-
-        if self.spectrometer_manager is None and needs_spec_man:
-            if not globalv.experiment_debug:
-                nonfound.append('spectrometer')
-
-        return nonfound
 
     def _execute_experiment_queues(self):
 
@@ -630,7 +741,7 @@ class ExperimentExecutor(Experimentable):
         # the first run was checked before delay before runs
         if i > 1:
             # test manager connections
-            if not self.check_managers(self.experiment_queue):
+            if not self._check_managers():
                 return
 
             self._check_run_aliquot(arv)
@@ -675,102 +786,6 @@ class ExperimentExecutor(Experimentable):
             mon.automated_run = arun
             arun.monitor = mon
         return arun
-
-    def _get_blank(self, kind, ms, ed,last=False, info=True):
-        db = self.db
-        sel = db.selector_factory(style='single')
-        sess = db.get_session()
-        q = sess.query(meas_AnalysisTable)
-        q = q.join(meas_MeasurementTable)
-        q = q.join(meas_ExtractionTable)
-        q = q.join(gen_AnalysisTypeTable)
-        q = q.join(gen_MassSpectrometerTable)
-        q = q.join(gen_ExtractionDeviceTable)
-        
-        q = q.filter(gen_AnalysisTypeTable.name == 'blank_{}'.format(kind))
-        q = q.filter(gen_MassSpectrometerTable.name == ms)
-        q = q.filter(gen_ExtractionDeviceTable.name==ed)
-        
-        dbr = None
-        if last:
-            q = q.order_by(meas_AnalysisTable.aliquot.desc())
-            q = q.limit(1)
-            dbr = q.one()
-#            dbr
-#            sel.load_records([dbs], load=False)
-#            dbr = sel.records[-1]
-        else:
-            dbs = q.all()
-            sel.load_records(dbs, load=False)
-            sel.selected = sel.records[-1]
-            info = sel.edit_traits(kind='livemodal')
-            if info.result:
-                dbr = sel.selected
-
-        if dbr:
-            dbr = sel._record_factory(dbr)
-#            dbr.load()
-            if info:
-                self.info('using {} as the previous {} blank'.format(dbr.record_id, kind))
-
-            self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
-            return dbr
-
-    def _has_preceeding_blank_or_background(self, exp):
-#        if globalv.experiment_debug:
-#            return True
-
-        types = ['air', 'unknown', 'cocktail']
-        btypes = ['blank_air', 'blank_unknown', 'blank_cocktail']
-        # get first air, unknown or cocktail
-        aruns = exp.cleaned_automated_runs
-        fa = next(((i, a) for i, a in enumerate(aruns)
-                            if a.analysis_type in types and \
-                                not a.skip and \
-                                    a.state == 'not run'), None)
-
-        if fa:
-            ind, an = fa
-            if ind == 0:
-                pdbr = self._get_blank(an.analysis_type, exp.mass_spectrometer,
-                                       exp.extract_device,
-                                       last=True, info=False)
-                if pdbr:
-                    msg = '''First "{}" not preceeded by a blank. 
-Select from database?
-
-If "No" use last "blank_{}" 
-Last Run= {}'''.format(an.analysis_type, an.analysis_type, pdbr.record_id)
-                else:
-                    msg = 'First "{}" not preceeded by a blank. Select from database?'
-
-                retval = self.confirmation_dialog(msg,
-                                                  cancel=True, return_retval=True)
-                if retval == CANCEL:
-                    return
-                elif retval == NO:
-                    return self._get_blank(an.analysis_type, exp.mass_spectrometer,
-                                           exp.extract_device,
-                                           last=True)
-                else:
-                    return self._get_blank(an.analysis_type, exp.mass_spectrometer,
-                                           exp.extract_device)
-
-#                if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
-#                    return self._get_blank(an.analysis_type, exp.mass_spectrometer)
-#                else:
-#                    return
-            else:
-                pa = aruns[ind - 1]
-#                print pa, pa.analysis_type, btypes
-                if not pa.analysis_type in btypes or pa.skip:
-                    if self.confirmation_dialog("First {} not preceeded by a blank. Select from database?".format(an.analysis_type)):
-                        return self._get_blank(an.analysis_type, exp.mass_spectrometer, 
-                                               exp.extract_device)
-                    else:
-                        return
-
-        return True
 
     def _do_automated_run(self, arun):
         def start_run():

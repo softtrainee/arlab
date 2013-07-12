@@ -62,9 +62,8 @@ class Experimentor(IsotopeDatabaseManager):
     experiment_queues = List
     stats = Instance(StatsGroup, ())
 
-#    title = Property(depends_on='experiment_queue')  # DelegatesTo('experiment_set', prefix='name')
-#    filelistener = None
-#    username = Str
+    mode = None
+    unique_executor_db = True
 
     save_enabled = Bool
 
@@ -76,16 +75,12 @@ class Experimentor(IsotopeDatabaseManager):
 #    _last_ver_time = None
 #    _ver_timeout = 10
 
-#    selected = Any
-#    pasted = Event
-#    refresh = Button
-#    dclicked = Any
     #===========================================================================
     # task events
     #===========================================================================
     execute_event = Event
     activate_editor_event = Event
-    save_event=Event
+    save_event = Event
 #    clear_display_event = Event
 
     def test_queues(self, qs=None):
@@ -130,7 +125,7 @@ class Experimentor(IsotopeDatabaseManager):
             queues = self.experiment_queues
 
         return [ai for ei in self.experiment_queues
-                    for ai in ei.executed_runs+ei.automated_runs
+                    for ai in ei.executed_runs + ei.automated_runs
                         if ai.executable
                         ]
 
@@ -138,10 +133,6 @@ class Experimentor(IsotopeDatabaseManager):
         if queues is None:
             queues = self.experiment_queues
 
-        for qi in queues:
-            self.debug('+++++++++++++++++ is updatable {} {}'.format(id(qi), qi.isUpdateable()))
-#             if not qi.isUpdateable():
-#                 return
         queues = [qi for qi in queues if qi.isUpdateable()]
         if not queues:
             return
@@ -192,11 +183,11 @@ class Experimentor(IsotopeDatabaseManager):
 
         def get_analysis_info(li):
             sample, irradiationpos = '', ''
-            
+
 #            analysis = db.get_last_analysis(li)
 #            if analysis:
 #                dbln = analysis.labnumber
-            dbln=db.get_labnumber(li)
+            dbln = db.get_labnumber(li)
             if dbln:
                 sample = dbln.sample
                 if sample:
@@ -252,9 +243,9 @@ class Experimentor(IsotopeDatabaseManager):
 
                 if arun.state in ('failed', 'canceled'):
                     continue
-                
+
                 if not arun.user_defined_aliquot:
-                    if arun.state in ('not run', 'extraction','measurement'):
+                    if arun.state in ('not run', 'extraction', 'measurement'):
                         arun.assigned_aliquot = int(aliquot_start + aliquot_cnt + 1)
                         if special or not egroup:
                             aliquot_cnt += 1
@@ -266,12 +257,15 @@ class Experimentor(IsotopeDatabaseManager):
     def execute_queues(self, queues, path, text, text_hash):
         self.debug('setup executor')
 
-        self.executor.trait_set(experiment_queues=queues,
+        self.executor.trait_set(
+                                experiment_queues=queues,
                                 experiment_queue=queues[0],
                                 text=text,
                                 path=path,
+
                                 text_hash=text_hash,
-                                stats=self.stats
+                                stats=self.stats,
+                                mode=self.mode
                                 )
 
         self.executor.execute()
@@ -321,7 +315,7 @@ class Experimentor(IsotopeDatabaseManager):
     def _dclicked_changed(self, new):
         self.experiment_factory.run_factory.edit_mode = True
         self._set_factory_runs(self.experiment_queue.selected)
-        
+
     @on_trait_change('executor:update_needed')
     def _refresh1(self):
         self.executor.clear_run_states()
@@ -339,10 +333,10 @@ class Experimentor(IsotopeDatabaseManager):
         if executor.isAlive():
             executor.end_at_run_completion = True
             executor.changed_flag = True
-            
+
     @on_trait_change('experiment_factory:save_button')
     def _save_update(self):
-        self.save_event=True
+        self.save_event = True
 
     def _experiment_queue_changed(self, eq):
         if eq:
@@ -368,7 +362,7 @@ class Experimentor(IsotopeDatabaseManager):
         if new:
             if len(new) > 1:
                 self._set_factory_runs(new)
-                
+
     def _set_factory_runs(self, new):
         ef = self.experiment_factory
         rf = ef.run_factory
@@ -376,7 +370,7 @@ class Experimentor(IsotopeDatabaseManager):
         rf._labnumber = NULL_STR
         rf.labnumber = ''
         rf.edit_mode = True
-        
+
         rf.suppress_update = True
         rf.set_selected_runs(new)
 #        rf.suppress_update = True
@@ -388,17 +382,32 @@ class Experimentor(IsotopeDatabaseManager):
 #         if self.experiment_queue:
 #             return 'Experiment {}'.format(self.experiment_queue.name)
 
+    def _executor_factory(self):
+        p1 = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
+        p2 = 'src.spectrometer.spectrometer_manager.SpectrometerManager'
+        p3 = 'src.spectrometer.ion_optics_manager.IonOpticsManager'
+        kw = dict()
+        if self.application:
+            kw = dict(extraction_line_manager=self.application.get_service(p1),
+                      spectrometer_manager=self.application.get_service(p2),
+                      ion_optics_manager=self.application.get_service(p3),)
+
+        if not self.unique_executor_db:
+            kw['db'] = self.db
+
+        e = ExperimentExecutor(
+                               application=self.application,
+                               **kw
+                               )
+
+
+        return e
+
 #===============================================================================
 # defaults
 #===============================================================================
     def _executor_default(self):
-        e = ExperimentExecutor(
-#                               db=self.db,
-                               application=self.application
-                               )
-
-        e.on_trait_change(self.update_info, 'update_needed')
-        return e
+        return self._executor_factory()
 
     def _experiment_factory_default(self):
         e = ExperimentFactory(db=self.db,

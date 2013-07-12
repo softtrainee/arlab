@@ -67,7 +67,6 @@ class RunParser(Loggable):
             line = line.split(delim)
 
         args = map(str.strip, line)
-
         script_info = self._load_scripts(header, args)
 
         ln = args[header.index('labnumber')]

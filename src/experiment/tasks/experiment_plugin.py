@@ -199,14 +199,17 @@ class ExperimentPlugin(BaseTaskPlugin):
         plugin = ip.get_plugin('Experiment', category='general')
 #        mode = plugin.get('mode')
         mode = ip.get_parameter(plugin, 'mode')
-        p1 = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
-        p2 = 'src.spectrometer.spectrometer_manager.SpectrometerManager'
-        p3 = 'src.spectrometer.ion_optics_manager.IonOpticsManager'
-        exp = Experimentor(application=self.application)
-        exp.executor.trait_set(extraction_line_manager=self.application.get_service(p1),
-                                 spectrometer_manager=self.application.get_service(p2),
-                                 ion_optics_manager=self.application.get_service(p3),
-                                 mode=mode)
+#         p1 = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
+#         p2 = 'src.spectrometer.spectrometer_manager.SpectrometerManager'
+#         p3 = 'src.spectrometer.ion_optics_manager.IonOpticsManager'
+
+        exp = Experimentor(application=self.application,
+                           mode=mode)
+
+#         exp.executor.trait_set(extraction_line_manager=self.application.get_service(p1),
+#                                spectrometer_manager=self.application.get_service(p2),
+#                                ion_optics_manager=self.application.get_service(p3),
+#                                mode=mode)
         return exp
 #    def _editor_factory(self, *args, **kw):
 #        return ExperimentEditor(application=self.application)

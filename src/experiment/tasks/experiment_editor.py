@@ -126,7 +126,7 @@ class ExperimentEditor(BaseTraitsEditor):
             queues = [self.queue]
         if self._validate_experiment_queues(queues):
             path = self._dump_experiment_queues(path, queues)
-            
+
         self.path = path
         self.dirty = False
 
@@ -141,9 +141,9 @@ class ExperimentEditor(BaseTraitsEditor):
 
         if not p:
             return
-        
-        p=add_extension(p)
-        
+
+        p = add_extension(p)
+
 
         self.info('saving experiment to {}'.format(p))
         with open(p, 'wb') as fp:
