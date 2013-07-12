@@ -179,8 +179,11 @@ class ValveManager(Manager):
                 else:
                     for i in xrange(0, len(word), 2):
                         packet = word[i:i + 2]
-                        key = packet[0]
-                        state = packet[1]
+                        try:
+                            key,state = packet[0], packet[1]
+                        except IndexError:
+                            return d
+                        
                         if key.upper() in ALPHAS:
                             if state in ('0', '1'):
                                 d[key] = bool(int(state))
