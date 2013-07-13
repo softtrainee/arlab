@@ -87,7 +87,7 @@ def assemble_script_blob(scripts, kinds=None):
     return 'Pychron Script', '\n'.join(ts)
 
 
-warned_scripts=[]
+warned_scripts = []
 
 
 class AutomatedRun(Loggable):
@@ -570,7 +570,7 @@ anaylsis_type={}
                 script.cancel()
 
         self.do_post_termination()
-                
+
         self.finish()
 
         if state:
@@ -876,7 +876,7 @@ anaylsis_type={}
                              arar_age=self.arar_age,
                              sample=self.sample,
                              irradiation=self.irradiation,
-                             
+
                              )
 
             plot_panel.reset()
@@ -1160,7 +1160,6 @@ anaylsis_type={}
 #             do_after(100, graph._update_graph)
 
         return True
-
 
     def _check_conditions(self, conditions, cnt):
         for ti in conditions:
@@ -1520,10 +1519,10 @@ anaylsis_type={}
             ic = self.arar_age.ic_factor
         else:
             ic = ArArAge(application=self.application).ic_factor
-        
-        #save ic_factor so it can be exported to secondary db    
-        self.ic_factor=ic
-        
+
+        # save ic_factor so it can be exported to secondary db
+        self.ic_factor = ic
+
         def func():
             self.info('default ic_factor={}'.format(ic))
             db = self.db
@@ -1537,7 +1536,7 @@ anaylsis_type={}
             analysis.selected_histories.selected_detector_intercalibration = history
             uv, ue = ic.nominal_value, ic.std_dev
             db.add_detector_intercalibration(history, 'CDD',
-                                             user_value=float(uv), 
+                                             user_value=float(uv),
                                              user_error=float(ue))
 
         return self._time_save(func, 'detector intercalibration')
@@ -1787,8 +1786,8 @@ anaylsis_type={}
 #                    setattr(self, '_{}_script'.format(name), None)
         else:
             valid = False
-            fname=s.filename if s else fname
-            
+            fname = s.filename if s else fname
+
             global warned_scripts
             if not name in warned_scripts:
                 warned_scripts.append(fname)
@@ -1865,7 +1864,7 @@ anaylsis_type={}
         '''
         hdn = self.extract_device.replace(' ', '_').lower()
         an = self.analysis_type.split('_')[0]
-                
+
         script.setup_context(tray=self.tray,
                             position=self.get_position_list(),
                             disable_between_positions=self.disable_between_positions,

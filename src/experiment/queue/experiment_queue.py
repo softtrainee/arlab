@@ -16,12 +16,14 @@
 
 #============= enthought library imports =======================
 from traits.api import Any , on_trait_change, Int, List
+#============= standard library imports ========================
+import hashlib
+#============= local library imports  ==========================
 from src.experiment.queue.base_queue import BaseExperimentQueue
 from src.constants import SCRIPT_KEYS, SCRIPT_NAMES
 from src.experiment.utilities.identifier import make_runid
-import hashlib
-#============= standard library imports ========================
-#============= local library imports  ==========================
+from src.experiment.utilities.human_error_checker import HumanErrorChecker
+
 
 class ExperimentQueue(BaseExperimentQueue):
     _cached_runs = None
@@ -30,7 +32,7 @@ class ExperimentQueue(BaseExperimentQueue):
     dclicked = Any
     database_identifier = Int
     executed_runs = List
-    
+
     def set_run_inprogress(self, aid):
 #    def run_executed(self, aid):
         run = self._find_run(aid)
@@ -52,7 +54,7 @@ class ExperimentQueue(BaseExperimentQueue):
                      if make_runid(a.labnumber, a.aliquot, a.step) == aid), None)
 
     def copy_function(self, obj):
-        
+
         ci = obj.clone_traits()
         ci.state = 'not run'
         if obj.user_defined_aliquot:
@@ -69,14 +71,34 @@ class ExperimentQueue(BaseExperimentQueue):
                 self.update_needed = True
 #                self.refresh_button = True
 
-    def test_runs(self, tested=None):
-#         self.executable=True
+#     @on_trait_change('automated_runs:state')
+#     def _refresh_table1(self):
+#         self.refresh_table_needed = True
+
+    def check_runs(self):
+        hec = HumanErrorChecker()
+        err = hec.check(self.automated_runs, test_all=True)
+        if err:
+            hec.report_errors(err)
+            self.executable = False
+            return
+
+        return True
+
+    def test_runs(self):
         runs = self.cleaned_automated_runs
 
-        tested = []
         if runs:
             ar = runs[0].make_run()
-            self.executable = False
+
+            failed = False
+#             hec = HumanErrorChecker()
+#
+#             err = hec.check(runs, test_all=True)
+#             if err:
+#                 hec.report_errors(err)
+#                 failed = True
+#             else:
             for ri in runs:
                 for si in SCRIPT_NAMES:
                     sn = getattr(ri, si)
@@ -89,10 +111,11 @@ class ExperimentQueue(BaseExperimentQueue):
                         nhash = hashlib.md5(nscript.text).digest()
                         if shash != nhash:
                             if not nscript.syntax_ok():
-                                return 'Error in script {}'.format(script.name)
+                                failed = True
+#                                 return 'Error in script {}'.format(script.name)
 
-        self.executable = True
-        return tested
+
+            self.executable = not failed
 
     def new_runs_generator(self, last_ran=None):
         runs = self.cleaned_automated_runs
@@ -111,7 +134,7 @@ class ExperimentQueue(BaseExperimentQueue):
 #            if self._cached_runs:
 #                startid = self._cached_runs.index(last_ran) + 1
 #                # for graphic clarity load the finished runs back in
-##                cnts = {}
+# #                cnts = {}
 #                for ci, ai in zip(self._cached_runs[:startid], runs[:startid]):
 #                    ai.trait_set(state=ci.state, aliqupt=ci.aliquot,
 #                                 step=ci.step,
@@ -120,7 +143,7 @@ class ExperimentQueue(BaseExperimentQueue):
 #                newruns = runs[startid:]
 #
 #                run = newruns[0]
-##                runid = run.runid
+# #                runid = run.runid
 #                runid = make_runid(run.labnumber, run.aliquot, run.step)
 #
 #                self.info('starting at analysis {} (startid={} of {})'.format(runid, startid + 1, n))

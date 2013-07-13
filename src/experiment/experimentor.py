@@ -79,17 +79,24 @@ class Experimentor(IsotopeDatabaseManager):
     # task events
     #===========================================================================
     execute_event = Event
+
     activate_editor_event = Event
     save_event = Event
 #    clear_display_event = Event
+    def refresh_executable(self, qs=None):
+        if qs is None:
+            qs = self.experiment_queues
+        self.executor.executable = all([ei.executable for ei in qs])
 
     def test_queues(self, qs=None):
         if qs is None:
             qs = self.experiment_queues
 
         for qi in qs:
-            qi.test_runs()
-        self.executor.executable = all([ei.executable for ei in qs])
+            if qi.check_runs():
+                qi.test_runs()
+
+        self.refresh_executable(qs)
 
     def test_connections(self):
         if not self.db:
@@ -148,6 +155,8 @@ class Experimentor(IsotopeDatabaseManager):
         self._modify_aliquots_steps(ans, exclude=exclude)
 
         self.debug('info updated')
+        for qi in queues:
+            qi.refresh_table_needed = True
 
     def _get_labnumber(self, ln):
         '''
@@ -209,14 +218,28 @@ class Experimentor(IsotopeDatabaseManager):
 
             sample, irradiationpos = get_analysis_info(cln)
 
-            # group analyses by aliquot
-            for aliquot, ais in groupby(analyses,
-                                        key=lambda x: x.aliquot):
-                self._set_aliquot_step(ais, special, cln, aliquot,
-                                       sample, irradiationpos
-                                       )
+            if not special:
+                key = lambda x: x.extract_group
+                ganalyses = groupby(sorted(analyses, key=key),
+                                    key=key)
+            else:
+                ganalyses = ((0, analyses),)
 
-    def _set_aliquot_step(self, ais, special, cln, aliquot, sample, irradiationpos):
+            offset = 0
+            for egroup, ans in ganalyses:
+#                 group analyses by aliquot
+                for aliquot, ais in groupby(ans,
+                                            key=lambda x: x._aliquot):
+
+                    self._set_aliquot_step(ais, special, cln, aliquot,
+                                           offset,
+                                           egroup,
+                                           sample, irradiationpos
+                                           )
+                    offset += 1
+
+    def _set_aliquot_step(self, ais, special, cln, aliquot, offset, egroup,
+                          sample, irradiationpos):
         db = self.db
 
         an = db.get_last_analysis(cln, aliquot=aliquot)
@@ -227,31 +250,37 @@ class Experimentor(IsotopeDatabaseManager):
             if an.step and an.aliquot == aliquot:
                 step_start = LAlphas.index(an.step) + 1
 
-        if not special:
-            ganalyses = groupby(ais, key=lambda x: x.extract_group)
-        else:
-            ganalyses = ((0, ais),)
+#         if not special:
+#             ganalyses = groupby(ais, key=lambda x: x.extract_group)
+#         else:
+#             ganalyses = ((0, ais),)
 
-        for aliquot_cnt, (egroup, aruns) in enumerate(ganalyses):
-            step_cnt = 0
-            for arun in aruns:
-                arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
-                if arun.skip:
-                    arun.aliquot = 0
-                    continue
+#         for aliquot_cnt, (egroup, aruns) in enumerate(ais):
+#         for aliquot_cnt, arun in enumerate(ais):
+        step_cnt = 0
+        aliquot_cnt = 0
+        for arun in ais:
+#             for arun in aruns:
+            arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
+            if arun.skip:
+                arun.aliquot = 0
+                continue
 
-                if arun.state in ('failed', 'canceled'):
-                    continue
+            if arun.state in ('failed', 'canceled'):
+                continue
 
-                if not arun.user_defined_aliquot:
-                    if arun.state in ('not run', 'extraction', 'measurement'):
-                        arun.assigned_aliquot = int(aliquot_start + aliquot_cnt + 1)
-                        if special or not egroup:
-                            aliquot_cnt += 1
+            if not arun.user_defined_aliquot:
+                if arun.state in ('not run', 'extraction', 'measurement'):
+#                     print arun.runid, egroup, aliquot_start, aliquot_cnt, offset
+#                     arun.assigned_aliquot = int(aliquot_start + 1 + offset)
+                    arun.assigned_aliquot = int(aliquot_start + offset + aliquot_cnt + 1)
+                    if special or not egroup:
+                        aliquot_cnt += 1
 
-                if not special and egroup:
-                    arun.step = int(step_start + step_cnt)
-                    step_cnt += 1
+            if not special and egroup:
+                arun.step = int(step_start + step_cnt)
+#                 print arun.aliquot, arun.step, step_start, step_cnt
+                step_cnt += 1
 
     def execute_queues(self, queues, path, text, text_hash):
         self.debug('setup executor')
@@ -291,7 +320,9 @@ class Experimentor(IsotopeDatabaseManager):
             '''
             self.executor.stop()
         else:
-            self.update_info()
+#             self.update_info()
+
+            self.debug('%%%%%%%%%%%%%%%%%% Execute event true')
             self.execute_event = True
 
     @on_trait_change('experiment_queues[]')
@@ -329,9 +360,13 @@ class Experimentor(IsotopeDatabaseManager):
         self.update_info()
         executor = self.executor
         executor.clear_run_states()
-        if executor.isAlive():
-            executor.end_at_run_completion = True
-            executor.changed_flag = True
+#         if executor.isAlive():
+#             executor.end_at_run_completion = True
+#             executor.changed_flag = True
+    @on_trait_change('experiment_factory:run_factory:refresh_table_needed')
+    def _refresh4(self):
+        for qi in self.experiment_queues:
+            qi.refresh_table_needed = True
 
     @on_trait_change('experiment_factory:save_button')
     def _save_update(self):

@@ -110,10 +110,10 @@ class ExperimentPlugin(BaseTaskPlugin):
 #                          protocol=ExperimentEditor,
 #                          factory=self._editor_factory
 #                          )
-        so_exp = self.service_offer_factory(
-                          protocol=Experimentor,
-                          factory=self._experimentor_factory
-                          )
+#         so_exp = self.service_offer_factory(
+#                           protocol=Experimentor,
+#                           factory=self._experimentor_factory
+#                           )
         so_isodb = self.service_offer_factory(
                           protocol=IsotopeDatabaseManager,
                           factory=self._iso_db_factory
@@ -152,7 +152,8 @@ class ExperimentPlugin(BaseTaskPlugin):
 #                           factory='src.experiments.analysis_graph_view.AnalysisGraphView'
 #                           )
 #        return [so, so1, so_exp_editor]
-        return [so_exp,
+        return [
+#                 so_exp,
 #                so_pyscript_manager,
                 so_signal_calculator,
 #                so_import_manager,
@@ -192,25 +193,25 @@ class ExperimentPlugin(BaseTaskPlugin):
         iso = IsotopeDatabaseManager(connect=False)
         return iso
 
-    def _experimentor_factory(self, *args, **kw):
-
-
-        ip = InitializationParser()
-        plugin = ip.get_plugin('Experiment', category='general')
-#        mode = plugin.get('mode')
-        mode = ip.get_parameter(plugin, 'mode')
-#         p1 = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
-#         p2 = 'src.spectrometer.spectrometer_manager.SpectrometerManager'
-#         p3 = 'src.spectrometer.ion_optics_manager.IonOpticsManager'
-
-        exp = Experimentor(application=self.application,
-                           mode=mode)
-
-#         exp.executor.trait_set(extraction_line_manager=self.application.get_service(p1),
-#                                spectrometer_manager=self.application.get_service(p2),
-#                                ion_optics_manager=self.application.get_service(p3),
-#                                mode=mode)
-        return exp
+#     def _experimentor_factory(self, *args, **kw):
+#
+#
+#         ip = InitializationParser()
+#         plugin = ip.get_plugin('Experiment', category='general')
+# #        mode = plugin.get('mode')
+#         mode = ip.get_parameter(plugin, 'mode')
+# #         p1 = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
+# #         p2 = 'src.spectrometer.spectrometer_manager.SpectrometerManager'
+# #         p3 = 'src.spectrometer.ion_optics_manager.IonOpticsManager'
+#
+#         exp = Experimentor(application=self.application,
+#                            mode=mode)
+#
+# #         exp.executor.trait_set(extraction_line_manager=self.application.get_service(p1),
+# #                                spectrometer_manager=self.application.get_service(p2),
+# #                                ion_optics_manager=self.application.get_service(p3),
+# #                                mode=mode)
+#         return exp
 #    def _editor_factory(self, *args, **kw):
 #        return ExperimentEditor(application=self.application)
 #    def _labnumber_entry_factory(self):
@@ -251,10 +252,12 @@ class ExperimentPlugin(BaseTaskPlugin):
 #                                  )
 
     def _task_factory(self):
-        return ExperimentEditorTask(manager=self._get_manager())
+#         return ExperimentEditorTask(manager=self._get_manager())
+#         return ExperimentEditorTask(manager=self._experimentor_factory())
+        return ExperimentEditorTask()
 
-    def _get_manager(self):
-        return self.application.get_service(Experimentor)
+#     def _get_manager(self):
+#         return self.application.get_service(Experimentor)
 
     def _preferences_panes_default(self):
         return [ExperimentPreferencesPane,

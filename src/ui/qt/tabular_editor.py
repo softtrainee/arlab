@@ -54,7 +54,7 @@ class _myTableView(_TableView):
         if font is not None:
             fnt = QFont(font)
             size = QFontMetrics(fnt)
-            vheader.setDefaultSectionSize(size.height()+2)
+            vheader.setDefaultSectionSize(size.height() + 2)
             hheader = self.horizontalHeader()
 
             hheader.setFont(fnt)
@@ -117,8 +117,8 @@ class _myTableView(_TableView):
 
         else:
             QTableView.keyPressEvent(self, event)
-    
-    _prev_paste_time=None
+
+    _prev_paste_time = None
     def keyPressEvent(self, event):
 
         if event.matches(QKeySequence.Copy):
@@ -126,12 +126,12 @@ class _myTableView(_TableView):
                                     self.selectionModel().selectedRows()]
 
         elif event.matches(QKeySequence.Paste):
-            
+
             if self._prev_paste_time:
-                if abs(time.time()-self._prev_paste_time)<0.5:
+                if abs(time.time() - self._prev_paste_time) < 0.5:
                     return
-            self._prev_paste_time=time.time()
-            
+            self._prev_paste_time = time.time()
+
             if self._copy_cache:
                 si = self.selectedIndexes()
                 copy_func = self.copy_func

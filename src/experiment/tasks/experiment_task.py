@@ -68,20 +68,36 @@ class ExperimentEditorTask(EditorTask):
                                          ),
                           top=PaneItem('pychron.experiment.controls')
                           )
+
+    def _manager_factory(self):
+        from src.experiment.experimentor import Experimentor
+        from src.helpers.parsers.initialization_parser import InitializationParser
+        ip = InitializationParser()
+        plugin = ip.get_plugin('Experiment', category='general')
+        mode = ip.get_parameter(plugin, 'mode')
+        exp = Experimentor(application=self.window.application,
+                           mode=mode)
+
+        return exp
+
+    def _manager_default(self):
+        return self._manager_factory()
+
     def activated(self):
-        elm=self._get_el_manager()
+
+        elm = self._get_el_manager()
         if elm:
             elm.activate()
-            
+
     def prepare_destroy(self):
-        elm=self._get_el_manager()
+        elm = self._get_el_manager()
         if elm:
             elm.closed(True)
-            
+
     def _get_el_manager(self):
         app = self.window.application
         return app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
-        
+
     def create_dock_panes(self):
         self.isotope_evolution_pane = IsotopeEvolutionPane()
 
@@ -97,7 +113,7 @@ class ExperimentEditorTask(EditorTask):
                 ]
 
 #        man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
-        man=self._get_el_manager()
+        man = self._get_el_manager()
         if man:
             from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
             panes.append(CanvasDockPane(model=man))
@@ -146,6 +162,7 @@ class ExperimentEditorTask(EditorTask):
             manager = self.manager
             if manager.verify_database_connection(inform=True):
                 if manager.load():
+                    self.manager.info('Opening experiment {}'.format(path))
                     with open(path, 'r') as fp:
                         txt = fp.read()
 
@@ -158,8 +175,9 @@ class ExperimentEditorTask(EditorTask):
                     qs = [ei.queue
                           for ei in self.editor_area.editors]
 
-                    manager.test_queues(qs)
                     manager.update_info()
+
+                    manager.test_queues(qs)
                     manager.path = path
                     manager.executor.reset()
 
@@ -205,21 +223,24 @@ class ExperimentEditorTask(EditorTask):
         self._open_editor(editor)
 
     def _save_file(self, path):
+
         self.active_editor.save(path)
 
         self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
-        self.manager.test_queues()
-        self.manager.update_info()
 
-        '''
-            if the queue is edited while the executor is running the end_at_run_completion is True
-            set it to its previous value
-        '''
-        ex = self.manager.executor
-        if ex.isAlive():
-            if ex.changed_flag:
-                ex.end_at_run_completion = ex.prev_end_at_run_completion
-            ex.changed_flag = False
+#         self.manager.update_info()
+        self.manager.refresh_executable()
+
+#
+#         '''
+#             if the queue is edited while the executor is running the end_at_run_completion is True
+#             set it to its previous value
+#         '''
+#         ex = self.manager.executor
+#         if ex.isAlive():
+#             if ex.changed_flag:
+#                 ex.end_at_run_completion = ex.prev_end_at_run_completion
+#             ex.changed_flag = False
 
     def _active_editor_changed(self):
         if self.active_editor:
@@ -269,6 +290,7 @@ class ExperimentEditorTask(EditorTask):
 
     @on_trait_change('manager:execute_event')
     def _execute(self):
+
         editor = self.active_editor
         if editor is None:
             if self.editor_area.editors:
@@ -283,10 +305,10 @@ class ExperimentEditorTask(EditorTask):
                     self._save_file(p)
                 else:
                     return
-            
-            p=add_extension(p, '.txt')
+
+            p = add_extension(p, '.txt')
             self.debug('active editor path {}, {}'.format(p, os.path.isfile(p)))
-            
+
             if os.path.isfile(p):
                 group = editor.group
                 min_idx = editor.merge_id
@@ -298,11 +320,11 @@ class ExperimentEditorTask(EditorTask):
                             if ei.group == group and ei.merge_id >= min_idx]
 
                 self.manager.execute_queues(qs, p, text, hash_val)
-                
+
     @on_trait_change('manager:save_event')
     def _save_queue(self):
         self.save()
-        
+
     @on_trait_change('window:closing')
     def _prompt_on_close(self, event):
         '''

@@ -344,23 +344,7 @@ class ExperimentExecutor(Experimentable):
 #===============================================================================
 # pre execute checking
 #===============================================================================
-    def _check_for_human_errors(self):
-        from src.experiment.utilities.human_error_checker import HumanErrorChecker
-        hec = HumanErrorChecker()
-
-        '''
-            returns a dict runid:error
-        '''
-        err = hec.check(self.experiment_queue)
-        if not err:
-            return True
-
     def _pre_execute_check(self, inform=True):
-        '''
-            check the queue for human errors
-        '''
-        if not self._check_for_human_errors():
-            return
 
         dbr = self._get_preceeding_blank_or_background(inform=inform)
         if not dbr is True:
@@ -843,6 +827,7 @@ class ExperimentExecutor(Experimentable):
             if not step():
                 break
         else:
+            print arun.state
             if arun.state not in ('truncated', 'canceled', 'failed'):
                 arun.state = 'success'
 
