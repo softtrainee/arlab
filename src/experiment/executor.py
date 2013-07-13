@@ -390,6 +390,7 @@ class ExperimentExecutor(Experimentable):
         dbr = None
         if last:
             q = q.order_by(meas_AnalysisTable.aliquot.desc())
+            q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
             q = q.limit(1)
             dbr = q.one()
         else:
