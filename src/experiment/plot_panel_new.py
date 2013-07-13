@@ -400,7 +400,7 @@ class PlotPanel(Loggable):
                              ),
 
                         ),
-#                 width=650,
+                width=500,
 #                 height=0.9,
 #                 x=self.window_x,
 #                 y=self.window_y,

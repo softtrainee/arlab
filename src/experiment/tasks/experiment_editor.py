@@ -60,13 +60,14 @@ class ExperimentEditor(BaseTraitsEditor):
                                    pasted='pasted',
                                    copy_function='copy_function',
                                    refresh='refresh_table_needed',
-
+#                                    scroll_to_bottom=True,
 #                                             copy_cache='copy_cache',
 #                                             update='update_needed',
 #                                            drag_move=True,
 #                                    auto_update=True,
                                    multi_select=True,
-                                   scroll_to_bottom=False)
+                                   scroll_to_bottom=False
+                                   )
                         )
 
         executed_grp = VGroup(Label('Completed Runs'),

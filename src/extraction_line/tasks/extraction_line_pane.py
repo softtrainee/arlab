@@ -35,7 +35,9 @@ class CanvasDockPane(TraitsDockPane):
     def traits_view(self):
         v = View(UItem('canvas',
                        editor=InstanceEditor(view='alt_canvas_view'),
-                       style='custom'))
+                       style='custom',
+                       width=500
+                       ))
         return v
 
 class GaugePane(TraitsDockPane):

@@ -46,7 +46,7 @@ from src.experiment.experimentable import Experimentable
 from src.ui.thread import Thread
 from src.pyscripts.wait_dialog import WaitDialog
 from src.experiment.automated_run.automated_run import AutomatedRun
-from pyface.constant import CANCEL, NO
+from pyface.constant import CANCEL, NO, YES
 from src.ui.qt.gui import invoke_in_main_thread
 from src.helpers.ctx_managers import no_update
 
@@ -54,10 +54,11 @@ from src.helpers.ctx_managers import no_update
 # @todo: display current exp sets mass spectrometer, extract device and tray
 
 BLANK_MESSAGE = '''First "{}" not preceeded by a blank. 
-Select from database?
+If "Yes" use last "blank_{}" 
+Last Run= {}
 
-If "No" use last "blank_{}" 
-Last Run= {}'''
+If "No" select from database
+'''
 
 class ExperimentExecutor(Experimentable):
     spectrometer_manager = Instance(Manager)
@@ -389,8 +390,8 @@ class ExperimentExecutor(Experimentable):
 
         dbr = None
         if last:
-            q = q.order_by(meas_AnalysisTable.aliquot.desc())
             q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+#             q = q.order_by(meas_AnalysisTable.aliquot.desc())
             q = q.limit(1)
             dbr = q.one()
         else:
@@ -438,7 +439,7 @@ class ExperimentExecutor(Experimentable):
 
                     if retval == CANCEL:
                         return
-                    elif retval == NO:
+                    elif retval == YES:
                         return pdbr
                     else:
                         return self._get_blank(an.analysis_type, exp.mass_spectrometer,

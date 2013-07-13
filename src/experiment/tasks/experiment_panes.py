@@ -391,7 +391,11 @@ class IsotopeEvolutionPane(TraitsDockPane):
     def traits_view(self):
         v = View(UItem('plot_panel',
 #                        editor=InstanceEditor(view='graph_view'),
-                       style='custom'))
+                       style='custom',
+                       width=600
+                       ),
+                 
+                 )
         return v
 
 class SummaryPane(TraitsDockPane):
