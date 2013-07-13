@@ -104,7 +104,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         sess = self.get_session()
         q = sess.query(AnalysesTable.Aliquot)
         q = q.filter(AnalysesTable.IrradPosition == labnumber)
-        q = q.order_by(AnalysesTable.Aliquot.desc())
+        q = q.order_by(AnalysesTable.RunDateTime.desc())
         q = q.limit(1)
         try:
             a = q.one()

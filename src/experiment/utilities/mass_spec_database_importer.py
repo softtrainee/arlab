@@ -115,6 +115,7 @@ class MassSpecDatabaseImporter(Loggable):
                 irradpos = '4359'
 
             paliquot = self.db.get_lastest_analysis_aliquot(rid)
+            self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%% paliqout{} {}'.format(paliquot, rid))
             if paliquot is None:
                 paliquot = 0
 
@@ -133,11 +134,11 @@ class MassSpecDatabaseImporter(Loggable):
             self.message('Could not save to Mass Spec database.\n {}'.format(e))
             if commit:
                 self.db.rollback()
-                pid = spec.rid
-                spec.aliquot = '*{:02n}'.format(spec.aliquot)
-                spec.rid = '{}-{}'.format(spec.labnumber, spec.aliquot)
-                self.message('Saving {} as {}'.format(pid, spec.rid))
-                self._add_analysis(spec, irradpos, spec.rid, runtype, commit)
+#                 pid = spec.rid
+#                 spec.aliquot = '*{:02n}'.format(spec.aliquot)
+#                 spec.rid = '{}-{}'.format(spec.labnumber, spec.aliquot)
+#                 self.message('Saving {} as {}'.format(pid, spec.rid))
+#                 self._add_analysis(spec, irradpos, spec.rid, runtype, commit)
 
 
     def _add_analysis(self, spec, irradpos, rid, runtype, commit=True):
