@@ -35,7 +35,8 @@ from src.experiment.script.script import Script
 from src.experiment.queue.increment_heat_template import IncrementalHeatTemplate
 from src.viewable import Viewable
 from src.ui.thread import Thread
-
+def EKlass(klass):
+    return klass(enter_set=True, auto_set=False)
 
 class AutomatedRunFactory(Viewable, ScriptMixin):
     db = Any
@@ -45,7 +46,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 #    aliquot = Property(Int(enter_set=True, auto_set=False), depends_on='_aliquot')
 #    _aliquot = Int
 #    o_aliquot = Int
-    aliquot=Int(enter_set=True, auto_set=False)
+    aliquot = EKlass(Int)
     user_defined_aliquot = False
     special_labnumber = Str('Special Labnumber')
 
@@ -72,7 +73,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     #===========================================================================
     # extract
     #===========================================================================
-    extract_value = Property(depends_on='_extract_value')
+    extract_value = Property(
+                             EKlass(Float),
+                             depends_on='_extract_value')
     _extract_value = Float
     extract_units = Str(NULL_STR)
     extract_units_names = List(['---', 'watts', 'temp', 'percent'])
@@ -81,9 +84,9 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     extract_group = Int(enter_set=True, auto_set=False)
     extract_group_button = Button('Group Selected')
 
-    duration = Float
-    cleanup = Float
-    beam_diameter = Property(depends_on='beam_diameter')
+    duration = EKlass(Float)
+    cleanup = EKlass(Float)
+    beam_diameter = Property(EKlass(Str), depends_on='beam_diameter')
     _beam_diameter = Any
 
     pattern = Str
@@ -119,6 +122,7 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
 #    frequencyable = Property(depends_on='labnumber')
     extractable = Property(depends_on='labnumber')
     update_info_needed = Event
+    refresh_table_needed = Event
     changed = Event
     suppress_update = False
 #    clear_selection = Event
@@ -435,7 +439,7 @@ pattern,
 position,
 weight, comment, skip, end_after, extract_group''')
     def _edit_handler(self, name, new):
-        self._update_run_values(name, new)      
+        self._update_run_values(name, new)
 
     @on_trait_change('''measurement_script:name, 
 extraction_script:name, 
@@ -756,7 +760,8 @@ post_equilibration_script:name
     def _get_patterns(self):
         p = paths.pattern_dir
         extension = '.lp,.txt'
-        return self._ls_directory(p, extension)
+        patterns = self._ls_directory(p, extension)
+        return ['', ] + patterns
 
 #     @cached_property
     def _get_templates(self):
@@ -796,7 +801,7 @@ post_equilibration_script:name
 #
 #                if si.user_defined_aliquot:
 #                    si.aliquot = int(self.aliquot)
-                    
+
             self.update_info_needed = True
 #    def _set_aliquot(self, a):
 #        if a != self.o_aliquot:
@@ -808,7 +813,7 @@ post_equilibration_script:name
 #                    si.user_defined_aliquot = True
 #                else:
 #                    si.user_defined_aliquot = self.user_defined_aliquot
-##
+# #
 #                if si.user_defined_aliquot:
 #                    si.aliquot = int(a)
 #            self.update_info_needed = True
@@ -821,37 +826,38 @@ post_equilibration_script:name
 
 
     def _get_beam_diameter(self):
-        bd=''
+        bd = ''
         if self._beam_diameter is not None:
-            bd=self._beam_diameter
+            bd = self._beam_diameter
         return bd
-    
+
     def _set_beam_diameter(self, v):
         try:
-            self._beam_diameter=float(v)
-            self._update_run_values('beam_diameter', self._beam_diameter)     
+            self._beam_diameter = float(v)
+            self._update_run_values('beam_diameter', self._beam_diameter)
         except (ValueError, TypeError):
             pass
-        
+
     def _update_run_values(self, attr, v):
         def func():
             for si in self._selected_runs:
                 setattr(si, attr, v)
-            
+
             if attr == 'extract_group':
                 self.update_info_needed = True
 
             self.changed = True
-            
-            
+            self.refresh_table_needed = True
+
+
         if self.edit_mode and \
             self._selected_runs and \
                 not self.suppress_update:
-            t=Thread(target=func)
-            self._update_t=t
+            t = Thread(target=func)
+            self._update_t = t
             t.start()
-            
-            
+
+
 #============= EOF =============================================
 
 

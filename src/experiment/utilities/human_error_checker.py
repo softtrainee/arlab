@@ -23,16 +23,29 @@ from src.experiment.utilities.identifier import get_analysis_type
 #============= local library imports  ==========================
 
 class HumanErrorChecker(Loggable):
-    def check(self, exp, test_all=False, inform=True):
+    def check(self, runs, test_all=False, inform=True):
         ret = dict()
-        for i, ai in enumerate(exp.cleaned_automated_runs):
+
+        inform = inform and not test_all
+        for i, ai in enumerate(runs):
             err = self._check_run(ai, inform)
             if err is not None:
+                ai.state = 'invalid'
                 ret[ai.runid] = err
                 if not test_all:
                     return ret
+            else:
+                ai.state = 'not run'
+
 
         return ret
+    def report_errors(self, errdict):
+
+        msg = '\n'.join(['{} {}'.format(k, v) for k, v in errdict.iteritems()])
+        self.warning_dialog(msg)
+
+    def check_run(self, run, inform=True):
+        return self._check_run(run, inform)
 
     def _check_run(self, run, inform):
 
@@ -53,8 +66,10 @@ class HumanErrorChecker(Loggable):
 
     def _check_attr(self, run, attr, inform):
         if not getattr(run, attr):
+            msg = 'No {} set for {}'.format(attr, run.runid)
+            self.warning(msg)
             if inform:
-                self.warning_dialog('No {} set for {}'.format(attr, run.runid))
+                self.warning_dialog(msg)
             return 'no {}'.format(attr)
 
 #============= EOF =============================================

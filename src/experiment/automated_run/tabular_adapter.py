@@ -67,30 +67,30 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 
     def get_bg_color(self, obj, trait, row, column):
         item = self.item
+
+        COLORS = {'success':SUCCESS_COLOR,
+                'extraction':EXTRACTION_COLOR,
+                'measurement':MEASUREMENT_COLOR,
+                'canceled':CANCELED_COLOR,
+                'truncated':TRUNCATED_COLOR,
+                'failed':FAILED_COLOR,
+                'end_after':END_AFTER_COLOR,
+                'invalid':'red'
+                }
+
         if not item.executable:
             color = NOT_EXECUTABLE_COLOR
+
         if item.skip:
             color = SKIP_COLOR  # '#33CCFF'  # light blue
-        elif item.state == 'success':
-            color = SUCCESS_COLOR  # '#66FF33'  # light green
-        elif item.state == 'extraction':
-            color = EXTRACTION_COLOR  # '#FFFF66'  # light yellow
-        elif item.state == 'measurement':
-            color = MEASUREMENT_COLOR  # '#FF7EDF'  # magenta
-        elif item.state == 'canceled':
-            color = CANCELED_COLOR  # '#FF7EDF'  # magenta
-        elif item.state == 'truncated':
-            color = TRUNCATED_COLOR  # '#FF7EDF'  # magenta
-        elif item.state == 'failed':
-            color = FAILED_COLOR  # '#FF7EDF'  # magenta
-        elif item.end_after:
-            color = END_AFTER_COLOR
         else:
-
-            if row % 2 == 0:
-                color = 'white'
+            if item.state in COLORS:
+                color = COLORS[item.state]
             else:
-                color = '#E6F2FF'  # light gray blue
+                if row % 2 == 0:
+                    color = 'white'
+                else:
+                    color = '#E6F2FF'  # light gray blue
 
         return color
 
@@ -136,8 +136,8 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         v = getattr(self.item, attr)
         if v:
             if isinstance(v, str):
-                v=float(v)
-            
+                v = float(v)
+
             return fmt.format(v)
         else:
             return ''

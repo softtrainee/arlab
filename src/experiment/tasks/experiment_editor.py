@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, Unicode, Bool, Property, Int, on_trait_change
+from traits.api import HasTraits, Any, Instance, Event, Unicode, Bool, Property, Int, on_trait_change
 from traitsui.api import View, Item, UI, UItem, HGroup, spring, VGroup, VSplit, Label
 from pyface.tasks.api import Editor
 
@@ -28,6 +28,7 @@ from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
 from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.envisage.tasks.base_editor import  BaseTraitsEditor
 from src.helpers.filetools import add_extension
+from src.experiment.utilities.human_error_checker import HumanErrorChecker
 
 
 class ExperimentEditor(BaseTraitsEditor):
@@ -40,12 +41,14 @@ class ExperimentEditor(BaseTraitsEditor):
     merge_id = Int(0)
     group = Int(0)
 
+
+
 #    def create(self, parent):
 #        self.control = self._create_control(parent)
     def traits_view(self):
 
         arun_grp = UItem('automated_runs',
-                       editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
+                         editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
                                    operations=['delete',
                                                'move',
 #                                                        'edit'
@@ -56,10 +59,12 @@ class ExperimentEditor(BaseTraitsEditor):
                                    rearranged='rearranged',
                                    pasted='pasted',
                                    copy_function='copy_function',
+                                   refresh='refresh_table_needed',
+
 #                                             copy_cache='copy_cache',
 #                                             update='update_needed',
 #                                            drag_move=True,
-                                   auto_update=True,
+#                                    auto_update=True,
                                    multi_select=True,
                                    scroll_to_bottom=False)
                         )
@@ -124,18 +129,25 @@ class ExperimentEditor(BaseTraitsEditor):
     def save(self, path, queues=None):
         if queues is None:
             queues = [self.queue]
+
         if self._validate_experiment_queues(queues):
             path = self._dump_experiment_queues(path, queues)
-
-        self.path = path
-        self.dirty = False
+            self.path = path
+            self.dirty = False
 
     def _validate_experiment_queues(self, eqs):
-        for exp in eqs:
-            if exp.test_runs():
-                return
-
-        return True
+        hec = HumanErrorChecker()
+        for qi in eqs:
+            qi.executable = True
+            err = hec.check(qi.automated_runs, test_all=True)
+            if err:
+                qi.executable = False
+                hec.report_errors(err)
+                break
+            if qi.test_runs():
+                break
+        else:
+            return True
 
     def _dump_experiment_queues(self, p, queues):
 
