@@ -80,16 +80,16 @@ class AutoFigureTask(FigureTask):
             at = last_run.analysis_type
             ln = last_run.labnumber
             editor = self._get_editor(AutoSeriesEditor)
-            if editor: 
+            if editor:
                 afc = editor.auto_figure_control
-                days,hours=afc.days,afc.hours
+                days, hours = afc.days, afc.hours
             else:
-                days,hours=1,0
-                
-            
-                
-                
-            self.plot_series(ln,at, ms, ed,
+                days, hours = 1, 0
+
+
+
+
+            self.plot_series(ln, at, ms, ed,
                              days=days, hours=hours)
 
     def _unique_analyses(self, ans):
@@ -104,7 +104,7 @@ class AutoFigureTask(FigureTask):
         '''
             switch to series editor
         '''
-        
+
         if ln is None:
             ln = self._cached['ln']
         if at is None:
@@ -121,7 +121,7 @@ class AutoFigureTask(FigureTask):
 
         klass = AutoSeriesEditor
         editor = self._get_editor(klass)
-        if editor and editor.labnumber ==ln:
+        if editor and editor.labnumber == ln:
             unks = self.manager.load_series(at, ms, ed,
                                             **kw)
             nunks = self._unique_analyses(unks)
@@ -131,10 +131,14 @@ class AutoFigureTask(FigureTask):
         else:
             unks = self.manager.load_series(at, ms, ed,
                                             **kw)
-            self.manager.load_analyses(unks)
-            self.new_series(unks, klass, name=ln)
-            self.active_editor.labnumber=ln
-            self.active_editor.show_series('Ar40')
+            if unks:
+                self.manager.load_analyses(unks)
+                self.new_series(unks, klass, name=ln)
+
+                self.active_editor.tool.add_peak_center_fit()
+
+                self.active_editor.labnumber = ln
+                self.active_editor.show_series('Ar40')
 
     def _get_editor(self, klass):
         return next((editor for editor in self.editor_area.editors

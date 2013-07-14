@@ -114,8 +114,33 @@ class FitSelector(HasTraits):
 
     def load_fits(self, keys, fits):
         self.fits = [
-                     self.fit_klass(name=ki, fit=fi) for ki, fi in zip(keys, fits)
+                     self.fit_klass(name=ki, fit=fi)
+                     for ki, fi in zip(keys, fits)
                     ]
+
+
+    def load_baseline_fits(self, keys):
+        fits = self.fits
+        if not fits:
+            fits = []
+
+        fs = [
+              self.fit_klass(name='{}bs'.format(ki), fit='average_sem')
+                    for ki in keys
+             ]
+
+        fits.extend(fs)
+        self.fits = fits
+    def add_peak_center_fit(self):
+        fits = self.fits
+        if not fits:
+            fits = []
+
+        fs = self.fit_klass(name='PC', fit='average_sem')
+
+        fits.append(fs)
+        self.fits = fits
+
 
 class InterpolationFit(Fit):
     def _get_fit_types(self):

@@ -22,10 +22,11 @@ from numpy import array
 from src.processing.plotters.plotter import Plotter
 from src.graph.regression_graph import RegressionGraph, StackedRegressionGraph
 import time
+from uncertainties import ufloat
 # from src.graph.regression_graph import AnnotatedRegressionGraph
 
 class Series(Plotter):
-    _reverse_sorted_analyses=True
+    _reverse_sorted_analyses = True
     def build(self, analyses,
               options=None,
               plotter_options=None):
@@ -69,7 +70,7 @@ class Series(Plotter):
         # normalize x to last analysis
         x = array(x)
         ox = x[:]
-        
+
         x -= time.time()
         x = x[::-1]
 
@@ -118,20 +119,28 @@ class Series(Plotter):
 
         if '/' in k:
             n, d = k.split('/')
-#            nv = get_value(analysis, n)
-#            dv = get_value(analysis, d)
-#            nv = getattr(analysis, n)
-#            dv = getattr(analysis, d)
             nv = analysis.get_signal_value(n)
             dv = analysis.get_signal_value(d)
             v = (nv / dv)
+        elif k.endswith('bs'):
+            v = analysis.get_baseline(k[:-2])
+        elif k == 'PC':
+            v = analysis.peakcenter
+            if not v:
+                v = 0
+            else:
+                _x, _y, v, _, _ = v
 
+            v = ufloat(v, 0)
         else:
             v = analysis.get_signal_value(k)
-#            v = getattr(analysis, k)
-#            v = get_value(analysis, k)
 
-        return v.nominal_value, v.std_dev
+        if v:
+            v, e = v.nominal_value, v.std_dev
+        else:
+            v, e = 0, 0
+
+        return v, e
 #============= EOF =============================================
 
 ##===============================================================================

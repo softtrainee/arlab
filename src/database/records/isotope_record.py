@@ -283,6 +283,11 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         else:
             background.trait_set(value=v, error=e)
 
+    def get_baseline(self, k):
+        if self.isotopes.has_key(k):
+            bs = self.isotopes[k].baseline
+            if bs:
+                return bs.uvalue
 #===============================================================================
 # viewable
 #===============================================================================
