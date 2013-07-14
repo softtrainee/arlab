@@ -135,19 +135,14 @@ class AutoFigureTask(FigureTask):
         if editor:
             unks = self.manager.load_sample_analyses(sample, aliquot)
             nunks = self._unique_analyses(unks)
-#             items = self.unknowns_pane.items
-#             uuids = [ai.uuid for ai in items]
-#             nunks = [ui for ui in unks if ui.uuid not in uuids]
             if nunks:
                 self.unknowns_pane.items.extend(nunks)
-#             self.unknowns_pane.items = unks
 
         else:
             unks = self.manager.load_sample_analyses(sample, aliquot)
             self.manager.load_analyses(unks)
             self.new_spectrum(unks, klass)
         self.group_by_aliquot()
-
 
     def plot_sample_ideogram(self, sample):
         self.debug('auto plot sample ideogram {}'.format(sample))
@@ -157,9 +152,6 @@ class AutoFigureTask(FigureTask):
 
             unks = self.manager.load_sample_analyses(sample)
             nunks = self._unique_analyses(unks)
-#             items = self.unknowns_pane.items
-#             uuids = [ai.uuid for ai in items]
-#             nunks = [ui for ui in unks if ui.uuid not in uuids]
             if nunks:
                 self.unknowns_pane.items.extend(nunks)
 
@@ -174,11 +166,6 @@ class AutoFigureTask(FigureTask):
         if self.active_editor.auto_figure_control.group_by_aliquot:
             self.group_by_aliquot()
 
-#     def prepare_destroy(self):
-#         if self.active_editor:
-#             pom = self.active_editor.plotter_options_manager
-#             pom.close()
-
     def create_dock_panes(self):
         panes = super(AutoFigureTask, self).create_dock_panes()
 
@@ -188,49 +175,11 @@ class AutoFigureTask(FigureTask):
 #         return panes + [self.plotter_options_pane,
 #                         ]
 
-#     def new_ideogram(self, ans=None, name='Ideo'):
-#         from src.processing.tasks.figures.figure_editor import IdeogramEditor
-#         func = self.manager.new_ideogram
-#         klass = IdeogramEditor
-#         self._new_figure(ans, name, func, klass)
-#
-#     def new_spectrum(self, ans=None, name='Spec'):
-#         from src.processing.tasks.figures.figure_editor import SpectrumEditor
-#         func = self.manager.new_spectrum
-#         klass = SpectrumEditor
-#         self._new_figure(ans, name, func, klass)
-#
-#     def new_inverse_isochron(self, ans=None, name='Inv. Iso.'):
-#         func = self.manager.new_inverse_isochron
-#         from src.processing.tasks.figures.figure_editor import InverseIsochronEditor
-#         klass = InverseIsochronEditor
-#         self._new_figure(ans, name, func, klass)
-#
-#     def _new_figure(self, ans, name, func, klass):
-#         comp, plotter = None, None
-#         if ans:
-#             self.unknowns_pane.items = ans
-#             comp, plotter = func(ans)
-#
-#         editor = klass(
-#                        component=comp,
-#                        plotter=plotter,
-#                        name=name,
-#                        processor=self.manager,
-#                        make_func=func
-#                        )
-#         self.plot_editor_pane.component = comp
-#         self._open_editor(editor)
-
     def _active_editor_changed(self):
         if self.active_editor:
             self.auto_figure_control_pane.auto_control = self.active_editor.auto_figure_control
 
         super(AutoFigureTask, self)._active_editor_changed()
-#         if self.active_editor:
-#             self.plotter_options_pane.pom = self.active_editor.plotter_options_manager
-#
-#         super(FigureTask, self)._active_editor_changed()
 
     @on_trait_change('''active_editor:auto_figure_control:[group_by_aliquot,
 group_by_labnumber]''')
@@ -248,9 +197,6 @@ group_by_labnumber]''')
         self.unknowns_pane.items = []
         self.plot_series(**{name:new})
 
-#         self.active_editor.rebuild(refresh_data=False)
-
-
 #     @on_trait_change('active_editor:plotter:recall_event')
 #     def _recall(self, new):
 #         print new
@@ -261,7 +207,6 @@ group_by_labnumber]''')
             return
 
         self.active_editor.rebuild(refresh_data=False)
-#         self.active_editor.dirty = True
 
 #        po = self.plotter_options_pane.pom.plotter_options
 #        comp = self.active_editor.make_func(ans=ans, plotter_options=po)

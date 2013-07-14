@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Str, Password, Enum, List, Button, Any, Int, \
-    on_trait_change
+    on_trait_change, Bool
 from traitsui.api import View, Item, Group, VGroup, HGroup, ListStrEditor
 from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
 from traitsui.list_str_adapter import ListStrAdapter
@@ -62,6 +62,8 @@ class ExperimentPreferences(BasePreferencesHelper):
     selected = Any
 #    selected_live = Any
     selected_index = Int
+
+    use_auto_figure = Bool
 
     @on_trait_change('db+')
     def db_attribute_changed(self, obj, name, old, new):
@@ -171,12 +173,6 @@ class ExperimentPreferencesPane(PreferencesPane):
                        HGroup(fav_grp, db_auth_grp),
                        show_border=True, label='Database')
 
-#        repo_grp = Group(
-#                         Item('repo_kind', show_label=False),
-#                         ftp_auth_grp,
-#                         show_border=True, label='Repo'
-#                         )
-# #
         massspec_grp = Group(
                              Group(
                                  Item('massspec_dbname', label='Database'),
@@ -188,11 +184,15 @@ class ExperimentPreferencesPane(PreferencesPane):
                                  ),
                              label='MassSpec'
                              )
+
+        auto_figure_grp = Group(Item('use_auto_figure'),
+                                label='Auto Figure'
+                                )
         return View(
 #                        user_grp,
                         db_grp,
-#                        repo_grp,
                         massspec_grp,
+                        auto_figure_grp,
                     )
 
 #============= EOF =============================================

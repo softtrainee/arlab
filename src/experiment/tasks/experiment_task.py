@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Any
+from traits.api import HasTraits, on_trait_change, Any, Bool
 # from traitsui.api import View, Item
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 #============= standard library imports ========================
@@ -33,6 +33,7 @@ import os
 from pyface.constant import CANCEL, YES, NO
 from src.helpers.filetools import add_extension
 from src.ui.gui import invoke_in_main_thread
+from apptools.preferences.preference_binding import bind_preference
 
 
 class ExperimentEditorTask(EditorTask):
@@ -41,8 +42,7 @@ class ExperimentEditorTask(EditorTask):
     name = 'Experiment'
 
     auto_figure_window = None
-
-
+    use_auto_figure = Bool
     def _default_directory_default(self):
         return paths.experiment_dir
 
@@ -86,6 +86,8 @@ class ExperimentEditorTask(EditorTask):
 
     def activated(self):
 
+        bind_preference(self, 'use_auto_figure',
+                        'pychron.experiment.use_auto_figure')
         elm = self._get_el_manager()
         if elm:
             elm.activate()
@@ -156,9 +158,9 @@ class ExperimentEditorTask(EditorTask):
 #===============================================================================
     def open(self):
 
-        self._test_auto_figure()
+#         self._test_auto_figure()
 
-        return
+#         return
 
 #        import os
         path = os.path.join(paths.experiment_dir, 'demo.txt')
@@ -254,17 +256,19 @@ class ExperimentEditorTask(EditorTask):
             self.manager.experiment_queue = self.active_editor.queue
 
     def _open_auto_figure(self):
-        app = self.window.application
-        from pyface.tasks.task_window_layout import TaskWindowLayout
-        win = app.create_window(TaskWindowLayout('pychron.processing.auto_figure'))
-        win.open()
-        self.window.activate()
-        self.auto_figure_window = win
+        if self.use_auto_figure:
+            app = self.window.application
+            from pyface.tasks.task_window_layout import TaskWindowLayout
+            win = app.create_window(TaskWindowLayout('pychron.processing.auto_figure'))
+            win.open()
+            self.window.activate()
+            self.auto_figure_window = win
 
     def _test_auto_figure(self):
+        self.use_auto_figure = True
+
         self._open_auto_figure()
         task = self.auto_figure_window.active_task
-
 
         task.plot_series('blank_unknown', 'jan', 'Fusions CO2', days=10)
         task.plot_series('blank_unknown', 'jan', 'Fusions Diode', days=100)
@@ -327,7 +331,6 @@ class ExperimentEditorTask(EditorTask):
         if editor is None:
             if self.editor_area.editors:
                 editor = self.editor_area.editors[0]
-        self.debug('active editor {}'.format(editor))
         if editor:
             p = editor.path
             if editor.dirty:
@@ -339,7 +342,6 @@ class ExperimentEditorTask(EditorTask):
                     return
 
             p = add_extension(p, '.txt')
-            self.debug('active editor path {}, {}'.format(p, os.path.isfile(p)))
 
             if os.path.isfile(p):
                 group = editor.group
@@ -350,9 +352,10 @@ class ExperimentEditorTask(EditorTask):
                         for ei in self.editor_area.editors
                             if ei.group == group and ei.merge_id >= min_idx]
 
-                self._open_auto_figure()
-
-                self.manager.execute_queues(qs, p, text, hash_val)
+                # launch execution thread
+                # if successful open an auto figure task
+                if self.manager.execute_queues(qs, p, text, hash_val):
+                    self._open_auto_figure()
 
     @on_trait_change('manager:save_event')
     def _save_queue(self):
