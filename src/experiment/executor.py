@@ -86,6 +86,7 @@ class ExperimentExecutor(Experimentable):
     cancel_run_button = Button('Cancel Run')
     refresh_button = Event
     non_clear_update_needed = Event
+    run_completed = Event
 
     can_cancel = Property(depends_on='_alive, delaying_between_runs')
     refresh_label = Property(depends_on='_was_executed')
@@ -829,12 +830,15 @@ class ExperimentExecutor(Experimentable):
             if not step():
                 break
         else:
-            print arun.state
+
             if arun.state not in ('truncated', 'canceled', 'failed'):
                 arun.state = 'success'
 
         self._increment_nruns_finished()
 #        self._update_executed_runs(arun)
+
+        if arun.state in ('success', 'truncated'):
+            self.run_completed = arun
 
         arun.finish()
 

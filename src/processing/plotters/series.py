@@ -20,36 +20,56 @@ from chaco.array_data_source import ArrayDataSource
 from numpy import array
 #============= local library imports  ==========================
 from src.processing.plotters.plotter import Plotter
-from src.graph.regression_graph import AnnotatedRegressionGraph
+from src.graph.regression_graph import RegressionGraph, StackedRegressionGraph
+import time
+# from src.graph.regression_graph import AnnotatedRegressionGraph
 
 class Series(Plotter):
-    def build(self, analyses, options):
-        an = AnnotatedRegressionGraph(
-                                       graph_dict=dict(container_dict=dict(padding=5),
-                                                       use_point_inspector=False
-#                                                               use_inspector_tool=False
-                                                       ),
-                                       window_title=options.name,
-                                       )
+    def build(self, analyses,
+              options=None,
+              plotter_options=None):
+        g = StackedRegressionGraph(
+                            container_dict=dict(padding=5,
+                                                stack_order='top_to_bottom'
+                                                ),
+                            use_point_inspector=False,
+                            )
 
-        g = an.graph
+        if options:
+            pid = 0
+            for fit in options['fits']:
+                if fit.show:
+                    self._build(g, analyses, fit.name, fit.fit, pid)
+                    pid += 1
+
+
+#         g.set_x_limits(min=)
+        g.refresh()
+
+        return g.plotcontainer
+
+    def _build(self, g, analyses, key, fit, plotid):
         p = g.new_plot(padding=[50, 5, 5, 35],
-                       ytitle=options.name,
-                       xtitle='Time (hrs)')
+                                ytitle=key,
+                                xtitle='Time (hrs)')
         p.value_range.tight_bounds = False
 
-        key = options.key
-
+        nsigma = 1
         # sort analyses by timestamp first
-        analyses = sorted(analyses, key=lambda x: x.timestamp)
-        x, ys = zip(*[(ai.timestamp, self.get_value(ai, key)) for ai in analyses])
+        analyses = sorted(analyses, key=lambda x: x.timestamp, reverse=False)
+
+        self.analyses = analyses
+
+        x, ys = zip(*[(ai.timestamp, self.get_value(ai, key))
+                      for ai in analyses])
         y, es = zip(*ys)
 
 
-        # normalize x to first analysis
+        # normalize x to last analysis
         x = array(x)
         ox = x[:]
-        x -= x[0]
+        x -= time.time()
+        x = x[::-1]
 
         # scale timestamp to hours
         x *= 1 / (60.*60)
@@ -58,30 +78,28 @@ class Series(Plotter):
             multiple by a constant. normally 1 but can use 1/295.5 if plotting ICFactor
         '''
         y = array(y)
-        y *= (1 / options.scalar)
+        y = y[::-1]
+#         y *= (1 / options.scalar)
 
         plot, scatter, _l = g.new_series(x, y,
-                                         display_index=ArrayDataSource(data=ox),
-                     type='scatter', marker_size=1.5,
-                     fit=options.fit,
-                     normalize=True,
-                     add_point_inspector=False
-                     )
+                                        display_index=ArrayDataSource(data=ox),
+                                        type='scatter',
+                                        fit=fit,
+                                        marker_size=1.5,
+                                        plotid=plotid
+                                        )
 
         self._add_scatter_inspector(g.plotcontainer,
                                     plot,
                                     scatter,
                                     0,
                                     )
-        self._add_error_bars(scatter, es, 'y', options.nsigma)
+        self._add_error_bars(scatter, es, 'y', nsigma)
 
         sel = [i for i, ai in enumerate(analyses) if ai.status != 0]
         scatter.index.metadata['selections'] = sel
 
         g.set_x_limits(min(x), max(x), pad='0.1')
-        g.refresh()
-
-        return an
 
     def get_value(self, analysis, k):
 #        def get_value(ai, ki):

@@ -442,7 +442,7 @@ class Plotter(Viewable):
         return ', '.join(sorted(list(set(['{}-{}'.format(a.labnumber, a.aliquot) for a in analyses]))))
 
     def update_graph_metadata(self, scatter, group_id, obj, name, old, new):
-        self.debug('update graph metadata')
+#         self.debug('update graph metadata')
 #         return
 
         sorted_ans = [a for a in self.sorted_analyses if a.group_id == group_id]

@@ -100,25 +100,27 @@ class FigureTask(AnalysisEditTask):
             items = sorted(items, key=key)
             for i, (_, analyses) in enumerate(groupby(items, key=key)):
                 idxs = [items.index(ai) for ai in analyses]
-                self.active_editor.set_group(idxs, i)
-            self.unknowns_pane.update_needed = True
+                self.active_editor.set_group(idxs, i, refresh=False)
+
+#             self.unknowns_pane.update_needed = True
+            self.active_editor.rebuild(refresh_data=False)
 
     def _get_unique_group_id(self):
-
         gids = {i.group_id for i in self.unknowns_pane.items}
         return max(gids) + 1
 
-
-    def new_ideogram(self, ans=None, name='Ideo'):
-        from src.processing.tasks.figures.figure_editor import IdeogramEditor
+    def new_ideogram(self, ans=None, klass=None, name='Ideo'):
         func = self.manager.new_ideogram
-        klass = IdeogramEditor
+        if klass is None:
+            from src.processing.tasks.figures.figure_editor import IdeogramEditor as klass
+
         self._new_figure(ans, name, func, klass)
 
-    def new_spectrum(self, ans=None, name='Spec'):
-        from src.processing.tasks.figures.figure_editor import SpectrumEditor
+    def new_spectrum(self, ans=None, klass=None, name='Spec'):
+        if klass is None:
+            from src.processing.tasks.figures.figure_editor import SpectrumEditor as klass
+
         func = self.manager.new_spectrum
-        klass = SpectrumEditor
         self._new_figure(ans, name, func, klass)
 
     def new_inverse_isochron(self, ans=None, name='Inv. Iso.'):
@@ -129,22 +131,53 @@ class FigureTask(AnalysisEditTask):
 
 #     def _save_file(self, path):
 #         self.active_editor.save_file(path)
+    def new_series(self, ans, klass=None, name='Series'):
+
+#         from src.processing.tasks.series.series_editor import SeriesEditor
+#         editor = SeriesEditor(name='Series',
+#                               processor=self.manager,
+#                               unknowns=ans
+#                               )
+#         editor.unknowns = self.unknowns_pane.items
+#         self._open_editor(editor)
+#         self.series_editor_count += 1
+        if klass is None:
+            from src.processing.tasks.figures.figure_editor import SeriesEditor as klass
+        func = self.manager.new_series
+
+        self._new_figure(ans, name, func, klass)
+
+        editor = self.active_editor
+        refiso = ans[0]
+#         editor._unknowns = ans
+        editor.trait_set(_unknowns=ans,
+                         unknowns=ans,
+                         trait_change_notify=False)
+#         editor.unknowns = ans
+        editor.tool.load_fits(refiso.isotope_keys,
+                            refiso.isotope_fits
+                            )
 
     def _new_figure(self, ans, name, func, klass):
         comp, plotter = None, None
         if ans:
-            self.unknowns_pane.items = ans
             comp, plotter = func(ans)
 
-        editor = klass(
-                       component=comp,
-                       plotter=plotter,
-                       name=name,
-                       processor=self.manager,
-                       make_func=func
-                       )
-        self.plot_editor_pane.component = comp
-        self._open_editor(editor)
+            editor = klass(
+                           component=comp,
+                           plotter=plotter,
+                           name=name,
+                           processor=self.manager,
+                           make_func=func
+                           )
+
+            self.plot_editor_pane.component = comp
+            self._open_editor(editor)
+
+            editor._unknowns = ans
+            editor._suppress_rebuild = True
+            self.unknowns_pane.items = ans
+            editor._suppress_rebuild = False
 
     def _active_editor_changed(self):
         if self.active_editor:

@@ -131,9 +131,11 @@ class AnalysisEditTask(EditorTask):
 
     @on_trait_change('unknowns_pane:[items, update_needed]')
     def _update_unknowns_runs(self, obj, name, old, new):
-        if not obj._no_update:
-            if self.active_editor:
-                self.active_editor.unknowns = self.unknowns_pane.items
+#         print self.active_editor, obj, name, old, new
+#         if not obj._no_update:
+        if self.active_editor:
+
+            self.active_editor.unknowns = self.unknowns_pane.items
 
     @on_trait_change('''unknowns_pane:dclicked, 
 references_pane:dclicked,

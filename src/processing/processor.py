@@ -13,38 +13,81 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+
+
+#============= enthought library imports =======================
+#============= standard library imports ========================
+from sqlalchemy.orm.exc import NoResultFound
+from sqlalchemy.sql.expression import and_, not_
+from datetime import datetime, timedelta
+#============= local library imports  ==========================
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.processing.plotter_options_manager import IdeogramOptionsManager, \
     SpectrumOptionsManager, InverseIsochronOptionsManager
-import datetime
 from src.database.orms.isotope_orm import meas_AnalysisTable, \
-    meas_MeasurementTable, gen_AnalysisTypeTable
-from sqlalchemy.sql.expression import and_
-from sqlalchemy.orm.exc import NoResultFound
+    meas_MeasurementTable, gen_AnalysisTypeTable, gen_LabTable, gen_SampleTable, \
+    gen_MassSpectrometerTable, gen_ExtractionDeviceTable, meas_ExtractionTable
 from src.processing.analysis import Analysis
 from src.processing.tasks.analysis_edit.fits import Fit
 from src.processing.plotters.spectrum import Spectrum
 from src.processing.plotters.ideogram import Ideogram
 from src.processing.plotters.inverse_isochron import InverseIsochron
+from src.processing.plotters.series import Series
 
-#============= enthought library imports =======================
-# from traits.api import HasTraits, List, Instance, on_trait_change, Any, DelegatesTo
-# from traitsui.api import View, Item
-# from src.experiment.isotope_database_manager import IsotopeDatabaseManager
-# from src.graph.graph import Graph
-# from src.processing.plotter_options_manager import IdeogramOptionsManager
-# from src.database.records.isotope_record import IsotopeRecord
-# from src.processing.analysis import Analysis, Marker
-# from src.processing.search.selector_manager import SelectorManager
-# from src.processing.search.search_manager import SearchManager
-# from src.ui.progress_dialog import myProgressDialog
-# from src.ui.gui import invoke_in_main_thread
-# import threading
-# from pyface.progress_dialog import ProgressDialog
-# import time
-#============= standard library imports ========================
-#============= local library imports  ==========================
+
 class Processor(IsotopeDatabaseManager):
+    def load_series(self, analysis_type, ms, ed, weeks=0, days=0, hours=0):
+        db = self.db
+        sess = db.get_session()
+        q = sess.query(meas_AnalysisTable)
+        q = q.join(meas_MeasurementTable)
+        q = q.join(meas_ExtractionTable)
+        q = q.join(gen_AnalysisTypeTable)
+        q = q.join(gen_MassSpectrometerTable)
+        q = q.join(gen_ExtractionDeviceTable)
+#         q = q.join(gen_LabTable)
+
+        d = datetime.today()
+        today = datetime.today()  # .date()#.datetime()
+        d = d - timedelta(hours=hours, weeks=weeks, days=days)
+        attr = meas_AnalysisTable.analysis_timestamp
+        q = q.filter(and_(attr <= today, attr >= d))
+        q = q.filter(gen_AnalysisTypeTable.name == analysis_type)
+        q = q.filter(gen_MassSpectrometerTable.name == ms)
+
+        if ed:
+#             ed = ed.capitalize()
+#             print ed
+            q = q.filter(gen_ExtractionDeviceTable.name == ed)
+
+        return self._make_analyses_from_query(q)
+
+
+    def load_sample_analyses(self, sample, aliquot=None):
+        db = self.db
+        sess = db.get_session()
+        q = sess.query(meas_AnalysisTable)
+        q = q.join(gen_LabTable)
+        q = q.join(gen_SampleTable)
+
+        q = q.filter(gen_SampleTable.name == sample)
+        if aliquot is not None:
+            q = q.filter(meas_AnalysisTable.aliquot == aliquot)
+
+        q = q.limit(10)
+        return self._make_analyses_from_query(q)
+
+    def _make_analyses_from_query(self, q):
+        ans = None
+        try:
+            ans = q.all()
+        except Exception, e:
+            import traceback
+            traceback.print_exc()
+
+        if ans:
+            ans = self.make_analyses(ans)
+            return ans
 
     def auto_blank_fit(self, irradiation, level, kind):
         if kind == 'preceeding':
@@ -269,6 +312,13 @@ class Processor(IsotopeDatabaseManager):
 #===============================================================================
 # figures
 #===============================================================================
+    def new_series(self, ans, options=None, plotter_options=None):
+        if ans:
+            p = Series()
+            gseries = p.build(ans, options=options,
+                              plotter_options=plotter_options)
+            return gseries, p
+
     def new_ideogram(self, ans, plotter_options=None):
         '''
             return a plotcontainer

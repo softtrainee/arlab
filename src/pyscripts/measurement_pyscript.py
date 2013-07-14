@@ -45,7 +45,7 @@ class MeasurementPyScript(ValvePyScript):
     _regress_id = 0
 
     _detectors = None
-    _use_abbreviated_counts = False
+    abbreviated_count_ratio = None
 
     def reset(self, arun):
         self.automated_run = arun
@@ -54,7 +54,7 @@ class MeasurementPyScript(ValvePyScript):
         self._time_zero = None
         self._regress_id = 0
         self._detectors = None
-        self._use_abbreviated_counts = False
+        self.abbreviated_count_ratio = None
         self.ncounts = 0
 
     def get_command_register(self):
@@ -63,7 +63,7 @@ class MeasurementPyScript(ValvePyScript):
 
     def truncate(self, style=None):
         if style == 'quick':
-            self._use_abbreviated_counts = True
+            self.abbreviated_count_ratio = 0.25
         super(MeasurementPyScript, self).truncate(style=style)
 
 #    def get_script_commands(self):
@@ -106,6 +106,9 @@ class MeasurementPyScript(ValvePyScript):
             return
 
         self.ncounts = ncounts
+        if self.abbreviated_count_ratio:
+            ncounts *= self.abbreviated_count_ratio
+
         if not self._automated_run_call('py_data_collection', ncounts,
                                         self._time_zero,
                                         self._time_zero_offset,
@@ -130,8 +133,8 @@ class MeasurementPyScript(ValvePyScript):
             self._estimated_duration += ns * estimated_duration_ff
             return
 
-        if self._use_abbreviated_counts:
-            ncounts *= 0.25
+        if self.abbreviated_count_ratio:
+            ncounts *= self.abbreviated_count_ratio
 
         self.ncounts = ncounts
         if not self._automated_run_call('py_baselines', ncounts,
@@ -299,10 +302,13 @@ class MeasurementPyScript(ValvePyScript):
                                  )
     @verbose_skip
     @command_register
-    def add_truncation(self, attr, comp, value, start_count=0, frequency=10):
+    def add_truncation(self, attr, comp, value, start_count=0, frequency=10,
+                       abbreviated_count_ratio=0
+                       ):
         self._automated_run_call('py_add_truncation', attr, comp, value,
                                  start_count=start_count,
-                                 frequency=frequency
+                                 frequency=frequency,
+                                 abbreviated_count_ratio=abbreviated_count_ratio
                                  )
     @verbose_skip
     @command_register

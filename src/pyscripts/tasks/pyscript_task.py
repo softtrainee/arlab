@@ -151,7 +151,6 @@ class PyScriptTask(EditorTask):
         else:
             klass = ExtractionEditor
 
-        print self.auto_detab, 'auto_dettablaa'
         editor = klass(path=path,
                        auto_detab=self.auto_detab,
                        )

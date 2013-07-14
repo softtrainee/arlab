@@ -67,7 +67,11 @@ class PlotEditor(HasTraits):
         if self.xmin < v:
             p.index_range.low_setting = self.xmin
             self.xauto = False
-        self.plot.index.metadata_changed = True
+
+        try:
+            self.plot.index.metadata_changed = True
+        except AttributeError:
+            pass
 
     def _xmax_changed(self):
         p = self.plot
@@ -76,7 +80,10 @@ class PlotEditor(HasTraits):
             p.index_range.high_setting = self.xmax
             self.xauto = False
 
-        p.default_index.metadata_changed = True
+        try:
+            p.default_index.metadata_changed = True
+        except AttributeError:
+            pass
 
     def _ymin_changed(self):
         p = self.plot

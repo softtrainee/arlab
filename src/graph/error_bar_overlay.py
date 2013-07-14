@@ -36,6 +36,9 @@ class ErrorBarOverlay(AbstractOverlay):
 
     def overlay(self, component, gc, view_bounds, mode='normal'):
         with gc:
+            gc.clip_to_rect(component.x, component.y,
+                            component.width, component.height)
+
             comp = self.component
             x = comp.index.get_data()
             y = comp.value.get_data()
@@ -86,5 +89,7 @@ class ErrorBarOverlay(AbstractOverlay):
             gc.set_fill_color(color)
             gc.line_set(start, end)
             gc.draw_path()
+
+
 
 #============= EOF =====================================

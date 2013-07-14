@@ -32,6 +32,7 @@ import hashlib
 import os
 from pyface.constant import CANCEL, YES, NO
 from src.helpers.filetools import add_extension
+from src.ui.gui import invoke_in_main_thread
 
 
 class ExperimentEditorTask(EditorTask):
@@ -39,8 +40,8 @@ class ExperimentEditorTask(EditorTask):
     group_count = 0
     name = 'Experiment'
 
-    def _menu_bar_factory(self, menus=None):
-        return super(ExperimentEditorTask, self)._menu_bar_factory(menus=menus)
+    auto_figure_window = None
+
 
     def _default_directory_default(self):
         return paths.experiment_dir
@@ -154,9 +155,15 @@ class ExperimentEditorTask(EditorTask):
 # generic actions
 #===============================================================================
     def open(self):
+
+        self._test_auto_figure()
+
+        return
+
 #        import os
-#        path = os.path.join(paths.experiment_dir, 'aaa.txt')
-        path = self.open_file_dialog()
+        path = os.path.join(paths.experiment_dir, 'demo.txt')
+#         path = self.open_file_dialog()
+
         if path:
 #            self.window.reset_layout()
             manager = self.manager
@@ -246,6 +253,26 @@ class ExperimentEditorTask(EditorTask):
         if self.active_editor:
             self.manager.experiment_queue = self.active_editor.queue
 
+    def _open_auto_figure(self):
+        app = self.window.application
+        from pyface.tasks.task_window_layout import TaskWindowLayout
+        win = app.create_window(TaskWindowLayout('pychron.processing.auto_figure'))
+        win.open()
+        self.window.activate()
+        self.auto_figure_window = win
+
+    def _test_auto_figure(self):
+        self._open_auto_figure()
+        task = self.auto_figure_window.active_task
+
+
+        task.plot_series('blank_unknown', 'jan', 'Fusions CO2', days=10)
+        task.plot_series('blank_unknown', 'jan', 'Fusions Diode', days=100)
+#         task.plot_sample_ideogram('NM-779')
+
+#===============================================================================
+# handlers
+#===============================================================================
     @on_trait_change('active_editor:queue:update_needed')
     def _update_runs(self, new):
         self.manager.update_info()
@@ -288,9 +315,14 @@ class ExperimentEditorTask(EditorTask):
                     pass
                 break
 
+    @on_trait_change('manager:executor:run_completed')
+    def _update_auto_figure(self, new):
+        if self.auto_figure_window:
+            task = self.auto_figure_window.active_task
+            invoke_in_main_thread(task.refresh_plots, **new)
+
     @on_trait_change('manager:execute_event')
     def _execute(self):
-
         editor = self.active_editor
         if editor is None:
             if self.editor_area.editors:
@@ -312,12 +344,13 @@ class ExperimentEditorTask(EditorTask):
             if os.path.isfile(p):
                 group = editor.group
                 min_idx = editor.merge_id
-        #        print p
                 text = open(p, 'r').read()
                 hash_val = hashlib.sha1(text).hexdigest()
                 qs = [ei.queue
                         for ei in self.editor_area.editors
                             if ei.group == group and ei.merge_id >= min_idx]
+
+                self._open_auto_figure()
 
                 self.manager.execute_queues(qs, p, text, hash_val)
 
