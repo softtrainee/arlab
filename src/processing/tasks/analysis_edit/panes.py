@@ -72,7 +72,14 @@ class HistoryTablePane(TablePane):
     def load_previous_selections(self):
         d = self._open_shelve()
         keys = sorted(d.keys(), reverse=True)
-        self.previous_selections = [d[ki] for ki in keys]
+        
+        def get_value(k):
+            try:
+                return d[k]
+            except Exception:
+                pass
+            
+        self.previous_selections = filter(None, [get_value(ki) for ki in keys])
 
     def dump_selection(self):
         records = self.items

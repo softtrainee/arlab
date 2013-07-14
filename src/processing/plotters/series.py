@@ -25,6 +25,7 @@ import time
 # from src.graph.regression_graph import AnnotatedRegressionGraph
 
 class Series(Plotter):
+    _reverse_sorted_analyses=True
     def build(self, analyses,
               options=None,
               plotter_options=None):
@@ -68,6 +69,7 @@ class Series(Plotter):
         # normalize x to last analysis
         x = array(x)
         ox = x[:]
+        
         x -= time.time()
         x = x[::-1]
 

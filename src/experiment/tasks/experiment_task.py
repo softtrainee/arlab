@@ -158,13 +158,13 @@ class ExperimentEditorTask(EditorTask):
 #===============================================================================
     def open(self):
 
-#         self._test_auto_figure()
+#        self._test_auto_figure()
 
-#         return
+#        return
 
 #        import os
-        path = os.path.join(paths.experiment_dir, 'demo.txt')
-#         path = self.open_file_dialog()
+#        path = os.path.join(paths.experiment_dir, 'demo.txt')
+        path = self.open_file_dialog()
 
         if path:
 #            self.window.reset_layout()
@@ -270,8 +270,8 @@ class ExperimentEditorTask(EditorTask):
         self._open_auto_figure()
         task = self.auto_figure_window.active_task
 
-        task.plot_series('blank_unknown', 'jan', 'Fusions CO2', days=10)
-        task.plot_series('blank_unknown', 'jan', 'Fusions Diode', days=100)
+        task.plot_series('blank_unknown', 'jan', 'Fusions CO2', days=1)
+#        task.plot_series('blank_unknown', 'jan', 'Fusions Diode', days=100)
 #         task.plot_sample_ideogram('NM-779')
 
 #===============================================================================
@@ -323,7 +323,7 @@ class ExperimentEditorTask(EditorTask):
     def _update_auto_figure(self, new):
         if self.auto_figure_window:
             task = self.auto_figure_window.active_task
-            invoke_in_main_thread(task.refresh_plots, **new)
+            invoke_in_main_thread(task.refresh_plots, new)
 
     @on_trait_change('manager:execute_event')
     def _execute(self):

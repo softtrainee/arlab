@@ -78,11 +78,19 @@ class AutoFigureTask(FigureTask):
             ms = last_run.mass_spectrometer
             ed = last_run.extract_device
             at = last_run.analysis_type
-
+            ln = last_run.labnumber
             editor = self._get_editor(AutoSeriesEditor)
-            afc = editor.auto_figure_control
-            self.plot_series(at, ms, ed,
-                             days=afc.days, hours=afc.hours)
+            if editor: 
+                afc = editor.auto_figure_control
+                days,hours=afc.days,afc.hours
+            else:
+                days,hours=1,0
+                
+            
+                
+                
+            self.plot_series(ln,at, ms, ed,
+                             days=days, hours=hours)
 
     def _unique_analyses(self, ans):
         if ans:
@@ -92,10 +100,13 @@ class AutoFigureTask(FigureTask):
                 ans = [ui for ui in ans if ui.uuid not in uuids]
         return ans
 
-    def plot_series(self, at=None, ms=None, ed=None, **kw):
+    def plot_series(self, ln=None, at=None, ms=None, ed=None, **kw):
         '''
             switch to series editor
         '''
+        
+        if ln is None:
+            ln = self._cached['ln']
         if at is None:
             at = self._cached['analysis_type']
         if ms is None:
@@ -103,13 +114,14 @@ class AutoFigureTask(FigureTask):
         if ed is None:
             ed = self._cached['ed']
 
+        self._cached['ln'] = ln
         self._cached['analysis_type'] = at
         self._cached['ms'] = ms
         self._cached['ed'] = ed
 
         klass = AutoSeriesEditor
         editor = self._get_editor(klass)
-        if editor:
+        if editor and editor.labnumber ==ln:
             unks = self.manager.load_series(at, ms, ed,
                                             **kw)
             nunks = self._unique_analyses(unks)
@@ -120,8 +132,8 @@ class AutoFigureTask(FigureTask):
             unks = self.manager.load_series(at, ms, ed,
                                             **kw)
             self.manager.load_analyses(unks)
-            self.new_series(unks, klass)
-
+            self.new_series(unks, klass, name=ln)
+            self.active_editor.labnumber=ln
             self.active_editor.show_series('Ar40')
 
     def _get_editor(self, klass):
