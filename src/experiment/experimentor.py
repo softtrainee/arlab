@@ -296,7 +296,7 @@ class Experimentor(IsotopeDatabaseManager):
 
                                 )
 
-        self.executor.execute()
+        return self.executor.execute()
 
 #===============================================================================
 # handlers

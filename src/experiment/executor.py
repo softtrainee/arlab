@@ -317,6 +317,7 @@ class ExperimentExecutor(Experimentable):
             self._execute_thread = t
 
             self._was_executed = True
+            return True
 
 #===============================================================================
 # stats
