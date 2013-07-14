@@ -124,6 +124,8 @@ class AnalysisEditTask(EditorTask):
                     tool = self.active_editor.tool
                 self.controls_pane.tool = tool
 
+                self.unknowns_pane.items = self.active_editor.unknowns
+
     @on_trait_change('active_editor:component_changed')
     def _update_component(self):
         if self.plot_editor_pane:

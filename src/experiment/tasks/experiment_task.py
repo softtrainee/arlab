@@ -158,9 +158,9 @@ class ExperimentEditorTask(EditorTask):
 #===============================================================================
     def open(self):
 
-#        self._test_auto_figure()
+        self._test_auto_figure()
 
-#        return
+        return
 
 #        import os
 #        path = os.path.join(paths.experiment_dir, 'demo.txt')
@@ -270,8 +270,8 @@ class ExperimentEditorTask(EditorTask):
         self._open_auto_figure()
         task = self.auto_figure_window.active_task
 
-        task.plot_series('blank_unknown', 'jan', 'Fusions CO2', days=1)
-#        task.plot_series('blank_unknown', 'jan', 'Fusions Diode', days=100)
+        task.plot_series('bu-FC-J', 'blank_unknown', 'jan', 'Fusions CO2', days=100)
+        task.plot_series('bu-FD-J', 'blank_unknown', 'jan', 'Fusions Diode', days=100)
 #         task.plot_sample_ideogram('NM-779')
 
 #===============================================================================

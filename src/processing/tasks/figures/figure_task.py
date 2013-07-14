@@ -131,7 +131,7 @@ class FigureTask(AnalysisEditTask):
 
 #     def _save_file(self, path):
 #         self.active_editor.save_file(path)
-    def new_series(self, ans, klass=None, name='Series'):
+    def new_series(self, ans, klass=None, name='Series', add_baseline_fits=False):
 
 #         from src.processing.tasks.series.series_editor import SeriesEditor
 #         editor = SeriesEditor(name='Series',
@@ -141,6 +141,7 @@ class FigureTask(AnalysisEditTask):
 #         editor.unknowns = self.unknowns_pane.items
 #         self._open_editor(editor)
 #         self.series_editor_count += 1
+
         if klass is None:
             from src.processing.tasks.figures.figure_editor import SeriesEditor as klass
         func = self.manager.new_series
@@ -155,8 +156,11 @@ class FigureTask(AnalysisEditTask):
                          trait_change_notify=False)
 #         editor.unknowns = ans
         editor.tool.load_fits(refiso.isotope_keys,
-                            refiso.isotope_fits
-                            )
+                              refiso.isotope_fits
+                              )
+        if add_baseline_fits:
+            editor.tool.load_baseline_fits(refiso.isotope_keys)
+
 
     def _new_figure(self, ans, name, func, klass):
         comp, plotter = None, None
