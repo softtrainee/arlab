@@ -304,6 +304,8 @@ class AutomatedRun(Loggable):
                 self.plot_panel.fits = fits
 
             self.fits = [(None, fits)]
+            
+        self.debug('@@@@@@@@@@@@@@@@@ Fits {}'.format(self.fits))
 
     def py_set_spectrometer_parameter(self, name, v):
         self.info('setting spectrometer parameter {} {}'.format(name, v))
@@ -1120,6 +1122,8 @@ anaylsis_type={}
 
                 if iter_cnt > s and iter_cnt < e:
                     break
+        
+#        self.debug('fs {}'.format(fs))
         return fs
 
 
@@ -1146,6 +1150,15 @@ anaylsis_type={}
         spec = self.spectrometer_manager.spectrometer
         ncounts = int(ncounts)
         iter_cnt = 0
+        
+        nfs = self._get_fit_block(0, fits)
+        for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+            graph.new_series(marker='circle', type='scatter',
+                             marker_size=1.25,
+                             fit=fi,
+                             plotid=pi
+                             )
+        
         while 1:
 #        for iter_cnt in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(iter_cnt, ncounts, check_conditions)
@@ -1154,7 +1167,7 @@ anaylsis_type={}
             elif ck == 'cancel':
                 return False
 
-            if iter_cnt % 50 == 0:
+            if iter_cnt and iter_cnt % 50 == 0:
                 self.info('collecting point {}'.format(iter_cnt))
             _debug = globalv.automated_run_debug
             m = self.integration_time * 0.99 if not _debug else 0.1
@@ -1177,48 +1190,48 @@ anaylsis_type={}
             self.signals = dict(zip(keys, signals))
 
             nfs = self._get_fit_block(iter_cnt, fits)
-
-            if len(graph.series[0]) < series + 1:
-#                 graph_kw = dict(marker='circle', type='scatter', marker_size=1.25)
-                for pi, (fi, dn) in enumerate(zip(nfs, dets)):
-                    signal = signals[keys.index(dn.name)]
-                    graph.new_series(x=[x], y=[signal],
-                                     marker='circle', type='scatter',
-                                     marker_size=1.25,
-                                     fit=fi,
-                                     plotid=pi
-                                     )
-#                 func = lambda x, signal, kw: graph.new_series(x=[x],
-#                                                                  y=[signal],
-#                                                                  **kw
-#                                                                  )
-            else:
-                for pi, (fi, dn) in enumerate(zip(nfs, dets)):
-                    signal = signals[keys.index(dn.name)]
-                    graph.add_datum((x, signal),
-                                    series=series,
-                                    plotid=pi,
-                                    update_y_limits=True,
-                                    ypadding='0.5'
-                                    )
-                    if fi:
-                        graph.set_fit(fi, plotid=pi, series=series - 1)
-
+            for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+                signal = signals[keys.index(dn.name)]
+                graph.add_datum((x, signal),
+                                series=series,
+                                plotid=pi,
+                                update_y_limits=True,
+                                ypadding='0.5'
+                                )
+                if fi:
+                    graph.set_fit(fi, plotid=pi, series=0)
+                    
+                    
+            if grpname=='signal':
                 self.plot_panel.fits = nfs
-#                 graph_kw = dict(series=series, do_after=None,
-#                                 update_y_limits=True,
-#                                 ypadding='0.5')
-#                 func = lambda x, signal, kw: graph.add_datum((x, signal), **kw)
-#
-#
-#
-#             for pi, (fi, dn) in enumerate(zip(fits, dets)):
-#                 signal = signals[keys.index(dn.name)]
-#                 graph_kw['plotid'] = pi
-#                 graph_kw['fit'] = fi
-#                 func(x, signal, graph_kw)
+#            print len(graph.series[0]), series
+#            if len(graph.series[0]) < series + 1:
+##                 graph_kw = dict(marker='circle', type='scatter', marker_size=1.25)
+#                for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+#                    signal = signals[keys.index(dn.name)]
+#                    graph.new_series(x=[x], y=[signal],
+#                                     marker='circle', type='scatter',
+#                                     marker_size=1.25,
+#                                     fit=fi,
+#                                     plotid=pi
+#                                     )
+##                 func = lambda x, signal, kw: graph.new_series(x=[x],
+##                                                                  y=[signal],
+##                                                                  **kw
+##                                                                  )
+#            else:
+#                for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+#                    signal = signals[keys.index(dn.name)]
+#                    graph.add_datum((x, signal),
+#                                    series=series,
+#                                    plotid=pi,
+#                                    update_y_limits=True,
+#                                    ypadding='0.5'
+#                                    )
+#                    if fi:
+#                        graph.set_fit(fi, plotid=pi, series=series - 1)
 
-
+    
             data_write_hook(x, keys, signals)
             if refresh:
                 graph.refresh()
@@ -1447,8 +1460,8 @@ anaylsis_type={}
                    if kind == 'sniff']
 
         rsignals = dict()
-
-        for fit, (iso, detname) in zip(self.fits, signals):
+        fits=self.plot_panel.fits
+        for fit, (iso, detname) in zip(fits, signals):
             tab = dm.get_table(detname, '/signal/{}'.format(iso))
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
 #            if iso=='Ar40':

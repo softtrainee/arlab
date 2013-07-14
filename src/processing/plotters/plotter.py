@@ -102,6 +102,8 @@ class Plotter(Viewable):
 
     recall_event = Event
 
+    _reverse_sorted_analyses=False
+    
     def edit_analyses(self):
         self.processing_manager.edit_analyses()
 
@@ -436,7 +438,10 @@ class Plotter(Viewable):
         return label
 
     def _get_sorted_analyses(self):
-        return sorted([a for a in self.analyses], key=self._cmp_analyses)
+        return sorted([a for a in self.analyses], 
+                      key=self._cmp_analyses,
+                      reverse=self._reverse_sorted_analyses
+                      )
 
     def get_labnumber(self, analyses):
         return ', '.join(sorted(list(set(['{}-{}'.format(a.labnumber, a.aliquot) for a in analyses]))))
