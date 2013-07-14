@@ -32,6 +32,7 @@ from traitsui.editors.table_editor import TableEditor
 from traitsui.extras.checkbox_column import CheckboxColumn
 from src.pyscripts.parameters import MeasurementAction, Detector, Hop, \
     MeasurementTruncation, MeasurementTermination
+from src.processing.tasks.analysis_edit import fits
 #============= local library imports  ==========================
 
 class ParameterEditor(Loggable):
@@ -178,23 +179,23 @@ class MeasurementParameterEditor(ParameterEditor):
             for di in self.active_detectors:
                 di.use = di.label in v
 
-        def extract_fits(v):
-            v = eval(v)
-            if len(v) == 1:
-                v = v * len(self.active_detectors)
-
-            for vi, di in zip(v, [di for di in self.active_detectors if di.use]):
-
-                if vi.endswith('SD'):
-                    vi = FIT_TYPES[3]
-                elif vi.endswith('SEM'):
-                    vi = FIT_TYPES[4]
-                di.fit = vi
+#         def extract_fits(v):
+#             v = eval(v)
+#             if len(v) == 1:
+#                 v = v * len(self.active_detectors)
+#
+#             for vi, di in zip(v, [di for di in self.active_detectors if di.use]):
+#
+#                 if vi.endswith('SD'):
+#                     vi = FIT_TYPES[3]
+#                 elif vi.endswith('SEM'):
+#                     vi = FIT_TYPES[4]
+#                 di.fit = vi
 
         attrs = (
                 ('multicollect_counts', int),
                 ('active_detectors'   , extract_detectors),
-                ('fits'               , extract_fits),
+#                 ('fits'               , extract_fits),
 
                 ('baseline_before'    , str_to_bool),
                 ('baseline_after'     , str_to_bool),
@@ -221,6 +222,9 @@ class MeasurementParameterEditor(ParameterEditor):
                 if self._extract_parameter(li, v, cast=cast):
                     found.append(v)
                     continue
+
+#         fits = self._extract_multiline_parameter(lines, 'fits')
+
 
         hoplist = self._extract_multiline_parameter(lines, 'hops')
         if hoplist:
@@ -584,9 +588,9 @@ use_peak_hop, ncycles, baseline_ncycles
                                         ObjectColumn(name='isotope',
                                                      editor=EnumEditor(name='isotopes')
                                                      ),
-                                        ObjectColumn(name='fit',
-                                                     editor=EnumEditor(values=[NULL_STR] + FIT_TYPES)
-                                                     ),
+#                                         ObjectColumn(name='fit',
+#                                                      editor=EnumEditor(values=[NULL_STR] + FIT_TYPES)
+#                                                      ),
 
 
                                                                    ])

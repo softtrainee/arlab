@@ -52,9 +52,11 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
     regressors = List
     regression_results = Event
     suppress_regression = False
+
     use_data_tool = True
     use_inspector_tool = True
     use_point_inspector = True
+
     popup = None
 #    fits = List
 #    def clear(self):
@@ -122,12 +124,16 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
     def set_fit(self, fi, plotid=0, series=0):
         plot = self.plots[plotid]
-        print plot.plots
-        scatter = plot.plots['data{}'.format(series)][0]
-        scatter.fit = fi
-        scatter.index.metadata['selections'] = []
-        scatter.index.metadata['filtered'] = None
-        self.redraw()
+
+        key = 'data{}'.format(series)
+#         print plot.plots.keys(), key, plot.plots.has_key(key), fi
+        if plot.plots.has_key(key):
+            scatter = plot.plots[key][0]
+    #         print scatter
+            scatter.fit = fi
+            scatter.index.metadata['selections'] = []
+            scatter.index.metadata['filtered'] = None
+            self.redraw()
 
     def get_fit(self, plotid=0, series=0):
         try:

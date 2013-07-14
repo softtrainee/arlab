@@ -73,12 +73,67 @@ class PlotterOption(HasTraits):
 FONTS = ['modern', 'arial']
 SIZES = [6, 8, 9, 10, 11, 12, 14, 16, 18, 24, 36]
 
+class BasePlotterOptions(HasTraits):
+    aux_plots = List
+    name = Str
+    def __init__(self, root, clean=False, *args, **kw):
+        super(BasePlotterOptions, self).__init__(*args, **kw)
+        if not clean:
+            self._load(root)
 
-class PlotterOptions(Viewable):
+    def traits_view(self):
+        v = View()
+        return v
+# ==============================================================================
+# persistence
+#===============================================================================
+    def _get_dump_attrs(self):
+        return tuple()
+
+    def dump(self, root):
+        self._dump(root)
+
+    def _make_dir(self, root):
+        if os.path.isdir(root):
+            return
+        else:
+            self._make_dir(os.path.dirname(root))
+            os.mkdir(root)
+
+    def _dump(self, root):
+        if not self.name:
+            return
+        p = os.path.join(root, self.name)
+#         print root, self.name
+        self._make_dir(root)
+
+        with open(p, 'w') as fp:
+            d = dict()
+            attrs = self._get_dump_attrs()
+            for t in attrs:
+                d[t] = getattr(self, t)
+
+            pickle.dump(d, fp)
+
+    def _load(self, root):
+        p = os.path.join(root, self.name)
+        if os.path.isfile(p):
+            with open(p, 'r') as fp:
+                try:
+                    obj = pickle.load(fp)
+                    self.trait_set(**obj)
+
+                except (pickle.PickleError, TypeError, EOFError):
+                    pass
+
+    def __repr__(self):
+        return self.name
+
+class PlotterOptions(BasePlotterOptions):
     title = Str
     auto_generate_title = Bool
 #     data_type = Str('database')
-    aux_plots = List
+
 
     xtick_font = Property
     xtick_font_size = Enum(*SIZES)
@@ -97,10 +152,7 @@ class PlotterOptions(Viewable):
     ytitle_font_name = Enum(*FONTS)
 #     data_type_editable = Bool(True)
 
-    def __init__(self, root, clean=False, *args, **kw):
-        super(PlotterOptions, self).__init__(*args, **kw)
-        if not clean:
-            self._load(root)
+
 
 #    def closed(self, isok):
 #        self._dump()
@@ -125,7 +177,6 @@ class PlotterOptions(Viewable):
         return reversed([pi
                 for pi in self.aux_plots if pi.name != NULL_STR])
 
-
     def _create_axis_group(self, axis, name):
 
         hg = HGroup(
@@ -136,44 +187,6 @@ class PlotterOptions(Viewable):
                     Spring(width=125, springy=False)
                     )
         return hg
-#===============================================================================
-# persistence
-#===============================================================================
-    def dump(self, root):
-        self._dump(root)
-
-    def _make_dir(self, root):
-        if os.path.isdir(root):
-            return
-        else:
-            self._make_dir(os.path.dirname(root))
-            os.mkdir(root)
-
-    def _dump(self, root):
-        if not self.name:
-            return
-        p = os.path.join(root, self.name)
-        print root, self.name
-        self._make_dir(root)
-
-        with open(p, 'w') as fp:
-            d = dict()
-            attrs = self._get_dump_attrs()
-            for t in attrs:
-                d[t] = getattr(self, t)
-
-            pickle.dump(d, fp)
-
-    def _load(self, root):
-        p = os.path.join(root, self.name)
-        if os.path.isfile(p):
-            with open(p, 'r') as fp:
-                try:
-                    obj = pickle.load(fp)
-                    self.trait_set(**obj)
-
-                except (pickle.PickleError, TypeError, EOFError):
-                    pass
 
     def _get_dump_attrs(self):
         attrs = ['title', 'auto_generate_title',
@@ -296,15 +309,14 @@ class PlotterOptions(Viewable):
 
         v = View(
                  g,
-                 resizable=True,
+#                  resizable=True,
 #                 title='Plotter Options',
-                 buttons=['OK', 'Cancel'],
-                 handler=self.handler_klass
+#                  buttons=['OK', 'Cancel'],
+#                  handler=self.handler_klass
                  )
         return v
 
-    def __repr__(self):
-        return self.name
+
 
 class AgeOptions(PlotterOptions):
     include_j_error = Bool(True)
@@ -380,6 +392,8 @@ class SpectrumOptions(AgeOptions):
         return attrs + ['step_nsigma']
 
 class InverseIsochronOptions(AgeOptions):
+    pass
+class SeriesOptions(BasePlotterOptions):
     pass
 
 if __name__ == '__main__':

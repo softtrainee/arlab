@@ -23,14 +23,15 @@ import os
 #============= local library imports  ==========================
 from src.viewable import Viewable
 from src.processing.plotters.plotter_options import PlotterOptions, \
-    IdeogramOptions, SpectrumOptions, InverseIsochronOptions
+    IdeogramOptions, SpectrumOptions, InverseIsochronOptions, SeriesOptions, \
+    BasePlotterOptions
 from src.paths import paths
 
 
 class PlotterOptionsManager(Viewable):
-    plotter_options_list = Property(List(PlotterOptions), depends_on='_plotter_options_list_dirty')
+    plotter_options_list = Property(List(BasePlotterOptions), depends_on='_plotter_options_list_dirty')
     _plotter_options_list_dirty = Event
-    plotter_options = Instance(PlotterOptions)
+    plotter_options = Instance(BasePlotterOptions)
     plotter_options_name = 'main'
     plotter_options_klass = PlotterOptions
 
@@ -140,7 +141,7 @@ class PlotterOptionsManager(Viewable):
             with open(p, 'r') as fp:
                 try:
                     n = pickle.load(fp)
-                except pickle.PickleError:
+                except (pickle.PickleError, EOFError):
                     n = 'Default'
 
         po = next((pi for pi in self.plotter_options_list if pi.name == n), None)
@@ -164,5 +165,10 @@ class InverseIsochronOptionsManager(PlotterOptionsManager):
     plotter_options_klass = InverseIsochronOptions
     persistence_name = 'inverse_isochron'
     title = 'Isochron Plot Options'
+
+class SeriesOptionsManager(PlotterOptionsManager):
+    plotter_options_klass = SeriesOptions
+    persistence_name = 'series'
+    title = 'Series Plot Options'
 
 #============= EOF =============================================

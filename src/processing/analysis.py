@@ -190,6 +190,21 @@ class Analysis(Loggable):
     def _set_graph_id(self, g):
         self.isotope_record.graph_id = g
 
+#     def __hash__(self):
+#         h = None
+#         if self.isotope_record:
+#             print self.isotope_record.uuid
+#             h = hash(self.isotope_record.uuid)
+#
+#         if not h:
+#             h = id(self)
+#         return h
+
+
+
+
+
+
 
 class NonDBAnalysis(HasTraits):
     record_id = Property

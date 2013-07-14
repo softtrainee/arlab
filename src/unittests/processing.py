@@ -20,8 +20,36 @@ from traitsui.api import View, Item
 import unittest
 from itertools import groupby
 from src.processing.selection.data_selector import FileSelector
+from src.processing.processor import Processor
+from src.unittests.database import get_test_database
 #============= standard library imports ========================
 #============= local library imports  ==========================
+
+class AutoFigureTest(unittest.TestCase):
+    def setUp(self):
+        man = get_test_database()
+        self.processor = Processor(bind=False,
+                                   db=man.db
+                                   )
+
+    def testGetBlanks(self):
+        ans = self.processor.load_series('blank_unknown',
+                                         'jan',
+                                         'Fusions Diode',
+                                         weeks=8,
+                                         hours=0)
+
+        self.assertEqual(len(ans), 1)
+
+    def testGetBlanks2(self):
+        ans = self.processor.load_series('blank_unknown',
+                                         'jan',
+                                         'Fusions CO2',
+                                         weeks=10,
+                                         hours=0)
+        ai = ans[0]
+        self.assertEqual(ai.extract_device, 'Fusions CO2')
+
 
 class FileSelectorTest(unittest.TestCase):
     def setUp(self):

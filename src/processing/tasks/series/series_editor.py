@@ -21,35 +21,35 @@ from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class SeriesEditor(GraphEditor):
-
-    def _rebuild_graph(self):
-        g = self.graph
-
-        xs = [ui.timestamp for ui in self._unknowns]
-        xs = self.normalize(xs)
-        set_x_flag = False
-        i = 0
-        for fit in self.tool.fits:
-            if fit.fit and fit.show:
-                iso = fit.name
-                set_x_flag = True
-                p = g.new_plot(xtitle='Time',
-                               ytitle='{} (fA)'.format(iso)
-                               )
-
-                isos = [ui.isotopes[iso] for ui in self._unknowns]
-                ys = [iso.value for iso in isos]
-                g.new_series(xs, ys,
-                             type='scatter',
-                             plotid=i,
-                             fit=fit.fit
-                             )
-                i += 1
-
-        if set_x_flag:
-            g.set_x_limits(0, max(xs), pad='0.1')
-            g.refresh()
+# class SeriesEditor(GraphEditor):
+#
+#     def _rebuild_graph(self):
+#         g = self.graph
+#
+#         xs = [ui.timestamp for ui in self._unknowns]
+#         xs = self.normalize(xs)
+#         set_x_flag = False
+#         i = 0
+#         for fit in self.tool.fits:
+#             if fit.fit and fit.show:
+#                 iso = fit.name
+#                 set_x_flag = True
+#                 p = g.new_plot(xtitle='Time',
+#                                ytitle='{} (fA)'.format(iso)
+#                                )
+#
+#                 isos = [ui.isotopes[iso] for ui in self._unknowns]
+#                 ys = [iso.value for iso in isos]
+#                 g.new_series(xs, ys,
+#                              type='scatter',
+#                              plotid=i,
+#                              fit=fit.fit
+#                              )
+#                 i += 1
+#
+#         if set_x_flag:
+#             g.set_x_limits(0, max(xs), pad='0.1')
+#             g.refresh()
 
 
 #============= EOF =============================================

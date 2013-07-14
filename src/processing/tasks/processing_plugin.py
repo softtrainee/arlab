@@ -125,7 +125,8 @@ class ProcessingPlugin(BaseTaskPlugin):
                         ('pychron.analysis_edit.ic_factor', self._ic_factor_task_factory, 'IC Factor'),
                         ('pychron.analysis_edit.batch', self._batch_edit_task_factory, 'Batch Edit'),
                         ('pychron.processing.figures', self._figure_task_factory, 'Figures'),
-                        ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher')
+                        ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher'),
+                        ('pychron.processing.auto_figure', self._auto_figure_task_factory, 'AutoFigure'),
                         )
                 ]
 
@@ -167,6 +168,10 @@ class ProcessingPlugin(BaseTaskPlugin):
     def _figure_task_factory(self):
         from src.processing.tasks.figures.figure_task import FigureTask
         return FigureTask(manager=self._processor_factory())
+
+    def _auto_figure_task_factory(self):
+        from src.processing.tasks.figures.auto_figure_task import AutoFigureTask
+        return AutoFigureTask(manager=self._processor_factory())
 
     def _publisher_task_factory(self):
         from src.processing.tasks.publisher.publisher_task import PublisherTask

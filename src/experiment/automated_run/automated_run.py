@@ -28,6 +28,7 @@ import yaml
 import struct
 from threading import Thread, Event as TEvent
 from uncertainties import ufloat
+from numpy import Inf
 #============= local library imports  ==========================
 from src.globals import globalv
 
@@ -271,17 +272,38 @@ class AutomatedRun(Loggable):
 
 
     def py_set_regress_fits(self, fits, series=0):
+        '''
+            fits can be 
+            1. 'linear'
+            2. ('linear',)
+            3. ('linear', 'linear')
+            4. ((0,100,'linear'),(100,None, 'parabolic')]
+            
+            
+        '''
+        def make_fits(fi):
+            if isinstance(fi, str):
+                fi = [fi, ] * n
+            elif isinstance(fi, tuple):
+                if len(fi) == 1:
+                    fi = [fi[0], ] * n
+
+            return list(fi)
+
         n = len(self._active_detectors)
-        if isinstance(fits, str):
-            fits = [fits, ] * n
-        elif isinstance(fits, tuple):
-            if len(fits) == 1:
-                fits = [fits[0], ] * n
-#
-        fits = list(fits)
-        if self.plot_panel:
-            self.plot_panel.fits = fits
-        self.fits = fits
+
+        if isinstance(fits, tuple):
+            if isinstance(fits[0], tuple):
+                self.fits = [(sli, make_fits(fs)) for sli, fs in fits]
+            else:
+                self.fits = [(None, make_fits(fits))]
+        else:
+
+            fits = make_fits(fits)
+            if self.plot_panel:
+                self.plot_panel.fits = fits
+
+            self.fits = [(None, fits)]
 
     def py_set_spectrometer_parameter(self, name, v):
         self.info('setting spectrometer parameter {} {}'.format(name, v))
@@ -298,7 +320,7 @@ class AutomatedRun(Loggable):
         gn = 'signal'
         fits = self.fits
         if fits is None:
-            fits = ['linear', ] * len(self._active_detectors)
+            fits = [(None, ['linear', ] * len(self._active_detectors))]
 
         self._build_tables(gn, fits)
         check_conditions = True
@@ -339,7 +361,7 @@ class AutomatedRun(Loggable):
             self.plot_panel._ncounts = ncounts
             self.plot_panel.isbaseline = False
 
-        fits = ['', ] * len(self._active_detectors)
+        fits = [(None, ['', ] * len(self._active_detectors))]
         gn = 'sniff'
         self._build_tables(gn)
         check_conditions = False
@@ -374,8 +396,8 @@ class AutomatedRun(Loggable):
         self.plot_panel.isbaseline = True
 
         gn = 'baseline'
-        fits = [fit, ] * len(self._active_detectors)
-        self._build_tables(gn, fits=fits)
+        fits = [(None, [fit, ] * len(self._active_detectors))]
+        self._build_tables(gn)
         check_conditions = False
         result = self._measure_iteration(gn,
                             self._get_data_writer(gn),
@@ -452,13 +474,16 @@ class AutomatedRun(Loggable):
         self.termination_conditions.append(TerminationCondition(attr, comp, value,
                                                                 start_count,
                                                                 frequency))
-    def py_add_truncation(self, attr, comp, value, start_count, frequency):
+    def py_add_truncation(self, attr, comp, value, start_count, frequency,
+                          abbreviated_count_ratio):
         '''
             attr must be an attribute of arar_age
         '''
         self.truncation_conditions.append(TruncationCondition(attr, comp, value,
                                                                 start_count,
-                                                                frequency))
+                                                                frequency,
+                                                                abbreviated_count_ratio
+                                                                ))
     def py_add_action(self, attr, comp, value, start_count, frequency, action, resume):
         '''
             attr must be an attribute of arar_age
@@ -893,6 +918,9 @@ anaylsis_type={}
 
     def _build_tables(self, gn, fits=None):
         dm = self.data_manager
+#         if fits is not None:
+#             # use last fit block
+#             fits = fits[-1][1]
 
         dm.new_group(gn)
         for i, d in enumerate(self._active_detectors):
@@ -901,12 +929,13 @@ anaylsis_type={}
             isogrp = dm.new_group(iso, parent='/{}'.format(gn))
             self._save_isotopes.append((iso, name, gn))
 
-            t = dm.new_table(isogrp, name)
-            try:
-                f = fits[i]
-                setattr(t.attrs, 'fit', f)
-            except (IndexError, TypeError):
-                pass
+#             _t = dm.new_table(isogrp, name)
+            dm.new_table(isogrp, name)
+#             try:
+#                 f = fits[i]
+#                 setattr(t.attrs, 'fit', f)
+#             except (IndexError, TypeError):
+#                 pass
 
     def _build_peak_hop_tables(self, gn, hops):
         dm = self.data_manager
@@ -1079,6 +1108,21 @@ anaylsis_type={}
 
         return True
 
+    def _get_fit_block(self, iter_cnt, fits):
+        for sli, fs in fits:
+            if sli:
+
+                s, e = sli
+                if s is None:
+                    s = 0
+                if e is None:
+                    e = Inf
+
+                if iter_cnt > s and iter_cnt < e:
+                    break
+        return fs
+
+
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, starttime_offset,
                            series, fits, check_conditions, refresh):
@@ -1101,7 +1145,7 @@ anaylsis_type={}
         dets = self._active_detectors
         spec = self.spectrometer_manager.spectrometer
         ncounts = int(ncounts)
-        iter_cnt = 1
+        iter_cnt = 0
         while 1:
 #        for iter_cnt in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(iter_cnt, ncounts, check_conditions)
@@ -1112,7 +1156,6 @@ anaylsis_type={}
 
             if iter_cnt % 50 == 0:
                 self.info('collecting point {}'.format(iter_cnt))
-            iter_cnt += 1
             _debug = globalv.automated_run_debug
             m = self.integration_time * 0.99 if not _debug else 0.1
             time.sleep(m)
@@ -1133,29 +1176,53 @@ anaylsis_type={}
 
             self.signals = dict(zip(keys, signals))
 
+            nfs = self._get_fit_block(iter_cnt, fits)
+
             if len(graph.series[0]) < series + 1:
-                graph_kw = dict(marker='circle', type='scatter', marker_size=1.25)
-                func = lambda x, signal, kw: graph.new_series(x=[x],
-                                                                 y=[signal],
-                                                                 **kw
-                                                                 )
+#                 graph_kw = dict(marker='circle', type='scatter', marker_size=1.25)
+                for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+                    signal = signals[keys.index(dn.name)]
+                    graph.new_series(x=[x], y=[signal],
+                                     marker='circle', type='scatter',
+                                     marker_size=1.25,
+                                     fit=fi,
+                                     plotid=pi
+                                     )
+#                 func = lambda x, signal, kw: graph.new_series(x=[x],
+#                                                                  y=[signal],
+#                                                                  **kw
+#                                                                  )
             else:
-                graph_kw = dict(series=series, do_after=None,
-                                update_y_limits=True,
-                                ypadding='0.5')
-                func = lambda x, signal, kw: graph.add_datum((x, signal), **kw)
+                for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+                    signal = signals[keys.index(dn.name)]
+                    graph.add_datum((x, signal),
+                                    series=series,
+                                    plotid=pi,
+                                    update_y_limits=True,
+                                    ypadding='0.5'
+                                    )
+                    if fi:
+                        graph.set_fit(fi, plotid=pi, series=series - 1)
 
+                self.plot_panel.fits = nfs
+#                 graph_kw = dict(series=series, do_after=None,
+#                                 update_y_limits=True,
+#                                 ypadding='0.5')
+#                 func = lambda x, signal, kw: graph.add_datum((x, signal), **kw)
+#
+#
+#
+#             for pi, (fi, dn) in enumerate(zip(fits, dets)):
+#                 signal = signals[keys.index(dn.name)]
+#                 graph_kw['plotid'] = pi
+#                 graph_kw['fit'] = fi
+#                 func(x, signal, graph_kw)
 
-
-            for pi, (fi, dn) in enumerate(zip(fits, dets)):
-                signal = signals[keys.index(dn.name)]
-                graph_kw['plotid'] = pi
-                graph_kw['fit'] = fi
-                func(x, signal, graph_kw)
 
             data_write_hook(x, keys, signals)
             if refresh:
                 graph.refresh()
+            iter_cnt += 1
 #                invoke_in_main_thread(graph.refresh)
 #             do_after(100, graph._update_graph)
 
@@ -1173,7 +1240,7 @@ anaylsis_type={}
 
         # exit the while loop if counts greater than max of original counts and the plot_panel counts
         maxcounts = max(ncounts, self.plot_panel.ncounts)
-        if i > maxcounts:
+        if i >= maxcounts:
             return 'break'
 
         if check_conditions:
@@ -1190,6 +1257,8 @@ anaylsis_type={}
                           color='red'
                           )
                 self.state = 'truncated'
+                self.measurement_script.abbreviated_count_ratio = truncation_condition.abbreviated_count_ratio
+
 #                self.condition_truncated = True
                 return 'break'
 
@@ -1202,11 +1271,11 @@ anaylsis_type={}
                 if not action_condition.resume:
                     return 'break'
 
-        if i > self.measurement_script.ncounts:
+        if i >= self.measurement_script.ncounts:
             self.info('script termination. measurement iteration executed {}/{} counts'.format(i, ncounts))
             return 'break'
 
-        if i > self.plot_panel.ncounts:
+        if i >= self.plot_panel.ncounts:
             self.info('user termination. measurement iteration executed {}/{} counts'.format(i, ncounts))
             self._total_counts -= (ncounts - i)
             return 'break'

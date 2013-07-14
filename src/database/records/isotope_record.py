@@ -359,7 +359,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                 for bi in blanks:
                     for ba in bi.blanks:
                         r = Blank(dbrecord=ba, name=ba.isotope)
-                        self.isotopes[ba.isotope].blank = r
+                        if self.isotopes.has_key(ba.isotope):
+                            self.isotopes[ba.isotope].blank = r
 
             return True
 
@@ -828,8 +829,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         else:
             return 0
 
-#     def _get_status(self):
-#        return self._get_dbrecord_value('status')
+    def _get_status(self):
+        return self._get_dbrecord_value('status')
+
 #    def _get_extract_value(self):
 #        return self._get_extraction_value('extract_value')
 #    def _get_extract_duration(self):
