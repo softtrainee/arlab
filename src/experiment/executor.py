@@ -133,6 +133,8 @@ class ExperimentExecutor(Experimentable):
     _end_flag = None
     _canceled = False
 
+    _abort_overlap_signal = None
+
     def isAlive(self):
         return self._alive
 
@@ -309,6 +311,7 @@ class ExperimentExecutor(Experimentable):
             self.stats.start_timer()
             self.stats.nruns_finished = 0
             self._canceled = False
+            self._abort_overlap_signal = Flag()
 
             t = Thread(target=self._execute)
             t.start()
@@ -640,7 +643,7 @@ class ExperimentExecutor(Experimentable):
                 t, run = runargs
                 self._last_ran = runspec
 
-                if run.overlap:
+                if run.analysis_type == 'unknown' and run.overlap:
                     self.info('overlaping')
                     run.wait_for_overlap()
                 else:
@@ -778,7 +781,6 @@ class ExperimentExecutor(Experimentable):
 
     def _do_automated_run(self, arun):
         def start_run():
-
             self.experiment_queue.set_run_inprogress(arun.runid)
 
             if not arun.start():
@@ -836,7 +838,6 @@ class ExperimentExecutor(Experimentable):
                 arun.state = 'success'
 
         self._increment_nruns_finished()
-#        self._update_executed_runs(arun)
 
         if arun.state in ('success', 'truncated'):
             self.run_completed = arun
@@ -845,8 +846,42 @@ class ExperimentExecutor(Experimentable):
 
         self.info('Automated run {} {}'.format(arun.runid, arun.state))
 
-#    def _update_executed_runs(self, arun):
-#        self.experiment_queue.run_executed(arun.runid)
+        # check to see if action should be taken
+#         self._check_run_at_end(arun)
+#===============================================================================
+#
+#===============================================================================
+    def _check_run_at_end(self, run):
+        '''
+            check to see if an action should be taken
+            
+            if runs  are overlapping this will be a problem.
+            
+            dont overlay onto blanks
+    
+            execute the action and continue the queue
+        '''
+
+        for action in self.experiment_queue.actions:
+            if action.check_run(run):
+                self._do_action(action)
+                break
+
+    def _do_action(self, action):
+        self.info('Do queue action {}'.format(action.action))
+        if action.action == 'repeat':
+            if action.count < action.nrepeat:
+                self.debug('repeating last run')
+                action.count += 1
+            else:
+                self.info('executed N {} {}s'.format(action.count + 1,
+                                                     action.action))
+                self.cancel(confirm=False)
+
+#===============================================================================
+#
+#===============================================================================
+
 
     def _end_runs(self):
         self._last_ran = None

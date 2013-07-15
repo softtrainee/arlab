@@ -166,7 +166,7 @@ class Demo(HasTraits):
                  'foo',
                  CustomLabel('a',
 #                             color='blue',
-                             size=15,
+                             size=24,
                              top_padding=10,
                              left_padding=10,
                              color_name='color'

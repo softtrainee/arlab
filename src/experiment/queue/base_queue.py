@@ -123,9 +123,9 @@ class BaseExperimentQueue(Loggable):
 #===============================================================================
     def load(self, txt):
         self.initialized = False
-        if self.automated_runs:
-            self._cached_runs = [ci for ci in self.automated_runs
-                                if not ci.skip]
+#         if self.automated_runs:
+#             self._cached_runs = [ci for ci in self.automated_runs
+#                                 if not ci.skip]
 
         self.stats.delay_between_analyses = self.delay_between_analyses
 
@@ -181,20 +181,17 @@ class BaseExperimentQueue(Loggable):
 
         return stream
 
-    def _load_runs(self, txt):
-        aruns = []
-        f = (l for l in txt.split('\n'))
+    def _extract_meta(self, line_gen):
         metastr = ''
         # read until break
-        for line in f:
+        for line in line_gen:
             if line.startswith('#====='):
                 break
             metastr += '{}\n'.format(line)
 
-        meta = yaml.load(metastr)
-        if meta is None:
-            self.warning_dialog('Invalid experiment set file. Poorly formatted metadata {}'.format(metastr))
+        return yaml.load(metastr), metastr
 
+    def _load_meta(self, meta):
         # load sample map
         self._load_map(meta)
 
@@ -207,6 +204,17 @@ class BaseExperimentQueue(Loggable):
         self._set_meta_param('delay_between_analyses', meta, default_int)
         self._set_meta_param('delay_before_analyses', meta, default_int)
         self._set_meta_param('username', meta, default)
+
+    def _load_runs(self, txt):
+        aruns = []
+        f = (l for l in txt.split('\n'))
+
+        meta, metastr = self._extract_meta(f)
+        if meta is None:
+            self.warning_dialog('Invalid experiment set file. Poorly formatted metadata {}'.format(metastr))
+            return
+
+        self._load_meta(meta)
 
         delim = '\t'
 

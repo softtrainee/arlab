@@ -16,27 +16,69 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Int, List, String, Float, Bool, \
-    on_trait_change, Str, Enum
+    on_trait_change, Str, Enum, Any, Instance
 from traitsui.api import View, Item, VGroup, Group, HGroup, Label, Spring, \
     UItem, ListEditor, InstanceEditor, spring, EnumEditor, TableEditor
-#============= standard library imports ========================
-import re
-from src.helpers.filetools import str_to_bool
-from src.loggable import Loggable
-from src.constants import NULL_STR, FIT_TYPES
-import os
-from src.paths import paths
-from ConfigParser import ConfigParser
 from traitsui.table_column import ObjectColumn
 from traitsui.editors.table_editor import TableEditor
 from traitsui.extras.checkbox_column import CheckboxColumn
+#============= standard library imports ========================
+import re
+import os
+from ConfigParser import ConfigParser
+#============= local library imports  ==========================
+from src.helpers.filetools import str_to_bool
+from src.loggable import Loggable
+from src.constants import NULL_STR, FIT_TYPES
+from src.paths import paths
 from src.pyscripts.parameters import MeasurementAction, Detector, Hop, \
     MeasurementTruncation, MeasurementTermination
-from src.processing.tasks.analysis_edit import fits
-#============= local library imports  ==========================
+
+
+
+class FitBlock(HasTraits):
+    start = Str(enter_set=True, auto_set=False)
+    end = Str(enter_set=True, auto_set=False)
+    detectors = List
+    def traits_view(self):
+        editor = TableEditor(
+                           sortable=False,
+                           reorderable=False,
+                           columns=[
+                                    ObjectColumn(name='label',
+                                                 editable=False,
+                                                 label='Det.'),
+                                    CheckboxColumn(name='use', label='Use'),
+                                    ObjectColumn(name='isotope',
+                                                 editor=EnumEditor(name='isotopes')
+                                                 ),
+                                     ObjectColumn(name='fit',
+                                                    editor=EnumEditor(values=[NULL_STR] + FIT_TYPES)
+                                                    ),
+                                    ]
+                           )
+        v = View(
+                 HGroup(Item('start'), Item('end')),
+                 UItem('detectors', editor=editor))
+        return v
+    def to_string(self):
+        s = self.start
+        if not s:
+            s = None
+
+        e = self.end
+        if not e:
+            e = None
+
+        f = ','.join(["'{}'".format(di.fit) for di in self.detectors])
+        return '(({},{}), ({}))'.format(s, e, f)
+
+    def __repr__(self):
+        return 'Block {}-{}'.format(self.start, self.end)
 
 class ParameterEditor(Loggable):
     body = String
+    editor = Any
     def parse(self, txt):
         pass
 
@@ -166,6 +208,11 @@ class MeasurementParameterEditor(ParameterEditor):
 
     fits = String
     suppress_update = False
+
+
+    fit_blocks = List(FitBlock)
+    fit_block = Instance(FitBlock)
+
 #===============================================================================
 # parse
 #===============================================================================
@@ -179,23 +226,9 @@ class MeasurementParameterEditor(ParameterEditor):
             for di in self.active_detectors:
                 di.use = di.label in v
 
-#         def extract_fits(v):
-#             v = eval(v)
-#             if len(v) == 1:
-#                 v = v * len(self.active_detectors)
-#
-#             for vi, di in zip(v, [di for di in self.active_detectors if di.use]):
-#
-#                 if vi.endswith('SD'):
-#                     vi = FIT_TYPES[3]
-#                 elif vi.endswith('SEM'):
-#                     vi = FIT_TYPES[4]
-#                 di.fit = vi
-
         attrs = (
                 ('multicollect_counts', int),
                 ('active_detectors'   , extract_detectors),
-#                 ('fits'               , extract_fits),
 
                 ('baseline_before'    , str_to_bool),
                 ('baseline_after'     , str_to_bool),
@@ -223,8 +256,7 @@ class MeasurementParameterEditor(ParameterEditor):
                     found.append(v)
                     continue
 
-#         fits = self._extract_multiline_parameter(lines, 'fits')
-
+        self._extract_fits(lines)
 
         hoplist = self._extract_multiline_parameter(lines, 'hops')
         if hoplist:
@@ -248,6 +280,65 @@ class MeasurementParameterEditor(ParameterEditor):
                 lines.insert(3, nv)
 
         self.suppress_update = False
+
+    def _make_fit_blocks(self, blocks):
+        def block_factory(b, f):
+            if b:
+                s, e = b
+                if s is not None:
+                    s = str(s)
+                else:
+                    s = ''
+                if e is not None:
+                    e = str(e)
+                else:
+                    e = ''
+
+            else:
+                s, e = '', ''
+
+            dets = [Detector(label=di.label,
+                             fit=f)
+                     for f, di in zip(f, self.active_detectors)]
+
+            fb = FitBlock(start=s, end=e,
+                          detectors=dets
+                          )
+            return fb
+
+        return [
+                block_factory(bounds, fits)
+                for bounds, fits in blocks
+                ]
+
+
+    def _extract_fits(self, lines):
+        v = self._extract_multiline_parameter(lines, 'fits')
+        fb = None
+        if v:
+            if isinstance(v[0], tuple):
+                if isinstance(v[0][0], tuple):
+                    fb = v
+            else:
+                fb = [(None, v)]
+
+        if fb:
+            fb = self._make_fit_blocks(fb)
+            self.fit_blocks = fb
+            self.fit_block = fb[0]
+#
+# #         print fits
+# #         v = eval(fits)
+#         if len(v) == 1:
+#             v = v * len(self.active_detectors)
+#
+#         for vi, di in zip(v, [di for di in self.active_detectors if di.use]):
+#
+#             if vi.endswith('SD'):
+#                 vi = FIT_TYPES[3]
+#             elif vi.endswith('SEM'):
+#                 vi = FIT_TYPES[4]
+#             di.fit = vi
 
     def _extract_actions(self, items):
         acs = []
@@ -316,10 +407,20 @@ class MeasurementParameterEditor(ParameterEditor):
         regex = self._get_regex(param)
         endline = self._endline
         for li in lines:
+
             if regex.match(li):
                 li = li.split('=')[1]
                 rlines.append(li)
+                try:
+                    v = eval(li)
+                    if isinstance(v, (tuple, list)):
+                        break
+                except SyntaxError:
+                    pass
+#                 if endline(li):
+#                     break
                 start = True
+
             elif start and endline(li):
                 rlines.append(li)
                 break
@@ -328,11 +429,12 @@ class MeasurementParameterEditor(ParameterEditor):
 
         if rlines:
             r = '\n'.join(rlines)
-
+#             if param == 'fits':
+#                 print rlines
             try:
                 return eval(r)
             except Exception, e:
-                print r
+#                 print r
                 self.debug(e)
 
     def _extract_parameter(self, line, attr, cast=None):
@@ -491,57 +593,18 @@ use_peak_hop, ncycles, baseline_ncycles
         self._modify_body('multicollect_isotope', iso)
         self._modify_body_multiline('hops', hopstr)
 
+    @on_trait_change('fit_block:[start,end,detectors:fit]')
+    def _update_fit_block(self, obj, name, old, new):
+#         print obj, name, old, new
+        blocks = ['{},'.format(bi.to_string()) for bi in self.fit_blocks]
+#         print blocks
+        nbs = [blocks[0]]
+        for bi in blocks[1:]:
+            nbs.append('        {}'.format(bi))
 
-    @on_trait_change('active_detectors:[use, fit, isotope]')
-    def _update_active_detectors(self, obj, name, new):
-        dets = self.active_detectors
+        new = 'FITS = [{}\n        ]'.format('\n'.join(nbs))
 
-        if name == 'isotope':
-            if new != NULL_STR:
-                for di in dets:
-                    if not di == obj:
-                        di.isotope = NULL_STR
-                self._modify_body('multicollect_detector', obj.label)
-                self._modify_body('multicollect_isotope', obj.isotope)
-            return
-
-#        s = ''
-#        if name == 'use':
-#            if not new and obj.isotope != NULL_STR:
-#                fd = next((a for a in self.active_detectors if a.use), None)
-#                fd.isotope = obj.isotope
-#
-#            attr = 'label'
-#            param = 'active_detectors'
-#        else:
-#            attr = 'fit'
-#            param = 'fits'
-#
-#        new = []
-#        for di in dets:
-#            if di.use:
-#                new.append((
-#                            getattr(di, 'label'),
-#                            getattr(di, 'fit')
-#                            ))
-
-        ad, fs = zip(*[(di.label, di.fit)
-                       for di in dets if di.use])
-        fs = list(fs)
-        for i, fi in enumerate(fs):
-            if fi.endswith('SEM'):
-                fs[i] = 'average_SEM'
-            elif fi.endswith('SD'):
-                fs[i] = 'average_SD'
-
-        for new, name in ((ad, 'active_detectors'),
-                          (fs, 'fits')):
-            if len(new) == 1:
-                s = "'{}',".format(new[0])
-            else:
-                s = ','.join(map("'{}'".format, new))
-
-                self._modify_body(name, '({})'.format(s))
+        self._modify_body_multiline('fits', new)
 
 #===============================================================================
 # defaults
@@ -574,27 +637,30 @@ use_peak_hop, ncycles, baseline_ncycles
                                       Item('multicollect_counts', label='Counts',
                                            tooltip='Number of data points to collect'
                                            )
-                                      ),
-                                 UItem('active_detectors',
-                                       style='custom',
-                                       editor=TableEditor(
-                                        sortable=False,
-                                        reorderable=False,
-                                        columns=[
-                                        ObjectColumn(name='label',
-                                                     editable=False,
-                                                     label='Det.'),
-                                        CheckboxColumn(name='use', label='Use'),
-                                        ObjectColumn(name='isotope',
-                                                     editor=EnumEditor(name='isotopes')
-                                                     ),
+                                    ),
+                                  UItem('fit_block', editor=EnumEditor(name='fit_blocks')),
+                                  UItem('fit_block', style='custom',
+                                        editor=InstanceEditor()),
+#                                  UItem('active_detectors',
+#                                        style='custom',
+#                                        editor=TableEditor(
+#                                         sortable=False,
+#                                         reorderable=False,
+#                                         columns=[
+#                                         ObjectColumn(name='label',
+#                                                      editable=False,
+#                                                      label='Det.'),
+#                                         CheckboxColumn(name='use', label='Use'),
+#                                         ObjectColumn(name='isotope',
+#                                                      editor=EnumEditor(name='isotopes')
+#                                                      ),
 #                                         ObjectColumn(name='fit',
 #                                                      editor=EnumEditor(values=[NULL_STR] + FIT_TYPES)
 #                                                      ),
 
 
-                                                                   ])
-                                       ),
+#                                                                    ])
+#                                        ),
 
                                  label='Multicollect',
                                  show_border=True
@@ -731,8 +797,8 @@ use_peak_hop, ncycles, baseline_ncycles
                      Item('use_peak_hop'),
                      peak_hop_group,
                      Group(
-                           cond_grp,
                            multicollect_grp,
+                           cond_grp,
                            baseline_grp,
                            peak_center_grp,
                            equilibration_grp,
@@ -744,3 +810,57 @@ use_peak_hop, ncycles, baseline_ncycles
         return v
 
 #============= EOF =============================================
+
+'''
+    @on_trait_change('active_detectors:[use, fit, isotope]')
+    def _update_active_detectors(self, obj, name, new):
+        dets = self.active_detectors
+
+        if name == 'isotope':
+            if new != NULL_STR:
+                for di in dets:
+                    if not di == obj:
+                        di.isotope = NULL_STR
+                self._modify_body('multicollect_detector', obj.label)
+                self._modify_body('multicollect_isotope', obj.isotope)
+            return
+
+#        s = ''
+#        if name == 'use':
+#            if not new and obj.isotope != NULL_STR:
+#                fd = next((a for a in self.active_detectors if a.use), None)
+#                fd.isotope = obj.isotope
+#
+#            attr = 'label'
+#            param = 'active_detectors'
+#        else:
+#            attr = 'fit'
+#            param = 'fits'
+#
+#        new = []
+#        for di in dets:
+#            if di.use:
+#                new.append((
+#                            getattr(di, 'label'),
+#                            getattr(di, 'fit')
+#                            ))
+
+        ad, fs = zip(*[(di.label, di.fit)
+                       for di in dets if di.use])
+        fs = list(fs)
+        for i, fi in enumerate(fs):
+            if fi.endswith('SEM'):
+                fs[i] = 'average_SEM'
+            elif fi.endswith('SD'):
+                fs[i] = 'average_SD'
+
+        for new, name in ((ad, 'active_detectors'),
+                          (fs, 'fits')):
+            if len(new) == 1:
+                s = "'{}',".format(new[0])
+            else:
+                s = ','.join(map("'{}'".format, new))
+
+                self._modify_body(name, '({})'.format(s))
+'''
+

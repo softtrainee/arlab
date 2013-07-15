@@ -49,7 +49,7 @@ class ExtractionPyScript(ValvePyScript):
         # remove ourselves from the script runner
         if self.runner:
             self.runner.scripts.remove(self)
-    
+
     def set_default_context(self):
         '''
             provide default values for all the properties exposed in the script
@@ -292,7 +292,7 @@ class ExtractionPyScript(ValvePyScript):
 
         ed = self.extract_device
         ed = ed.replace('_', ' ')
-        self.manager.set_extract_state('{} on'.format(ed), color='red')
+        self.manager.set_extract_state('{} ON! {}({})'.format(ed, power, units), color='red')
 
         self.info('extract sample to {} ({})'.format(power, units))
         self._manager_action([('extract', (power,), {'units':units})],
@@ -418,7 +418,7 @@ class ExtractionPyScript(ValvePyScript):
             r.set(value)
         else:
             self.info('Could not set {}'.format(name))
-    
+
     @verbose_skip
     @command_register
     def get_resource_value(self, name=None):
@@ -430,7 +430,7 @@ class ExtractionPyScript(ValvePyScript):
                 return r.isSet()
         else:
             self.info('Could not get {}'.format(name))
-    
+
 
     @verbose_skip
     @command_register
@@ -446,15 +446,15 @@ class ExtractionPyScript(ValvePyScript):
     @command_register
     def disable(self):
         return self._disable()
-    
-    
+
+
     @verbose_skip
     @command_register
     def prepare(self):
         return self._manager_action([('prepare', (), {})],
                              protocol=ILaserManager,
                              name=self.extract_device)
-        
+
 
 #===============================================================================
 # private
@@ -464,7 +464,7 @@ class ExtractionPyScript(ValvePyScript):
         self.manager.set_extract_state(False)
         return self._manager_action([('disable_device', (), {})],
                              protocol=ILaserManager,
-                             name=self.extract_device)  
+                             name=self.extract_device)
     def _set_axis(self, name, value, velocity):
         kw = dict(block=True)
         if velocity:
@@ -479,19 +479,19 @@ class ExtractionPyScript(ValvePyScript):
         else:
             self.info('move to position suceeded')
         return True
-    
+
     def _cancel_hook(self):
         if self._resource_flag:
             self._resource_flag.clear()
-        
-        #disable the extract device    
+
+        # disable the extract device
         self._disable()
-        
-        #stop patterning
+
+        # stop patterning
         self._stop_pattern()
-    
+
     def _stop_pattern(self):
-        self._manager_action([('stop_pattern',(),{})],
+        self._manager_action([('stop_pattern', (), {})],
                              name=self.extract_device,
                               protocol=ILaserManager)
 #============= EOF ====================================

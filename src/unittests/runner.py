@@ -9,12 +9,14 @@ paths.build('_diode')
 logging_setup('unittests')
 
 # from .database import IsotopeTestCase
-# from .experiment import ExperimentTest
+from .experiment import ExperimentTest2
 # from .experiment import ExecutorTest
 # from .experiment import HumanErrorCheckerTest
+# from .experiment_queue import QueueTest
 # from .automated_run import AutomatedRunTest
 # from .processing import FileSelectorTest
-from .processing import AutoFigureTest
+# from .processing import AutoFigureTest
+# from .pyscript import PyscriptTest
 # from .york_regression import YorkRegressionTest, NewYorkRegressionTest
 # from .regression import NewYorkRegressionTest
 # from .bayesian import BayesianTest

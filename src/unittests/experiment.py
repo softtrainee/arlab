@@ -26,6 +26,8 @@ from src.experiment.tasks.experiment_task import ExperimentEditorTask
 from src.database.records.isotope_record import IsotopeRecord
 #============= standard library imports ========================
 #============= local library imports  ==========================
+
+
 class BaseExperimentTest(unittest.TestCase):
     def _load_queues(self):
         man = self.experimentor
@@ -40,7 +42,7 @@ class BaseExperimentTest(unittest.TestCase):
                 editor.new_queue(qi)
                 qs.append(editor.queue)
 
-        man.test_queues(qs, inform=False)
+#         man.test_queues(qs)
         man.experiment_queues = qs
         man.update_info()
         man.path = path
@@ -53,10 +55,27 @@ class BaseExperimentTest(unittest.TestCase):
                                          )
         self.experimentor.db = db = get_test_database().db
 
-        self._experiment_file = './data/experiment.txt'
+        self._experiment_file = './data/experiment2.txt'
 
         self.exp_task = ExperimentEditorTask()
         self._load_queues()
+
+class ExperimentTest2(BaseExperimentTest):
+    def testAliquots(self):
+        queue = self._load_queues()[0]
+        aqs = (46, 46, 47, 47)
+        for i, (aq, an) in enumerate(zip(aqs, queue.automated_runs)):
+            print i, an.labnumber
+            self.assertEqual(an.aliquot, aq)
+
+    def testSteps(self):
+        queue = self._load_queues()[0]
+#         sts = ('A', 'B', '', 'A', 'B', '', '', '', '')
+        sts = ('A', 'B', 'A', 'B')
+        for i, (st, an) in enumerate(zip(sts, queue.automated_runs)):
+#             if st in ('E', 'F'):
+            print i, an.labnumber, an.step, st, an.aliquot
+            self.assertEqual(an.step, st)
 
 class ExperimentTest(BaseExperimentTest):
 

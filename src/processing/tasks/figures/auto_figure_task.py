@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Instance, List, Dict
+from traits.api import HasTraits, on_trait_change, Instance, List, Dict, Bool
 from traitsui.api import View, Item
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed
 from src.processing.tasks.figures.plotter_options_pane import PlotterOptionsPane
@@ -31,8 +31,12 @@ class AutoFigureTask(FigureTask):
     name = 'AutoFigure'
     id = 'pychron.processing.auto_figure'
     plotter_options_pane = Instance(PlotterOptionsPane)
+
     _cached_samples = None
     _cached = Dict
+
+    use_single_ideogram = Bool(True)
+
     def _default_layout_default(self):
         return TaskLayout(
                           id='pychron.analysis_edit',
@@ -64,6 +68,7 @@ class AutoFigureTask(FigureTask):
             plot a series
         '''
 
+        ln = last_run.labnumber
         if last_run.analysis_type == 'unknown':
             sample = last_run.sample
             if sample:
@@ -72,22 +77,18 @@ class AutoFigureTask(FigureTask):
                     aliquot = last_run.aliquot
                     self.plot_sample_spectrum(sample, aliquot)
                 else:
-                    self.plot_sample_ideogram(sample)
+                    self.plot_sample_ideogram(ln, sample)
 
         else:
             ms = last_run.mass_spectrometer
             ed = last_run.extract_device
             at = last_run.analysis_type
-            ln = last_run.labnumber
             editor = self._get_editor(AutoSeriesEditor)
             if editor:
                 afc = editor.auto_figure_control
                 days, hours = afc.days, afc.hours
             else:
                 days, hours = 1, 0
-
-
-
 
             self.plot_series(ln, at, ms, ed,
                              days=days, hours=hours)
@@ -101,9 +102,6 @@ class AutoFigureTask(FigureTask):
         return ans
 
     def plot_series(self, ln=None, at=None, ms=None, ed=None, **kw):
-        '''
-            switch to series editor
-        '''
 
         if ln is None:
             ln = self._cached['ln']
@@ -120,8 +118,8 @@ class AutoFigureTask(FigureTask):
         self._cached['ed'] = ed
 
         klass = AutoSeriesEditor
-        editor = self._get_editor(klass)
-        if editor and editor.labnumber == ln:
+        editor = self._get_editor(klass, labnumber=ln)
+        if editor:
             unks = self.manager.load_series(at, ms, ed,
                                             **kw)
             nunks = self._unique_analyses(unks)
@@ -133,16 +131,39 @@ class AutoFigureTask(FigureTask):
                                             **kw)
             if unks:
                 self.manager.load_analyses(unks)
-                self.new_series(unks, klass, name=ln)
+                self.new_series(unks, klass,
+                                add_baseline_fits=True,
+                                add_derivate_fits=True,
+                                name='Series {}'.format(ln))
 
-                self.active_editor.tool.add_peak_center_fit()
+                editor = self.active_editor
+                tool = editor.tool
+
+                ref = unks[0]
+                tool.load_baseline_fits(ref.isotope_keys)
+                tool.add_peak_center_fit()
+                tool.add_derivate_fits(ref.isotope_keys)
 
                 self.active_editor.labnumber = ln
                 self.active_editor.show_series('Ar40')
 
-    def _get_editor(self, klass):
+    def _get_editor(self, klass, **kw):
+
+        def test(editor):
+            if isinstance(editor, klass):
+                for k, v in kw.iteritems():
+                    if hasattr(editor, k):
+                        if getattr(editor, k) != v:
+                            break
+                    else:
+                        break
+                else:
+                    return True
+#                         getattr(editor, k)==v
+
+
         return next((editor for editor in self.editor_area.editors
-                        if isinstance(editor, klass)), None)
+                        if test(editor)), None)
 
     def plot_sample_spectrum(self, sample, aliquot):
         self.debug('auto plot sample spectrum sample={} aliquot={}'.format(sample, aliquot))
@@ -160,10 +181,14 @@ class AutoFigureTask(FigureTask):
             self.new_spectrum(unks, klass)
         self.group_by_aliquot()
 
-    def plot_sample_ideogram(self, sample):
-        self.debug('auto plot sample ideogram {}'.format(sample))
+    def plot_sample_ideogram(self, labnumber, sample):
+        self.debug('auto plot sample ideogram lab={} {}'.format(labnumber, sample))
         klass = AutoIdeogramEditor
-        editor = self._get_editor(klass)
+        if self.use_single_ideogram:
+            editor = self._get_editor(klass)
+        else:
+            editor = self._get_editor(klass, labnumber=labnumber)
+
         if editor:
 
             unks = self.manager.load_sample_analyses(sample)
@@ -174,13 +199,15 @@ class AutoFigureTask(FigureTask):
         else:
             unks = self.manager.load_sample_analyses(sample)
             self.manager.load_analyses(unks)
-            self.new_ideogram(unks, klass)
+            self.new_ideogram(unks, klass, name='Ideo. {}'.format(labnumber))
+            self.active_editor.labnumber = labnumber
 
-        if self.active_editor.auto_figure_control.group_by_labnumber:
-            self.group_by_labnumber()
+        if self.use_single_ideogram:
+            if self.active_editor.auto_figure_control.group_by_labnumber:
+                self.group_by_labnumber()
 
-        if self.active_editor.auto_figure_control.group_by_aliquot:
-            self.group_by_aliquot()
+            if self.active_editor.auto_figure_control.group_by_aliquot:
+                self.group_by_aliquot()
 
     def create_dock_panes(self):
         panes = super(AutoFigureTask, self).create_dock_panes()

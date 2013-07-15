@@ -29,16 +29,19 @@ from src.experiment.utilities.identifier import SPECIAL_NAMES, SPECIAL_MAPPING, 
     make_special_identifier, make_standard_identifier
 from src.experiment.automated_run.spec import AutomatedRunSpec
 from src.regex import TRANSECT_REGEX, POSITION_REGEX
-from src.experiment.utilities.script_mixin import ScriptMixin
+# from src.experiment.utilities.script_mixin import ScriptMixin
 from src.paths import paths
 from src.experiment.script.script import Script
 from src.experiment.queue.increment_heat_template import IncrementalHeatTemplate
 from src.viewable import Viewable
 from src.ui.thread import Thread
+from src.loggable import Loggable
+import yaml
 def EKlass(klass):
     return klass(enter_set=True, auto_set=False)
 
-class AutomatedRunFactory(Viewable, ScriptMixin):
+# class AutomatedRunFactory(Viewable, ScriptMixin):
+class AutomatedRunFactory(Loggable):
     db = Any
 
     labnumber = String(enter_set=True, auto_set=False)
@@ -130,6 +133,15 @@ class AutomatedRunFactory(Viewable, ScriptMixin):
     edit_mode = Bool(False)
     edit_mode_label = Property(depends_on='edit_mode')
     edit_enabled = Bool(False)
+
+
+    mass_spectrometer = String
+    extract_device = Str
+
+    extraction_script = Instance(Script)
+    measurement_script = Instance(Script)
+    post_measurement_script = Instance(Script)
+    post_equilibration_script = Instance(Script)
 
 #     def _template_changed(self):
 #         print self, self.template
@@ -506,46 +518,7 @@ post_equilibration_script:name
         else:
             self._frequency_enabled = False
 
-#    def _aliquot_changed(self):
-#        if self.edit_mode:
-#            if self.aliquot:
-#                if self.aliquot != self.o_aliquot and self.o_aliquot:
-#                    self.user_defined_aliquot = True
-#                else:
-#                    self.user_defined_aliquot = False
-#
-#                refln=self._selected_runs[0].labnumber
-#                for si in self._selected_runs:
-#                    if si.labnumber !=refln:
-#                        if si.aliquot != self.aliquot:
-#                            si.user_defined_aliquot = True
-#                        else:
-#                            si.user_defined_aliquot = self.user_defined_aliquot
-#
-#                    if si.user_defined_aliquot:
-#                        si.aliquot = int(self.aliquot)
-#
     def _labnumber_changed(self, old, new):
-        def _load_scripts(_old, _new):
-            '''
-                load default steps if 
-                    1. labnumber is special
-                    2. labnumber was a special and now unknown
-                    
-                dont load if was unknown and now unknown
-                this preserves the users changes 
-            '''
-            # if new is special e.g bu-01-01
-            if '-' in _new:
-                _new = _new.split('-')[0]
-            if '-' in _old:
-                _old = old.split('-')[0]
-
-            if _new in ANALYSIS_MAPPING or \
-                _old in ANALYSIS_MAPPING or not _old and _new:
-                # set default scripts
-                self._load_default_scripts(_new)
-
         labnumber = self.labnumber
         if not labnumber or labnumber == NULL_STR:
             return
@@ -562,18 +535,15 @@ post_equilibration_script:name
 
         # if labnumber has a place holder load default script and return
         if '##' in labnumber:
-            _load_scripts(old, new)
+            self._load_scripts(old, new)
             return
 
         self.irradiation = ''
         self.sample = ''
 
         self._aliquot = 0
-#         self.aliquot = 0
-        self.o_aliquot = 0
         if labnumber:
             # convert labnumber (a, bg, or 10034 etc)
-#            clabnumber = convert_identifier(labnumber)
             ln = db.get_labnumber(labnumber)
             if ln:
                 # set sample and irrad info
@@ -588,14 +558,16 @@ post_equilibration_script:name
                     a = 1
 
                 self._aliquot = a
-                self.o_aliquot = a
-#                 self.aliquot = a
 
                 self.irradiation = self._make_irrad_level(ln)
-                _load_scripts(old, new)
+                self._load_scripts(old, new)
 
             elif special:
-                if not (labnumber[:2] in ('pa', 'dg')):
+                ln = labnumber[:2]
+                if ln == 'dg':
+                    self._load_extraction_defaults(ln)
+
+                if not (ln in ('pa', 'dg')):
                     '''
                         don't add pause or degas to database
                     '''
@@ -603,11 +575,11 @@ post_equilibration_script:name
                         db.add_labnumber(labnumber)
                         db.commit()
                         self._aliquot = 1
-                        _load_scripts(old, new)
+                        self._load_scripts(old, new)
                     else:
                         self.labnumber = ''
                 else:
-                    _load_scripts(old, new)
+                    self._load_scripts(old, new)
             else:
                 self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 
@@ -803,27 +775,6 @@ post_equilibration_script:name
 #                    si.aliquot = int(self.aliquot)
 
             self.update_info_needed = True
-#    def _set_aliquot(self, a):
-#        if a != self.o_aliquot:
-#            self.user_defined_aliquot = True
-#
-#        if self.edit_mode:
-#            for si in self._selected_runs:
-#                if si.aliquot != a:
-#                    si.user_defined_aliquot = True
-#                else:
-#                    si.user_defined_aliquot = self.user_defined_aliquot
-# #
-#                if si.user_defined_aliquot:
-#                    si.aliquot = int(a)
-#            self.update_info_needed = True
-#
-#        self.o_aliquot = self._aliquot
-#        self._aliquot = int(a)
-#
-#    def _get_aliquot(self):
-#        return self._aliquot
-
 
     def _get_beam_diameter(self):
         bd = ''
@@ -849,7 +800,6 @@ post_equilibration_script:name
             self.changed = True
             self.refresh_table_needed = True
 
-
         if self.edit_mode and \
             self._selected_runs and \
                 not self.suppress_update:
@@ -857,7 +807,145 @@ post_equilibration_script:name
             self._update_t = t
             t.start()
 
+#===============================================================================
+#
+#===============================================================================
+    def _load_extraction_defaults(self, ln):
+        defaults = self._load_default_file()
+        if defaults:
+            if ln in defaults:
+                grp = defaults[ln]
+                for attr in ('extract_value', 'extract_units'):
+                    v = grp.get(attr)
+                    if v is not None:
+                        setattr(self, attr, v)
 
+    def _load_scripts(self, old, new):
+        '''
+            load default scripts if 
+                1. labnumber is special
+                2. labnumber was a special and now unknown
+                
+            dont load if was unknown and now unknown
+            this preserves the users changes 
+        '''
+        # if new is special e.g bu-01-01
+        if '-' in new:
+            new = new.split('-')[0]
+        if '-' in old:
+            old = old.split('-')[0]
+
+        if new in ANALYSIS_MAPPING or \
+            old in ANALYSIS_MAPPING or not old and new:
+            # set default scripts
+            self._load_default_scripts(new)
+
+    def _load_default_scripts(self, labnumber):
+        self.debug('load default scripts for {}'.format(labnumber))
+        # if labnumber is int use key='U'
+        try:
+            _ = int(labnumber)
+            labnumber = 'u'
+        except ValueError:
+            pass
+
+        labnumber = str(labnumber).lower()
+
+        defaults = self._load_default_file()
+        if defaults:
+            if labnumber in defaults:
+                default_scripts = defaults[labnumber]
+                for skey in SCRIPT_KEYS:
+                    new_script_name = default_scripts.get(skey) or NULL_STR
+
+                    new_script_name = self._remove_file_extension(new_script_name)
+                    if labnumber in ('u', 'bu') and self.extract_device != NULL_STR:
+
+                        # the default value trumps pychron's
+                        if self.extract_device and new_script_name == NULL_STR:
+                            e = self.extract_device.split(' ')[1].lower()
+                            if skey == 'extraction':
+                                new_script_name = e
+                            elif skey == 'post_equilibration':
+                                new_script_name = 'pump_{}'.format(e)
+
+                    elif labnumber == 'dg':
+                        e = self.extract_device.split(' ')[1].lower()
+                        new_script_name = '{}_{}'.format(e, new_script_name)
+
+                    script = getattr(self, '{}_script'.format(skey))
+                    script.name = new_script_name
+
+    def _load_default_file(self):
+        # open the yaml config file
+        p = os.path.join(paths.scripts_dir, 'defaults.yaml')
+        if not os.path.isfile(p):
+            self.warning('Script defaults file does not exist {}'.format(p))
+            return
+
+        with open(p, 'r') as fp:
+            defaults = yaml.load(fp)
+
+        # convert keys to lowercase
+        defaults = dict([(k.lower(), v) for k, v in defaults.iteritems()])
+        return defaults
+
+
+#===============================================================================
+#
+#===============================================================================
+    def _application_changed(self):
+        self.extraction_script.application = self.application
+        self.measurement_script.application = self.application
+        self.post_measurement_script.application = self.application
+        self.post_equilibration_script.application = self.application
+
+
+    @on_trait_change('mass_spectrometer, can_edit')
+    def _update_value(self, name, new):
+        for si in SCRIPT_NAMES:
+            script = getattr(self, si)
+            setattr(script, name, new)
+
+
+    def _script_factory(self, label, name, kind='ExtractionLine'):
+        return Script(label=label,
+#                      names=getattr(self, '{}_scripts'.format(name)),
+                      application=self.application,
+                      mass_spectrometer=self.mass_spectrometer,
+                      kind=kind,
+                      can_edit=self.can_edit
+                      )
+
+    def _extraction_script_default(self):
+        return self._script_factory('Extraction', 'extraction')
+
+    def _measurement_script_default(self):
+        return self._script_factory('Measurement', 'measurement', kind='Measurement')
+
+    def _post_measurement_script_default(self):
+        return self._script_factory('Post Measurement', 'post_measurement')
+
+    def _post_equilibration_script_default(self):
+        return self._script_factory('Post Equilibration', 'post_equilibration')
+
+    def _clean_script_name(self, name):
+        name = self._remove_mass_spectrometer_name(name)
+        return self._remove_file_extension(name)
+
+    def _remove_file_extension(self, name, ext='.py'):
+        if name is NULL_STR:
+            return NULL_STR
+
+        if name.endswith('.py'):
+            name = name[:-3]
+
+        return name
+
+    def _remove_mass_spectrometer_name(self, name):
+        if self.mass_spectrometer:
+            name = name.replace('{}_'.format(self.mass_spectrometer), '')
+        return name
 #============= EOF =============================================
 
 
