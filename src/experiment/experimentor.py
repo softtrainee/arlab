@@ -220,8 +220,13 @@ class Experimentor(IsotopeDatabaseManager):
 
             if not special:
                 key = lambda x: x.extract_group
-                ganalyses = groupby(sorted(analyses, key=key),
-                                    key=key)
+                # sort by extract group
+                a = sorted(analyses, key=key)
+
+                # sort by idx. allows for non sorted extract_groups
+                a = sorted(a, key=lambda x: ans.index(x))
+
+                ganalyses = groupby(a, key=key)
             else:
                 ganalyses = ((0, analyses),)
 

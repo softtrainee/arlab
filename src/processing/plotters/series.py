@@ -105,23 +105,15 @@ class Series(Plotter):
         g.set_x_limits(min(x), max(x), pad='0.1')
 
     def get_value(self, analysis, k):
-#        def get_value(ai, ki):
-
-#            try:
-# #                nv = ai.arar_result[ki.replace('Ar', 's')]
-#                # if ki is like s40 or s39
-#                nv = ai.arar_result[ki]
-#            except KeyError:
-#
-#                # ki is like Ar40 or Ar39bs
-#                nv = ai.isotopes[ki].uvalue  # - ai.signals['{}bs'.format(ki)]
-#            return nv
-
         if '/' in k:
             n, d = k.split('/')
             nv = analysis.get_signal_value(n)
             dv = analysis.get_signal_value(d)
             v = (nv / dv)
+        elif k.endswith('E'):
+            u = analysis.get_signal_value(k[:-1])
+            v, e = u.nominal_value, u.std_dev
+            v = e / float(v) * 100
         elif k.endswith('bs'):
             v = analysis.get_baseline(k[:-2])
         elif k == 'PC':
@@ -130,12 +122,12 @@ class Series(Plotter):
                 v = 0
             else:
                 _x, _y, v, _, _ = v
-
-            v = ufloat(v, 0)
         else:
             v = analysis.get_signal_value(k)
 
-        if v:
+        if isinstance(v, (int, float)):
+            e = 0
+        elif v:
             v, e = v.nominal_value, v.std_dev
         else:
             v, e = 0, 0

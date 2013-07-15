@@ -66,7 +66,7 @@ class ExperimentEditor(BaseTraitsEditor):
 #                                            drag_move=True,
 #                                    auto_update=True,
                                    multi_select=True,
-                                   scroll_to_bottom=False
+#                                    scroll_to_bottom=False
                                    )
                         )
 
@@ -75,7 +75,8 @@ class ExperimentEditor(BaseTraitsEditor):
                                     editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
                                                     editable=False,
                                                     auto_update=True,
-                                                    selectable=False
+                                                    selectable=False,
+                                                    scroll_to_row='scroll_to_row'
                                                     ),
                             ))
 

@@ -23,6 +23,8 @@ from src.experiment.queue.base_queue import BaseExperimentQueue
 from src.constants import SCRIPT_KEYS, SCRIPT_NAMES
 from src.experiment.utilities.identifier import make_runid
 from src.experiment.utilities.human_error_checker import HumanErrorChecker
+from src.experiment.queue.experiment_queue_action import ExperimentQueueAction
+
 
 
 class ExperimentQueue(BaseExperimentQueue):
@@ -32,6 +34,7 @@ class ExperimentQueue(BaseExperimentQueue):
     dclicked = Any
     database_identifier = Int
     executed_runs = List
+    scroll_to_row = Int
 
     def set_run_inprogress(self, aid):
 #    def run_executed(self, aid):
@@ -44,6 +47,7 @@ class ExperimentQueue(BaseExperimentQueue):
         if run is not None:
             self.automated_runs.remove(run)
             self.executed_runs.append(run)
+            self.scroll_to_row = len(self.executed_runs) - 1
         else:
             self.debug('Problem removing {}'.format(aid))
 
@@ -74,6 +78,20 @@ class ExperimentQueue(BaseExperimentQueue):
 #     @on_trait_change('automated_runs:state')
 #     def _refresh_table1(self):
 #         self.refresh_table_needed = True
+
+    def _load_meta(self, meta):
+        super(ExperimentQueue, self)._load_meta(meta)
+        if 'actions' in meta:
+            self.queue_actions = [ExperimentQueueAction(astr)
+                                    for astr in meta['actions']
+                                    ]
+
+        else:
+            self.debug('no actions provided for this queue')
+
+    def _load_actions(self):
+        pass
+
 
     def check_runs(self):
         hec = HumanErrorChecker()

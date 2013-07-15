@@ -295,7 +295,8 @@ class ControlsPane(TraitsDockPane):
                               width=-50),
 
                         CustomLabel('extraction_state_label',
-                                    color_name='extraction_state_color'
+                                    color_name='extraction_state_color',
+                                    size=24
                                     ),
                         spring,
 #                        Item('show_sample_map', show_label=False,
@@ -394,7 +395,7 @@ class IsotopeEvolutionPane(TraitsDockPane):
                        style='custom',
                        width=600
                        ),
-                 
+
                  )
         return v
 

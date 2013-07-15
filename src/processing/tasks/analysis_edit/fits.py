@@ -118,7 +118,6 @@ class FitSelector(HasTraits):
                      for ki, fi in zip(keys, fits)
                     ]
 
-
     def load_baseline_fits(self, keys):
         fits = self.fits
         if not fits:
@@ -131,6 +130,7 @@ class FitSelector(HasTraits):
 
         fits.extend(fs)
         self.fits = fits
+
     def add_peak_center_fit(self):
         fits = self.fits
         if not fits:
@@ -140,6 +140,21 @@ class FitSelector(HasTraits):
 
         fits.append(fs)
         self.fits = fits
+
+    def add_derivated_fits(self, keys):
+        fits = self.fits
+        if not fits:
+            fits = []
+
+        fs = [
+              self.fit_klass(name='{}E'.format(ki), fit='average_sem')
+                    for ki in keys
+             ]
+
+        fits.extend(fs)
+        self.fits = fits
+
+
 
 
 class InterpolationFit(Fit):

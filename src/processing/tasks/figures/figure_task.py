@@ -105,10 +105,6 @@ class FigureTask(AnalysisEditTask):
 #             self.unknowns_pane.update_needed = True
             self.active_editor.rebuild(refresh_data=False)
 
-    def _get_unique_group_id(self):
-        gids = {i.group_id for i in self.unknowns_pane.items}
-        return max(gids) + 1
-
     def new_ideogram(self, ans=None, klass=None, name='Ideo'):
         func = self.manager.new_ideogram
         if klass is None:
@@ -129,19 +125,8 @@ class FigureTask(AnalysisEditTask):
         klass = InverseIsochronEditor
         self._new_figure(ans, name, func, klass)
 
-#     def _save_file(self, path):
-#         self.active_editor.save_file(path)
-    def new_series(self, ans, klass=None, name='Series', add_baseline_fits=False):
-
-#         from src.processing.tasks.series.series_editor import SeriesEditor
-#         editor = SeriesEditor(name='Series',
-#                               processor=self.manager,
-#                               unknowns=ans
-#                               )
-#         editor.unknowns = self.unknowns_pane.items
-#         self._open_editor(editor)
-#         self.series_editor_count += 1
-
+    def new_series(self, ans, klass=None, name='Series',
+                  ):
         if klass is None:
             from src.processing.tasks.figures.figure_editor import SeriesEditor as klass
         func = self.manager.new_series
@@ -158,9 +143,6 @@ class FigureTask(AnalysisEditTask):
         editor.tool.load_fits(refiso.isotope_keys,
                               refiso.isotope_fits
                               )
-        if add_baseline_fits:
-            editor.tool.load_baseline_fits(refiso.isotope_keys)
-
 
     def _new_figure(self, ans, name, func, klass):
         comp, plotter = None, None
@@ -189,9 +171,9 @@ class FigureTask(AnalysisEditTask):
 
         super(FigureTask, self)._active_editor_changed()
 
-    @on_trait_change('active_editor:plotter:recall_event')
-    def _recall(self, new):
-        print new
+#     @on_trait_change('active_editor:plotter:recall_event')
+#     def _recall(self, new):
+#         print new
 
     @on_trait_change('plotter_options_pane:pom:plotter_options:[+, aux_plots:+]')
     def _options_update(self, name, new):
@@ -201,7 +183,7 @@ class FigureTask(AnalysisEditTask):
         self.active_editor.rebuild()
         self.active_editor.dirty = True
 
-#        po = self.plotter_options_pane.pom.plotter_options
-#        comp = self.active_editor.make_func(ans=ans, plotter_options=po)
-#        self.active_editor.component = comp
+    def _get_unique_group_id(self):
+        gids = {i.group_id for i in self.unknowns_pane.items}
+        return max(gids) + 1
 #============= EOF =============================================
