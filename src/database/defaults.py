@@ -19,6 +19,16 @@ import os
 from src.paths import paths
 from pyface.message_dialog import warning
 
+def iterdir(d):
+    for t in os.listdir(d):
+        if t.startswith('.'):
+            continue
+        p = os.path.join(d, t)
+        if not os.path.isfile(p):
+            continue
+
+        yield p, t
+#
 
 def load_isotopedb_defaults(db):
     for name, mass in MOLECULAR_WEIGHTS.iteritems():
@@ -56,26 +66,40 @@ def load_isotopedb_defaults(db):
         warning(None, 'No irradiation_tray_maps directory. add to .../setupfiles')
 
     else:
-        for t in os.listdir(mdir):
-            if t.startswith('.'):
-                continue
-            p = os.path.join(mdir, t)
-            if not os.path.isfile(p):
-                continue
+        for p, name in iterdir(mdir):
+            _load_irradiation_map(db, p, name)
 
-            with open(p, 'r') as f:
-                h = f.readline()
-                nholes, _diam = h.split(',')
-                nholes = int(nholes)
+    mdir = paths.map_dir
+    if not os.path.isdir(mdir):
+        warning(None, 'No irradiation_tray_maps directory. add to .../setupfiles')
 
-                holes = []
-                for i, l in enumerate(f):
-                    try:
-                        holes.append(map(float, l.strip().split(',')))
-                    except ValueError:
-                        break
+    else:
+        for p, name in iterdir(mdir):
+            _load_tray_map(db, p, name)
 
-                blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
-                db.add_irradiation_holder(t, geometry=blob)
     db.commit()
 
+def _load_tray_map(db, p, name):
+    from src.lasers.stage_managers.stage_map import StageMap
+    sm = StageMap(file_path=p)
+
+    r = sm.g_dimension
+    blob = ''.join([struct.pack('>fff', si.x, si.y, r)
+                    for si in sm.sample_holes])
+    db.add_load_holder(name, geometry=blob)
+
+def _load_irradiation_map(db, p, name):
+    with open(p, 'r') as f:
+        h = f.readline()
+        nholes, _diam = h.split(',')
+        nholes = int(nholes)
+
+        holes = []
+        for i, l in enumerate(f):
+            try:
+                holes.append(map(float, l.strip().split(',')))
+            except ValueError:
+                break
+
+        blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
+        db.add_irradiation_holder(name, geometry=blob)

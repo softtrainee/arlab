@@ -98,7 +98,8 @@ class CommandsPane(TraitsDockPane):
 
     def _selected_command_changed(self):
         if self.selected_command:
-            obj = next((ci for ci in self.command_objects if ci.name == self.selected_command), None)
+            obj = next((ci for ci in self.command_objects
+                             if ci.name == self.selected_command), None)
             self.command_object = obj
 
     def _set_commands(self, cs):

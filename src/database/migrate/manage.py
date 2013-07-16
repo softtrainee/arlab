@@ -12,8 +12,8 @@ if __name__ == '__main__':
 #    main(url='sqlite:///{}'.format(p) , debug='False', repository='isotopedb/')
 
 #    url = 'mysql://root:Argon@localhost/isotopedb?connect_timeout=3'
-#    url = 'mysql://root:Argon@localhost/isotopedb_dev?connect_timeout=3'
-    url = 'mysql+pymysql://root:Argon@localhost/isotopedb_dev_migrate?connect_timeout=3'
+    url = 'mysql+pymysql://root:Argon@localhost/isotopedb_dev?connect_timeout=3'
+#     url = 'mysql+pymysql://root:Argon@localhost/isotopedb_dev_migrate?connect_timeout=3'
 #    url = 'mysql://root:Argon@localhost/isotopedb_FC2?connect_timeout=3'
     # url = 'mysql://massspec:DBArgon@129.138.12.131/isotopedb_dev_mod?connect_timeout=3'
 #    url = 'mysql+pymysql://root:Argon@localhost/pychrondata_minnabluff?connect_timeout=3'

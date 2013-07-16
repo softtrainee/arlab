@@ -135,7 +135,7 @@ class ExperimentQueue(BaseExperimentQueue):
 
             self.executable = not failed
 
-    def new_runs_generator(self, last_ran=None):
+    def new_runs_generator(self):
         runs = self.cleaned_automated_runs
         runs = [ri for ri in runs if ri.executable]
         rgen = (r for r in runs)

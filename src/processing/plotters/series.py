@@ -23,6 +23,7 @@ from src.processing.plotters.plotter import Plotter
 from src.graph.regression_graph import RegressionGraph, StackedRegressionGraph
 import time
 from uncertainties import ufloat
+import math
 # from src.graph.regression_graph import AnnotatedRegressionGraph
 
 class Series(Plotter):
@@ -62,9 +63,12 @@ class Series(Plotter):
 
         self.analyses = analyses
 
-        x, ys = zip(*[(ai.timestamp, self.get_value(ai, key))
-                      for ai in analyses])
-        y, es = zip(*ys)
+        x, y, es = self._get_values(analyses, key)
+#         x, ys = zip(*[(ai.timestamp, self.get_value(ai, key))
+#                       for ai in analyses])
+
+
+#         y, es = zip(*ys)
 
 
         # normalize x to last analysis
@@ -104,35 +108,68 @@ class Series(Plotter):
 
         g.set_x_limits(min(x), max(x), pad='0.1')
 
-    def get_value(self, analysis, k):
+    def _get_values(self, analyses, k):
         if '/' in k:
-            n, d = k.split('/')
-            nv = analysis.get_signal_value(n)
-            dv = analysis.get_signal_value(d)
-            v = (nv / dv)
-        elif k.endswith('E'):
-            u = analysis.get_signal_value(k[:-1])
-            v, e = u.nominal_value, u.std_dev
-            v = e / float(v) * 100
+            def get_v(a):
+                n, d = k.split('/')
+                nv = a.get_signal_value(n)
+                dv = a.get_signal_value(d)
+                v = (nv / dv)
+                return a.timestamp, v.nominal_value, v.std_dev
         elif k.endswith('bs'):
-            v = analysis.get_baseline(k[:-2])
+            def get_v(a):
+                v = a.get_baseline(k[:-2])
+                return a.timestamp, v.nominal_value, v.std_dev
         elif k == 'PC':
-            v = analysis.peakcenter
-            if not v:
-                v = 0
-            else:
-                _x, _y, v, _, _ = v
+            def get_v(a):
+                v = a.peakcenter
+                if not v:
+                    v = 0
+                else:
+                    _x, _y, v, _, _ = v
+                return a.timestamp, v, 0
+        elif k.endswith('E'):
+            def get_v(a):
+                u = a.get_signal_value(k[:-1])
+                v, e = u.nominal_value, u.std_dev
+                v = e / float(v * v) * 100
+                v = math.log(v)
+                return a.timestamp, v, 0
         else:
-            v = analysis.get_signal_value(k)
+            def get_v(a):
+                v = a.get_signal_value(k)
+                return a.timestamp, v.nominal_value, v.std_dev
+        return zip(*[get_v(ai) for ai in analyses])
 
-        if isinstance(v, (int, float)):
-            e = 0
-        elif v:
-            v, e = v.nominal_value, v.std_dev
-        else:
-            v, e = 0, 0
-
-        return v, e
+#     def get_value(self, analysis, k):
+#         if '/' in k:
+#             n, d = k.split('/')
+#             nv = analysis.get_signal_value(n)
+#             dv = analysis.get_signal_value(d)
+#             v = (nv / dv)
+#         elif k.endswith('E'):
+#             u = analysis.get_signal_value(k[:-1])
+#             v, e = u.nominal_value, u.std_dev
+#             v = e / float(v) * 100
+#         elif k.endswith('bs'):
+#             v = analysis.get_baseline(k[:-2])
+#         elif k == 'PC':
+#             v = analysis.peakcenter
+#             if not v:
+#                 v = 0
+#             else:
+#                 _x, _y, v, _, _ = v
+#         else:
+#             v = analysis.get_signal_value(k)
+#
+#         if isinstance(v, (int, float)):
+#             e = 0
+#         elif v:
+#             v, e = v.nominal_value, v.std_dev
+#         else:
+#             v, e = 0, 0
+#
+#         return v, e
 #============= EOF =============================================
 
 ##===============================================================================

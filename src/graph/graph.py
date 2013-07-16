@@ -743,7 +743,7 @@ class Graph(Viewable, ContextMenuMixin):
             if rd['type'] == 'cmap_scatter':
                 from chaco.default_colormaps import color_map_name_dict
                 rd['color_mapper'] = color_map_name_dict[color_map_name]
-                rd['line_width'] = 0
+#                 rd['line_width'] = 1
 
 #                    self.series[plotid][1] += (c,)
                 c = self.series[plotid][-1][0].replace('x', 'c')

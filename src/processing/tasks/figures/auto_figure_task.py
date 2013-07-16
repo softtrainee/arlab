@@ -181,13 +181,14 @@ class AutoFigureTask(FigureTask):
             self.new_spectrum(unks, klass)
         self.group_by_aliquot()
 
-    def plot_sample_ideogram(self, labnumber, sample):
-        self.debug('auto plot sample ideogram lab={} {}'.format(labnumber, sample))
+    def plot_sample_ideogram(self, sample):
+        self.debug('auto plot sample ideogram lab={}'.format(sample))
         klass = AutoIdeogramEditor
         if self.use_single_ideogram:
             editor = self._get_editor(klass)
         else:
-            editor = self._get_editor(klass, labnumber=labnumber)
+#             editor = self._get_editor(klass, labnumber=labnumber)
+            editor = self._get_editor(klass, sample=sample)
 
         if editor:
 
@@ -199,8 +200,9 @@ class AutoFigureTask(FigureTask):
         else:
             unks = self.manager.load_sample_analyses(sample)
             self.manager.load_analyses(unks)
-            self.new_ideogram(unks, klass, name='Ideo. {}'.format(labnumber))
-            self.active_editor.labnumber = labnumber
+#             self.new_ideogram(unks, klass, name='Ideo. {}'.format(labnumber))
+            self.new_ideogram(unks, klass, name='Ideo. {}'.format(sample))
+            self.active_editor.sample = sample
 
         if self.use_single_ideogram:
             if self.active_editor.auto_figure_control.group_by_labnumber:

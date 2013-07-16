@@ -44,8 +44,18 @@ class ExperimentQueueFactory(Loggable):
     tray = Str
     trays = Property
 
+    load_name = Str
+    load_names = Property
 
     ok_make = Property(depends_on='mass_spectrometer, username')
+
+    @cached_property
+    def _get_load_names(self):
+        ts = self.db.get_loads()
+        names = [ti.name for ti in ts]
+        return names
+
+
     def _get_ok_make(self):
         ms = self.mass_spectrometer.strip()
         un = self.username.strip()

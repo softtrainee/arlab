@@ -914,7 +914,7 @@ post_equilibration_script:name
                       application=self.application,
                       mass_spectrometer=self.mass_spectrometer,
                       kind=kind,
-                      can_edit=self.can_edit
+#                       can_edit=self.can_edit
                       )
 
     def _extraction_script_default(self):

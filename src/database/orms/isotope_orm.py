@@ -407,6 +407,40 @@ class meas_MonitorTable(Base, NameMixin):
 
     analysis_id = foreignkey('meas_AnalysisTable')
 
+
+
+class meas_PositionsTable(Base, BaseMixin):
+    load_identifier = Column(String(80), ForeignKey('loading_LoadTable.name'))
+    extraction_id = foreignkey('meas_ExtractionTable')
+    is_degas = Column(Boolean)
+    position = Column(Integer)
+
+class loading_LoadTable(Base):
+    @declared_attr
+    def __tablename__(self):
+        return self.__name__
+
+    name = Column(String(80), primary_key=True)
+    create_date = Column(DateTime, default=func.now())
+    holder = Column(String(80), ForeignKey('gen_LoadHolderTable.name'))
+
+    measured_positions = relationship('meas_PositionsTable')
+    loaded_positions = relationship('loading_PositionsTable')
+
+class loading_PositionsTable(Base, BaseMixin):
+    load_identifier = Column(String(80), ForeignKey('loading_LoadTable.name'))
+    lab_identifier = Column(String(80), ForeignKey('gen_LabTable.identifier'))
+    position = Column(Integer)
+
+class gen_LoadHolderTable(Base):
+    @declared_attr
+    def __tablename__(self):
+        return self.__name__
+
+    name = Column(String(80), primary_key=True)
+    geometry = Column(BLOB)
+
+    loads = relationship('loading_LoadTable', backref='holder_')
 #===============================================================================
 # irradiation
 #===============================================================================

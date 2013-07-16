@@ -304,7 +304,7 @@ class AutomatedRun(Loggable):
                 self.plot_panel.fits = fits
 
             self.fits = [(None, fits)]
-            
+
         self.debug('@@@@@@@@@@@@@@@@@ Fits {}'.format(self.fits))
 
     def py_set_spectrometer_parameter(self, name, v):
@@ -1122,7 +1122,7 @@ anaylsis_type={}
 
                 if iter_cnt > s and iter_cnt < e:
                     break
-        
+
 #        self.debug('fs {}'.format(fs))
         return fs
 
@@ -1150,7 +1150,7 @@ anaylsis_type={}
         spec = self.spectrometer_manager.spectrometer
         ncounts = int(ncounts)
         iter_cnt = 0
-        
+
         nfs = self._get_fit_block(0, fits)
         for pi, (fi, dn) in enumerate(zip(nfs, dets)):
             graph.new_series(marker='circle', type='scatter',
@@ -1158,7 +1158,7 @@ anaylsis_type={}
                              fit=fi,
                              plotid=pi
                              )
-        
+
         while 1:
 #        for iter_cnt in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(iter_cnt, ncounts, check_conditions)
@@ -1200,13 +1200,13 @@ anaylsis_type={}
                                 )
                 if fi:
                     graph.set_fit(fi, plotid=pi, series=0)
-                    
-                    
-            if grpname=='signal':
+
+
+            if grpname == 'signal':
                 self.plot_panel.fits = nfs
 #            print len(graph.series[0]), series
 #            if len(graph.series[0]) < series + 1:
-##                 graph_kw = dict(marker='circle', type='scatter', marker_size=1.25)
+# #                 graph_kw = dict(marker='circle', type='scatter', marker_size=1.25)
 #                for pi, (fi, dn) in enumerate(zip(nfs, dets)):
 #                    signal = signals[keys.index(dn.name)]
 #                    graph.new_series(x=[x], y=[signal],
@@ -1215,10 +1215,10 @@ anaylsis_type={}
 #                                     fit=fi,
 #                                     plotid=pi
 #                                     )
-##                 func = lambda x, signal, kw: graph.new_series(x=[x],
-##                                                                  y=[signal],
-##                                                                  **kw
-##                                                                  )
+# #                 func = lambda x, signal, kw: graph.new_series(x=[x],
+# #                                                                  y=[signal],
+# #                                                                  **kw
+# #                                                                  )
 #            else:
 #                for pi, (fi, dn) in enumerate(zip(nfs, dets)):
 #                    signal = signals[keys.index(dn.name)]
@@ -1231,7 +1231,7 @@ anaylsis_type={}
 #                    if fi:
 #                        graph.set_fit(fi, plotid=pi, series=series - 1)
 
-    
+
             data_write_hook(x, keys, signals)
             if refresh:
                 graph.refresh()
@@ -1314,7 +1314,19 @@ anaylsis_type={}
         self.info('Analysis started at {}'.format(self._runtime))
 
     def _post_extraction_save(self):
-        pass
+        ext = self._save_extraction()
+        self._db_extraction = ext
+
+        is_degas = self.labnumber == 'dg'
+
+        db = self.db
+
+        loadtable = db.get_loadtable(self.loadtable)
+        if loadtable is None:
+            loadtable = db.add_loadtable(self.loadtable)
+            db.flush()
+
+        db.add_load_position(loadtable, is_degas=is_degas)
 
     def _pre_measurement_save(self):
         self.info('pre measurement save')
@@ -1406,7 +1418,10 @@ anaylsis_type={}
                 self.warning('no experiment found for {}'.format(self.experiment_identifier))
 
             # save extraction
-            ext = self._save_extraction(a)
+#             ext = self._save_extraction(a)
+            ext = self._db_extraction
+            a.extraction = ext
+
 
             # save measurement
             meas = self._save_measurement(a)
@@ -1460,7 +1475,7 @@ anaylsis_type={}
                    if kind == 'sniff']
 
         rsignals = dict()
-        fits=self.plot_panel.fits
+        fits = self.plot_panel.fits
         for fit, (iso, detname) in zip(fits, signals):
             tab = dm.get_table(detname, '/signal/{}'.format(iso))
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
@@ -1541,7 +1556,7 @@ anaylsis_type={}
             return meas
         return self._time_save(func, 'measurement')
 
-    def _save_extraction(self, analysis):
+    def _save_extraction(self, analysis=None):
         self.info('saving extraction')
         def func():
             db = self.db
