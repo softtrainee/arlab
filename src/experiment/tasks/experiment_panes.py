@@ -70,6 +70,11 @@ class ExperimentFactoryPane(TraitsDockPane):
                                           editor=EnumEditor(name=make_qf_name('extract_devices')),
                                           )
                                    ),
+                            QFItem('load_name',
+                                   show_label=False,
+                                   editor=EnumEditor(name=make_qf_name('load_names'))
+                                   ),
+
                             QFItem('delay_before_analyses'),
                             QFItem('delay_between_analyses')
                             ),
@@ -407,6 +412,7 @@ class SummaryPane(TraitsDockPane):
         v = View(UItem('plot_panel', editor=InstanceEditor(view='summary_view'),
                        style='custom'))
         return v
+
 
 # from pyface.tasks.enaml_dock_pane import EnamlDockPane
 # class TestEnamlPane(EnamlDockPane):

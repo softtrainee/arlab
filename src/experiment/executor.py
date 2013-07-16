@@ -109,7 +109,7 @@ class ExperimentExecutor(Experimentable):
     extraction_state = None
 
     _alive = Bool(False)
-    _last_ran = None
+#     _last_ran = None
     _prev_baselines = Dict
     _prev_blanks = Dict
     _was_executed = Bool(False)
@@ -134,6 +134,7 @@ class ExperimentExecutor(Experimentable):
     _canceled = False
 
     _abort_overlap_signal = None
+    _triggered_run = False
 
     def isAlive(self):
         return self._alive
@@ -600,7 +601,7 @@ class ExperimentExecutor(Experimentable):
         self.db.commit()
         exp.database_identifier = int(dbexp.id)
 
-        rgen, nruns = exp.new_runs_generator(self._last_ran)
+        rgen, nruns = exp.new_runs_generator()
         cnt = 0
         totalcnt = 0
 
@@ -609,12 +610,16 @@ class ExperimentExecutor(Experimentable):
             force_delay = False
 
             # check for mods
-            if self._check_for_file_mods():
-                self._reload_from_disk()
-                cnt = 0
-                self.info('%%%%%%%%%%%%%%%%%%%% Queue Modified %%%%%%%%%%%%%%%%%%%%')
-                rgen, nruns = exp.new_runs_generator(self._last_ran)
-                force_delay = True
+#             if self._check_for_file_mods():
+#                 self._reload_from_disk()
+#                 cnt = 0
+#                 self.info('%%%%%%%%%%%%%%%%%%%% Queue Modified %%%%%%%%%%%%%%%%%%%%')
+#                 rgen, nruns = exp.new_runs_generator(self._last_ran)
+#                 force_delay = True
+#
+            if self._triggered_run:
+                rgen, nruns = exp.new_runs_generator()
+                self._triggered_run = False
 
             if force_delay or (self.isAlive() and \
                                cnt < nruns and \
@@ -623,11 +628,11 @@ class ExperimentExecutor(Experimentable):
                 delay = exp.delay_between_analyses
                 self._delay(delay)
 
-            if self._check_for_file_mods():
-                self._reload_from_disk()
-                cnt = 0
-                self.info('%%%%%%%%%%%%%%%%%%%% Queue Modified %%%%%%%%%%%%%%%%%%%%')
-                rgen, nruns = exp.new_runs_generator(self._last_ran)
+#             if self._check_for_file_mods():
+#                 self._reload_from_disk()
+#                 cnt = 0
+#                 self.info('%%%%%%%%%%%%%%%%%%%% Queue Modified %%%%%%%%%%%%%%%%%%%%')
+#                 rgen, nruns = exp.new_runs_generator(self._last_ran)
 
             runargs = None
             try:
@@ -641,7 +646,7 @@ class ExperimentExecutor(Experimentable):
             cnt += 1
             if runargs:
                 t, run = runargs
-                self._last_ran = runspec
+#                 self._last_ran = runspec
 
                 if run.analysis_type == 'unknown' and run.overlap:
                     self.info('overlaping')
@@ -667,7 +672,7 @@ class ExperimentExecutor(Experimentable):
                 set last_run to None if this run wasnt successfully
                 experiment set will restart at last successful run
             '''
-            self._last_ran = None
+#             self._last_ran = None
             self.warning('automated runs did not complete successfully')
             self.warning('error: {}'.format(self.err_message))
 
@@ -873,6 +878,12 @@ class ExperimentExecutor(Experimentable):
             if action.count < action.nrepeat:
                 self.debug('repeating last run')
                 action.count += 1
+                exp = self.experiment_queue
+
+                run = exp.executed_runs[0]
+                exp.automated_runs.insert(0, run)
+                self._triggered_run = True
+
             else:
                 self.info('executed N {} {}s'.format(action.count + 1,
                                                      action.action))
@@ -884,25 +895,26 @@ class ExperimentExecutor(Experimentable):
 
 
     def _end_runs(self):
-        self._last_ran = None
+#         self._last_ran = None
         self.stats.stop_timer()
         self.extraction_state = False
+        self.extraction_state_label = '{} Finished'.format(self.experiment_queue.name)
 
-    def _get_all_automated_runs(self):
-        ans = super(ExperimentExecutor, self)._get_all_automated_runs()
-
-        startid = 0
-        exp = self.experiment_queue
-        if exp and exp._cached_runs:
-            try:
-                startid = exp._cached_runs.index(self._last_ran) + 1
-            except ValueError:
-                pass
-
-        if startid:
-            return [ai for ai in ans][startid:]
-        else:
-            return ans
+#     def _get_all_automated_runs(self):
+#         ans = super(ExperimentExecutor, self)._get_all_automated_runs()
+#
+#         startid = 0
+#         exp = self.experiment_queue
+#         if exp and exp._cached_runs:
+#             try:
+#                 startid = exp._cached_runs.index(self._last_ran) + 1
+#             except ValueError:
+#                 pass
+#
+#         if startid:
+#             return [ai for ai in ans][startid:]
+#         else:
+#             return ans
 
 #===============================================================================
 # handlers

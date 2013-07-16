@@ -125,6 +125,10 @@ class SetResource(Command):
     description = ''
     example = ''
 
+class GetResourceValue(Command):
+    description = ''
+    example = ''
+
 class SetPositionCommand(ValueCommand):
     pass
 

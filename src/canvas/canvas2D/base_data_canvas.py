@@ -118,7 +118,8 @@ class BaseDataCanvas(DataView):
         # plot=BaseXYPlot
         plot = LinePlot
 
-        sp = plot(index=ArrayDataSource(self.y_range), value=ArrayDataSource(self.x_range),
+        sp = plot(index=ArrayDataSource(self.y_range),
+                  value=ArrayDataSource(self.x_range),
                        index_mapper=LinearMapper(range=self.index_range),
                        value_mapper=LinearMapper(range=self.value_range))
 

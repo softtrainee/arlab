@@ -30,8 +30,9 @@ from src.envisage.tasks.actions import GenericSaveAction, GenericSaveAsAction, \
     GenericFindAction, RaiseAction, RaiseUIAction, ResetLayoutAction, \
     MinimizeAction, PositionAction, IssueAction
 from pyface.file_dialog import FileDialog
-from pyface.constant import OK
+from pyface.constant import OK, CANCEL
 from itertools import groupby
+from pyface.confirmation_dialog import ConfirmationDialog
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -304,10 +305,18 @@ class BaseTask(Task):
                      name='Help')
         return menu
 
+    def _confirmation(self, message=''):
+        dialog = ConfirmationDialog(parent=self.window.control,
+                                    message=message, cancel=True,
+                                    default=CANCEL, title='Save Changes?')
+        return dialog.open()
+
+
 class BaseManagerTask(BaseTask):
     default_directory = Unicode
     wildcard = None
     manager = Any
+
     def open_file_dialog(self, **kw):
         if 'default_directory' not in kw:
             kw['default_directory'] = self.default_directory

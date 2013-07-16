@@ -25,7 +25,10 @@ class MeanRegressor(BaseRegressor):
     ddof = 1
     _fit = 'average'
     def _calculate_coefficients(self):
-        return [self.ys.mean()]
+        if len(self.ys):
+            return [self.ys.mean()]
+        else:
+            return 0
 
     def _calculate_coefficient_errors(self):
         return [self.std, self.sem]

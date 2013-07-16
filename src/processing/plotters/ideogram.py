@@ -39,6 +39,7 @@ from numpy import log10
 from src.processing.plotters.point_move_tool import PointMoveTool
 from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
 import time
+from chaco.abstract_overlay import AbstractOverlay
 # from src.processing.figure import AgeResult
 
 # def weighted_mean(x, errs):
@@ -55,6 +56,8 @@ import time
 #    pass
 
 N = 500
+
+
 
 
 class Ideogram(Plotter):
@@ -195,7 +198,7 @@ class Ideogram(Plotter):
                 # get aux type and plot
                 try:
                     func = getattr(self, '_aux_plot_{}'.format(ap['name']))
-                    func(g, analyses, plotid + 1, group_id, aux_namespace,
+                    func(g, ans, plotid + 1, group_id, aux_namespace,
                          value_scale=ap['scale'],
                          x_error=ap['x_error'],
                          y_error=ap['y_error']
@@ -272,11 +275,20 @@ class Ideogram(Plotter):
         aages, xerrs = zip(*n)
         maa = start + len(aages)
         age_ys = linspace(start, maa, len(aages))
+
+#         tt = [ai.timestamp for ai in self.analyses]
+
+        ts = array([ai.timestamp for ai in analyses])
+        ts = 1 / ts
+#         print ts, 'fff'
         self._add_aux_plot(g, aages, age_ys, xerrs, None, group_id,
                                value_format=lambda x: '{:d}'.format(int(x)),
                                additional_info=lambda x: x.age_string,
                                plotid=plotid,
-                               **kw
+                                plot_type='cmap_scatter',
+                                colors=ts,
+                                color_map_name='gray',
+                                marker_size=4
                                )
 
     def _calculate_probability_curve(self, ages, errors, xmi, xma):
@@ -427,19 +439,26 @@ class Ideogram(Plotter):
                       value_scale='linear',
                       x_error=False,
                       y_error=False,
-                      additional_info=None
+                      additional_info=None,
+                      plot_type='scatter',
+                      **kw
                       ):
 
         g.set_grid_traits(visible=False, plotid=plotid)
         g.set_grid_traits(visible=False, grid='y', plotid=plotid)
 
+        if not 'marker_size' in kw:
+            kw['marker_size'] = 2
+
         scatter, p = g.new_series(ages, ys,
-                                   type='scatter', marker='circle',
-                                   marker_size=2,
+                                   type=plot_type, marker='circle',
+#                                    marker_size=2,
                                    value_scale=value_scale,
 #                                   selection_marker='circle',
                                    selection_marker_size=3,
-                                   plotid=plotid)
+                                   plotid=plotid,
+                                   **kw
+                                   )
         if xerrors and x_error:
             self._add_error_bars(scatter, xerrors, 'x', 1)
 

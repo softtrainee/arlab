@@ -42,6 +42,8 @@ from src.experiment.experimentor import Experimentor
 # from src.experiment.import_manager import ImportManager
 from src.experiment.tasks.constants_preferences import ConstantsPreferencesPane
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.experiment.loading.load_task import LoadingTask
+from src.experiment.loading.actions import SaveLoadingAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -57,7 +59,14 @@ class ExperimentPlugin(BaseTaskPlugin):
         def save_as_factory():
             return SaveAsExperimentQueueAction(self._get_manager())
 
-        return [TaskExtension(
+        return [
+                TaskExtension(task_id='pychron.loading',
+                               actions=[SchemaAddition(id='save_loading_figure',
+                                                       factory=SaveLoadingAction,
+                                                       path='MenuBar/File')
+                                        ],
+                              ),
+                TaskExtension(
                               actions=[
                                        SchemaAddition(id='open_experiment',
                                                         factory=OpenExperimentQueueAction,
@@ -240,6 +249,13 @@ class ExperimentPlugin(BaseTaskPlugin):
                             name='Experiment',
                             task_group='experiment'
                             ),
+                TaskFactory(id='pychron.loading',
+                            factory=self._load_task_factory,
+                            name='Loading',
+                            accelerator='Ctrl+Y',
+                            task_group='experiment'
+                            )
+
 #                TaskFactory(id='pychron.labnumber_entry',
 #                            factory=self._labnumber_task_factory,
 #                            name='Labnumber'
@@ -250,6 +266,8 @@ class ExperimentPlugin(BaseTaskPlugin):
 #        return LabnumberEntryTask(manager=self.application.get_service(LabnumberEntry),
 #                                  importer=self.application.get_service(ImportManager)
 #                                  )
+    def _load_task_factory(self):
+        return LoadingTask()
 
     def _task_factory(self):
 #         return ExperimentEditorTask(manager=self._get_manager())

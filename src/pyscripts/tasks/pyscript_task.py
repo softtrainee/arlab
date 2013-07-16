@@ -115,17 +115,17 @@ class PyScriptTask(EditorTask):
     def new(self):
 
         # todo ask for script type
-
         info = self.edit_traits(view='kind_select_view')
         if info.result:
             self._open_editor(path='')
             return True
 
-    def open(self):
-        path = '/Users/ross/Pychrondata_diode/scripts/measurement/jan_unknown.py'
-# #         path = '/Users/ross/Pychrondata_diode/scripts/extraction/jan_diode.py'
-        self._open_file(path)
-        return True
+#     def open(self):
+# #         path = '/Users/ross/Pychrondata_diode/scripts/measurement/jan_unknown.py'
+# #         path = '/Users/ross/Pychrondata_diode/scripts/extra/jan_unknown.py'
+#         path = '/Users/ross/Pychrondata_diode/scripts/extraction/jan_diode.py'
+#         self._open_file(path)
+#         return True
 
     def _open_file(self, path, **kw):
         self.info('opening pyscript: {}'.format(path))
@@ -140,10 +140,7 @@ class PyScriptTask(EditorTask):
     def _open_editor(self, path, kind=None):
         if path:
             kind = self._extract_kind(path)
-#            if kind is not None:
-#                self.kind = kind
 
-#        if self.kind == 'Measurement':
         if kind == 'Measurement':
             klass = MeasurementEditor
         elif kind == 'Bakeout':
@@ -155,62 +152,8 @@ class PyScriptTask(EditorTask):
                        auto_detab=self.auto_detab,
                        )
 
-#        self.editor.editor = editor
-#        editor.editor = self.editor
-
-#         self.editor_area.add_editor(editor)
-#         self.editor_area.activate_editor(editor)
         super(PyScriptTask, self)._open_editor(editor)
 
-#    def _save_file(self, path):
-#        pass
-
-
-#    def _kind_changed(self):
-#        if self.kind:
-#            self.commands.load_commands(self.kind)
-#            pm = self.parameter_editor_factory(self.kind)
-#            print pm
-#            self.editor = pm
-
-#    def parameter_editor_factory(self, kind):
-#        pkg = 'src.pyscripts.parameter_editor'
-#        klass = '{}ParameterEditor'.format(kind)
-# #        cmd_name = '{}_command_editor'.format(scmd)
-# #        try:
-# #            cmd = getattr(self, cmd_name)
-# #        except AttributeError:
-#
-#        m = __import__(pkg, globals={}, locals={}, fromlist=[klass])
-#        return getattr(m, klass)()
-# #        try:
-#            cmd = getattr(m, klass)()
-#            setattr(self, cmd_name, cmd)
-#        except AttributeError, e :
-
-#    def _selected_command_changed(self):
-#        print self.selected_command
-#        if self.selected_command:
-#            scmd = self.selected_command
-#            cmd = None
-#            words = scmd.split('_')
-#            klass = ''.join(map(str.capitalize, words))
-#
-#            pkg = 'src.pyscripts.commands.api'
-#            cmd_name = '{}_command_editor'.format(scmd)
-#            try:
-#                cmd = getattr(self, cmd_name)
-#            except AttributeError:
-#
-#                m = __import__(pkg, globals={}, locals={}, fromlist=[klass])
-#                try:
-#                    cmd = getattr(m, klass)()
-#                    setattr(self, cmd_name, cmd)
-#                except AttributeError, e :
-#                    if scmd:
-#                        print e
-#
-#            self.selected = cmd
 
     def _get_description(self):
         if self.selected:
@@ -221,27 +164,5 @@ class PyScriptTask(EditorTask):
         if self.selected:
             return self.selected.example
         return ''
-
-#    def kind_select_view(self):
-#        v = View(
-#                 Label('Select kind of new PyScript'),
-#                 UItem('kind', editor=EnumEditor(name='kinds')),
-#                 kind='livemodal',
-#                 buttons=['OK', 'Cancel'],
-#                 title=' ',
-#
-#               )
-#
-#        return v
-
-#            print self.selected_command
-#    def _menu_bar_factory(self, menus=None):
-#        if menus is None:
-#            menus = []
-#        menus.extend([
-#                      SMenu()
-#                      ])
-#
-#        return super(PyScriptTask, self)._menu_bar_factory(menus=menus)
 
 #============= EOF =============================================

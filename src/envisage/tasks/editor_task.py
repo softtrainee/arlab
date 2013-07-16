@@ -24,7 +24,7 @@ from pyface.tasks.api import IEditor, IEditorAreaPane
 from src.loggable import Loggable
 from src.envisage.tasks.base_task import BaseManagerTask
 # from pyface.tasks.split_editor_area_pane import SplitEditorAreaPane
-from pyface.confirmation_dialog import ConfirmationDialog
+# from pyface.confirmation_dialog import ConfirmationDialog
 from pyface.constant import CANCEL, YES
 
 from pyface.tasks.advanced_editor_area_pane import AdvancedEditorAreaPane
@@ -95,11 +95,12 @@ class EditorTask(BaseManagerTask, Loggable):
             return self.editor_area.active_editor
 
         return None
-    def _confirmation(self, message=''):
-        dialog = ConfirmationDialog(parent=self.window.control,
-                                    message=message, cancel=True,
-                                    default=CANCEL, title='Save Changes?')
-        return dialog.open()
+
+#     def _confirmation(self, message=''):
+#         dialog = ConfirmationDialog(parent=self.window.control,
+#                                     message=message, cancel=True,
+#                                     default=CANCEL, title='Save Changes?')
+#         return dialog.open()
 
     def _prompt_for_save(self):
         if self.editor_area is None:

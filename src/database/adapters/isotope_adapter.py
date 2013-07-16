@@ -28,7 +28,8 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_ExperimentTable, meas_ExtractionTable, meas_IsotopeTable, meas_MeasurementTable, \
     meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
     meas_SignalTable, meas_PeakCenterTable, meas_PositionTable, \
-    meas_ScriptTable, meas_MonitorTable
+    meas_ScriptTable, meas_MonitorTable, loading_LoadTable, gen_LoadHolderTable, \
+    meas_PositionsTable, loading_PositionsTable
 
 
 # med_
@@ -76,12 +77,39 @@ class IsotopeAdapter(DatabaseAdapter):
     '''
 
     selector_klass = IsotopeAnalysisSelector
-#    path_table = meas_AnalysisPathTable
 
-#    def initialize_database(self):
-#        self.add_sample('B')
-#        self.commit()
-#        self.add_labnumber('A')
+    def add_load(self, name, **kw):
+        l = loading_LoadTable(name=name, **kw)
+        self._add_item(l)
+        return l
+
+    def add_load_position(self, labnumber, **kw):
+        lp = loading_PositionsTable(**kw)
+        ln = self.get_labnumber(labnumber)
+        if ln:
+            lp.lab_identifier = ln.identifier
+
+        self._add_item(lp)
+        return lp
+
+    def get_loadtable(self, name=None):
+        lt = None
+        if name is not None:
+            lt = self._retrieve_item(loading_LoadTable, name)
+        else:
+            q = self.get_query(loading_LoadTable)
+            if q:
+                q = q.order_by(loading_LoadTable.create_date.desc())
+                try:
+                    lt = q.first()
+                except Exception, e:
+                    import traceback
+                    traceback.print_exc()
+
+        return lt
+#===============================================================================
+#
+#===============================================================================
     def clone_record(self, a):
         sess = self.new_session()
         q = sess.query(meas_AnalysisTable)
@@ -246,7 +274,9 @@ class IsotopeAdapter(DatabaseAdapter):
 
         ed = self.get_extraction_device(extract_device)
         if ed:
-            ed.extractions.append(ex)
+            ex.extract_device_id = ed.id
+
+#             ed.extractions.append(ex)
 
         return ex
 
@@ -319,6 +349,10 @@ class IsotopeAdapter(DatabaseAdapter):
                                     chronology=chronology)
         self._add_item(ir)
         return ir
+
+    def add_load_holder(self, name, **kw):
+        lh = gen_LoadHolderTable(name=name, **kw)
+        return self._add_unique(lh, 'load_holder', name)
 
     def add_irradiation_holder(self, name , **kw):
         ih = irrad_HolderTable(name=name, **kw)
@@ -629,7 +663,7 @@ class IsotopeAdapter(DatabaseAdapter):
             return q.one()
         except NoResultFound, e:
             self.debug('get last analysis {}'.format(e))
-            return 
+            return
 
     def get_unique_analysis(self, ln, ai, step=None):
         sess = self.get_session()
@@ -710,6 +744,9 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_irradiation_chronology(self, value):
         return self._retrieve_item(irrad_ChronologyTable, value)
+
+    def get_load_holder(self, value):
+        return self._retrieve_item(gen_LoadHolderTable, value)
 
     def get_irradiation_holder(self, value):
         return self._retrieve_item(irrad_HolderTable, value)
@@ -857,6 +894,12 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_spectrometer_parameters(self, value):
         return self._retrieve_item(meas_SpectrometerParametersTable, value, key='hash')
+
+    def get_load_holders(self, **kw):
+        return self._retrieve_items(gen_LoadHolderTable, **kw)
+
+    def get_loads(self, **kw):
+        return self._retrieve_items(loading_LoadTable, **kw)
 #===============================================================================
 # deleters
 #===============================================================================

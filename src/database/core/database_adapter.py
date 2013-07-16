@@ -131,6 +131,12 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
     def initialize_database(self):
         pass
 
+    def get_query(self, table):
+        sess = self.get_session()
+        if sess:
+            q = sess.query(table)
+            return q
+
     def get_session(self):
         '''
         '''

@@ -34,6 +34,8 @@ from pyface.constant import CANCEL, YES, NO
 from src.helpers.filetools import add_extension
 from src.ui.gui import invoke_in_main_thread
 from apptools.preferences.preference_binding import bind_preference
+from src.experiment.loading.panes import LoadDockPane
+from src.canvas.canvas2D.loading_canvas import LoadingCanvas
 
 
 class ExperimentEditorTask(EditorTask):
@@ -103,6 +105,7 @@ class ExperimentEditorTask(EditorTask):
 
     def create_dock_panes(self):
         self.isotope_evolution_pane = IsotopeEvolutionPane()
+        self.load_pane = LoadDockPane()
 
         panes = [
                 ExperimentFactoryPane(model=self.manager.experiment_factory),
@@ -112,6 +115,7 @@ class ExperimentEditorTask(EditorTask):
                 WaitPane(model=self.manager.executor),
                 ExplanationPane(),
                 self.isotope_evolution_pane,
+                self.load_pane
 #                 self.summary_pane,
                 ]
 
@@ -158,13 +162,13 @@ class ExperimentEditorTask(EditorTask):
 #===============================================================================
     def open(self):
 
-        self._test_auto_figure()
+#         self._test_auto_figure()
 
-        return
+#         return
 
 #        import os
-#        path = os.path.join(paths.experiment_dir, 'demo.txt')
-        path = self.open_file_dialog()
+        path = os.path.join(paths.experiment_dir, 'demo.txt')
+#         path = self.open_file_dialog()
 
         if path:
 #            self.window.reset_layout()
@@ -270,13 +274,35 @@ class ExperimentEditorTask(EditorTask):
         self._open_auto_figure()
         task = self.auto_figure_window.active_task
 
-        task.plot_series('bu-FC-J', 'blank_unknown', 'jan', 'Fusions CO2', days=100)
-        task.plot_series('bu-FD-J', 'blank_unknown', 'jan', 'Fusions Diode', days=100)
-#         task.plot_sample_ideogram('NM-779')
+#         task.plot_series('bu-FC-J', 'blank_unknown', 'jan', 'Fusions CO2', days=100)
+#         task.plot_series('bu-FD-J', 'blank_unknown', 'jan', 'Fusions Diode', days=100)
+        task.plot_sample_ideogram('NM-779')
 
 #===============================================================================
 # handlers
 #===============================================================================
+    @on_trait_change('manager.experiment_factory:queue_factory:load_name')
+    def _update_load(self, new):
+        db = self.manager.db
+
+        lt = db.get_loadtable(new)
+        c = LoadingCanvas(
+                          view_x_range=(-2, 2),
+                          view_y_range=(-2, 2),
+                          editable=False
+                          )
+        if lt:
+            h = lt.holder_.name
+            c.load_tray_map(h)
+
+            for pi in lt.loaded_positions:
+                item = c.scene.get_item(str(pi.position))
+                if item:
+                    item.fill = True
+
+        self.load_pane.component = c
+        self.load_pane.load_name = new
+
     @on_trait_change('active_editor:queue:update_needed')
     def _update_runs(self, new):
         self.manager.update_info()

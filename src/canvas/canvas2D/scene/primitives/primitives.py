@@ -174,7 +174,7 @@ class Primitive(HasTraits):
             gc.set_font(str_to_font(self.font))
             gc.set_text_position(x, y + h / 2 - 6)
             gc.show_text(str(self.name))
-            gc.draw_path()
+#             gc.draw_path()
 
     @on_trait_change('default_color, active_color, x, y')
     def _refresh_canvas(self):
@@ -214,6 +214,12 @@ class QPrimitive(Primitive):
 
         c = map(lambda x:x / 255., c)
         return c
+
+    def is_in(self, x, y):
+        mx, my = self.get_xy()
+        w, h = self.get_wh()
+        if mx <= x <= (mx + w) and my <= y <= (my + h):
+            return True
 
 class Point(QPrimitive):
     radius = Float(1)
@@ -608,6 +614,7 @@ class Triangle(QPrimitive):
 class Circle(QPrimitive):
     radius = Float
     fill = False
+    fill_color = (1, 1, 0)
     def __init__(self, x, y, radius=10, *args, **kw):
         super(Circle, self).__init__(x, y, *args, **kw)
         self.radius = radius
@@ -618,8 +625,18 @@ class Circle(QPrimitive):
         r = self.map_dimension(self.radius)
 
         gc.arc(x, y, r, 0, 360)
+
         if self.fill:
-            gc.fill_path()
+#             gc.set_fill_color(self.fill_color)
+#             gc.set_stroke_color((0, 0, 0))
+            gc.set_fill_color(self.fill_color)
+            gc.draw_path()
+#             gc.fill_path()
+
+#             gc.stroke_path()
+
+        self._render_name(gc, x - 5, y - 5, r, r)
+
 
     def is_in(self, event):
         x, y = self.get_xy()
