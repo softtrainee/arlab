@@ -60,6 +60,12 @@ class FusionsTask(BaseLaserTask):
 #===============================================================================
 # action handlers
 #===============================================================================
+    def open_power_calibration(self):
+        if self.manager:
+            pc = self.manager.power_calibration_manager
+            if pc:
+                self.window.application.open_view(pc)
+
     def open_pattern(self):
         if self.manager:
             self.manager.open_pattern_maker()

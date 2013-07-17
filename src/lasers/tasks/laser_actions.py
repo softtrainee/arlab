@@ -117,4 +117,9 @@ class PowerMapAction(LaserTaskAction):
 #     name = 'Execute Pattern...'
 #     method = 'execute_pattern'
 
+class PowerCalibrationAction(LaserTaskAction):
+    name = 'Power Calibration...'
+    method = 'open_power_calibration'
+
+
 #============= EOF =============================================
