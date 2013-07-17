@@ -8,7 +8,8 @@ ETSConfig.toolkit = 'qt4'
 paths.build('_diode')
 logging_setup('unittests')
 
-from .lab_entry import LabEntryTest
+from .motor import LinearMapperTest
+# from .lab_entry import LabEntryTest
 # from .database import IsotopeTestCase
 # from .experiment import ExperimentTest2
 # from .experiment import ExecutorTest

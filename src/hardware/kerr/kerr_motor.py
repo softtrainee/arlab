@@ -30,6 +30,7 @@ from src.globals import globalv
 from src.ui.custom_label_editor import CustomLabel
 from pyface.timer.api import do_after
 from src.ui.gui import invoke_in_main_thread
+from src.hardware.linear_mapper import LinearMapper
 
 SIGN = ['negative', 'positive']
 
@@ -159,6 +160,24 @@ class KerrMotor(KerrDevice):
 
         if config.has_option('General', 'initialize'):
             self.use_initialize = self.config_get(config, 'General', 'initialize', cast='boolean')
+
+
+
+        mi = self.min
+        ma = self.max
+
+        if self.sign == -1:
+            tm = mi
+            mi = ma
+            ma = tm
+
+        self.linear_mapper = LinearMapper(
+                                        low_data=mi,
+                                        high_data=ma,
+                                        low_step=0,
+                                        high_step=self.steps
+                                        )
+
 
     def _start_initialize(self, *args, **kw):
         '''
@@ -371,39 +390,6 @@ class KerrMotor(KerrDevice):
         status_register = map(int, make_bitarray(int(status_byte[:2], 16)))
         return not status_register[7]
 
-#    def _check_status_byte(self, check_bit):
-#        '''
-#        return bool
-#        check bit =0 False
-#        check bit =1 True
-#        '''
-#        status_byte = self.read_defined_status()
-#
-#        if status_byte == 'simulation':
-#            status_byte = 'DFDF'
-#
-#        status_register=map(int,make_bitarray(int(status_byte[:2], 16)))
-#        print status_register
-#        #2 status bytes were returned ?
-#        if len(status_byte) > 4:
-#            status_byte = status_byte[-4:-2]
-#
-#        else:
-#            status_byte = status_byte[:2]
-#
-#        try:
-#            status_register = self._check_bits(int(status_byte, 16))
-#        except Exception, e:
-#            self.warning('kerr_motor:228 {}'.format(str(e)))
-#            status_register = []
-#            if self.timer is not None:
-#                self.timer.Stop()
-#        '''
-#        if X bits is set to one its index will be in the status register
-#        '''
-#
-#        return check_bit in status_register
-
     def _get_motor_position(self, **kw):
         '''
         '''
@@ -524,13 +510,16 @@ class KerrMotor(KerrDevice):
         if not self.enabled:
             pos = self._get_motor_position(verbose=False)
             if pos is not None:
-                pos /= (self.steps * (1 - self.home_position))
 
-                if self.sign == -1:
-                    pos = 1 - pos
-                pos *= (self.max - self.min)
+                pos = self.linear_mapper.map_data(pos)
 
-                pos = max(min(self.max, pos), self.min)
+#                 pos /= (self.steps * (1 - self.home_position))
+#
+#                 if self.sign == -1:
+#                     pos = 1 - pos
+#                 pos *= (self.max - self.min)
+#
+#                 pos = max(min(self.max, pos), self.min)
 
                 self.update_position = pos
 
@@ -541,69 +530,32 @@ class KerrMotor(KerrDevice):
 #        return float('%0.3f' % self._data_position)
 
     def _set_data_position(self, pos):
-        '''
-
-            this is a better solution than al deinos (mass spec) for handling positioning of a
-            linear drive.  Al sets the focused position from 0-100. this means if you change the drive sign
-            (in affect changing the homing position +tive or -tive) you also have to change the focused position
-
-            example
-            drive sign =-1
-            home pos= 99
-
-            drive sign =1
-            home pos = 1
-
-            this seems wrong. the solution that follows sets the focused position in % distance from home
-
-            focus_beam_pos=0.01 #1%
-            dr_sign=1
-
-            #normalize the input value to 1
-            pos=pos/(max-min)
-
-            if dr_sign==-1:
-                pos=1-pos
-
-            #scale pos to the total number of motor steps ** minus the focused position in motor steps **
-            focus_pos_msteps=motor_steps*focus_pos
-
-            pos_msteps= (motor_steps-focus_pos_msteps) * pos
-
-
-            drive a few steps past desired position then back to desired position
-            this takes out any lash in the gears
-
-        '''
         self.info('setting motor in data space {:0.3f}'.format(float(pos)))
         if self._data_position != pos:
 
             self._data_position = pos
+            lm = self.linear_mapper
+            steps = lm.map_steps(pos)
 
-            pos /= float((self.max - self.min))
-            if self.sign == -1.0:
-                pos = 1 - pos
-
-            npos = int((1 - self.home_position) * self.steps * pos)
             hysteresis = 0
             self.do_hysteresis = False
             if self.hysteresis_value < 0:
-                use_hysteresis = self._motor_position > npos
+                use_hysteresis = self._motor_position > steps
             else:
-                use_hysteresis = self._motor_position < npos
+                use_hysteresis = self._motor_position < steps
 
             if use_hysteresis and self.use_hysteresis:
                 self.do_hysteresis = True
                 self.doing_hysteresis_correction = False
                 hysteresis = self.hysteresis_value
 
-            self._set_motor_position_(npos, hysteresis)
+            self._set_motor_position_(steps, hysteresis)
             if not self.parent.simulation:
-                #invoke in gui thread because in position update can be triggered from a RemoteHardware thread
+                # invoke in gui thread because in position update can be triggered from a RemoteHardware thread
                 def launch_timer():
                     self.timer = Timer(400, self._update_position)
                 invoke_in_main_thread(launch_timer)
-                    
+
             else:
                 self.update_position = self._data_position
 
@@ -661,3 +613,103 @@ class KerrMotor(KerrDevice):
     def _set_velocity(self, v):
         self._velocity = v
 #============= EOF ====================================
+
+#    def _check_status_byte(self, check_bit):
+#        '''
+#        return bool
+#        check bit =0 False
+#        check bit =1 True
+#        '''
+#        status_byte = self.read_defined_status()
+#
+#        if status_byte == 'simulation':
+#            status_byte = 'DFDF'
+#
+#        status_register=map(int,make_bitarray(int(status_byte[:2], 16)))
+#        print status_register
+#        #2 status bytes were returned ?
+#        if len(status_byte) > 4:
+#            status_byte = status_byte[-4:-2]
+#
+#        else:
+#            status_byte = status_byte[:2]
+#
+#        try:
+#            status_register = self._check_bits(int(status_byte, 16))
+#        except Exception, e:
+#            self.warning('kerr_motor:228 {}'.format(str(e)))
+#            status_register = []
+#            if self.timer is not None:
+#                self.timer.Stop()
+#        '''
+#        if X bits is set to one its index will be in the status register
+#        '''
+#
+#        return check_bit in status_register
+#     def _set_data_position2(self, pos):
+#         '''
+#
+#             this is a better solution than al deinos (mass spec) for handling positioning of a
+#             linear drive.  Al sets the focused position from 0-100. this means if you change the drive sign
+#             (in affect changing the homing position +tive or -tive) you also have to change the focused position
+#
+#             example
+#             drive sign =-1
+#             home pos= 99
+#
+#             drive sign =1
+#             home pos = 1
+#
+#             this seems wrong. the solution that follows sets the focused position in % distance from home
+#
+#             focus_beam_pos=0.01 #1%
+#             dr_sign=1
+#
+#             #normalize the input value to 1
+#             pos=pos/(max-min)
+#
+#             if dr_sign==-1:
+#                 pos=1-pos
+#
+#             #scale pos to the total number of motor steps ** minus the focused position in motor steps **
+#             focus_pos_msteps=motor_steps*focus_pos
+#
+#             pos_msteps= (motor_steps-focus_pos_msteps) * pos
+#
+#
+#             drive a few steps past desired position then back to desired position
+#             this takes out any lash in the gears
+#
+#         '''
+#         self.info('setting motor in data space {:0.3f}'.format(float(pos)))
+#         if self._data_position != pos:
+#
+#             self._data_position = pos
+#
+#             pos /= float((self.max - self.min))
+#             if self.sign == -1.0:
+#                 pos = 1 - pos
+#
+#             steps = int((1 - self.home_position) * self.steps * pos)
+#             hysteresis = 0
+#             self.do_hysteresis = False
+#             if self.hysteresis_value < 0:
+#                 use_hysteresis = self._motor_position > steps
+#             else:
+#                 use_hysteresis = self._motor_position < steps
+#
+#             if use_hysteresis and self.use_hysteresis:
+#                 self.do_hysteresis = True
+#                 self.doing_hysteresis_correction = False
+#                 hysteresis = self.hysteresis_value
+#
+#             self._set_motor_position_(steps, hysteresis)
+#             if not self.parent.simulation:
+#                 #invoke in gui thread because in position update can be triggered from a RemoteHardware thread
+#                 def launch_timer():
+#                     self.timer = Timer(400, self._update_position)
+#                 invoke_in_main_thread(launch_timer)
+#
+#             else:
+#                 self.update_position = self._data_position
+
