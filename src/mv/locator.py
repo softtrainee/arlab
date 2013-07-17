@@ -39,7 +39,7 @@ from src.geometry.geometry import sort_clockwise, approximate_polygon_center, \
     calc_length
 from src.geometry.convex_hull import convex_hull
 import math
-from skimage.color.colorconv import rgb2gray, rgb2grey, is_rgb, gray2rgb
+
 
 
 class Locator(Loggable):
@@ -395,7 +395,7 @@ class Locator(Loggable):
 
         draw_circle(src, cpt, radius, color=color, thickness=1)
 
-    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness=-1):
+    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness= -1):
         '''
             convenience function for drawing indicators
         '''

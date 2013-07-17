@@ -136,6 +136,7 @@ class ConfigLoadable(Loggable):
         path=None,
         name=None,
         warn=True,
+        set_path=True
         ):
         '''
 
@@ -163,7 +164,8 @@ class ConfigLoadable(Loggable):
         if path is not None and os.path.isfile(path):
             config = self.configparser_factory()
             config.read(path)
-            self.config_path = path
+            if set_path:
+                self.config_path = path
             return config
         elif warn:
             msg = '{} not a valid initialization file'.format(path)
