@@ -15,251 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Event, Property, Instance, Bool, Str, Float, \
-    on_trait_change, Interface, implements, Any
-from traitsui.api import View, Item, VGroup, HGroup, spring, VSplit
+from traits.api import Instance, Bool, Str, on_trait_change
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.managers.manager import Manager
-from src.lasers.stage_managers.stage_manager import StageManager
 #
 from src.monitors.laser_monitor import LaserMonitor
 # from src.managers.graph_manager import GraphManager
 from src.lasers.laser_managers.pulse import Pulse
 from src.paths import paths
-# from src.hardware.meter_calibration import MeterCalibration
-from src.lasers.pattern.pattern_maker_view import PatternMakerView
-from src.lasers.pattern.pattern_executor import PatternExecutor
-from src.lasers.power.power_calibration_manager import PowerCalibrationManager
-# from src.lasers.laser_managers.extraction_device import IExtractionDevice
 from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
-from src.database.adapters.power_map_adapter import PowerMapAdapter
-from src.ui.led_editor import LED, LEDEditor
-from src.lasers.laser_managers.ilaser_manager import ILaserManager
-from src.hardware.meter_calibration import MeterCalibration
-
-
-class BaseLaserManager(Manager):
-    implements(ILaserManager)
-    pattern_executor = Instance(PatternExecutor)
-    use_video = Bool(False)
-
-    enable = Event
-    enable_label = Property(depends_on='enabled')
-    enabled_led = Instance(LED, ())
-    enabled = Bool(False)
-
-    stage_manager = Instance(StageManager)
-#     stage_manager = Any
-    requested_power = Any
-    status_text = Str
-    pulse = Any
-    laser_controller = Any
-    mode = 'normal'
-
-    use_calibrated_power = Bool(True)
-    requested_power = Property(Float, depends_on='_requested_power')
-    units = Property(depends_on='use_calibrated_power')
-    _requested_power = Float
-    _calibrated_power = None
-
-    def initialize_video(self):
-        if self.use_video:
-            self.stage_manager.initialize_video()
-    def is_ready(self):
-        return True
-
-    def take_snapshot(self, *args, **kw):
-        pass
-
-    def end_extract(self, *args, **kw):
-        pass
-
-    def extract(self, *args, **kw):
-        pass
-
-    def prepare(self):
-        pass
-
-    def set_motor_lock(self, name, value):
-        pass
-
-    def set_motor(self, *args, **kw):
-        pass
-
-    def get_motor(self, name):
-        pass
-
-    def enable_device(self):
-        return self.enable_laser()
-
-    def disable_device(self):
-        self.disable_laser()
-
-    def enable_laser(self):
-        pass
-
-    def disable_laser(self):
-        pass
-
-    def new_pattern_maker(self):
-        pm = PatternMakerView()
-        self.open_view(pm)
-
-    def open_pattern_maker(self):
-        pm = PatternMakerView(
-                              executor=self.pattern_executor
-                              )
-        if pm.load_pattern():
-            self.open_view(pm)
-
-    def execute_pattern(self, name=None, block=False):
-        pm = self.pattern_executor
-        if pm.load_pattern(name):
-            pm.execute(block)
-
-    def stop_pattern(self):
-        if self.pattern_executor:
-            self.pattern_executor.stop()
-
-    def isPatterning(self):
-        if self.pattern_executor:
-            return self.pattern_executor.isPatterning()
-
-    def _pattern_executor_default(self):
-        controller = None
-        if hasattr(self, 'stage_manager'):
-            controller = self.stage_manager.stage_controller
-
-        pm = PatternExecutor(application=self.application, controller=controller)
-        return pm
-
-    def move_to_position(self, pos, *args, **kw):
-        if not isinstance(pos, list):
-            pos = [pos]
-
-        for pi in pos:
-            self._move_to_position(pi)
-
-        return True
-
-    def trace_path(self, *args, **kw):
-        pass
-
-    def drill_point(self, *args, **kw):
-        pass
-
-    def set_motors_for_point(self, pt):
-        pass
-
-#    def get_control_button_group(self):
-#        grp = HGroup(spring, Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
-#                        self._button_group_factory(self.get_control_buttons(), orientation='h'),
-# #                                  springy=True
-#                    )
-#        return grp
-#
-#    def get_control_buttons(self):
-#        return [('enable', 'enable_label', None)]
-
-#===============================================================================
-# getter/setters
-#===============================================================================
-    def _get_enable_label(self):
-        '''
-        '''
-        return 'DISABLE' if self.enabled else 'ENABLE'
-
-    def _get_calibrated_power(self, power, use_calibration=True, verbose=True):
-
-        if self.use_calibrated_power and use_calibration:
-            if power < 0.1:
-                power = 0
-            else:
-                lb = self.laser_controller
-                power = lb.get_calibrated_power(power)
-        return power
-
-#            config = lb.get_configuration()
-#            section = 'PowerOutput'
-#            if config.has_section(section):
-#                cs = config.get(section, 'coefficients')
-#                try:
-#                    cs = map(float, cs.split(','))
-#                except ValueError:
-#                    return
-#            else:
-#                cs = [1, 0]
-#
-#            print cs
-#            pc = MeterCalibration(cs)
-#
-##             pc = self.power_calibration_manager.load_power_calibration(verbose=verbose, warn=False)
-#            if pc is None:
-#                return
-#
-#            if power < 0.1:
-#                power = 0
-#            else:
-#                power = pc.get_input(power)
-#                if verbose:
-#                    self.info('using power coefficients  (e.g. ax2+bx+c) {}'.format(pc.print_string()))
-#                if coeffs is not None:
-#                    sc = ','.join(['{}={:0.3e}'.format(*c) for c in zip('abcdefg', coeffs)])
-#                    if verbose:
-#                        self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
-#        return power
-
-    def _get_requested_power(self):
-        return self._requested_power
-
-    def _get_units(self):
-        return '(W)' if self.use_calibrated_power else '(%)'
-#===============================================================================
-# handlers
-#===============================================================================
-    def _enabled_changed(self):
-        if self.enabled:
-            self.enabled_led.state = 'green'
-        else:
-            self.enabled_led.state = 'red'
-
-    def _use_video_changed(self):
-        if not self.use_video:
-            try:
-                self.stage_manager.video.close()
-            except AttributeError, e:
-                print 'use video 1', e
-
-        try:
-            sm = self._stage_manager_factory(self.stage_args)
-
-            sm.stage_controller = self.stage_manager.stage_controller
-            sm.stage_controller.parent = sm
-            if self.plugin_id:
-                sm.bind_preferences(self.plugin_id)
-            sm.visualizer = self.stage_manager.visualizer
-
-            sm.load()
-
-            self.stage_manager = sm
-        except AttributeError, e:
-            print 'use video 2', e
-
-
-    def _stage_manager_factory(self, args):
-        self.stage_args = args
-        if self.use_video:
-            from src.lasers.stage_managers.video_stage_manager import VideoStageManager
-            klass = VideoStageManager
-        else:
-            klass = StageManager
-
-        args['parent'] = self
-        sm = klass(**args)
-        return sm
+from src.lasers.laser_managers.base_lase_manager import BaseLaserManager
 
 
 class LaserManager(BaseLaserManager):
@@ -267,18 +34,8 @@ class LaserManager(BaseLaserManager):
         Base class for a GUI representation of a laser device
     '''
 
-#    enable = Event
-#    enable_label = Property(depends_on='enabled')
-#    enabled_led = Instance(LED, ())
-#    enabled = Bool(False)
-
-#    graph_manager = Instance(GraphManager, ())
-#     stage_manager = Instance(StageManager)
-#    pattern_executor = Instance(PatternExecutor)
-    power_calibration_manager = Instance(PowerCalibrationManager)
     laser_script_executor = Instance(LaserScriptExecutor)
 
-#    use_video = Bool(False)
     record_lasing_video = Bool(False)
     record_lasing_power = Bool(False)
 
@@ -287,22 +44,9 @@ class LaserManager(BaseLaserManager):
     monitor_klass = LaserMonitor
 
     plugin_id = Str
-    # simulation_led = Instance(LED, ())
 
     status_text = Str
     pulse = Instance(Pulse)
-
-#     use_calibrated_power = Bool(True)
-#     requested_power = Property(Float, depends_on='_requested_power')
-#     units = Property(depends_on='use_calibrated_power')
-#     _requested_power = Float
-#     _calibrated_power = None
-
-#    internal_meter_response = DelegatesTo('laser_controller')
-
-    _power_calibration = None
-
-#    dbname = ''
 
 #===============================================================================
 # public interface
@@ -323,14 +67,6 @@ class LaserManager(BaseLaserManager):
 
     def set_xy(self, xy, velocity=None):
         self.stage_manager.set_xy(*xy)
-
-#===============================================================================
-# patterning
-#===============================================================================
-#    def _pattern_executor_factory(self):
-#        pm = self.pattern_executor
-#        pm.controller = self.stage_manager.stage_controller
-#        return pm
 
     def get_pattern_names(self):
         return self.get_file_list(paths.pattern_dir, extension='.lp')
@@ -363,7 +99,6 @@ class LaserManager(BaseLaserManager):
                 self.debug('setting enable_error_flag')
 
             self.disable_laser()
-
 
         return enabled
 
@@ -459,29 +194,123 @@ class LaserManager(BaseLaserManager):
 #            self.stage_manager.machine_vision_manager.close_images()
 #
         self._dispose_optional_windows_hook()
+
+#===============================================================================
+# handlers
+#===============================================================================
+    @on_trait_change('stage_manager:canvas:current_position')
+    def update_status_bar(self, obj, name, old, new):
+        if isinstance(new, tuple):
+            self.status_text = 'x = {:n} ({:0.4f} mm), y = {:n} ({:0.4f} mm)'.format(*new)
+
+    def _enable_fired(self):
+        '''
+        '''
+        if not self.enabled:
+            self.enable_laser()
+        else:
+
+            self.disable_laser()
+
+#===============================================================================
+# hooks
+#===============================================================================
+    def _dispose_optional_windows_hook(self):
+        pass
+
+    def _kill_hook(self):
+        self.disable_laser()
+
+    def _enable_hook(self):
+        return True
+
+    def _disable_hook(self):
+        pass
+
+    def _set_laser_power_hook(self, *args, **kw):
+        pass
+
+#===============================================================================
+# factories
+#===============================================================================
+    def monitor_factory(self):
+        lm = self.monitor
+        if lm is None:
+            lm = self.monitor_klass(manager=self,
+#                            configuration_dir_name=paths.monitors_dir,
+                            name=self.monitor_name)
+        if hasattr(lm, 'update_imb'):
+            self.on_trait_change(lm.update_imb, 'laser_controller:internal_meter_response')
+        return lm
+
+#===============================================================================
+# defaults
+#===============================================================================
+    def _pulse_default(self):
+        p = os.path.join(paths.hidden_dir, 'pulse')
+        if os.path.isfile(p):
+            with open(p, 'rb') as f:
+                try:
+                    pul = pickle.load(f)
+                    pul.manager = self
+                except pickle.PickleError:
+                    pul = Pulse(manager=self)
+        else:
+            pul = Pulse(manager=self)
+
+        return pul
+
+
+    def _laser_script_executor_default(self):
+        return LaserScriptExecutor(laser_manager=self,
+                                   name=self.name)
+
+
+#===============================================================================
+# zobed
+#===============================================================================
+#    def get_control_button_group(self):
+#        grp = HGroup(spring, Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
+#                        self._button_group_factory(self.get_control_buttons(), orientation='h'),
+# #                                  springy=True
+#                    )
+#        return grp
+#
+#    def get_control_buttons(self):
+#        return [('enable', 'enable_label', None)]
+
+
+#===============================================================================
+# patterning
+#===============================================================================
+#    def _pattern_executor_factory(self):
+#        pm = self.pattern_executor
+#        pm.controller = self.stage_manager.stage_controller
+#        return pm
 #===============================================================================
 # public getters
 #===============================================================================
-    def get_pulse_manager(self):
-        return self.pulse
+#     def get_pulse_manager(self):
+#         return self.pulse
 
-    def get_power_map_manager(self):
-        from src.lasers.power.power_map_manager import PowerMapManager
-        pm = PowerMapManager(laser_manager=self,
-                             database=self.get_power_map_database())
-        return pm
+#     def get_power_map_manager(self):
+#         from src.lasers.power.power_map_manager import PowerMapManager
+#         pm = PowerMapManager(laser_manager=self,
+#                              database=self.get_power_map_database())
+#         return pm
+#
+#     def get_power_map_database(self):
+#         db = PowerMapAdapter(
+#                              name=paths.powermap_db,
+# #                            name=self.dbname,
+#                             kind='sqlite',
+#                             application=self.application
+#                             )
+#         db.manage_database()
+#         db.connect()
+#
+#         return db
 
-    def get_power_map_database(self):
-        db = PowerMapAdapter(
-                             name=paths.powermap_db,
-#                            name=self.dbname,
-                            kind='sqlite',
-                            application=self.application
-                            )
-        db.manage_database()
-        db.connect()
-
-        return db
 #===============================================================================
 # views
 #===============================================================================
@@ -490,8 +319,8 @@ class LaserManager(BaseLaserManager):
 #
 #    def get_control_group(self):
 #        return VGroup()
-    def get_unique_view_id(self):
-        return 'pychron.{}'.format(self.__class__.__name__.lower())
+#     def get_unique_view_id(self):
+#         return 'pychron.{}'.format(self.__class__.__name__.lower())
 
 #    def get_control_buttons(self):
 #        '''
@@ -505,10 +334,10 @@ class LaserManager(BaseLaserManager):
 #    def get_additional_controls(self, *args):
 #        pass
 
-    def get_power_slider(self):
-        '''
-        '''
-        return self._slider_group_factory([('request_power', 'request_power', dict(enabled_when='enabled'))])
+#     def get_power_slider(self):
+#         '''
+#         '''
+#         return self._slider_group_factory([('request_power', 'request_power', dict(enabled_when='enabled'))])
 
 #    def traits_view(self):
 #        '''
@@ -533,23 +362,6 @@ class LaserManager(BaseLaserManager):
 #                    y=self.window_y,
 #                    statusbar='status_text',
 #                    )
-
-#===============================================================================
-# handlers
-#===============================================================================
-    @on_trait_change('stage_manager:canvas:current_position')
-    def update_status_bar(self, obj, name, old, new):
-        if isinstance(new, tuple):
-            self.status_text = 'x = {:n} ({:0.4f} mm), y = {:n} ({:0.4f} mm)'.format(*new)
-
-    def _enable_fired(self):
-        '''
-        '''
-        if not self.enabled:
-            self.enable_laser()
-        else:
-
-            self.disable_laser()
 
 #     def _use_video_changed(self):
 #         if not self.use_video:
@@ -613,24 +425,6 @@ class LaserManager(BaseLaserManager):
 #            pc = MeterCalibration([1, 0])
 #
 #        return pc
-#===============================================================================
-# hooks
-#===============================================================================
-    def _dispose_optional_windows_hook(self):
-        pass
-
-    def _kill_hook(self):
-        self.disable_laser()
-
-    def _enable_hook(self):
-        return True
-
-    def _disable_hook(self):
-        pass
-
-    def _set_laser_power_hook(self, *args, **kw):
-        pass
-
 # #===============================================================================
 # # getter/setters
 # #===============================================================================
@@ -656,21 +450,6 @@ class LaserManager(BaseLaserManager):
 #     def _get_requested_power(self):
 #         return self._requested_power
 
-
-
-#===============================================================================
-# factories
-#===============================================================================
-    def monitor_factory(self):
-        lm = self.monitor
-        if lm is None:
-            lm = self.monitor_klass(manager=self,
-#                            configuration_dir_name=paths.monitors_dir,
-                            name=self.monitor_name)
-        if hasattr(lm, 'update_imb'):
-            self.on_trait_change(lm.update_imb, 'laser_controller:internal_meter_response')
-        return lm
-
 #     def _stage_manager_factory(self, args):
 #         self.stage_args = args
 #         if self.use_video:
@@ -682,33 +461,13 @@ class LaserManager(BaseLaserManager):
 #         args['parent'] = self
 #         sm = klass(**args)
 #         return sm
-#===============================================================================
-# defaults
-#===============================================================================
-    def _pulse_default(self):
-        p = os.path.join(paths.hidden_dir, 'pulse')
-        if os.path.isfile(p):
-            with open(p, 'rb') as f:
-                try:
-                    pul = pickle.load(f)
-                    pul.manager = self
-                except pickle.PickleError:
-                    pul = Pulse(manager=self)
-        else:
-            pul = Pulse(manager=self)
+#     def _power_calibration_manager_default(self):
+#         return PowerCalibrationManager(
+#                                        parent=self,
+#                                        db=self.get_power_calibration_database(),
+#                                        application=self.application
+#                                        )
 
-        return pul
-
-    def _power_calibration_manager_default(self):
-        return PowerCalibrationManager(
-                                       parent=self,
-                                       db=self.get_power_calibration_database(),
-                                       application=self.application
-                                       )
-
-    def _laser_script_executor_default(self):
-        return LaserScriptExecutor(laser_manager=self,
-                                   name=self.name)
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup

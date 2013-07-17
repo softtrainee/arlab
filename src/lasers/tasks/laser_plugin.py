@@ -32,6 +32,7 @@ from src.lasers.tasks.laser_actions import OpenScannerAction, \
     OpenPatternAction, PowerMapAction, PowerCalibrationAction
 from pyface.tasks.action.schema import SMenu, GroupSchema
 from pyface.action.group import Group
+from src.lasers.tasks.laser_calibration_task import LaserCalibrationTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -122,8 +123,19 @@ class FusionsPlugin(BaseLaserPlugin):
                             task_group='hardware',
                             factory=self._task_factory,
                             name=self.task_name
-                            )
+                            ),
+                TaskFactory(id='pychron.lasers.calibration',
+                            task_group='hardware',
+                            factory=self._calibration_task_factory,
+                            name='Laser Calibration',
+                            accelerator='Ctrl+2'
+                            ),
                 ]
+
+    def _calibration_task_factory(self):
+        t = LaserCalibrationTask(manager=self._get_manager())
+        return t
+
 
     sources = List(contributes_to='pychron.video.sources')
     def _sources_default(self):
@@ -158,18 +170,13 @@ class FusionsPlugin(BaseLaserPlugin):
                                                        ),
                                   path='MenuBar/Extraction'
                                   ),
-                   SchemaAddition(id='power_map',
-                                  factory=lambda: Group(
-                                                        PowerMapAction(),
-                                                        ),
-                                  path='MenuBar/Extraction'
-                                  ),
-#                    SchemaAddition(id='power_calibration',
-#                                   factory=lambda: Group(
-#                                                         PowerCalibrationAction(),
-#                                                         ),
-#                                   path='MenuBar/Extraction'
-#                                   )
+                    SchemaAddition(id='calibration',
+                                   factory=lambda: Group(
+                                                         PowerMapAction(),
+                                                         PowerCalibrationAction(),
+                                                         ),
+                                   path='MenuBar/Extraction'
+                                   ),
 
                               ]
                             )
