@@ -384,6 +384,7 @@ class Experimentor(IsotopeDatabaseManager):
             self.experiment_factory.queue = eq
             qf = self.experiment_factory.queue_factory
             for a in ('username', 'mass_spectrometer', 'extract_device',
+                      'load_name',
                       'delay_before_analyses', 'delay_between_analyses'
                       ):
                 v = getattr(eq, a)

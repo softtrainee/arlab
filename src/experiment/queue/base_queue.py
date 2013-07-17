@@ -61,6 +61,8 @@ class BaseExperimentQueue(Loggable):
     _no_update = False
     initialized = False
 
+    load_name = Str
+
     def _get_name(self):
         if self.path:
             return os.path.splitext(os.path.basename(self.path))[0]
@@ -195,7 +197,7 @@ class BaseExperimentQueue(Loggable):
         # load sample map
         self._load_map(meta)
 
-        default = lambda x: x if x else '---'
+        default = lambda x: str(x) if x else ''
         default_int = lambda x: x if x is not None else 1
 
         self._set_meta_param('tray', meta, default)
@@ -204,6 +206,7 @@ class BaseExperimentQueue(Loggable):
         self._set_meta_param('delay_between_analyses', meta, default_int)
         self._set_meta_param('delay_before_analyses', meta, default_int)
         self._set_meta_param('username', meta, default)
+        self._set_meta_param('load_name', meta, default, metaname='load')
 
     def _load_runs(self, txt):
         aruns = []
@@ -345,6 +348,7 @@ delay_before_analyses: {}
 delay_between_analyses: {}
 extract_device: {}
 tray: {} 
+load: {}
 '''.format(
            self.username,
            datetime.datetime.today(),
@@ -352,7 +356,8 @@ tray: {}
            self.delay_before_analyses,
            self.delay_between_analyses,
            self.extract_device,
-           self.tray if self.tray else '',
+           self.tray or '',
+           self.load_name or ''
            )
 
         if fp:

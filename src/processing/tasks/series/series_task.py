@@ -55,16 +55,18 @@ class SeriesTask(AnalysisEditTask):
 
     def create_dock_panes(self):
         selector = self.manager.db.selector
-        selector.queries[0].criterion = 'NM-205'
+#         selector.queries[0].criterion = 'NM-205'
         selector._search_fired()
 
         self.unknowns_pane = UnknownsPane(adapter_klass=self.unknowns_adapter)
         self.controls_pane = ControlsPane()
+        from src.processing.selection.data_selector import DataSelector
+        ds = DataSelector(database_selector=selector)
 
         return [
                 self.unknowns_pane,
                 self.controls_pane,
-                QueryPane(model=selector),
+                QueryPane(model=ds),
                 ]
 #        panes = super(FluxTask, self).create_dock_panes()
 #        return panes + [
@@ -72,7 +74,9 @@ class SeriesTask(AnalysisEditTask):
 #                      ]
 
     def new_series(self):
-        from src.processing.tasks.series.series_editor import SeriesEditor
+        from src.processing.tasks.figures.figure_editor import SeriesEditor
+
+#         from src.processing.tasks.series.series_editor import SeriesEditor
         editor = SeriesEditor(name='Series {:03n}'.format(self.series_editor_count),
                               processor=self.manager
                               )

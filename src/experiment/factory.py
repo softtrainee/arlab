@@ -38,7 +38,7 @@ class ExperimentFactory(Loggable):
 
     add_button = Button('Add')
     clear_button = Button('Clear')
-    save_button=Button('Save')
+    save_button = Button('Save')
     edit_mode_button = Button('Edit')
     edit_enabled = DelegatesTo('run_factory')
 
@@ -55,7 +55,7 @@ class ExperimentFactory(Loggable):
     _extract_device = String
     _labnumber = String
 
-    help_label = String('Select Irradiation/Level or Project')
+#     help_label = String('Select Irradiation/Level or Project')
 
     #===========================================================================
     # permisions
@@ -65,26 +65,26 @@ class ExperimentFactory(Loggable):
 
     def set_selected_runs(self, runs):
         self.run_factory.set_selected_runs(runs)
-    
+
     def _clear_button_fired(self):
         self.queue.clear_frequency_runs()
 
-    _prev_add_time=None
+    _prev_add_time = None
     def _add_button_fired(self):
         '''
             only allow add button to be fired every 0.5s
         '''
-    
+
         if self._prev_add_time:
-            if abs(time.time()-self._prev_add_time)<0.5:
+            if abs(time.time() - self._prev_add_time) < 0.5:
                 self.debug('skipping')
                 return
-            
-        self._prev_add_time=time.time()
-                
-        egs=list(set([ai.extract_group for ai in self.queue.automated_runs]))
-        eg= max(egs) if egs else 0
-    
+
+        self._prev_add_time = time.time()
+
+        egs = list(set([ai.extract_group for ai in self.queue.automated_runs]))
+        eg = max(egs) if egs else 0
+
         new_runs, freq = self.run_factory.new_runs(
                                                    auto_increment_position=self.auto_increment_position,
                                                    auto_increment_id=self.auto_increment_id,
@@ -99,7 +99,8 @@ class ExperimentFactory(Loggable):
 #        if n >= tol:
 #            self.warning_dialog('You are at or have existed your max. allowable runs. N={} Max={}'.format(n, tol))
 
-    @on_trait_change('queue_factory:[mass_spectrometer, extract_device, delay_+, tray, username]')
+    @on_trait_change('''queue_factory:[mass_spectrometer, 
+extract_device, delay_+, tray, username, load_name]''')
     def _update_queue(self, name, new):
         if name == 'mass_spectrometer':
             self._mass_spectrometer = new
@@ -114,14 +115,17 @@ class ExperimentFactory(Loggable):
         if self.queue:
             self.queue.trait_set(**{name:new})
 
+        self.queue.changed = True
+
     @on_trait_change('run_factory:[labnumber]')
     def _update_labnumber(self, name, new):
         if name == 'labnumber':
             self._labnumber = new
 
-#    @on_trait_change('queue:[mass_spectrometer, extract_device, username, delay_+]')
-#    def _update_queue_values(self, name, new):
-#        self.queue_factory.trait_set({name:new})
+#     @on_trait_change('queue:[mass_spectrometer, extract_device, username, delay_+]')
+#     def _update_queue_values(self, name, new):
+#         print name, new
+#         self.queue_factory.trait_set({name:new})
 #
 #    def _queue_changed(self):
 #        for a in ('username','mass_spectrometer','extract_device','username',
