@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Any, Bool
+from traits.api import HasTraits, on_trait_change, Any, Bool, Instance
 # from traitsui.api import View, Item
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 #============= standard library imports ========================
@@ -34,9 +34,10 @@ from pyface.constant import CANCEL, YES, NO
 from src.helpers.filetools import add_extension
 from src.ui.gui import invoke_in_main_thread
 from apptools.preferences.preference_binding import bind_preference
-from src.experiment.loading.panes import LoadDockPane
+from src.experiment.loading.panes import LoadDockPane, LoadTablePane
 from src.canvas.canvas2D.loading_canvas import LoadingCanvas
 
+from src.experiment.loading.load_task import LoadingManager
 
 class ExperimentEditorTask(EditorTask):
     wildcard = '*.txt'
@@ -45,6 +46,12 @@ class ExperimentEditorTask(EditorTask):
 
     auto_figure_window = None
     use_auto_figure = Bool
+    loading_manager = Instance(LoadingManager)
+
+    def _loading_manager_default(self):
+        lm = LoadingManager(db=self.manager.db)
+        return lm
+
     def _default_directory_default(self):
         return paths.experiment_dir
 
@@ -105,7 +112,10 @@ class ExperimentEditorTask(EditorTask):
 
     def create_dock_panes(self):
         self.isotope_evolution_pane = IsotopeEvolutionPane()
+
+
         self.load_pane = LoadDockPane()
+        self.load_table_pane = LoadTablePane(model=self.loading_manager)
 
         panes = [
                 ExperimentFactoryPane(model=self.manager.experiment_factory),
@@ -115,7 +125,8 @@ class ExperimentEditorTask(EditorTask):
                 WaitPane(model=self.manager.executor),
                 ExplanationPane(),
                 self.isotope_evolution_pane,
-                self.load_pane
+                self.load_pane,
+                self.load_table_pane
 #                 self.summary_pane,
                 ]
 
@@ -290,34 +301,30 @@ class ExperimentEditorTask(EditorTask):
 
             self.video_source.set_url(url)
 
+    @on_trait_change('loading_manager:selected_positions')
+    def _update_selected_positions(self, new):
+        if new:
+            rf = self.manager.experiment_factory.run_factory
+            nn = new[0]
+
+            rf.selected_irradiation = nn.irradiation
+            rf.selected_level = nn.level
+            rf.labnumber = nn.labnumber
+
+            # filter rows that dont match the first rows labnumber
+            ns = [str(ni.positions[0]) for ni in new
+                  if ni.labnumber == nn.labnumber]
+
+            rf.position = ','.join(ns)
+
     @on_trait_change('manager.experiment_factory:queue_factory:load_name')
     def _update_load(self, new):
-        db = self.manager.db
 
-        lt = db.get_loadtable(new)
-        c = LoadingCanvas(
-                          view_x_range=(-2, 2),
-                          view_y_range=(-2, 2),
-                          editable=False
-                          )
-        if lt:
-            h = lt.holder_.name
-            c.load_tray_map(h)
+        lm = self.loading_manager
+        canvas = lm.make_canvas(new, editable=False)
+        lm.load_load(new, group_labnumbers=False)
 
-            for pi in lt.loaded_positions:
-                item = c.scene.get_item(str(pi.position))
-                if item:
-                    item.fill = True
-
-            for pi in lt.measured_positions:
-                item = c.scene.get_item(str(pi.position))
-                if item:
-                    if pi.is_degas:
-                        item.degas_indicator = True
-                    else:
-                        item.measured_indicator = True
-
-        self.load_pane.component = c
+        self.load_pane.component = canvas
         self.load_pane.load_name = new
 
     @on_trait_change('active_editor:queue:update_needed')

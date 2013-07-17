@@ -33,7 +33,7 @@ from pyface.constant import CANCEL, YES, NO
 # from src.ui.gui import invoke_in_main_thread
 # from apptools.preferences.preference_binding import bind_preference
 from src.envisage.tasks.base_task import BaseTask, BaseManagerTask
-from src.experiment.loading.panes import LoadPane, LoadControlPane, LoadTable
+from src.experiment.loading.panes import LoadPane, LoadControlPane, LoadTablePane
 from src.canvas.canvas2D.loading_canvas import LoadingCanvas
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 
@@ -81,13 +81,22 @@ def make_position_str(pos):
 
 class LoadPosition(HasTraits):
     labnumber = Str
-    irradiation_str = Str
     sample = Str
     positions = List
+    level = Str
+    irradiation = Str
+    irrad_position = Int
 
+    irradiation_str = Property
     position_str = Property(depends_on='positions[]')
+
     def _get_position_str(self):
         return make_position_str(self.positions)
+
+    def _get_irradiation_str(self):
+        return '{} {}{}'.format(self.irradiation,
+                                self.level,
+                                self.irrad_position)
 
 class LoadingManager(IsotopeDatabaseManager):
 
@@ -100,10 +109,13 @@ class LoadingManager(IsotopeDatabaseManager):
 
     irradiation_hole = Str
     sample = Str
-    refresh_table = Event
 
     positions = List
+
+    # table signal/events
+    refresh_table = Event
     scroll_to_row = Int
+    selected_positions = Any
 
     db_load_name = Str
     loads = List
@@ -144,7 +156,33 @@ class LoadingManager(IsotopeDatabaseManager):
 
         return self.db_load_name
 
-    def load_load(self, loadtable):
+    def make_canvas(self, new, editable=True):
+        db = self.db
+        lt = db.get_loadtable(new)
+        c = LoadingCanvas(
+                          view_x_range=(-2, 2),
+                          view_y_range=(-2, 2),
+                          editable=editable
+                          )
+        self.canvas = c
+        if lt:
+            h = lt.holder_.name
+            c.load_tray_map(h)
+            for pi in lt.loaded_positions:
+                item = c.scene.get_item(str(pi.position))
+                if item:
+                    item.fill = True
+
+            for pi in lt.measured_positions:
+                item = c.scene.get_item(str(pi.position))
+                if item:
+                    if pi.is_degas:
+                        item.degas_indicator = True
+                    else:
+                        item.measured_indicator = True
+        return c
+
+    def load_load(self, loadtable, group_labnumbers=True):
         if isinstance(loadtable, str):
             loadtable = self.db.get_loadtable(loadtable)
 
@@ -159,22 +197,31 @@ class LoadingManager(IsotopeDatabaseManager):
                 if item:
                     item.fill = True
                 pos.append(pid)
-            ln = self.db.get_labnumber(ln)
-            ip = ln.irradiation_position
-            level = ip.level
-            irrad = level.irradiation
 
-            sample = ln.sample.name if ln.sample else ''
+            if group_labnumbers:
+                self._add_position(ln, pos)
+            else:
+                for pi in pos:
+                    self._add_position(ln, [pi])
 
-            lp = LoadPosition(labnumber=ln.identifier,
-                  sample=sample,
-                  irradiation_str='{} {}{}'.format(irrad.name,
-                                                   level.name,
-                                                   ip.position),
 
-                  positions=pos
-                  )
-            self.positions.append(lp)
+    def _add_position(self, ln, pos):
+        ln = self.db.get_labnumber(ln)
+        ip = ln.irradiation_position
+        level = ip.level
+        irrad = level.irradiation
+
+        sample = ln.sample.name if ln.sample else ''
+
+        lp = LoadPosition(labnumber=ln.identifier,
+              sample=sample,
+              irradiation=irrad.name,
+              level=level.name,
+              irrad_position=int(ip.position),
+              positions=pos
+              )
+        self.positions.append(lp)
+
 
     def save(self):
         db = self.db
@@ -282,7 +329,7 @@ class LoadingTask(BaseManagerTask):
     def create_dock_panes(self):
 
         self.control_pane = LoadControlPane(model=self.manager)
-        self.table_pane = LoadTable(model=self.manager)
+        self.table_pane = LoadTablePane(model=self.manager)
 #         self.irradiation_pane = LoadIrradiationPane(model=self.manager)
         return [self.control_pane,
                 self.table_pane,
