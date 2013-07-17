@@ -146,8 +146,8 @@ class ExperimentEditor(BaseTraitsEditor):
                 qi.executable = False
                 hec.report_errors(err)
                 break
-            if qi.test_runs():
-                break
+#             if qi.test_runs():
+#                 break
         else:
             return True
 

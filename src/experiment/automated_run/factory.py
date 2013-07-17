@@ -468,6 +468,7 @@ post_equilibration_script:name
                     name = '{}_script'.format(obj.label)
                     setattr(si, name, new)
             self.changed = True
+            self.refresh_table_needed = True
 
     def _skip_changed(self):
         self.update_info_needed = True

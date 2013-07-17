@@ -213,6 +213,7 @@ class AutomatedRun(Loggable):
     _equilibration_done = False
 
 #    save_error_flag = False
+    invalid_script = False
 
     def _state_changed(self, old, new):
         self.debug('state changed from {} to {}'.format(old, new))
@@ -1864,6 +1865,14 @@ anaylsis_type={}
         return script
 
     def _bootstrap_script(self, fname, name):
+        global warned_scripts
+        def warn(fn):
+            self.invalid_script = True
+            if not fn in warned_scripts:
+                warned_scripts.append(fn)
+                self.warning_dialog('Invalid Scriptb {}'.format(fn))
+#                 self.executable = False
+
         self.info('loading script "{}"'.format(fname))
         func = getattr(self, '{}_script_factory'.format(name))
         s = func()
@@ -1877,18 +1886,13 @@ anaylsis_type={}
 # #                    setattr(self, '_{}_script'.format(name), s)
 #
                 except Exception, e:
-                    self.warning(e)
-                    self.warning_dialog('Invalid Scripta {}'.format(e))
+                    warn(fname)
                     valid = False
 #                    setattr(self, '_{}_script'.format(name), None)
         else:
             valid = False
             fname = s.filename if s else fname
-
-            global warned_scripts
-            if not name in warned_scripts:
-                warned_scripts.append(fname)
-                self.warning_dialog('Invalid Scriptb {}'.format(fname))
+            warn(fname)
 
         self.valid_scripts[name] = valid
         return s

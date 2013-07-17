@@ -92,48 +92,53 @@ class ExperimentQueue(BaseExperimentQueue):
     def _load_actions(self):
         pass
 
+    def isExecutable(self):
+        if self.check_runs():
+            # test scripts
+            return all([ai.executable for ai in self.automated_runs])
 
     def check_runs(self):
         hec = HumanErrorChecker()
         err = hec.check(self.automated_runs, test_all=True)
         if err:
             hec.report_errors(err)
-            self.executable = False
+#             self.executable = False
             return
 
         return True
 
-    def test_runs(self):
-        runs = self.cleaned_automated_runs
-
-        if runs:
-            ar = runs[0].make_run()
-
-            failed = False
-#             hec = HumanErrorChecker()
+#     def test_runs(self):
+#         pass
+#         runs = self.cleaned_automated_runs
 #
-#             err = hec.check(runs, test_all=True)
-#             if err:
-#                 hec.report_errors(err)
-#                 failed = True
-#             else:
-            for ri in runs:
-                for si in SCRIPT_NAMES:
-                    sn = getattr(ri, si)
-                    script = getattr(ar, si)
-                    if script:
-                        shash = hashlib.md5(script.text).digest()
-
-                        setattr(ar.script_info, '{}_name'.format(si), sn)
-                        nscript = getattr(ar, si)
-                        nhash = hashlib.md5(nscript.text).digest()
-                        if shash != nhash:
-                            if not nscript.syntax_ok():
-                                failed = True
-#                                 return 'Error in script {}'.format(script.name)
-
-
-            self.executable = not failed
+#         if runs:
+#             ar = runs[0].make_run(new_uuid=False)
+#
+#             failed = False
+# #             hec = HumanErrorChecker()
+# #
+# #             err = hec.check(runs, test_all=True)
+# #             if err:
+# #                 hec.report_errors(err)
+# #                 failed = True
+# #             else:
+#             for ri in runs:
+#                 for si in SCRIPT_NAMES:
+#                     sn = getattr(ri, si)
+#                     script = getattr(ar, si)
+#                     if script:
+#                         shash = hashlib.md5(script.text).digest()
+#
+#                         setattr(ar.script_info, '{}_name'.format(si), sn)
+#                         nscript = getattr(ar, si)
+#                         nhash = hashlib.md5(nscript.text).digest()
+#                         if shash != nhash:
+#                             if not nscript.syntax_ok():
+#                                 failed = True
+# #                                 return 'Error in script {}'.format(script.name)
+#
+#
+#             self.executable = not failed
 
     def new_runs_generator(self):
         runs = self.cleaned_automated_runs

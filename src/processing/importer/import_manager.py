@@ -163,11 +163,11 @@ class ImportManager(IsotopeDatabaseManager):
             if self.selected:
                 selected = [(si.name, tuple()) for si in self.selected]
 
-            selected = [
+#             selected = [
 #                         ('NM-205', ['E', ]),
 # #                        ('NM-205', ['F' ]),
-                        ('NM-256', ['E', 'F', ])
-                        ]
+#                         ('NM-256', ['E', 'F', ])
+#                         ]
 #            selected = MINNA_BLUFF_IRRADIATIONS
 
             if selected:

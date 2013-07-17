@@ -29,7 +29,7 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
     meas_SignalTable, meas_PeakCenterTable, meas_PositionTable, \
     meas_ScriptTable, meas_MonitorTable, loading_LoadTable, gen_LoadHolderTable, \
-    meas_PositionsTable, loading_PositionsTable
+    loading_PositionsTable
 
 
 # med_

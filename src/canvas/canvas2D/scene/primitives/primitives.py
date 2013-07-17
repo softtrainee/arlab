@@ -611,6 +611,7 @@ class Triangle(QPrimitive):
                     gc.show_text('{:0.3f}'.format(v))
 
 
+
 class Circle(QPrimitive):
     radius = Float
     fill = False
@@ -625,15 +626,12 @@ class Circle(QPrimitive):
         r = self.map_dimension(self.radius)
 
         gc.arc(x, y, r, 0, 360)
+        gc.stroke_path()
 
         if self.fill:
-#             gc.set_fill_color(self.fill_color)
-#             gc.set_stroke_color((0, 0, 0))
             gc.set_fill_color(self.fill_color)
-            gc.draw_path()
-#             gc.fill_path()
-
-#             gc.stroke_path()
+            gc.arc(x, y, r, 0, 360)
+            gc.fill_path()
 
         self._render_name(gc, x - 5, y - 5, r, r)
 
@@ -649,6 +647,28 @@ class Circle(QPrimitive):
 
     def _get_group(self):
         return Item('radius')
+class LoadIndicator(Circle):
+    degas_indicator = False
+    measured_indicator = False
+    degas_color = (1, 0.5, 0)
+    measured_color = (1, 0, 0)
+    def _render_(self, gc):
+        Circle._render_(self, gc)
+
+        x, y = self.get_xy()
+        r = self.map_dimension(self.radius)
+        nr = r * 0.25
+
+        if self.degas_indicator:
+            gc.set_fill_color(self.degas_color)
+            gc.arc(x, y + 2 * nr, nr, 0, 360)
+            gc.fill_path()
+
+        if self.measured_indicator:
+            gc.set_fill_color(self.measured_color)
+            gc.arc(x, y - 2 * nr, nr, 0, 360)
+            gc.fill_path()
+
 
 class CalibrationObject(HasTraits):
     tweak_dict = Dict

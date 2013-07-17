@@ -83,20 +83,20 @@ class Experimentor(IsotopeDatabaseManager):
     activate_editor_event = Event
     save_event = Event
 #    clear_display_event = Event
-    def refresh_executable(self, qs=None):
-        if qs is None:
-            qs = self.experiment_queues
-        self.executor.executable = all([ei.executable for ei in qs])
+#     def refresh_executable(self, qs=None):
+#         if qs is None:
+#             qs = self.experiment_queues
+#
+#         self.executor.executable = all([ei.isExecutable() for ei in qs])
 
-    def test_queues(self, qs=None):
-        if qs is None:
-            qs = self.experiment_queues
+    def update_queues(self):
+        self._update_queues()
 
-        for qi in qs:
-            if qi.check_runs():
-                qi.test_runs()
-
-        self.refresh_executable(qs)
+#     def test_queues(self, qs=None):
+#         if qs is None:
+#             qs = self.experiment_queues
+#
+#         self.refresh_executable(qs)
 
     def test_connections(self):
         if not self.db:
@@ -331,9 +331,11 @@ class Experimentor(IsotopeDatabaseManager):
             self.execute_event = True
 
     @on_trait_change('experiment_queues[]')
-    def _update_stats(self):
-        self.stats.experiment_queues = self.experiment_queues
+    def _update_queues(self):
+        qs = self.experiment_queues
+        self.stats.experiment_queues = qs
         self.stats.calculate()
+        self.executor.executable = all([ei.isExecutable() for ei in qs])
 
     @on_trait_change('experiment_factory:run_factory:changed')
     def _queue_dirty(self):

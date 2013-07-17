@@ -17,7 +17,6 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Float, Int
 from traitsui.api import View, Item
-from pymc.examples.disaster_model_linear import params_of_mean
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -36,7 +35,9 @@ class ExperimentQueueAction(HasTraits):
         self._parse(aparams)
 
     def _parse(self, params):
-        params = eval(params)
+
+#         print params, type(params)
+#         params = eval(params)
         n = len(params)
         nr = 1
         if n == 6:

@@ -167,8 +167,8 @@ class ExperimentEditorTask(EditorTask):
 #         return
 
 #        import os
-        path = os.path.join(paths.experiment_dir, 'demo.txt')
-#         path = self.open_file_dialog()
+#         path = os.path.join(paths.experiment_dir, 'demo.txt')
+        path = self.open_file_dialog()
 
         if path:
 #            self.window.reset_layout()
@@ -185,15 +185,17 @@ class ExperimentEditorTask(EditorTask):
                             editor.new_queue(qi)
                             self._open_editor(editor)
 
-                    qs = [ei.queue
-                          for ei in self.editor_area.editors]
+#                     qs = [ei.queue
+#                         for ei in self.editor_area.editors]
 
-                    manager.update_info()
+#                     manager.update_info()
 
-                    manager.test_queues(qs)
+#                     manager.test_queues(qs)
+#                     manager.refresh_executable()
                     manager.path = path
                     manager.executor.reset()
 
+#                     manager.update_queues()
 #                    manager.start_file_listener(path)
 
             return True
@@ -242,8 +244,9 @@ class ExperimentEditorTask(EditorTask):
         self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
 
 #         self.manager.update_info()
-        self.manager.refresh_executable()
-
+#         self.manager.update_stats()
+#         self.manager.refresh_executable()
+#         self.manager.update_
 #
 #         '''
 #             if the queue is edited while the executor is running the end_at_run_completion is True
@@ -299,6 +302,14 @@ class ExperimentEditorTask(EditorTask):
                 item = c.scene.get_item(str(pi.position))
                 if item:
                     item.fill = True
+
+            for pi in lt.measured_positions:
+                item = c.scene.get_item(str(pi.position))
+                if item:
+                    if pi.is_degas:
+                        item.degas_indicator = True
+                    else:
+                        item.measured_indicator = True
 
         self.load_pane.component = c
         self.load_pane.load_name = new

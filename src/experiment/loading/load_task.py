@@ -188,6 +188,7 @@ class LoadingManager(IsotopeDatabaseManager):
                 ls = self._get_loads()
                 self.loads = ls
                 self._get_last_load()
+                self.load_name = ''
 
         else:
             lt = db.get_loadtable(name=self.db_load_name)
