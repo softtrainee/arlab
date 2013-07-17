@@ -49,6 +49,7 @@ from src.experiment.automated_run.automated_run import AutomatedRun
 from pyface.constant import CANCEL, NO, YES
 from src.ui.qt.gui import invoke_in_main_thread
 from src.helpers.ctx_managers import no_update
+from sqlalchemy.orm.exc import NoResultFound
 
 # @todo: display total time in iso format
 # @todo: display current exp sets mass spectrometer, extract device and tray
@@ -185,6 +186,9 @@ class ExperimentExecutor(Experimentable):
 
     def reset(self):
         self._was_executed = False
+        self.experiment_queue = None
+        self.experiment_queues = []
+
 
     def stop(self):
         if self.delaying_between_runs:
@@ -397,9 +401,12 @@ class ExperimentExecutor(Experimentable):
         dbr = None
         if last:
             q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
-#             q = q.order_by(meas_AnalysisTable.aliquot.desc())
             q = q.limit(1)
-            dbr = q.one()
+            try:
+                dbr = q.one()
+            except NoResultFound:
+                pass
+
         else:
             dbs = q.all()
             sel.load_records(dbs, load=False)
@@ -503,13 +510,15 @@ class ExperimentExecutor(Experimentable):
 #===============================================================================
 
     def _execute(self):
-        # test runs first
-        for exp in self.experiment_queues:
-            err = exp.test_runs()
-            if err:
-                self.info('experiment canceled. {}'.format(err))
-                self.warning('experiment canceled')
-                return
+#         # test runs first
+#         for exp in self.experiment_queues:
+#             if exp.isExecutable()
+
+#             err = exp.test_runs()
+#             if err:
+#                 self.info('experiment canceled. {}'.format(err))
+#                 self.warning('experiment canceled')
+#                 return
 
         self._execute_experiment_queues()
 

@@ -340,7 +340,9 @@ class meas_PositionTable(Base, BaseMixin):
     y = Column(Float)
     z = Column(Float)
 
+    is_degas = Column(Boolean)
     extraction_id = foreignkey('meas_ExtractionTable')
+    load_identifier = Column(String(80), ForeignKey('loading_LoadTable.name'))
 
 
 class meas_SpectrometerParametersTable(Base, BaseMixin):
@@ -409,11 +411,11 @@ class meas_MonitorTable(Base, NameMixin):
 
 
 
-class meas_PositionsTable(Base, BaseMixin):
-    load_identifier = Column(String(80), ForeignKey('loading_LoadTable.name'))
-    extraction_id = foreignkey('meas_ExtractionTable')
-    is_degas = Column(Boolean)
-    position = Column(Integer)
+# class meas_PositionsTable(Base, BaseMixin):
+#     load_identifier = Column(String(80), ForeignKey('loading_LoadTable.name'))
+#     extraction_id = foreignkey('meas_ExtractionTable')
+#     is_degas = Column(Boolean)
+#     position = Column(Integer)
 
 class loading_LoadTable(Base):
     @declared_attr
@@ -424,7 +426,7 @@ class loading_LoadTable(Base):
     create_date = Column(DateTime, default=func.now())
     holder = Column(String(80), ForeignKey('gen_LoadHolderTable.name'))
 
-    measured_positions = relationship('meas_PositionsTable')
+    measured_positions = relationship('meas_PositionTable')
     loaded_positions = relationship('loading_PositionsTable')
 
 class loading_PositionsTable(Base, BaseMixin):

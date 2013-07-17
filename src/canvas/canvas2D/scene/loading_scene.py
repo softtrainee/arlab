@@ -21,7 +21,8 @@ from src.canvas.canvas2D.scene.scene import Scene
 import os
 from src.paths import paths
 from src.lasers.stage_managers.stage_map import StageMap
-from src.canvas.canvas2D.scene.primitives.primitives import Circle
+from src.canvas.canvas2D.scene.primitives.primitives import Circle, \
+    LoadIndicator
 from numpy import Inf
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -39,7 +40,7 @@ class LoadingScene(Scene):
             xma = max(xma, hi.x)
             yma = max(yma, hi.y)
 
-            v = Circle(
+            v = LoadIndicator(
                        x=hi.x,
                        y=hi.y,
                        radius=sm.g_dimension / 2.0,

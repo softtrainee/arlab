@@ -263,6 +263,7 @@ class BaseExperimentQueue(Loggable):
     def _automated_run_factory(self, script_info, params):
         arv = AutomatedRunSpec()
         arv.load(script_info, params)
+
         return arv
 
     def _load_map(self, meta):
