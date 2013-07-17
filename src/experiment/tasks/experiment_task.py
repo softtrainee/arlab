@@ -143,20 +143,7 @@ class ExperimentEditorTask(EditorTask):
 
         return panes
 
-    @on_trait_change('source_pane:[selected_connection, source:+]')
-    def _update_source(self, name, new):
-        from src.image.video_source import parse_url
-        if name == 'selected_connection':
-            islocal, r = parse_url(new)
-            if islocal:
-                pass
-            else:
-                self.source_pane.source.host = r[0]
-                self.source_pane.source.port = r[1]
-        else:
-            url = self.source_pane.source.url()
 
-            self.video_source.set_url(url)
 #===============================================================================
 # generic actions
 #===============================================================================
@@ -167,8 +154,8 @@ class ExperimentEditorTask(EditorTask):
 #         return
 
 #        import os
-#         path = os.path.join(paths.experiment_dir, 'demo.txt')
-        path = self.open_file_dialog()
+        path = os.path.join(paths.experiment_dir, 'demo.txt')
+#         path = self.open_file_dialog()
 
         if path:
 #            self.window.reset_layout()
@@ -185,15 +172,19 @@ class ExperimentEditorTask(EditorTask):
                             editor.new_queue(qi)
                             self._open_editor(editor)
 
+                            # loading queue editor set dirty
+                            # clear dirty flag
+                            editor.dirty = False
+
 #                     qs = [ei.queue
 #                         for ei in self.editor_area.editors]
 
-#                     manager.update_info()
 
 #                     manager.test_queues(qs)
 #                     manager.refresh_executable()
                     manager.path = path
                     manager.executor.reset()
+                    manager.update_info()
 
 #                     manager.update_queues()
 #                    manager.start_file_listener(path)
@@ -284,6 +275,21 @@ class ExperimentEditorTask(EditorTask):
 #===============================================================================
 # handlers
 #===============================================================================
+    @on_trait_change('source_pane:[selected_connection, source:+]')
+    def _update_source(self, name, new):
+        from src.image.video_source import parse_url
+        if name == 'selected_connection':
+            islocal, r = parse_url(new)
+            if islocal:
+                pass
+            else:
+                self.source_pane.source.host = r[0]
+                self.source_pane.source.port = r[1]
+        else:
+            url = self.source_pane.source.url()
+
+            self.video_source.set_url(url)
+
     @on_trait_change('manager.experiment_factory:queue_factory:load_name')
     def _update_load(self, new):
         db = self.manager.db
@@ -357,10 +363,13 @@ class ExperimentEditorTask(EditorTask):
                 break
 
     @on_trait_change('manager:executor:run_completed')
-    def _update_auto_figure(self, new):
+    def _update_run_completed(self, new):
         if self.auto_figure_window:
             task = self.auto_figure_window.active_task
             invoke_in_main_thread(task.refresh_plots, new)
+
+        load_name = self.manager.executor.experiment_queue.load_name
+        self._update_load(load_name)
 
     @on_trait_change('manager:execute_event')
     def _execute(self):

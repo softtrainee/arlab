@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any , on_trait_change, Int, List
+from traits.api import Any , on_trait_change, Int, List, Str
 #============= standard library imports ========================
 import hashlib
 #============= local library imports  ==========================

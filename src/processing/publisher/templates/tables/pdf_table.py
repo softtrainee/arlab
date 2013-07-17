@@ -30,7 +30,7 @@ class PDFTable(HasTraits):
     add_title = True
     add_header = True
     number = 1
-
+    colwidths = None
     def _new_paragraph(self, t, s='Normal'):
         style = STYLES[s]
         p = Paragraph(t, style)
@@ -58,7 +58,8 @@ class PDFTable(HasTraits):
 #        if len(nv)>n+2:
 
     def _make(self, rows):
-        ta = Table(rows)
+        print self.colwidths
+        ta = Table(rows, colWidths=self.colwidths)
         ta.hAlign = 'LEFT'
         ta.vAlign = 'TOP'
         self._set_column_widths(ta)
@@ -72,7 +73,8 @@ class PDFTable(HasTraits):
             return [(i, v) for i, v in enumerate(rows)
                       if isinstance(v, klass)]
     def _set_column_widths(self, ta):
-        ta._argW[0] = 0.17 * inch
+        pass
+#         ta._argW[0] = 0.17 * inch
 #        ta._argW[2] = 0.5 * inch
 
     def _set_row_heights(self, ta, rows):

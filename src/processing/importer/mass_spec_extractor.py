@@ -81,7 +81,7 @@ class MassSpecExtractor(Extractor):
 
         # is irrad already in dest
         dbirrad = dest.get_irradiation(name)
-        skipped = True
+        added_to_db = False
         if dbirrad is None:
             # add chronology
             dbchron = self._add_chronology(dest, name)
@@ -89,13 +89,13 @@ class MassSpecExtractor(Extractor):
             dbpr = self._add_production_ratios(dest, name)
             # add irradiation
             dbirrad = dest.add_irradiation(name, production=dbpr, chronology=dbchron)
-            skipped = False
+            added_to_db = True
 
         dest.flush()
-        
+
         if dbirrad:
             # add all the levels and positions for this irradiation
-            self._add_levels(dest, dbirrad, name,
+            added_to_db = self._add_levels(dest, dbirrad, name,
                              include_analyses,
                              include_blanks,
                              include_airs,
@@ -109,7 +109,7 @@ class MassSpecExtractor(Extractor):
             dest.commit()
 
         self.import_err_file.close()
-        return ImportName(name=name, skipped=skipped)
+        return ImportName(name=name, skipped=not added_to_db)
 
     def _add_levels(self, dest, dbirrad, name,
                     include_analyses=False,
@@ -121,8 +121,8 @@ class MassSpecExtractor(Extractor):
             add all levels and positions for dbirrad
             if include_analyses is True add all analyses
         '''
+        added_to_db = False
         levels = self.db.get_levels_by_irradname(name)
-        print levels
         if not include_list:
             include_list = [li.Level for li in levels]
 
@@ -135,6 +135,7 @@ class MassSpecExtractor(Extractor):
             dbl = dest.get_irradiation_level(name, mli.Level)
             if dbl is None:
                 dest.add_irradiation_level(mli.Level, dbirrad, mli.SampleHolder)
+                added_to_db = True
 
             # add all irradiation positions for this level
             positions = self.db.get_irradiation_positions(name, mli.Level)
@@ -151,6 +152,7 @@ class MassSpecExtractor(Extractor):
                     ln.selected_flux_history = fh
                     fl = dest.add_flux(ip.J, ip.JEr)
                     fh.flux = fl
+                    added_to_db = True
 
                 sample = self._add_sample_project(dest, ip)
                 ln.sample = sample
@@ -159,16 +161,22 @@ class MassSpecExtractor(Extractor):
                 if include_analyses:
                     self.info('============ Adding Analyses ============')
                     for ai in ip.analyses:
-                        self._add_analysis(dest, ln, ai)
+                        if self._add_analysis(dest, ln, ai):
+                            added_to_db = True
 
                         if include_blanks:
-                            self._add_associated_unknown_blanks(dest, ai)
+                            if self._add_associated_unknown_blanks(dest, ai):
+                                added_to_db = True
                         if include_airs:
-                            self._add_associated_airs(dest, ai)
+                            if self._add_associated_airs(dest, ai):
+                                added_to_db = True
                         if include_cocktails:
-                            self._add_associated_cocktails(dest, ai)
+                            if self._add_associated_cocktails(dest, ai):
+                                added_to_db = True
 
                 dest.flush()
+
+        return added_to_db
 
     def _add_associated_cocktails(self, dest, dba):
         ms = dba.login_session.machine
@@ -190,7 +198,7 @@ class MassSpecExtractor(Extractor):
                     ln = 'c-00-{}'.format(msname)
                 return ln
 
-            self._add_associated(dest, dba, make_labnumber,
+            return self._add_associated(dest, dba, make_labnumber,
                                  atype=1,
                                  add_hook=add_hook,
                                  analysis_type='cocktail'
@@ -218,7 +226,7 @@ class MassSpecExtractor(Extractor):
                     ln = 'a-00-{}'.format(msname)
                 return ln
 
-            self._add_associated(dest, dba, make_labnumber,
+            return self._add_associated(dest, dba, make_labnumber,
                                  atype=2,
                                  add_hook=add_hook,
                                  analysis_type='air'
@@ -236,7 +244,7 @@ class MassSpecExtractor(Extractor):
                 ln = '-'.join(ln.split('-')[:-1])
             return ln
 
-        self._add_associated(dest, dba, make_labnumber, atype=5,
+        return self._add_associated(dest, dba, make_labnumber, atype=5,
                              analysis_type='blank_air'
                              )
 
@@ -252,7 +260,7 @@ class MassSpecExtractor(Extractor):
                 ln = '-'.join(ln.split('-')[:-1])
             return ln
 
-        self._add_associated(dest, dba, make_labnumber, atype=5,
+        return self._add_associated(dest, dba, make_labnumber, atype=5,
                              analysis_type='blank_coctail'
                              )
 
@@ -280,7 +288,7 @@ class MassSpecExtractor(Extractor):
             q = q.filter(not_(RunScriptTable.Label.in_(['Blank Pipette 1', 'Blank Pipette 2'])))
             return q
 
-        self._add_associated(dest, dba, make_labnumber,
+        return self._add_associated(dest, dba, make_labnumber,
                              filter_hook=filter_func)
 
     def _add_associated(self, dest, dba, make_labnumber,
@@ -290,6 +298,7 @@ class MassSpecExtractor(Extractor):
                         add_hook=None,
                         **kw
                         ):
+        added_to_db = False
         post = dba.RunDateTime
         ms = dba.login_session.machine.Label
         br = self._find_analyses(ms, post, -2, atype, **kw)
@@ -305,6 +314,9 @@ class MassSpecExtractor(Extractor):
             if self._add_analysis(dest, ln, bi, analysis_type=analysis_type):
                 if add_hook:
                     add_hook(dest, bi)
+                added_to_db = True
+
+        return added_to_db
 
     def _get_ms_identifier(self, ai):
         msname = ai.login_session.machine
@@ -372,6 +384,7 @@ class MassSpecExtractor(Extractor):
             pass
 
     def _add_analysis(self, dest, dest_labnumber, dbanalysis, analysis_type='unknown', _ed_cache=[], _an_cache=[]):
+
         #=======================================================================
         # add analysis
         #=======================================================================

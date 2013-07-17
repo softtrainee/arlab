@@ -89,6 +89,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #    open_button = Button
 #    open_button_label = 'Open'
 
+
     db = Instance(DatabaseAdapter)
     tabular_adapter = BaseTabularAdapter
     id_string = Str

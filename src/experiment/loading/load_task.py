@@ -138,7 +138,7 @@ class LoadingManager(IsotopeDatabaseManager):
 
             self.db_load_name = lt.name
             if lt.holder_:
-                self.tray = lt.holder_.name
+#                 self.tray = lt.holder_.name
 
                 self.load_load(lt)
 
@@ -148,6 +148,8 @@ class LoadingManager(IsotopeDatabaseManager):
         if isinstance(loadtable, str):
             loadtable = self.db.get_loadtable(loadtable)
 
+        self.positions = []
+        self.tray = loadtable.holder_.name
         for ln, poss in groupby(loadtable.loaded_positions,
                                         key=lambda x:x.lab_identifier):
             pos = []
@@ -391,7 +393,6 @@ class LoadingTask(BaseManagerTask):
                 ts.add('BACKGROUND', (0, idx + 1), (-1, idx + 1),
                         colors.lightgrey)
 
-
         cw = map(lambda x: mm * x, [15, 25, 32, 23])
 
         rh = [mm * 5 for i in range(len(data))]
@@ -404,10 +405,8 @@ class LoadingTask(BaseManagerTask):
 
         return t
 
-
     @on_trait_change('manager:db_load_name')
     def _load_changed(self):
-        self._tray_changed()
         self.manager.load_load(self.manager.db_load_name)
 
     @on_trait_change('manager:tray')

@@ -24,14 +24,39 @@ from reportlab.lib.units import inch
 from src.processing.publisher.writers.writer import BaseWriter
 from src.processing.publisher.templates.tables.ideogram_table import IdeogramTable
 from src.processing.publisher.templates.tables.spectrum import SpectrumTable
-from reportlab.lib.pagesizes import legal, landscape
+from reportlab.lib.pagesizes import legal, landscape, letter
 from reportlab.platypus.flowables import Image
 
+class SimplePDFWriter(BaseWriter):
+    _flowables = List
 
-class PDFWriter(BaseWriter):
+    def add(self, a):
+        self._flowables.append(a)
+
+    def publish(self, out=None,
+                use_landscape=True,
+                leftMargin=0.5, rightMargin=0.5, topMargin=0.5):
+        if out is None:
+            out = self.filename
+
+        pagesize = letter
+        if use_landscape:
+            pagesize = landscape(pagesize)
+
+        doc = SimpleDocTemplate(out,
+                                leftMargin=leftMargin * inch,
+                                rightMargin=rightMargin * inch,
+                                topMargin=topMargin * inch,
+                                pagesize=pagesize
+#                                 pagesize=landscape(legal)
+#                                pagesize=(20 * inch, 10 * inch)
+                                )
+
+        doc.build(self._flowables)
+
+class PDFWriter(SimplePDFWriter):
     _text = ''
 #    def __init__(self,*args,**kw):
-    _flowables = List
 
     def add_ideogram_table(self, analyses,
                            widths=None,
@@ -69,17 +94,5 @@ class PDFWriter(BaseWriter):
     def add_sample(self):
         pass
 
-    def publish(self, out=None, leftMargin=0.5, rightMargin=0.5, topMargin=0.5):
-        if out is None:
-            out = self.filename
 
-        doc = SimpleDocTemplate(out,
-                                leftMargin=leftMargin * inch,
-                                rightMargin=rightMargin * inch,
-                                topMargin=topMargin * inch,
-                                pagesize=landscape(legal)
-#                                pagesize=(20 * inch, 10 * inch)
-                                )
-
-        doc.build(self._flowables)
 #============= EOF =============================================

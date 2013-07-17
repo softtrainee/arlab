@@ -41,10 +41,14 @@ class ExperimentEditor(BaseTraitsEditor):
     merge_id = Int(0)
     group = Int(0)
 
-
+#     dirty = Bool(False)
 
 #    def create(self, parent):
 #        self.control = self._create_control(parent)
+    def _dirty_changed(self):
+        self.debug('dirty changed {}'.format(self.dirty))
+
+
     def traits_view(self):
 
         arun_grp = UItem('automated_runs',
@@ -107,9 +111,11 @@ class ExperimentEditor(BaseTraitsEditor):
         self.queue.path = self.path
 
     def _set_queue_dirty(self):
+#         print 'set qirty', self.queue._no_update, self.queue.initialized
         if not self.queue._no_update and self.queue.initialized:
             self.dirty = True
-
+#         else:
+#             self.dirty = False
 #===========================================================================
 #
 #===========================================================================
@@ -135,7 +141,7 @@ class ExperimentEditor(BaseTraitsEditor):
         if self._validate_experiment_queues(queues):
             path = self._dump_experiment_queues(path, queues)
             self.path = path
-            self.dirty = False
+#             self.dirty = False
 
     def _validate_experiment_queues(self, eqs):
         hec = HumanErrorChecker()
