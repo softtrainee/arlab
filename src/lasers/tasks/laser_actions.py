@@ -21,6 +21,7 @@ from pyface.action.action import Action
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.lasers.laser_managers.pychron_laser_manager import PychronLaserManager
 from pyface.tasks.action.task_action import TaskAction
+from pyface.tasks.task_layout import TaskLayout
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -109,17 +110,36 @@ class NewPatternAction(LaserTaskAction):
     name = 'New Pattern...'
     method = 'new_pattern'
 
-class PowerMapAction(LaserTaskAction):
+class LaserCalibrationAction(LaserTaskAction):
+    def _get_task(self, event):
+        app = event.window.application
+#         win = event.window
+        task_id = 'pychron.laser.calibration'
+        for win in app.windows:
+            if win.active_task.id == task_id:
+                task = win.active_task
+                win.activate()
+        else:
+            win = app.create_window(TaskLayout(task_id))
+        return task
+
+class PowerMapAction(LaserCalibrationAction):
     name = 'Power Map...'
-    method = 'open_power_map'
-    enabled_name = 'power_map_enabled'
+    def perform(self, event):
+        task = self._get_task
+        task.new_power_map()
+
+#     method = 'open_power_map'
+#     enabled_name = 'power_map_enabled'
 # class ExecutePatternAction(LaserTaskAction):
 #     name = 'Execute Pattern...'
 #     method = 'execute_pattern'
 
-class PowerCalibrationAction(LaserTaskAction):
+class PowerCalibrationAction(LaserCalibrationAction):
     name = 'Power Calibration...'
-    method = 'open_power_calibration'
+    def perform(self, event):
+        task = self._get_task
+        task.new_power_calibration()
 
 
 #============= EOF =============================================
