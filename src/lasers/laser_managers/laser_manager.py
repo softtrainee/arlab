@@ -38,6 +38,7 @@ from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
 from src.database.adapters.power_map_adapter import PowerMapAdapter
 from src.ui.led_editor import LED, LEDEditor
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
+from src.hardware.meter_calibration import MeterCalibration
 
 
 class BaseLaserManager(Manager):
@@ -174,7 +175,20 @@ class BaseLaserManager(Manager):
     def _get_calibrated_power(self, power, use_calibration=True, verbose=True):
 
         if self.use_calibrated_power and use_calibration:
-            pc = self.power_calibration_manager.load_power_calibration(verbose=verbose, warn=False)
+            lb = self.laser_controller
+            config = lb.get_configuration()
+            section = 'PowerOutput'
+            if config.has_section(section):
+                coefficients = config.get(section, 'coefficients')
+                cs = self._parse_coefficient_string(coefficients, warn=False)
+                if cs is None:
+                    return
+            else:
+                cs = [1, 0]
+
+            pc = MeterCalibration(cs)
+
+#             pc = self.power_calibration_manager.load_power_calibration(verbose=verbose, warn=False)
             if pc is None:
                 return
 

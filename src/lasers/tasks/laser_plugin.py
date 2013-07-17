@@ -164,12 +164,12 @@ class FusionsPlugin(BaseLaserPlugin):
                                                         ),
                                   path='MenuBar/Extraction'
                                   ),
-                   SchemaAddition(id='power_calibration',
-                                  factory=lambda: Group(
-                                                        PowerCalibrationAction(),
-                                                        ),
-                                  path='MenuBar/Extraction'
-                                  )
+#                    SchemaAddition(id='power_calibration',
+#                                   factory=lambda: Group(
+#                                                         PowerCalibrationAction(),
+#                                                         ),
+#                                   path='MenuBar/Extraction'
+#                                   )
 
                               ]
                             )

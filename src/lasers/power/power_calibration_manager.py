@@ -13,6 +13,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from traits.etsconfig.etsconfig import ETSConfig
+ETSConfig.toolkit = 'qt4'
+
+
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Button, Instance, Int, \
@@ -39,49 +43,6 @@ from src.hardware.analog_power_meter import AnalogPowerMeter
 from src.hardware.meter_calibration import MeterCalibration
 
 FITDEGREES = dict(Linear=1, Parabolic=2, Cubic=3)
-
-def confirmation(message):
-    dialog = wx.Dialog(
-                       None, -1, 'Confirmation'
-    )
-
-#    tc = wx.StaticText(dialog, label=message)
-    return dialog
-
-# class PowerCalibrationObject(object):
-#    coefficients = None
-#    bounds = None
-#
-#    def get_calibrated_power(self, rp):
-#        if self.bounds:
-#            for c, b in zip(self.coefficients, self.bounds):
-#                if b[0] < rp <= b[1]:
-#                    break
-#            else:
-#                closest = 0
-#                min_d = 1000
-#                for i, b in enumerate(self.bounds):
-#                    d = min(abs(b[0] - rp), abs(b[1] - rp))
-#                    if d < min_d:
-#                        closest = i
-#                c = self.coefficients[closest]
-#        else:
-#            c = self.coefficients
-#
-#        #say y=ax+b (watts=a*power_percent+b)
-#        #calculate x for a given y
-#        #solvers solve x for y=0
-#        #we want x for y=power, therefore
-#        #subtract the requested power from the intercept coeff (b)
-#        #find the root of the polynominal
-#
-#        if c is not None and len(c):
-#            c[-1] -= rp
-#            power = optimize.newton(poly1d(c), 1)
-#            c[-1] += rp
-#        else:
-#            power = rp
-#        return power, c
 
 
 class DummyAPM:
