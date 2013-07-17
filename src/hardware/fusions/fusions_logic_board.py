@@ -14,6 +14,7 @@
 # limitations under the License.
 #===============================================================================
 from src.hardware.kerr.kerr_manager import KerrManager
+from src.hardware.meter_calibration import MeterCalibration
 '''
 Fusions Control board
 a combination of the logic board and the kerr microcontroller
@@ -62,6 +63,36 @@ class FusionsLogicBoard(CoreDevice):
     motors = List
     _test_comms = True
     has_pointer = True
+
+    def _calibration_factory(self, calibration):
+        coeffs = None
+        if calibration == 'watts':
+            config = self.get_configuration()
+            coeffs = self._get_watt_calibration_coefficients(config)
+
+        if coeffs is None:
+            coeffs = [1, 0]
+        return MeterCalibration(coeffs)
+
+    def _get_watt_calibration_coefficients(self, config):
+        coeffs = [1, 0]
+        section = 'PowerOutput'
+        if config.has_section(section):
+            cs = config.get(section, 'coefficients')
+            try:
+                coeffs = map(float, cs.split(','))
+            except ValueError:
+                self.warning_dialog('Invalid power calibration {}'.format(cs))
+                return
+
+        return coeffs
+
+    def get_calibrated_power(self, request, calibration='watts'):
+#        coeffs = [1, 0]
+#        print self.config_path
+        mc = self._calibration_factory(calibration)
+        self.info('using power coefficients  (e.g. ax2+bx+c) {}'.format(mc.print_string()))
+        return mc.get_input(request)
 
     def initialize(self, *args, **kw):
         '''
@@ -117,15 +148,8 @@ class FusionsLogicBoard(CoreDevice):
             v = config.get('Motors', option)
             self.add_motor(option, v)
 
-#        z = self.config_get(config, 'Motors', 'zoom')
-#        b = self.config_get(config, 'Motors', 'beam', optional=True)
-#
-#        if z is not None:
-#            self.zoom_motor.load(os.path.join(self.configuration_dir_path, z))
-#
-#        if b is not None:
-#            self.beam_motor.load(os.path.join(self.configuration_dir_path, b))
-
+        if not self._get_watt_calibration_coefficients(config):
+            return
 
         return True
 
@@ -136,7 +160,7 @@ class FusionsLogicBoard(CoreDevice):
 
     def add_motor(self, name, path):
         p = os.path.join(self.configuration_dir_path, path)
-        config = self.get_configuration(path=p)
+        config = self.get_configuration(path=p, set_path=False)
         klassname = self.config_get(config, 'General', 'kind', default='', optional=True)
         m = self._motor_factory(name, klassname)
         m.load(p)

@@ -175,34 +175,42 @@ class BaseLaserManager(Manager):
     def _get_calibrated_power(self, power, use_calibration=True, verbose=True):
 
         if self.use_calibrated_power and use_calibration:
-            lb = self.laser_controller
-            config = lb.get_configuration()
-            section = 'PowerOutput'
-            if config.has_section(section):
-                coefficients = config.get(section, 'coefficients')
-                cs = self._parse_coefficient_string(coefficients, warn=False)
-                if cs is None:
-                    return
-            else:
-                cs = [1, 0]
-
-            pc = MeterCalibration(cs)
-
-#             pc = self.power_calibration_manager.load_power_calibration(verbose=verbose, warn=False)
-            if pc is None:
-                return
-
             if power < 0.1:
                 power = 0
             else:
-                power = pc.get_input(power)
-                if verbose:
-                    self.info('using power coefficients  (e.g. ax2+bx+c) {}'.format(pc.print_string()))
+                lb = self.laser_controller
+                power = lb.get_calibrated_power(power)
+        return power
+
+#            config = lb.get_configuration()
+#            section = 'PowerOutput'
+#            if config.has_section(section):
+#                cs = config.get(section, 'coefficients')
+#                try:
+#                    cs = map(float, cs.split(','))
+#                except ValueError:
+#                    return
+#            else:
+#                cs = [1, 0]
+#
+#            print cs
+#            pc = MeterCalibration(cs)
+#
+##             pc = self.power_calibration_manager.load_power_calibration(verbose=verbose, warn=False)
+#            if pc is None:
+#                return
+#
+#            if power < 0.1:
+#                power = 0
+#            else:
+#                power = pc.get_input(power)
+#                if verbose:
+#                    self.info('using power coefficients  (e.g. ax2+bx+c) {}'.format(pc.print_string()))
 #                if coeffs is not None:
 #                    sc = ','.join(['{}={:0.3e}'.format(*c) for c in zip('abcdefg', coeffs)])
 #                    if verbose:
 #                        self.info('using power coefficients (e.g. ax2+bx+c) {}'.format(sc))
-        return power
+#        return power
 
     def _get_requested_power(self):
         return self._requested_power
