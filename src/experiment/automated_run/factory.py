@@ -59,9 +59,9 @@ class AutomatedRunFactory(Loggable):
     project = Any
     projects = Property(depends_on='db')
 
-    selected_irradiation = Any('Irradiation')
+    selected_irradiation = Str('Irradiation')
     irradiations = Property(depends_on='db')
-    selected_level = Any('Level')
+    selected_level = Str('Level')
     levels = Property(depends_on='selected_irradiation, db')
 
     skip = Bool(False)
@@ -613,35 +613,51 @@ post_equilibration_script:name
     @cached_property
     def _get_irradiations(self):
 #        return {'a':'1:xxx','g':'2:bbb',}
+#         if self.db:
+#             keys = [(pi, pi.name) for pi in self.db.get_irradiations()]
+#             keys = [(a, '{:02n}:{}'.format(i + 2, b)) for i, (a, b) in enumerate(keys)]
+#             keys = [
+#                     ('Irradiation', '00:Irradiation'.format(NULL_STR)),
+#                     (LINE_STR, '01:{}'.format(LINE_STR)),
+#                     ] + keys
+#             return dict(keys)
+#         else:
+#             return dict()
+
+        irradiations = []
         if self.db:
-            keys = [(pi, pi.name) for pi in self.db.get_irradiations()]
-            keys = [(a, '{:02n}:{}'.format(i + 2, b)) for i, (a, b) in enumerate(keys)]
-            keys = [
-                    ('Irradiation', '00:Irradiation'.format(NULL_STR)),
-                    (LINE_STR, '01:{}'.format(LINE_STR)),
-                    ] + keys
-            return dict(keys)
-        else:
-            return dict()
+            irradiations = [pi.name for pi in self.db.get_irradiations()]
+
+        return ['Irradiation', LINE_STR] + irradiations
 
     @cached_property
     def _get_levels(self):
+        levels = []
         if self.db:
-            r = [
-                 ('Level', '00:Level'.format(NULL_STR)),
-                 (LINE_STR, '01:{}'.format(LINE_STR)),
-                 ]
-
-            if self.selected_irradiation and self.selected_irradiation != 'Irradiation':
+            if not self.selected_irradiation in ('IRRADIATION', LINE_STR):
                 irrad = self.db.get_irradiation(self.selected_irradiation)
                 if irrad:
-                    rr = sorted(((pi, pi.name) for pi in irrad.levels), key=lambda p: p[1])
-                    rr = [(a, '{:02n}:{}'.format(i + 1, b)) for i, (a, b) in enumerate(rr)]
-                    r.extend(rr)
+                    levels = sorted([li.name for li in irrad.levels])
+        if levels:
+            self.selected_level = levels[0] if levels else 'LEVEL'
 
-            return dict(r)
-        else:
-            return dict()
+        return ['Level', LINE_STR] + levels
+#         if self.db:
+#             r = [
+#                  ('Level', '00:Level'.format(NULL_STR)),
+#                  (LINE_STR, '01:{}'.format(LINE_STR)),
+#                  ]
+
+#             if self.selected_irradiation and self.selected_irradiation != 'Irradiation':
+#                 irrad = self.db.get_irradiation(self.selected_irradiation)
+#                 if irrad:
+#                     rr = sorted(((pi, pi.name) for pi in irrad.levels), key=lambda p: p[1])
+#                     rr = [(a, '{:02n}:{}'.format(i + 1, b)) for i, (a, b) in enumerate(rr)]
+#                     r.extend(rr)
+#
+#             return dict(r)
+#         else:
+#             return dict()
 
     @cached_property
     def _get_projects(self):
@@ -656,18 +672,29 @@ post_equilibration_script:name
     @cached_property
     def _get_labnumbers(self):
         lns = []
-        if self.selected_level and not self.selected_level in ('Level', LINE_STR):
-            lns = [str(pi.labnumber.identifier)
-                    for pi in self.selected_level.positions]
+        db = self.db
+        if db:
+            if self.selected_level and not self.selected_level in ('Level', LINE_STR):
+                level = db.get_irradiation_level(self.selected_irradiation,
+                                                 self.selected_level)
+                if level:
+                    lns = [str(pi.labnumber.identifier)
+                        for pi in level.positions]
 
-        project = self.project
-        if project and project != NULL_STR:
-            project = self.db.get_project(project)
-            if project is not None:
-                lns = [str(ln.identifier)
-                    for s in project.samples
-                        for ln in s.labnumbers]
+
         return sorted(lns)
+#         if self.selected_level and not self.selected_level in ('Level', LINE_STR):
+#             lns = [str(pi.labnumber.identifier)
+#                     for pi in self.selected_level.positions]
+
+#         project = self.project
+#         if project and project != NULL_STR:
+#             project = self.db.get_project(project)
+#             if project is not None:
+#                 lns = [str(ln.identifier)
+#                     for s in project.samples
+#                         for ln in s.labnumbers]
+#         return sorted(lns)
 #        return [NULL_STR] + sorted(lns)
 
     def _get_position(self):

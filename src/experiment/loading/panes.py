@@ -33,7 +33,7 @@ class PositionsAdapter(TabularAdapter):
                ('Positions', 'position_str')
                ]
 
-class LoadTable(TraitsDockPane):
+class LoadTablePane(TraitsDockPane):
     name = 'Positions'
     id = 'pychron.loading.positions'
     def traits_view(self):
@@ -41,7 +41,9 @@ class LoadTable(TraitsDockPane):
                  UItem('positions',
                        editor=TabularEditor(adapter=PositionsAdapter(),
                                             refresh='refresh_table',
-                                            scroll_to_row='scroll_to_row'
+                                            scroll_to_row='scroll_to_row',
+                                            selected='selected_positions',
+                                            multi_select=True
                                             )
                        )
                  )
