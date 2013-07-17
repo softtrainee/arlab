@@ -29,7 +29,7 @@ from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.lasers.tasks.laser_actions import OpenScannerAction, \
     OpenAutoTunerAction, NewPatternAction, \
-    OpenPatternAction, PowerMapAction
+    OpenPatternAction, PowerMapAction, PowerCalibrationAction
 from pyface.tasks.action.schema import SMenu, GroupSchema
 from pyface.action.group import Group
 #============= standard library imports ========================
@@ -161,6 +161,12 @@ class FusionsPlugin(BaseLaserPlugin):
                    SchemaAddition(id='power_map',
                                   factory=lambda: Group(
                                                         PowerMapAction(),
+                                                        ),
+                                  path='MenuBar/Extraction'
+                                  ),
+                   SchemaAddition(id='power_calibration',
+                                  factory=lambda: Group(
+                                                        PowerCalibrationAction(),
                                                         ),
                                   path='MenuBar/Extraction'
                                   )
