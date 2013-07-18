@@ -22,6 +22,7 @@ from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.lasers.laser_managers.pychron_laser_manager import PychronLaserManager
 from pyface.tasks.action.task_action import TaskAction
 from pyface.tasks.task_layout import TaskLayout
+from pyface.tasks.task_window_layout import TaskWindowLayout
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -29,8 +30,6 @@ class BaseLaserAction(Action):
     manager_name = None
     manager = None
     def _get_manager(self, event, app=None):
-
-        print self.manager_name
         if self.manager is not None:
             manager = self.manager
         else:
@@ -110,9 +109,9 @@ class NewPatternAction(LaserTaskAction):
     name = 'New Pattern...'
     method = 'new_pattern'
 
-class LaserCalibrationAction(LaserTaskAction):
+class LaserCalibrationAction(Action):
     def _get_task(self, event):
-        app = event.window.application
+        app = event.task.window.application
 #         win = event.window
         task_id = 'pychron.laser.calibration'
         for win in app.windows:
@@ -120,14 +119,23 @@ class LaserCalibrationAction(LaserTaskAction):
                 task = win.active_task
                 win.activate()
         else:
-            win = app.create_window(TaskLayout(task_id))
+            win = app.create_window(TaskWindowLayout(task_id))
+            win.open()
+            task = win.active_task
+
         return task
 
 class PowerMapAction(LaserCalibrationAction):
     name = 'Power Map...'
     def perform(self, event):
-        task = self._get_task
+        task = self._get_task(event)
         task.new_power_map()
+
+class OpenPowerMapAction(LaserCalibrationAction):
+    name = 'Power Map'
+    def perform(self, event):
+        task = self._get_task(event)
+        task.open_power_map()
 
 #     method = 'open_power_map'
 #     enabled_name = 'power_map_enabled'
@@ -138,7 +146,7 @@ class PowerMapAction(LaserCalibrationAction):
 class PowerCalibrationAction(LaserCalibrationAction):
     name = 'Power Calibration...'
     def perform(self, event):
-        task = self._get_task
+        task = self._get_task(event)
         task.new_power_calibration()
 
 

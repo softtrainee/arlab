@@ -106,17 +106,27 @@ class Irradiation(Saveable):
 
     def _make_chronblob(self):
         def make_ci(ci):
-                return '{} {}%{} {}'.format(ci.startdate, ci.starttime,
+            return '{} {}%{} {}'.format(ci.startdate, ci.starttime,
                                             ci.enddate, ci.endtime)
+
         err = self.chronology_input.validate_chronology()
         if err :
-            self.warning_dialog('Invalid Chronology. {}'.format(err))
-            return
+#             self.warning_dialog('Invalid Chronology. {}'.format(err))
+            return err
 
         chronblob = '$\n'.join([make_ci(ci) for ci in self.chronology_input.dosages])
         return chronblob
 
     def save_to_db(self):
+        if not self.name:
+            ret = self.confirmation_dialog('No name set for this irradiation.\nCancel ?',
+                                           title='No Irradiation Name'
+                                           )
+            if ret:
+                return False
+            else:
+                return
+
         db = self.db
         ir = db.get_irradiation(self.name)
         if ir is not None:
@@ -124,15 +134,30 @@ class Irradiation(Saveable):
             return
         else:
             prn = self.pr_name
+
             if not prn:
-                prn = self.production_ratio_input.names[0]
+                ret = self.confirmation_dialog('Production Ratio not set.\nCancel?',
+                                               title='No Production Ratio'
+                                               )
+                if ret:
+                    return False
+                else:
+                    return
 
             chronblob = self._make_chronblob()
-            if chronblob:
+            print chronblob
+            if chronblob.startswith('$'):
                 cr = db.add_irradiation_chronology(chronblob)
                 ir = db.add_irradiation(self.name, prn, cr)
-                db.commit()
-                return True
+            else:
+                ret = self.confirmation_dialog('Chronology not set correctly.{}.\nCancel?'.format(chronblob),)
+                if ret:
+                    return False
+                else:
+                    return
+
+            db.commit()
+            return True
 
 #            holder = db.get_irradiation_holder(self.holder)
 #            alpha = [chr(i) for i in range(65, 65 + self.ntrays)]

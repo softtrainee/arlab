@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int
+from traits.api import HasTraits, Int, Float
 from traitsui.api import View, Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -24,8 +24,8 @@ class LinearMapper(HasTraits):
     low_step = Int(0)
     high_step = Int(1)
 
-    low_data = Int(0)
-    high_data = Int(0)
+    low_data = Float(0)
+    high_data = Float(1)
     _scale = 1
     def map_data(self, steps):
         self._compute_scale()

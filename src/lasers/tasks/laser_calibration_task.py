@@ -26,13 +26,13 @@ from src.lasers.tasks.editors.power_map_editor import PowerMapEditor
 from src.lasers.tasks.editors.power_calibration_editor import PowerCalibrationEditor
 from src.lasers.tasks.laser_calibration_panes import LaserCalibrationControlPane, \
     LaserCalibrationExecutePane
+import os
 
 class BaseLaserTask(EditorTask):
     pass
 
 class LaserCalibrationTask(BaseLaserTask):
     id = 'pychron.laser.calibration'
-
     execute = Event
     execute_label = Property(depends_on='executing')
     executing = Bool
@@ -53,8 +53,8 @@ class LaserCalibrationTask(BaseLaserTask):
                                 )
                           )
 
-    def activated(self):
-        self.new_power_map()
+#     def activated(self):
+#             self.new_power_map()
 
     def create_dock_panes(self):
         ep = LaserCalibrationExecutePane(model=self)
@@ -62,7 +62,21 @@ class LaserCalibrationTask(BaseLaserTask):
         self.control_pane = lp
         return [lp, ep]
 
+    def open_power_map(self):
+#         p = self.open_file_dialog()
+        p = '/Users/ross/Pychrondata_demo/data/scans/powermap-2013-07-17001.hdf5'
+        if p:
+            editor = PowerMapEditor(
+#                                     name='Power Map {:03n}'.format(n + 1),
+                                    name='Power Map {}'.format(os.path.basename(p))
+                                    )
+            editor.load(p)
+
+
+            self._open_editor(editor)
+
     def new_power_map(self):
+
         n = len([ed for ed in self.editor_area.editors
                        if isinstance(ed, PowerMapEditor)])
 

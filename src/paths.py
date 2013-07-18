@@ -109,7 +109,7 @@ class Paths():
     #==============================================================================
     # data
     #==============================================================================
-    data_dir = data_dir = None
+    data_dir = None
     modeling_data_dir = None
     argus_data_dir = None
     positioning_error_dir = None
@@ -168,7 +168,7 @@ class Paths():
         # #database
         #==============================================================================
 #        db_path = '/usr/local/pychron
-        db_path=stable_root
+        db_path = stable_root
         self.device_scan_root = device_scan_root = join(db_path, 'device_scans')
         self.device_scan_db = join(device_scan_root, 'device_scans.sqlite')
         self.bakeout_db_root = join(db_path, 'bakeoutdb')
@@ -227,7 +227,7 @@ class Paths():
         #==============================================================================
         # data
         #==============================================================================
-        self.data_dir = data_dir = join(stable_root, 'data')
+        self.data_dir = data_dir = join(root, 'data')
         self.spectrometer_scans_dir = join(data_dir, 'spectrometer_scans')
         self.modeling_data_dir = join(data_dir, 'modeling')
         self.argus_data_dir = join(data_dir, 'argusVI')

@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property, Unicode, List, \
-    Instance, Float, Int, Bool, Event, DelegatesTo
+    Instance, Float, Int, Bool, Event, DelegatesTo, Any
 from traitsui.api import View, Item, UItem, VGroup, ButtonEditor
 from src.envisage.tasks.base_editor import BaseTraitsEditor
 from src.loggable import Loggable
@@ -24,6 +24,8 @@ from src.canvas.canvas2D.raster_canvas import RasterCanvas
 from enable.component_editor import ComponentEditor
 from src.lasers.power.power_mapper import PowerMapper
 from src.ui.thread import Thread
+from src.lasers.power.power_map_processor import PowerMapProcessor
+from src.managers.data_managers.h5_data_manager import H5DataManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -57,11 +59,25 @@ class PowerMapEditor(BaseTraitsEditor):
     completed = DelegatesTo('mapper')
     was_executed = False
 
+    component = Any
+
+    def load(self, path):
+
+        pmp = PowerMapProcessor()
+
+        reader = H5DataManager()
+        reader.open_data(path)
+        cg = pmp.load_graph(reader)
+
+        self.component = cg.plotcontainer
+        self.was_executed = True
+
     def do_execute(self, lm):
 
         mapper = self.mapper
         mapper.laser_manager = lm
         mapper.canvas = self.canvas
+        self.component = self.canvas
 
         editor = self.editor
         bd = editor.beam_diameter
@@ -84,7 +100,7 @@ class PowerMapEditor(BaseTraitsEditor):
 
     def traits_view(self):
         v = View(
-                 UItem('canvas', editor=ComponentEditor())
+                 UItem('component', editor=ComponentEditor())
                  )
         return v
 

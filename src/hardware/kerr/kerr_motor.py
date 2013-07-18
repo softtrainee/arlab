@@ -175,7 +175,7 @@ class KerrMotor(KerrDevice):
                                         low_data=mi,
                                         high_data=ma,
                                         low_step=0,
-                                        high_step=self.steps
+                                        high_step=int(self.steps)
                                         )
 
 

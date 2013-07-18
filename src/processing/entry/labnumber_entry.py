@@ -38,46 +38,51 @@ from src.processing.entry.irradiated_position import IrradiatedPositionAdapter, 
 import math
 from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
 from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
+from src.database.orms.isotope_orm import gen_ProjectTable, gen_SampleTable
 
 
 class LabnumberEntry(IsotopeDatabaseManager):
 
-#    irradiation = Str
-#    level = Str
     irradiation_tray = Str
-
-#    irradiations = Property(depends_on='saved, updated')
-#    levels = Property(depends_on='irradiation,saved, updated')
     trays = Property
+
     edit_irradiation_button = Button('Edit')
     edit_level_enabled = Property(depends_on='level')
     edit_irradiation_enabled = Property(depends_on='irradiation')
-#    saved = Event
-#    updated = Event
-#    irradiation_trays = Property
+
     tray_name = Str
     irradiation_tray_image = Property(Image, depends_on='level, irradiation, saved')
     irradiated_positions = List(IrradiatedPosition)
 
-    auto_assign = Bool
-    auto_startrid = Int(19999)
-    auto_assign_overwrite = Bool(False)
-    auto_project = Str('Foo')
-    auto_sample = Str('FC-2')
-    auto_material = Str('sanidine')
-    auto_j = Float(1e-4)
-    auto_j_err = Float(1e-7)
-    freeze_button = Button('Freeze')
-    thaw_button = Button('Thaw')
-
-    _update_sample_table = Event
-
-#    save_button = Button('Save')
     add_irradiation_button = Button('Add Irradiation')
     add_level_button = Button('Add Level')
     edit_level_button = Button('Edit')
 
+    #===========================================================================
+    # irradiation positions table events
+    #===========================================================================
     selected = Any
+    refresh_table = Event
+
+    #===========================================================================
+    # factory traits
+    #===========================================================================
+    sample = Str
+    samples = Property
+    add_sample_button = Button('+')
+
+    material = Str
+    materials = Property
+    add_material_button = Button('+')
+
+    project = Str
+    projects = Property
+    add_project_button = Button('+')
+
+
+    #===========================================================================
+    #
+    #===========================================================================
 
     def __init__(self, *args, **kw):
         super(LabnumberEntry, self).__init__(*args, **kw)
@@ -116,7 +121,6 @@ class LabnumberEntry(IsotopeDatabaseManager):
             w.add(ta)
         w.publish(use_landscape=False)
 
-
     def save(self):
         self._save_to_db()
 
@@ -127,14 +131,6 @@ class LabnumberEntry(IsotopeDatabaseManager):
 
                 from src.database.defaults import load_isotopedb_defaults
                 load_isotopedb_defaults(db)
-
-    def _set_auto_params(self, s, rid):
-        s.labnumber = rid
-        s.sample = self.auto_sample
-        s.project = self.auto_project
-        s.material = self.auto_material
-        s.j = self.auto_j
-        s.j_err = self.auto_j_err
 
     def _load_holder_positions(self, holder):
         self.irradiated_positions = []
@@ -243,14 +239,20 @@ class LabnumberEntry(IsotopeDatabaseManager):
         irrad = Irradiation(db=self.db,
                             trays=self.trays
                             )
+
         while 1:
             info = irrad.edit_traits(kind='livemodal')
             if info.result:
-                if irrad.save_to_db():
-    #            self._add_irradiation(irrad)
+                result = irrad.save_to_db()
+                if result is True:
                     self.irradiation = irrad.name
                     self.saved = True
                     break
+                elif result is False:
+                    break
+            else:
+                break
+
 
     def _edit_irradiation_button_fired(self):
         irrad = Irradiation(db=self.db,
@@ -323,6 +325,153 @@ class LabnumberEntry(IsotopeDatabaseManager):
             else:
                 self.warning_dialog('Level {} already exists for Irradiation {}'.format(self.irradiation))
 
+    def _level_changed(self):
+        self.irradiated_positions = []
+
+        irrad = self.db.get_irradiation(self.irradiation)
+        if not irrad:
+            return
+
+        level = next((li for li in irrad.levels if li.name == self.level), None)
+        if level:
+            if level.holder:
+                self._load_holder_positions(level.holder)
+
+            positions = level.positions
+            if positions:
+                for pi in positions:
+                    ir = self._position_factory(pi)
+                    hi = pi.position - 1
+                    self.irradiated_positions[hi] = ir
+
+    @on_trait_change('project, sample')
+    def _edit_handler(self, name, new):
+        if self.selected:
+
+            for si in self.selected:
+                setattr(si, name, new)
+
+            if name == 'sample':
+                sample = self.db.get_sample(new)
+                material = sample.material
+                material = material.name if material else ''
+
+                for si in self.selected:
+                    setattr(si, 'material', material)
+
+
+        self.refresh_table = True
+
+#===============================================================================
+# factorys
+#===============================================================================
+    def _position_factory(self, dbpos):
+        ln = dbpos.labnumber
+        position = int(dbpos.position)
+
+        labnumber = ln.identifier if ln else None
+        ir = IrradiatedPosition(labnumber=str(labnumber), hole=position)
+        if labnumber:
+            selhist = ln.selected_flux_history
+            if selhist:
+                flux = selhist.flux
+                if flux:
+                    ir.j = flux.j
+                    ir.j_err = flux.j_err
+#
+            sample = ln.sample
+            if sample:
+                ir.sample = sample.name
+                material = sample.material
+                project = sample.project
+                if project:
+                    ir.project = project.name
+                if material:
+                    ir.material = material.name
+            note = ln.note
+            if note:
+                ir.note = note
+
+        return ir
+
+#===============================================================================
+# property get/set
+#===============================================================================
+    @cached_property
+    def _get_projects(self):
+        order = gen_ProjectTable.name.asc()
+        projects = [pi.name for pi in self.db.get_projects(order=order)]
+        return projects
+
+    @cached_property
+    def _get_samples(self):
+        order = gen_SampleTable.name.asc()
+        samples = [si.name for si in self.db.get_samples(order=order)]
+        return samples
+
+    @cached_property
+    def _get_materials(self):
+        materials = [mi.name for mi in self.db.get_materials()]
+        return materials
+
+    def _get_irradiation_tray_image(self):
+        p = self._get_map_path()
+        level = self.db.get_irradiation_level(self.irradiation, self.level)
+        holder = None
+        if level:
+            holder = level.holder
+            holder = holder.name if holder else None
+        holder = holder if holder is not None else NULL_STR
+        self.tray_name = holder
+        im = ImageResource('{}.png'.format(holder),
+                             search_path=[p]
+                             )
+        return im
+
+    @cached_property
+    def _get_trays(self):
+
+        p = os.path.join(self._get_map_path(), 'images')
+        if not os.path.isdir(p):
+            self.warning_dialog('{} does not exist'.format(p))
+            return Undefined
+
+        ts = [os.path.splitext(pi)[0] for pi in os.listdir(p) if not pi.startswith('.')
+#                    if not (pi.endswith('.png')
+#                            or pi.endswith('.pct')
+#                            or pi.startswith('.'))
+              ]
+        if ts:
+            self.tray = ts[-1]
+
+        return ts
+
+    def _get_map_path(self):
+        return os.path.join(paths.setup_dir, 'irradiation_tray_maps')
+
+    def _get_edit_irradiation_enabled(self):
+        return self.irradiation is not None
+
+    def _get_edit_level_enabled(self):
+        return self.level is not None
+
+
+
+if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+    paths.build('_experiment')
+
+    logging_setup('runid')
+    m = LabnumberEntry()
+    m.configure_traits()
+#============= EOF =============================================
+#     def _set_auto_params(self, s, rid):
+#         s.labnumber = rid
+#         s.sample = self.auto_sample
+#         s.project = self.auto_project
+#         s.material = self.auto_material
+#         s.j = self.auto_j
+#         s.j_err = self.auto_j_err
 #    def _save_button_fired(self):
 #        self._save_to_db()
 
@@ -363,126 +512,21 @@ class LabnumberEntry(IsotopeDatabaseManager):
 # #                    cnt += 1
 #
 #         self._update_sample_table = True
+#     auto_assign = Bool
+#     auto_startrid = Int(19999)
+#     auto_assign_overwrite = Bool(False)
+#     auto_project = Str('Foo')
+#     auto_sample = Str('FC-2')
+#     auto_material = Str('sanidine')
+#     auto_j = Float(1e-4)
+#     auto_j_err = Float(1e-7)
+#     freeze_button = Button('Freeze')
+#     thaw_button = Button('Thaw')
 
-    def _level_changed(self):
-        self.irradiated_positions = []
+#     _update_sample_table = Event
 
-        irrad = self.db.get_irradiation(self.irradiation)
-        if not irrad:
-            return
+#    save_button = Button('Save')
 
-        level = next((li for li in irrad.levels if li.name == self.level), None)
-        if level:
-            if level.holder:
-                self._load_holder_positions(level.holder)
-
-            positions = level.positions
-            if positions:
-                for pi in positions:
-                    ir = self._position_factory(pi)
-                    hi = pi.position - 1
-                    self.irradiated_positions[hi] = ir
-
-    def _position_factory(self, dbpos):
-        ln = dbpos.labnumber
-        position = int(dbpos.position)
-
-        labnumber = ln.identifier if ln else None
-        ir = IrradiatedPosition(labnumber=str(labnumber), hole=position)
-        if labnumber:
-            selhist = ln.selected_flux_history
-            if selhist:
-                flux = selhist.flux
-                if flux:
-                    ir.j = flux.j
-                    ir.j_err = flux.j_err
-#
-            sample = ln.sample
-            if sample:
-                ir.sample = sample.name
-                material = sample.material
-                project = sample.project
-                if project:
-                    ir.project = project.name
-                if material:
-                    ir.material = material.name
-            note = ln.note
-            if note:
-                ir.note = note
-
-        return ir
-
-#===============================================================================
-# property get/set
-#===============================================================================
-
-    def _get_irradiation_tray_image(self):
-        p = self._get_map_path()
-#        ir = self.db.get_irradiation(self.irradiation)
-
-        level = self.db.get_irradiation_level(self.irradiation, self.level)
-        holder = None
-        if level:
-            holder = level.holder
-            holder = holder.name if holder else None
-        holder = holder if holder is not None else NULL_STR
-        self.tray_name = holder
-        im = ImageResource('{}.png'.format(holder),
-                             search_path=[p]
-                             )
-        return im
-
-    @cached_property
-    def _get_flux_monitors(self):
-        db = self.db
-        fs = db.get_flux_monitors()
-        if fs:
-            fs = [fi.name for fi in db.get_flux_monitors()]
-        else:
-            fs = []
-        return fs
-
-    @cached_property
-    def _get_trays(self):
-
-        p = os.path.join(self._get_map_path(), 'images')
-        if not os.path.isdir(p):
-            self.warning_dialog('{} does not exist'.format(p))
-            return Undefined
-
-        ts = [os.path.splitext(pi)[0] for pi in os.listdir(p) if not pi.startswith('.')
-#                    if not (pi.endswith('.png')
-#                            or pi.endswith('.pct')
-#                            or pi.startswith('.'))
-              ]
-        if ts:
-            self.tray = ts[-1]
-
-        return ts
-
-    def _get_map_path(self):
-        return os.path.join(paths.setup_dir, 'irradiation_tray_maps')
-
-    def _get_calculate_flux_enabled(self):
-        if self.selected:
-            return len(self.selected) >= 3
-
-    def _get_edit_irradiation_enabled(self):
-        return self.irradiation is not None
-
-    def _get_edit_level_enabled(self):
-        return self.level is not None
-
-
-
-if __name__ == '__main__':
-    from src.helpers.logger_setup import logging_setup
-    paths.build('_experiment')
-
-    logging_setup('runid')
-    m = LabnumberEntry()
-    m.configure_traits()
-#============= EOF =============================================
 #     def traits_view(self):
 #         irradiation = Group(
 #                             HGroup(
