@@ -19,14 +19,14 @@ from traits.api import Bool, Any, Instance, Button, Property, Event, on_trait_ch
 from traitsui.api import View, Item, Handler, HGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
-from threading import Thread
+#from threading import Thread
 from threading import Event as TEvent
-from numpy import linspace, argmin, argmax, random
+from numpy import linspace, argmin, argmax, random, asarray
 import time
 import os
 #============= local library imports  ==========================
 from src.time_series.time_series import smooth
-from src.image.cv_wrapper import grayspace, crop, resize
+from src.image.cv_wrapper import grayspace, crop, resize, get_focus_measure
 # from src.image.cvwrapper import grayspace, get_focus_measure, crop, resize
 from scipy.ndimage.measurements import variance
 from scipy.ndimage.filters import generic_gradient_magnitude, sobel
@@ -40,6 +40,7 @@ from src.graph.graph import Graph
 from src.mv.focus.focus_parameters import FocusParameters
 from src.ui.image_editor import ImageEditor
 from src.ui.gui import invoke_in_main_thread
+from src.ui.thread import Thread
 
 
 class ConfigureHandler(Handler):
@@ -186,19 +187,20 @@ class AutoFocusManager(Manager):
 ImageGradmin={} (z={})
 ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 
-            self.graph.add_vertical_rule(fma)
+            focus_pos = fmi
+            self.graph.add_vertical_rule(focus_pos)
             self.graph.redraw()
 #            self.graph.add_vertical_rule(fma)
 
-            self.info('calculated focus z= {}'.format(fma))
+            self.info('calculated focus z= {}'.format(focus_pos))
 
 #            if set_z:
             controller = self.stage_controller
             if controller is not None:
                 if not stop_signal.isSet():
-                    controller.single_axis_move('z', fma, block=True)
-                    controller._z_position = fma
-                    controller.z_progress = fma
+                    controller.single_axis_move('z', focus_pos, block=True)
+                    controller._z_position = focus_pos
+                    controller.z_progress = focus_pos
 
         self.autofocusing = False
 
@@ -252,7 +254,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 #            mi = min(min(nstart, nend), min(start, end))
 #            ma = max(max(nstart, nend), max(start, end))
 #            self.graph.set_x_limits(mi, ma, pad=2)
-
+            time.sleep(1)
             # do a slow tight sweep around the nominal focal point
             self._do_sweep(nstart, nend, velocity=self.parameters.velocity_scalar2)
             fms, focussteps = self._collect_focus_measures(operator, roi, series=1)
@@ -265,15 +267,15 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 
         self.info('frames analyzed {}'.format(len(fms)))
 
-        self.canvas.markupcontainer.pop('croprect')
+#        self.canvas.markupcontainer.pop('croprect')
         return self._calculate_nominal_focal_point(fms, focussteps)
 
     def _do_sweep(self, start, end, velocity=None):
         controller = self.stage_controller
         controller.single_axis_move('z', start, block=True)
-        time.sleep(0.05)
+        time.sleep(0.1)
         # explicitly check for motion
-        controller.block(axis='z')
+#        controller.block(axis='z')
 
         if velocity:
             vo = controller.axes['z'].velocity
@@ -281,6 +283,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             controller.set_single_axis_motion_parameters(pdict=dict(velocity=vo * velocity,
                                                     key='z'))
 
+        self.info('starting sweep from {}'.format(controller.z_progress))
         # pause before moving to end
         time.sleep(0.5)
         controller.single_axis_move('z', end)
@@ -294,7 +297,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
                 src = self._load_source()
                 x = controller.z_progress
                 y = self._calculate_focus_measure(src, operator, roi)
-                self.graph.add_datum((x, y), series=series, do_after=1)
+                self.graph.add_datum((x, y), series=series)
 
                 focussteps.append(x)
                 fms.append(y)
@@ -323,8 +326,9 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         '''
 
         # need to resize to 640,480. this is the space the roi is in
-        s = resize(grayspace(src), 640, 480)
-        v = crop(s, *roi, mat=False)
+#        s = resize(grayspace(src), 640, 480)
+        src = grayspace(src)
+        v = crop(asarray(src), *roi)
 
         di = dict(var=lambda x:variance(x),
                   laplace=lambda x: get_focus_measure(x, 'laplace'),
@@ -364,8 +368,9 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 
     def _load_source(self):
         src = self.video.get_frame()
-        if src:
-            return Image.new_frame(src)
+        return src
+#        if src:
+#            return Image.new_frame(src)
 #            self.image.load(src)
 
 #        return self.image.source_frame

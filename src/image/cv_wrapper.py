@@ -18,6 +18,7 @@
 #============= standard library imports ========================
 from numpy import array, asarray, ndarray
 from collections import namedtuple
+from scipy.ndimage.filters import laplace
 
 try:
     from cv2 import VideoCapture, VideoWriter, imwrite, line, fillPoly, polylines, \
@@ -26,11 +27,12 @@ try:
         circle, moments, minAreaRect, minEnclosingCircle, convexHull
 
     from cv import ConvertImage, fromarray, LoadImage, Flip, \
-        Resize, CreateImage, CvtColor, Scalar, CreateMat, Copy, GetSubRect, PolyLine
+        Resize, CreateImage, CvtColor, Scalar, CreateMat, Copy, GetSubRect, PolyLine, Split, \
+        Merge, Laplace, ConvertScaleAbs, GetSize
 
     from cv import CV_CVTIMG_SWAP_RB, CV_8UC1, CV_BGR2GRAY, CV_GRAY2BGR, \
         CV_8UC3, CV_RGB, CV_16UC1, CV_32FC3, CV_CHAIN_APPROX_NONE, CV_RETR_EXTERNAL, \
-        CV_AA, CV_16UC3
+        CV_AA, CV_16UC3, CV_16SC1
 except ImportError, e:
     print e
     print 'OpenCV required'
@@ -41,15 +43,50 @@ from src.geometry.centroid import calculate_centroid
 
 
 def get_focus_measure(src, kind):
-    return -1
+
+#    planes = CreateMat(3, 1, CV_8UC3)
+
+#    print src
+    if not isinstance(src, ndarray):
+        src = asarray(src)
+
+    v = laplace(src)
+    return v.flatten().mean()
+#
+#    w, h = GetSize(src)
+##    src = asMat(src)
+#    laplace = CreateMat(w, h, CV_16SC1)
+#    colorlaplace = CreateMat(w, h, CV_8UC3)
+#
+#    Split(src, planes)
+#    for plane in planes:
+#        Laplace(plane, laplace, 3)
+#        ConvertScaleAbs(laplace, plane, 1, 0)
+#
+#    Merge(planes, colorlaplace)
+#    f = asarray(colorlaplace).flatten()
+##    f = colorlaplace.ndarray.flatten()
+##    f.sort()
+##    print f[-int(len(f) * 0.1):], int(len(f) * 0.1), len(f)
+##    len(f)
+#    return f[-int(len(f) * 0.1):].mean()
 
 def crop(src, x, y, w, h):
-    cropped = CreateMat(h, w, CV_8UC3)
-#                           (roi_width, roi_height), d, c)
-    src_region = GetSubRect(fromarray(src), (x, y, w, h))
-    Copy(src_region, cropped)
-    return cropped
-#    return src[y:y + h, x:x + w]
+
+
+#    cropped = CreateMat(w, h, CV_8UC3)
+##                           (roi_width, roi_height), d, c)
+#    rect = map(int, (x, y, w, h))
+#    print rect
+##    print (x, y, w, h)
+    if not isinstance(src, ndarray):
+        src = asarray(src)
+#
+#    src_region = GetSubRect(src, rect)
+#    Copy(src_region, cropped)
+#    return cropped
+#    return fromarray(src[y:y + h, x:x + w])
+    return src[y:y + h, x:x + w]
 
 
 def save_image(src, path):
@@ -88,7 +125,8 @@ def colorspace(src, cs=None):
     return dst
 
 def grayspace(src):
-    src = fromarray(src)
+    if isinstance(src, ndarray):
+        src = fromarray(src)
 #    print src
 #    src.step = 92
     if src.channels > 1:
@@ -116,14 +154,16 @@ def grayspace(src):
 #    return dst
 
 def resize(src, w, h, dst=None):
+
     if isinstance(dst, tuple):
         dst = CreateMat(*dst)
 
-    if dst is None:
-        dst = CreateMat(int(h), int(w), CV_8UC3)
-
     if isinstance(src, ndarray):
         src = asMat(src)
+
+    if dst is None:
+        dst = CreateMat(int(h), int(w), src.type)
+
     Resize(src, dst)
     return dst
 
