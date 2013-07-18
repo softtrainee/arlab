@@ -190,7 +190,12 @@ class MotionController(CoreDevice):
         '''
         '''
         if not self._moving_():
+            self._not_moving_count += 1
+
+        if self._not_moving_count > 3:
+            self._not_moving_count = 0
             self.timer.Stop()
+            self.debug('stop timer')
 
         z = self.get_current_position('z')
         self.z_progress = z
@@ -234,14 +239,14 @@ class MotionController(CoreDevice):
             # timer is calling self._moving_
             func = lambda: self.timer.IsRunning()
 
-#        print func, self.timer
         time.sleep(0.25)
 
         a = func()
+        print 'aaaa', a, func
         while a:
             a = func()
-#            print a
-            time.sleep(0.2)
+            print 'ffff', a
+            time.sleep(1)
 
         if event is not None:
             event.set()

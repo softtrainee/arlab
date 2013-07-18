@@ -767,6 +767,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 time.sleep(0.1)
 
         if block:
+            self.debug('blocking {}'.format(block))
             self._block_(axis=block)
 
 #    def _block_(self, axis=None, event=None):
