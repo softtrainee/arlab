@@ -29,7 +29,8 @@ from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.lasers.tasks.laser_actions import OpenScannerAction, \
     OpenAutoTunerAction, NewPatternAction, \
-    OpenPatternAction, PowerMapAction, PowerCalibrationAction
+    OpenPatternAction, PowerMapAction, PowerCalibrationAction, \
+    OpenPowerMapAction
 from pyface.tasks.action.schema import SMenu, GroupSchema
 from pyface.action.group import Group
 from src.lasers.tasks.laser_calibration_task import LaserCalibrationTask
@@ -124,7 +125,7 @@ class FusionsPlugin(BaseLaserPlugin):
                             factory=self._task_factory,
                             name=self.task_name
                             ),
-                TaskFactory(id='pychron.lasers.calibration',
+                TaskFactory(id='pychron.laser.calibration',
                             task_group='hardware',
                             factory=self._calibration_task_factory,
                             name='Laser Calibration',
@@ -177,7 +178,10 @@ class FusionsPlugin(BaseLaserPlugin):
                                                          ),
                                    path='MenuBar/Extraction'
                                    ),
-
+                    SchemaAddition(
+                                   factory=OpenPowerMapAction,
+                                   path='MenuBar/File/Open'
+                                   ),
                               ]
                             )
                        ]

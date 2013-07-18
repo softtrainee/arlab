@@ -17,13 +17,13 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, on_trait_change
 from src.envisage.tasks.base_task import  BaseManagerTask
-from pyface.tasks.task_layout import TaskLayout, PaneItem, Splitter
+from pyface.tasks.task_layout import TaskLayout, PaneItem, Splitter, Tabbed
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.importer.import_manager import ImportManager
 from src.processing.entry.labnumber_entry import LabnumberEntry
 from src.processing.tasks.entry.labnumber_entry_panes import LabnumbersPane, \
-    IrradiationPane, ImporterPane
+    IrradiationPane, ImporterPane, IrradiationEditorPane
 
 class LabnumberEntryTask(BaseManagerTask):
     name = 'Labnumber'
@@ -37,16 +37,12 @@ class LabnumberEntryTask(BaseManagerTask):
 
     def _default_layout_default(self):
         return TaskLayout(
-#                          left=PaneItem('pychron.experiment.factory'),
-#                          right=Splitter(
-#                                         PaneItem('pychron.experiment.stats'),
-#                                         PaneItem('pychron.experiment.console'),
-#                                         orientation='vertical'
-#                                         ),
-#                          bottom=PaneItem('pychron.experiment.console'),
                           left=Splitter(
                                         PaneItem('pychron.labnumber.irradiation'),
-                                        PaneItem('pychron.labnumber.importer'),
+                                        Tabbed(
+                                               PaneItem('pychron.labnumber.importer'),
+                                               PaneItem('pychron.labnumber.editor')
+                                               ),
                                         orientation='vertical'
                                         )
                           )
@@ -57,7 +53,8 @@ class LabnumberEntryTask(BaseManagerTask):
     def create_dock_panes(self):
         return [
                 IrradiationPane(model=self.manager),
-                ImporterPane(model=self.importer)
+                ImporterPane(model=self.importer),
+                IrradiationEditorPane(model=self.manager)
                 ]
 
 

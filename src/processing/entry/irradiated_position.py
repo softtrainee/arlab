@@ -105,6 +105,7 @@ class IrradiatedPositionAdapter(TabularAdapter):
     j_width = Int(100)
     j_err_width = Int(100)
 
+    font = 'arial 10'
 
 #    hole_can_edit = False
 

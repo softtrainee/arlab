@@ -27,17 +27,18 @@ class Dosage(HasTraits):
     enddate = Date
     starttime = Time
     endtime = Time
-    def _startdate_default(self):
-        return datetime.now().date()
 
-    def _starttime_default(self):
-        return datetime.now().time()
-
-    def _enddate_default(self):
-        return datetime.now().date()
-
-    def _endtime_default(self):
-        return datetime.now().time()
+#     def _startdate_default(self):
+#         return datetime.now().date()
+#
+#     def _starttime_default(self):
+#         return datetime.now().time()
+#
+#     def _enddate_default(self):
+#         return datetime.now().date()
+#
+#     def _endtime_default(self):
+#         return datetime.now().time()
 
     def validate_dosage(self, prev_dose):
         if self.startdate is None:

@@ -21,12 +21,40 @@ from traitsui.api import View, Item, TabularEditor, VGroup, spring, HGroup, \
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 # from src.irradiation.irradiated_position import IrradiatedPositionAdapter
 from pyface.tasks.traits_dock_pane import TraitsDockPane
-from src.ui.custom_label_editor import CustomLabel
+# from src.ui.custom_label_editor import CustomLabel
 from traitsui.tabular_adapter import TabularAdapter
 from src.processing.entry.irradiated_position import IrradiatedPositionAdapter
-from traitsui.editors.progress_editor import ProgressEditor
+# from traitsui.editors.progress_editor import ProgressEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
+
+class IrradiationEditorPane(TraitsDockPane):
+    id = 'pychron.labnumber.editor'
+    name = 'Editor'
+    def traits_view(self):
+        v = View(
+                 VGroup(
+                         HGroup(
+                                Item('project',
+                                     editor=EnumEditor(name='projects')),
+                                UItem('add_project_button')
+                              ),
+                         HGroup(
+                                Item('sample',
+                                     editor=EnumEditor(name='samples')),
+                                UItem('add_sample_button')
+                              ),
+#                          HGroup(
+#                                 Item('material',
+#                                      editor=EnumEditor(name='materials')),
+#                                 UItem('add_material_button')
+#                               )
+                        ),
+
+               )
+        return v
+
+
 class ImportNameAdapter(TabularAdapter):
     columns = [('Name', 'name')]
 
@@ -47,7 +75,7 @@ class LabnumbersPane(TraitsTaskPane):
     def traits_view(self):
         v = View(Item('irradiated_positions',
                              editor=TabularEditor(adapter=IrradiatedPositionAdapter(),
-                                                  update='_update_sample_table',
+                                                  refresh='refresh_table',
                                                   multi_select=True,
                                                   selected='selected',
                                                   operations=['edit']
@@ -161,7 +189,7 @@ class IrradiationPane(TraitsDockPane):
 #                            show_border=True
                             )
         return v
-#
+
 #     def traits_view(self):
 #        irradiation = Group(
 #                            HGroup(

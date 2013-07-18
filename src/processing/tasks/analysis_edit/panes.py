@@ -72,13 +72,13 @@ class HistoryTablePane(TablePane):
     def load_previous_selections(self):
         d = self._open_shelve()
         keys = sorted(d.keys(), reverse=True)
-        
+
         def get_value(k):
             try:
                 return d[k]
             except Exception:
                 pass
-            
+
         self.previous_selections = filter(None, [get_value(ki) for ki in keys])
 
     def dump_selection(self):
@@ -101,7 +101,12 @@ class HistoryTablePane(TablePane):
                 md5.update('{}{}{}'.format(r.uuid, r.group_id, r.graph_id))
             return md5.hexdigest()
 
-        d = self._open_shelve()
+        try:
+            d = self._open_shelve()
+        except Exception:
+            import traceback
+            traceback.print_exc()
+            return
 
         name = make_name(records)
         ha = make_hash(records)

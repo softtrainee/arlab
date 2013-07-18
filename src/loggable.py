@@ -93,7 +93,6 @@ class Loggable(HasTraits):
         dialog.open()
 
     def confirmation_dialog(self, msg, return_retval=False, cancel=False, title=''):
-#        return False
 
         dlg = myConfirmationDialog(
                                    cancel=cancel,
@@ -106,26 +105,12 @@ class Loggable(HasTraits):
         else:
             from pyface.api import YES
             return retval == YES
-#         dlg.control = dlg._create_control(None)
-#
-# #         invoke_in_main_thread
-#         dlg._show_modal()
-# #        print result
-#         return False
-#        result = confirmation(None, msg, title=title)
-        # NO==5104, YES==5103
-#        return result == 5103
-
 
     def information_dialog(self, msg, title='Information'):
         dlg = myMessageDialog(parent=None, message=msg,
                             title=title,
                             severity='information')
         dlg.open()
-#         if title is None:
-#             information(None, msg)
-#         else:
-#             information(None, msg, title=title)
 
     def db_save_dialog(self):
         return self.confirmation_dialog('Save to Database')
