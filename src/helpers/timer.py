@@ -89,17 +89,20 @@ class Timer(QThread):
 
 #         self._completed = True
 
-    def stop(self):
-        self.Stop()
+#     def stop(self):
+#         self.Stop()
 
     def Stop(self):
         self._flag.set()
+    stop = Stop
 
     def isActive(self):
         return self.isRunning() and not self.isFinished()
 #         # need to wait unit
 #         self.f
-#         return not self._flag.is_set() and not self._completed
+#         return not self._flag.is_set()
+
+# and not self._completed
 
     def set_interval(self, v):
         self._period = v
