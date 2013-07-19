@@ -123,7 +123,8 @@ class FusionsPlugin(BaseLaserPlugin):
         return [TaskFactory(id=self.id,
                             task_group='hardware',
                             factory=self._task_factory,
-                            name=self.task_name
+                            name=self.task_name,
+                            accelerator='Ctrl+l'
                             ),
                 TaskFactory(id='pychron.laser.calibration',
                             task_group='hardware',

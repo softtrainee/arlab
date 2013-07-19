@@ -60,18 +60,24 @@ class BaseExperimentTest(unittest.TestCase):
         self.exp_task = ExperimentEditorTask()
         self._load_queues()
 
+
 class ExperimentTest2(BaseExperimentTest):
     def testAliquots(self):
         queue = self._load_queues()[0]
-        aqs = (46, 46, 47, 47)
+#         aqs = (46, 46, 47, 47)
+        aqs = (46, 46, 47, 46, 46)
+        aqs = (1, 46, 46, 47, 46, 46, 2)
+        aqs = (1, 46, 46, 45, 46, 46, 2)
         for i, (aq, an) in enumerate(zip(aqs, queue.automated_runs)):
-            print i, an.labnumber
+            print i, an.labnumber, an.aliquot, aq, 'aaa'
             self.assertEqual(an.aliquot, aq)
 
     def testSteps(self):
         queue = self._load_queues()[0]
 #         sts = ('A', 'B', '', 'A', 'B', '', '', '', '')
-        sts = ('A', 'B', 'A', 'B')
+        sts = ('A', 'B', 'A', 'C', 'D')
+        sts = ('', 'A', 'B', 'A', 'C', 'D', '')
+        sts = ('', 'A', 'B', 'E', 'C', 'D')
         for i, (st, an) in enumerate(zip(sts, queue.automated_runs)):
 #             if st in ('E', 'F'):
             print i, an.labnumber, an.step, st, an.aliquot

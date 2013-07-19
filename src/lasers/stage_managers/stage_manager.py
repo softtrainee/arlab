@@ -327,7 +327,7 @@ class StageManager(Manager):
     def moving(self, force_query=False, **kw):
         moving = False
         if self.stage_controller.timer is not None:
-            moving = self.stage_controller.timer.IsRunning()
+            moving = self.stage_controller.timer.isActive()
         elif force_query:
             moving = self.stage_controller._moving_(**kw)
 

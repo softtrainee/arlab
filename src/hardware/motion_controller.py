@@ -18,14 +18,14 @@
 from traits.api import Property, Dict, Float, Any, Instance
 from traitsui.api import View, VGroup, Item, RangeEditor
 # from pyface.timer.api import Timer
-from src.helpers.timer import Timer
 #============= standard library imports ========================
 import os
-
+import time
 #============= local library imports  ==========================
+from src.helpers.timer import Timer
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.motion.motion_profiler import MotionProfiler
-import time
+from src.hardware.utilities import limit_frequency
 
 
 class MotionController(CoreDevice):
@@ -72,24 +72,27 @@ class MotionController(CoreDevice):
         self.parent.canvas.set_stage_position(self._x_position,
                                               self._y_position)
 
-
-
-
     def timer_factory(self, func=None):
         '''
+        
+            reuse timer if func is the same
+            
         '''
-        if self.timer is not None:
-            self.timer.Stop()
-
+        timer = self.timer
         if func is None:
             func = self._inprogress_update
-        self._not_moving_count = 0
-#        print func
-        t = Timer(250, func)
-#        print t
-#        self.timer = t
-#        t.start()
-        return t
+
+        if timer is None:
+            self._not_moving_count = 0
+            timer = Timer(250, func)
+        elif timer.func == func:
+            if timer.isActive():
+                self.debug('reusing old timer')
+            else:
+                self._not_moving_count = 0
+                timer = Timer(250, func)
+
+        return timer
 
     def set_z(self, v, **kw):
         self.single_axis_move('z', v, **kw)
@@ -189,24 +192,29 @@ class MotionController(CoreDevice):
     def _z_inprogress_update(self):
         '''
         '''
-        if not self._moving_():
+        m = self._moving_()
+        if not m:
             self._not_moving_count += 1
 
-        if self._not_moving_count > 3:
+        if self._not_moving_count > 1:
             self._not_moving_count = 0
             self.timer.Stop()
             self.debug('stop timer')
 
         z = self.get_current_position('z')
         self.z_progress = z
+        self.debug('z inprogress {}. moving={} '.format(z, m))
 
     def _inprogress_update(self):
         '''
         '''
-        if not self._moving_():
-            self._not_moving_count += 1
 
-        if self._not_moving_count > 2:
+        m = self._moving_()
+        if not m:
+            self._not_moving_count += 1
+        self.debug('inprogress update {}'.format(m))
+
+        if self._not_moving_count > 1:
             self._not_moving_count = 0
             self.timer.Stop()
             self.parent.canvas.clear_desired_position()
@@ -237,19 +245,30 @@ class MotionController(CoreDevice):
         func = lambda: self._moving_(axis=axis)
         if self.timer is not None:
             # timer is calling self._moving_
-            func = lambda: self.timer.IsRunning()
+            func = lambda: self.timer.isActive()
 
         time.sleep(0.25)
 
         a = func()
-        print 'aaaa', a, func
+#         print 'aaaa', a, func
+        i = 0
         while a:
+
             a = func()
-            print 'ffff', a
-            time.sleep(1)
+#             print 'ffff', a
+            time.sleep(0.1)
+            if i > 100:
+                i = 0
+            if i % 20 == 0:
+                self.debug('blocking {}'.format(a))
+
+            i += 1
+
+        self.debug('block finished')
 
         if event is not None:
             event.set()
+
 #===============================================================================
 # property get/set
 #===============================================================================

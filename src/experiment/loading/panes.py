@@ -38,6 +38,8 @@ class LoadTablePane(TraitsDockPane):
     id = 'pychron.loading.positions'
     def traits_view(self):
         v = View(
+                 UItem('group_positions',
+                       visible_when='show_group_positions'),
                  UItem('positions',
                        editor=TabularEditor(adapter=PositionsAdapter(),
                                             refresh='refresh_table',

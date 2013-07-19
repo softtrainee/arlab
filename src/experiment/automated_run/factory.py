@@ -190,7 +190,9 @@ class AutomatedRunFactory(Loggable):
         special = labnumber in ANALYSIS_MAPPING
         return labnumber, special
 
-    def new_runs(self, auto_increment_position, auto_increment_id=False, extract_group_cnt=0):
+    def new_runs(self, positions=None, auto_increment_position=False,
+                    auto_increment_id=False,
+                    extract_group_cnt=0):
         '''
             returns a list of runs even if its only one run 
                     also returns self.frequency if using special labnumber else None
@@ -203,7 +205,7 @@ class AutomatedRunFactory(Loggable):
 #        if self.template and self.template  and not freq and not special :
             arvs = self._render_template(extract_group_cnt)
         else:
-            arvs = self._new_runs()
+            arvs = self._new_runs(positions=positions)
 
         if auto_increment_id:
             self.labnumber = self._increment(self.labnumber)
@@ -272,14 +274,17 @@ class AutomatedRunFactory(Loggable):
 #        self._extract_group_cnt += 1
         return arvs
 
-    def _new_runs(self):
+    def _new_runs(self, positions):
         s = 0
         e = 0
         _ln, special = self._make_short_labnumber()
         if special:
             arvs = [self._new_run()]
         else:
-            if self.position:
+            if positions:
+                arvs = [self._new_run(position=pi, excludes=['position'])
+                                        for pi in positions]
+            elif self.position:
 
                 # is position a int or list of ints
                 if ',' in self.position:

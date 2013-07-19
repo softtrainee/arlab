@@ -211,6 +211,7 @@ class Experimentor(IsotopeDatabaseManager):
             return sample, irradiationpos
 
         db = self.db
+#         oans = ans[:]
         groups = self._group_analyses(ans, exclude=exclude)
         for ln, analyses in groups:
             ln, special = get_is_special(ln)
@@ -218,50 +219,54 @@ class Experimentor(IsotopeDatabaseManager):
 
             sample, irradiationpos = get_analysis_info(cln)
 
+            aliquot_key = lambda x: x._aliquot
+            egroup_key = lambda x: x.extract_group
             if not special:
-                key = lambda x: x.extract_group
-                # sort by extract group
-                a = sorted(analyses, key=key)
+                a = sorted(analyses, key=aliquot_key)
+                for aliquot, aa in groupby(a, key=aliquot_key):
+                    aa = sorted(aa, key=egroup_key)
+                    aliquot_start = None
 
-                # sort by idx. allows for non sorted extract_groups
-                a = sorted(a, key=lambda x: ans.index(x))
+                    for egroup, ais in groupby(aa, key=egroup_key):
+                        ast = self._set_aliquot_step(ais, special, cln,
+                                                    aliquot,
+                                                    aliquot_start,
+                                                    egroup,
+                                                    sample,
+                                                    irradiationpos
+                                                )
+                        aliquot_start = ast + 1
 
-                ganalyses = groupby(a, key=key)
             else:
-                ganalyses = ((0, analyses),)
-
-            offset = 0
-            for egroup, ans in ganalyses:
-#                 group analyses by aliquot
-                for aliquot, ais in groupby(ans,
-                                            key=lambda x: x._aliquot):
-
+                aliquot_start = None
+                egroup = 0
+                ans = sorted(analyses, key=aliquot_key)
+                for aliquot, ais in groupby(ans, key=aliquot_key):
                     self._set_aliquot_step(ais, special, cln, aliquot,
-                                           offset,
+                                           aliquot_start,
                                            egroup,
-                                           sample, irradiationpos
-                                           )
-                    offset += 1
+                                           sample, irradiationpos)
+#
 
-    def _set_aliquot_step(self, ais, special, cln, aliquot, offset, egroup,
+
+
+
+    def _set_aliquot_step(self, ais, special, cln,
+                          aliquot,
+                          aliquot_start,
+                          egroup,
                           sample, irradiationpos):
         db = self.db
 
-        an = db.get_last_analysis(cln, aliquot=aliquot)
-        aliquot_start = 0
         step_start = 0
-        if an:
-            aliquot_start = an.aliquot
-            if an.step and an.aliquot == aliquot:
-                step_start = LAlphas.index(an.step) + 1
+        if aliquot_start is None:
+            an = db.get_last_analysis(cln, aliquot=aliquot)
+            aliquot_start = 0
+            if an:
+                aliquot_start = an.aliquot
+                if an.step and an.aliquot == aliquot:
+                    step_start = LAlphas.index(an.step) + 1
 
-#         if not special:
-#             ganalyses = groupby(ais, key=lambda x: x.extract_group)
-#         else:
-#             ganalyses = ((0, ais),)
-
-#         for aliquot_cnt, (egroup, aruns) in enumerate(ais):
-#         for aliquot_cnt, arun in enumerate(ais):
         step_cnt = 0
         aliquot_cnt = 0
         for arun in ais:
@@ -276,9 +281,8 @@ class Experimentor(IsotopeDatabaseManager):
 
             if not arun.user_defined_aliquot:
                 if arun.state in ('not run', 'extraction', 'measurement'):
-#                     print arun.runid, egroup, aliquot_start, aliquot_cnt, offset
-#                     arun.assigned_aliquot = int(aliquot_start + 1 + offset)
-                    arun.assigned_aliquot = int(aliquot_start + offset + aliquot_cnt + 1)
+#                     print arun.runid, egroup, aliquot_start, aliquot_cnt
+                    arun.assigned_aliquot = int(aliquot_start + aliquot_cnt + 1)
                     if special or not egroup:
                         aliquot_cnt += 1
 
@@ -286,6 +290,8 @@ class Experimentor(IsotopeDatabaseManager):
                 arun.step = int(step_start + step_cnt)
 #                 print arun.aliquot, arun.step, step_start, step_cnt
                 step_cnt += 1
+
+        return aliquot_start
 
     def execute_queues(self, queues, path, text, text_hash):
         self.debug('setup executor')
@@ -442,8 +448,6 @@ class Experimentor(IsotopeDatabaseManager):
                                application=self.application,
                                **kw
                                )
-
-
         return e
 
 #===============================================================================

@@ -23,6 +23,7 @@ from kerr_motor import KerrMotor
 class KerrThorMotor(KerrMotor):
     '''
     '''
+
     def _initialize_(self, *args, **kw):
         '''
         '''
@@ -33,8 +34,7 @@ class KerrThorMotor(KerrMotor):
                   (addr, '1800', 100, 'configure io pins'),
                   (addr, 'F6B0042003F401B004FF006400010101', 100, 'set gains'),
                   (addr, '1701', 100, 'turn on amp'),
-                  (addr, '00', 100, 'reset position'),
+#                   (addr, '00', 100, 'reset position'),
                   ]
-        self._execute_hex_commands(commands)
-        self._home_motor(*args, **kw)
+        self._initialize_motor(commands, *args, **kw)
 #=============EOF-==============================================

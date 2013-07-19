@@ -77,8 +77,6 @@ class MachineVisionManager(Manager):
         r = 4 - cw_px % 4
         cw_px = ch_px = cw_px + r
 
-
-
         return asarray(crop(src, x, y, cw_px, ch_px))
 
     def _gray_image(self, src):
@@ -92,14 +90,14 @@ class MachineVisionManager(Manager):
             t = Timer(60 * minutes, im.close_ui)
             t.start()
 
-    def new_image(self, frame=None):
+    def new_image(self, frame=None, title='AutoCenter', view_id='target'):
 
 #         if self.target_image is not None:
 #             self.target_image.close_ui()
 
         im = StandAloneImage(
-#                             title=self.title,
-#                              view_identifier='pychron.fusions.co2.target'
+                             title=title,
+                             id='pychron.machine_vision.{}'.format(view_id)
                              )
 
 #         self.target_image = im

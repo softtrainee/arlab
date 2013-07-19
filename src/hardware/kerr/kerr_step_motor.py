@@ -152,12 +152,9 @@ class KerrStepMotor(KerrMotor):
                     (addr, self._build_parameters(), 100, 'set parameters'),
                     (addr, self._build_io(), 100, 'set io'),
                     (addr, '1701', 100, 'turn on amp'),
-                    (addr, '00', 100, 'reset position')
                     ]
-        self._execute_hex_commands(commands)
+        self._initialize_motor(commands, *args, **kw)
 
-#        self._set_motor_position_(100)
-        self._home_motor(*args, **kw)
 
     def _assemble_options_byte(self):
         ob = []

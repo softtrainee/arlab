@@ -25,6 +25,7 @@ from traitsui.api import View, Item, ButtonEditor, HGroup, Group
 #============= local library imports  ==========================
 # from src.hardware.arduino.arduino_fiber_light_module import ArduinoFiberLightModule
 from src.hardware.core.abstract_device import AbstractDevice
+# from src.hardware.kerr.kerr_motor import limit_frequency
 
 
 class FiberLight(AbstractDevice):
@@ -57,7 +58,14 @@ class FiberLight(AbstractDevice):
     def initialize(self, *args, **kw):
         self.read_state()
         self.read_intensity()
+
+        if self._cdevice:
+            self._cdevice.setup_consumer(self._write_intensity)
         return True
+
+    def _write_intensity(self, v):
+        if self._cdevice:
+            self._cdevice.set_intensity(v / 100 * 255)
 
     def read_state(self):
         if self._cdevice is not None:
@@ -90,12 +98,13 @@ class FiberLight(AbstractDevice):
     def _get_intensity(self):
         return self._intensity
 
+
     def _set_intensity(self, v):
         '''
         '''
         if self._cdevice is not None:
             self._intensity = float(v)
-            self._cdevice.set_intensity(self._intensity / 100 * 255)
+            self._cdevice.add_consumable(self._intensity)
 
     @on_trait_change('power')
     def power_fired(self):

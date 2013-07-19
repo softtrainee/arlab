@@ -44,254 +44,15 @@ from pyface.image_resource import ImageResource
 from src.paths import paths
 from reportlab.platypus.tables import Table, TableStyle
 from reportlab.platypus.flowables import PageBreak, Flowable
-from reportlab.platypus.doctemplate import SimpleDocTemplate
+from reportlab.platypus.doctemplate import SimpleDocTemplate, BaseDocTemplate, \
+    PageTemplate, FrameBreak
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.units import mm, inch
 from reportlab.lib import colors
 from chaco.pdf_graphics_context import PdfPlotGraphicsContext
-
-def make_bound(st):
-    if len(st) > 1:
-        s = '{}-{}'.format(st[0], st[-1])
-    else:
-        s = '{}'.format(st[0])
-    return s
-
-def make_position_str(pos):
-    s = ''
-    if pos:
-        pos = sorted(pos)
-        pp = pos[0]
-        stack = [pp]
-        ss = []
-
-        for pi in  pos[1:]:
-            if not pp + 1 == pi:
-                ss.append(make_bound(stack))
-                stack = []
-
-            stack.append(pi)
-            pp = pi
-
-        if stack:
-            ss.append(make_bound(stack))
-
-        s = ','.join(ss)
-    return s
-
-class LoadPosition(HasTraits):
-    labnumber = Str
-    sample = Str
-    positions = List
-    level = Str
-    irradiation = Str
-    irrad_position = Int
-
-    irradiation_str = Property
-    position_str = Property(depends_on='positions[]')
-
-    def _get_position_str(self):
-        return make_position_str(self.positions)
-
-    def _get_irradiation_str(self):
-        return '{} {}{}'.format(self.irradiation,
-                                self.level,
-                                self.irrad_position)
-
-class LoadingManager(IsotopeDatabaseManager):
-
-    tray = Str
-    trays = List
-    load_name = Str
-
-    labnumber = Str
-    labnumbers = Property(depends_on='level')
-
-    irradiation_hole = Str
-    sample = Str
-
-    positions = List
-
-    # table signal/events
-    refresh_table = Event
-    scroll_to_row = Int
-    selected_positions = Any
-
-    db_load_name = Str
-    loads = List
-
-    def setup(self):
-        self.populate_default_tables()
-
-        ls = self._get_loads()
-        if ls:
-            self.loads = ls
-
-        ts = self._get_trays()
-        if ts:
-            self.trays = ts
-
-        ls = self._get_last_load()
-
-    def _get_loads(self):
-        loads = self.db.get_loads()
-        if loads:
-            return [li.name for li in loads]
-
-    def _get_trays(self):
-        trays = self.db.get_load_holders()
-        if trays:
-            ts = [ti.name for ti in trays]
-            return ts
-
-    def _get_last_load(self):
-        lt = self.db.get_loadtable()
-        if lt:
-
-            self.db_load_name = lt.name
-            if lt.holder_:
-#                 self.tray = lt.holder_.name
-
-                self.load_load(lt)
-
-        return self.db_load_name
-
-    def make_canvas(self, new, editable=True):
-        db = self.db
-        lt = db.get_loadtable(new)
-        c = LoadingCanvas(
-                          view_x_range=(-2, 2),
-                          view_y_range=(-2, 2),
-                          editable=editable
-                          )
-        self.canvas = c
-        if lt:
-            h = lt.holder_.name
-            c.load_tray_map(h)
-            for pi in lt.loaded_positions:
-                item = c.scene.get_item(str(pi.position))
-                if item:
-                    item.fill = True
-
-            for pi in lt.measured_positions:
-                item = c.scene.get_item(str(pi.position))
-                if item:
-                    if pi.is_degas:
-                        item.degas_indicator = True
-                    else:
-                        item.measured_indicator = True
-        return c
-
-    def load_load(self, loadtable, group_labnumbers=True):
-        if isinstance(loadtable, str):
-            loadtable = self.db.get_loadtable(loadtable)
-
-        self.positions = []
-        self.tray = loadtable.holder_.name
-        for ln, poss in groupby(loadtable.loaded_positions,
-                                        key=lambda x:x.lab_identifier):
-            pos = []
-            for pi in poss:
-                pid = pi.position
-                item = self.canvas.scene.get_item(str(pid))
-                if item:
-                    item.fill = True
-                pos.append(pid)
-
-            if group_labnumbers:
-                self._add_position(ln, pos)
-            else:
-                for pi in pos:
-                    self._add_position(ln, [pi])
-
-
-    def _add_position(self, ln, pos):
-        ln = self.db.get_labnumber(ln)
-        ip = ln.irradiation_position
-        level = ip.level
-        irrad = level.irradiation
-
-        sample = ln.sample.name if ln.sample else ''
-
-        lp = LoadPosition(labnumber=ln.identifier,
-              sample=sample,
-              irradiation=irrad.name,
-              level=level.name,
-              irrad_position=int(ip.position),
-              positions=pos
-              )
-        self.positions.append(lp)
-
-
-    def save(self):
-        db = self.db
-        if self.load_name:
-            lln = self._get_last_load()
-            if self.load_name == lln:
-                return 'duplicate name'
-            else:
-                self.info('adding load {} to database'.format(self.load_name))
-                db.add_load(self.load_name, holder=self.tray)
-                db.commit()
-
-                ls = self._get_loads()
-                self.loads = ls
-                self._get_last_load()
-                self.load_name = ''
-
-        else:
-            lt = db.get_loadtable(name=self.db_load_name)
-
-            sess = db.get_session()
-            for li in lt.loaded_positions:
-                sess.delete(li)
-
-            db.flush()
-            for pi in self.positions:
-                ln = pi.labnumber
-                self.info('updating positions for {} {}'.format(lt.name, ln))
-                for pp in pi.positions:
-                    i = db.add_load_position(ln, position=pp)
-                    lt.loaded_positions.append(i)
-
-            db.commit()
-
-    @cached_property
-    def _get_labnumbers(self):
-        level = self.db.get_irradiation_level(self.irradiation, self.level)
-        if level:
-#             self._positions = [str(li.position) for li in level.positions]
-            return sorted([li.labnumber.identifier for li in level.positions])
-        else:
-            return []
-
-    def _labnumber_changed(self):
-        level = self.db.get_irradiation_level(self.irradiation, self.level)
-        if level:
-            pos = next((pi for pi in level.positions
-                  if pi.labnumber.identifier == self.labnumber), None)
-            if pos is not None:
-                self.irradiation_hole = str(pos.position)
-
-                sample = pos.labnumber.sample
-                if sample:
-                    self.sample = sample.name
-
-
-
-# class ComponentFlowable(Flowable):
-#     component = None
-#     def __init__(self, component=None):
-#         self.component = component
-#         Flowable.__init__(self)
-#
-#
-#     def draw(self):
-#         print 'sefas', self.component, self.canv
-#         if self.component:
-#             print self.canv
-#             gc = PdfPlotGraphicsContext(pdf_canvas=self.canv)
-#             gc.render_component(self.component)
+from src.experiment.loading.loading_manager import LoadingManager, LoadPosition, \
+    ComponentFlowable
+from reportlab.platypus.frames import Frame
 
 
 class LoadingTask(BaseManagerTask):
@@ -345,84 +106,50 @@ class LoadingTask(BaseManagerTask):
         self.manager.save()
 
     def save_loading(self):
-#         path = self.save_file_dialog()
         path = '/Users/ross/Sandbox/load_001.pdf'
         if path:
-
-            from chaco.pdf_graphics_context import PdfPlotGraphicsContext
-
+            doc = BaseDocTemplate(path,
+                                  leftMargin=0.25 * inch,
+                                  rightMargin=0.25 * inch,
+#                                   _pageBreakQuick=0,
+                                  showBoundary=1)
 #             doc = SimpleDocTemplate(path)
-#             fl = [ComponentFlowable(component=self.canvas),
-#                   ]
-#             doc.save()
-            w, h = letter
-            gc = PdfPlotGraphicsContext(filename=path,
-                                        pagesize='letter',
-#                                         dest_box=(0.5, hh / 2. - 0.5,
-#                                                   -0.5,
-#                                                   hh / 2.)
-                                        )
-            component = self.canvas
-#             component.use_backbuffer = False
 
             man = self.manager
 
             n = len(man.positions)
             idx = int(round(n / 2.))
-            p1 = man.positions[:idx + 1]
-            p2 = man.positions[idx - 1:]
+
+            p1 = man.positions[:idx]
+            p2 = man.positions[idx:]
 #
             t1 = self._make_table(p1)
             t2 = self._make_table(p2)
+            fl = [ComponentFlowable(component=self.canvas),
+                  FrameBreak(),
+                  t1,
+                  FrameBreak(),
+                  t2
+                  ]
 
-            single_page = True
-            if not single_page:
+            # make 3 frames top, lower-left, lower-right
+            lm = doc.leftMargin
+            bm = doc.bottomMargin + doc.height * .333
 
-                gc.render_component(component)
-                gc.gc.showPage()
-                t1.wrapOn(gc.gc, w, h)
+            fw = doc.width
+            fh = doc.height * 0.666
+            top = Frame(lm, bm, fw, fh)
 
-                hh = h - t1._height - 0.5 * inch
-                t1.drawOn(gc.gc, 0.5 * inch, hh)
+            fw = doc.width / 2.
+            fh = doc.height * 0.333
+            bm = doc.bottomMargin
+            lbottom = Frame(lm, bm, fw, fh, showBoundary=True)
+            rbottom = Frame(lm + doc.width / 2., bm, fw, fh)
 
-                t2.wrapOn(gc.gc, w, h)
+            template = PageTemplate(frames=[top, lbottom, rbottom])
+            doc.addPageTemplates(template)
 
-                hh = h - t2._height - 0.5 * inch
-                t2.drawOn(gc.gc, 0.5 * inch + w / 2.0, hh)
-
-            else:
-                hh = h - component.height - 1 * inch
-                left = t1.split(w, hh)
-                right = t2.split(w, hh)
-
-                t = left[0]
-                t.wrapOn(gc.gc, w, hh)
-                t.drawOn(gc.gc, 0, 0)
-
-                th = t._height
-
-                t = right[0]
-                t.wrapOn(gc.gc, w, hh)
-
-                dh = th - t._height
-                t.drawOn(gc.gc, w / 2.0 - 0.4 * inch, dh)
-
-                gc.render_component(component)
-                gc.gc.showPage()
-
-                if len(left) > 1:
-                    t = left[1]
-                    th = t._height
-                    t.wrapOn(gc.gc, w, h)
-                    t.drawOn(gc.gc, 0.5 * inch,
-                             h - 0.5 * inch - th)
-
-                    if len(right) > 1:
-                        t = right[1]
-                        t.wrapOn(gc.gc, w, h - inch)
-                        t.drawOn(gc.gc, w / 2 + 0.5 * inch,
-                                 h - 0.5 * inch - th)
-            gc.save()
+            doc.build(fl)
 
     def _make_table(self, positions):
         data = [('L#', 'Irradiation', 'Sample', 'Positions')]
@@ -430,6 +157,9 @@ class LoadingTask(BaseManagerTask):
 
         ts = TableStyle()
         ts.add('LINEBELOW', (0, 0), (-1, 0), 1, colors.black)
+
+        ts.add('FONTSIZE', (-3, 1), (-1, -1), 8)
+        ts.add('VALIGN', (-3, 1), (-1, -1), 'MIDDLE')
 #         positions = positions * 15
 
         for idx, pi in enumerate(positions):
@@ -440,7 +170,7 @@ class LoadingTask(BaseManagerTask):
                 ts.add('BACKGROUND', (0, idx + 1), (-1, idx + 1),
                         colors.lightgrey)
 
-        cw = map(lambda x: mm * x, [15, 25, 32, 23])
+        cw = map(lambda x: mm * x, [12, 20, 22, 40])
 
         rh = [mm * 5 for i in range(len(data))]
         t = Table(data,
@@ -460,11 +190,12 @@ class LoadingTask(BaseManagerTask):
     def _tray_changed(self):
 
         c = LoadingCanvas(
-                          view_x_range=(-2, 2),
-                          view_y_range=(-2, 2),
+                          view_x_range=(-2.2, 2.2),
+                          view_y_range=(-2.2, 2.2),
 
                           )
         c.load_tray_map(self.manager.tray)
+
         self.canvas = c
         self.load_pane.component = c
 
@@ -479,21 +210,23 @@ class LoadingTask(BaseManagerTask):
 
         man = self.manager
         if man.labnumber:
-            irrad_str = '{} {}{}'.format(man.irradiation,
-                                       man.level,
-                                       man.irradiation_hole
-                                       )
+#             irrad_str = '{} {}{}'.format(man.irradiation,
+#                                        man.level,
+#                                        man.irradiation_hole
+#                                        )
 
             pos = next((pi for pi in  man.positions
                        if pi.labnumber == man.labnumber), None)
 
             pid = int(new.identifier)
+
+            new.add_text(man.labnumber, oy=-10)
             if pos is not None:
                 if new.fill:
-
                     if pid in pos.positions:
                         pos.positions.remove(pid)
                         new.fill = False
+                        new.clear_text()
                     else:
                         npos = next((pi for pi in man.positions
                                     if pid in pi.positions), None)
@@ -506,11 +239,12 @@ class LoadingTask(BaseManagerTask):
                         man.positions.remove(pos)
                 else:
                     pos.positions.append(pid)
-
                     new.fill = True
             else:
                 lp = LoadPosition(labnumber=man.labnumber,
-                                irradiation_str=irrad_str,
+                                  irradiation=man.irradiation,
+                                  level=man.level,
+                                  irrad_position=int(man.irradiation_hole),
                                 sample=man.sample,
                                 positions=[pid]
                                 )
@@ -533,6 +267,85 @@ class LoadingTask(BaseManagerTask):
                 self._save()
 
 #============= EOF =============================================
+#     def save_loading2(self):
+# #         path = self.save_file_dialog()
+#         path = '/Users/ross/Sandbox/load_001.pdf'
+#         if path:
+#
+#             from chaco.pdf_graphics_context import PdfPlotGraphicsContext
+#
+# #             doc = SimpleDocTemplate(path)
+# #             fl = [ComponentFlowable(component=self.canvas),
+# #                   ]
+# #             doc.save()
+#             w, h = letter
+#             gc = PdfPlotGraphicsContext(filename=path,
+#                                         pagesize='letter',
+# #                                         dest_box=(0.5, hh / 2. - 0.5,
+# #                                                   -0.5,
+# #                                                   hh / 2.)
+#                                         )
+#             component = self.canvas
+# #             component.use_backbuffer = False
+#
+#             man = self.manager
+#
+#             n = len(man.positions)
+#             idx = int(round(n / 2.))
+#             p1 = man.positions[:idx + 1]
+#             p2 = man.positions[idx - 1:]
+# #
+#             t1 = self._make_table(p1)
+#             t2 = self._make_table(p2)
+#
+#             single_page = True
+#             if not single_page:
+#
+#                 gc.render_component(component)
+#                 gc.gc.showPage()
+#                 t1.wrapOn(gc.gc, w, h)
+#
+#                 hh = h - t1._height - 0.5 * inch
+#                 t1.drawOn(gc.gc, 0.5 * inch, hh)
+#
+#                 t2.wrapOn(gc.gc, w, h)
+#
+#                 hh = h - t2._height - 0.5 * inch
+#                 t2.drawOn(gc.gc, 0.5 * inch + w / 2.0, hh)
+#
+#             else:
+#                 hh = h - component.height - 1 * inch
+#                 left = t1.split(w, hh)
+#                 right = t2.split(w, hh)
+#
+#                 t = left[0]
+#                 t.wrapOn(gc.gc, w, hh)
+#                 t.drawOn(gc.gc, 0, 0)
+#
+#                 th = t._height
+#
+#                 t = right[0]
+#                 t.wrapOn(gc.gc, w, hh)
+#
+#                 dh = th - t._height
+#                 t.drawOn(gc.gc, w / 2.0 - 0.4 * inch, dh)
+#
+#                 gc.render_component(component)
+#                 gc.gc.showPage()
+#
+#                 if len(left) > 1:
+#                     t = left[1]
+#                     th = t._height
+#                     t.wrapOn(gc.gc, w, h)
+#                     t.drawOn(gc.gc, 0.5 * inch,
+#                              h - 0.5 * inch - th)
+#
+#                     if len(right) > 1:
+#                         t = right[1]
+#                         t.wrapOn(gc.gc, w, h - inch)
+#                         t.drawOn(gc.gc, w / 2 + 0.5 * inch,
+#                                  h - 0.5 * inch - th)
+#             gc.save()
 # if new in self._positions:
 #                 new.fill = False
 #                 self._positions.remove(new)

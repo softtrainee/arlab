@@ -17,7 +17,7 @@
 #=============enthought library imports=======================
 from traits.api import Float, Property, Bool, Int, CInt
 from traitsui.api import View, Item, HGroup, VGroup, EnumEditor, RangeEditor, Label, Group
-from pyface.timer.api import Timer
+# from pyface.timer.api import Timer
 
 #=============standard library imports ========================
 import struct
@@ -31,10 +31,17 @@ from src.ui.custom_label_editor import CustomLabel
 from pyface.timer.api import do_after
 from src.ui.gui import invoke_in_main_thread
 from src.hardware.linear_mapper import LinearMapper
+from traits.has_traits import cached_property
+from src.helpers.timer import Timer
+from src.hardware.utilities import limit_frequency
+from Queue import Queue
+from src.ui.thread import Thread
+from src.hardware.core.core_device import ConsumerMixin
 
 SIGN = ['negative', 'positive']
 
-class KerrMotor(KerrDevice):
+
+class KerrMotor(KerrDevice, ConsumerMixin):
     '''
         Base class for motors controller by a kerr microcontroller board
 
@@ -54,7 +61,8 @@ class KerrMotor(KerrDevice):
     home_at_startup = Bool(True)
     min = Float(0)
     max = Float(100)
-    steps = Float(137500)
+    steps = Int(137500)
+    min_steps = Int(0)
     sign = Float
 
     enabled = Bool(False)
@@ -120,29 +128,36 @@ class KerrMotor(KerrDevice):
             self.info('not changing pos {}=={}'.format(self.data_position, value))
 
         return True
-
     def _convert_value(self, value):
         return value
 
     def load_additional_args(self, config):
         '''
         '''
-        args = [('Motion', 'steps'),
-              ('Motion', 'sign'),
-              ('Motion', 'velocity'),
-              ('Motion', 'acceleration'),
+        args = [
+                ('Motion', 'steps', 'int'),
+                ('Motion', 'min_steps', 'int'),
+                ('Motion', 'sign'),
+                ('Motion', 'velocity'),
+                ('Motion', 'acceleration'),
 
-              ('Homing', 'home_delay'),
-              ('Homing', 'home_velocity'),
-              ('Homing', 'home_acceleration'),
-              ('Homing', 'home_position'),
-              ('Homing', 'home_at_startup'),
-              ('General', 'min'),
-              ('General', 'max'),
-              ('General', 'nominal_position')
+                ('Homing', 'home_delay'),
+                ('Homing', 'home_velocity'),
+                ('Homing', 'home_acceleration'),
+                ('Homing', 'home_position'),
+                ('Homing', 'home_at_startup'),
+                ('General', 'min'),
+                ('General', 'max'),
+                ('General', 'nominal_position')
               ]
-        for section, key in args:
-            self.set_attribute(config, key, section, key, cast='float')
+        for args in args:
+            if len(args) == 3:
+                section, key, cast = args
+            else:
+                cast = 'float'
+                section, key = args
+
+            self.set_attribute(config, key, section, key, cast=cast)
 
         if config.has_option('Motion', 'hysteresis'):
             '''
@@ -161,8 +176,6 @@ class KerrMotor(KerrDevice):
         if config.has_option('General', 'initialize'):
             self.use_initialize = self.config_get(config, 'General', 'initialize', cast='boolean')
 
-
-
         mi = self.min
         ma = self.max
 
@@ -174,7 +187,7 @@ class KerrMotor(KerrDevice):
         self.linear_mapper = LinearMapper(
                                         low_data=mi,
                                         high_data=ma,
-                                        low_step=0,
+                                        low_step=int(self.min_steps),
                                         high_step=int(self.steps)
                                         )
 
@@ -233,30 +246,48 @@ class KerrMotor(KerrDevice):
         self.progress = None
         self.enabled = True
 
+        self.setup_consumer()
+#         self.move_queue = Queue()
+#         self._consumer = Thread(target=self._consume_move)
+#         self._should_consume = True
+#         self._consumer.start()
         return True
 
     def _clear_bits(self):
         cmd = (self.address, '0b', 100, 'clear bits')
         self._execute_hex_command(cmd)
 
+    def _initialize_motor(self, commands, *args, **kw):
+        self.load_data_position()
+
+        self._execute_hex_commands(commands)
+        if self.home_at_startup:
+            self._execute_hex_commands([(self.address, '00', 100, 'reset position')])
+            self._home_motor(*args, **kw)
+
+        self.load_data_position()
+
     def _initialize_(self, *args, **kw):
         '''
         '''
         addr = self.address
-        if self.home_at_startup:
-            commands = [(addr, '1706', 100, 'stop motor, turn off amp'),
-                        (addr, self._build_io(), 100, 'configure io pins'),
-                        (addr, self._build_gains(), 100, 'set gains'),
-                        (addr, '1701', 100, 'turn on amp'),
-                        (addr, '00', 100, 'reset position'),
-    #                     (addr, '1201', 100, 'set status')
-    #                   (addr, '0b', 100, 'clear bits')
-                      ]
-            self._execute_hex_commands(commands)
-            self._home_motor(*args, **kw)
-        else:
-            commands = [(addr, '1701', 100, 'turn on amp'), ]
-            self._execute_hex_commands(commands)
+        commands = [(addr, '1706', 100, 'stop motor, turn off amp'),
+                    (addr, self._build_io(), 100, 'configure io pins'),
+                    (addr, self._build_gains(), 100, 'set gains'),
+                    (addr, '1701', 100, 'turn on amp'),
+#                     (addr, '00', 100, 'reset position'),
+#                     (addr, '1201', 100, 'set status')
+#                   (addr, '0b', 100, 'clear bits')
+                  ]
+        self._initialize_motor(commands, *args, **kw)
+#         self._execute_hex_commands(commands)
+#
+#         if self.home_at_startup:
+#             self._execute_hex_commands([(addr, '00', 100, 'reset position')])
+#             self._home_motor(*args, **kw)
+#         else:
+#             commands = [(addr, '1701', 100, 'turn on amp'), ]
+#             self._execute_hex_commands(commands)
 
     def _home_motor(self, *args, **kw):
         '''
@@ -381,12 +412,24 @@ class KerrMotor(KerrDevice):
                                 )
         return status_byte
 
+    def load_data_position(self):
+        '''
+        '''
+        steps = self._get_motor_position(verbose=False)
+        if steps is not None:
+            pos = self.linear_mapper.map_data(steps)
+            self.update_position = pos
+            self._data_position = pos
+            self.debug('Load data position {} steps= {} {}'.format(
+                                                                  steps, pos,
+                                                                  self.units))
+
+
     def _moving(self, verbose=True):
         status_byte = self.read_defined_status(verbose=verbose)
 
-        if status_byte == 'simulation':
+        if status_byte in ('simulation', None):
             status_byte = 'DFDF'
-
         status_register = map(int, make_bitarray(int(status_byte[:2], 16)))
         return not status_register[7]
 
@@ -463,6 +506,8 @@ class KerrMotor(KerrDevice):
         '''
         hpos = self._calculate_hysteresis_position(pos, hysteresis)
         self._motor_position = hpos
+
+        return
 #        self._motor_position =npos= min(self.max, max(self.min, pos + hysteresis))
         #============pos is in mm===========
         addr = self.address
@@ -530,8 +575,11 @@ class KerrMotor(KerrDevice):
 #        return float('%0.3f' % self._data_position)
 
     def _set_data_position(self, pos):
-        self.info('setting motor in data space {:0.3f}'.format(float(pos)))
+        self.add_consumable((self._set_motor, pos))
+
+    def _set_motor(self, pos):
         if self._data_position != pos:
+            self.info('setting motor in data space {:0.3f}'.format(float(pos)))
 
             self._data_position = pos
             lm = self.linear_mapper
@@ -550,14 +598,34 @@ class KerrMotor(KerrDevice):
                 hysteresis = self.hysteresis_value
 
             self._set_motor_position_(steps, hysteresis)
-            if not self.parent.simulation:
-                # invoke in gui thread because in position update can be triggered from a RemoteHardware thread
-                def launch_timer():
-                    self.timer = Timer(400, self._update_position)
-                invoke_in_main_thread(launch_timer)
+#             print self.parent.simulation
+            def launch():
+                self.timer = self.timer_factory()
+            invoke_in_main_thread(launch)
 
-            else:
+            if self.parent.simulation:
                 self.update_position = self._data_position
+
+    def timer_factory(self):
+        '''
+        
+            reuse timer is possible
+            
+        '''
+        timer = self.timer
+
+        func = self._update_position
+        if timer is None:
+            self._not_moving_count = 0
+            timer = Timer(250, func)
+        else:
+            if timer.isActive():
+                self.debug('reusing old timer')
+            else:
+                self._not_moving_count = 0
+                timer = Timer(400, func)
+
+        return timer
 
     def _float_to_hexstr(self, f, endianness='little'):
         '''
