@@ -150,10 +150,7 @@ class BaseLaserManager(Manager):
 
     def _get_calibrated_power(self, power, use_calibration=True, verbose=True):
         if self.use_calibrated_power and use_calibration:
-            if power < 0.1:
-                power = 0
-            else:
-                power = self.laser_controller.get_calibrated_power(power)
+            power = max(0, self.laser_controller.get_calibrated_power(power))
         return power
 
     def _get_requested_power(self):
