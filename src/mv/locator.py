@@ -26,6 +26,7 @@ from skimage.morphology.watershed import is_local_maximum
 from skimage.morphology import watershed
 from skimage.draw import polygon
 from scipy import ndimage
+from skimage.exposure import rescale_intensity
 #============= local library imports  ==========================
 # from src.geometry.centroid.calculate_centroid import calculate_centroid
 from src.loggable import Loggable
@@ -395,7 +396,7 @@ class Locator(Loggable):
 
         draw_circle(src, cpt, radius, color=color, thickness=1)
 
-    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness= -1):
+    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness=-1):
         '''
             convenience function for drawing indicators
         '''
@@ -435,6 +436,7 @@ class Locator(Loggable):
         if denoise:
             frm = self._denoise(frm, weight=denoise)
 # #        contrast = False
+
         if contrast:
             frm = self._contrast_equalization(frm)
 
@@ -454,13 +456,12 @@ class Locator(Loggable):
         '''
             rescale intensities to maximize contrast
         '''
-        from skimage.exposure.exposure import rescale_intensity
 #        from numpy import percentile
         # Contrast stretching
 #        p2 = percentile(img, 2)
 #        p98 = percentile(img, 98)
-        return rescale_intensity(array(img)).astype('uint8')
 
+        return rescale_intensity(asarray(img)).astype('uint8')
 
 #============= EOF =============================================
 #        from numpy import linspace, pi, cos, sin, radians

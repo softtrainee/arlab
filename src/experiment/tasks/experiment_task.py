@@ -35,9 +35,9 @@ from src.helpers.filetools import add_extension
 from src.ui.gui import invoke_in_main_thread
 from apptools.preferences.preference_binding import bind_preference
 from src.experiment.loading.panes import LoadDockPane, LoadTablePane
-from src.canvas.canvas2D.loading_canvas import LoadingCanvas
+from src.experiment.loading.loading_manager import LoadingManager
+from pandas.core.algorithms import group_position
 
-from src.experiment.loading.load_task import LoadingManager
 
 class ExperimentEditorTask(EditorTask):
     wildcard = '*.txt'
@@ -49,7 +49,9 @@ class ExperimentEditorTask(EditorTask):
     loading_manager = Instance(LoadingManager)
 
     def _loading_manager_default(self):
-        lm = LoadingManager(db=self.manager.db)
+        lm = LoadingManager(db=self.manager.db,
+                            show_group_positions=True
+                            )
         return lm
 
     def _default_directory_default(self):
@@ -130,7 +132,6 @@ class ExperimentEditorTask(EditorTask):
 #                 self.summary_pane,
                 ]
 
-#        man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
         man = self._get_el_manager()
         if man:
             from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
@@ -161,7 +162,6 @@ class ExperimentEditorTask(EditorTask):
     def open(self):
 
 #         self._test_auto_figure()
-
 #         return
 
 #        import os
@@ -301,10 +301,23 @@ class ExperimentEditorTask(EditorTask):
 
             self.video_source.set_url(url)
 
+    @on_trait_change('loading_manager:group_positions')
+    def _update_group_positions(self, new):
+        if not new:
+            ef = self.manager.experiment_factory
+            rf = ef.run_factory
+            rf.position = ''
+        else:
+            pos = self.loading_manager.selected_positions
+            self._update_selected_positions(pos)
+
     @on_trait_change('loading_manager:selected_positions')
     def _update_selected_positions(self, new):
+        ef = self.manager.experiment_factory
+        ef.selected_positions = new
         if new:
-            rf = self.manager.experiment_factory.run_factory
+            rf = ef.run_factory
+
             nn = new[0]
 
             rf.selected_irradiation = nn.irradiation
@@ -315,7 +328,10 @@ class ExperimentEditorTask(EditorTask):
             ns = [str(ni.positions[0]) for ni in new
                   if ni.labnumber == nn.labnumber]
 
-            rf.position = ','.join(ns)
+            group_positions = self.loading_manager.group_positions
+#             group_positions = False
+            if group_positions:
+                rf.position = ','.join(ns)
 
     @on_trait_change('manager.experiment_factory:queue_factory:load_name')
     def _update_load(self, new):

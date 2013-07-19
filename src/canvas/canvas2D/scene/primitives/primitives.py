@@ -87,10 +87,15 @@ class Primitive(HasTraits):
 
     def render(self, gc):
         if self.visible:
+
             gc.begin_path()
+
             self.set_stroke_color(gc)
             self.set_fill_color(gc)
+
+            gc.set_font(str_to_font(self.font))
             gc.set_line_width(self.line_width)
+
             self._render_(gc)
             gc.stroke_path()
 
@@ -129,7 +134,7 @@ class Primitive(HasTraits):
 
     def get_xy(self):
         x, y = self.x, self.y
-        offset = 1
+        offset = 0
         if self.space == 'data':
 #            if self.canvas is None:
 #                print self
@@ -166,15 +171,18 @@ class Primitive(HasTraits):
     def _render_name(self, gc, x, y, w, h):
         if self.name:
             gc.set_fill_color((0, 0, 0))
+#             gc.set_font(str_to_font(self.font))
 
             t = str(self.name)
-            tw = gc.get_full_text_extent(t)[0]
-            x = x + w / 2.0 - tw / 2.0
+            tw, th, _, _ = gc.get_full_text_extent(t)
+            x = x + w / 2. - tw / 2.
+            y = y + h / 2. - th / 2.
 
-            gc.set_font(str_to_font(self.font))
-            gc.set_text_position(x, y + h / 2 - 6)
-            gc.show_text(str(self.name))
-#             gc.draw_path()
+            self._render_text(gc, t, x, y)
+
+    def _render_text(self, gc, t, x, y):
+        gc.set_text_position(x, y)
+        gc.show_text(t)
 
     @on_trait_change('default_color, active_color, x, y')
     def _refresh_canvas(self):
@@ -633,7 +641,7 @@ class Circle(QPrimitive):
             gc.arc(x, y, r, 0, 360)
             gc.fill_path()
 
-        self._render_name(gc, x - 5, y - 5, r, r)
+        self._render_name(gc, x, y, r / 4., r / 2.)
 
 
     def is_in(self, event):
@@ -647,11 +655,21 @@ class Circle(QPrimitive):
 
     def _get_group(self):
         return Item('radius')
+
 class LoadIndicator(Circle):
     degas_indicator = False
     measured_indicator = False
     degas_color = (1, 0.5, 0)
     measured_color = (1, 0, 0)
+
+    _text = List
+
+    def clear_text(self):
+        self._text = []
+
+    def add_text(self, t, ox=0, oy=0):
+        self._text.append((t, ox, oy))
+
     def _render_(self, gc):
         Circle._render_(self, gc)
 
@@ -668,6 +686,12 @@ class LoadIndicator(Circle):
             gc.set_fill_color(self.measured_color)
             gc.arc(x, y - 2 * nr, nr, 0, 360)
             gc.fill_path()
+
+        if self._text:
+            for ti, ox, oy in self._text:
+                w, h, a, b = gc.get_full_text_extent(ti)
+                self._render_text(gc, ti, x - w / 2., y + oy)
+
 
 
 class CalibrationObject(HasTraits):

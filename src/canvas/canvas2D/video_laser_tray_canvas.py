@@ -40,7 +40,8 @@ class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
 
     def add_markup_rect(self, x, y, w, h, name=''):
         from src.canvas.canvas2D.scene.primitives.primitives import Rectangle
-        r = Rectangle(x=x, y=y, width=w, height=h,
+        r = Rectangle(x=x, y=y,
+                      width=w, height=h,
                       space='screen',
                       name=name,
                       fill=False)

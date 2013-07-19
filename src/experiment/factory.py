@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Button, Bool, Property, \
-    on_trait_change, String, Int, Any, DelegatesTo
+    on_trait_change, String, Int, Any, DelegatesTo, List
 from traitsui.api import View, Item, HGroup, VGroup, UItem, UCustom, spring
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -55,6 +55,8 @@ class ExperimentFactory(Loggable):
     _extract_device = String
     _labnumber = String
 
+    selected_positions = List
+
 #     help_label = String('Select Irradiation/Level or Project')
 
     #===========================================================================
@@ -85,7 +87,10 @@ class ExperimentFactory(Loggable):
         egs = list(set([ai.extract_group for ai in self.queue.automated_runs]))
         eg = max(egs) if egs else 0
 
+
+        positions = [str(pi.positions[0]) for pi in self.selected_positions]
         new_runs, freq = self.run_factory.new_runs(
+                                                   positions=positions,
                                                    auto_increment_position=self.auto_increment_position,
                                                    auto_increment_id=self.auto_increment_id,
                                                    extract_group_cnt=eg

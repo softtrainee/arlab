@@ -50,10 +50,10 @@ class LoadingScene(Scene):
                        )
             self.add_item(v)
 
-        w = xma - xmi
-        h = yma - ymi
-        w *= 1.1 / 2.0
-        h *= 1.1 / 2.0
+        w = (xma - xmi) * 1.2
+        h = (yma - ymi) * 1.2
+        w /= 2.0
+        h /= 2.0
         self._xrange = -w, w
         self._yrange = -h, h
 

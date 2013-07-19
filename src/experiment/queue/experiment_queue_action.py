@@ -37,7 +37,7 @@ class ExperimentQueueAction(HasTraits):
     def _parse(self, params):
 
 #         print params, type(params)
-#         params = eval(params)
+        params = eval(params)
         n = len(params)
         nr = 1
         if n == 6:

@@ -19,7 +19,7 @@ from traits.api import Bool, Any, Instance, Button, Property, Event, on_trait_ch
 from traitsui.api import View, Item, Handler, HGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
-#from threading import Thread
+# from threading import Thread
 from threading import Event as TEvent
 from numpy import linspace, argmin, argmax, random, asarray
 import time
@@ -173,6 +173,7 @@ class AutoFocusManager(Manager):
                     self.info('setting zoom: {}'.format(zoom))
                     manager.set_motor('zoom', zoom, block=True)
                     time.sleep(1.5)
+
         args = self._do_focusing(fstart, fend, steps, operator)
 
         if manager is not None:
@@ -217,9 +218,19 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             self.stage_controller.set_single_axis_motion_parameters(pdict=pdict)
 
     def _do_focusing(self, start, end, steps, operator):
-        roi = self._get_roi()
-        self._add_focus_area_rect(*roi)
+        screen_roi = self._get_roi()
+        self._add_focus_area_rect(*screen_roi)
 
+        src = self._load_source()
+        h, w, _d = src.shape
+
+        cx = w / 2.
+        cy = h / 2.
+
+        cw = self.parameters.crop_width
+        ch = self.parameters.crop_height
+
+        roi = cx, cy, cw, ch
 
         '''
             start the z in motion and take pictures as you go
@@ -243,6 +254,8 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
             # reached end of sweep
             # calculate a nominal focal point
             args = self._calculate_nominal_focal_point(fms, focussteps)
+            if not args:
+                return
             nfocal = args[3]
 
             nwin = self.parameters.negative_window
@@ -273,7 +286,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
     def _do_sweep(self, start, end, velocity=None):
         controller = self.stage_controller
         controller.single_axis_move('z', start, block=True)
-        time.sleep(0.1)
+#         time.sleep(0.1)
         # explicitly check for motion
 #        controller.block(axis='z')
 
@@ -293,7 +306,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         focussteps = []
         fms = []
         if controller.timer:
-            while controller.timer.IsRunning() and not self._evt_autofocusing.isSet():
+            while controller.timer.isActive() and not self._evt_autofocusing.isSet():
                 src = self._load_source()
                 x = controller.z_progress
                 y = self._calculate_focus_measure(src, operator, roi)
@@ -305,15 +318,16 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         return fms, focussteps
 
     def _calculate_nominal_focal_point(self, fms, focussteps):
+        if fms:
+            sfms = smooth(fms)
+            if sfms:
+                fmi = focussteps[argmin(sfms)]
+                fma = focussteps[argmax(sfms)]
 
-        sfms = smooth(fms)
-        fmi = focussteps[argmin(sfms)]
-        fma = focussteps[argmax(sfms)]
+                mi = min(sfms)
+                ma = max(sfms)
 
-        mi = min(sfms)
-        ma = max(sfms)
-
-        return mi, fmi, ma, fma
+                return mi, fmi, ma, fma
 
     def _calculate_focus_measure(self, src, operator, roi):
         '''
@@ -379,16 +393,36 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         w = self.parameters.crop_width
         h = self.parameters.crop_height
 
-        cx = (640 * self.canvas.scaling - w) / 2
-        cy = (480 * self.canvas.scaling - h) / 2
+        lp = self.canvas.index_mapper.low_pos
+        hp = self.canvas.index_mapper.high_pos
+        cw = hp - lp
+
+        cx = (cw - w) / 2. + lp
+
+        lp = self.canvas.value_mapper.low_pos
+        hp = self.canvas.value_mapper.high_pos
+        ch = hp - lp
+        cy = (ch - h) / 2. + lp
+
+
+#         cw, ch = self.canvas.outer_bounds
+#         print w, h, cw, ch
+#         cx = cw / 2. - w / 2.
+#         cy = ch / 2. - h / 2.
+#         cx = (cw - w) / 2.
+#         cy = (ch - h) / 2.
+#         cx = (640 * self.canvas.scaling - w) / 2
+#         cy = (480 * self.canvas.scaling - h) / 2
         roi = cx, cy, w, h
 
         return roi
 
     def _add_focus_area_rect(self, cx, cy, w, h):
-        pl = self.canvas.padding_left
-        pb = self.canvas.padding_bottom
-        self.canvas.add_markup_rect(cx + pl, cy + pb, w, h, name='croprect')
+#         pl = self.canvas.padding_left
+#         pb = self.canvas.padding_bottom
+
+        self.canvas.remove_item('croprect')
+        self.canvas.add_markup_rect(cx, cy, w, h, name='croprect')
 
     def _autofocus_button_fired(self):
         if not self.autofocusing:
@@ -404,6 +438,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
     def _configure_button_fired(self):
         self._crop_rect_update()
         self.edit_traits(view='configure_view', kind='livemodal')
+
         self.canvas.remove_item('croprect')
 #        try:
 #            self.canvas.markupcontainer.pop('croprect')
@@ -421,6 +456,10 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 
     def _parameters_default(self):
         return self.load_parameter()
+
+    def _autofocusing_changed(self, new):
+        if not new:
+            self.canvas.remove_item('croprect')
 #===============================================================================
 # Deprecated
 #===============================================================================
