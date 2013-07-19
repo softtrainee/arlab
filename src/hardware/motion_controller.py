@@ -192,6 +192,7 @@ class MotionController(CoreDevice):
     def _z_inprogress_update(self):
         '''
         '''
+        stopped = False
         m = self._moving_()
         if not m:
             self._not_moving_count += 1
@@ -200,10 +201,11 @@ class MotionController(CoreDevice):
             self._not_moving_count = 0
             self.timer.Stop()
             self.debug('stop timer')
+            stopped = True
 
         z = self.get_current_position('z')
         self.z_progress = z
-        self.debug('z inprogress {}. moving={} '.format(z, m))
+        self.debug('z inprogress {}. moving={} stopped={}'.format(z, m, stopped))
 
     def _inprogress_update(self):
         '''
@@ -242,26 +244,29 @@ class MotionController(CoreDevice):
         if event is not None:
             event.clear()
 
-        func = lambda: self._moving_(axis=axis)
-        if self.timer is not None:
-            # timer is calling self._moving_
-            func = lambda: self.timer.isActive()
+        timer = self.timer
+        if timer is not None:
+            def timerActive():
+                return self.timer.isActive()
+            func = timerActive
+        else:
+            def moving():
+                return self._moving_(axis=axis)
+            func = moving
 
-        time.sleep(0.25)
-
-        a = func()
-#         print 'aaaa', a, func
         i = 0
-        while a:
-
+        fn = func.func_name
+        n = 10
+        while 1:
             a = func()
-#             print 'ffff', a
-            time.sleep(0.1)
+            if i % n == 0:
+                self.debug('blocking {} {}'.format(fn, a))
+
+            time.sleep(0.05)
             if i > 100:
                 i = 0
-            if i % 20 == 0:
-                self.debug('blocking {}'.format(a))
-
+            if not a:
+                break
             i += 1
 
         self.debug('block finished')
