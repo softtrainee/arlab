@@ -260,21 +260,10 @@ class _TabularEditor(qtTabularEditor):
         if self.control:
             super(_TabularEditor, self).refresh_editor()
 
-    def _scroll_to_row_changed(self, row):
-        """ Scroll to the given row.
-        """
-        scroll_hint = self.scroll_to_row_hint_map.get(self.factory.scroll_to_row_hint, self.control.PositionAtCenter)
-
-        '''
-            for some reason only one call to scrollTo was not working consistently
-        '''
-        for i in range(3):
-            self.control.scrollTo(self.model.index(row, 0), scroll_hint)
-
 
 class myTabularEditor(TabularEditor):
-    scroll_to_bottom = Bool(True)
-    scroll_to_row_hint = 'visible'
+#     scroll_to_bottom = Bool(True)
+#     scroll_to_row_hint = 'visible'
 #    scroll_to_row_hint = 'bottom'
 #    drag_move = Bool(False)
     rearranged = Str

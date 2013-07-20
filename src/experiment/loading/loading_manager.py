@@ -198,8 +198,6 @@ class LoadingManager(IsotopeDatabaseManager):
                 item = c.scene.get_item(str(pi.position))
                 if item:
                     item.fill = True
-                    print item
-#                     item.identifier = lt.labnumber
                     item.identifier = pi.lab_identifier
 
             for pi in lt.measured_positions:

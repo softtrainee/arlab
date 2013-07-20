@@ -33,7 +33,7 @@ from src.experiment.tasks.experiment_preferences import ExperimentPreferences, \
 from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
     OpenExperimentQueueAction, SaveExperimentQueueAction, \
     SaveAsExperimentQueueAction, SignalCalculatorAction, MergeQueuesAction, \
-    UpdateDatabaseAction
+    UpdateDatabaseAction, DeselectAction
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.experiment.experimentor import Experimentor
@@ -44,6 +44,9 @@ from src.experiment.tasks.constants_preferences import ConstantsPreferencesPane
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.loading.load_task import LoadingTask
 from src.experiment.loading.actions import SaveLoadingAction
+from pyface.tasks.action.schema import SGroup
+from pyface.action.group import Group
+# from envisage.ui.action.group import Group
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -64,6 +67,17 @@ class ExperimentPlugin(BaseTaskPlugin):
                                actions=[SchemaAddition(id='save_loading_figure',
                                                        factory=SaveLoadingAction,
                                                        path='MenuBar/File')
+                                        ],
+                              ),
+                TaskExtension(task_id='pychron.experiment',
+                               actions=[
+                                        SchemaAddition(
+                                                       factory=lambda: Group(
+                                                              DeselectAction(),
+                                                              MergeQueuesAction()
+                                                              ),
+                                                path='MenuBar/Edit'
+                                               ),
                                         ],
                               ),
                 TaskExtension(
@@ -88,10 +102,7 @@ class ExperimentPlugin(BaseTaskPlugin):
 #                                                      factory=LabnumberEntryAction,
 #                                                      path='MenuBar/Edit'
 #                                                      ),
-                                       SchemaAddition(id='merge_queues',
-                                                      factory=MergeQueuesAction,
-                                                      path='MenuBar/Edit'
-                                                      ),
+
                                        SchemaAddition(id='signal_calculator',
                                                       factory=SignalCalculatorAction,
                                                       path='MenuBar/Tools'

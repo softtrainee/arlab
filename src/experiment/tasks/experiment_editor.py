@@ -64,6 +64,8 @@ class ExperimentEditor(BaseTraitsEditor):
                                    pasted='pasted',
                                    copy_function='copy_function',
                                    refresh='refresh_table_needed',
+                                   scroll_to_row='automated_runs_scroll_to_row',
+#                                    scroll_to_row_hint='bottom',
 #                                    scroll_to_bottom=True,
 #                                             copy_cache='copy_cache',
 #                                             update='update_needed',
@@ -80,7 +82,7 @@ class ExperimentEditor(BaseTraitsEditor):
                                                     editable=False,
                                                     auto_update=True,
                                                     selectable=False,
-                                                    scroll_to_row='scroll_to_row'
+                                                    scroll_to_row='executed_runs_scroll_to_row'
                                                     ),
                             ))
 

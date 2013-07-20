@@ -21,9 +21,15 @@ from traits.api import Any
 from pyface.action.api import Action
 from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.ui.progress_dialog import myProgressDialog
+from pyface.tasks.action.task_action import TaskAction
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
+class DeselectAction(TaskAction):
+    name = 'Deselect'
+    method = 'deselect'
+    accelerator = 'Ctrl+Shift+D'
+    tooltip = 'Deselect the selected run(s)'
 
 class ExperimentAction(Action):
     task_id = 'pychron.experiment'

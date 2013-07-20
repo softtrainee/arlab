@@ -37,6 +37,7 @@ from src.viewable import Viewable
 from src.ui.thread import Thread
 from src.loggable import Loggable
 import yaml
+from src.experiment.utilities.human_error_checker import HumanErrorChecker
 def EKlass(klass):
     return klass(enter_set=True, auto_set=False)
 
@@ -86,6 +87,8 @@ class AutomatedRunFactory(Loggable):
 
     extract_group = Int(enter_set=True, auto_set=False)
     extract_group_button = Button('Group Selected')
+
+    ramp_duration = EKlass(Float)
 
     duration = EKlass(Float)
     cleanup = EKlass(Float)
@@ -145,6 +148,22 @@ class AutomatedRunFactory(Loggable):
 
 #     def _template_changed(self):
 #         print self, self.template
+    human_error_checker = Instance(HumanErrorChecker, ())
+    def check_run_addition(self, runs, load_name):
+        '''
+            check if its ok to add runs to the queue.
+            ie. do they have any missing values.
+                does the labnumber match the loading
+            
+            return True if ok to add runs else False
+        '''
+        hec = self.human_error_checker
+        ret = hec.check(runs, test_all=True)
+        if ret:
+            hec.report_errors(ret)
+            return False
+
+        return True
 
     def load_templates(self):
         self.templates = self._get_templates()
@@ -450,7 +469,7 @@ class AutomatedRunFactory(Loggable):
             eg = self._selected_runs[0].extract_group + 1
             self.extract_group = eg
 
-    @on_trait_change('''cleanup, duration, extract_value,
+    @on_trait_change('''cleanup, duration, extract_value,ramp_duration,
 extract_units,
 pattern,
 position,

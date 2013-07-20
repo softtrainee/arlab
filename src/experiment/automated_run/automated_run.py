@@ -139,6 +139,7 @@ class AutomatedRun(Loggable):
     overlap = CInt
     cleanup = CInt
     ramp_rate = Float
+    ramp_duration = Float
 
     weight = Float
     comment = Str
@@ -401,7 +402,7 @@ class AutomatedRun(Loggable):
         gn = 'baseline'
         fits = [(None, [fit, ] * len(self._active_detectors))]
         self._build_tables(gn)
-        check_conditions = False
+        check_conditions = True
         result = self._measure_iteration(gn,
                             self._get_data_writer(gn),
                             ncounts, starttime,
@@ -1955,8 +1956,6 @@ anaylsis_type={}
                     runner=self.runner
                     )
 
-
-
             return obj
 
     def _setup_context(self, script):
@@ -1977,7 +1976,8 @@ anaylsis_type={}
                             analysis_type=an,
                             ramp_rate=self.ramp_rate,
                             pattern=self.pattern,
-                            beam_diameter=self.beam_diameter
+                            beam_diameter=self.beam_diameter,
+                            ramp_duration=self.ramp_duration
                             )
 
     def _add_script_extension(self, name, ext='.py'):

@@ -38,6 +38,7 @@ class AutomatedRunsTable(HasTraits):
 
     def set_runs(self, runs):
         if runs:
+            nruns = []
             klass = self.klass
             for ri in runs:
                 if ri.__class__ != klass:
@@ -49,7 +50,10 @@ class AutomatedRunsTable(HasTraits):
                             pass
 
                     ri = nri
-                self.automated_runs.append(ri)
+                nruns.append(ri)
+ #               self.automated_runs.append(ri)
+
+            self.automated_runs.extend(nruns)
 
 #    def traits_view(self):
 #        v = View(Item('automated_runs',
