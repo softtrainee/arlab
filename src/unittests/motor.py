@@ -19,11 +19,30 @@ from traits.api import HasTraits, Int
 from traitsui.api import View, Item
 import unittest
 from src.hardware.linear_mapper import LinearMapper
+from src.hardware.core.motion.motion_profiler2 import MotionProfiler as MotionProfiler2
+from src.hardware.core.motion.motion_profiler import MotionProfiler
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 
+class MotionProfilerTest(unittest.TestCase):
+    def setUp(self):
+        self.mp = MotionProfiler()
+        self.mp2 = MotionProfiler2()
 
+    def testCheckParameters2(self):
+        displacement = 5
+        mv, mac, mdc = 0.1, 10, 10
+        args2 = self.mp2.calculate_corrected_parameters(displacement,
+                                                        mac, mdc)
+        print args2
+        print self.mp2.calculate_transit_parameters(displacement, *args2)
+        args1 = self.mp.calculate_corrected_parameters(displacement,
+                                                       mv, mac, mdc)
+#         print nv, na, nd
+        print args1
+        print self.mp.calculate_transit_parameters(displacement, *args1)
+        self.assertTupleEqual(args1, args2)
 
 class LinearMapperTest(unittest.TestCase):
     def setUp(self):
@@ -61,5 +80,7 @@ class LinearMapperTest(unittest.TestCase):
         ds = 4
         steps = m.map_steps(ds)
         self.assertEqual(steps, 9500 / 2.)
+
+
 
 #============= EOF =============================================

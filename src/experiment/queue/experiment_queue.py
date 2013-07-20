@@ -24,6 +24,8 @@ from src.constants import SCRIPT_KEYS, SCRIPT_NAMES
 from src.experiment.utilities.identifier import make_runid
 from src.experiment.utilities.human_error_checker import HumanErrorChecker
 from src.experiment.queue.experiment_queue_action import ExperimentQueueAction
+import time
+from pyface.timer.do_later import do_later
 
 
 
@@ -34,7 +36,8 @@ class ExperimentQueue(BaseExperimentQueue):
     dclicked = Any
     database_identifier = Int
     executed_runs = List
-    scroll_to_row = Int
+    executed_runs_scroll_to_row = Int
+    automated_runs_scroll_to_row = Int
 
     def set_run_inprogress(self, aid):
 #    def run_executed(self, aid):
@@ -47,7 +50,9 @@ class ExperimentQueue(BaseExperimentQueue):
         if run is not None:
             self.automated_runs.remove(run)
             self.executed_runs.append(run)
-            self.scroll_to_row = len(self.executed_runs) - 1
+            idx = len(self.executed_runs) - 1
+            do_later(self.trait_set, executed_runs_scroll_to_row=idx)
+
         else:
             self.debug('Problem removing {}'.format(aid))
 
@@ -69,8 +74,14 @@ class ExperimentQueue(BaseExperimentQueue):
 
     @on_trait_change('automated_runs[]')
     def _refresh_info(self, new):
+
+        self.debug('automated runs len changed {}'.format(len(new)))
+        if new:
+            idx = self.automated_runs.index(new[-1])
+            self.debug('SSSSSSSSSSSSSS set AR scroll to {}'.format(idx))
+            do_later(self.trait_set, automated_runs_scroll_to_row=idx)
+
         if not self._no_update:
-            self.debug('automated runs len changed {}'.format(len(new)))
             if self.automated_runs:
                 self.update_needed = True
 #                self.refresh_button = True

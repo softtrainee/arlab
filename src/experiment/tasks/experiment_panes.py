@@ -256,6 +256,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                                   tooltip='Set the number of seconds to getter the sample gas'
                                   ),
                              RFItem('beam_diameter'),
+                             RFItem('ramp_duration', label='Ramp Dur. (s)'),
                              # Item('ramp_rate', label='Ramp Rate (C/s)'),
                              RFItem('pattern', editor=EnumEditor(name=make_rf_name('patterns'))),
                              label='Extract',

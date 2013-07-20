@@ -8,7 +8,9 @@ ETSConfig.toolkit = 'qt4'
 paths.build('_diode')
 logging_setup('unittests')
 
-from machine_vision import FocusTest
+from .motor import MotionProfilerTest
+# from .pyscript import RampTest
+# from machine_vision import FocusTest
 # from .loading import LoadingTest
 # from .motor import LinearMapperTest
 # from .lab_entry import LabEntryTest

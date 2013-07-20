@@ -36,7 +36,8 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     extract_value_width = Int(50)
     extract_units_width = Int(40)
     extract_group_width = Int(40)
-    duration_width = Int(50)
+    duration_width = Int(60)
+    ramp_duration_width = Int(50)
     cleanup_width = Int(60)
     pattern_width = Int(80)
     beam_diameter_width = Int(65)
@@ -57,6 +58,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     #===========================================================================
     # number values
     #===========================================================================
+    ramp_duration_text = Property
     extract_value_text = Property
     beam_diameter_text = Property
     duration_text = Property
@@ -114,6 +116,9 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 
         return al
 
+    def _get_ramp_duration_text(self, trait, item):
+        return self._get_number('ramp_duration', fmt='{:n}')
+
     def _get_extract_group_text(self, trait, item):
         return self._get_number('extract_group', fmt='{:02n}')
 
@@ -157,9 +162,10 @@ class AutomatedRunSpecAdapter(TabularAdapter):
                  ('Extract', 'extract_value'),
                  ('Units', 'extract_units'),
                  ('Group', 'extract_group'),
-                 ('Duration', 'duration'),
-                 ('Cleanup', 'cleanup'),
-                 ('Beam Diam.', 'beam_diameter'),
+                 ('Ramp (s)', 'ramp_duration'),
+                 ('Duration (s)', 'duration'),
+                 ('Cleanup (s)', 'cleanup'),
+                 ('Beam (mm)', 'beam_diameter'),
                  ('Pattern', 'pattern'),
                  ('Extraction', 'extraction_script'),
                  ('Measurement', 'measurement_script'),

@@ -27,8 +27,9 @@ from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.constants import NULL_STR, LINE_STR
 from src.loggable import Loggable
 import time
+from src.hardware.core.core_device import ConsumerMixin
 
-class ExperimentFactory(Loggable):
+class ExperimentFactory(Loggable, ConsumerMixin):
     db = Any
     run_factory = Instance(AutomatedRunFactory)
     queue_factory = Instance(ExperimentQueueFactory)
@@ -64,6 +65,9 @@ class ExperimentFactory(Loggable):
     #===========================================================================
 #    max_allowable_runs = Int(10000)
 #    can_edit_scripts = Bool(True)
+    def __init__(self, *args, **kw):
+        super(ExperimentFactory, self).__init__(*args, **kw)
+        self.setup_consumer(self._add_run)
 
     def set_selected_runs(self, runs):
         self.run_factory.set_selected_runs(runs)
@@ -71,31 +75,38 @@ class ExperimentFactory(Loggable):
     def _clear_button_fired(self):
         self.queue.clear_frequency_runs()
 
-    _prev_add_time = None
     def _add_button_fired(self):
         '''
             only allow add button to be fired every 0.5s
+            
+            use consumermixin.add_consumable instead of frequency limiting
         '''
+        self.add_consumable(0)
 
-        if self._prev_add_time:
-            if abs(time.time() - self._prev_add_time) < 0.5:
-                self.debug('skipping')
-                return
+#     _prev_add_time = None
+    def _add_run(self, *args, **kw):
 
-        self._prev_add_time = time.time()
+#         if self._prev_add_time:
+#             if abs(time.time() - self._prev_add_time) < 0.5:
+#                 self.debug('skipping')
+#                 return
+#
+#         self._prev_add_time = time.time()
 
         egs = list(set([ai.extract_group for ai in self.queue.automated_runs]))
         eg = max(egs) if egs else 0
 
 
         positions = [str(pi.positions[0]) for pi in self.selected_positions]
-        new_runs, freq = self.run_factory.new_runs(
-                                                   positions=positions,
+
+        load_name = self.queue_factory.load_name
+        new_runs, freq = self.run_factory.new_runs(positions=positions,
                                                    auto_increment_position=self.auto_increment_position,
                                                    auto_increment_id=self.auto_increment_id,
                                                    extract_group_cnt=eg
                                                    )
-        self.queue.add_runs(new_runs, freq)
+        if self.run_factory.check_run_addition(new_runs, load_name):
+            self.queue.add_runs(new_runs, freq)
 
     def _edit_mode_button_fired(self):
         self.run_factory.edit_mode = not self.run_factory.edit_mode

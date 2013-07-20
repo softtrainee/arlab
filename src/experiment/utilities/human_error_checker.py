@@ -37,7 +37,6 @@ class HumanErrorChecker(Loggable):
             else:
                 ai.state = 'not run'
 
-
         return ret
     def report_errors(self, errdict):
 

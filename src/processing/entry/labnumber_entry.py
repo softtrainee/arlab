@@ -39,6 +39,8 @@ import math
 from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
 from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
 from src.database.orms.isotope_orm import gen_ProjectTable, gen_SampleTable
+from src.ui.thread import Thread
+
 
 
 class LabnumberEntry(IsotopeDatabaseManager):
@@ -325,7 +327,21 @@ class LabnumberEntry(IsotopeDatabaseManager):
             else:
                 self.warning_dialog('Level {} already exists for Irradiation {}'.format(self.irradiation))
 
+    def _irradiation_changed(self):
+        self.irradiated_positions = []
+
+    _level_thread = None
     def _level_changed(self):
+        if self._level_thread:
+            if self._level_thread.isRunning():
+                return
+
+        self.debug('level changed')
+        t = Thread(target=self._update_level)
+        t.start()
+        self._level_thread = t
+
+    def _update_level(self):
         self.irradiated_positions = []
 
         irrad = self.db.get_irradiation(self.irradiation)
@@ -338,11 +354,15 @@ class LabnumberEntry(IsotopeDatabaseManager):
                 self._load_holder_positions(level.holder)
 
             positions = level.positions
+            n = len(self.irradiated_positions)
             if positions:
                 for pi in positions:
-                    ir = self._position_factory(pi)
                     hi = pi.position - 1
-                    self.irradiated_positions[hi] = ir
+                    if hi < n:
+                        ir = self._position_factory(pi)
+                        self.irradiated_positions[hi] = ir
+                    else:
+                        self.debug('extra irradiation position for this tray {}'.format(hi))
 
     @on_trait_change('project, sample')
     def _edit_handler(self, name, new):

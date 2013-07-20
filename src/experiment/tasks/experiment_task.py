@@ -95,6 +95,10 @@ class ExperimentEditorTask(EditorTask):
     def _manager_default(self):
         return self._manager_factory()
 
+    def deselect(self):
+        if self.active_editor:
+            self.active_editor.queue.selected = []
+
     def activated(self):
 
         bind_preference(self, 'use_auto_figure',

@@ -75,6 +75,7 @@ class AutomatedRunSpec(Loggable):
     cleanup = Float
     pattern = Str
     beam_diameter = CStr
+    ramp_duration = Float
     #===========================================================================
     # info
     #===========================================================================
@@ -99,7 +100,7 @@ class AutomatedRunSpec(Loggable):
 
     def to_string(self):
         attrs = ['labnumber', 'aliquot', 'step',
-                   'extract_value', 'extract_units',
+                   'extract_value', 'extract_units', 'ramp_duration',
                    'position', 'duration', 'cleanup', 'beam_diameter',
                    'mass_spectrometer', 'extract_device',
                    'extraction_script', 'measurement_script',
@@ -217,7 +218,7 @@ class AutomatedRunSpec(Loggable):
 
     def _get_run_attrs(self):
         return ('labnumber', 'aliquot', 'step',
-                   'extract_value', 'extract_units',
+                   'extract_value', 'extract_units', 'ramp_duration',
                    'position', 'duration', 'cleanup',
                    'pattern',
                    'beam_diameter',

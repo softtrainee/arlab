@@ -16,6 +16,8 @@
 
 #============= enthought library imports =======================
 import unittest
+import time
+from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class PyscriptTest(unittest.TestCase):
@@ -38,5 +40,16 @@ class PyscriptTest(unittest.TestCase):
 #         self.assertEqual(afit, ((0, 5), ('linear', 'linear')))
 #         afit = editor.fit_blocks[1]
 #         self.assertEqual(afit, ((5, None), ('linear', 'parabolic')))
+
+
+class RampTest(unittest.TestCase):
+    def testRamp(self):
+        ps = ExtractionPyScript()
+        ps.setup_context(extract_device='a')
+#         rm = Ramp()
+        r = ps.ramp(start=0, end=10, duration=10, period=0.5)
+#         r = rm.ramp(start=0, end=10, rate=2)
+        self.assertGreater(r, 10)
+
 
 #============= EOF =============================================

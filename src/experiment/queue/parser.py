@@ -129,6 +129,8 @@ class RunParser(Loggable):
                      'cleanup',
 #                     'aliquot',
 
+                     'ramp_duration',
+
                      # ver 1.0
                      'extract_group',
                      # ver 2.0

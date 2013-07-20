@@ -36,6 +36,40 @@ ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 '''
 command_register = makeRegistry()
 
+class Ramper(object):
+    def ramp(self, func, start, end, duration, rate=0, period=1):
+        '''
+            rate = units/s
+            duration= s
+            
+            use rate if specified
+        '''
+        st = time.time()
+        if end is not None:
+            if rate:
+                duration = abs(start - end) / float(rate)
+
+            if duration:
+                self._ramp(func, start, end, duration, period)
+
+        return time.time() - st
+
+    def _ramp(self, func, start, end, duration, period):
+        st = time.time()
+        i = 1
+
+        step = period * (end - start) / float(duration)
+
+        while (time.time() - st) < duration:
+            ct = time.time()
+            v = start + i * step
+#             print i, v, time.time() - ct
+            if func(i, v):
+                time.sleep(max(0, period - (time.time() - ct)))
+                i += 1
+            else:
+                break
+
 class ExtractionPyScript(ValvePyScript):
     _resource_flag = None
     info_color = EXTRACTION_COLOR
@@ -309,46 +343,67 @@ class ExtractionPyScript(ValvePyScript):
 
     @verbose_skip
     @command_register
-    def ramp(self, setpoint=0, rate=0, start=0, period=2):
-
-        setpoint = float(setpoint)
-        rate = float(rate)
-        period = float(period)
-
-        self.info('ramping from {} to {} rate= {} W/s, step_period= {} s'.format(start,
-                                                                    setpoint,
-                                                                    rate,
-                                                                    period
-                                                                    ))
-
-        dT = setpoint - start
-        dur = abs(dT / rate)
-
-        if not self._manager_action([('enable_laser', (), {})],
-                             protocol=ILaserManager,
-                             name=self.extract_device)[0]:
-            return
-
-        check_period = 0.5
-        samples_per_sec = 1 / float(period)
-        n = int(dur * samples_per_sec)
-        steps = linspace(start, setpoint, n)
-
-        st = time.time()
-        for i, si in enumerate(steps):
+    def ramp(self, start=0, end=0, duration=0, rate=0, period=1):
+        def func(i, ramp_step):
             if self._cancel:
-                break
-            self.info('ramp step {} of {}. setpoint={}'.format(i + 1, n, si))
-            self._manager_action([('set_laser_power', (si,), {})],
+                return
+
+            self.info('ramp step {}. setpoint={}'.format(i, ramp_step))
+            if not self._manager_action([('set_laser_power', (ramp_step,), {})],
                              protocol=ILaserManager,
                              name=self.extract_device
-                             )
-            for _ in xrange(int(period / check_period)):
-                if self._cancel:
-                    break
-                time.sleep(check_period)
+                             ):
+                return
 
-        return int(time.time() - st)
+            if self._cancel:
+                return
+
+            return True
+
+        st = time.time()
+        rmp = Ramper()
+        rmp.ramp(func, start, end, duration, rate, period)
+        return time.time() - st
+#     def ramp(self, setpoint=0, rate=0, start=0, period=2):
+#
+#         setpoint = float(setpoint)
+#         rate = float(rate)
+#         period = float(period)
+#
+#         self.info('ramping from {} to {} rate= {} W/s, step_period= {} s'.format(start,
+#                                                                     setpoint,
+#                                                                     rate,
+#                                                                     period
+#                                                                     ))
+#
+#         dT = setpoint - start
+#         dur = abs(dT / rate)
+#
+#         if not self._manager_action([('enable_laser', (), {})],
+#                              protocol=ILaserManager,
+#                              name=self.extract_device)[0]:
+#             return
+#
+#         check_period = 0.5
+#         samples_per_sec = 1 / float(period)
+#         n = int(dur * samples_per_sec)
+#         steps = linspace(start, setpoint, n)
+#
+#         st = time.time()
+#         for i, si in enumerate(steps):
+#             if self._cancel:
+#                 break
+#             self.info('ramp step {} of {}. setpoint={}'.format(i + 1, n, si))
+#             self._manager_action([('set_laser_power', (si,), {})],
+#                              protocol=ILaserManager,
+#                              name=self.extract_device
+#                              )
+#             for _ in xrange(int(period / check_period)):
+#                 if self._cancel:
+#                     break
+#                 time.sleep(check_period)
+#
+#         return int(time.time() - st)
 
     @verbose_skip
     @command_register
