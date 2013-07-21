@@ -94,16 +94,21 @@ class LaserCalibrationTask(BaseLaserTask):
 # handlers
 #===============================================================================
     def _execute_changed(self):
-        if self.active_editor and self.executing:
+        if self.active_editor:
+            if self.executing:
                 self.active_editor.stop()
                 self.executing = False
+            else:
+                if self.active_editor.was_executed:
+                    self.new_power_map()
 
+                if self.active_editor.do_execute(self.manager):
+                    self.executing = True
         else:
-            if self.active_editor.was_executed:
-                self.new_power_map()
-
+            self.new_power_map()
             if self.active_editor.do_execute(self.manager):
                 self.executing = True
+
 
     def _active_editor_changed(self):
         if self.active_editor:

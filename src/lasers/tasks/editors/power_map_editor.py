@@ -26,6 +26,9 @@ from src.lasers.power.power_mapper import PowerMapper
 from src.ui.thread import Thread
 from src.lasers.power.power_map_processor import PowerMapProcessor
 from src.managers.data_managers.h5_data_manager import H5DataManager
+from src.graph.graph import Graph
+from src.graph.contour_graph import ContourGraph
+from chaco.plot_containers import HPlotContainer
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -38,15 +41,19 @@ class PowerMapControls(HasTraits):
     center_x = Float(0)
     center_y = Float(0)
     integration = Int(1)
+    discrete_scan = Bool(False)
 
     def traits_view(self):
         v = View(VGroup(
+
+                        Item('discrete_scan'),
                         Item('beam_diameter'),
                         Item('request_power'),
                         Item('padding'),
                         Item('step_length'),
                         Item('center_x'),
                         Item('center_y'),
+
                     )
                  )
         return v
@@ -76,15 +83,23 @@ class PowerMapEditor(BaseTraitsEditor):
 
         mapper = self.mapper
         mapper.laser_manager = lm
-        mapper.canvas = self.canvas
-        self.component = self.canvas
+
 
         editor = self.editor
+        padding = editor.padding
+
+        if editor.discrete_scan:
+            mapper.canvas = self.canvas
+            self.component = self.canvas
+        else:
+
+            c = mapper.make_component(padding)
+            self.component = c
+
         bd = editor.beam_diameter
         rp = editor.request_power
         cx = editor.center_x
         cy = editor.center_y
-        padding = editor.padding
         step_len = editor.step_length
 
 #         mapper.do_power_mapping(bd, rp, cx, cy, padding, step_len)

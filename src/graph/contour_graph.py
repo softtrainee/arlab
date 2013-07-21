@@ -78,7 +78,6 @@ class ContourGraph(Graph):
             rd['colormap'] = color_map_name_dict.get(cmap)
             zname = self.zdataname_generators[plotid].next()
             plot.data.set_data(zname, z)
-
             contour = plot.img_plot(zname, **rd)[0]
             plot.contour_plot(zname, type='poly', **rd)
 #            plot.contour_plot(zname, type='line',

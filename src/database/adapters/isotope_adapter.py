@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 #============= standard library imports ========================
-from sqlalchemy.sql.expression import  and_
+from sqlalchemy.sql.expression import  and_, func
 # import hashlib
 from cStringIO import StringIO
 #============= local library imports  ==========================
@@ -644,6 +644,16 @@ class IsotopeAdapter(DatabaseAdapter):
 #===========================================================================
 # getters single
 #===========================================================================
+    def get_last_labnumber(self):
+        sess = self.get_session()
+        q = sess.query(gen_LabTable)
+        q = q.order_by(func.abs(gen_LabTable.identifier).desc())
+        try:
+            return q.first()
+        except NoResultFound, e:
+            self.debug('get last labnumber {}'.format(e))
+            return
+
     def get_last_analysis(self, ln, aliquot=None):
         ln = self.get_labnumber(ln)
         if not ln:
@@ -658,9 +668,9 @@ class IsotopeAdapter(DatabaseAdapter):
             q = q.order_by(meas_AnalysisTable.step.desc())
 
         q = q.order_by(meas_AnalysisTable.aliquot.desc())
-        q = q.limit(1)
+#         q = q.limit(1)
         try:
-            return q.one()
+            return q.first()
         except NoResultFound, e:
             self.debug('get last analysis {}'.format(e))
             return
@@ -787,8 +797,11 @@ class IsotopeAdapter(DatabaseAdapter):
         except Exception, _:
             pass
 
-    def get_labnumber(self, labnum):
-        return self._retrieve_item(gen_LabTable, labnum, key='identifier')
+    def get_labnumber(self, labnum, **kw):
+        return self._retrieve_item(gen_LabTable, labnum,
+                                   key='identifier',
+                                   **kw
+                                   )
 #        if isinstance(labnum, str):
 #            labnum = convert_identifier(labnum)
 #
@@ -862,7 +875,7 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_users(self, **kw):
         return self._retrieve_items(gen_UserTable, **kw)
 
-    def get_labnumbers(self, **kw):
+    def get_labnumbers(self, last=None, **kw):
         return self._retrieve_items(gen_LabTable, **kw)
 
     def get_flux_monitors(self, **kw):

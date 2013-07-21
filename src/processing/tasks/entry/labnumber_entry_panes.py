@@ -34,21 +34,22 @@ class IrradiationEditorPane(TraitsDockPane):
     def traits_view(self):
         v = View(
                  VGroup(
+                        UItem('load_file_button'),
                          HGroup(
                                 Item('project',
                                      editor=EnumEditor(name='projects')),
                                 UItem('add_project_button')
                               ),
                          HGroup(
+                               Item('material',
+                                    editor=EnumEditor(name='materials')),
+                               UItem('add_material_button')
+                             ),
+                         HGroup(
                                 Item('sample',
                                      editor=EnumEditor(name='samples')),
                                 UItem('add_sample_button')
                               ),
-#                          HGroup(
-#                                 Item('material',
-#                                      editor=EnumEditor(name='materials')),
-#                                 UItem('add_material_button')
-#                               )
                         ),
 
                )
