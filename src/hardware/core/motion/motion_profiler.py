@@ -63,7 +63,20 @@ class MotionProfiler(ConfigLoadable):
         mac = obj.acceleration
         mdc = obj.deceleration
 
-        nv, nac, ndc = self.calculate_corrected_parameters(displacement, mac, mdc)
+        try:
+            nv, nac, ndc = self.calculate_corrected_parameters(displacement, mac, mdc)
+        except RuntimeError:
+            '''
+                max recusion.
+                
+                max velocity prevents move of this displacement
+                from taking less than max transit time
+                
+                use max velocity and nominal acc. 
+            '''
+            nv, nac, ndc = self.max_velocity, obj.nominal_acceleration, obj.nominal_deceleration
+
+
         dv = abs(nv - mv)
         dac = abs(nac - mac)
         ddc = abs(ndc - mdc)
@@ -89,12 +102,20 @@ class MotionProfiler(ConfigLoadable):
 #             print 'is trapezoid'
             # is time greater than max transit time
             if sum(times) > self.max_transit_time:
+                '''
+                    this move takes too long. 
+                    use max velocity and increase acc until this is a trapezoidal 
+                    move
+                '''
                 return self.calculate_corrected_parameters(displacement,
                                                            acc * 1.01, dec * 1.01)
 
 #             # is ac time less than min
             if times[0] < self.min_acceleration_time or \
                  times[1] < self.min_acceleration_time:
+                '''
+                    acc is too fast. calculate new accel so that acctime=min
+                '''
                 ac = vel / (2 * self.min_acceleration_time)
                 return self.calculate_corrected_parameters(displacement,
                                                            ac, ac
@@ -102,8 +123,10 @@ class MotionProfiler(ConfigLoadable):
             return vel, acc, dec
 
         else:  # not a trapezoid
-            print 'not trapezoid'
-#             cv = (displacement * acc / 2.0) ** 0.5
+            '''
+                velocity time is negative. 
+                increace acc and dec. this reduces acctime, increasing veltime
+            '''
             return self.calculate_corrected_parameters(displacement,
                                                        acc * 1.01, dec * 1.01)
 

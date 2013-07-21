@@ -135,26 +135,21 @@ class Irradiation(Saveable):
         else:
             prn = self.pr_name
 
-            if not prn:
-                ret = self.confirmation_dialog('Production Ratio not set.\nCancel?',
-                                               title='No Production Ratio'
-                                               )
-                if ret:
-                    return False
-                else:
-                    return
+#             if not prn:
+#                 ret = self.confirmation_dialog('Production Ratio not set.\nCancel?',
+#                                                title='No Production Ratio'
+#                                                )
+#                 if ret:
+#                     return False
+#                 else:
+#                     return
 
+            cr = None
             chronblob = self._make_chronblob()
-            print chronblob
             if chronblob.startswith('$'):
                 cr = db.add_irradiation_chronology(chronblob)
-                ir = db.add_irradiation(self.name, prn, cr)
-            else:
-                ret = self.confirmation_dialog('Chronology not set correctly.{}.\nCancel?'.format(chronblob),)
-                if ret:
-                    return False
-                else:
-                    return
+
+            ir = db.add_irradiation(self.name, prn, cr)
 
             db.commit()
             return True

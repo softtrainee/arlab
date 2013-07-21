@@ -345,7 +345,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             return
 
 
-    def _retrieve_item(self, table, value, key='name'):
+    def _retrieve_item(self, table, value, key='name', last=None):
         sess = self.get_session()
         if sess is None:
             return
@@ -361,6 +361,9 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             q = sess.query(table)
             for k, v in zip(key, value):
                 q = q.filter(getattr(table, k) == v)
+
+            if last:
+                q = q.order_by(last)
 
             try:
                 return q.one()

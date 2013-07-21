@@ -48,12 +48,11 @@ class ConsumerMixin(object):
     def _consume(self):
         while self._should_consume:
             v = self._consumer_queue.get()
-            if isinstance(v, tuple):
+            if self._consume_func:
+                self._consume_func(v)
+            elif isinstance(v, tuple):
                 func, a = v
                 func(a)
-            elif self._consume_func:
-                self._consume_func(v)
-
 
 class Alarm(HasTraits):
     alarm_str = Str

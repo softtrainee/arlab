@@ -26,16 +26,37 @@ class LabEntryTest(unittest.TestCase):
     def setUp(self):
         db = get_test_database().db
         self.le = LabnumberEntry(db=db)
-        self.le.irradiation = 'NM-251'
-        self.le.level = 'H'
+#         self.le.irradiation = 'NM-251'
+#         self.le.level = 'H'
 
-    def testNPositions(self):
-        n = len(self.le.irradiated_positions)
-        self.assertEqual(n, 12)
+#     def testNPositions(self):
+#         n = len(self.le.irradiated_positions)
+#         self.assertEqual(n, 12)
+#
+#     def testWrite(self):
+#         le = self.le
+#         le.make_table()
 
-    def testWrite(self):
+#     def testLoadFile(self):
+#         p = '/Users/ross/Sandbox/irradiation_import.xls'
+#         self.le._load_positions_from_file(p, dry_run=True)
+#         self.le.irradiation = 'TEST'
+#
+#         self.assertEqual(self.le.irradiation, 'TEST')
+#         self.assertEqual(len(self.le.levels), 2)
+#         self.assertEqual(self.le.level, 'B')
+#
+#         self.assertEqual(len(self.le.irradiated_positions), 4)
+#         self.assertEqual(self.le.irradiated_positions[0].sample, 'test_sample1')
+#         self.assertEqual(self.le.irradiated_positions[0].material, 'test_material')
+
+    def testLabnumberGenerator(self):
         le = self.le
+        irradiation = 'TEST'
+        offset = 10000
+        level_offset = 100
+        ge = le._labnumber_generator(irradiation, offset, level_offset)
 
-        le.make_table()
-
+        lns = [li for li in ge]
+        self.assertListEqual(lns, [20000, 20000, 20000, 20000])
 #============= EOF =============================================

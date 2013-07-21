@@ -177,10 +177,10 @@ class IsotopeDatabaseManager(Manager):
 #         r = [NULL_STR] +
         r = [str(ri.name) for ri in self.db.get_irradiations()
                         if ri.name]
-        if r:
+
+        if r and not self.irradiation:
             self.irradiation = r[0]
-#        if r and not self.irradiation:
-#            self.irradiation = r[-1]
+
         return r
 
     @cached_property
@@ -192,7 +192,7 @@ class IsotopeDatabaseManager(Manager):
 #             r = [NULL_STR] + sorted([str(ri.name) for ri in irrad.levels])
             r = sorted([str(ri.name) for ri in irrad.levels
                                         if ri.name])
-            if r:
+            if r and not self.level:
                 self.level = r[0]
 #            if r and not self.level:
 

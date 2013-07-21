@@ -40,6 +40,9 @@ from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
 from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
 from src.database.orms.isotope_orm import gen_ProjectTable, gen_SampleTable
 from src.ui.thread import Thread
+from pyface.timer.do_later import do_later
+import xlrd
+from src.managers.data_managers.xls_data_manager import XLSDataManager
 
 
 
@@ -59,7 +62,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
     add_irradiation_button = Button('Add Irradiation')
     add_level_button = Button('Add Level')
     edit_level_button = Button('Edit')
-
+    load_file_button = Button('Load File')
     #===========================================================================
     # irradiation positions table events
     #===========================================================================
@@ -133,6 +136,130 @@ class LabnumberEntry(IsotopeDatabaseManager):
 
                 from src.database.defaults import load_isotopedb_defaults
                 load_isotopedb_defaults(db)
+
+    def finalize_irradiation(self, dry_run=False):
+        '''
+            generate labnumbers
+            
+            lock irradiation table
+            
+            make pdf table
+        '''
+        db = self.db
+        irrad = db.get_irradiation(self.irradiation)
+
+        offset = 0
+        level_offset = 0
+        self._generate_labnumbers(offset, level_offset, dry_run)
+
+        irrad.locked = True
+        if not dry_run:
+            db.commit()
+
+    def _generate_labnumbers(self, offset=0, level_offset=0, dry_run=False):
+        '''
+            get last labnumber 
+            
+            start numbering at add 1+offset
+            
+            add level_offset between each level
+        '''
+        lngen = self._labnumber_generator(self.irradiation,
+                                          offset,
+                                          level_offset
+                                          )
+        db = self.db
+        while 1:
+            try:
+                pos, ln = lngen.next()
+            except StopIteration:
+                break
+
+            ln = db.add_labnumber(ln)
+            pos.labnumber = ln
+
+        if not dry_run:
+            db.commit()
+
+        self._update_level()
+
+    def _labnumber_generator(self, irradiation, offset, level_offset):
+        def gen():
+            db = self.db
+            last_ln = db.get_last_labnumber()
+            if last_ln:
+                last_ln = int(last_ln.identifier)
+            else:
+                last_ln = 0
+
+            sln = last_ln + offset
+            irrad = db.get_irradiation(irradiation)
+            i = 1
+            for level in irrad.levels:
+                for position in level.irradiated_positions:
+                    yield position, sln + i
+                    i += 1
+
+                i += level_offset
+
+        return gen()
+
+    def _load_positions_from_file(self, p, dry_run=False):
+        '''
+            use an xls file to enter irradiation positions
+            
+            sheet must be named IrradiationInfo
+            
+            add level
+            
+            add project
+            add sample
+            add material
+            
+            add irradiation_position
+            
+            commit to database
+            
+            load positions from database into table for viewing
+            
+        '''
+
+        db = self.db
+        irradiation = self.irradiation
+
+        dm = XLSDataManager()
+        dm.open(p)
+
+        sheet = 'IrradiationInfo'
+        header_offset = 1
+        project_idx = dm.get_column_idx('project', sheet=sheet)
+        sample_idx = dm.get_column_idx('sample', sheet=sheet)
+        material_idx = dm.get_column_idx('material', sheet=sheet)
+        level_idx = dm.get_column_idx('level', sheet=sheet)
+        pos_idx = dm.get_column_idx('position', sheet=sheet)
+        for ri in range(sheet.nrows - header_offset):
+            ri += header_offset
+
+            level = sheet.cell_value(ri, level_idx)
+            db.add_irradiation_level(irradiation, level)
+
+            project = sheet.cell_value(ri, project_idx)
+            material = sheet.cell_value(ri, material_idx)
+            sample = sheet.cell_value(ri, sample_idx)
+
+            prj = db.add_project(project)
+            mat = db.add_material(material)
+            db.add_sample(sample, project=prj, material=mat)
+
+            pos = sheet.cell_value(ri, pos_idx)
+            db.add_irradiation_position(pos, None, irradiation, level)
+
+        if not dry_run:
+            db.commit()
+
+        self.updated = True
+        self.level = level
+
 
     def _load_holder_positions(self, holder):
         self.irradiated_positions = []
@@ -237,10 +364,16 @@ class LabnumberEntry(IsotopeDatabaseManager):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _load_file_button_fired(self):
+        p = self.open_file_dialog()
+        if p:
+            self._load_positions_from_file(p)
+
     def _add_irradiation_button_fired(self):
         irrad = Irradiation(db=self.db,
                             trays=self.trays
                             )
+
 
         while 1:
             info = irrad.edit_traits(kind='livemodal')
@@ -249,12 +382,12 @@ class LabnumberEntry(IsotopeDatabaseManager):
                 if result is True:
                     self.irradiation = irrad.name
                     self.saved = True
+
                     break
                 elif result is False:
                     break
             else:
                 break
-
 
     def _edit_irradiation_button_fired(self):
         irrad = Irradiation(db=self.db,
