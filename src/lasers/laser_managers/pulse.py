@@ -19,7 +19,7 @@ from traits.api import HasTraits, Any, Instance, Float, Event, \
      Property, Bool, on_trait_change
 from traitsui.api import View, Item, Handler, HGroup, ButtonEditor, spring, Label, \
     VGroup
-import apptools.sweet_pickle as pickle
+# import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
 from threading import Thread, Event as TEvent
@@ -33,7 +33,6 @@ import time
 class PulseHandler(Handler):
     def close(self, info, ok):
         info.object.dump_pulse()
-
         return ok
 
 
@@ -50,10 +49,11 @@ class Pulse(HasTraits):
     enabled = Bool(False)
 
     disable_at_end = Bool(False)
-    def dump_pulse(self):
-        p = os.path.join(paths.hidden_dir, 'pulse')
-        with open(p, 'wb') as f:
-            pickle.dump(self, f)
+
+#     def dump(self):
+#         p = os.path.join(paths.hidden_dir, 'pulse')
+#         with open(p, 'wb') as f:
+#             pickle.dump(self, f)
 
     @on_trait_change('manager:enabled')
     def upad(self, obj, name, old, new):

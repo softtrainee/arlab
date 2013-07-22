@@ -786,6 +786,7 @@ class ExperimentExecutor(Experimentable):
         arun.info_display = self.info_display
 
         arun.username = self.username
+        arun.load_name = exp.load_name
 
         mon, _ = self._monitor_factory()
         if mon is not None:

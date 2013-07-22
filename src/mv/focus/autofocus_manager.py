@@ -101,7 +101,7 @@ class AutoFocusManager(Manager):
         else:
             return FocusParameters()
 
-    def passive_focus(self):
+    def passive_focus(self, block=False):
 #        manager = self.laser_manager
         oper = self.parameters.operator
         self.info('passive focus. operator = {}'.format(oper))
@@ -134,6 +134,8 @@ class AutoFocusManager(Manager):
                                             args=(self._evt_autofocusing,)
                                             )
         self._passive_focus_thread.start()
+        if block:
+            self._passive_focus_thread.join()
 
     def _open_graph(self):
         ui = self.graph.edit_traits()

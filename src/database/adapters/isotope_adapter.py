@@ -364,15 +364,19 @@ class IsotopeAdapter(DatabaseAdapter):
         return ip
 
     def add_irradiation_position(self, pos, labnumber, irrad, level, **kw):
-        labnumber = self.get_labnumber(labnumber)
-        dbpos = irrad_PositionTable(position=pos, labnumber=labnumber)
+        if labnumber:
+            labnumber = self.get_labnumber(labnumber)
 
         irrad = self.get_irradiation(irrad)
-        if isinstance(level, str):
+        if isinstance(level, (str, unicode)):
             level = next((li for li in irrad.levels if li.name == level), None)
 
         if level:
-            level.positions.append(dbpos)
+            dbpos = next((di for di in level.positions if di.position == pos), None)
+            if not dbpos:
+                dbpos = irrad_PositionTable(position=pos,
+                                            labnumber=labnumber, **kw)
+                level.positions.append(dbpos)
 
         return dbpos
 
@@ -386,21 +390,27 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def add_irradiation_level(self, name, irradiation, holder, z=0):
         irradiation = self.get_irradiation(irradiation)
-        holder = self.get_irradiation_holder(holder)
+        if irradiation:
+            irn = irradiation.name
+            level = next((li for li in irradiation.levels if li.name == name), None)
+            if not level:
+                holder = self.get_irradiation_holder(holder)
+    #             irn = irradiation.name if irradiation else None
+                hn = holder.name if holder else None
+                self.info('adding level {}, holder={} to {}'.format(name, hn, irn))
 
-        irn = irradiation.name if irradiation else None
-        hn = holder.name if holder else None
-        self.info('adding level {}, holder={} to {}'.format(name, hn, irn))
+                level = irrad_LevelTable(name=name, z=z)
+                if irradiation is not None:
+                    irradiation.levels.append(level)
 
-        level = irrad_LevelTable(name=name, z=z)
-        if irradiation is not None:
-            irradiation.levels.append(level)
+                if holder is not None:
+                    holder.levels.append(level)
 
-        if holder is not None:
-            holder.levels.append(level)
+                self._add_item(level)
+            return level
+        else:
+            self.info('no irradiation to add to as this level. irradiation={}'.format(irradiation))
 
-        self._add_item(level)
-        return level
 
 #    def add_import(self, **kw):
 #        ih = gen_ImportTable(**kw)
@@ -601,23 +611,29 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def add_labnumber(self, labnumber,
 #                      aliquot,
-                      sample=None, irradiation=None, **kw):
-        ln = self.get_labnumber(labnumber)
+                      sample=None,
+                      unique=True,
+                      **kw):
+        if unique:
+            ln = self.get_labnumber(labnumber)
+        else:
+            ln = None
+
         if ln is None:
-            ln = gen_LabTable(identifier=labnumber,
-    #                      aliquot=aliquot,
-                          ** kw)
+            ln = gen_LabTable(identifier=labnumber, **kw)
 
             sample = self.get_sample(sample)
-
-            if sample is not None and ln is not None:
+            if sample is not None:
                 sample.labnumbers.append(ln)
+                sname = sample.name
+            else:
+                self.debug('sample {} does not exist'.format(sample))
+                sname = ''
 
-            self.info('adding labnumber {}'.format(labnumber))
+            self.info('adding labnumber={} sample={}'.format(labnumber, sname))
             self._add_item(ln)
 
         return ln
-
 
     def add_analysis(self, labnumber, **kw):
 #        if isinstance(labnumber, (str, int, unicode)):
@@ -700,9 +716,10 @@ class IsotopeAdapter(DatabaseAdapter):
         except NoResultFound:
             return
 
-    def get_analysis_uuid(self, uuid):
-#        return meas_AnalysisTable, 'uuid'
-        return self._retrieve_item(meas_AnalysisTable, uuid, key='uuid')
+#     def get_analysis_uuid(self, value):
+#         return self.get_analysis(value, key)
+# #        return meas_AnalysisTable, 'uuid'
+#         return self._retrieve_item(meas_AnalysisTable, uuid, key='uuid')
 
     def get_analysis_record(self, value):
         return self._retrieve_item(meas_AnalysisTable, value, key='id')
@@ -710,8 +727,8 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_image(self, name):
         return self._retrieve_item(med_ImageTable, name, key='name')
 
-    def get_analysis(self, value):
-        return self._retrieve_item(meas_AnalysisTable, value, key='lab_id')
+    def get_analysis(self, value, key='lab_id'):
+        return self._retrieve_item(meas_AnalysisTable, value, key=key)
 
     def get_analysis_type(self, value):
         return self._retrieve_item(gen_AnalysisTypeTable, value)

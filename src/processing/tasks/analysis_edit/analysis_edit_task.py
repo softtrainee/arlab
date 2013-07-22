@@ -106,7 +106,7 @@ class AnalysisEditTask(EditorTask):
                               graph_id=pi.graph_id,
                               group_id=pi.group_id
                               )
-                dbrecord = db.get_analysis_uuid(pi.uuid)
+                dbrecord = db.get_analysis(pi.uuid, key='uuid')
                 if iso.create(dbrecord):
                     return iso
 #

@@ -17,30 +17,28 @@
 #============= enthought library imports =======================
 from traits.api import Any , on_trait_change, Int, List, Str
 #============= standard library imports ========================
-import hashlib
+
 #============= local library imports  ==========================
 from src.experiment.queue.base_queue import BaseExperimentQueue
-from src.constants import SCRIPT_KEYS, SCRIPT_NAMES
 from src.experiment.utilities.identifier import make_runid
 from src.experiment.utilities.human_error_checker import HumanErrorChecker
 from src.experiment.queue.experiment_queue_action import ExperimentQueueAction
-import time
 from pyface.timer.do_later import do_later
-
 
 
 class ExperimentQueue(BaseExperimentQueue):
     _cached_runs = None
     current_run = Any
     selected = Any
+    executed_selected = Any
     dclicked = Any
     database_identifier = Int
     executed_runs = List
     executed_runs_scroll_to_row = Int
     automated_runs_scroll_to_row = Int
+    linked_copy_cache = List
 
     def set_run_inprogress(self, aid):
-#    def run_executed(self, aid):
         run = self._find_run(aid)
 
         # using the no_update ctx manager was not working
@@ -62,7 +60,10 @@ class ExperimentQueue(BaseExperimentQueue):
         return next((a for a in self.automated_runs
                      if make_runid(a.labnumber, a.aliquot, a.step) == aid), None)
 
-    def copy_function(self, obj):
+    def executed_paste_function(self, obj):
+        return
+
+    def paste_function(self, obj):
 
         ci = obj.clone_traits()
         ci.state = 'not run'
@@ -72,6 +73,8 @@ class ExperimentQueue(BaseExperimentQueue):
             ci.aliquot = 0
         return ci
 
+#     _test = True
+
     @on_trait_change('automated_runs[]')
     def _refresh_info(self, new):
 
@@ -80,6 +83,11 @@ class ExperimentQueue(BaseExperimentQueue):
             idx = self.automated_runs.index(new[-1])
             self.debug('SSSSSSSSSSSSSS set AR scroll to {}'.format(idx))
             do_later(self.trait_set, automated_runs_scroll_to_row=idx)
+
+#         if new > 1:
+#             if self._test:
+#                 self.executed_runs.append(new[0])
+#                 self._test = False
 
         if not self._no_update:
             if self.automated_runs:

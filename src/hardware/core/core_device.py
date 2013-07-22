@@ -31,28 +31,7 @@ from src.hardware.core.scanable_device import ScanableDevice
 from src.rpc.rpcable import RPCable
 from src.has_communicator import HasCommunicator
 from src.hardware.core.communicators.scheduler import CommunicationScheduler
-from Queue import Queue
-from src.ui.thread import Thread
-
-class ConsumerMixin(object):
-    def setup_consumer(self, func=None):
-        self._consume_func = func
-        self._consumer_queue = Queue()
-        self._consumer = Thread(target=self._consume)
-        self._should_consume = True
-        self._consumer.start()
-
-    def add_consumable(self, v):
-        self._consumer_queue.put(v)
-
-    def _consume(self):
-        while self._should_consume:
-            v = self._consumer_queue.get()
-            if self._consume_func:
-                self._consume_func(v)
-            elif isinstance(v, tuple):
-                func, a = v
-                func(a)
+from src.consumer_mixin import ConsumerMixin
 
 class Alarm(HasTraits):
     alarm_str = Str

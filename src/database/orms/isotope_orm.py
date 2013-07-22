@@ -464,6 +464,7 @@ class irrad_PositionTable(Base, BaseMixin):
 
     level_id = foreignkey('irrad_LevelTable')
     position = Column(Integer)
+    weight = Column(Float)
 
 class irrad_ProductionTable(Base, NameMixin):
     K4039 = Column(Float)
@@ -561,6 +562,7 @@ class gen_LabTable(Base, BaseMixin):
     irradiation_id = foreignkey('irrad_PositionTable')
     selected_flux_id = foreignkey('flux_HistoryTable')
     note = stringcolumn(140)
+
 
 class gen_MassSpectrometerTable(Base, NameMixin):
 #    experiments = relationship('ExperimentTable', backref='mass_spectrometer')

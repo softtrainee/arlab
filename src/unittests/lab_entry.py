@@ -37,26 +37,30 @@ class LabEntryTest(unittest.TestCase):
 #         le = self.le
 #         le.make_table()
 
-#     def testLoadFile(self):
-#         p = '/Users/ross/Sandbox/irradiation_import.xls'
-#         self.le._load_positions_from_file(p, dry_run=True)
-#         self.le.irradiation = 'TEST'
-#
-#         self.assertEqual(self.le.irradiation, 'TEST')
-#         self.assertEqual(len(self.le.levels), 2)
-#         self.assertEqual(self.le.level, 'B')
-#
-#         self.assertEqual(len(self.le.irradiated_positions), 4)
-#         self.assertEqual(self.le.irradiated_positions[0].sample, 'test_sample1')
-#         self.assertEqual(self.le.irradiated_positions[0].material, 'test_material')
+    def testLoadFile(self):
+        p = './data/irradiation_import.xls'
+        self.le.irradiation = 'TEST'
 
-    def testLabnumberGenerator(self):
-        le = self.le
-        irradiation = 'TEST'
-        offset = 10000
-        level_offset = 100
-        ge = le._labnumber_generator(irradiation, offset, level_offset)
+        self.le._load_positions_from_file(p, dry_run=False)
 
-        lns = [li for li in ge]
-        self.assertListEqual(lns, [20000, 20000, 20000, 20000])
+        self.assertEqual(self.le.irradiation, 'TEST')
+        self.assertEqual(len(self.le.levels), 2)
+        self.assertEqual(self.le.level, 'B')
+
+        self.assertEqual(len(self.le.irradiated_positions), 61)
+        self.assertEqual(self.le.irradiated_positions[0].sample, 'test_sample1')
+        self.assertEqual(self.le.irradiated_positions[0].material, 'test_material')
+        self.assertEqual(self.le.irradiated_positions[0].weight, 1.1)
+
+#     def testLabnumberGenerator(self):
+#         le = self.le
+#         irradiation = 'TEST'
+#         offset = 100000
+# #         offset = 0
+#         level_offset = 100
+#         ge = le._labnumber_generator(irradiation, offset, level_offset)
+#
+#         lns = [li for li in ge]
+#         self.assertListEqual(lns, [300000, 300001, 300100, 300101, 300200, 300201])
+#         self.assertListEqual(lns, [200001, 200002, 200100, 200101, 200200, 200201])
 #============= EOF =============================================

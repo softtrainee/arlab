@@ -29,6 +29,7 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.graph.graph import Graph
 from src.graph.contour_graph import ContourGraph
 from chaco.plot_containers import HPlotContainer
+from src.lasers.tasks.editors.laser_editor import LaserEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -58,7 +59,7 @@ class PowerMapControls(HasTraits):
                  )
         return v
 
-class PowerMapEditor(BaseTraitsEditor):
+class PowerMapEditor(LaserEditor):
 
     canvas = Instance(RasterCanvas, ())
     editor = Instance(PowerMapControls, ())
@@ -66,7 +67,7 @@ class PowerMapEditor(BaseTraitsEditor):
     completed = DelegatesTo('mapper')
     was_executed = False
 
-    component = Any
+
 
     def load(self, path):
 
@@ -79,11 +80,10 @@ class PowerMapEditor(BaseTraitsEditor):
         self.component = cg.plotcontainer
         self.was_executed = True
 
-    def do_execute(self, lm):
-
+#     def do_execute(self, lm):
+    def _do_execute(self):
         mapper = self.mapper
-        mapper.laser_manager = lm
-
+        mapper.laser_manager = self._laser_manager
 
         editor = self.editor
         padding = editor.padding

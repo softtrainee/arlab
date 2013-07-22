@@ -24,7 +24,7 @@ import time
 from numpy import exp, mgrid, linspace, hstack, array, rot90
 from src.helpers.datetime_tools import generate_datestamp
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.hardware.core.core_device import ConsumerMixin
+from src.consumer_mixin import ConsumerMixin
 import random
 from scipy.interpolate.ndgriddata import griddata
 from src.graph.contour_graph import ContourGraph

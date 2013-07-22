@@ -291,7 +291,8 @@ class LoadingManager(IsotopeDatabaseManager):
         level = self.db.get_irradiation_level(self.irradiation, self.level)
         if level:
 #             self._positions = [str(li.position) for li in level.positions]
-            return sorted([li.labnumber.identifier for li in level.positions])
+            return sorted([li.labnumber.identifier
+                           for li in level.positions if li.labnumber])
         else:
             return []
 

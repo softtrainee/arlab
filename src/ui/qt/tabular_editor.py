@@ -27,23 +27,26 @@ from traitsui.qt4.tabular_editor import TabularEditor as qtTabularEditor, \
 from traitsui.mimedata import PyMimeData
 from src.helpers.ctx_managers import no_update
 import time
+from src.consumer_mixin import ConsumerMixin
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class _myTableView(_TableView):
+class _myTableView(_TableView, ConsumerMixin):
     '''
         for drag and drop reference see
         https://github.com/enthought/traitsui/blob/master/traitsui/qt4/tree_editor.py
         
     '''
     _copy_cache = None
-    copy_func = None
+    _linked_copy_cache = None
+    paste_func = None
     _dragging = None
 
     def __init__(self, *args, **kw):
         super(_myTableView, self).__init__(*args, **kw)
         self.setDragDropMode(QAbstractItemView.DragDrop)
 
+        self.setup_consumer()
         editor = self._editor
 
 #        # reimplement row height
@@ -118,35 +121,37 @@ class _myTableView(_TableView):
         else:
             QTableView.keyPressEvent(self, event)
 
-    _prev_paste_time = None
+    def _add(self, items):
+        si = self.selectedIndexes()
+        paste_func = self.paste_func
+        if paste_func is None:
+            paste_func = lambda x: x.clone_traits()
+
+        if len(si):
+            idx = si[-1].row() + 1
+        else:
+            idx = len(self._editor.value)
+
+        editor = self._editor
+        with no_update(editor.object):
+            for ci in reversed(items):
+                editor.model.insertRow(idx, obj=paste_func(ci))
+
     def keyPressEvent(self, event):
 
         if event.matches(QKeySequence.Copy):
             self._copy_cache = [self._editor.value[ci.row()] for ci in
                                     self.selectionModel().selectedRows()]
+            self._editor.copy_cache = self._copy_cache
 
         elif event.matches(QKeySequence.Paste):
+            items = self._copy_cache
+            if not items:
+                items = self._linked_copy_cache
 
-            if self._prev_paste_time:
-                if abs(time.time() - self._prev_paste_time) < 0.5:
-                    return
-            self._prev_paste_time = time.time()
+            if items:
+                self.add_consumable((self._add, items))
 
-            if self._copy_cache:
-                si = self.selectedIndexes()
-                copy_func = self.copy_func
-                if copy_func is None:
-                    copy_func = lambda x: x.clone_traits()
-
-                if len(si):
-                    idx = si[-1].row() + 1
-                else:
-                    idx = len(self._editor.value)
-
-                editor = self._editor
-                with no_update(editor.object):
-                    for ci in reversed(self._copy_cache):
-                        editor.model.insertRow(idx, obj=copy_func(ci))
         else:
             self.super_keyPressEvent(event)
 #            super(_myTableView, self).keyPressEvent(event)
@@ -196,7 +201,7 @@ class _myTableView(_TableView):
     def dropEvent(self, e):
         if self.is_external():
             data = PyMimeData.coerce(e.mimeData()).instance()
-            copy_func = lambda x: x
+            paste_func = lambda x: x
 
             row = self.rowAt(e.pos().y())
             n = len(self._editor.value)
@@ -216,11 +221,11 @@ class _myTableView(_TableView):
                 with no_update(self._editor.object):
                     for i, (_, di) in enumerate(reversed(data)):
     #                    print 'insert'
-    #                    obj = copy_func1(di)
+    #                    obj = paste_func1(di)
     #                    editor.callx(editor.adapter.insert, editor.object, editor.name, row + i, obj)
-                        model.insertRow(row=row, obj=copy_func(di))
+                        model.insertRow(row=row, obj=paste_func(di))
 
-    #                 model.insertRow(row=row, obj=copy_func(data[0][1]))
+    #                 model.insertRow(row=row, obj=paste_func(data[0][1]))
 #                 self._editor.object._no_update = False
 
 
@@ -241,20 +246,25 @@ class _myTableView(_TableView):
 class _TabularEditor(qtTabularEditor):
 
     widget_factory = _myTableView
+    copy_cache = List
 
     def init(self, parent):
         super(_TabularEditor, self).init(parent)
 
 #        self.sync_value(self.factory.rearranged, 'rearranged', 'to')
 #        self.sync_value(self.factory.pasted, 'pasted', 'to')
-#        self.sync_value(self.factory.copy_cache, 'copy_cache', 'to')
+        self.sync_value(self.factory.copy_cache, 'copy_cache', 'both')
 
-        if hasattr(self.object, self.factory.copy_function):
-            self.control.copy_func = getattr(self.object, self.factory.copy_function)
+        if hasattr(self.object, self.factory.paste_function):
+            self.control.paste_func = getattr(self.object, self.factory.paste_function)
 
-    def _copy_function_changed(self):
+    def _copy_cache_changed(self):
         if self.control:
-            self.control.copy_func = self.copy_function
+            self.control._linked_copy_cache = self.copy_cache
+
+#     def _paste_function_changed(self):
+#         if self.control:
+#             self.control.paste_func = self.paste_function
 
     def refresh_editor(self):
         if self.control:
@@ -269,7 +279,7 @@ class myTabularEditor(TabularEditor):
     rearranged = Str
     pasted = Str
     copy_cache = Str
-    copy_function = Str
+    paste_function = Str
     drag_external = Bool(False)
     def _get_klass(self):
         return _TabularEditor
