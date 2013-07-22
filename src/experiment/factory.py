@@ -27,7 +27,7 @@ from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.constants import NULL_STR, LINE_STR
 from src.loggable import Loggable
 import time
-from src.hardware.core.core_device import ConsumerMixin
+from src.consumer_mixin import ConsumerMixin
 
 class ExperimentFactory(Loggable, ConsumerMixin):
     db = Any

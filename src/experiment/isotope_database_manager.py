@@ -118,7 +118,7 @@ class IsotopeDatabaseManager(Manager):
             return pi
 
         if isinstance(pi, IsotopeRecordView):
-            rec = self.db.get_analysis_uuid(pi.uuid)
+            rec = self.db.get_analysis(pi.uuid, key='uuid')
             kw.update(dict(graph_id=pi.graph_id,
                            group_id=pi.group_id))
             pi = rec

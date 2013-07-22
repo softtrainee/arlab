@@ -216,6 +216,8 @@ class AutomatedRun(Loggable):
 #    save_error_flag = False
     invalid_script = False
 
+    load_name = Str
+
     def _state_changed(self, old, new):
         self.debug('state changed from {} to {}'.format(old, new))
 #===============================================================================
@@ -1323,9 +1325,9 @@ anaylsis_type={}
 
         db = self.db
 
-        loadtable = db.get_loadtable(self.loadtable)
+        loadtable = db.get_loadtable(self.load_name)
         if loadtable is None:
-            loadtable = db.add_loadtable(self.loadtable)
+            loadtable = db.add_loadtable(self.load_name)
             db.flush()
 
         db.add_load_position(loadtable, is_degas=is_degas)

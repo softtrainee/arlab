@@ -152,6 +152,7 @@ class LaserManager(BaseLaserManager):
 
     def close(self, ok):
         self.pulse.dump_pulse()
+        self.debug('laser close')
         return super(LaserManager, self).close(ok)
 
     def set_laser_monitor_duration(self, d):
@@ -195,6 +196,11 @@ class LaserManager(BaseLaserManager):
 #
         self._dispose_optional_windows_hook()
 
+    def shutdown(self):
+        self.debug('shutdown')
+        self._dump_pulse()
+
+
 #===============================================================================
 # handlers
 #===============================================================================
@@ -217,9 +223,10 @@ class LaserManager(BaseLaserManager):
 #===============================================================================
     def _dispose_optional_windows_hook(self):
         pass
-
-    def _kill_hook(self):
-        self.disable_laser()
+#
+#     def _kill_hook(self):
+#         self.disable_laser()
+#         self.pulse.dump()
 
     def _enable_hook(self):
         return True
@@ -246,20 +253,30 @@ class LaserManager(BaseLaserManager):
 #===============================================================================
 # defaults
 #===============================================================================
+    def _dump_pulse(self):
+        p = os.path.join(paths.hidden_dir, 'pulse')
+        with open(p, 'wb') as f:
+            pickle.dump(self.pulse, f)
+
+    def _load_pulse(self, p):
+        with open(p, 'rb') as f:
+            try:
+                pul = pickle.load(f)
+                pul.manager = self
+                return pul
+            except Exception, e:
+                self.debug('load pulse problem {} {}'.format(p, e))
+
     def _pulse_default(self):
+        pul = None
         p = os.path.join(paths.hidden_dir, 'pulse')
         if os.path.isfile(p):
-            with open(p, 'rb') as f:
-                try:
-                    pul = pickle.load(f)
-                    pul.manager = self
-                except pickle.PickleError:
-                    pul = Pulse(manager=self)
-        else:
+            pul = self._load_pulse(p)
+
+        if pul is None:
             pul = Pulse(manager=self)
 
         return pul
-
 
     def _laser_script_executor_default(self):
         return LaserScriptExecutor(laser_manager=self,

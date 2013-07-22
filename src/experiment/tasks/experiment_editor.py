@@ -60,11 +60,12 @@ class ExperimentEditor(BaseTraitsEditor):
                                    editable=True,
                                    dclicked='dclicked',
                                    selected='selected',
-                                   rearranged='rearranged',
-                                   pasted='pasted',
-                                   copy_function='copy_function',
+#                                    rearranged='rearranged',
+#                                    pasted='pasted',
+                                   paste_function='paste_function',
                                    refresh='refresh_table_needed',
                                    scroll_to_row='automated_runs_scroll_to_row',
+                                   copy_cache='linked_copy_cache',
 #                                    scroll_to_row_hint='bottom',
 #                                    scroll_to_bottom=True,
 #                                             copy_cache='copy_cache',
@@ -81,14 +82,23 @@ class ExperimentEditor(BaseTraitsEditor):
                                     editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
                                                     editable=False,
                                                     auto_update=True,
-                                                    selectable=False,
+                                                    selectable=True,
+                                                    copy_cache='linked_copy_cache',
+                                                    selected='executed_selected',
+                                                    multi_select=True,
+#                                                     paste_function='executed_paste_function',
+#                                                     paste_function='paste_function',
                                                     scroll_to_row='executed_runs_scroll_to_row'
                                                     ),
-                            ))
+                            ),
+#                             visible_when='executed_runs'
+                    )
 
         v = View(
-                 VSplit(arun_grp,
-                        executed_grp),
+                 VSplit(
+                        executed_grp,
+                        arun_grp,
+                        ),
                  resizable=True
                 )
         return v

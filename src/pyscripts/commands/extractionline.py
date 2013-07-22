@@ -46,6 +46,9 @@ class SetMotorLock(Command):
 class Snapshot(Command):
     pass
 
+class Autofocus(Command):
+    pass
+
 class TracePath(Command):
     pass
 

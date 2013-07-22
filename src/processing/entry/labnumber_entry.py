@@ -39,9 +39,9 @@ import math
 from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
 from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
 from src.database.orms.isotope_orm import gen_ProjectTable, gen_SampleTable
-from src.ui.thread import Thread
+# from src.ui.thread import Thread
 from pyface.timer.do_later import do_later
-import xlrd
+
 from src.managers.data_managers.xls_data_manager import XLSDataManager
 
 
@@ -63,6 +63,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
     add_level_button = Button('Add Level')
     edit_level_button = Button('Edit')
     load_file_button = Button('Load File')
+    generate_labnumbers_button = Button('Generate Labnumbers')
     #===========================================================================
     # irradiation positions table events
     #===========================================================================
@@ -164,7 +165,8 @@ class LabnumberEntry(IsotopeDatabaseManager):
             
             add level_offset between each level
         '''
-        lngen = self._labnumber_generator(self.irradiation,
+        ir = self.irradiation
+        lngen = self._labnumber_generator(ir,
                                           offset,
                                           level_offset
                                           )
@@ -175,8 +177,10 @@ class LabnumberEntry(IsotopeDatabaseManager):
             except StopIteration:
                 break
 
-            ln = db.add_labnumber(ln)
-            pos.labnumber = ln
+            pos.labnumber.identifier = ln
+            le = pos.level.name
+            pi = pos.position
+            self.info('setting irrad. pos. {} {}-{} labnumber={}'.format(ir, le, pi, ln))
 
         if not dry_run:
             db.commit()
@@ -184,7 +188,8 @@ class LabnumberEntry(IsotopeDatabaseManager):
         self._update_level()
 
     def _labnumber_generator(self, irradiation, offset, level_offset):
-        def gen():
+
+        def gen(offset, level_offset):
             db = self.db
             last_ln = db.get_last_labnumber()
             if last_ln:
@@ -192,23 +197,34 @@ class LabnumberEntry(IsotopeDatabaseManager):
             else:
                 last_ln = 0
 
+            i = 0
+            if not offset:
+                last_ln += 1
+
             sln = last_ln + offset
             irrad = db.get_irradiation(irradiation)
-            i = 1
+
+#             for _ in range(3):
+#                 for _ in range(2):
             for level in irrad.levels:
-                for position in level.irradiated_positions:
+                for position in level.positions:
                     yield position, sln + i
                     i += 1
 
-                i += level_offset
+                if level_offset:
+                    sln = sln + level_offset
+                    i = 0
+                    if not offset:
+                        i = -1
 
-        return gen()
+
+        return gen(offset, level_offset)
 
     def _load_positions_from_file(self, p, dry_run=False):
         '''
             use an xls file to enter irradiation positions
             
-            sheet must be named IrradiationInfo
+            sheet must be named IrradiationInfo or the first sheet
             
             add level
             
@@ -216,7 +232,12 @@ class LabnumberEntry(IsotopeDatabaseManager):
             add sample
             add material
             
+            optional:
+                weight
+            
             add irradiation_position
+            add labnumber.  since sample info is associated with labnumber table
+            need to add a labnumber entry now. dont set the identifier yet tho
             
             commit to database
             
@@ -230,18 +251,23 @@ class LabnumberEntry(IsotopeDatabaseManager):
         dm = XLSDataManager()
         dm.open(p)
 
-        sheet = 'IrradiationInfo'
         header_offset = 1
+        sheet = dm.get_sheet(('IrradiationInfo', 0))
+
         project_idx = dm.get_column_idx('project', sheet=sheet)
         sample_idx = dm.get_column_idx('sample', sheet=sheet)
         material_idx = dm.get_column_idx('material', sheet=sheet)
         level_idx = dm.get_column_idx('level', sheet=sheet)
+        holder_idx = dm.get_column_idx('holder', sheet=sheet)
         pos_idx = dm.get_column_idx('position', sheet=sheet)
+        weight_idx = dm.get_column_idx('weight', sheet=sheet)
+
         for ri in range(sheet.nrows - header_offset):
             ri += header_offset
-
             level = sheet.cell_value(ri, level_idx)
-            db.add_irradiation_level(irradiation, level)
+            holder = sheet.cell_value(ri, holder_idx)
+
+            dblevel = db.add_irradiation_level(level, irradiation, holder)
 
             project = sheet.cell_value(ri, project_idx)
             material = sheet.cell_value(ri, material_idx)
@@ -252,14 +278,23 @@ class LabnumberEntry(IsotopeDatabaseManager):
             db.add_sample(sample, project=prj, material=mat)
 
             pos = sheet.cell_value(ri, pos_idx)
-            db.add_irradiation_position(pos, None, irradiation, level)
+
+            dbln = db.add_labnumber('', sample=sample,
+                                        unique=False)
+
+            weight = None
+            if weight_idx:
+                weight = sheet.cell_value(ri, weight_idx)
+            db.add_irradiation_position(pos, dbln, irradiation, dblevel,
+                                        weight=weight,
+                                        )
 
         if not dry_run:
             db.commit()
 
         self.updated = True
         self.level = level
-
+#         self._update_level()
 
     def _load_holder_positions(self, holder):
         self.irradiated_positions = []
@@ -364,6 +399,11 @@ class LabnumberEntry(IsotopeDatabaseManager):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _generate_labnumbers_button_fired(self):
+        self._generate_labnumbers(offset=0,
+                                  level_offset=0,
+                                  dry_run=False)
+
     def _load_file_button_fired(self):
         p = self.open_file_dialog()
         if p:
@@ -465,29 +505,38 @@ class LabnumberEntry(IsotopeDatabaseManager):
 
     _level_thread = None
     def _level_changed(self):
-        if self._level_thread:
-            if self._level_thread.isRunning():
-                return
+#         if self._level_thread:
+#             if self._level_thread.isRunning():
+#                 return
 
         self.debug('level changed')
+
+        from threading import Thread
         t = Thread(target=self._update_level)
         t.start()
-        self._level_thread = t
+#         self._level_thread = t
+#         t.join()
 
-    def _update_level(self):
+    def _update_level(self, name=None):
+        if name is None:
+            name = self.level
+
         self.irradiated_positions = []
 
         irrad = self.db.get_irradiation(self.irradiation)
         if not irrad:
+            self.debug('no irradiation for {}'.format(self.irradiation))
             return
 
-        level = next((li for li in irrad.levels if li.name == self.level), None)
+        level = next((li for li in irrad.levels if li.name == name), None)
+        self.debug('dblevel {} for self.level {}'.format(level, name))
         if level:
             if level.holder:
                 self._load_holder_positions(level.holder)
 
             positions = level.positions
             n = len(self.irradiated_positions)
+
             if positions:
                 for pi in positions:
                     hi = pi.position - 1
@@ -524,26 +573,29 @@ class LabnumberEntry(IsotopeDatabaseManager):
 
         labnumber = ln.identifier if ln else None
         ir = IrradiatedPosition(labnumber=str(labnumber), hole=position)
-        if labnumber:
-            selhist = ln.selected_flux_history
-            if selhist:
-                flux = selhist.flux
-                if flux:
-                    ir.j = flux.j
-                    ir.j_err = flux.j_err
+#         if labnumber:
+        selhist = ln.selected_flux_history
+        if selhist:
+            flux = selhist.flux
+            if flux:
+                ir.j = flux.j
+                ir.j_err = flux.j_err
 #
-            sample = ln.sample
-            if sample:
-                ir.sample = sample.name
-                material = sample.material
-                project = sample.project
-                if project:
-                    ir.project = project.name
-                if material:
-                    ir.material = material.name
-            note = ln.note
-            if note:
-                ir.note = note
+        sample = ln.sample
+        if sample:
+            ir.sample = sample.name
+            material = sample.material
+            project = sample.project
+            if project:
+                ir.project = project.name
+            if material:
+                ir.material = material.name
+
+        ir.weight = str(dbpos.weight)
+
+        note = ln.note
+        if note:
+            ir.note = note
 
         return ir
 

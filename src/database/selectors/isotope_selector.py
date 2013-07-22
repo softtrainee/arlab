@@ -121,7 +121,7 @@ class IsotopeAnalysisSelector(DatabaseSelector):
             uuid = idn
         else:
             uuid = idn.uuid
-            dbr = self.db.get_analysis_uuid(uuid)
+            dbr = self.db.get_analysis(uuid, key='uuid')
 
         return self.record_klass(_dbrecord=dbr)
 

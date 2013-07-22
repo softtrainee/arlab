@@ -35,6 +35,7 @@ class IrradiationEditorPane(TraitsDockPane):
         v = View(
                  VGroup(
                         UItem('load_file_button'),
+                        UItem('generate_labnumbers_button'),
                          HGroup(
                                 Item('project',
                                      editor=EnumEditor(name='projects')),

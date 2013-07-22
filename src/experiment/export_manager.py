@@ -135,7 +135,7 @@ class ExportManager(IsotopeDatabaseManager):
 
             # reusing the record object is 45% faster than making a new one each iteration
             # get a dbrecord for this analysis
-            record._dbrecord = src.get_analysis_uuid(rec.uuid)
+            record._dbrecord = src.get_analysis(rec.uuid, key='uuid')
             e = Exported(rid=rec.record_id, n=i + 1)
             if record.load_isotopes():
                 spec = self._make_spec(record)

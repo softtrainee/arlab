@@ -16,13 +16,26 @@
 
 #============= enthought library imports =======================
 from traits.api import List, Instance, Str, Property, Any
-from traitsui.api import View, Item, UItem, InstanceEditor
+from traitsui.api import View, Item, UItem, InstanceEditor, ButtonEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from traitsui.tabular_adapter import TabularAdapter
 from src.ui.tabular_editor import myTabularEditor
+
 # from src.pyscripts.commands.core import ICommand
 #============= standard library imports ========================
 #============= local library imports  ==========================
+
+class ControlPane(TraitsDockPane):
+    name = 'Control'
+    id = 'pychron.pyscript.control'
+    def traits_view(self):
+        v = View(
+                 UItem('execute',
+                       editor=ButtonEditor(label_value='execute_label')
+                       )
+                 )
+        return v
+
 class DescriptionPane(TraitsDockPane):
     name = 'Description'
     id = 'pychron.pyscript.description'

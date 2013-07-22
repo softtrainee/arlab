@@ -356,6 +356,7 @@ class Experimentor(IsotopeDatabaseManager):
 
     @on_trait_change('experiment_queue:dclicked')
     def _dclicked_changed(self, new):
+        print 'dclicke', new
         self.experiment_factory.run_factory.edit_mode = True
         self._set_factory_runs(self.experiment_queue.selected)
 

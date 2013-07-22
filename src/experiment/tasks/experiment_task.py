@@ -36,7 +36,7 @@ from src.ui.gui import invoke_in_main_thread
 from apptools.preferences.preference_binding import bind_preference
 from src.experiment.loading.panes import LoadDockPane, LoadTablePane
 from src.experiment.loading.loading_manager import LoadingManager
-from pandas.core.algorithms import group_position
+from src.messaging.notify.notifier import Notifier
 
 
 class ExperimentEditorTask(EditorTask):
@@ -46,6 +46,7 @@ class ExperimentEditorTask(EditorTask):
 
     auto_figure_window = None
     use_auto_figure = Bool
+    use_notifications = Bool
     loading_manager = Instance(LoadingManager)
 
     def _loading_manager_default(self):
@@ -81,27 +82,17 @@ class ExperimentEditorTask(EditorTask):
                           top=PaneItem('pychron.experiment.controls')
                           )
 
-    def _manager_factory(self):
-        from src.experiment.experimentor import Experimentor
-        from src.helpers.parsers.initialization_parser import InitializationParser
-        ip = InitializationParser()
-        plugin = ip.get_plugin('Experiment', category='general')
-        mode = ip.get_parameter(plugin, 'mode')
-        exp = Experimentor(application=self.window.application,
-                           mode=mode)
-
-        return exp
-
-    def _manager_default(self):
-        return self._manager_factory()
-
     def deselect(self):
         if self.active_editor:
             self.active_editor.queue.selected = []
+            self.active_editor.queue.executed_selected = []
 
     def activated(self):
 
         bind_preference(self, 'use_auto_figure',
+                        'pychron.experiment.use_auto_figure')
+
+        bind_preference(self, 'use_notifications',
                         'pychron.experiment.use_auto_figure')
         elm = self._get_el_manager()
         if elm:
@@ -268,14 +259,22 @@ class ExperimentEditorTask(EditorTask):
         if self.active_editor:
             self.manager.experiment_queue = self.active_editor.queue
 
+    def _publish_notification(self, run):
+        msg = 'RunAdded {}'.format(run.uuid)
+        self.notifier.send_notification(msg)
+
     def _open_auto_figure(self):
         if self.use_auto_figure:
             app = self.window.application
             from pyface.tasks.task_window_layout import TaskWindowLayout
             win = app.create_window(TaskWindowLayout('pychron.processing.auto_figure'))
             win.open()
-            self.window.activate()
+
+            win.active_task.attached = True
             self.auto_figure_window = win
+
+            self.window.activate()
+
 
     def _test_auto_figure(self):
         self.use_auto_figure = True
@@ -371,6 +370,19 @@ class ExperimentEditorTask(EditorTask):
         self.isotope_evolution_pane.plot_panel = new
 #         self.summary_pane.plot_panel = new
 
+    @on_trait_change('manager:executor:run_completed')
+    def _update_run_completed(self, new):
+        if self.auto_figure_window:
+            task = self.auto_figure_window.active_task
+            invoke_in_main_thread(task.refresh_plots, new)
+
+        if self.use_notifications:
+            self._publish_notification(new)
+
+        load_name = self.manager.executor.experiment_queue.load_name
+        self._update_load(load_name)
+
+
     @on_trait_change('manager:add_queues_flag')
     def _add_queues(self, new):
         self.debug('add_queues_flag trigger n={}'.format(self.manager.add_queues_count))
@@ -389,14 +401,6 @@ class ExperimentEditorTask(EditorTask):
                     pass
                 break
 
-    @on_trait_change('manager:executor:run_completed')
-    def _update_run_completed(self, new):
-        if self.auto_figure_window:
-            task = self.auto_figure_window.active_task
-            invoke_in_main_thread(task.refresh_plots, new)
-
-        load_name = self.manager.executor.experiment_queue.load_name
-        self._update_load(load_name)
 
     @on_trait_change('manager:execute_event')
     def _execute(self):
@@ -450,4 +454,28 @@ class ExperimentEditorTask(EditorTask):
         else:
             super(ExperimentEditorTask, self)._prompt_on_close(event)
 
+#===============================================================================
+# default/factory
+#===============================================================================
+
+    def _notifier_factory(self):
+        n = Notifier()
+        return n
+
+    def _manager_factory(self):
+        from src.experiment.experimentor import Experimentor
+        from src.helpers.parsers.initialization_parser import InitializationParser
+        ip = InitializationParser()
+        plugin = ip.get_plugin('Experiment', category='general')
+        mode = ip.get_parameter(plugin, 'mode')
+        exp = Experimentor(application=self.window.application,
+                           mode=mode)
+
+        return exp
+
+    def _manager_default(self):
+        return self._manager_factory()
+
+    def _notifier_default(self):
+        return self._notifier_factory()
 #============= EOF =============================================

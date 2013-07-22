@@ -38,6 +38,9 @@ class BaseLaserTask(BaseHardwareTask):
         if self.manager.stage_manager:
             self.manager.stage_manager.keyboard_focus = True
 
+    def prepare_destroy(self):
+        self.manager.shutdown()
+
 class FusionsTask(BaseLaserTask):
     def _default_layout_default(self):
         return TaskLayout(left=PaneItem('{}.stage'.format(self.id)),

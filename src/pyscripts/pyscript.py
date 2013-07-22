@@ -31,6 +31,14 @@ from src.loggable import Loggable
 from Queue import Queue, Empty
 from src.globals import globalv
 from src.ui.gui import invoke_in_main_thread
+import sys
+import bdb
+
+import inspect
+class PyScriptDebugger(bdb.Bdb):
+    def dispatch_line(self, frame):
+        print frame, inspect.getargvalues(frame)
+
 class DummyManager(Loggable):
     def open_valve(self, *args, **kw):
         self.info('open valve')
@@ -249,13 +257,30 @@ class PyScript(Loggable):
         else:
             return code
 
+    def _tracer(self, frame, event, arg):
+        if event == 'line':
+            print frame.f_code.co_filename, frame.f_lineno
+
+        return self._tracer
+
     def execute_snippet(self, snippet):
+#         sys.settrace(self._tracer)
         safe_dict = self.get_context()
         code_or_err = self.compile_snippet(snippet)
         if not isinstance(code_or_err, Exception):
             try:
+
+#                 sys.settrace(None)
                 exec code_or_err in safe_dict
                 safe_dict['main']()
+#                 db = PyScriptDebugger()
+
+#                 expr = "safe_dict['main']()"
+#                 db.runeval(expr, locals())
+
+#                 import pdb
+#                 pdb.runeval(expr)
+
             except KeyError, e:
                 return MainError()
             except Exception, e:
@@ -497,6 +522,9 @@ class PyScript(Loggable):
 
     @command_register
     def sleep(self, duration=0, message=None):
+
+
+
         self._estimated_duration += duration
         if self.parent_script is not None:
             self.parent_script._estimated_duration += self._estimated_duration
@@ -514,7 +542,6 @@ class PyScript(Loggable):
 #        if globalv.experiment_debug:
 #            duration = min(duration, 5)
 #            self.debug('using debug sleep {}'.format(duration))
-
         self._sleep(duration, message=message)
 
     @skip
@@ -581,12 +608,15 @@ class PyScript(Loggable):
         man = self.manager
         if protocol is not None and man is not None:
             app = man.application
-            if app is not None:
-                args = (protocol,)
-                if name is not None:
-                    args = (protocol, 'name=="{}"'.format(name))
+        else:
+            app = self.application
 
-                man = app.get_service(*args)
+        if app is not None:
+            args = (protocol,)
+            if name is not None:
+                args = (protocol, 'name=="{}"'.format(name))
+
+            man = app.get_service(*args)
 
         if man is not None:
             if not isinstance(func, list):

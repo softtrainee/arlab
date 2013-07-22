@@ -146,17 +146,19 @@ class ExtractionPyScript(ValvePyScript):
 #===============================================================================
     @verbose_skip
     @command_register
-    def snapshot(self, format_str=''):
-        if format_str == '':
-            format_str = '{}'
+    def autofocus(self):
+        self._manager_action(['do_autofocus', (), {}],
+                             name=self.extract_device,
+                             protocol=ILaserManager)
 
-        name = format_str.format(self.run_identifier)
-
-        ps = self._manager_action(['take_snapshot', (name,), {}],
+    @verbose_skip
+    @command_register
+    def snapshot(self, name=''):
+        ps = self._manager_action(['take_snapshot', (), {'name':name}],
                              name=self.extract_device,
                              protocol=ILaserManager)
         if ps:
-            self.snapshot_paths.append(ps[0])
+            self.snapshot_paths.append(ps[1])
 
     @verbose_skip
     @command_register

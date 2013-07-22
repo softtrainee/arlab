@@ -36,7 +36,7 @@ from src.helpers.timer import Timer
 from src.hardware.utilities import limit_frequency
 from Queue import Queue
 from src.ui.thread import Thread
-from src.hardware.core.core_device import ConsumerMixin
+from src.consumer_mixin import ConsumerMixin
 
 SIGN = ['negative', 'positive']
 

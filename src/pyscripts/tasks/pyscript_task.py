@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, List, Instance, Property, Any, Enum, \
-    on_trait_change, Bool
+    on_trait_change, Bool, Event
 from traitsui.api import View, Item, EnumEditor, UItem, Label
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Tabbed, Splitter
 #============= standard library imports ========================
@@ -26,25 +26,131 @@ from src.envisage.tasks.editor_task import EditorTask
 from src.pyscripts.tasks.pyscript_editor import ExtractionEditor, MeasurementEditor, \
     BakeoutEditor
 from src.pyscripts.tasks.pyscript_panes import CommandsPane, DescriptionPane, \
-    ExamplePane, EditorPane, CommandEditorPane
+    ExamplePane, EditorPane, CommandEditorPane, ControlPane
 from src.paths import paths
 from src.ui.preference_binding import bind_preference
+from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
+import os
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
 
-class PyScriptTask(EditorTask):
+class ExecuteMixin(HasTraits):
+    execute = Event
+    execute_label = Property(depends_on='executing')
+    executing = Bool
+
+    def _get_execute_label(self):
+        return 'Stop' if self.executing else 'Start'
+
+    def _execute_fired(self):
+        if self.executing:
+            self._cancel_execute()
+            self.executing = False
+        else:
+            if self._start_execute():
+                self.executing = True
+                self._do_execute()
+
+    def _cancel_execute(self):
+        pass
+    def _start_execute(self):
+        pass
+
+class PyScriptTask(EditorTask, ExecuteMixin):
     name = 'PyScript'
     kind = String
     kinds = List(['Extraction', 'Measurement'])
     commands_pane = Instance(CommandsPane)
-#    selected_command = String
-#    commands = Instance(Commands, ())
-#    selected = Any
-#    description = Property(String, depends_on='selected')
-#    example = Property(String, depends_on='selected')
-
-#    editor = Instance(ParameterEditor, ())
 
     wildcard = '*.py'
     auto_detab = Bool(False)
+
+    _current_script = None
+
+    def _runner_factory(self):
+        # get the extraction line manager's mode
+        man = self._get_el_manager()
+        if man is None:
+            self.warning_dialog('No Extraction line manager available')
+            return
+
+        mode = man.mode
+        if mode == 'client':
+#            em = self.extraction_line_manager
+            from src.helpers.parsers.initialization_parser import InitializationParser
+            ip = InitializationParser()
+            elm = ip.get_plugin('Experiment', category='general')
+            runner = elm.find('runner')
+            host, port, kind = None, None, None
+
+            if runner is not None:
+                comms = runner.find('communications')
+                host = comms.find('host')
+                port = comms.find('port')
+                kind = comms.find('kind')
+
+            if host is not None:
+                host = host.text  # if host else 'localhost'
+            if port is not None:
+                port = int(port.text)  # if port else 1061
+            if kind is not None:
+                kind = kind.text  # if kind else 'udp'
+
+            from src.pyscripts.pyscript_runner import RemotePyScriptRunner
+            runner = RemotePyScriptRunner(host, port, kind)
+        else:
+            from src.pyscripts.pyscript_runner import PyScriptRunner
+            runner = PyScriptRunner()
+
+        return runner
+
+    def _get_el_manager(self):
+        app = self.window.application
+        man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+        return man
+
+    def _do_execute(self):
+        self.debug('do execute')
+
+        self._current_script = None
+        ae = self.active_editor
+        if isinstance(ae, ExtractionEditor):
+            root, fn = os.path.split(ae.path)
+
+            script = ExtractionPyScript(
+                                        application=self.window.application,
+                                        root=root,
+                                        name=fn,
+                                        runner=self._runner)
+
+            if script.bootstrap():
+                script.set_default_context()
+                try:
+                    script.test()
+                except Exception, e:
+                    return
+
+                self._current_script = script
+                script.execute()
+
+        self.executing = False
+
+    def _start_execute(self):
+        self.debug('start execute')
+
+        # make a script runner
+        self._runner = None
+        runner = self._runner_factory()
+        if runner is None:
+            return
+        else:
+            self._runner = runner
+            return True
+
+    def _cancel_execute(self):
+        self.debug('cancel execute')
+        if self._current_script:
+            self._current_script.cancel()
+
     def __init__(self, *args, **kw):
         super(PyScriptTask, self).__init__(*args, **kw)
         bind_preference(self, 'auto_detab', 'pychron.pyscript.auto_detab')
@@ -60,6 +166,10 @@ class PyScriptTask(EditorTask):
         return TaskLayout(
                           id='pychron.pyscript',
                           left=Splitter(
+
+                                        PaneItem('pychron.pyscript.control',
+                                          height=100),
+
                                         PaneItem('pychron.pyscript.commands_editor',
                                           height=100,
                                           width=510,
@@ -83,10 +193,12 @@ class PyScriptTask(EditorTask):
         self.commands_pane = CommandsPane()
         self.command_editor_pane = CommandEditorPane()
         self.editor_pane = EditorPane()
+        self.control_pane = ControlPane(model=self)
         return [
                 self.commands_pane,
                 self.command_editor_pane,
                 self.editor_pane,
+                self.control_pane,
                 ]
 
     @on_trait_change('commands_pane:command_object')
@@ -120,12 +232,13 @@ class PyScriptTask(EditorTask):
             self._open_editor(path='')
             return True
 
-#     def open(self):
-# #         path = '/Users/ross/Pychrondata_diode/scripts/measurement/jan_unknown.py'
-# #         path = '/Users/ross/Pychrondata_diode/scripts/extra/jan_unknown.py'
-#         path = '/Users/ross/Pychrondata_diode/scripts/extraction/jan_diode.py'
-#         self._open_file(path)
-#         return True
+    def open(self):
+#         path = '/Users/ross/Pychrondata_diode/scripts/measurement/jan_unknown.py'
+#         path = '/Users/ross/Pychrondata_diode/scripts/extra/jan_unknown.py'
+        path = '/Users/ross/Pychrondata_diode/scripts/extraction/jan_diode.py'
+        path = '/Users/ross/Pychrondata_demo/scripts/laser/zoom_scan.py'
+        self._open_file(path)
+        return True
 
     def _open_file(self, path, **kw):
         self.info('opening pyscript: {}'.format(path))

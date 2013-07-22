@@ -23,6 +23,7 @@ from src.processing.tasks.figures.figure_task import FigureTask
 from src.processing.tasks.figures.figure_editor import IdeogramEditor, \
     SpectrumEditor, AutoIdeogramEditor, AutoSpectrumEditor, AutoSeriesEditor
 from src.processing.tasks.figures.auto_figure_panes import AutoFigureControlPane
+from src.messaging.notify.subscriber import Subscriber
 # from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -36,28 +37,16 @@ class AutoFigureTask(FigureTask):
     _cached = Dict
 
     use_single_ideogram = Bool(True)
+    attached = False
+    def activated(self):
+        if not self.attached:
+            self.sub = Subscriber(host='localhost',
+                                  port=8100,
 
-    def _default_layout_default(self):
-        return TaskLayout(
-                          id='pychron.analysis_edit',
-                          left=Splitter(
-                                     Tabbed(
-                                            PaneItem('pychron.analysis_edit.unknowns'),
-                                            PaneItem('pychron.processing.figures.plotter_options')
-                                            ),
-                                     Tabbed(
-                                            PaneItem('pychron.analysis_edit.controls'),
-                                            PaneItem('pychron.processing.editor'),
-                                            PaneItem('pychron.processing.auto_figure_controls')
-                                            ),
-                                     orientation='vertical'
-                                     ),
-
-                          right=Splitter(
-                                         PaneItem('pychron.search.query'),
-                                         orientation='vertical'
-                                         )
-                          )
+                                  )
+            self.sub.connect()
+            self.sub.subscribe('RunAdded')
+            self.sub.listen(self.refresh_plots)
 
     def refresh_plots(self, last_run):
         '''
@@ -67,31 +56,62 @@ class AutoFigureTask(FigureTask):
             if last run is blank, air, cocktail 
             plot a series
         '''
-
-        ln = last_run.labnumber
-        if last_run.analysis_type == 'unknown':
-            sample = last_run.sample
-            if sample:
-
-                if last_run.extract_group:
-                    aliquot = last_run.aliquot
-                    self.plot_sample_spectrum(sample, aliquot)
-                else:
-                    self.plot_sample_ideogram(ln, sample)
+        if isinstance(last_run, (str, unicode)):
+            args = self._get_args(last_run)
+            if args:
+                ln, at, sample, eg, al, ms, ed = args
+            else:
+                return
 
         else:
+            ln = last_run.labnumber
+            at = last_run.analysis_type
+            sample = last_run.sample
+            eg = last_run.extract_group
+            al = last_run.aliquot
             ms = last_run.mass_spectrometer
             ed = last_run.extract_device
-            at = last_run.analysis_type
-            editor = self._get_editor(AutoSeriesEditor)
-            if editor:
-                afc = editor.auto_figure_control
-                days, hours = afc.days, afc.hours
-            else:
-                days, hours = 1, 0
 
-            self.plot_series(ln, at, ms, ed,
-                             days=days, hours=hours)
+        if at == 'unknown':
+            self._refresh_unknown(ln, at, sample, eg, al)
+        else:
+            self._refresh_series(ms, ed, at)
+
+    def _get_args(self, uuid):
+        an = self.db.get_analysis(uuid, key='uuid')
+        if an is not None:
+            ln = an.labnumber.identifier
+            at = an.analysis_type.name
+
+            sample = ''
+            if an.labnumber.sample:
+                sample = an.labnumber.sample.name
+#
+            eg = an.step
+            al = an.aliquot
+            ms = an.measurement.mass_spectrometer.name
+            ed = an.extraction.extraction_device.name
+
+            return ln, at, sample, eg, al, ms, ed
+
+
+    def _refresh_unknown(self, ln, sample, extract_group, aliquot):
+        if sample:
+            if extract_group:
+                self.plot_sample_spectrum(sample, aliquot)
+            else:
+                self.plot_sample_ideogram(ln, sample)
+
+    def _refresh_series(self, ms, ed, at):
+        editor = self._get_editor(AutoSeriesEditor)
+        if editor:
+            afc = editor.auto_figure_control
+            days, hours = afc.days, afc.hours
+        else:
+            days, hours = 1, 0
+
+        self.plot_series(ln, at, ms, ed,
+                         days=days, hours=hours)
 
     def _unique_analyses(self, ans):
         if ans:
@@ -256,4 +276,27 @@ group_by_labnumber]''')
 #        po = self.plotter_options_pane.pom.plotter_options
 #        comp = self.active_editor.make_func(ans=ans, plotter_options=po)
 #        self.active_editor.component = comp
+
+
+    def _default_layout_default(self):
+        return TaskLayout(
+                          id='pychron.analysis_edit',
+                          left=Splitter(
+                                     Tabbed(
+                                            PaneItem('pychron.analysis_edit.unknowns'),
+                                            PaneItem('pychron.processing.figures.plotter_options')
+                                            ),
+                                     Tabbed(
+                                            PaneItem('pychron.analysis_edit.controls'),
+                                            PaneItem('pychron.processing.editor'),
+                                            PaneItem('pychron.processing.auto_figure_controls')
+                                            ),
+                                     orientation='vertical'
+                                     ),
+
+                          right=Splitter(
+                                         PaneItem('pychron.search.query'),
+                                         orientation='vertical'
+                                         )
+                          )
 #============= EOF =============================================
