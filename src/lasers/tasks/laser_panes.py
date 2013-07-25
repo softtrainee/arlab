@@ -122,11 +122,12 @@ class StageControlPane(TraitsDockPane):
         recgrp = None
         if self.model.stage_manager.__class__.__name__ == 'VideoStageManager':
             mvgrp = VGroup(
-                      HGroup(SItem('use_autocenter', label='Enabled'),
-                             SUItem('autocenter_button',
-                                  enabled_when='use_autocenter'),
-                             SUItem('configure_autocenter_button')
-                          ),
+#                       HGroup(SItem('use_autocenter', label='Enabled'),
+#                              SUItem('autocenter_button',
+#                                   enabled_when='use_autocenter'),
+#                              SUItem('configure_autocenter_button')
+#                           ),
+                      SUItem('autocenter_manager', style='custom'),
                       SUItem('autofocus_manager', style='custom'),
                       label='Machine Vision', show_border=True,
                       )

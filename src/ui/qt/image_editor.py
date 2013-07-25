@@ -17,7 +17,7 @@
 
 
 #=============enthought library imports=======================
-from traits.api import List, Any, Bool, Float
+from traits.api import List, Any, Bool, Float, Event, Str
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 from PySide.QtGui import QLabel, QImage, QPixmap, QScrollArea
@@ -59,6 +59,8 @@ def convert_bitmap(image, width=None, height=None):
 
 class _ImageEditor(Editor):
     image_ctrl = Any
+    refresh = Event
+
     def init(self, parent):
         image = self.factory.image
         if image is None:
@@ -90,6 +92,12 @@ class _ImageEditor(Editor):
 
         self.set_tooltip()
 
+        self.sync_value(self.factory.refresh, 'refresh', 'from')
+
+    def _refresh_fired(self):
+        print 'reasfasd'
+        self.update_editor()
+
     def update_editor(self):
         image = self.factory.image
         if image is None:
@@ -105,6 +113,8 @@ class _ImageEditor(Editor):
 #         self.control.setPixmap(convert_bitmap(image, qsize.width()))
 
     def set_pixmap(self, image, w):
+
+
         self.image_ctrl.setPixmap(convert_bitmap(image, w))
 
 
@@ -115,3 +125,4 @@ class ImageEditor(BasicEditorFactory):
     image = Any
     scrollable = Bool(False)
     scale = Bool(True)
+    refresh = Str

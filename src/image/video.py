@@ -33,6 +33,31 @@ from cv_wrapper import swap_rb as cv_swap_rb
 #
 
 from src.globals import globalv
+def convert_to_video(self, path, fps, name_filter='snapshot%03d.jpg',
+                     ffmpeg=None,
+                     output=None):
+    '''
+        path: path to directory containing list of images 
+        
+        commandline
+        $ ffmpeg -r 25 -codec x264 -i /snapshot%03d.jpg -o output.avi
+        
+        
+    '''
+    import subprocess
+    if output is None:
+        output = os.path.join(path, '{}.avi'.format(path))
+
+    if os.path.exists(output):
+        return
+
+    frame_rate = '{}'.format(fps)
+    codec = '{}'.format('x264')  # H.264
+    path = '{}'.format(os.path.join(path, name_filter))
+    if ffmpeg is None or not os.path.isfile(ffmpeg):
+        ffmpeg = '/usr/local/bin/ffmpeg'
+
+    subprocess.call([ffmpeg, '-r', frame_rate, '-i', path, output, '-codec', codec])
 
 
 class Video(Image):
@@ -288,30 +313,8 @@ class Video(Image):
             self._save_ok_event.set()
 
     def _convert_to_video(self, path, fps, name_filter='snapshot%03d.jpg', output=None):
-        '''
-            path: path to directory containing list of images 
-            
-            commandline
-            $ ffmpeg -r 25 -codec x264 -i /snapshot%03d.jpg -o output.avi
-            
-            
-        '''
-        import subprocess
-        if output is None:
-            output = os.path.join(path, '{}.avi'.format(path))
-
-        if os.path.exists(output):
-            return
-
-        frame_rate = '{}'.format(fps)
-        codec = '{}'.format('x264')  # H.264
-        path = '{}'.format(os.path.join(path, name_filter))
-
-        ffmpeg = '/usr/local/bin/ffmpeg'
-        if self.ffmpeg_path:
-            ffmpeg = self.ffmpeg_path
-
-        subprocess.call([ffmpeg, '-r', frame_rate, '-i', path, output, '-codec', codec])
+        ffmpeg = self.ffmpeg_path
+        convert_to_video(path, fps, name_filter, ffmpeg, output)
 
     def _cv_record(self, path, stop, fps, renderer=None):
         '''

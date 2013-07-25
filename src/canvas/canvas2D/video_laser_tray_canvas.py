@@ -38,13 +38,46 @@ class VideoLaserTrayCanvas(LaserTrayCanvas, VideoCanvas):
         self._desired_position = None
         self.request_redraw()
 
-    def add_markup_rect(self, x, y, w, h, name=''):
+    def get_screen_center(self):
+        lp = self.index_mapper.low_pos
+        hp = self.index_mapper.high_pos
+        cx = (hp - lp) / 2. + lp
+
+        lp = self.value_mapper.low_pos
+        hp = self.value_mapper.high_pos
+        cy = (hp - lp) / 2. + lp
+        return cx, cy
+
+    def get_center_rect_position(self, w=0, h=0):
+        lp = self.index_mapper.low_pos
+        hp = self.index_mapper.high_pos
+        cw = hp - lp
+
+        cx = (cw - w) / 2. + lp
+
+        lp = self.value_mapper.low_pos
+        hp = self.value_mapper.high_pos
+        ch = hp - lp
+        cy = (ch - h) / 2. + lp
+        return cx, cy
+
+    def add_markup_circle(self, x, y, r, **kw):
+        from src.canvas.canvas2D.scene.primitives.primitives import Circle
+        r = Circle(x=x, y=y,
+                  radius=r,
+                  space='screen',
+                  fill=False,
+                  **kw)
+        self.scene.add_item(r)
+
+    def add_markup_rect(self, x, y, w, h, **kw):
         from src.canvas.canvas2D.scene.primitives.primitives import Rectangle
         r = Rectangle(x=x, y=y,
                       width=w, height=h,
                       space='screen',
-                      name=name,
-                      fill=False)
+                      fill=False,
+                      **kw
+                      )
         self.scene.add_item(r)
 #        self.markupcontainer['croprect'] = Rectangle(x=x, y=y, width=w, height=h,
 #                                                     canvas=self, space='screen',

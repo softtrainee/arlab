@@ -119,24 +119,28 @@ class ViewableDevice(ConfigLoadable):
                          label='Info',
                          )
 
-        v = View(
-                 Group(
-                       info_grp,
-
-                       layout='tabbed'
-                       )
-                 )
-
+#         v = View(
+#                  Group(
+#                        info_grp,
+#                        layout='tabbed'
+#                        )
+#                  )
+        grp = Group(layout='tabbed')
         cg = self.get_control_group()
-
-        config_group = self.get_configure_group()
         if cg:
             cg.label = 'Control'
-            v.content.content.insert(0, cg)
+            grp.content.append(cg)
+#             v.content.content.insert(0, cg)
 
+        config_group = self.get_configure_group()
         if config_group:
             config_group.label = 'Configure'
-            v.content.content.insert(1, config_group)
+            grp.content.append(config_group)
+
+        grp.content.append(info_grp)
+        v = View(grp)
+#             v.content.content.insert(1, config_group)
+
         return v
 
     def traits_view(self):

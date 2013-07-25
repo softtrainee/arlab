@@ -171,9 +171,11 @@ class PowerMapper(Loggable, ConsumerMixin):
         lm = self.laser_manager
         sm = lm.stage_manager
         apm = lm.get_device('analog_power_meter')
-        i = 0
         self._xs, self._ys, self._zs = array([]), array([]), array([])
         tab = self._new_data_table(padding)
+
+        sc = sm.stage_controller
+        i = 0
         while 1:
             if not self._alive:
                 break
@@ -189,40 +191,50 @@ class PowerMapper(Loggable, ConsumerMixin):
                 sx = cx + padding
                 ex = cx - padding
 
-            sc = sm.stage_controller
+            self.info('move to start {},{}'.format(sx, ny))
             # move to start position
             sc.linear_move(sx, ny, block=True)
-            time.sleep(1)
 
             # move to start position
             self.info('move to end {},{}'.format(ex, ny))
-            sc.linear_move(ex, ny, block=False, velocity=0.5)
+            sc.linear_move(ex, ny, block=False, velocity=0.5, immediate=True)
 
             self.graph.new_series(color='black')
             sid = len(self.graph.series[0]) - 1
 
-            if lm.simulation:
-                n = 21
-                r = random.random()
-                if r < 0.25:
-                    n += 1
-                elif r > 0.75:
-                    n -= 1
-                for i in range(n):
-                    x, y = i * 0.1 - 1, ny
-                    mag = row + random.random()
-                    self.add_consumable((tab, x, y, i, row, mag, sid))
-            else:
-                while 1:
-                    x, y = sc.x, sc.y
-                    mag = apm.read_power_meter(verbose=False)
-                    if not sc.timer.isActive():
-                        self.add_consumable((tab, x, y, 1, row, mag, sid))
-                        break
-                    else:
-                        self.add_consumable((tab, x, y, 0, row, mag, sid))
+#             if lm.simulation:
+#                 n = 21
+#                 r = random.random()
+#                 if r < 0.25:
+#                     n += 1
+#                 elif r > 0.75:
+#                     n -= 1
+#                 for i in range(n):
+#                     x, y = i * 0.1 - 1, ny
+#                     mag = row + random.random()
+#                     self.add_consumable((tab, x, y, i, row, mag, sid))
+#             else:
+            p = sc.timer.get_interval()
+            xaxis = sc.axes['x']
+            yaxis = sc.axes['y']
+            while 1:
+                time.sleep(p)
 
-#                     time.sleep(0.1)
+                x, y = xaxis.position, yaxis.position
+                if apm:
+                    mag = apm.read_power_meter(verbose=False)
+                else:
+                    mag = row + random.random()
+
+                self.debug('x={}, y={}'.format(x, y))
+                if not sc.timer.isActive():
+                    self.add_consumable((tab, x, y, 1, row, mag, sid))
+                    break
+                else:
+                    self.add_consumable((tab, x, y, 0, row, mag, sid))
+
+
+            self.debug('row {} y={} complete'.format(row, ny))
 
             i += 1
 

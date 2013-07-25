@@ -54,6 +54,7 @@ class NewportMotionController(MotionController):
             # get and clear any error
             self.read_error()
 
+            self.setup_consumer(buftime=500)
             return r
 
     def load_additional_args(self, config):
@@ -166,6 +167,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
 
         cmd = self._build_query('TP', xx=aid)
         f = self.ask(cmd, verbose=False)
+
+        aname = '_{}_position'.format(axis)
         if f != 'simulation' and f is not None:
             try:
                 f = float(f)
@@ -176,8 +179,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 f = None
         else:
 #            time.sleep(0.5)
-            f = getattr(self, '_{}_position'.format(axis))
+            f = getattr(self, aname)
 
+        self.axes[axis].position = f
         return f
 
     def relative_move(self, ax_key, direction):
@@ -276,15 +280,26 @@ ABLE TO USE THE HARDWARE JOYSTICK
             self._x_position = x
             self._y_position = y
 
+            self.debug('doing linear move')
             self.timer = self.timer_factory()
             self._linear_move_(dict(x=x, y=y), **kw)
         else:
             self.info('displacement of move too small {} < {}'.format(d, tol))
 
+
     def single_axis_move(self, key, value, block=False, mode='absolute',
-                         velocity=None, update=True, **kw):
+                         velocity=None, update=250,
+                         immediate=False, **kw):
         '''
         '''
+        args = (key, value, block, mode, velocity, update, kw)
+        if block or immediate:
+            self._single_axis_move(args)
+        else:
+            self.add_consumable((self._single_axis_move, args))
+
+    def _single_axis_move(self, args):
+        key, value, block, mode, velocity, update, kw = args
         x = None
         y = None
         try:
@@ -341,8 +356,10 @@ ABLE TO USE THE HARDWARE JOYSTICK
             block = key
 
         if update:
+
+            self.debug('timer period {}'.format(update))
 #        if update and not block:
-            self.timer = self.timer_factory(func=func)
+            self.timer = self.timer_factory(func=func, period=update)
         else:
             if mode == 'absolute':
                 if x is not None and y is not None:
@@ -589,10 +606,12 @@ ABLE TO USE THE HARDWARE JOYSTICK
                 self.groupobj.velocity = velocity
 
     def _check_motion_parameters(self, displacement, obj):
+        self.debug('checking motion parameters')
         if displacement <= 0:
             return
         if obj.calculate_parameters:
             change, nv, ac, dc = self.motion_profiler.check_motion(displacement, obj)
+            self.debug('calculated {} {} {} {}'.format(change, nv, ac, dc))
             if change:
                 obj.trait_set(acceleration=ac,
                                         deceleration=dc,
@@ -606,6 +625,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
         return change
 
     def configure_group(self, group, displacement=None, velocity=None, **kw):
+        self.debug('configuring group')
         gobj = self.groupobj
         if not gobj and group:
             self.logger.warn('GROUPED MOVE NOT ENABLED')
@@ -725,7 +745,9 @@ ABLE TO USE THE HARDWARE JOYSTICK
     def _linear_move_(self, kwargs, block=False, grouped_move=True, sign_correct=True, **kw):
         '''
         '''
+
         self.configure_group(grouped_move, **kw)
+        self.debug('group configured')
         for k in kwargs:
             key = k[0]
             if sign_correct:
@@ -751,6 +773,7 @@ ABLE TO USE THE HARDWARE JOYSTICK
                                      ])
 
         if block:
+            self.info('moving to {x:0.5f},{y:0.5f}'.format(**kwargs))
             self._block_()
             self.info('move to {x:0.5f},{y:0.5f} complete'.format(**kwargs))
             self.update_axes()

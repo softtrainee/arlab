@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, List, Instance, Property, Any, Enum, \
-    on_trait_change, Bool, Event
+    on_trait_change, Bool, Event, Int
 from traitsui.api import View, Item, EnumEditor, UItem, Label
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Tabbed, Splitter
 #============= standard library imports ========================
@@ -32,6 +32,7 @@ from src.ui.preference_binding import bind_preference
 from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 import os
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
+from threading import Thread
 
 class ExecuteMixin(HasTraits):
     execute = Event
@@ -48,7 +49,9 @@ class ExecuteMixin(HasTraits):
         else:
             if self._start_execute():
                 self.executing = True
-                self._do_execute()
+                t = Thread(target=self._do_execute)
+                t.start()
+                self._t = t
 
     def _cancel_execute(self):
         pass
@@ -64,16 +67,19 @@ class PyScriptTask(EditorTask, ExecuteMixin):
     wildcard = '*.py'
     auto_detab = Bool(False)
 
-    _current_script = None
-
+    _current_script = Any
+    use_trace = Bool(False)
+    trace_delay = Int(50)
     def _runner_factory(self):
         # get the extraction line manager's mode
         man = self._get_el_manager()
+
         if man is None:
             self.warning_dialog('No Extraction line manager available')
-            return
+            mode = 'normal'
+        else:
+            mode = man.mode
 
-        mode = man.mode
         if mode == 'client':
 #            em = self.extraction_line_manager
             from src.helpers.parsers.initialization_parser import InitializationParser
@@ -128,9 +134,17 @@ class PyScriptTask(EditorTask, ExecuteMixin):
                     script.test()
                 except Exception, e:
                     return
-
                 self._current_script = script
-                script.execute()
+                script.setup_context(extract_device='fusions_diode')
+                if self.use_trace:
+                    self.active_editor.trace_delay = self.trace_delay
+
+                t = script.execute(
+#                                    new_thread=True,
+                                   trace=self.use_trace
+                                   )
+#                 t.join()
+
 
         self.executing = False
 
@@ -267,6 +281,9 @@ class PyScriptTask(EditorTask, ExecuteMixin):
 
         super(PyScriptTask, self)._open_editor(editor)
 
+    @on_trait_change('_current_script:trace_line')
+    def _update_lineno(self, new):
+        self.active_editor.highlight_line = new
 
     def _get_description(self):
         if self.selected:

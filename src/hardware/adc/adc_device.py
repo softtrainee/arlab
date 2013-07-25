@@ -42,7 +42,7 @@ class ADCDevice(AbstractDevice):
                 if factory:
                     break
 
-            self.set_attribute(config, 'channel', 'ADC')
+            self.set_attribute(config, 'channel', 'ADC', 'channel')
 
 #        adc = self.config_get(config, 'General', 'adc')
 #

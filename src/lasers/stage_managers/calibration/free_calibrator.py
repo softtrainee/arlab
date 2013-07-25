@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Button, Bool, Any, String, List
-from traitsui.api import View, Item, HGroup
+from traitsui.api import View, Item, HGroup, ButtonEditor
 # from src.ui.custom_label_editor import CustomLabel
 # from src.geometry.geometry import calculate_reference_frame_center, calc_length
 from src.lasers.stage_managers.calibration.calibrator import TrayCalibrator
@@ -35,7 +35,6 @@ class FreeCalibrator(TrayCalibrator):
 
     points = List
     append_current_calibration = Bool(False)
-
 
     def get_controls(self):
         cg = HGroup(Item('object.calibrator.accept_point',

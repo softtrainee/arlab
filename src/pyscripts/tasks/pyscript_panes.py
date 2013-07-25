@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import List, Instance, Str, Property, Any
-from traitsui.api import View, Item, UItem, InstanceEditor, ButtonEditor
+from traitsui.api import View, Item, UItem, InstanceEditor, ButtonEditor, VGroup
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from traitsui.tabular_adapter import TabularAdapter
 from src.ui.tabular_editor import myTabularEditor
@@ -30,9 +30,17 @@ class ControlPane(TraitsDockPane):
     id = 'pychron.pyscript.control'
     def traits_view(self):
         v = View(
-                 UItem('execute',
-                       editor=ButtonEditor(label_value='execute_label')
-                       )
+                 VGroup(
+                     UItem('execute',
+                           editor=ButtonEditor(label_value='execute_label')
+                           ),
+                     VGroup(
+                         UItem('use_trace'),
+                         UItem('trace_delay', label='Delay (ms)'),
+                         show_border=True,
+                         label='Trace'
+                         )
+                        )
                  )
         return v
 

@@ -25,7 +25,7 @@ import time
 from src.helpers.timer import Timer
 from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.motion.motion_profiler import MotionProfiler
-from src.hardware.utilities import limit_frequency
+# from src.hardware.utilities import limit_frequency
 
 
 class MotionController(CoreDevice):
@@ -72,7 +72,7 @@ class MotionController(CoreDevice):
         self.parent.canvas.set_stage_position(self._x_position,
                                               self._y_position)
 
-    def timer_factory(self, func=None):
+    def timer_factory(self, func=None, period=250):
         '''
         
             reuse timer if func is the same
@@ -84,17 +84,24 @@ class MotionController(CoreDevice):
 
         if timer is None:
             self._not_moving_count = 0
-            timer = Timer(250, func)
+            timer = Timer(period, func)
         elif timer.func == func:
             if timer.isActive():
                 self.debug('reusing old timer')
             else:
                 self._not_moving_count = 0
-                timer = Timer(250, func)
+                timer = Timer(period, func)
+        else:
+            timer.stop()
+            self._not_moving_count = 0
+            time.sleep(period / 1000.)
+            timer = Timer(period, func)
 
+        timer.set_interval(period)
         return timer
 
     def set_z(self, v, **kw):
+
         self.single_axis_move('z', v, **kw)
 #        setattr(self, '_{}_position'.format('z'), v)
         self._z_position = v
@@ -205,7 +212,7 @@ class MotionController(CoreDevice):
 
         z = self.get_current_position('z')
         self.z_progress = z
-        self.debug('z inprogress {}. moving={} stopped={}'.format(z, m, stopped))
+#         self.debug('z inprogress {}. moving={} stopped={}'.format(z, m, stopped))
 
     def _inprogress_update(self):
         '''
@@ -214,7 +221,8 @@ class MotionController(CoreDevice):
         m = self._moving_()
         if not m:
             self._not_moving_count += 1
-        self.debug('inprogress update {}'.format(m))
+
+#         self.debug('inprogress update {}'.format(m))
 
         if self._not_moving_count > 1:
             self._not_moving_count = 0
@@ -255,12 +263,12 @@ class MotionController(CoreDevice):
             func = moving
 
         i = 0
-        fn = func.func_name
-        n = 10
+#         fn = func.func_name
+#         n = 10
         while 1:
             a = func()
-            if i % n == 0:
-                self.debug('blocking {} {}'.format(fn, a))
+#             if i % n == 0:
+#                 self.debug('blocking {} {}'.format(fn, a))
 
             time.sleep(0.05)
             if i > 100:

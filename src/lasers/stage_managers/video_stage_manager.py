@@ -116,7 +116,7 @@ class VideoStageManager(StageManager):
     def bind_preferences(self, pref_id):
         super(VideoStageManager, self).bind_preferences(pref_id)
 
-        bind_preference(self, 'use_autocenter', '{}.use_autocenter'.format(pref_id))
+        bind_preference(self.autocenter_manager, 'use_autocenter', '{}.use_autocenter'.format(pref_id))
         bind_preference(self, 'render_with_markup', '{}.render_with_markup'.format(pref_id))
         bind_preference(self, 'auto_upload', 'pychron.media_server.auto_upload')
         bind_preference(self, 'use_media_server', 'pychron.media_server.use_media_server')
@@ -399,7 +399,7 @@ class VideoStageManager(StageManager):
         interp = False
         sm = self._stage_map
 
-        if self.use_autocenter:
+        if self.autocenter_manager.use_autocenter:
             time.sleep(0.75)
             for _t in range(max(1, ntries)):
                 # use machine vision to calculate positioning error
@@ -410,6 +410,7 @@ class VideoStageManager(StageManager):
                         holenum,
                         dim=self._stage_map.g_dimension
                         )
+
                 if rpos:
                     self.linear_move(*rpos, block=True,
                                      use_calibration=False,
@@ -504,11 +505,11 @@ class VideoStageManager(StageManager):
     def _autocenter_button_fired(self):
         self.autocenter()
 
-    def _configure_autocenter_button_fired(self):
-        info = self.autocenter_manager.edit_traits(view='configure_view',
-                                                kind='livemodal')
-        if info.result:
-            self.autocenter_manager.dump_detector()
+#     def _configure_autocenter_button_fired(self):
+#         info = self.autocenter_manager.edit_traits(view='configure_view',
+#                                                 kind='livemodal')
+#         if info.result:
+#             self.autocenter_manager.dump_detector()
 
     def _snapshot_button_fired(self):
         self.snapshot()
@@ -539,8 +540,8 @@ class VideoStageManager(StageManager):
         else:
             self.video_server.stop()
 
-    def __stage_map_changed(self):
-        self.visualizer.stage_map = self._stage_map
+#     def __stage_map_changed(self):
+#         self.visualizer.stage_map = self._stage_map
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -658,6 +659,7 @@ class VideoStageManager(StageManager):
         if self.parent.mode != 'client':
             from src.mv.autocenter_manager import AutoCenterManager
             return AutoCenterManager(video=self.video,
+                                     canvas=self.canvas,
 #                                 pxpermm=self.pxpercmx / 10.,
 #                                    stage_controller=self.stage_controller,
 #                                    laser_manager=self.parent,

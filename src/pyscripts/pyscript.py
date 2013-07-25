@@ -15,13 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, Any, Bool, DelegatesTo, Dict, Property
+from traits.api import Str, Any, Bool, DelegatesTo, Dict, Property, Int
 from pyface.confirmation_dialog import confirm  # from pyface.wx.dialog import confirmation
 #============= standard library imports ========================
 import time
 import os
 import inspect
-from threading import Thread, Event
+from threading import Event
 #============= local library imports  ==========================
 from src.pyscripts.wait_dialog import WaitDialog
 
@@ -33,11 +33,7 @@ from src.globals import globalv
 from src.ui.gui import invoke_in_main_thread
 import sys
 import bdb
-
-import inspect
-class PyScriptDebugger(bdb.Bdb):
-    def dispatch_line(self, frame):
-        print frame, inspect.getargvalues(frame)
+from src.ui.thread import Thread
 
 class DummyManager(Loggable):
     def open_valve(self, *args, **kw):
@@ -202,28 +198,62 @@ class PyScript(Loggable):
     _estimated_duration = 0
     _graph_calc = False
 
-    def execute(self, new_thread=False, bootstrap=True, finished_callback=None):
+    trace_line = Int
+    def traceit(self, frame, event, arg):
+        if event == "line":
+            co = frame.f_code
+            if co.co_filename == self.filename:
+                lineno = frame.f_lineno
+                self.trace_line = lineno
+
+        return self.traceit
+
+    def execute(self, new_thread=False, bootstrap=True,
+                      trace=False,
+                      finished_callback=None):
+        if bootstrap:
+            self.bootstrap()
+
+        if not self.syntax_checked:
+            self.test()
 
         def _ex_():
-            if bootstrap:
-                self.bootstrap()
-
-            ok = True
-            if not self.syntax_checked:
-                self.test()
-
-            if ok:
-                self._execute()
-                if finished_callback:
-                    finished_callback()
+            self._execute(trace)
+            if finished_callback:
+                finished_callback()
 
             return self._completed
 
         if new_thread:
             t = Thread(target=_ex_)
             t.start()
+#             self._t = t
+            return t
         else:
             return _ex_()
+
+#     def execute(self, new_thread=False, bootstrap=True, finished_callback=None):
+#
+#         def _ex_():
+#             if bootstrap:
+#                 self.bootstrap()
+#
+#             ok = True
+#             if not self.syntax_checked:
+#                 self.test()
+#
+#             if ok:
+#                 self._execute()
+#                 if finished_callback:
+#                     finished_callback()
+#
+#             return self._completed
+#
+#         if new_thread:
+#             t = Thread(target=_ex_)
+#             t.start()
+#         else:
+#             return _ex_()
 
     def test(self):
         if not self.syntax_checked:
@@ -263,54 +293,54 @@ class PyScript(Loggable):
 
         return self._tracer
 
-    def execute_snippet(self, snippet):
-#         sys.settrace(self._tracer)
+    def execute_snippet(self, trace=False):
         safe_dict = self.get_context()
-        code_or_err = self.compile_snippet(snippet)
-        if not isinstance(code_or_err, Exception):
-            try:
 
-#                 sys.settrace(None)
-                exec code_or_err in safe_dict
-                safe_dict['main']()
-#                 db = PyScriptDebugger()
-
-#                 expr = "safe_dict['main']()"
-#                 db.runeval(expr, locals())
-
-#                 import pdb
-#                 pdb.runeval(expr)
-
-            except KeyError, e:
-                return MainError()
-            except Exception, e:
-                import traceback
-                traceback.print_exc()
-# #            self.warning_dialog(str(e))
-                return e
+        if trace:
+            snippet = self.filename
         else:
-            return code_or_err
-#            return  traceback.format_exc()
-#        safe_dict = self.get_context()
-#        try:
-#            code = compile(snippet, '<string>', 'exec')
-#            exec code in safe_dict
-#            safe_dict['main']()
-#        except KeyError, e:
-#            print e
-#            print '#============'
-#
-#            for di in safe_dict.keys():
-#                print di
-#
-#            return MainError()
-#
-#        except Exception, e:
-#            import traceback
-#            traceback.print_exc()
-# #            self.warning_dialog(str(e))
-#            return e
-#            return  traceback.format_exc()
+            snippet = self.text
+
+        if os.path.isfile(snippet):
+            sys.settrace(self.traceit)
+            import imp
+            try:
+                script = imp.load_source('script', snippet)
+            except Exception, e:
+                return e
+            script.__dict__.update(safe_dict)
+            try:
+                script.main()
+            except AttributeError:
+                return MainError
+
+        else:
+#         sys.settrace(self._tracer)
+            code_or_err = self.compile_snippet(snippet)
+            if not isinstance(code_or_err, Exception):
+                try:
+
+    #                 sys.settrace(None)
+                    exec code_or_err in safe_dict
+                    safe_dict['main']()
+    #                 db = PyScriptDebugger()
+
+    #                 expr = "safe_dict['main']()"
+    #                 db.runeval(expr, locals())
+
+    #                 import pdb
+    #                 pdb.runeval(expr)
+
+                except KeyError, e:
+                    return MainError()
+                except Exception, e:
+                    import traceback
+                    traceback.print_exc()
+    # #            self.warning_dialog(str(e))
+                    return e
+            else:
+                return code_or_err
+
 
     def syntax_ok(self):
         return not self._syntax_error
@@ -576,16 +606,14 @@ class PyScript(Loggable):
 #===============================================================================
 # private
 #===============================================================================
-    def _execute(self):
-
-        if not self.text:
-            return 'No script text'
+    def _execute(self, trace=False):
 
         self._cancel = False
         self._completed = False
         self._truncate = False
 
-        error = self.execute_snippet(self.text)
+        error = self.execute_snippet(trace)
+
         if error:
             return error
 

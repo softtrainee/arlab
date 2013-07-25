@@ -18,13 +18,14 @@ ETSConfig.toolkit = 'qt4'
 
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Float
+from traits.api import HasTraits, Instance, Float, Button
 from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 import time
 from threading import Timer
 from numpy import asarray
 #============= local library imports  ==========================
+from src.mv.test_image import TestImage
 from src.managers.manager import Manager
 from src.image.video import Video
 # from src.image.image import StandAloneImage
@@ -34,10 +35,14 @@ from src.image.standalone_image import StandAloneImage
 
 from src.mv.co2_locator import CO2Locator
 
+
 class MachineVisionManager(Manager):
     video = Instance(Video)
 #     target_image = Instance(StandAloneImage)
     pxpermm = Float(23)
+
+    step = Button
+    test_image = Instance(TestImage, ())
 
     def new_co2_locator(self):
         c = CO2Locator(pxpermm=self.pxpermm)
@@ -86,7 +91,7 @@ class MachineVisionManager(Manager):
         # use a manager to open so will auto close on quit
         self.open_view(im)
         if auto_close:
-            minutes = 0.25
+            minutes = 2
             t = Timer(60 * minutes, im.close_ui)
             t.start()
 
@@ -186,17 +191,53 @@ class MachineVisionManager(Manager):
 #            plot(times)
 #            show()
 #        do_later(foo)
+
+    def _test2(self, im):
+
+        dim = 1.0
+
+        frame = self.new_image_frame()
+
+        cw = ch = dim * 3.2
+
+        frame = self._crop_image(frame, cw, ch)
+#         print frame
+#         im.source_frame = frame
+        loc = self.new_co2_locator()
+        from threading import Event
+        evt = Event()
+        self.step_signal = evt
+        loc.step_signal = evt
+        loc.test_image = self.test_image
+
+        dx, dy = loc.find(im, frame, dim * self.pxpermm)
+#         print dx, dy
+
     def setup_image(self):
         frame = self.new_image_frame()
         im = self.new_image(frame)
         self.view_image(im)
         return im
 
+    def _step_fired(self):
+        self.step_signal.set()
+
     def _test_fired(self):
+        from src.globals import globalv
+
+        p = '/Users/ross/Sandbox/test_target.jpg'
+#         p = '/Users/ross/Sandbox/pos_err/pos_err_200_0-002.jpg'
+        p = '/Users/ross/Sandbox/poserror/pos_err_221_0-007.jpg'
+#         p = '/Users/ross/Sandbox/poserror/snapshot009.jpg'
+        # force video to reload test image
+        self.video.source_frame = None
+        globalv.video_test_path = p
+
         im = self.setup_image()
 
+#         self._test2(im)
         from src.ui.thread import Thread
-        t = Thread(target=self._test, args=(im,))
+        t = Thread(target=self._test2, args=(im,))
         t.start()
         self._t = t
 
@@ -204,8 +245,16 @@ class MachineVisionManager(Manager):
 #         t = Thread(target=self._test)
 #         t.start()
 
+
     def traits_view(self):
-        return View('test')
+        return View(Item('test'),
+                    Item('step'),
+                    Item('test_image', show_label=False,
+                         style='custom'),
+                    resizable=True
+                    )
+
+
 
 def test():
     from src.globals import globalv

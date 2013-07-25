@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import Float, Property, Bool, Int, CInt
+from traits.api import Float, Property, Bool, Int, CInt, Button
 from traitsui.api import View, Item, HGroup, VGroup, EnumEditor, RangeEditor, Label, Group
 # from pyface.timer.api import Timer
 
@@ -27,16 +27,11 @@ from kerr_device import KerrDevice
 from src.hardware.core.data_helper import make_bitarray
 import time
 from src.globals import globalv
-from src.ui.custom_label_editor import CustomLabel
-from pyface.timer.api import do_after
 from src.ui.gui import invoke_in_main_thread
 from src.hardware.linear_mapper import LinearMapper
-from traits.has_traits import cached_property
 from src.helpers.timer import Timer
-from src.hardware.utilities import limit_frequency
-from Queue import Queue
-from src.ui.thread import Thread
 from src.consumer_mixin import ConsumerMixin
+from src.ui.progress_dialog import myProgressDialog
 
 SIGN = ['negative', 'positive']
 
@@ -83,6 +78,9 @@ class KerrMotor(KerrDevice, ConsumerMixin):
     display_name_color = 'brown'
 
     locked = False
+    units = 'mm'
+
+    home_button = Button
 
     def _get_display_name(self):
         return self.name.capitalize()
@@ -145,10 +143,11 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                 ('Homing', 'home_velocity'),
                 ('Homing', 'home_acceleration'),
                 ('Homing', 'home_position'),
-                ('Homing', 'home_at_startup'),
+                ('Homing', 'home_at_startup', 'boolean'),
                 ('General', 'min'),
                 ('General', 'max'),
-                ('General', 'nominal_position')
+                ('General', 'nominal_position'),
+                ('General', 'units')
               ]
         for args in args:
             if len(args) == 3:
@@ -204,6 +203,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 #            progress.increment()
 
     def _update_position_changed(self):
+        self.debug('*****************************update position {}'.format(self.update_position))
         try:
             self.progress.change_message('{} position = {}'.format(self.name, self.update_position))
         except AttributeError:
@@ -213,11 +213,13 @@ class KerrMotor(KerrDevice, ConsumerMixin):
     def _finish_initialize(self):
         '''
         '''
-        self._data_position = self.min
-        self.update_position = self.min
-        if self.sign == -1:
-            self._data_position = self.max
-            self.update_position = self.max
+        pass
+#         if self.home_at_startup:
+#             self._data_position = self.min
+#             self.update_position = self.min
+#             if self.sign == -1:
+#                 self._data_position = self.max
+#                 self.update_position = self.max
 
     def initialize(self, *args, **kw):
         '''
@@ -246,11 +248,8 @@ class KerrMotor(KerrDevice, ConsumerMixin):
         self.progress = None
         self.enabled = True
 
-        self.setup_consumer()
-#         self.move_queue = Queue()
-#         self._consumer = Thread(target=self._consume_move)
-#         self._should_consume = True
-#         self._consumer.start()
+        self.setup_consumer(buftime=500)
+
         return True
 
     def _clear_bits(self):
@@ -289,12 +288,17 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 #             commands = [(addr, '1701', 100, 'turn on amp'), ]
 #             self._execute_hex_commands(commands)
 
-    def _home_motor(self, *args, **kw):
+    def _home_button_fired(self):
+#         self.progress = myProgressDialog(max=2)
+#         self.progress.open()
+
+        self._home_motor()
+        self.load_data_position()
+
+    def _home_motor(self, progress=None, *args, **kw):
         '''
         '''
-        progress = self.progress
         if progress is not None:
-            progress = kw['progress']
             progress.increase_max()
             progress.change_message('Homing {}'.format(self.name))
             progress.increment()
@@ -363,20 +367,21 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 
         while not self.parent.simulation:
 
-            pos = self._get_motor_position(verbose=True)
-#             print 'ffff', pos
+#             steps = self.load_data_position()
+            steps = self._get_motor_position(verbose=True)
+#             print 'ffff', steps
             if progress is not None:
-                progress.change_message('{} position = {}'.format(self.name, pos))
+                progress.change_message('{} position = {}'.format(self.name, steps))
 
-            if pos is None:
+            if steps is None:
                 fail_cnt += 1
                 if fail_cnt > 5:
                     break
                 continue
 
-            pos_buffer.append(pos)
+            pos_buffer.append(steps)
             if len(pos_buffer) == n:
-                if abs(float(sum(pos_buffer)) / n - pos) < tolerance:
+                if abs(float(sum(pos_buffer)) / n - steps) < tolerance:
                     break
                 else:
                     pos_buffer.pop(0)
@@ -418,12 +423,15 @@ class KerrMotor(KerrDevice, ConsumerMixin):
         steps = self._get_motor_position(verbose=False)
         if steps is not None:
             pos = self.linear_mapper.map_data(steps)
+
             self.update_position = pos
             self._data_position = pos
-            self.debug('Load data position {} steps= {} {}'.format(
-                                                                  steps, pos,
-                                                                  self.units))
 
+            self.debug('Load data position {} {} steps= {}'.format(
+                                                                  pos, self.units,
+                                                                  steps,
+                                                                  ))
+            return steps
 
     def _moving(self, verbose=True):
         status_byte = self.read_defined_status(verbose=verbose)
@@ -507,7 +515,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
         hpos = self._calculate_hysteresis_position(pos, hysteresis)
         self._motor_position = hpos
 
-        return
+#         return
 #        self._motor_position =npos= min(self.max, max(self.min, pos + hysteresis))
         #============pos is in mm===========
         addr = self.address
@@ -601,6 +609,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 #             print self.parent.simulation
             def launch():
                 self.timer = self.timer_factory()
+
             invoke_in_main_thread(launch)
 
             if self.parent.simulation:
@@ -659,6 +668,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                                                 low_name='min',
                                                 high_name='max', enabled=False),
                              ),
+                         Item('home_button', show_label=False)
 #                          show_border=True,
 #                          label=self.display_name,
 #                          )

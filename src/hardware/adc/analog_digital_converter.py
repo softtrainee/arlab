@@ -192,9 +192,9 @@ class M1000(AnalogDigitalConverter):
             short *+00072.00
             long *1RD+00072.00A4
         '''
-        func = lambda r: float(r[5:-2]) if form == self.long_form_prompt else float(r[2:])
+        func = lambda X: float(X[5:-2]) if form == self.long_form_prompt else float(X[2:])
 
-        if r is not None:
+        if r:
             if type == 'block':
                 r = r.split(',')
                 return [func(ri) for ri in r if ri is not '']

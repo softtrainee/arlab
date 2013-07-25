@@ -64,6 +64,8 @@ class ExperimentPreferences(BasePreferencesHelper):
     selected_index = Int
 
     use_auto_figure = Bool
+    use_notifications = Bool
+    notification_port = Int
 
     @on_trait_change('db+')
     def db_attribute_changed(self, obj, name, old, new):
@@ -185,7 +187,17 @@ class ExperimentPreferencesPane(PreferencesPane):
                              label='MassSpec'
                              )
 
-        auto_figure_grp = Group(Item('use_auto_figure'),
+        auto_figure_grp = Group(
+
+                                Item('use_auto_figure'),
+                                VGroup(
+                                       Item('use_notifications'),
+                                       Item('notification_port',
+                                            enabled_when='use_notifications',
+                                            label='Port'),
+
+                                       label='Notifications'
+                                       ),
                                 label='Auto Figure'
                                 )
         return View(

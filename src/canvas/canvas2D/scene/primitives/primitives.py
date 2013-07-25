@@ -631,7 +631,9 @@ class Circle(QPrimitive):
     def _render_(self, gc):
         x, y = self.get_xy()
 #        print 'asaaaa', self.radius
-        r = self.map_dimension(self.radius)
+        r = self.radius
+        if self.space == 'data':
+            r = self.map_dimension(r)
 
         gc.arc(x, y, r, 0, 360)
         gc.stroke_path()

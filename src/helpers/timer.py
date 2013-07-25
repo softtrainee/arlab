@@ -105,5 +105,11 @@ class Timer(QThread):
 # and not self._completed
 
     def set_interval(self, v):
-        self._period = v
+        self._period = v / 1000.
+
+    def get_interval(self):
+        '''
+            return period in s
+        '''
+        return self._period
 #============= EOF =====================================
