@@ -25,10 +25,11 @@ from src.hardware.core.i_core_device import ICoreDevice
 from src.has_communicator import HasCommunicator
 from src.rpc.rpcable import RPCable
 from src.hardware.core.core_device import CoreDevice
-from src.hardware.core.viewable_device import ViewableDevice
+# from src.hardware.core.viewable_device import ViewableDevice
+from src.hardware.core.scanable_device import ScanableDevice
 
 
-class AbstractDevice(RPCable, HasCommunicator, ViewableDevice):
+class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
     '''
     '''
     implements(ICoreDevice)
@@ -88,7 +89,7 @@ class AbstractDevice(RPCable, HasCommunicator, ViewableDevice):
             return self._cdevice.initialize(*args, **kw)
 
     def post_initialize(self, *args, **kw):
-        pass
+        self.setup_scan()
 
     def open(self, **kw):
         '''
@@ -96,9 +97,9 @@ class AbstractDevice(RPCable, HasCommunicator, ViewableDevice):
         if self._cdevice is not None:
             return self._cdevice.open(**kw)
 
-    def setup_scan(self, *args, **kw):
-        if self._cdevice is not None:
-            return self._cdevice.setup_scan(*args, **kw)
+#     def setup_scan(self, *args, **kw):
+#         if self._cdevice is not None:
+#             return self._cdevice.setup_scan(*args, **kw)
 
     def load(self, *args, **kw):
         '''

@@ -396,10 +396,10 @@ class FusionsLaserManager(LaserManager):
     def get_motor(self, name):
         return next((mi for mi in self.laser_controller.motors if mi.name == name), None)
 
-    def do_autofocus(self):
+    def do_autofocus(self, **kw):
         if self.use_video:
             am = self.stage_manager.autofocus_manager
-            am.passive_focus(block=True)
+            am.passive_focus(block=True, **kw)
 
     def take_snapshot(self, *args, **kw):
         if self.use_video:

@@ -23,6 +23,7 @@ from skimage.filter import sobel, threshold_adaptive
 from skimage.morphology import watershed
 #============= local library imports  ==========================
 from src.mv.segment.base import BaseSegmenter
+from scipy import ndimage
 # from skimage.exposure.exposure import rescale_intensity
 # from scipy.ndimage.morphology import binary_closing
 
@@ -48,45 +49,15 @@ class RegionSegmenter(BaseSegmenter):
             n[markers == True] = 255
             n[markers == False] = 1
             markers = n
-#            print markers
-#            markers = markers.astype('uint8')
-#            n = ones_like(markers)
-#            n[markers] = 255
-#            print n
-#            markers[markers] = 255
-#            markers[not markers] = 1
-#            print markers
-#            markers = n.astype('uint8')
-#            markers = invert(markers).astype('uint8')
 
         else:
             markers = zeros_like(image)
             markers[image < self.threshold_low] = 1
             markers[image > self.threshold_high] = 255
 
-#        global cnt
-#        # remove holes
-#        if cnt % 2 == 0:
-#            markers = binary_closing(markers).astype('uint8') * 255
-#        cnt += 1
-#        print markers
         elmap = sobel(image, mask=image)
         wsrc = watershed(elmap, markers, mask=image)
-        return invert(wsrc)
-#        elmap = ndimage.distance_transform_edt(image)
-#        local_maxi = is_local_maximum(elmap, image,
-#                                      ones((3, 3))
-#                                      )
-#        markers = ndimage.label(local_maxi)[0]
-#        wsrc = watershed(-elmap, markers, mask=image)
-#        fwsrc = ndimage.binary_fill_holes(out)
-#        return wsrc
-#        if self.use_inverted_image:
-#            out = invert(wsrc)
-#        else:
-#            out = wsrc
 
-#        time.sleep(1)
-#        do_later(lambda:self.show_image(image, -elmap, out))
-#        return out
+#         wsrc = wsrc.astype('uint8')
+        return invert(wsrc)
 #============= EOF =============================================

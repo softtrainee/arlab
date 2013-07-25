@@ -146,18 +146,19 @@ class ExtractionPyScript(ValvePyScript):
 #===============================================================================
     @verbose_skip
     @command_register
-    def autofocus(self):
-        self._manager_action(['do_autofocus', (), {}],
+    def autofocus(self, set_zoom=True):
+        self._manager_action([('do_autofocus', (), {'set_zoom':set_zoom})],
                              name=self.extract_device,
                              protocol=ILaserManager)
 
     @verbose_skip
     @command_register
     def snapshot(self, name=''):
-        ps = self._manager_action(['take_snapshot', (), {'name':name}],
+        ps = self._manager_action([('take_snapshot', (), {'name':name})],
                              name=self.extract_device,
                              protocol=ILaserManager)
         if ps:
+            ps = ps[0]
             self.snapshot_paths.append(ps[1])
 
     @verbose_skip
@@ -518,7 +519,9 @@ class ExtractionPyScript(ValvePyScript):
 #===============================================================================
     def _disable(self):
         self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% disable')
-        self.manager.set_extract_state(False)
+        if self.manager:
+            self.manager.set_extract_state(False)
+
         return self._manager_action([('disable_device', (), {})],
                              protocol=ILaserManager,
                              name=self.extract_device)

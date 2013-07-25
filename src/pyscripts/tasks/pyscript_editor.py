@@ -16,13 +16,14 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property, Bool, Event, \
-    Unicode, Any, List, String, cached_property
+    Unicode, Any, List, String, cached_property, Int
 from pyface.tasks.api import Editor
 import os
 from src.pyscripts.parameter_editor import MeasurementParameterEditor, \
     ParameterEditor
-from PySide.QtGui import QTextCursor
-from pyface.ui.qt4.python_editor import PythonEditorEventFilter
+from PySide.QtGui import QTextCursor, QTextFormat, QTextEdit
+import time
+# from pyface.ui.qt4.python_editor import PythonEditorEventFilter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 SCRIPT_PKGS = dict(Bakeout='src.pyscripts.bakeout_pyscript',
@@ -80,6 +81,20 @@ class CodeWidget(AdvancedCodeWidget):
         else:
             # if line is all spaces, treat it as the indent position
             return len(line)
+
+    def highlight_line(self, lineno):
+        selection = QTextEdit.ExtraSelection()
+        selection.format.setBackground(self.code.line_highlight_color)
+        selection.format.setProperty(
+                QTextFormat.FullWidthSelection, True)
+
+        doc = self.code.document()
+        block = doc.findBlockByLineNumber(lineno - 1)
+        pos = block.position()
+        selection.cursor = self.code.textCursor()
+        selection.cursor.setPosition(pos)
+        selection.cursor.clearSelection()
+        self.code.setExtraSelections([selection])
 
 class Commands(HasTraits):
     script_commands = List
@@ -139,6 +154,8 @@ class PyScriptEditor(Editor):
     commands = Property(depends_on='kind')
 
     auto_detab = True
+    highlight_line = Int
+    trace_delay = Int  # ms
 
     def get_scroll(self):
         return self.control.code.verticalScrollBar().value()
@@ -208,6 +225,10 @@ class PyScriptEditor(Editor):
             self.control.code.line_number_widget.setVisible(
                 self.show_line_numbers)
             self.control.code.update_line_number_width()
+
+    def _highlight_line_changed(self):
+        self.control.highlight_line(self.highlight_line)
+        time.sleep(self.trace_delay * 0.001)
 
     def _get_tooltip(self):
         return self.path

@@ -421,7 +421,7 @@ class FusionsLogicBoard(CoreDevice):
     def get_control_group(self):
         return Group(
                      Item('motors', style='custom',
-                          height= -100,
+#                           height= -100,
                           editor=ListEditor(
                                             view='control_view',
 #                                            mutable=False,

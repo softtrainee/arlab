@@ -26,15 +26,23 @@ from src.lasers.stage_managers.calibration.free_calibrator import FreeCalibrator
 from src.lasers.stage_managers.calibration.calibrator import TrayCalibrator
 import os
 from src.paths import paths
+from src.lasers.stage_managers.calibration.hole_calibrator import HoleCalibrator
 
 TRAY_HELP = '''1. Locate center hole
 2. Locate right hole
 '''
-FREE_HELP = '''1. Move to Point, Enter Reference Position. Repeat at least 2X
-2. Hit End Calibrate to finish and compute parameters
-'''
-# from src.regex import XY_REGEX
 
+HELP_DICT = {
+           'Free':'''1. Move to Point, Enter Reference Position. Repeat at least 2X
+2. Hit End Calibrate to finish and compute parameters
+''',
+            'Hole':'''1. Move to Hole, Enter Reference hole. Repeat at least 2X
+2. Hit End Calibrate to finish and compute parameters'''
+            }
+
+STYLE_DICT = {'Free':FreeCalibrator,
+              'Hole':HoleCalibrator,
+             }
 
 class TrayCalibrationManager(Manager):
     x = Float
@@ -46,68 +54,17 @@ class TrayCalibrationManager(Manager):
     calibrate = Event
     calibration_step = String('Calibrate')
     calibration_help = String(TRAY_HELP)
-    style = Enum('Tray', 'Free')
+    style = Enum('Tray', 'Free', 'Hole')
     canvas = Any
     calibrator = Property(depends_on='style')
 
-#    position_entry = String(enter_set=True, auto_set=False)
-
     def isCalibrating(self):
         return self.calibration_step != 'Calibrate'
-#===============================================================================
-# handlers
-#===============================================================================
-    def _style_changed(self):
-        if self.style == 'Free':
-            self.calibration_help = FREE_HELP
-        else:
-            self.calibration_help = TRAY_HELP
-
-#    def _position_entry_changed(self, en):
-#        '''
-#            go to a calibrated position
-#        '''
-#        if XY_REGEX.match(en):
-#            x, y = map(float, en.split(','))
-#            self.parent.linear_move(x, y, use_calibration=True, block=False)
-#        else:
-#            try:
-#                h = int(en)
-#                self.parent.move_to_hole(h)
-#            except ValueError:
-#                pass
 
     def get_current_position(self):
         x = self.parent.stage_controller.x
         y = self.parent.stage_controller.y
         return x, y
-
-    def _calibrate_fired(self):
-        '''
-        '''
-        x, y = self.get_current_position()
-        self.rotation = 0
-
-        args = self.calibrator.handle(self.calibration_step,
-                                      x, y, self.canvas)
-        if args:
-            for a in ('calibration_step', 'cx', 'cy', 'scale', 'error', 'rotation'):
-                if args.has_key(a):
-                    setattr(self, a, args[a])
-                    if a == 'rotation':
-                        self.save_calibration()
-
-#            cstep, cx, cy, rot, scale, err = args
-#            if cstep is not None:
-#                self.calibration_step = cstep
-#            if cx is not None and cy is not None:
-#                self.x, self.y = cx, cy
-#            if scale is not None:
-#                self.scale = scale
-#            if rot is not None:
-#                self.rotation = rot
-#                self.save_calibration()
-
 
     def load_calibration(self, stage_map=None):
         if stage_map is None:
@@ -161,28 +118,52 @@ class TrayCalibrationManager(Manager):
             cg.content.append(ad)
 
         v = View(cg,
-                    CustomLabel('calibration_help',
-                                color='green',
-                                height=75, width=300),
-#                    Group(
-#                          Item('position_entry',
-#                               show_label=False,
-#                               tooltip='Enter a positon e.g 1 for a hole, or 3,4 for X,Y'
-#                               ), label='Position',
-#                          show_border=True)
+                 CustomLabel('calibration_help',
+                            color='green',
+                            height=75, width=300),
                 )
         return v
+
+#===============================================================================
+# handlers
+#===============================================================================
+    def _style_changed(self):
+        if self.style in HELP_DICT:
+            self.calibration_help = HELP_DICT[self.style]
+        else:
+            self.calibration_help = TRAY_HELP
+
+    def _calibrate_fired(self):
+        '''
+        '''
+        x, y = self.get_current_position()
+        self.rotation = 0
+
+        args = self.calibrator.handle(self.calibration_step,
+                                      x, y, self.canvas)
+        if args:
+            for a in ('calibration_step', 'cx', 'cy', 'scale', 'error', 'rotation'):
+                if args.has_key(a):
+                    setattr(self, a, args[a])
+                    if a == 'rotation':
+                        self.save_calibration()
+
 #===============================================================================
 # property get/set
 #===============================================================================
+
     @cached_property
     def _get_calibrator(self):
         kw = dict(name=self.parent.stage_map,
-                manager=self)
-        if self.style == 'Free':
-            klass = FreeCalibrator
+                  manager=self)
+
+        if self.style in STYLE_DICT:
+            klass = STYLE_DICT[self.style]
         else:
             klass = TrayCalibrator
+
+        if self.style == 'Hole':
+            kw['stage_map'] = self.parent._stage_map
 
         return klass(**kw)
 #============= EOF =============================================

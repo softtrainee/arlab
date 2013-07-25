@@ -101,7 +101,10 @@ class AutoFocusManager(Manager):
         else:
             return FocusParameters()
 
-    def passive_focus(self, block=False):
+    def passive_focus(self, block=False, **kw):
+
+        self._evt_autofocusing = TEvent()
+        self._evt_autofocusing.clear()
 #        manager = self.laser_manager
         oper = self.parameters.operator
         self.info('passive focus. operator = {}'.format(oper))
@@ -128,13 +131,19 @@ class AutoFocusManager(Manager):
 
         invoke_in_main_thread(self._open_graph)
 
-
         target = self._passive_focus
         self._passive_focus_thread = Thread(name='autofocus', target=target,
-                                            args=(self._evt_autofocusing,)
+                                            args=(self._evt_autofocusing,
+
+                                                  ),
+                                            kwargs=kw
                                             )
         self._passive_focus_thread.start()
         if block:
+#             while 1:
+#                 if not self._passive_focus_thread.isRunning():
+#                     break
+#                 time.sleep(0.25)
             self._passive_focus_thread.join()
 
     def _open_graph(self):
@@ -148,7 +157,7 @@ class AutoFocusManager(Manager):
 
         self.info('autofocusing stopped by user')
 
-    def _passive_focus(self, stop_signal):
+    def _passive_focus(self, stop_signal, set_zoom=True):
         '''
             sweep z looking for max focus measure
             FMgrad= roberts or sobel (sobel removes noise)
@@ -167,14 +176,15 @@ class AutoFocusManager(Manager):
         steps = step_scalar * (max(fend, fstart) - min(fend, fstart)) + 1
 
         prev_zoom = None
-        if manager is not None:
-            if zoom:
-                motor = manager.get_motor('zoom')
-                if motor:
-                    prev_zoom = motor.data_position
-                    self.info('setting zoom: {}'.format(zoom))
-                    manager.set_motor('zoom', zoom, block=True)
-                    time.sleep(1.5)
+        if set_zoom and \
+                manager is not None and \
+                     zoom:
+            motor = manager.get_motor('zoom')
+            if motor:
+                prev_zoom = motor.data_position
+                self.info('setting zoom: {}'.format(zoom))
+                manager.set_motor('zoom', zoom, block=True)
+                time.sleep(1.5)
 
         args = self._do_focusing(fstart, fend, steps, operator)
 
@@ -190,7 +200,7 @@ class AutoFocusManager(Manager):
 ImageGradmin={} (z={})
 ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 
-            focus_pos = fmi
+            focus_pos = fma
             self.graph.add_vertical_rule(focus_pos)
             self.graph.redraw()
 #            self.graph.add_vertical_rule(fma)
@@ -224,6 +234,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         self._add_focus_area_rect(*screen_roi)
 
         src = self._load_source()
+        src = asarray(src)
         h, w, _d = src.shape
 
         cx = w / 2.
@@ -300,29 +311,48 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 
         self.info('starting sweep from {}'.format(controller.z_progress))
         # pause before moving to end
-        time.sleep(0.5)
-        controller.single_axis_move('z', end)
+        time.sleep(0.25)
+        controller.single_axis_move('z', end, update=100, immediate=True)
 
     def _collect_focus_measures(self, operator, roi, series=0):
         controller = self.stage_controller
         focussteps = []
         fms = []
         if controller.timer:
-            while controller.timer.isActive() and not self._evt_autofocusing.isSet():
+            p = controller.timer.get_interval()
+            self.debug('controller timer period {}'.format(p))
+            pz = controller.z_progress
+
+            while 1:
                 src = self._load_source()
                 x = controller.z_progress
-                y = self._calculate_focus_measure(src, operator, roi)
-                self.graph.add_datum((x, y), series=series)
+                if x != pz:
+                    y = self._calculate_focus_measure(src, operator, roi)
+                    self.graph.add_datum((x, y), series=series)
 
-                focussteps.append(x)
-                fms.append(y)
-                time.sleep(0.05)
+                    focussteps.append(x)
+                    fms.append(y)
+
+                    pz = x
+
+                if not (controller.timer.isActive() and \
+                        not self._evt_autofocusing.isSet()):
+                    break
+                time.sleep(p)
+
+            self.debug('sweep finished')
+
+
         return fms, focussteps
 
     def _calculate_nominal_focal_point(self, fms, focussteps):
         if fms:
             sfms = smooth(fms)
-            if sfms:
+            if sfms is not None:
+
+                self.graph.new_series(focussteps, sfms)
+                self.graph.redraw()
+
                 fmi = focussteps[argmin(sfms)]
                 fma = focussteps[argmax(sfms)]
 
@@ -344,7 +374,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         # need to resize to 640,480. this is the space the roi is in
 #        s = resize(grayspace(src), 640, 480)
         src = grayspace(src)
-        v = crop(asarray(src), *roi)
+        v = crop(src, *roi)
 
         di = dict(var=lambda x:variance(x),
                   laplace=lambda x: get_focus_measure(x, 'laplace'),
@@ -395,16 +425,7 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
         w = self.parameters.crop_width
         h = self.parameters.crop_height
 
-        lp = self.canvas.index_mapper.low_pos
-        hp = self.canvas.index_mapper.high_pos
-        cw = hp - lp
-
-        cx = (cw - w) / 2. + lp
-
-        lp = self.canvas.value_mapper.low_pos
-        hp = self.canvas.value_mapper.high_pos
-        ch = hp - lp
-        cy = (ch - h) / 2. + lp
+        cx, cy = self.canvas.get_center_rect_position(w, h)
 
 
 #         cw, ch = self.canvas.outer_bounds
@@ -424,13 +445,12 @@ ImageGradmax={}, (z={})'''.format(operator, mi, fmi, ma, fma))
 #         pb = self.canvas.padding_bottom
 
         self.canvas.remove_item('croprect')
-        self.canvas.add_markup_rect(cx, cy, w, h, name='croprect')
+        self.canvas.add_markup_rect(cx, cy, w, h, identifier='croprect')
 
     def _autofocus_button_fired(self):
         if not self.autofocusing:
             self.autofocusing = True
-            self._evt_autofocusing = TEvent()
-            self._evt_autofocusing.clear()
+
             self.passive_focus()
         else:
             self.autofocusing = False

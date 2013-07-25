@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Any, Bool, Instance
+from traits.api import HasTraits, on_trait_change, Any, Bool, Instance, Int
 # from traitsui.api import View, Item
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 #============= standard library imports ========================
@@ -47,6 +47,8 @@ class ExperimentEditorTask(EditorTask):
     auto_figure_window = None
     use_auto_figure = Bool
     use_notifications = Bool
+    notifications_port = Int
+
     loading_manager = Instance(LoadingManager)
 
     def _loading_manager_default(self):
@@ -93,7 +95,10 @@ class ExperimentEditorTask(EditorTask):
                         'pychron.experiment.use_auto_figure')
 
         bind_preference(self, 'use_notifications',
-                        'pychron.experiment.use_auto_figure')
+                        'pychron.experiment.use_notifications')
+
+        bind_preference(self, 'notifications_port',
+                        'pychron.experiment.notifications_port')
         elm = self._get_el_manager()
         if elm:
             elm.activate()

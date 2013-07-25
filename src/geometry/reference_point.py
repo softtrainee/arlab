@@ -15,22 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, String
-from traitsui.api import View, HGroup
+from traits.api import HasTraits, Float, String, List, Property, Str
+from traitsui.api import View, HGroup, Item, EnumEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.ui.custom_label_editor import CustomLabel
 
-HELP_TAG = '''Enter the x, y for this point {:0.3f},{:0.3f}
+HELP_TAG_POINT = '''Enter the x, y for this point {:0.3f},{:0.3f}
 in data space i.e mm
 '''
+
+HELP_TAG_HOLE = '''Enter the hole for this point {:0.3f},{:0.3f}'''
+
 
 class ReferencePoint(HasTraits):
     x = Float
     y = Float
-    help_tag = String(HELP_TAG)
+    help_tag = String(HELP_TAG_POINT)
+
     def __init__(self, pt, *args, **kw):
-        self.help_tag = HELP_TAG.format(*pt)
+        self.help_tag = self.help_tag.format(*pt)
         super(ReferencePoint, self).__init__(*args, **kw)
 
     def traits_view(self):
@@ -46,4 +50,34 @@ class ReferencePoint(HasTraits):
                  title='Reference Point'
                  )
         return v
+
+class ReferenceHole(ReferencePoint):
+    hole = Property
+    _hole = Str
+    help_tag = String(HELP_TAG_HOLE)
+    valid_holes = List
+
+    def _get_hole(self):
+        return self._hole
+
+    def _set_hole(self, v):
+        self._hole = v
+
+    def _validate_hole(self, v):
+        if v in self.valid_holes:
+            return v
+    def traits_view(self):
+        v = View(
+                 CustomLabel('help_tag',
+                             top_padding=10,
+                             left_padding=10,
+#                             align='center',
+                             color='maroon'),
+                 Item('hole'),
+                 buttons=['OK', 'Cancel'],
+                 kind='modal',
+                 title='Reference Hole'
+                 )
+        return v
+
 #============= EOF =============================================

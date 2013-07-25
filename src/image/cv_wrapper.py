@@ -19,6 +19,8 @@
 from numpy import array, asarray, ndarray
 from collections import namedtuple
 from scipy.ndimage.filters import laplace
+from numpy.lib.function_base import percentile
+from skimage.color.colorconv import gray2rgb, rgb2gray, is_gray
 
 try:
     from cv2 import VideoCapture, VideoWriter, imwrite, line, fillPoly, polylines, \
@@ -43,16 +45,20 @@ from src.geometry.centroid import calculate_centroid
 
 
 def get_focus_measure(src, kind):
-    if isinstance(src, ndarray):
-        src = fromarray(src)
+    if not isinstance(src, ndarray):
+        src = asarray(src)
 
-    w, h = GetSize(src)
-    dst = CreateMat(w, h, CV_16SC1)
-    Laplace(src, dst)
+#     w, h = GetSize(src)
+#     dst = CreateMat(w, h, CV_16SC1)
+#     Laplace(src, dst)
 
-    d = asarray(dst).flatten()
-    return max(d)
-
+#     d = asarray(dst).flatten()
+    dst = laplace(src)
+    d = dst.flatten()
+    d = percentile(d, 99)
+    return d.mean()
+#     return max(d)
+#     return d[-int(len(d) * 0.1):].mean()
 #    planes = CreateMat(3, 1, CV_8UC3)
 
 #    print src
@@ -106,46 +112,55 @@ def colorspace(src, cs=None):
     '''
 
     '''
-    if isinstance(src, ndarray):
-        src = fromarray(src)
 
-    if cs is None:
-        cs = CV_GRAY2BGR
+    if not isinstance(src, ndarray):
+        src = asarray(src)
 
-
-#    try:
-#        ch = src.channels
-#        w, h = src.cols, src.rows
-#    except AttributeError:
-#        try:
-#            h, w, ch = src.shape
-#        except ValueError:
-#            ch = 1
-#            h, w = src.shape
-#            src = fromarray(src)
-
-#    if src.channels == 1:
-#        return merge(src, src)
-    dst = CreateMat(src.cols, src.rows, CV_8UC3)
-#        dst = cv.Mat(cv.Size(src.cols, src.rows), cv.CV_8UC3)
-#        dst = new_dst(src, nchannels=3)
-
-    CvtColor(src, dst, cs)
-#    else:
-#        dst = src
-
-    return dst
+    return gray2rgb(src)
+#     else:
+# #         src = fromarray(src)
+#
+#
+#         if cs is None:
+#             cs = CV_GRAY2BGR
+#
+#         print src
+#     #    try:
+#     #        ch = src.channels
+#     #        w, h = src.cols, src.rows
+#     #    except AttributeError:
+#     #        try:
+#     #            h, w, ch = src.shape
+#     #        except ValueError:
+#     #            ch = 1
+#     #            h, w = src.shape
+#     #            src = fromarray(src)
+#
+#     #    if src.channels == 1:
+#     #        return merge(src, src)
+#         dst = CreateMat(src.cols, src.rows, CV_8UC3)
+#     #        dst = cv.Mat(cv.Size(src.cols, src.rows), cv.CV_8UC3)
+#     #        dst = new_dst(src, nchannels=3)
+#
+#         CvtColor(src, dst, cs)
+#     #    else:
+#     #        dst = src
+#
+#         return dst
 
 def grayspace(src):
     if isinstance(src, ndarray):
-        src = fromarray(src)
-#    print src
-#    src.step = 92
-    if src.channels > 1:
-        dst = CreateMat(src.height, src.width, CV_8UC1)
-        CvtColor(src, dst, CV_BGR2GRAY)
+        if not is_gray(src):
+            dst = rgb2gray(src)
+        else:
+            dst = src
     else:
-        dst = src
+        if src.channels > 1:
+            dst = CreateMat(src.height, src.width, CV_8UC1)
+            CvtColor(src, dst, CV_BGR2GRAY)
+        else:
+            dst = src
+
     return dst
 #   gray = CreateMat(img.height, img.width, CV_8UC1)
 #   CvtColor(img, gray, CV_BGR2GRAY)
@@ -310,10 +325,11 @@ def get_centroid(pts):
 # segmentation
 #===============================================================================
 def contour(src):
+
 #    return None, None
 #    print src, type(src)
 #    nsrc = fromarray(src[:, :])
-    return findContours(src, CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE)
+    return findContours(src.copy(), CV_RETR_EXTERNAL, CV_CHAIN_APPROX_NONE)
 
 def get_polygons(src,
                  contours, hierarchy,

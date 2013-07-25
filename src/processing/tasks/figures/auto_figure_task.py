@@ -40,13 +40,17 @@ class AutoFigureTask(FigureTask):
     attached = False
     def activated(self):
         if not self.attached:
-            self.sub = Subscriber(host='localhost',
-                                  port=8100,
 
-                                  )
-            self.sub.connect()
-            self.sub.subscribe('RunAdded')
-            self.sub.listen(self.refresh_plots)
+            '''
+                ask user for connection information when opening 
+                
+                allow to save and select from favorites    
+            '''
+            sub = Subscriber(host='localhost',
+                                  port=8100)
+            sub.connect()
+            sub.subscribe('RunAdded')
+            sub.listen(self.refresh_plots)
 
     def refresh_plots(self, last_run):
         '''

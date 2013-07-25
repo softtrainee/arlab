@@ -28,14 +28,14 @@ from numpy import array, asarray
 #=============local library imports  ==========================
 from src.managers.manager import Manager
 from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas
-from src.helpers.color_generators import colors8i as colors
+# from src.helpers.color_generators import colors8i as colors
 
 from src.hardware.motion_controller import MotionController
 from src.paths import paths
 import pickle
-from src.lasers.stage_managers.stage_visualizer import StageVisualizer
+# from src.lasers.stage_managers.stage_visualizer import StageVisualizer
 from src.lasers.points.points_programmer import PointsProgrammer
-from src.geometry.scan_line import make_scan_lines
+# from src.geometry.scan_line import make_scan_lines
 from src.geometry.geometry import sort_clockwise
 from src.geometry.convex_hull import convex_hull
 from src.geometry.polygon_offset import polygon_offset
@@ -95,9 +95,9 @@ class StageManager(Manager):
 
     tray_calibration_manager = Instance(TrayCalibrationManager)
 
-    motion_profiler = DelegatesTo('stage_controller')
+#     motion_profiler = DelegatesTo('stage_controller')
 
-    visualizer = Instance(StageVisualizer)
+#     visualizer = Instance(StageVisualizer)
 
     move_thread = None
     temp_position = None
@@ -458,7 +458,8 @@ class StageManager(Manager):
 
             time.sleep(1)
             self.info('setting z to nominal position. {} mm '.format(self._default_z))
-            self.stage_controller.single_axis_move('z', self._default_z, block=True)
+            self.stage_controller.single_axis_move('z', self._default_z,
+                                                   block=True)
             self.stage_controller._z_position = self._default_z
 
         if self.home_option in ['XY', 'Home All']:
@@ -469,7 +470,8 @@ class StageManager(Manager):
             self.stage_controller._y_position = -25
 
             self.info('moving to center')
-            self.stage_controller.linear_move(0, 0, block=True, sign_correct=False)
+            self.stage_controller.linear_move(0, 0, block=True,
+                                              sign_correct=False)
 
     def _get_hole_by_position(self, x, y):
         if self._stage_map:
@@ -813,7 +815,7 @@ class StageManager(Manager):
         pos = self._stage_map.get_corrected_hole_pos(key)
         self.info('position {}'.format(pos))
         if pos is not None:
-            self.visualizer.set_current_hole(key)
+#             self.visualizer.set_current_hole(key)
 
             if abs(pos[0]) < 1e-6:
                 pos = self._stage_map.get_hole_pos(key)
@@ -1248,11 +1250,11 @@ class StageManager(Manager):
                                    canvas=self.canvas)
         return t
 
-    def _visualizer_default(self):
-        v = StageVisualizer(stage_map=self._stage_map,
-                            )
-        self.canvas.on_trait_change(v.update_calibration, 'calibration_item.[rotation, center]')
-        return v
+#     def _visualizer_default(self):
+#         v = StageVisualizer(stage_map=self._stage_map,
+#                             )
+#         self.canvas.on_trait_change(v.update_calibration, 'calibration_item.[rotation, center]')
+#         return v
 
     def _points_programmer_default(self):
         pp = PointsProgrammer(canvas=self.canvas,
