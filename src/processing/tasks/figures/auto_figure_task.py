@@ -24,6 +24,7 @@ from src.processing.tasks.figures.figure_editor import IdeogramEditor, \
     SpectrumEditor, AutoIdeogramEditor, AutoSpectrumEditor, AutoSeriesEditor
 from src.processing.tasks.figures.auto_figure_panes import AutoFigureControlPane
 from src.messaging.notify.subscriber import Subscriber
+from src.ui.gui import invoke_in_main_thread
 # from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -39,8 +40,8 @@ class AutoFigureTask(FigureTask):
     use_single_ideogram = Bool(True)
     attached = False
     
-    host=Str('129.138.12.160')
-    port=Int(8100)
+    host=Str('129.138.12.141')
+    port=Int(8101)
     
     def activated(self):
         if not self.attached:
@@ -54,8 +55,11 @@ class AutoFigureTask(FigureTask):
                                   port=self.port)
             sub.connect()
             sub.subscribe('RunAdded')
-            sub.listen(self.refresh_plots)
-
+            sub.listen(self.sub_refresh_plots)
+            
+    def sub_refresh_plots(self, last_run):
+        invoke_in_main_thread(self.refresh_plots, last_run)
+        
     def refresh_plots(self, last_run):
         '''
             if last run is part of a step heat experiment
@@ -81,15 +85,16 @@ class AutoFigureTask(FigureTask):
             ed = last_run.extract_device
 
         if at == 'unknown':
-            self._refresh_unknown(ln, at, sample, eg, al)
+            self._refresh_unknown(ln, sample, eg, al)
         else:
-            self._refresh_series(ms, ed, at)
+            self._refresh_series(ln,ms, ed, at)
 
     def _get_args(self, uuid):
-        an = self.db.get_analysis(uuid, key='uuid')
+        an = self.manager.db.get_analysis(uuid, key='uuid')
         if an is not None:
             ln = an.labnumber.identifier
-            at = an.analysis_type.name
+            
+            at = an.measurement.analysis_type.name
 
             sample = ''
             if an.labnumber.sample:
@@ -108,9 +113,9 @@ class AutoFigureTask(FigureTask):
             if extract_group:
                 self.plot_sample_spectrum(sample, aliquot)
             else:
-                self.plot_sample_ideogram(ln, sample)
+                self.plot_sample_ideogram(ln,sample)
 
-    def _refresh_series(self, ms, ed, at):
+    def _refresh_series(self,ln, ms, ed, at):
         editor = self._get_editor(AutoSeriesEditor)
         if editor:
             afc = editor.auto_figure_control
@@ -157,20 +162,21 @@ class AutoFigureTask(FigureTask):
         else:
             unks = self.manager.load_series(at, ms, ed,
                                             **kw)
+            
             if unks:
                 self.manager.load_analyses(unks)
                 self.new_series(unks, klass,
-                                add_baseline_fits=True,
-                                add_derivate_fits=True,
+#                                add_baseline_fits=True,
+#                                add_derivate_fits=True,
                                 name='Series {}'.format(ln))
-
+#
                 editor = self.active_editor
                 tool = editor.tool
 
                 ref = unks[0]
                 tool.load_baseline_fits(ref.isotope_keys)
                 tool.add_peak_center_fit()
-                tool.add_derivate_fits(ref.isotope_keys)
+                tool.add_derivated_fits(ref.isotope_keys)
 
                 self.active_editor.labnumber = ln
                 self.active_editor.show_series('Ar40')
@@ -209,7 +215,7 @@ class AutoFigureTask(FigureTask):
             self.new_spectrum(unks, klass)
         self.group_by_aliquot()
 
-    def plot_sample_ideogram(self, sample):
+    def plot_sample_ideogram(self, ln, sample):
         self.debug('auto plot sample ideogram lab={}'.format(sample))
         klass = AutoIdeogramEditor
         if self.use_single_ideogram:
@@ -220,13 +226,13 @@ class AutoFigureTask(FigureTask):
 
         if editor:
 
-            unks = self.manager.load_sample_analyses(sample)
+            unks = self.manager.load_sample_analyses(ln, sample)
             nunks = self._unique_analyses(unks)
             if nunks:
                 self.unknowns_pane.items.extend(nunks)
 
         else:
-            unks = self.manager.load_sample_analyses(sample)
+            unks = self.manager.load_sample_analyses(ln, sample)
             self.manager.load_analyses(unks)
 #             self.new_ideogram(unks, klass, name='Ideo. {}'.format(labnumber))
             self.new_ideogram(unks, klass, name='Ideo. {}'.format(sample))
