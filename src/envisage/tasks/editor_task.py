@@ -22,13 +22,14 @@ from pyface.tasks.api import IEditor, IEditorAreaPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.loggable import Loggable
-from src.envisage.tasks.base_task import BaseManagerTask
+from src.envisage.tasks.base_task import BaseManagerTask, BaseExtractionLineTask
 # from pyface.tasks.split_editor_area_pane import SplitEditorAreaPane
 # from pyface.confirmation_dialog import ConfirmationDialog
 from pyface.constant import CANCEL, YES
 
 from pyface.tasks.advanced_editor_area_pane import AdvancedEditorAreaPane
-class EditorTask(BaseManagerTask, Loggable):
+# class EditorTask(BaseManagerTask, Loggable):
+class EditorTask(BaseExtractionLineTask, Loggable):
     active_editor = Property(Instance(IEditor),
                              depends_on='editor_area.active_editor'
                              )
@@ -75,8 +76,6 @@ class EditorTask(BaseManagerTask, Loggable):
     def _open_file(self, path, **kw):
         pass
 
-    def prepare_destroy(self):
-        pass
 
     def create_central_pane(self):
         self.editor_area = AdvancedEditorAreaPane()

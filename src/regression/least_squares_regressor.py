@@ -21,10 +21,25 @@ from src.regression.base_regressor import BaseRegressor
 from scipy import optimize
 from numpy import asarray, sqrt, matrix, diagonal, array
 #============= local library imports  ==========================
-
+import re
+from src.helpers.formatting import floatfmt
 class LeastSquaresRegressor(BaseRegressor):
     fitfunc = Callable
     initial_guess = List
+    def make_equation(self):
+        import inspect
+        eq = inspect.getsource(self.fitfunc).strip()
+
+        def func(match):
+            m = match.group(0)
+            idx = int(m[2:-1])
+            return floatfmt(self._coefficients[idx])
+
+        for ci in self._coefficients:
+            eq = re.sub(r'p\[\d]', func, eq)
+
+        h, t = eq.split(':')
+        return 'fitfunc={}'.format(t)
 
     def _fitfunc_changed(self):
         self.calculate()

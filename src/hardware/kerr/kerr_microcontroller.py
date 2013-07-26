@@ -36,9 +36,9 @@ class KerrMicrocontroller(KerrDevice):
         self.parent.tell('0' * 40, is_hex=True)
 
         addr = self.address
-        commands = [(addr, '2101FF', 50, 'setting module 1 address'),
-                    (addr, '2102FF', 50, 'setting module 2 address'),
-                    (addr, '2103FF', 50, 'setting module 3 address'),
+        commands = [(addr, '2101FF', 100, 'setting module 1 address'),
+                    (addr, '2102FF', 100, 'setting module 2 address'),
+                    (addr, '2103FF', 100, 'setting module 3 address'),
 
                   ]
         self._execute_hex_commands(commands, tell=True)

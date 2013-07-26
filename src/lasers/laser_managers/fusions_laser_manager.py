@@ -106,6 +106,8 @@ class FusionsLaserManager(LaserManager):
 
     chiller = Any
 
+    motor_event = Event
+
     @on_trait_change('laser_controller:refresh_canvas')
     def refresh_canvas(self):
         if self.stage_manager:
@@ -391,6 +393,7 @@ class FusionsLaserManager(LaserManager):
             return True
 
     def set_motor(self, *args, **kw):
+        self.motor_event = (args, kw)
         return self.laser_controller.set_motor(*args, **kw)
 
     def get_motor(self, name):

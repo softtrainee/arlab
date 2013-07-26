@@ -50,8 +50,8 @@ class ExperimentEditorTask(EditorTask):
     notifications_port = Int
 
     loading_manager = Instance(LoadingManager)
-    notifier=Instance(Notifier)
-    
+    notifier = Instance(Notifier)
+
     def _loading_manager_default(self):
         lm = LoadingManager(db=self.manager.db,
                             show_group_positions=True
@@ -84,18 +84,19 @@ class ExperimentEditorTask(EditorTask):
                                          ),
                           top=PaneItem('pychron.experiment.controls')
                           )
-    
+
     def send_test_notification(self):
         self.debug('sending test notification')
-        db=self.manager.db
-        an=db.get_last_analysis('bu-FD-o')
-        an=self.manager.make_analyses([an])[0]
+        db = self.manager.db
+#         an=db.get_last_analysis('bu-FD-o')
+        an = db.get_last_analysis('22598')
+        an = self.manager.make_analyses([an])[0]
         if an:
             self.debug('test push {}'.format(an.record_id))
             self._publish_notification(an)
         else:
             self.debug('problem recalling last analysis')
-        
+
     def deselect(self):
         if self.active_editor:
             self.active_editor.queue.selected = []
@@ -111,18 +112,7 @@ class ExperimentEditorTask(EditorTask):
 
         bind_preference(self, 'notifications_port',
                         'pychron.experiment.notifications_port')
-        elm = self._get_el_manager()
-        if elm:
-            elm.activate()
-
-    def prepare_destroy(self):
-        elm = self._get_el_manager()
-        if elm:
-            elm.closed(True)
-
-    def _get_el_manager(self):
-        app = self.window.application
-        return app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+        super(ExperimentEditorTask, self).activated()
 
     def create_dock_panes(self):
         self.isotope_evolution_pane = IsotopeEvolutionPane()
@@ -144,10 +134,7 @@ class ExperimentEditorTask(EditorTask):
 #                 self.summary_pane,
                 ]
 
-        man = self._get_el_manager()
-        if man:
-            from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
-            panes.append(CanvasDockPane(model=man))
+        panes = self._add_canvas_pane(panes)
 
         app = self.window.application
         from src.lasers.laser_managers.ilaser_manager import ILaserManager

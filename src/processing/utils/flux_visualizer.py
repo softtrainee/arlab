@@ -14,8 +14,8 @@
 # limitations under the License.
 #===============================================================================
 
-from traits.etsconfig.etsconfig import ETSConfig
-ETSConfig.toolkit = 'qt4'
+# from traits.etsconfig.etsconfig import ETSConfig
+# ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
 from traits.api import HasTraits
 from traitsui.api import View, Item
@@ -29,7 +29,10 @@ import math
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.interpolate import griddata
-from src.regression.ols_regressor import MultipleLinearRegressor
+from src.regression.ols_regressor import MultipleLinearRegressor, FluxRegressor
+from matplotlib.pyplot import savefig
+import os
+import video_stitcher
 #============= standard library imports ========================
 #============= local library imports  ==========================
 def load_holder(holder):
@@ -189,7 +192,8 @@ def load_flux_xls(p, holes, header_offset=1):
     hole_ids = []
     for ri in range(sheet.nrows - header_offset):
         ri += header_offset
-
+#         if ri % 2 == 0:
+#             continue
         hole = sheet.cell_value(ri, hole_idx)
         if hole:
             hole = int(hole) - 1
@@ -250,6 +254,10 @@ def visualize_flux_contour(p, holder, delim=','):
 #    from src.regression.ols_regressor import MultipleLinearRegressor
     use_2d = True
 #     use_2d = False
+#     calc_dev = True
+    calc_dev = False
+#     age_space = 280.2
+    age_space = 0
 
     holes = load_holder(holder)
 
@@ -281,26 +289,29 @@ def visualize_flux_contour(p, holder, delim=','):
     x, y = zip(*[(x, y) for i, (x, y, v) in enumerate(holes)
                         if not i in hole_ids])
 
-    calc_dev = True
-#     calc_dev = False
-    age_space = 280.2
+
     if use_2d:
 
-        if calc_dev:
-            nz = zeros((n, n))
-            xy = zip(xx, yy)
+        nz = zeros((n, n))
+        xy = zip(xx, yy)
 #             print xy
 #             print z
-            reg = MultipleLinearRegressor(xs=xy, ys=z, fit='linear')
-            for i in range(n):
-                for j in range(n):
-                    pt = (XX[i, j],
-                          YY[i, j])
-                    v = reg.predict([pt])[0]
+        reg = FluxRegressor(xs=xy,
+                                      ys=z)
+#             reg = MultipleLinearRegressor(xs=xy,
+#                                           ys=z,
+#                                         )
+        for i in range(n):
+            for j in range(n):
+                pt = (XX[i, j],
+                      YY[i, j])
+                v = reg.predict([pt])[0]
 #                     print v
-                    nz[i, j] = v
+                nz[i, j] = v
+        if calc_dev:
             zi = nz - zi
-
+        else:
+            zi = nz
         if age_space:
             zi *= age_space
 
@@ -327,11 +338,14 @@ def visualize_flux_contour(p, holder, delim=','):
                 alpha=0.5
 #                 s=300
                 )
-
-
 #         draw_border(1)
 #         draw_circular_grid(r, rings)
-
+        f = gcf()
+        f.set_size_inches((8, 8))
+        plt.axes().set_aspect('equal')
+        xlabel('X (mm)')
+        ylabel('Y (mm)')
+        rc('font', **{'size': 24})
 
     else:
         fig = plt.figure()
@@ -350,25 +364,37 @@ def visualize_flux_contour(p, holder, delim=','):
 #             print X.shape
 #             contourf(xi, yi, zi, 25, cmap=cm.jet)
 
-        ax.contourf(XX, YY, zi,
-                    20,
-                    cmap=cm.jet)
+#         ax.contourf(XX, YY, zi,
+#                     20,
+#                     cmap=cm.jet)
 
-#             contour(XX, YY, zi, 25, cmap=cm.jet,
-#                     )
-#             ax.plot_trisurf(xx, yy, z, cmap=cm.jet, linewidth=0.2)
-#         ax.plot_wireframe(XX, YY, zi, alpha=0.25)
-#         ax.plot_surface(XX, YY, zi, rstride=2, cstride=2,
-#                         shade=True,
-#                         cmap=cm.jet
-#                         )
-        ax.set_zlabel('Delta-J %')
-    f = gcf()
-    f.set_size_inches((8, 8))
-    plt.axes().set_aspect('equal')
-    xlabel('X (mm)')
-    ylabel('Y (mm)')
-    rc('font', **{'size': 24})
+        xy = zip(xx, yy)
+        reg = FluxRegressor(xs=xy, ys=z)
+        ZZ = zeros((n, n))
+
+        for i in range(n):
+            for j in range(n):
+                pt = (XX[i, j],
+                      YY[i, j])
+                v = reg.predict([pt])[0]
+#                     print v
+                ZZ[i, j] = v
+
+        p = ax.plot_surface(XX, YY, ZZ, cmap=cm.jet,
+                        rstride=2, cstride=2,
+                        linewidth=0, antialiased=False,
+                        alpha=0.5
+                        )
+
+        cb = fig.colorbar(p)
+        cb.set_label('Delta-J %')
+#         root = '/Users/ross/Sandbox/flux_visualizer/animations'
+#         for i, ii in enumerate(xrange(0, 360, 10)):
+#             ax.view_init(elev=10., azim=ii)
+#             savefig(os.path.join(root, '{:03n}.jpg'.format(i)))
+#
+#
+#         video_stitcher.stitch(root, 5, name_filter='%03d.jpg')
     show()
 
 if __name__ == '__main__':
@@ -377,6 +403,7 @@ if __name__ == '__main__':
     p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G3.txt'
     p = '/Users/ross/Sandbox/flux_visualizer/J_nm-258_tray_G.xls'
     p = '/Users/ross/Sandbox/flux_visualizer/J_nm-258_tray_G2.xls'
+    p = '/Users/ross/Sandbox/flux_visualizer/J_NM-259A.xls'
 #     p = '/Users/ross/Sandbox/flux_visualizer/runid_contour.txt'
 #    p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G.txt'
     holder = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/1_75mm_3level'

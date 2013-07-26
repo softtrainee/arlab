@@ -32,38 +32,18 @@ class ExtractionLineCanvas(HasTraits):
     '''
     '''
     canvas2D = Any
-    alt_canvas2D = Any
-#    canvas3D = Any
     manager = Any
-#     style = Enum('2D', '3D')
-#     width = Float(300)
-#     height = Float(500)
 
-#    def __init__(self, *args, **kw):
-#        '''
-#        '''
-#        super(ExtractionLineCanvas, self).__init__(*args, **kw)
-
-#        exp = self.manager.explanation
-#        if exp:
-#            for c in exp.explanable_items:
-#                c.canvas = self
 
     def toggle_item_identify(self, name):
         '''
         '''
-
-#         if self.canvas2D is not None:
-#             self.canvas2D.toggle_item_identify(name)
         self._canvas_function('toggle_item_identify', name)
 
     def refresh(self):
         '''
         '''
         self._canvas_function('request_redraw')
-#         for c in (self.canvas2D, self.alt_canvas2D):
-#             if c:
-#                 c.request_redraw()
 
     def get_object(self, name):
         if self.canvas2D:
@@ -73,21 +53,12 @@ class ExtractionLineCanvas(HasTraits):
     def load_canvas_file(self, path):
         '''
         '''
-#         if self.canvas2D:
-#             self.canvas2D.load_canvas_file(path)
         self._canvas_function('load_canvas_file', path)
 
     def update_valve_state(self, name, state, *args, **kw):
         '''
             do the specific canvas action
         '''
-#         if self.canvas2D:
-#             self.canvas2D.update_valve_state(name, state)
-#         if self.alt_canvas2D:
-#             self.alt_canvas2D.update_valve_state(name, state)
-#         for c in (self.canvas2D, self.alt_canvas2D):
-#             if c:
-#                 c.update_valve_state(name, state)
         self._canvas_function('update_valve_state', name, state)
 
     def update_valve_lock_state(self, name, state, *args, **kw):
@@ -95,16 +66,11 @@ class ExtractionLineCanvas(HasTraits):
             do the specific canvas action
         '''
         self._canvas_function('update_valve_lock_state', name, state)
-#         for c in (self.canvas2D, self.alt_canvas2D):
-#             if c:
-#                 c.update_valve_lock_state(name, state)
-#         if self.canvas2D:
-#         if self.alt_canvas2D:
-#             self.canvas2D.update_valve_lock_state(name, state)
+
     def _canvas_function(self, func, *args, **kw):
-        for c in (self.canvas2D, self.alt_canvas2D):
-            if c:
-                getattr(c, func)(*args, **kw)
+        c = self.canvas2D
+        if c:
+            getattr(c, func)(*args, **kw)
 
     def _canvas_factory(self, name, default=None):
         from src.canvas.canvas2D.extraction_line_canvas2D import ExtractionLineCanvas2D
@@ -119,8 +85,6 @@ class ExtractionLineCanvas(HasTraits):
         e.load_canvas_file(p)
         return e
 
-    def _alt_canvas2D_default(self):
-        return self._canvas_factory('alt_canvas.xml', default='canvas.xml')
 
     def _canvas2D_default(self):
         return self._canvas_factory('canvas.xml')
@@ -129,51 +93,18 @@ class ExtractionLineCanvas(HasTraits):
         '''
         '''
 
-#         w, h = self._get_canvas_size()
         g = Item('canvas2D',
                     style='custom',
-                    # visible_when='twod_canvas',
                     show_label=False,
-                    editor=ComponentEditor(
-#                                             width=w ,
-#                                             height=h
-                                            ),
-#                 width=h * self.canvas2D.aspect_ratio,
-#                 height=h,
+                    editor=ComponentEditor(),
                 label='2D'
                 )
         return g
 
-#    def _canvas3D_group(self):
-#        '''
-#        '''
-#        w, h = self._get_canvas_size()
-#        g = Item('canvas3D',
-#                    style='custom',
-#                    show_label=False,
-#                    # visible_when = 'not twod_canvas',
-#                    editor=Canvas3DEditor(),
-#                    width=w,
-#                    height=h,
-#                    label='3D'
-#                    )
-#
-#        return g
-    def alt_canvas_view(self):
-        v = View(UItem('alt_canvas2D',
-                       style='custom',
-                       editor=ComponentEditor()
-                     )
-               )
-
-        return v
     def traits_view(self):
         '''
         '''
-#         if self.style == '2D':
         c = self._canvas2D_group()
-#        else:
-#            c = self._canvas3D_group()
         v = View(c)
         return v
 #============= EOF ====================================

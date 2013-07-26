@@ -17,7 +17,8 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any
 from traitsui.api import View, Item
-from src.envisage.tasks.base_task import BaseHardwareTask
+from src.envisage.tasks.base_task import BaseHardwareTask, \
+    BaseExtractionLineTask
 from src.spectrometer.tasks.spectrometer_panes import ScanPane, ControlsPane, \
     ReadoutPane, IntensitiesPane
 from pyface.tasks.task_layout import TaskLayout, PaneItem, Splitter, Tabbed
@@ -27,28 +28,18 @@ from src.spectrometer.tasks.spectrometer_actions import PeakCenterAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class SpectrometerTask(BaseHardwareTask):
+class SpectrometerTask(BaseExtractionLineTask):
     scan_manager = Any
     name = 'Scan'
+
+
     def prepare_destroy(self):
         self.scan_manager.stop_scan()
+        super(SpectrometerTask, self).prepare_destroy()
 
     def activated(self):
         self.scan_manager.setup_scan()
-
-#     def _menu_bar_factory(self, menus=None):
-#         measure_menu = SMenu(
-# #                              PeakCenterAction(),
-#                             id='Measure', name='&Measure',
-#                             before='help.menu'
-#                             )
-#         if not menus:
-#             menus=[measure_menu]
-#         else:
-#             menus.append(measure_menu)
-#         print menus, 'spec'
-#         return super(BaseHardwareTask, self)._menu_bar_factory(menus=menus)
-
+        super(SpectrometerTask, self).activated()
 
     def _default_layout_default(self):
         return TaskLayout(
@@ -80,11 +71,16 @@ class SpectrometerTask(BaseHardwareTask):
                 ReadoutPane(model=self.scan_manager),
                 IntensitiesPane(model=self.scan_manager)
                 ]
-        app = self.window.application
-        man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
-        if man:
-            from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
-            panes.append(CanvasDockPane(model=man))
+
+        panes = self._add_canvas_pane(panes)
+
+#         app = self.window.application
+#         man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+#         if man:
+#             from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
+#             panes.append(CanvasDockPane(canvas=man.new_canvas()))
+
+#             panes.append(CanvasDockPane(model=man))
         return panes
 
 #============= EOF =============================================

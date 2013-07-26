@@ -341,6 +341,30 @@ class BaseManagerTask(BaseTask):
             return dialog.path
 
 
+class BaseExtractionLineTask(BaseManagerTask):
+    def _get_el_manager(self):
+        app = self.window.application
+        man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+        return man
+
+    def prepare_destroy(self):
+        man = self._get_el_manager()
+        if man:
+            man.deactivate()
+
+    def activated(self):
+        man = self._get_el_manager()
+        if man:
+            man.activate()
+
+    def _add_canvas_pane(self, panes):
+        app = self.window.application
+        man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+        if man:
+            from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
+            panes.append(CanvasDockPane(canvas=man.new_canvas(name='alt_canvas')))
+
+        return panes
 
 class BaseHardwareTask(BaseManagerTask):
     pass
