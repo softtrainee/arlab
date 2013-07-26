@@ -95,6 +95,8 @@ class KerrMotor(KerrDevice, ConsumerMixin):
         '''
             F6  B004 2003 F401 E803 FF 00 E803 01 01 01
             cmd p    d    i    il   ol cl el   sr db sm
+            
+            B004 2003 F401 B004 FF 00 6400 010101
         '''
         p = (45060, 4)
         d = (8195, 4)
@@ -125,6 +127,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
             self.info('not changing pos {}=={}'.format(self.data_position, value))
 
         return True
+
     def _convert_value(self, value):
         return value
 
@@ -515,8 +518,6 @@ class KerrMotor(KerrDevice, ConsumerMixin):
         hpos = self._calculate_hysteresis_position(pos, hysteresis)
         self._desired_position = pos
         self._motor_position = hpos
-
-#         return
 #        self._motor_position =npos= min(self.max, max(self.min, pos + hysteresis))
         #============pos is in mm===========
         addr = self.address
@@ -729,4 +730,70 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 #        '''
 #
 #        return check_bit in status_register
+#     def _set_data_position2(self, pos):
+#         '''
+#
+#             this is a better solution than al deinos (mass spec) for handling positioning of a
+#             linear drive.  Al sets the focused position from 0-100. this means if you change the drive sign
+#             (in affect changing the homing position +tive or -tive) you also have to change the focused position
+#
+#             example
+#             drive sign =-1
+#             home pos= 99
+#
+#             drive sign =1
+#             home pos = 1
+#
+#             this seems wrong. the solution that follows sets the focused position in % distance from home
+#
+#             focus_beam_pos=0.01 #1%
+#             dr_sign=1
+#
+#             #normalize the input value to 1
+#             pos=pos/(max-min)
+#
+#             if dr_sign==-1:
+#                 pos=1-pos
+#
+#             #scale pos to the total number of motor steps ** minus the focused position in motor steps **
+#             focus_pos_msteps=motor_steps*focus_pos
+#
+#             pos_msteps= (motor_steps-focus_pos_msteps) * pos
+#
+#
+#             drive a few steps past desired position then back to desired position
+#             this takes out any lash in the gears
+#
+#         '''
+#         self.info('setting motor in data space {:0.3f}'.format(float(pos)))
+#         if self._data_position != pos:
+#
+#             self._data_position = pos
+#
+#             pos /= float((self.max - self.min))
+#             if self.sign == -1.0:
+#                 pos = 1 - pos
+#
+#             steps = int((1 - self.home_position) * self.steps * pos)
+#             hysteresis = 0
+#             self.do_hysteresis = False
+#             if self.hysteresis_value < 0:
+#                 use_hysteresis = self._motor_position > steps
+#             else:
+#                 use_hysteresis = self._motor_position < steps
+#
+#             if use_hysteresis and self.use_hysteresis:
+#                 self.do_hysteresis = True
+#                 self.doing_hysteresis_correction = False
+#                 hysteresis = self.hysteresis_value
+#
+#             self._set_motor_position_(steps, hysteresis)
+#             if not self.parent.simulation:
+#                 #invoke in gui thread because in position update can be triggered from a RemoteHardware thread
+#                 def launch_timer():
+#                     self.timer = Timer(400, self._update_position)
+#                 invoke_in_main_thread(launch_timer)
+#
+#             else:
+#                 self.update_position = self._data_position
 

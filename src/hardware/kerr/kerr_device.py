@@ -23,6 +23,7 @@ from traits.api import Any, Str
 import ConfigParser
 #=============local library imports  ==========================
 from src.config_loadable import ConfigLoadable
+import time
 class KerrDevice(ConfigLoadable):
     '''
         Base class for Kerr devices
@@ -55,12 +56,15 @@ class KerrDevice(ConfigLoadable):
 #    def load_additional_args(self, config):
 #        pass
 
-    def _execute_hex_commands(self, commands, **kw):
+    def _execute_hex_commands(self, commands, delay=None, **kw):
         '''
         '''
         # commands list of tuples (addr,hex-command,delay,description)
         for cmd in commands:
             self._execute_hex_command(cmd, **kw)
+            if delay:
+                time.sleep(delay * 0.001)
+
 
     def _execute_hex_command(self, cmd, tell=False, nbytes=2, **kw):
         '''
@@ -122,7 +126,7 @@ class KerrDevice(ConfigLoadable):
         return rbits
 
     def _get_io_bits(self):
-        return ['0',  # bit 4
+        return ['0', # bit 4
                 '1',
                 '1',
                 '1',
