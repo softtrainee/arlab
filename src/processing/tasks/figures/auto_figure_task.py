@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Instance, List, Dict, Bool
+from traits.api import HasTraits, on_trait_change, Instance, List, Dict, Bool, Str, Int
 from traitsui.api import View, Item
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed
 from src.processing.tasks.figures.plotter_options_pane import PlotterOptionsPane
@@ -38,6 +38,10 @@ class AutoFigureTask(FigureTask):
 
     use_single_ideogram = Bool(True)
     attached = False
+    
+    host=Str('129.138.12.160')
+    port=Int(8100)
+    
     def activated(self):
         if not self.attached:
 
@@ -46,8 +50,8 @@ class AutoFigureTask(FigureTask):
                 
                 allow to save and select from favorites    
             '''
-            sub = Subscriber(host='localhost',
-                                  port=8100)
+            sub = Subscriber(host=self.host,
+                                  port=self.port)
             sub.connect()
             sub.subscribe('RunAdded')
             sub.listen(self.refresh_plots)

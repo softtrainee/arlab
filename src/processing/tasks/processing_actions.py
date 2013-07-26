@@ -29,6 +29,7 @@ from pyface.tasks.action.task_action import TaskAction
 #         processor = app.get_service('src.processing.processor.Processor')
 #         return processor
 
+
 #===============================================================================
 # grouping
 #===============================================================================
