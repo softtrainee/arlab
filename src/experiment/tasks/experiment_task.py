@@ -50,7 +50,8 @@ class ExperimentEditorTask(EditorTask):
     notifications_port = Int
 
     loading_manager = Instance(LoadingManager)
-
+    notifier=Instance(Notifier)
+    
     def _loading_manager_default(self):
         lm = LoadingManager(db=self.manager.db,
                             show_group_positions=True
@@ -83,7 +84,18 @@ class ExperimentEditorTask(EditorTask):
                                          ),
                           top=PaneItem('pychron.experiment.controls')
                           )
-
+    
+    def send_test_notification(self):
+        self.debug('sending test notification')
+        db=self.manager.db
+        an=db.get_last_analysis('bu-FD-o')
+        an=self.manager.make_analyses([an])[0]
+        if an:
+            self.debug('test push {}'.format(an.record_id))
+            self._publish_notification(an)
+        else:
+            self.debug('problem recalling last analysis')
+        
     def deselect(self):
         if self.active_editor:
             self.active_editor.queue.selected = []
@@ -165,8 +177,8 @@ class ExperimentEditorTask(EditorTask):
 #         return
 
 #        import os
-        path = os.path.join(paths.experiment_dir, 'demo.txt')
-#         path = self.open_file_dialog()
+#        path = os.path.join(paths.experiment_dir, 'demo.txt')
+        path = self.open_file_dialog()
 
         if path:
 #            self.window.reset_layout()
@@ -266,6 +278,7 @@ class ExperimentEditorTask(EditorTask):
 
     def _publish_notification(self, run):
         msg = 'RunAdded {}'.format(run.uuid)
+        self.info('pushing notification {}'.format(msg))
         self.notifier.send_notification(msg)
 
     def _open_auto_figure(self):
@@ -465,6 +478,7 @@ class ExperimentEditorTask(EditorTask):
 
     def _notifier_factory(self):
         n = Notifier()
+        n.setup(self.notifications_port)
         return n
 
     def _manager_factory(self):

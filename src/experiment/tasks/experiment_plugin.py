@@ -33,7 +33,7 @@ from src.experiment.tasks.experiment_preferences import ExperimentPreferences, \
 from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
     OpenExperimentQueueAction, SaveExperimentQueueAction, \
     SaveAsExperimentQueueAction, SignalCalculatorAction, MergeQueuesAction, \
-    UpdateDatabaseAction, DeselectAction
+    UpdateDatabaseAction, DeselectAction, SendTestNotificationAction
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.experiment.experimentor import Experimentor
@@ -82,9 +82,13 @@ class ExperimentPlugin(BaseTaskPlugin):
                               ),
                 TaskExtension(
                               actions=[
+                                       
                                        SchemaAddition(id='open_experiment',
                                                         factory=OpenExperimentQueueAction,
                                                         path='MenuBar/File/Open'),
+                                       SchemaAddition(id='test_notify',
+                                                        factory=SendTestNotificationAction,
+                                                        path='MenuBar/File'),
 
                                        SchemaAddition(id='new_experiment',
                                                       factory=NewExperimentQueueAction,

@@ -49,22 +49,26 @@ class AnalysisEditTask(EditorTask):
 
         self.controls_pane = ControlsPane()
         self.plot_editor_pane = PlotEditorPane()
-
-        return [
+        panes=[
                 self.unknowns_pane,
                 self.controls_pane,
                 self.plot_editor_pane,
-                self._create_query_pane()
 #                self.results_pane,
                 ]
+        cp=self._create_query_pane()
+        if cp:
+            panes.append(cp)
+        return panes
+    
     def _create_query_pane(self):
-        selector = self.manager.db.selector
-        selector._search_fired()
+        if self.manager.db:
+            selector = self.manager.db.selector
+            selector._search_fired()
+    
+            from src.processing.selection.data_selector import DataSelector
+            ds = DataSelector(database_selector=selector)
 
-        from src.processing.selection.data_selector import DataSelector
-        ds = DataSelector(database_selector=selector)
-
-        return QueryPane(model=ds)
+            return QueryPane(model=ds)
 
     def _create_unknowns_pane(self):
         self.unknowns_pane = up = self.unknowns_pane_klass(adapter_klass=self.unknowns_adapter)
@@ -79,9 +83,10 @@ class AnalysisEditTask(EditorTask):
     def _open_external_task(self, _id):
         app = self.window.application
         for win in app.windows:
-            if win.active_task.id == _id:
-                win.activate()
-                break
+            if win.active_task:
+                if win.active_task.id == _id:
+                    win.activate()
+                    break
         else:
             win = app.create_window(TaskWindowLayout(_id))
             win.open()
@@ -123,8 +128,8 @@ class AnalysisEditTask(EditorTask):
                 if hasattr(self.active_editor, 'tool'):
                     tool = self.active_editor.tool
                 self.controls_pane.tool = tool
-
-                self.unknowns_pane.items = self.active_editor.unknowns
+                if hasattr(self.active_editor, 'unknowns'):
+                    self.unknowns_pane.items = self.active_editor.unknowns
 
     @on_trait_change('active_editor:component_changed')
     def _update_component(self):

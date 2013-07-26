@@ -65,7 +65,7 @@ class ExperimentPreferences(BasePreferencesHelper):
 
     use_auto_figure = Bool
     use_notifications = Bool
-    notification_port = Int
+    notifications_port = Int
 
     @on_trait_change('db+')
     def db_attribute_changed(self, obj, name, old, new):
@@ -192,7 +192,7 @@ class ExperimentPreferencesPane(PreferencesPane):
                                 Item('use_auto_figure'),
                                 VGroup(
                                        Item('use_notifications'),
-                                       Item('notification_port',
+                                       Item('notifications_port',
                                             enabled_when='use_notifications',
                                             label='Port'),
 

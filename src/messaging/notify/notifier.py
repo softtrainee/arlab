@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Int
 from traitsui.api import View, Item
 from src.loggable import Loggable
 import zmq
@@ -23,12 +23,17 @@ import zmq
 #============= local library imports  ==========================
 
 class Notifier(Loggable):
-    def setup(self):
-        context = zmq.Context()
-        sock = context.socket(zmq.PUB)
-        sock.bind('tcp://*:8100')
-        self._sock = sock
+#    port=Int(8100)
+    def setup(self, port):
+        if port:
+            context = zmq.Context()
+            sock = context.socket(zmq.PUB)
+            sock.bind('tcp://*:{}'.format(port))
+            self._sock = sock
 
     def send_notification(self, msg):
-        self._sock.send(msg)
+        if self._sock:
+            self._sock.send(msg)
+        else:
+            self.debug('notifier not setup')
 #============= EOF =============================================
