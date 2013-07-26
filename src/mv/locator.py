@@ -42,7 +42,7 @@ from src.geometry.geometry import sort_clockwise, approximate_polygon_center, \
 from src.geometry.convex_hull import convex_hull
 import math
 from skimage import feature
-from scipy.interpolate.ndgriddata import griddata
+#from scipy.interpolate.ndgriddata import griddata
 from src.ui.gui import invoke_in_main_thread
 from scipy.ndimage.measurements import center_of_mass
 from scipy.ndimage.filters import sobel
@@ -497,7 +497,7 @@ class Locator(Loggable):
 
         draw_circle(src, cpt, radius, color=color, thickness=1)
 
-    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness=-1):
+    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness= -1):
         '''
             convenience function for drawing indicators
         '''

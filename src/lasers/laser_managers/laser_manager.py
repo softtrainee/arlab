@@ -204,10 +204,10 @@ class LaserManager(BaseLaserManager):
 #===============================================================================
 # handlers
 #===============================================================================
-    @on_trait_change('stage_manager:canvas:current_position')
-    def update_status_bar(self, obj, name, old, new):
-        if isinstance(new, tuple):
-            self.status_text = 'x = {:n} ({:0.4f} mm), y = {:n} ({:0.4f} mm)'.format(*new)
+#    @on_trait_change('stage_manager:canvas:current_position')
+#    def update_status_bar(self, obj, name, old, new):
+#        if isinstance(new, tuple):
+#            self.status_text = 'x = {:n} ({:0.4f} mm), y = {:n} ({:0.4f} mm)'.format(*new)
 
     def _enable_fired(self):
         '''

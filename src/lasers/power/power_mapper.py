@@ -121,10 +121,11 @@ class PowerMapper(Loggable, ConsumerMixin):
             self.warning_dialog('No Laser Manager available')
 
         # stop the consumer
-        self._should_consume = False
+#        self._should_consume = False
 
     def _add_data(self, v):
         tab, x, y, col, row, mag, sid = v
+        self.debug('{} {} {} {} {} {}'.format(*v))
         self._write_datum(tab, x, y, col, row, mag)
         self.graph.add_datum((x, mag), series=sid)
         self.graph.redraw()
@@ -215,6 +216,7 @@ class PowerMapper(Loggable, ConsumerMixin):
 #                     self.add_consumable((tab, x, y, i, row, mag, sid))
 #             else:
             p = sc.timer.get_interval()
+            self.debug('power map timer {}'.format(p))
             xaxis = sc.axes['x']
             yaxis = sc.axes['y']
             while 1:
@@ -226,7 +228,7 @@ class PowerMapper(Loggable, ConsumerMixin):
                 else:
                     mag = row + random.random()
 
-                self.debug('x={}, y={}'.format(x, y))
+#                self.debug('x={}, y={}'.format(x, y))
                 if not sc.timer.isActive():
                     self.add_consumable((tab, x, y, 1, row, mag, sid))
                     break

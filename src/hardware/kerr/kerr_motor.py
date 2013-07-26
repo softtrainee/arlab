@@ -97,14 +97,26 @@ class KerrMotor(KerrDevice, ConsumerMixin):
             cmd p    d    i    il   ol cl el   sr db sm
             
             B004 2003 F401 B004 FF 00 6400 010101
+            
+            100 1000 0 0 255 0 4000 1 1 1
         '''
-        p = (45060, 4)
-        d = (8195, 4)
-        i = (62465, 4)
-        il = (59395, 4)
+#        p = (45060, 4)
+#        d = (8195, 4)
+#        i = (62465, 4)
+#        il = (59395, 4)
+#        ol = (255, 2)
+#        cl = (0, 2)
+#        el = (59395, 4)
+#        sr = (1, 2)
+#        db = (1, 2)
+#        sm = (1, 2)
+        p = (100, 4)
+        d = (1000, 4)
+        i = (0, 4)
+        il = (0, 4)
         ol = (255, 2)
         cl = (0, 2)
-        el = (59395, 4)
+        el = (4000, 4)
         sr = (1, 2)
         db = (1, 2)
         sm = (1, 2)
@@ -191,7 +203,6 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                                         low_step=int(self.min_steps),
                                         high_step=int(self.steps)
                                         )
-
 
     def _start_initialize(self, *args, **kw):
         '''
@@ -501,7 +512,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
         hpos = pos + hysteresis
 #         self._hysteresis_correction = 0
 #         if hysteresis:
-        hpos = max(self.min, min(self.max, hpos))
+        hpos = max(self.min_steps, min(self.steps, hpos))
 #             if hpos > self.max:
 #                 self._hysteresis_correction = hpos - self.max
 #                 hpos = self.max

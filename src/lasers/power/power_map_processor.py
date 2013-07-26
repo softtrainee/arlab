@@ -27,6 +27,7 @@ from src.graph.contour_graph import ContourGraph
 from src.managers.data_managers.h5_data_manager import H5DataManager
 
 from scipy import ndimage
+from scipy.interpolate.ndgriddata import griddata
 # from src.managers.data_managers.h5_data_manager import H5DataManager
 
 class PowerMapProcessor:
@@ -44,7 +45,7 @@ class PowerMapProcessor:
         cg = ContourGraph()
 
         z, metadata = self._extract_power_map_data(reader)
-        x, y, z = self._prep_2D_data(z)
+#        x, y, z = self._prep_2D_data(z)
 #        print x, y, z
         w = 300
         h = 300
@@ -59,8 +60,8 @@ class PowerMapProcessor:
                           )
         cplot.index_axis.title = 'mm'
         cplot.value_axis.title = 'mm'
-
-        plot, names, rd = cg.new_series(x=x, y=y, z=z, style='contour',
+        print z
+        plot, names, rd = cg.new_series(x=[], y=[], z=z, style='contour',
                       xbounds=bounds,
                       ybounds=bounds,
                       cmap=self.color_map,
@@ -114,11 +115,11 @@ class PowerMapProcessor:
         cg.new_series(plotid=2, render_style='connectedpoints')
         cg.new_series(plotid=2, **options)
 #
-        ma = max([max(z[i, :]) for i in range(len(x))])
-        mi = min([min(z[i, :]) for i in range(len(x))])
-
-        cg.set_y_limits(min=mi, max=ma, plotid=1)
-        cg.set_y_limits(min=mi, max=ma, plotid=2)
+#        ma = max([max(z[i, :]) for i in range(len(x))])
+#        mi = min([min(z[i, :]) for i in range(len(x))])
+#
+#        cg.set_y_limits(min=mi, max=ma, plotid=1)
+#        cg.set_y_limits(min=mi, max=ma, plotid=2)
 
         cg.show_crosshairs()
 #
@@ -162,31 +163,54 @@ class PowerMapProcessor:
 
         metadata['bounds'] = -float(b), float(b)
 
-        for row in tab.iterrows():
-            x = int(row['col'])
-            try:
-                nr = cells[x]
-            except IndexError:
-                cells.append([])
-                nr = cells[x]
+#        xs = []
+#        ys = []
 
-            # baseline = self._calc_baseline(table, index) if self.correct_baseline else 0.0
-            baseline = 0
-            pwr = row['power']
 
-            nr.append(max(pwr - baseline, 0))
+        xs, ys, power = array([(r['x'], r['y'], r['power'])
+                                for r in tab.iterrows()]).T
+#        xs, ys, power = array(xs), array(ys), array(power)
+        n = power.shape[0]
+#        print n
+        xi = linspace(-min(xs), max(xs), n)
+        yi = linspace(-min(ys), max(ys), n)
+        X = xi[None, :]
+        Y = yi[:, None]
 
-        d = len(cells[-2]) - len(cells[-1])
-
-        if d:
-            cells[-1] += [0, ] * d
-
-        cells = array(cells)
-        # use interpolation to provide smoother interaction
-        cells = ndimage.interpolation.zoom(cells, self.interpolation_factor)
-
-        return rot90(cells, k=2), metadata
-
+#        print b
+#        print X
+#        print xs
+#        print ys
+#        print power
+#        print power
+        power = griddata((xs, ys), power, (X, Y),
+                         fill_value=0,
+                         method='linear')
+        return power, metadata
+#        for row in tab.iterrows():
+#            x = int(row['col'])
+#            try:
+#                nr = cells[x]
+#            except IndexError:
+#                cells.append([])
+#                nr = cells[x]
+#
+#            # baseline = self._calc_baseline(table, index) if self.correct_baseline else 0.0
+#            baseline = 0
+#            pwr = row['power']
+#
+#            nr.append(max(pwr - baseline, 0))
+#
+#        d = len(cells[-2]) - len(cells[-1])
+#
+#        if d:
+#            cells[-1] += [0, ] * d
+#
+#        cells = array(cells)
+#        # use interpolation to provide smoother interaction
+#        cells = ndimage.interpolation.zoom(cells, self.interpolation_factor)
+#
+#        return rot90(cells, k=2), metadata
     def _extract_csv(self, reader):
         cells = []
         metadata = []
@@ -254,7 +278,7 @@ class PowerMapProcessor:
 #        print z
         mx = float(max(z))
 
-        z = array([100 * x / mx for x in [y for y in z]])
+#        z = array([100 * x / mx for x in [y for y in z]])
 
         r, c = shape(z)
         x = linspace(0, 1, r)

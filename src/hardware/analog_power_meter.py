@@ -56,7 +56,7 @@ class AnalogPowerMeter(ADCDevice):
     def read_power_meter(self, *args, **kw):
         '''
         '''
-        kw['verbose'] = True
+        kw['verbose'] = False
         v = self.read_voltage(**kw)
 
         return v
