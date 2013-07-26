@@ -57,24 +57,28 @@ class VideoStageManager(StageManager):
     video = Instance(Video)
     canvas_editor_klass = VideoComponentEditor
 #    calibration_manager = Instance(CalibrationManager)
-    camera_xcoefficients = Property(String(enter_set=True, auto_set=False),
-                                   depends_on='_camera_xcoefficients')
-    _camera_xcoefficients = String
+#     camera_xcoefficients = Property(String(enter_set=True, auto_set=False),
+#                                    depends_on='_camera_xcoefficients')
+#     _camera_xcoefficients = String
+#
+#     camera_ycoefficients = Property(String(enter_set=True, auto_set=False),
+#                                    depends_on='_camera_ycoefficients')
+#     _camera_ycoefficients = String
 
-    camera_ycoefficients = Property(String(enter_set=True, auto_set=False),
-                                   depends_on='_camera_ycoefficients')
-    _camera_ycoefficients = String
+    camera_zoom_coefficients = Property(String(enter_set=True, auto_set=False),
+                                   depends_on='_camera_zoom_coefficients')
+    _camera_zoom_coefficients = String
 
-    camera_calibration_manager = Instance(CameraCalibrationManager)
-    calculate = Button
+#     camera_calibration_manager = Instance(CameraCalibrationManager)
+#     calculate = Button
 
-    calibrate_focus = Button
-    focus_z = Float
+#     calibrate_focus = Button
+#     focus_z = Float
 
-    calculate_offsets = Bool
+#     calculate_offsets = Bool
 
-    pxpercmx = DelegatesTo('camera_calibration_manager')
-    pxpercmy = DelegatesTo('camera_calibration_manager')
+#     pxpercmx = DelegatesTo('camera_calibration_manager')
+#     pxpercmy = DelegatesTo('camera_calibration_manager')
 
     use_auto_center_interpolation = Bool(False)
 
@@ -495,12 +499,24 @@ class VideoStageManager(StageManager):
 #===============================================================================
 # handlers
 #===============================================================================
-    @on_trait_change('parent:zoom')
+    @on_trait_change('parent:motor_event')
     def _update_zoom(self, new):
         s = self.stage_controller
-        if self.camera:
-            if new is not None:
-                self.camera.set_limits_by_zoom(new, s.x, s.y)
+        if self.canvas.camera:
+            if not isinstance(new, (int, float)):
+                args, _ = new
+                name, v = args[:2]
+            else:
+                name = 'zoom'
+                v = new
+
+            if name == 'zoom':
+                pxpermm = self.canvas.camera.set_limits_by_zoom(v, s.x, s.y)
+                self.pxpermm = pxpermm
+
+    def _pxpermm_changed(self, new):
+        if self.autocenter_manager:
+            self.autocenter_manager.pxpermm = new
 
     def _autocenter_button_fired(self):
         self.autocenter()
@@ -524,15 +540,15 @@ class VideoStageManager(StageManager):
 
             self.start_recording()
 
-    def _calculate_fired(self):
-        t = Thread(target=self._calculate_camera_parameters)
-        t.start()
-
-    def _calibrate_focus_fired(self):
-        z = self.stage_controller.z
-        self.info('setting focus posiition {}'.format(z))
-        self.canvas.camera.focus_z = z
-        self.canvas.camera.save_focus()
+#     def _calculate_fired(self):
+#         t = Thread(target=self._calculate_camera_parameters)
+#         t.start()
+#
+#     def _calibrate_focus_fired(self):
+#         z = self.stage_controller.z
+#         self.info('setting focus posiition {}'.format(z))
+#         self.canvas.camera.focus_z = z
+#         self.canvas.camera.save_focus()
 
     def _use_video_server_changed(self):
         if self.use_video_server:
@@ -545,31 +561,46 @@ class VideoStageManager(StageManager):
 #===============================================================================
 # property get/set
 #===============================================================================
-    def _get_camera_xcoefficients(self):
-        return self._camera_xcoefficients
+#     def _get_camera_xcoefficients(self):
+#         return self._camera_xcoefficients
+#
+#     def _set_camera_xcoefficients(self, v):
+#         self._camera_coefficients = v
+#         self.canvas.camera.calibration_data.xcoeff_str = v
+#         self._update_xy_limits()
+#
+#     def _get_camera_ycoefficients(self):
+#         return self._camera_ycoefficients
+#
+#     def _set_camera_ycoefficients(self, v):
+#         self._camera_ycoefficients = v
+#         self.canvas.camera.calibration_data.ycoeff_str = v
+#         self._update_xy_limits()
 
-    def _set_camera_xcoefficients(self, v):
-        self._camera_coefficients = v
-        self.canvas.camera.calibration_data.xcoeff_str = v
+    def _get_camera_zoom_coefficients(self):
+        return self._camera_zoom_coefficients
+
+    def _set_camera_zoom_coefficients(self, v):
+        self.canvas.camera.zoom_coefficients = v
         self._update_xy_limits()
 
-    def _get_camera_ycoefficients(self):
-        return self._camera_ycoefficients
-
-    def _set_camera_ycoefficients(self, v):
-        self._camera_ycoefficients = v
-        self.canvas.camera.calibration_data.ycoeff_str = v
-        self._update_xy_limits()
+    def _validate_camera_zoom_coefficients(self, v):
+        try:
+            return map(float, v.split(','))
+        except ValueError:
+            pass
 
     def _update_xy_limits(self):
+        z = 0
         if self.parent is not None:
-            z = self.parent.zoom
-        else:
-            z = 0
+            zoom = self.parent.get_motor('zoom')
+            if zoom is not None:
+                z = zoom.data_position
 
         x = self.stage_controller.get_current_position('x')
         y = self.stage_controller.get_current_position('y')
-        self.canvas.camera.set_limits_by_zoom(z, x, y)
+        pxpermm = self.canvas.camera.set_limits_by_zoom(z, x, y)
+        self.pxpermm = pxpermm
 
     def _get_record_label(self):
         return 'Record' if not self.is_recording else 'Stop'
@@ -618,8 +649,8 @@ class VideoStageManager(StageManager):
     def _camera_default(self):
         camera = Camera()
 
-        camera.calibration_data.on_trait_change(self.update_camera_params, 'xcoeff_str')
-        camera.calibration_data.on_trait_change(self.update_camera_params, 'ycoeff_str')
+#         camera.calibration_data.on_trait_change(self.update_camera_params, 'xcoeff_str')
+#         camera.calibration_data.on_trait_change(self.update_camera_params, 'ycoeff_str')
 #        camera.on_trait_change(self.parent.update_camera_params, 'focus_z')
 
         p = os.path.join(paths.canvas2D_dir, 'camera.cfg')
@@ -636,6 +667,9 @@ class VideoStageManager(StageManager):
             vid.vflip = camera.vflip
             vid.hflip = camera.hflip
 
+        self._camera_zoom_coefficients = ','.join(map(str, camera.zoom_coefficients))
+
+        px = camera.calculate_pxpermm(0)
         return camera
 
     def _video_default(self):

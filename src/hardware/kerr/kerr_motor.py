@@ -43,8 +43,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
     '''
     use_initialize = Bool(True)
     use_hysteresis = Bool(False)
-    hysteresis_value = Float(0)
-    _hysteresis_correction = Float(0)
+    hysteresis_value = Float(0)  # nominal value to for hysteresis
 
     velocity = Property
     _velocity = Float
@@ -168,9 +167,9 @@ class KerrMotor(KerrDevice, ConsumerMixin):
             '''
 
             self.hysteresis_value = self.config_get(config, 'Motion', 'hysteresis', cast='int')
-            self.use_hysteresis = True
-        else:
-            self.use_hysteresis = False
+#             self.use_hysteresis = True
+#         else:
+#             self.use_hysteresis = False
 
         if config.has_option('General', 'initialize'):
             self.use_initialize = self.config_get(config, 'General', 'initialize', cast='boolean')
@@ -497,22 +496,24 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 
     def _calculate_hysteresis_position(self, pos, hysteresis):
         hpos = pos + hysteresis
-        if hysteresis:
-            if hpos > self.max:
-                self._hysteresis_correction = hpos - self.max
-                hpos = self.max
-            elif hpos < self.min:
-                self._hysteresis_correction = hpos - self.min
-                hpos = self.min
-            else:
-                self._hysteresis_correction = hysteresis
-
+#         self._hysteresis_correction = 0
+#         if hysteresis:
+        hpos = max(self.min, min(self.max, hpos))
+#             if hpos > self.max:
+#                 self._hysteresis_correction = hpos - self.max
+#                 hpos = self.max
+#             elif hpos < self.min:
+#                 self._hysteresis_correction = hpos - self.min
+#                 hpos = self.min
+#             else:
+#                 self._hysteresis_correction = hysteresis
         return hpos
 
     def _set_motor_position_(self, pos, hysteresis=0, velocity=None):
         '''
         '''
         hpos = self._calculate_hysteresis_position(pos, hysteresis)
+        self._desired_position = pos
         self._motor_position = hpos
 
 #         return
@@ -544,12 +545,14 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 #            self.enabled = False
 
         else:
-            if self.use_hysteresis and \
+#             if self.use_hysteresis and \
+            if self.hysteresis_value and \
                 not self.doing_hysteresis_correction and\
                     self.do_hysteresis:
                     # move to original desired position at half velocity
 #                    print 'mp',self._motor_position, self.hysteresis_value
-                    self._set_motor_position_(self._motor_position - self._hysteresis_correction,
+                    self._set_motor_position_(
+                                              self._desired_position,
                                               velocity=self.velocity / 2
                                               )
                     self.doing_hysteresis_correction = True
@@ -593,19 +596,21 @@ class KerrMotor(KerrDevice, ConsumerMixin):
             lm = self.linear_mapper
             steps = lm.map_steps(pos)
 
-            hysteresis = 0
-            self.do_hysteresis = False
-            if self.hysteresis_value < 0:
-                use_hysteresis = self._motor_position > steps
-            else:
-                use_hysteresis = self._motor_position < steps
+            hv = 0
+            hysteresis = self.hysteresis_value
+            if hysteresis:
+                self.do_hysteresis = False
+                if hysteresis < 0:
+                    use_hysteresis = self._motor_position > steps
+                else:
+                    use_hysteresis = self._motor_position < steps
 
-            if use_hysteresis and self.use_hysteresis:
-                self.do_hysteresis = True
-                self.doing_hysteresis_correction = False
-                hysteresis = self.hysteresis_value
+                if use_hysteresis:
+                    self.do_hysteresis = True
+                    self.doing_hysteresis_correction = False
+                    hv = hysteresis
 
-            self._set_motor_position_(steps, hysteresis)
+            self._set_motor_position_(steps, hv)
 #             print self.parent.simulation
             def launch():
                 self.timer = self.timer_factory()
@@ -724,70 +729,4 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 #        '''
 #
 #        return check_bit in status_register
-#     def _set_data_position2(self, pos):
-#         '''
-#
-#             this is a better solution than al deinos (mass spec) for handling positioning of a
-#             linear drive.  Al sets the focused position from 0-100. this means if you change the drive sign
-#             (in affect changing the homing position +tive or -tive) you also have to change the focused position
-#
-#             example
-#             drive sign =-1
-#             home pos= 99
-#
-#             drive sign =1
-#             home pos = 1
-#
-#             this seems wrong. the solution that follows sets the focused position in % distance from home
-#
-#             focus_beam_pos=0.01 #1%
-#             dr_sign=1
-#
-#             #normalize the input value to 1
-#             pos=pos/(max-min)
-#
-#             if dr_sign==-1:
-#                 pos=1-pos
-#
-#             #scale pos to the total number of motor steps ** minus the focused position in motor steps **
-#             focus_pos_msteps=motor_steps*focus_pos
-#
-#             pos_msteps= (motor_steps-focus_pos_msteps) * pos
-#
-#
-#             drive a few steps past desired position then back to desired position
-#             this takes out any lash in the gears
-#
-#         '''
-#         self.info('setting motor in data space {:0.3f}'.format(float(pos)))
-#         if self._data_position != pos:
-#
-#             self._data_position = pos
-#
-#             pos /= float((self.max - self.min))
-#             if self.sign == -1.0:
-#                 pos = 1 - pos
-#
-#             steps = int((1 - self.home_position) * self.steps * pos)
-#             hysteresis = 0
-#             self.do_hysteresis = False
-#             if self.hysteresis_value < 0:
-#                 use_hysteresis = self._motor_position > steps
-#             else:
-#                 use_hysteresis = self._motor_position < steps
-#
-#             if use_hysteresis and self.use_hysteresis:
-#                 self.do_hysteresis = True
-#                 self.doing_hysteresis_correction = False
-#                 hysteresis = self.hysteresis_value
-#
-#             self._set_motor_position_(steps, hysteresis)
-#             if not self.parent.simulation:
-#                 #invoke in gui thread because in position update can be triggered from a RemoteHardware thread
-#                 def launch_timer():
-#                     self.timer = Timer(400, self._update_position)
-#                 invoke_in_main_thread(launch_timer)
-#
-#             else:
-#                 self.update_position = self._data_position
 

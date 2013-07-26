@@ -19,11 +19,13 @@ from traits.api import Int, Property
 #============= standard library imports ========================
 from numpy import polyval, asarray, column_stack, ones, \
     matrix, sqrt, abs, hstack, vstack
+from numpy.core.numeric import ones_like
+
 
 try:
-    from statsmodels.api import OLS
+    from statsmodels.api import OLS, add_constant
 except ImportError:
-    from scikits.statsmodels.api import OLS
+    from scikits.statsmodels.api import OLS, add_constant
 
 #============= local library imports  ==========================
 from base_regressor import BaseRegressor
@@ -349,13 +351,17 @@ class MultipleLinearRegressor(OLSRegressor):
         X=array(xy)
     '''
 
+
+
     def _get_X(self, xs=None):
         if xs is None:
-            xs = asarray(self.xs)
+            xs = self.xs
+
         xs = asarray(xs)
 
         r, c = xs.shape
         if c == 2:
+            x1, x2 = xs.T
             xs = column_stack((xs, ones(r)))
             return xs
 
@@ -394,6 +400,19 @@ class MultipleLinearRegressor(OLSRegressor):
             return se
 
         return [calc_error(xi, sef) for xi in x]
+
+
+class FluxRegressor(MultipleLinearRegressor):
+    def _get_X(self, xs=None):
+        '''
+        
+        '''
+        if xs is None:
+            xs = self.xs
+        xs = asarray(xs)
+        x1, x2 = xs.T
+        X = column_stack((x1, x2, x1 ** 2, x2 ** 2, x1 * x2, ones_like(x1)))
+        return X
 
 if __name__ == '__main__':
     import numpy as np

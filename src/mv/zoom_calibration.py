@@ -14,12 +14,12 @@
 # limitations under the License.
 #===============================================================================
 from traits.etsconfig.etsconfig import ETSConfig
-import math
-from skimage.morphology.binary import binary_erosion
-from skimage.filter.edges import sobel
-from scipy import ndimage
-
 ETSConfig.toolkit = 'qt4'
+
+import math
+from skimage.filter.edges import sobel, vsobel
+from src.regression.least_squares_regressor import LeastSquaresRegressor
+
 
 # from numpy.lib.function_base import histogram
 import os
@@ -33,7 +33,7 @@ from skimage.transform.hough_transform import probabilistic_hough, hough_line, \
 from src.graph.graph import Graph
 
 from numpy import array, diff, unique, argmax, bincount, ma, histogram, \
-    zeros_like, polyfit, polyval, linspace, max, mean, std
+    zeros_like, polyfit, polyval, linspace, max, mean, std, exp
 from src.image.image import Image
 from src.image.cv_wrapper import load_image, draw_circle, grayspace, colorspace, \
     crop
@@ -80,7 +80,8 @@ class ZoomCalibration(HasTraits):
 
     def _calculate_spacing(self, im):
         h, w, d = im.shape
-        cw, ch = 600, 600
+#         cw, ch = 600, 600
+        cw, ch = 300, 300
         cx = (w - cw) / 2
         cy = (h - ch) / 2
         im = crop(im, cx, cy, cw, ch)
@@ -92,26 +93,21 @@ class ZoomCalibration(HasTraits):
 # #                              high_threshold=
 #                              )
 #         edges = edges.astype('uint8')
+#         edges = vsobel(d)
         edges = sobel(d)
-#         print max(edges)
-#         edges *= 255
 
         nim = zeros_like(edges)
-#         nim[edges > 10] = 255
-#         nim[((edges > 50) & (edges < 100))] = 255
-#         print max(edges)
-#         print histogram(edges)
-#         edges[edges > 110] = 0
         nim[edges > 0.1] = 255
         edges = nim
         self.test_image.set_image(edges)
 
-#         print edges.shape
 
         hspace, angles, dists = hough_line(edges)
+
+        self.test_image.set_image(hspace, 1)
+
         _hspace, angles, dists = hough_peaks(hspace, angles, dists,
-#                                             min_angle=5
-#                                             min_angle=1
+
                                              )
         nim = zeros_like(edges)
         h, w, d = im.shape
@@ -128,31 +124,19 @@ class ZoomCalibration(HasTraits):
                 nim[coords] = 200
                 xs.append(di)
 
-        self.test_image.set_image(nim, 1)
+        self.test_image.set_image(nim, 2)
         xs.sort()
         # compute difference between each pair
         dxs = diff(xs)
+        print dxs
         dd = sorted(dxs)[1:]
+        print dd
         while len(dd):
             if std(dd) < 3:
-                return mean(dd)
+                print dd
+                return mean(dd) * 4  # each bar =0.25mm
             else:
                 dd = dd[:-1]
-
-#         dd = sorted(dxs)
-#         i = 0
-#         n = len(dd)
-#         print 'dddd', dd
-#         while i < n:
-#             if std(dd) < 2:
-#                 print 'rrrr', dd
-#                 return mean(dd)
-#             else:
-#                 if i % 2 == 0:
-#                     dd = dd[:-1]
-#                 else:
-#                     dd = dd[1:]
-#                 i += 1
 
 
     def _test_button_fired(self):
@@ -176,7 +160,7 @@ class ZoomCalibration(HasTraits):
 
 
     def _test1(self):
-        self.test_image.setup_images(2,
+        self.test_image.setup_images(3,
 #                                     (475, 613)
                                     (640, 480)
                                      )
@@ -196,12 +180,15 @@ class ZoomCalibration(HasTraits):
 #                    1,
 #                     2,
 #                     3, 4, 5,
-                    (6, [20, 30, 40, 50, 60, 70, 80, 90, 100, ],
-                        [2, 3, 4, 5, 6, 7, 8, 9, 10]
+#                     (6, [20, 30, 40, 50, 60, 70, 80, 90, 100, ],
+#                         [2, 3, 4, 5, 6, 7, 8, 9, 10]
+#                      ),
+                    (6, [10],
+                        [1]
                      ),
-                    (6, [100, 90, 80, 70, 60, 50, 40, 30, 20],
-                        [11, 12, 13, 14, 15, 16, 17, 18, 19]
-                     )
+#                     (6, [100, 90, 80, 70, 60, 50, 40, 30, 20],
+#                         [11, 12, 13, 14, 15, 16, 17, 18, 19]
+#                     )
 
                    ]:
             dxs = []
@@ -216,13 +203,24 @@ class ZoomCalibration(HasTraits):
 
                 zs.append(zi)
 
-
             g.new_series(zs, dxs, type='scatter')
 
             coeffs = polyfit(zs, dxs, 2)
+            print 'parabolic intercept {}'.format(coeffs[-1])
 
-            xs = linspace(min(zs), max(zs))
+            xs = linspace(0, max(zs))
             ys = polyval(coeffs, xs)
+            g.new_series(xs, ys)
+
+            fitfunc = lambda p, x: p[0] * exp(p[1] * x) + p[2]
+            lr = LeastSquaresRegressor(fitfunc=fitfunc,
+                                       initial_guess=[1, 0.1, 0],
+                                       xs=zs,
+                                       ys=dxs
+                                       )
+            xs = linspace(0, max(zs))
+            ys = lr.predict(xs)
+            print 'exponential intercept {}'.format(lr.predict(0))
             g.new_series(xs, ys)
 
         invoke_in_main_thread(g.edit_traits)

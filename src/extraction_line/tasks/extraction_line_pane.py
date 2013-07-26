@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Any
 from traitsui.api import View, UItem, InstanceEditor
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
@@ -32,9 +32,10 @@ class CanvasPane(TraitsTaskPane):
 class CanvasDockPane(TraitsDockPane):
     id = 'pychron.extraction_line.canvas_dock'
     name = 'Extraction Line Canvas'
+    canvas = Any
     def traits_view(self):
         v = View(UItem('canvas',
-                       editor=InstanceEditor(view='alt_canvas_view'),
+                       editor=InstanceEditor(),
                        style='custom',
                        width=500
                        ))

@@ -38,7 +38,7 @@ H = 2
 class ExtractionLineCanvas2D(SceneCanvas):
     '''
     '''
-    valves = Dict
+#     valves = Dict
     active_item = Any
     selected_id = Str
     show_axes = False
@@ -72,9 +72,9 @@ class ExtractionLineCanvas2D(SceneCanvas):
         valve = self._get_valve_by_name(name)
         if valve is not None:
             valve.state = nstate
-        
+
         self.request_redraw()
-        
+
     def update_valve_lock_state(self, name, lockstate):
         valve = self._get_valve_by_name(name)
         if valve is not None:

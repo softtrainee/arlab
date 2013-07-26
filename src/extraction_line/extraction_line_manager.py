@@ -14,8 +14,7 @@
 # limitations under the License.
 #===============================================================================
 #=============enthought library imports=======================
-from traits.api import  Instance
-from traitsui.api import View, Item, VSplit
+from traits.api import  Instance, List
 #=============standard library imports ========================
 import os
 import time
@@ -47,7 +46,7 @@ class ExtractionLineManager(Manager):
     
     '''
     canvas = Instance(ExtractionLineCanvas)
-#     alt_canvas = Instance(AlternateExtractionLineCanvas)
+    _canvases = List
     explanation = Instance(ExtractionLineExplanation, ())
 
     valve_manager = Instance(Manager)
@@ -64,7 +63,7 @@ class ExtractionLineManager(Manager):
 
     runscript = None
 
-#    pyscript_editor = Instance(PyScriptManager)
+
     monitor = Instance(SystemMonitor)
 
     learner = None
@@ -140,10 +139,7 @@ class ExtractionLineManager(Manager):
 #        e = self.explanation
 #        self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
     def closed(self, ok):
-        self.info('stopping status monitor')
-        if self._update_status_flag:
-            self._update_status_flag.set()
-
+        self.stop_status_monitor()
         if self.gauge_manager:
             self.gauge_manager.stop_scans()
 
@@ -151,6 +147,14 @@ class ExtractionLineManager(Manager):
             self.monitor.stop()
         return True
 
+    def stop_status_monitor(self):
+        if self._update_status_flag:
+            self.info('stopping status monitor')
+            self._update_status_flag.set()
+
+    def deactivate(self):
+        self.debug('$$$$$$$$$$$$$$$$$$$$$$$$ EL deactivated')
+        self.closed(True)
 #    def opened(self, ui):
 #        super(ExtractionLineManager, self).opened(ui)
 #        self.reload_scene_graph()
@@ -192,7 +196,18 @@ class ExtractionLineManager(Manager):
             state_freq = self._valve_state_frequency
             lock_freq = self._valve_lock_frequency
             vm = self.valve_manager
-            while not self._update_status_flag.isSet():
+#             while not self._update_status_flag.isSet():
+            while 1:
+                if self._update_status_flag.isSet():
+                    # dont stop the monitor until all "clients" have stopped
+                    # clients could be the spectrometer or experiment task
+                    if self._monitor_cnt > 0:
+                        self.info('{} connections still present. Keeping status monitor alive'.format(self._monitor_cnt))
+                        self._monitor_cnt -= 1
+                        self._update_status_flag.clear()
+                    else:
+                        break
+
                 time.sleep(1)
                 if cnt % state_freq == 0:
                     vm.load_valve_states()
@@ -212,11 +227,14 @@ class ExtractionLineManager(Manager):
         self._update_status_flag.clear()
         if self.isMonitoringValveState():
             self.info('monitor already running')
+            self._monitor_cnt += 1
         else:
+
+            self._monitor_cnt = 0
             t = Thread(target=func)
             t.start()
             self.info('starting status monitor')
-            self._monitor_thread=t
+            self._monitor_thread = t
 
     def isMonitoringValveState(self):
         return self._monitoring_valve_status
@@ -244,27 +262,27 @@ class ExtractionLineManager(Manager):
     def reload_scene_graph(self):
         self.info('reloading canvas scene')
 
-        if self.canvas is not None:
-            p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
-            self.canvas.load_canvas_file(p)
+        for c in self._canvases:
+            if c is not None:
+                p = os.path.join(paths.canvas2D_dir, c.path_name)
+                c.load_canvas_file(p)
+#                 print p
+#                 # load state
+                if self.valve_manager:
+                    for k, v in self.valve_manager.valves.iteritems():
+                        vc = c.get_object(k)
+                        if vc:
+                            vc.soft_lock = v.software_lock
+                            vc.state = v.state
 
-            # load state
-            if self.valve_manager:
-                for k, v in self.valve_manager.valves.iteritems():
-                    vc = self.canvas.get_object(k)
-                    if vc:
-                        vc.soft_lock = v.software_lock
-                        vc.state = v.state
 
-            self.canvas.refresh()
-
-    def load_canvas(self):
-        '''
-        '''
-        p = self._file_dialog_('open', **dict(default_dir=paths.canvas2D_dir))
-
-        if p is not None:
-            self.canvas.load_canvas(p)
+#     def load_canvas(self):
+#         '''
+#         '''
+#         p = self._file_dialog_('open', **dict(default_dir=paths.canvas2D_dir))
+#
+#         if p is not None:
+#             self.canvas.load_canvas(p)
 
 #     def set_canvas_size(self, width=None, height=None):
 #         self.canvas.set_size(width, height)
@@ -276,10 +294,14 @@ class ExtractionLineManager(Manager):
 #        if self.canvas:
 #            self.canvas.update_pressure(o.name, n, o.state)
     def update_valve_state(self, *args, **kw):
-        self.canvas.update_valve_state(*args, **kw)
+        for c in self._canvases:
+            c.update_valve_state(*args, **kw)
+
 
     def update_valve_lock_state(self, *args, **kw):
-        self.canvas.update_valve_lock_state(*args, **kw)
+        for c in self._canvases:
+            c.update_valve_lock_state(*args, **kw)
+#         self.canvas.update_valve_lock_state(*args, **kw)
 
 #    def update_canvas2D(self, *args):
 #        if self.canvas:
@@ -444,36 +466,11 @@ class ExtractionLineManager(Manager):
             # valve state show as changed if even it didnt actuate
 #            if result:
             if change:
-                self.canvas.update_valve_state(name, True if action == 'open' else False)
+                self.update_valve_state(name, True if action == 'open' else False)
+#                 self.canvas.update_valve_state(name, True if action == 'open' else False)
 #                result = True
 
         return result, change
-
-#    def execute_run_script(self, runscript_name):
-#        runscript_dir = os.path.join(paths.scripts_dir, 'runscripts')
-#        if self.runscript is None:
-#            e = ExtractionLineScript(source_dir=runscript_dir ,
-#                                     file_name=runscript_name,
-#                                     manager=self,
-#
-#                                     )
-#
-#            e.bootstrap()
-#        elif self.runscript.isAlive():
-#            self.warning('{} already running'.format(runscript_name))
-#        else:
-#            self.runscript = None
-
-    def execute_pyscript(self, name):
-        if not name.endswith('.py'):
-            name += '.py'
-
-        p = os.path.join(paths.scripts_dir, 'pyscripts', name)
-        if not os.path.isfile(p):
-            return p
-
-        pe = self.pyscript_editor
-        return pe.execute_script(path=p)
 
     def get_script_state(self, key):
         return self.pyscript_editor.get_script_state(key)
@@ -483,29 +480,6 @@ class ExtractionLineManager(Manager):
             selected = next((i for i in self.explanation.explanable_items if obj.name == i.name), None)
             if selected:
                 self.explanation.selected = selected
-
-#    def traits_view(self):
-#        '''
-#        '''
-#        v = View(
-#                 VSplit(
-#                         Item('gauge_manager',
-#                              style='custom', show_label=False,
-#                              height=0.2,
-#                              springy=False,
-#                              defined_when='gauge_manager'
-#                              ),
-#                         Item('canvas',
-#                              style='custom',
-#                              show_label=False,
-#                              height=0.8)
-#                        ),
-#               handler=self.handler_klass,
-#               title='Extraction Line Manager',
-#               resizable=True,
-#               id='pychron.extraction_line_window'
-#               )
-#        return v
 
 #=================== factories ==========================
 
@@ -545,13 +519,19 @@ class ExtractionLineManager(Manager):
 
         return e
 
+    def new_canvas(self, name='canvas'):
+        c = ExtractionLineCanvas(manager=self,
+                                 path_name='{}.xml'.format(name)
+                                 )
+        self._canvases.append(c)
+
+        return c
+
     def _canvas_default(self):
         '''
         '''
-        return ExtractionLineCanvas(manager=self)
+        return self.new_canvas()
 
-#     def _alt_canvas_default(self):
-#         return AlternateExtractionLineCanvas(_canvas=self.canvas)
 #    def _pumping_monitor_default(self):
 #        '''
 #        '''

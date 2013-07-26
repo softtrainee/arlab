@@ -36,7 +36,7 @@ from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
     UpdateDatabaseAction, DeselectAction, SendTestNotificationAction
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
-from src.experiment.experimentor import Experimentor
+# from src.experiment.experimentor import Experimentor
 # from src.experiment.entry.labnumber_entry import LabnumberEntry
 # from src.experiment.tasks.labnumber_entry_task import LabnumberEntryTask
 # from src.experiment.import_manager import ImportManager
@@ -82,7 +82,7 @@ class ExperimentPlugin(BaseTaskPlugin):
                               ),
                 TaskExtension(
                               actions=[
-                                       
+
                                        SchemaAddition(id='open_experiment',
                                                         factory=OpenExperimentQueueAction,
                                                         path='MenuBar/File/Open'),

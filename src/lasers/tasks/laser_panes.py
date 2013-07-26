@@ -118,8 +118,12 @@ class StageControlPane(TraitsDockPane):
 #         if self.model.mode != 'client':
 
         mode = self.model.mode
-        mvgrp = None
-        recgrp = None
+#         mvgrp = None
+#         recgrp = None
+        cagrp = VGroup(
+                       visible_when='use_video',
+                       label='Camera')
+
         if self.model.stage_manager.__class__.__name__ == 'VideoStageManager':
             mvgrp = VGroup(
 #                       HGroup(SItem('use_autocenter', label='Enabled'),
@@ -140,17 +144,22 @@ class StageControlPane(TraitsDockPane):
                      show_border=True,
                      label='Recording'
                      )
-        else:
-            recgrp = Group()
+            cfggrp = VGroup(
+                          SItem('camera_zoom_coefficients', label='Zoom Coefficients')
+                          )
+            cagrp.content.extend((cfggrp, recgrp, mvgrp))
+#         else:
+#             recgrp = Group()
 
-        cagrp = VGroup(
-                       recgrp,
-#                   label='Machine Vision', show_border=True)
-                       visible_when='use_video',
-                       label='Camera'
-                       )
-        if mode != 'client' and mvgrp:
-            cagrp.content.extend((mvgrp,))
+#         cagrp = VGroup(
+#                        recgrp,
+# #                   label='Machine Vision', show_border=True)
+#                        visible_when='use_video',
+#                        label='Camera'
+#                        )
+#         if mode != 'client' and mvgrp:
+#             cagrp.content.insert(0, co)
+#             cagrp.content.append(mvgrp)
 
         cgrp = Group(
                      SUItem('stage_controller', style='custom',
