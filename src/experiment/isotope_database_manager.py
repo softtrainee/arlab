@@ -26,6 +26,7 @@ from src.ui.progress_dialog import myProgressDialog
 from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
 from src.processing.analysis import Analysis, NonDBAnalysis
 from src.constants import NULL_STR
+from src.ui.gui import invoke_in_main_thread
 
 
 class IsotopeDatabaseManager(Manager):
@@ -154,7 +155,6 @@ class IsotopeDatabaseManager(Manager):
                 progress.change_message(msg)
 
                 func(ai)
-
                 progress.increment()
 
     def open_progress(self, n=2):

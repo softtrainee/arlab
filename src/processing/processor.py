@@ -63,7 +63,7 @@ class Processor(IsotopeDatabaseManager):
         return self._make_analyses_from_query(q)
 
 
-    def load_sample_analyses(self, sample, aliquot=None):
+    def load_sample_analyses(self, labnumber, sample, aliquot=None):
         db = self.db
         sess = db.get_session()
         q = sess.query(meas_AnalysisTable)
@@ -74,7 +74,10 @@ class Processor(IsotopeDatabaseManager):
         if aliquot is not None:
             q = q.filter(meas_AnalysisTable.aliquot == aliquot)
 
-        q = q.limit(10)
+        if sample=='FC-2':
+            q=q.filter(gen_LabTable.identifier==labnumber)
+            
+#        q = q.limit(10)
         return self._make_analyses_from_query(q)
 
     def _make_analyses_from_query(self, q):

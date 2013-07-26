@@ -161,7 +161,7 @@ class SeriesEditor(FigureEditor):
 #         self.tool.suppress_refresh_unknowns = False
 
 class AutoIdeogramControl(HasTraits):
-    group_by_aliquot = Bool(True)
+    group_by_aliquot = Bool(False)
     group_by_labnumber = Bool(False)
     def traits_view(self):
         v = View(
