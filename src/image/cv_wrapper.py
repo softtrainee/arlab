@@ -20,7 +20,8 @@ from numpy import array, asarray, ndarray
 from collections import namedtuple
 from scipy.ndimage.filters import laplace
 from numpy.lib.function_base import percentile
-from skimage.color.colorconv import gray2rgb, rgb2gray, is_gray
+
+from skimage.color.colorconv import gray2rgb, rgb2gray
 
 try:
     from cv2 import VideoCapture, VideoWriter, imwrite, line, fillPoly, polylines, \
@@ -53,7 +54,7 @@ def get_focus_measure(src, kind):
 #     Laplace(src, dst)
 
 #     d = asarray(dst).flatten()
-    dst = laplace(src)
+    dst = laplace(src.astype(float))
     d = dst.flatten()
     d = percentile(d, 99)
     return d.mean()
@@ -150,6 +151,8 @@ def colorspace(src, cs=None):
 
 def grayspace(src):
     if isinstance(src, ndarray):
+        from skimage.color.colorconv import is_gray
+        print is_gray
         if not is_gray(src):
             dst = rgb2gray(src)
         else:
