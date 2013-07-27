@@ -431,13 +431,13 @@ class Manager(Viewable, RPCable):
 
         return device
 
-    def get_file_list(self, p, extension=None):
-        if os.path.isdir(p):
-            ps = os.listdir(p)
-            if extension is not None:
-                ps = [pi for pi in ps if pi.endswith(extension)]
-
-            return ps
+#     def get_file_list(self, p, extension=None):
+#         if os.path.isdir(p):
+#             ps = os.listdir(p)
+#             if extension is not None:
+#                 ps = [pi for pi in ps if pi.endswith(extension)]
+#
+#             return ps
 
     def _file_dialog_(self, action, **kw):
         '''

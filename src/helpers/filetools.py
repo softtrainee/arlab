@@ -19,6 +19,29 @@
 #========== standard library imports ==========
 import os
 
+def list_directory(p, extension=None, filtername=None, remove_extension=False):
+    ds = []
+    if extension:
+        def test(path):
+            return any([path.endswith(ext) for ext in extension.split(',')])
+    else:
+        def test(path):
+            return True
+
+    if os.path.isdir(p):
+        ds = os.listdir(p)
+        if extension is not None:
+            ds = [pi for pi in ds
+                        if test(pi)]
+        if filtername:
+            ds = [pi for pi in ds
+                  if pi.startswith(filtername)
+                  ]
+
+    if remove_extension:
+        ds = [os.path.splitext(pi)[0] for pi in ds]
+    return ds
+
 def add_extension(p, ext='.txt'):
     if not p.endswith(ext):
         p += ext

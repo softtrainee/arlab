@@ -24,6 +24,8 @@ from src.lasers.pattern.pattern_maker_view import PatternMakerView
 from src.managers.manager import Manager
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.ui.led_editor import LED
+from src.helpers.filetools import list_directory
+from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -89,6 +91,12 @@ class BaseLaserManager(Manager):
 
     def disable_laser(self):
         pass
+
+    def get_pattern_names(self):
+        p = paths.pattern_dir
+        extension = '.lp,.txt'
+        patterns = list_directory(p, extension)
+        return ['', ] + patterns
 
     def new_pattern_maker(self):
         pm = PatternMakerView()

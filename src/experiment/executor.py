@@ -310,6 +310,8 @@ class ExperimentExecutor(Experimentable):
             return True
 
     def execute(self):
+
+
         self.debug('%%%%%%%%%%%%%%%%%%% Starting Execution')
                     # check for blank before starting the thread
         if self._pre_execute_check():
@@ -519,6 +521,7 @@ class ExperimentExecutor(Experimentable):
 #                 self.info('experiment canceled. {}'.format(err))
 #                 self.warning('experiment canceled')
 #                 return
+        self.db.reset()
 
         self._execute_experiment_queues()
 
@@ -909,6 +912,8 @@ class ExperimentExecutor(Experimentable):
         self.stats.stop_timer()
         self.extraction_state = False
         self.extraction_state_label = '{} Finished'.format(self.experiment_queue.name)
+
+        self.db.reset()
 
 #     def _get_all_automated_runs(self):
 #         ans = super(ExperimentExecutor, self)._get_all_automated_runs()

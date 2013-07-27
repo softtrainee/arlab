@@ -24,6 +24,7 @@ import os
 from src.paths import paths
 from ConfigParser import ConfigParser
 from matplotlib.mlab import ma
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -49,12 +50,15 @@ class ExperimentQueueFactory(Loggable):
 
     ok_make = Property(depends_on='mass_spectrometer, username')
 
+#===============================================================================
+# property get/set
+#===============================================================================
+
     @cached_property
     def _get_load_names(self):
         ts = self.db.get_loads()
         names = [ti.name for ti in ts]
         return names
-
 
     def _get_ok_make(self):
         ms = self.mass_spectrometer.strip()
@@ -64,38 +68,7 @@ class ExperimentQueueFactory(Loggable):
         return ms and not ms in ('Spectrometer', LINE_STR)  and un
 #                ed and ed != NULL_STR and  \
 #                    un
-#===============================================================================
-# views
-#===============================================================================
-#     def traits_view(self):
-#         v = View(VGroup(
-#                        Item('username'),
-# #                       Item('mass_spectrometer',
-# #                            editor=EnumEditor(name='mass_spectrometers'),
-# #                            ),
-# #                       Item('extract_device',
-# #                            editor=EnumEditor(name='extract_devices'),
-# #                            ),
-# # #                       Item('tray',
-# # #                            editor=EnumEditor(name='trays'),
-# # #                            tooltip='Select an sample tray for this set'
-# # #                            ),
-#
-#                        Item('delay_before_analyses',
-# #                            tooltip='Set the time in seconds to delay before starting this queue',
-# #                            label='Delay before Analyses (s)'
-#                             ),
-#                        Item('delay_between_analyses',
-# #                            tooltip='Set the delay between analysis in seconds',
-# #                            label='Delay between Analyses (s)'
-#                             ),
-#
-#                        ),
-#                 )
-#         return v
-#===============================================================================
-# property get/set
-#===============================================================================
+
     @cached_property
     def _get_trays(self):
         return [NULL_STR]

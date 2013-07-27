@@ -96,7 +96,8 @@ class AutomatedRunFactory(Loggable):
     _beam_diameter = Any
 
     pattern = Str
-    patterns = Property
+    patterns = List
+#     patterns = Property
 
     #===========================================================================
     # templates
@@ -780,12 +781,12 @@ post_equilibration_script:name
     def _get_edit_template_label(self):
         return 'Edit' if self._use_template() else 'New'
 
-    @cached_property
-    def _get_patterns(self):
-        p = paths.pattern_dir
-        extension = '.lp,.txt'
-        patterns = self._ls_directory(p, extension)
-        return ['', ] + patterns
+#     @cached_property
+#     def _get_patterns(self):
+#         p = paths.pattern_dir
+#         extension = '.lp,.txt'
+#         patterns = self._ls_directory(p, extension)
+#         return ['', ] + patterns
 
 #     @cached_property
     def _get_templates(self):
@@ -798,21 +799,6 @@ post_equilibration_script:name
             self.template = 'Step Heat Template'
 
         return ['Step Heat Template', LINE_STR] + temps
-
-    def _ls_directory(self, p, extension):
-        ps = []
-        def test(path):
-            return any([path.endswith(ext) for ext in extension.split(',')])
-
-        if os.path.isdir(p):
-            ds = os.listdir(p)
-            if extension is not None:
-                ds = [pi for pi in ds
-                            if test(pi)]
-            ds = [os.path.splitext(pi)[0] for pi in ds]
-            ps += ds
-
-        return ps
 
     def _aliquot_changed(self):
         if self.edit_mode:

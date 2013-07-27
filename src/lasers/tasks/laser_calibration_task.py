@@ -29,7 +29,11 @@ from src.lasers.tasks.laser_calibration_panes import LaserCalibrationControlPane
 import os
 
 class BaseLaserTask(EditorTask):
-    pass
+    def activated(self):
+        pass
+    def prepare_destroy(self):
+        pass
+
 
 class LaserCalibrationTask(BaseLaserTask):
     id = 'pychron.laser.calibration'
@@ -63,9 +67,9 @@ class LaserCalibrationTask(BaseLaserTask):
         return [lp, ep]
 
     def open_power_map(self):
-        p = self.open_file_dialog()
+#         p = self.open_file_dialog()
 #         p = '/Users/ross/Pychrondata_demo/data/scans/powermap-2013-07-17001.hdf5'
-#        p = '/Users/ross/Sandbox/powermap-2013-07-26005.hdf5'
+        p = '/Users/ross/Sandbox/powermap-2013-07-26005.hdf5'
         if p:
             editor = PowerMapEditor(
 #                                     name='Power Map {:03n}'.format(n + 1),

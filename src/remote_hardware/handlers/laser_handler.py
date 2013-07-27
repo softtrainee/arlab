@@ -259,35 +259,29 @@ class LaserHandler(BaseRemoteHardwareHandler):
 
         return self.error_response(err)
 
-    def GetJogProcedures(self, manager, *args):
+    def GetPatternNames(self, manager, *args):
         jogs = manager.get_pattern_names()
         return ','.join(jogs)
 
-    def DoPattern(self, *args, **kw):
-        return self.DoJog(*args, **kw)
-    def AbortPattern(self, *args, **kw):
-        return self.AbortJog(*args, **kw)
-    def IsPatterning(self, *args, **kw):
-        return self.IsJogging(*args, **kw)
-
-    def DoJog(self, manager, name, *args):
+    def DoPattern(self, manager, name, *args, **kw):
         if name is None:
             err = InvalidArgumentsErrorCode('DoJog', name)
         else:
-
-#            err = manager.stage_manager.pattern_manager.execute_pattern(name)
             err = manager.execute_pattern(name)
         return self.error_response(err)
 
-    def AbortJog(self, manager, *args):
+    def IsPatterning(self, manager, *args, **kw):
+        err = manager.isPatterning()
+        return self.error_response(str(err))
+
+    def AbortPattern(self, manager, *args, **kw):
         err = manager.stop_pattern()
         return self.error_response(err)
 
-    def IsJogging(self, manager, *args):
-        err = manager.isPatterning()
-
-        # returns "True" or "False"
-        return self.error_response(str(err))
+    DoJog = DoPattern
+    IsJogging = IsPatterning
+    AbortJog = AbortPattern
+    GetJogProcedures = GetPatternNames
 
     def SetBeamDiameter(self, manager, data, *args):
         try:
@@ -416,6 +410,25 @@ class LaserHandler(BaseRemoteHardwareHandler):
 #===============================================================================
 #
 #===============================================================================
+#     def DoJog(self, manager, name, *args):
+#         if name is None:
+#             err = InvalidArgumentsErrorCode('DoJog', name)
+#         else:
+#
+# #            err = manager.stage_manager.pattern_manager.execute_pattern(name)
+#             err = manager.execute_pattern(name)
+#         return self.error_response(err)
+
+#     def AbortJog(self, manager, *args):
+#         err = manager.stop_pattern()
+#         return self.error_response(err)
+
+#     def IsJogging(self, manager, *args):
+#         err = manager.isPatterning()
+#
+#         # returns "True" or "False"
+#         return self.error_response(str(err))
+
 #    def ListDirectory(self, manager, name, ext, *args):
 #        p = ''
 #        if hasattr(paths, name):

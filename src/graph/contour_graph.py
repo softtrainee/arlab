@@ -146,10 +146,10 @@ class ContourGraph(Graph):
         '''
         return self.container_factory()
 
-    def container_factory(self):
-        '''
-        '''
-        return self._container_factory(kind='h', spacing=10)
+#     def container_factory(self):
+#         '''
+#         '''
+#         return self._container_factory(kind='h', spacing=10)
 
     def make_colorbar(self, cplot):
         '''

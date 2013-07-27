@@ -17,20 +17,20 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Bool
+from traits.api import Bool, HasTraits
 # from traitsui.api import View, Item, Group, HGroup, VGroup, HSplit, VSplit
 #============= standard library imports ========================
 # from tables import openFile
-from numpy import transpose, array, shape, max, linspace, rot90, fliplr, flipud
+from numpy import transpose, array, shape, max, linspace, rot90, \
+    fliplr, flipud, zeros_like, pi, sin, cos
 #============= local library imports  ==========================
 from src.graph.contour_graph import ContourGraph
 from src.managers.data_managers.h5_data_manager import H5DataManager
 
-from scipy import ndimage
 from scipy.interpolate.ndgriddata import griddata
-# from src.managers.data_managers.h5_data_manager import H5DataManager
+from numpy.lib.function_base import percentile
 
-class PowerMapProcessor:
+class PowerMapProcessor(HasTraits):
     '''
     '''
     correct_baseline = Bool(False)
@@ -39,107 +39,118 @@ class PowerMapProcessor:
     interpolation_factor = 5
 
     def load_graph(self, reader, window_title=''):
-        '''
-        '''
-
-        cg = ContourGraph()
+        cg = ContourGraph(
+                        container_dict=dict(kind='h',
+#                                               padding=40,
+#                                               shape=(2, 2),
+#                                               spacing=(12, 12)
+                                            )
+                          )
 
         z, metadata = self._extract_power_map_data(reader)
-#        x, y, z = self._prep_2D_data(z)
-#        print x, y, z
-        w = 300
-        h = 300
-        bounds = metadata['bounds']
-        cplot = cg.new_plot(
-                            add=False,
-                            padding_top=15,
-                            padding_left=20,
-                            padding_right=5,
-                            resizable='',
-                            bounds=[w, h],
-                          )
-        cplot.index_axis.title = 'mm'
-        cplot.value_axis.title = 'mm'
 
-        plot, names, rd = cg.new_series(x=[], y=[], z=z, style='contour',
+        center_plot = cg.new_plot(
+                            add=False,
+                            padding=0,
+                            width=400,
+                            height=400,
+                            resizable=''
+#                             aspect_ratio=1
+                            )
+        center_plot.index_axis.title = 'mm'
+        center_plot.value_axis.title = 'mm'
+
+        bounds = metadata['bounds']
+        center_plot, names, rd = cg.new_series(z=z, style='contour',
                       xbounds=bounds,
                       ybounds=bounds,
-                      cmap=self.color_map,
+#                     cmap=self.color_map,
 #                      colorbar=True,
-                      levels=self.levels)
+#                     levels=self.levels
+                      )
 
-        cb = cg.make_colorbar(plot.plots['plot0'][0])
 
-#        # plot max location
-#        from scipy.ndimage import maximum_position
-#        xm, ym = maximum_position(z)
-#        f = lambda a, i: [a[i] * abs(bounds[0] - bounds[1]) + bounds[0]]
-#        cg.new_series(x=f(x, xm), y=f(y, ym), type='scatter',
-#                      marker='plus',
-#                      color='black')
-#
-        cpolyplot = cplot.plots['plot0'][0]
+        bottom_plot = cg.new_plot(
+                            add=False,
+                            height=150,
+                            resizable='h',
+                            padding=0,
+                            )
+
+        right_plot = cg.new_plot(
+                              add=False,
+                              width=150,
+                              resizable='v',
+                              padding=0,
+                              )
+        right_plot.y_axis.orientation = 'right'
+
+        center = center_plot.plots['plot0'][0]
         options = dict(style='cmap_scatter',
                      type='cmap_scatter',
                      marker='circle',
-                     color_mapper=cpolyplot.color_mapper
+                     color_mapper=center.color_mapper
                      )
 
-        p_xaxis = cg.new_plot(
-                              add=False,
-                            padding_bottom=0,
-                            padding_left=20,
-                            padding_right=5,
-                            padding_top=30,
-                            resizable='',
-                            bounds=[w, 100],
-                            title='Power Map'
-                            )
-
-        p_xaxis.index_axis.visible = False
-        p_xaxis.value_axis.title = 'Power (%)'
         cg.new_series(plotid=1, render_style='connectedpoints')
         cg.new_series(plotid=1, **options)
-
-        p_yaxis = cg.new_plot(add=False,
-                              orientation='v',
-                              padding_left=0,
-                              padding_bottom=55,
-                              resizable='',
-                              bounds=[120, h]
-                             )
-
-        p_yaxis.index_axis.visible = False
-        p_yaxis.value_axis.title = 'Power (%)'
-#
         cg.new_series(plotid=2, render_style='connectedpoints')
         cg.new_series(plotid=2, **options)
-#
-#        ma = max([max(z[i, :]) for i in range(len(x))])
-#        mi = min([min(z[i, :]) for i in range(len(x))])
-#
-#        cg.set_y_limits(min=mi, max=ma, plotid=1)
-#        cg.set_y_limits(min=mi, max=ma, plotid=2)
 
-        cg.show_crosshairs()
-#
-        cpolyplot.index.on_trait_change(cg.metadata_changed,
+        center.index.on_trait_change(cg.metadata_changed,
                                            'metadata_changed')
 
-        container = cg._container_factory(kind='v',
-                                          bounds=[w, h + 200],
-                                          resizable=''
-                                          )
+        cg.show_crosshairs()
 
-# #        print type(container)
-        container.add(cplot)
-        container.add(p_xaxis)
+        cx, cy, radius = self._measure_properties(z, metadata)
+        cg.new_series(x=[cx], y=[cy], type='scatter')
+        theta = linspace(-pi, pi)
+        xs = cx + radius * cos(theta)
+        ys = cy + radius * sin(theta)
+
+        cg.new_series(x=xs, y=ys)
+
+
+        gridcontainer = cg._container_factory(kind='g',
+                                              padding=40,
+                                              shape=(2, 2),
+                                              spacing=(12, 12))
+
+        gridcontainer.add(center_plot)
+        gridcontainer.add(right_plot)
+        gridcontainer.add(bottom_plot)
+
+        cb = cg.make_colorbar(center)
+        cb.width = 50
+        cb.padding_left = 50
 
         cg.plotcontainer.add(cb)
-        cg.plotcontainer.add(container)
-        cg.plotcontainer.add(p_yaxis)
+        cg.plotcontainer.add(gridcontainer)
 
         return cg
+
+    def _measure_properties(self, z, metadata):
+        from skimage.morphology import label
+        from skimage.measure._regionprops import regionprops
+        from skimage.exposure.exposure import rescale_intensity
+
+        nim = zeros_like(z).astype(int)
+        t = percentile(z, 75)
+        nim[z > t] = 1
+
+        props = regionprops(nim, ['EquivDiameter', 'Centroid'])
+        r, c = props[0]['Centroid']
+
+        rr, cc = nim.shape
+#         print r, c
+        b = metadata['bounds']
+        scale = rr / (b[1] - b[0])
+
+        cx = c / scale + b[0]
+        cy = r / scale + b[0]
+#         print cx, cy
+        radius = props[0]['EquivDiameter'] / (2.*scale)
+        return cx, cy, radius
 
     def _extract_power_map_data(self, reader):
         '''
@@ -163,12 +174,9 @@ class PowerMapProcessor:
 
         metadata['bounds'] = -float(b), float(b)
 
-#        xs = []
-#        ys = []
-
-
         xs, ys, power = array([(r['x'], r['y'], r['power'])
                                 for r in tab.iterrows()]).T
+
 #        xs, ys, power = array(xs), array(ys), array(power)
 #        n = power.shape[0]
 #        print n
@@ -180,8 +188,10 @@ class PowerMapProcessor:
 
         power = griddata((xs, ys), power, (X, Y),
                          fill_value=0,
-                         method='cubic')
+#                          method='cubic'
+                         )
         return rot90(power, k=2), metadata
+
 #        return flipud(fliplr(power)), metadata
 #        for row in tab.iterrows():
 #            x = int(row['col'])
@@ -299,3 +309,149 @@ class PowerMapProcessor:
 #                try:
 #                    x = int(row['x'])
 #                except:
+#     def load_graph2(self, reader, window_title=''):
+#         '''
+#         '''
+#
+#
+#
+# #        x, y, z = self._prep_2D_data(z)
+# #        print x, y, z
+#         w = 300
+#         h = 300
+#         bounds = metadata['bounds']
+#         cplot = cg.new_plot(
+#                             add=False,
+#                             aspect_ratio=1,
+#                             padding_top=0
+# #                             padding_top=15,
+# #                             padding_left=20,
+# #                             padding_right=5,
+# #                             resizable='',
+# #                             bounds=[w, h],
+#                           )
+# #         cplot.width = 400
+# #         cplot.height = 400
+#
+#
+#         cplot.index_axis.title = 'mm'
+#         cplot.value_axis.title = 'mm'
+#
+#         plot, names, rd = cg.new_series(x=[], y=[], z=z, style='contour',
+#                       xbounds=bounds,
+#                       ybounds=bounds,
+#                       cmap=self.color_map,
+# #                      colorbar=True,
+#                       levels=self.levels)
+#
+#         cb = cg.make_colorbar(plot.plots['plot0'][0])
+#         cb.padding_bottom = 55
+#         cb.padding_top = 140
+#
+#         cg.new_series(x=[cx], y=[cy], type='scatter')
+#         theta = linspace(-pi, pi)
+#         radius = props[0]['EquivDiameter'] / (2.*scale)
+# #         circle_y = radius * (cos(circle_x) - sin(circle_x))
+#         xs = cx + radius * cos(theta)
+#         ys = cy + radius * sin(theta)
+#
+#         cg.new_series(x=xs, y=ys)
+#
+# #        # plot max location
+# #        from scipy.ndimage import maximum_position
+# #        xm, ym = maximum_position(z)
+# #        f = lambda a, i: [a[i] * abs(bounds[0] - bounds[1]) + bounds[0]]
+# #        cg.new_series(x=f(x, xm), y=f(y, ym), type='scatter',
+# #                      marker='plus',
+# #                      color='black')
+# #
+#         cpolyplot = cplot.plots['plot0'][0]
+#         options = dict(style='cmap_scatter',
+#                      type='cmap_scatter',
+#                      marker='circle',
+#                      color_mapper=cpolyplot.color_mapper
+#                      )
+#
+#         p_xaxis = cg.new_plot(
+#                               add=False,
+#                               padding_bottom=0,
+# #                               padding_left=20,
+# #                             padding_right=5,
+# #                             padding_top=30,
+#                             resizable='h',
+# #                             halign='center',
+# #                             height=100,
+# #                             aspect_ratio=w / 100.,
+#                             bounds=[w, 100],
+#                             title='Power Map'
+#                             )
+#
+#         p_xaxis.index_axis.visible = False
+#         p_xaxis.value_axis.title = 'Power (%)'
+#         cg.new_series(plotid=1, render_style='connectedpoints')
+#         cg.new_series(plotid=1, **options)
+#
+#         p_yaxis = cg.new_plot(add=False,
+#                               orientation='v',
+#                               padding_left=0,
+#                               padding_bottom=55,
+#                               padding_top=0,
+# #                               padding_top=140,
+#                             resizable='v',
+#                             bounds=[120, h]
+#                              )
+#
+#         p_yaxis.index_axis.visible = False
+#         p_yaxis.value_axis.title = 'Power (%)'
+# #
+#         cg.new_series(plotid=2, render_style='connectedpoints')
+#         cg.new_series(plotid=2, **options)
+# #
+# #        ma = max([max(z[i, :]) for i in range(len(x))])
+# #        mi = min([min(z[i, :]) for i in range(len(x))])
+# #
+# #        cg.set_y_limits(min=mi, max=ma, plotid=1)
+# #        cg.set_y_limits(min=mi, max=ma, plotid=2)
+#
+#         cg.show_crosshairs()
+# #
+#         cpolyplot.index.on_trait_change(cg.metadata_changed,
+#                                            'metadata_changed')
+#
+#         container = cg._container_factory(kind='v',
+#                                           spacing=0,
+#                                           fill_padding=True,
+#                                           bgcolor='green',
+#                                         aspect_ratio=w / 400.
+# #                                           halign='right',
+# #                                           halign='right',
+# #                                          bounds=[w, h],
+# #                                          resizable=''
+#                                           )
+#
+# # #        print type(container)
+#         container.add(cplot)
+#         container.add(p_xaxis)
+#
+#
+#         vc = VPlotContainer(stack_order='top_to_bottom',
+#                             aspect_ratio=0.25,
+#                             fill_padding=True,
+#                             bgcolor='blue'
+#                             )
+#
+#         from enable.component import Component
+#         spacer = Component(bounds=[100, 100],
+#                            resizable='',
+#                            bgcolor='red')
+# #         vc.add(spacer)
+#         vc.add(p_yaxis)
+#
+#         cg.plotcontainer.spacing = 0
+# #         cg.plotcontainer.halign = 'left'
+#         cg.plotcontainer.add(container)
+#         cg.plotcontainer.add(vc)
+# #         cg.plotcontainer.add(cb)
+#         cg.plotcontainer.resizable = ''
+#
+#         return cg
