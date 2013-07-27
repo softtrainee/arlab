@@ -107,6 +107,7 @@ class BaseLaserPlugin(BaseTaskPlugin):
         return d
 
     def _get_manager(self):
+
         return self.application.get_service(ILaserManager, 'name=="{}"'.format(self.name))
 
     def _preferences_default(self):

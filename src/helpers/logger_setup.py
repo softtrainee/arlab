@@ -19,7 +19,7 @@
 #=============standard library imports ========================
 import os
 import sys
-import logging.handlers
+import logging
 #=============local library imports  =========================
 from src.paths import paths
 from filetools import unique_path
@@ -27,6 +27,7 @@ from filetools import unique_path
 import shutil
 
 from src.helpers.filetools import list_directory
+from logging.handlers import RotatingFileHandler
 
 NAME_WIDTH = 40
 gFORMAT = '%(name)-{}s: %(asctime)s %(levelname)-7s (%(threadName)-10s) %(message)s'.format(NAME_WIDTH)
@@ -41,8 +42,8 @@ def logging_setup(name, **kw):
     from src.helpers.archiver import Archiver
 
     # set up deprecation warnings
-    import warnings
-    warnings.simplefilter('default')
+#    import warnings
+#    warnings.simplefilter('default')
 
     # make sure we have a log directory
     bdir = os.path.join(paths.root, 'logs')
@@ -67,21 +68,21 @@ def logging_setup(name, **kw):
             shutil.copyfile(v, '{}{}'.format(backup_logpath, t))
             os.remove(v)
 
-
-    if sys.version.split(' ')[0] < '2.4.0':
-        logging.basicConfig()
-    else:
-        root = logging.getLogger()
-        shandler = logging.StreamHandler()
+#    if sys.version.split(' ')[0] < '2.4.0':
+#        logging.basicConfig()
+#    else:
+    root = logging.getLogger('')
+    shandler = logging.StreamHandler()
+##
+## #        global rhandler
+    rhandler = RotatingFileHandler(
+                    logpath, maxBytes=1e7, backupCount=5)
 #
-# #        global rhandler
-        rhandler = logging.handlers.RotatingFileHandler(
-                        logpath, maxBytes=1e7, backupCount=5)
-#
-        for hi in (shandler, rhandler):
-            hi.setLevel(gLEVEL)
-            hi.setFormatter(logging.Formatter(gFORMAT))
-            root.addHandler(hi)
+    for hi in (shandler, rhandler):
+#        for hi in (rhandler,):
+        hi.setLevel(gLEVEL)
+        hi.setFormatter(logging.Formatter(gFORMAT))
+        root.addHandler(hi)
 
 #     new_logger('main')
     # archive logs older than 1 month
@@ -93,11 +94,11 @@ def logging_setup(name, **kw):
 
 def new_logger(name):
     name = '{:<{}}'.format(name, NAME_WIDTH)
-    if name.strip() == 'main':
-        l = logging.getLogger()
-    else:
-        l = logging.getLogger(name)
-#    l = logging.getLogger(name)
+#    if name.strip() == 'main':
+#        l = logging.getLogger()
+#    else:
+
+    l = logging.getLogger(name)
 
 
 #    print name

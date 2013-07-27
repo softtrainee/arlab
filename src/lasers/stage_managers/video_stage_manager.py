@@ -200,13 +200,13 @@ class VideoStageManager(StageManager):
             else:
                 close()
 
-    def update_camera_params(self, obj, name, old, new):
-        if name == 'focus_z':
-            self.focus_z = new
-        elif 'y' in name:
-            self._camera_ycoefficients = new
-        elif 'x' in name:
-            self._camera_xcoefficients = new
+#    def update_camera_params(self, obj, name, old, new):
+#        if name == 'focus_z':
+#            self.focus_z = new
+#        elif 'y' in name:
+#            self._camera_ycoefficients = new
+#        elif 'x' in name:
+#            self._camera_xcoefficients = new
 
 #    def finish_loading(self):
 #        super(VideoStageManager, self).finish_loading()
@@ -667,9 +667,8 @@ class VideoStageManager(StageManager):
             vid.vflip = camera.vflip
             vid.hflip = camera.hflip
 
-        self._camera_zoom_coefficients = ','.join(map(str, camera.zoom_coefficients))
+        self._camera_zoom_coefficients = camera.zoom_coefficients
 
-        px = camera.calculate_pxpermm(0)
         return camera
 
     def _video_default(self):

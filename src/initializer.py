@@ -57,7 +57,7 @@ class Initializer(Loggable):
         '''
 
         '''
-
+        self.debug('add initialization {}'.format(a))
         ilist = self.init_list
         ilist.append(a)
 #        add = True
