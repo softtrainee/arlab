@@ -254,8 +254,21 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 
             if move_to_nominal:
                 # move to the home position
-                self._set_data_position(self.nominal_position)
-                self.block(5, progress=self.progress)
+                np = self.nominal_position
+                self._set_motor(self.nominal_position)
+
+                timeout = 60
+                # timer stops when move has completed
+                timed_out = self.timer.wait_for_completion(timeout=timeout)
+                if timed_out:
+                    msg = 'move to nominal position {} timed out after {}s'.format(np, timeout)
+                    self.warning(msg)
+                    self.warning_dialog(msg)
+                else:
+                    self.info('move to nominal position {} complete'.format(np))
+
+#                 self._set_data_position(self.nominal_position)
+#                 self.block(5, progress=self.progress)
 
         # remove reference to progress
         self.progress = None
@@ -380,8 +393,8 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 
         while not self.parent.simulation:
 
-#             steps = self.load_data_position()
-            steps = self._get_motor_position(verbose=True)
+            steps = self.load_data_position()
+#             steps = self._get_motor_position(verbose=True)
 #             print 'ffff', steps
             if progress is not None:
                 progress.change_message('{} position = {}'.format(self.name, steps))
@@ -571,31 +584,20 @@ class KerrMotor(KerrDevice, ConsumerMixin):
             else:
                 self.enabled = True
                 if self.timer is not None:
-
                     self.timer.Stop()
-                    self.update_position = self._data_position
+#                     self.update_position = self._data_position
 
         if not self.enabled:
             pos = self._get_motor_position(verbose=False)
             if pos is not None:
 
                 pos = self.linear_mapper.map_data(pos)
-
-#                 pos /= (self.steps * (1 - self.home_position))
-#
-#                 if self.sign == -1:
-#                     pos = 1 - pos
-#                 pos *= (self.max - self.min)
-#
-#                 pos = max(min(self.max, pos), self.min)
-
                 self.update_position = pos
 
     def _get_data_position(self):
         '''
         '''
         return  self._data_position
-#        return float('%0.3f' % self._data_position)
 
     def _set_data_position(self, pos):
         self.add_consumable((self._set_motor, pos))
@@ -623,7 +625,6 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                     hv = hysteresis
 
             self._set_motor_position_(steps, hv)
-#             print self.parent.simulation
             def launch():
                 self.timer = self.timer_factory()
 
@@ -635,7 +636,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
     def timer_factory(self):
         '''
         
-            reuse timer is possible
+            reuse timer if possible
             
         '''
         timer = self.timer
@@ -649,7 +650,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                 self.debug('reusing old timer')
             else:
                 self._not_moving_count = 0
-                timer = Timer(400, func)
+                timer = Timer(250, func)
 
         return timer
 

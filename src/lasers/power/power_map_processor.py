@@ -152,7 +152,7 @@ class PowerMapProcessor:
         return d
 
     def _extract_h5(self, dm):
-        cells = []
+#         cells = []
         tab = dm.get_table('power_map', '/')
         metadata = dict()
         try:
@@ -172,17 +172,12 @@ class PowerMapProcessor:
 #        xs, ys, power = array(xs), array(ys), array(power)
         n = power.shape[0]
 #        print n
-        xi = linspace(-min(xs), max(xs), n)
-        yi = linspace(-min(ys), max(ys), n)
+        xi = linspace(min(xs), max(xs), n)
+        yi = linspace(min(ys), max(ys), n)
+
         X = xi[None, :]
         Y = yi[:, None]
 
-#        print b
-#        print X
-#        print xs
-#        print ys
-#        print power
-#        print power
         power = griddata((xs, ys), power, (X, Y),
                          fill_value=0,
                          method='linear')
