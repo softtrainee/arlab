@@ -63,8 +63,9 @@ class LaserCalibrationTask(BaseLaserTask):
         return [lp, ep]
 
     def open_power_map(self):
-        p = self.open_file_dialog()
-#        p = '/Users/ross/Pychrondata_demo/data/scans/powermap-2013-07-17001.hdf5'
+#         p = self.open_file_dialog()
+#         p = '/Users/ross/Pychrondata_demo/data/scans/powermap-2013-07-17001.hdf5'
+        p = '/Users/ross/Sandbox/powermap-2013-07-26005.hdf5'
         if p:
             editor = PowerMapEditor(
 #                                     name='Power Map {:03n}'.format(n + 1),

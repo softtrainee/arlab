@@ -92,16 +92,26 @@ class PowerMapper(Loggable, ConsumerMixin):
 
     def stop(self):
         self._alive = False
+        lm = self.laser_manager
+        if lm:
+            lm.set_laser_power(0)
+            lm.disable_device()
+
+            sm = lm.stage_manager
+            sm.stop()
 
     def do_power_mapping(self, bd, rp, cx, cy, padding, step_len):
         self._padding = padding
 
-        self.info('executing discrete scan')
+
+        self._bounds = [cx - padding, cx + padding, cy - padding, cy + padding]
+
+        self.info('executing power map')
         self.info('beam diameter={} request_power={}'.format(bd, rp))
 
-        self.setup_consumer(func=self._add_data)
         lm = self.laser_manager
         if lm is not None:
+            self.setup_consumer(func=self._add_data)
             self._alive = True
             # enable the laser
             lm.enable_laser()
@@ -115,13 +125,15 @@ class PowerMapper(Loggable, ConsumerMixin):
             else:
                 self._continuous_scan(cx, cy, padding, step_len)
 
-            self._alive = False
+
+            self.stop()
             self.completed = True
+
+            # stop the consumer
+            self._should_consume = False
+
         else:
             self.warning_dialog('No Laser Manager available')
-
-        # stop the consumer
-#        self._should_consume = False
 
     def _add_data(self, v):
         tab, x, y, col, row, mag, sid = v
@@ -133,11 +145,16 @@ class PowerMapper(Loggable, ConsumerMixin):
         self._xs = hstack((self._xs, x))
         self._ys = hstack((self._ys, y))
         self._zs = hstack((self._zs, mag))
+
+
+        xl, xh = self._bounds[:2]
+        yl, yh = self._bounds[2:]
+
         if col and row > 1:
             cg = self.contour_graph
 
-            xi = linspace(-0.5, 0.5, 100)
-            yi = linspace(-0.5, 0.5, 100)
+            xi = linspace(xl, xh, 100)
+            yi = linspace(yl, yh, 100)
             X = xi[None, :]
             Y = yi[:, None]
 
@@ -151,23 +168,22 @@ class PowerMapper(Loggable, ConsumerMixin):
                         method='cubic',
                         fill_value=0)
 
-
             zd = rot90(zd, k=2)
 #             zd = zd.T
 #             print zd
             if not cg.plots[0].plots.keys():
-                padding = self._padding
                 cg.new_series(z=zd,
-                              xbounds=(-padding, padding),
-                              ybounds=(-padding, padding),
+                              xbounds=(xl, xh),
+                              ybounds=(xl, xh),
                               style='contour')
             else:
                 cg.plots[0].data.set_data('z0', zd)
 
             cg.redraw()
 
-
     def _continuous_scan(self, cx, cy, padding, step_len):
+        self.info('doing continuous scan')
+
         _nrows, row_gen = self._row_generator(cx, cy, padding, step_len)
         lm = self.laser_manager
         sm = lm.stage_manager
@@ -198,7 +214,7 @@ class PowerMapper(Loggable, ConsumerMixin):
 
             # move to start position
             self.info('move to end {},{}'.format(ex, ny))
-            sc.linear_move(ex, ny, block=False, velocity=0.5, immediate=True)
+            sc.linear_move(ex, ny, block=False, velocity=0.1, immediate=True)
 
             self.graph.new_series(color='black')
             sid = len(self.graph.series[0]) - 1
@@ -242,6 +258,7 @@ class PowerMapper(Loggable, ConsumerMixin):
 
 
     def _discrete_scan(self, cx, cy, padding, step_len):
+        self.info('doing discrete scan')
         nsteps, step_gen = self._step_generator(cx, cy, padding, step_len)
 
         lm = self.laser_manager

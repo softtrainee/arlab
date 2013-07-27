@@ -253,7 +253,7 @@ def visualize_flux_contour(p, holder, delim=','):
 #    ETSConfig.toolkit = 'qt4'
 #    from src.regression.ols_regressor import MultipleLinearRegressor
     use_2d = True
-#     use_2d = False
+    use_2d = False
 #     calc_dev = True
     calc_dev = False
 #     age_space = 280.2
@@ -404,6 +404,7 @@ if __name__ == '__main__':
     p = '/Users/ross/Sandbox/flux_visualizer/J_nm-258_tray_G.xls'
     p = '/Users/ross/Sandbox/flux_visualizer/J_nm-258_tray_G2.xls'
     p = '/Users/ross/Sandbox/flux_visualizer/J_NM-259A.xls'
+    p = '/Users/ross/Sandbox/flux_visualizer/J_NM-259A2.xls'
 #     p = '/Users/ross/Sandbox/flux_visualizer/runid_contour.txt'
 #    p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G.txt'
     holder = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/1_75mm_3level'

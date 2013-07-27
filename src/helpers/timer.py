@@ -23,32 +23,6 @@ import time
 
 from PySide.QtCore import QThread
 #============= local library imports  ==========================
-#
-# class Timer(QTimer):
-#     def __init__(self, period, func, delay=0, *args, **kw):
-#         super(Timer, self).__init__()
-#
-#         def callback():
-#             print 'callback'
-#             func(*args, **kw)
-# #         self._func = func
-#
-# #         self._flag = Event()
-# #         self._flag.clear()
-#
-# #         self._delay = delay / 1000.0
-# #         self._args = args
-# #         self._kwargs = kw
-#
-#         period = in(period / 1000.0)
-#         self.timeout.connect(callback)
-#         self.start(period)
-#         print 'asdfsafda'
-#
-#     def Stop(self):
-#         self.stop()
-
-
 
 
 class Timer(QThread):
@@ -87,10 +61,16 @@ class Timer(QThread):
             if t:
                 flag.wait(t)
 
-#         self._completed = True
+    def wait_for_completion(self, timeout=None):
+        st = time.time()
+        while 1:
+            if timeout:
+                if time.time() - st > timeout:
+                    return 'timeout'
 
-#     def stop(self):
-#         self.Stop()
+            if not self.isActive():
+                break
+            time.sleep(0.1)
 
     def Stop(self):
         self._flag.set()
