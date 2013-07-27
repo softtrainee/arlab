@@ -22,7 +22,7 @@ from multiprocessing.process import Process
         - move to archive
     2. remove archive directories older than X
 '''
-from traits.api import Range, Bool, Str
+from traits.api import HasTraits, Range, Bool, Str
 import os
 import shutil
 from datetime import datetime, timedelta
@@ -33,6 +33,7 @@ from src.loggable import Loggable
 MONTH_NAMES = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', \
                'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']
 
+# archive cannot be a loggable because archive used to clean log
 
 class Archiver(Loggable):
     archive_hours = Range(0, 23, 0)
@@ -40,8 +41,22 @@ class Archiver(Loggable):
     archive_months = Range(0, 12, 1)
     clean_archives = Bool(True)
     root = Str
-    use_logger_display = False
-    use_warning_display = False
+
+#     logger = None
+# #     use_logger_display = False
+# #     use_warning_display = False
+#
+#     def info(self, *args, **kw):
+#         if self.logger:
+#             self.logger.info(*args, **kw)
+#
+#     def warning(self, *args, **kw):
+#         if self.logger:
+#             self.logger.warning(*args, **kw)
+#
+#     def debug(self, *args, **kw):
+#         if self.logger:
+#             self.logger.debug(*args, **kw)
 
     def clean(self, spawn_process=True):
         if spawn_process:

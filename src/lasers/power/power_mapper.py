@@ -123,6 +123,7 @@ class PowerMapper(Loggable, ConsumerMixin):
                 self._discrete_scan(cx, cy, padding, step_len)
             else:
                 self._continuous_scan(cx, cy, padding, step_len)
+                self._measure_properties()
 
             self.stop()
             self.completed = True
@@ -216,7 +217,7 @@ class PowerMapper(Loggable, ConsumerMixin):
             # move to start position
             sc.linear_move(sx, ny, block=True)
 
-            #wait for detector to settle
+            # wait for detector to settle
             time.sleep(5)
 
             self.graph.new_series(color='black')
@@ -269,8 +270,73 @@ class PowerMapper(Loggable, ConsumerMixin):
 
         self.debug('scan complete')
 
+    def _measure_properties(self):
+        z = self.contour_graph.plots[0].data.get_data('z0')
+        from skimage.morphology import label
+        from skimage.measure._regionprops import regionprops
 
-    def _discrete_scan(self, cx, cy, padding, step_len):
+        print regionprops(label(z), ['EquivDiameter'])
+
+
+    def _row_generator(self, cx, cy, padding, step_len):
+        nsteps = int(padding / step_len)
+#        ysteps = xrange(-nsteps, nsteps + 1)
+        ysteps = xrange(nsteps + 1, -nsteps, -1)
+
+        self.graph.set_x_limits(cx - padding, cx + padding, pad='0.1')
+        def gen():
+            for j, yi in enumerate(ysteps):
+                ny = (yi * step_len) + cy
+                yield j, ny
+        return nsteps, gen()
+
+    def _step_generator(self, cx, cy, padding, step_len):
+        nsteps = int(padding / step_len)
+        xsteps = xrange(-nsteps, nsteps + 1)
+        ysteps = xrange(-nsteps, nsteps + 1)
+
+        self.canvas.set_parameters(xsteps, ysteps)
+        self.canvas.request_redraw()
+
+        def gen():
+            for j, yi in enumerate(ysteps):
+                ny = (yi * step_len) + cy
+                for i, xi in enumerate(xsteps):
+                    nx = (xi * step_len) + cx
+                    yield i, nx, j, ny
+
+        return len(xsteps), gen()
+
+#===============================================================================
+# data
+#===============================================================================
+    def _new_data_table(self, padding):
+        dm = self.data_manager
+#        root = '/usr/local/pychron/powermaps'
+#         dw = DataWarehouse(root=paths.powermap_db_root)
+#                           root=os.path.join(paths.co2laser_db_root, 'power_map'))
+#                           os.path.join(data_dir, base_dir))
+#         dw.build_warehouse()
+        dm.new_frame(base_frame_name='powermap-{}'.format(generate_datestamp()),
+#                      directory=dw.get_current_dir()
+                     )
+        t = dm.new_table('/', 'power_map', table_style='PowerMap')
+        t._v_attrs['bounds'] = padding
+        return t
+
+    def _write_datum(self, tab, nx, ny, c, r, mag):
+        nr = tab.row
+        nr['col'] = c
+        nr['row'] = r
+        nr['x'] = nx
+        nr['y'] = ny
+        nr['power'] = mag
+        nr.append()
+        tab.flush()
+#===============================================================================
+# discrete
+#===============================================================================
+def _discrete_scan(self, cx, cy, padding, step_len):
         self.info('doing discrete scan')
         nsteps, step_gen = self._step_generator(cx, cy, padding, step_len)
 
@@ -310,59 +376,6 @@ class PowerMapper(Loggable, ConsumerMixin):
             self._write_datum(tab, nx, ny, col, row, mag)
             self.canvas.set_cell_value(col, row, mag)
 
-    def _new_data_table(self, padding):
-        dm = self.data_manager
-#        root = '/usr/local/pychron/powermaps'
-#         dw = DataWarehouse(root=paths.powermap_db_root)
-#                           root=os.path.join(paths.co2laser_db_root, 'power_map'))
-#                           os.path.join(data_dir, base_dir))
-#         dw.build_warehouse()
-        dm.new_frame(base_frame_name='powermap-{}'.format(generate_datestamp()),
-#                      directory=dw.get_current_dir()
-                     )
-        t = dm.new_table('/', 'power_map', table_style='PowerMap')
-        t._v_attrs['bounds'] = padding
-        return t
-
-    def _write_datum(self, tab, nx, ny, c, r, mag):
-        nr = tab.row
-        nr['col'] = c
-        nr['row'] = r
-        nr['x'] = nx
-        nr['y'] = ny
-        nr['power'] = mag
-        nr.append()
-        tab.flush()
-
-
-    def _row_generator(self, cx, cy, padding, step_len):
-        nsteps = int(padding / step_len)
-#        ysteps = xrange(-nsteps, nsteps + 1)
-        ysteps = xrange(nsteps + 1, -nsteps, -1)
-
-        self.graph.set_x_limits(cx - padding, cx + padding, pad='0.1')
-        def gen():
-            for j, yi in enumerate(ysteps):
-                ny = (yi * step_len) + cy
-                yield j, ny
-        return nsteps, gen()
-
-    def _step_generator(self, cx, cy, padding, step_len):
-        nsteps = int(padding / step_len)
-        xsteps = xrange(-nsteps, nsteps + 1)
-        ysteps = xrange(-nsteps, nsteps + 1)
-
-        self.canvas.set_parameters(xsteps, ysteps)
-        self.canvas.request_redraw()
-
-        def gen():
-            for j, yi in enumerate(ysteps):
-                ny = (yi * step_len) + cy
-                for i, xi in enumerate(xsteps):
-                    nx = (xi * step_len) + cx
-                    yield i, nx, j, ny
-
-        return len(xsteps), gen()
 #============= EOF =============================================
 
 

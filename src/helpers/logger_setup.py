@@ -14,9 +14,6 @@
 # limitations under the License.
 #===============================================================================
 
-
-
-
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
@@ -29,10 +26,92 @@ from filetools import unique_path
 # from src.globals import globalv
 import shutil
 
+from src.helpers.filetools import list_directory
+
 NAME_WIDTH = 40
 gFORMAT = '%(name)-{}s: %(asctime)s %(levelname)-7s (%(threadName)-10s) %(message)s'.format(NAME_WIDTH)
 gLEVEL = logging.DEBUG
 
+
+rhandler = None
+
+def logging_setup(name, **kw):
+    '''
+    '''
+    from src.helpers.archiver import Archiver
+
+    # set up deprecation warnings
+    import warnings
+    warnings.simplefilter('default')
+
+    # make sure we have a log directory
+    bdir = os.path.join(paths.root, 'logs')
+    if not os.path.isdir(bdir):
+        os.mkdir(bdir)
+
+    # create a new logging file
+    logname = '{}.current.log'.format(name)
+    logpath = os.path.join(bdir, logname)
+
+    if os.path.isfile(logpath):
+        backup_logpath, _cnt = unique_path(bdir, name, extension='log')
+
+        shutil.copyfile(logpath, backup_logpath)
+        os.remove(logpath)
+
+        # get all .# paths
+        ps = list_directory(bdir, filtername=logname, remove_extension=False)
+        for pi in ps:
+            _h, t = os.path.splitext(pi)
+            v = os.path.join(bdir, pi)
+            shutil.copyfile(v, '{}{}'.format(backup_logpath, t))
+            os.remove(v)
+
+
+    if sys.version.split(' ')[0] < '2.4.0':
+        logging.basicConfig()
+    else:
+        root = logging.getLogger()
+        shandler = logging.StreamHandler()
+#
+# #        global rhandler
+        rhandler = logging.handlers.RotatingFileHandler(
+                        logpath, maxBytes=1e7, backupCount=5)
+#
+        for hi in (shandler, rhandler):
+            hi.setLevel(gLEVEL)
+            hi.setFormatter(logging.Formatter(gFORMAT))
+            root.addHandler(hi)
+
+#     new_logger('main')
+    # archive logs older than 1 month
+    a = Archiver(archive_days=30,
+                 archive_months=6,
+                 root=bdir
+                 )
+    a.clean(False)
+
+def new_logger(name):
+    name = '{:<{}}'.format(name, NAME_WIDTH)
+    if name.strip() == 'main':
+        l = logging.getLogger()
+    else:
+        l = logging.getLogger(name)
+#    l = logging.getLogger(name)
+
+
+#    print name
+    l.setLevel(gLEVEL)
+
+#    handler = logging.StreamHandler(stream=sys.stdout)
+#    handler.setFormatter(logging.Formatter(gFORMAT))
+#    l.addHandler(handler)
+
+    return l
+#    '''
+#    '''
+#    return l
+#============================== EOF ===================================
 # LOGGER_LIST = []
 
 # class DisplayHandler(logging.StreamHandler):
@@ -88,70 +167,6 @@ gLEVEL = logging.DEBUG
 #                os.remove(pi)
 #
 #    print 'clean up finished'
-
-rhandler = None
-
-def logging_setup(name, **kw):
-    '''
-    '''
-
-    # set up deprecation warnings
-    import warnings
-    warnings.simplefilter('default')
-
-    # make sure we have a log directory
-    bdir = os.path.join(paths.root, 'logs')
-    if not os.path.isdir(bdir):
-        os.mkdir(bdir)
-
-    # create a new logging file
-    logpath = os.path.join(bdir, '{}.current.log'.format(name))
-    if os.path.isfile(logpath):
-        backup_logpath, _cnt = unique_path(bdir, name, extension='log')
-        shutil.copyfile(logpath, backup_logpath)
-        os.remove(logpath)
-
-    if sys.version.split(' ')[0] < '2.4.0':
-        logging.basicConfig()
-    else:
-#        return
-#
-        root = logging.getLogger()
-        shandler = logging.StreamHandler()
-#
-# #        global rhandler
-        rhandler = logging.handlers.RotatingFileHandler(
-               logpath, maxBytes=1e7, backupCount=5)
-#
-        for hi in [shandler, rhandler]:
-            hi.setLevel(gLEVEL)
-            hi.setFormatter(logging.Formatter(gFORMAT))
-            root.addHandler(hi)
-
-#     new_logger('main')
-
-
-def new_logger(name):
-    name = '{:<{}}'.format(name, NAME_WIDTH)
-    if name.strip() == 'main':
-        l = logging.getLogger()
-    else:
-        l = logging.getLogger(name)
-#    l = logging.getLogger(name)
-
-
-#    print name
-    l.setLevel(gLEVEL)
-
-#    handler = logging.StreamHandler(stream=sys.stdout)
-#    handler.setFormatter(logging.Formatter(gFORMAT))
-#    l.addHandler(handler)
-
-    return l
-#    '''
-#    '''
-#    return l
-#============================== EOF ===================================
 
 # MAXLEN = 30
 # def add_console(logger=None, name=None,

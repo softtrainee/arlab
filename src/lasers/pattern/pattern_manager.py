@@ -62,8 +62,8 @@ class PatternManager(Manager):
     def isAlive(self):
         return self._alive
 
-    def get_pattern_names(self):
-        return self.get_file_list(paths.pattern_dir, extension='.lp')
+#     def get_pattern_names(self):
+#         return self.get_file_list(paths.pattern_dir, extension='.lp')
 
     def stop_pattern(self):
         self.info('User requested stop')

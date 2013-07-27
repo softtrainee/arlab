@@ -28,6 +28,7 @@ from src.constants import NULL_STR, LINE_STR
 from src.loggable import Loggable
 import time
 from src.consumer_mixin import ConsumerMixin
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
 
 class ExperimentFactory(Loggable, ConsumerMixin):
     db = Any
@@ -156,8 +157,17 @@ extract_device, delay_+, tray, username, load_name]''')
         self.run_factory = self._run_factory_factory()
 #         self.run_factory.update_templates_needed = True
         self.run_factory.load_templates()
+        self.run_factory.patterns = self._get_patterns(ed)
         if self.queue:
             self.queue.set_extract_device(ed)
+
+    def _get_patterns(self, ed):
+        ps = []
+        man = self.application.get_service(ILaserManager, 'name=="{}"'.format(ed))
+        if man:
+            ps = man.get_pattern_names()
+
+        return ps
 #===============================================================================
 # property get/set
 #===============================================================================

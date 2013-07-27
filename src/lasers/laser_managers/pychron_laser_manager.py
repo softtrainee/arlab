@@ -186,6 +186,16 @@ class PychronLaserManager(BaseLaserManager):
         '''
         self._cancel_blocking = True
 
+    def get_pattern_names(self):
+        # get contents of local pattern_dir
+        ps = super(PychronLaserManager, self).get_pattern_names()
+
+        # get contents of remote pattern_dir
+        pn = self._ask('GetPatternNames')
+        if pn:
+            ps.extend(pn)
+
+        return ps
 #===============================================================================
 # pyscript commands
 #===============================================================================
