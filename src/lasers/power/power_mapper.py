@@ -137,7 +137,7 @@ class PowerMapper(Loggable, ConsumerMixin):
 
     def _add_data(self, v):
         tab, x, y, col, row, mag, sid = v
-        self.debug('{} {} {} {} {} {}'.format(*v))
+        self.debug('{} {} {} {} {}'.format(*v[1:]))
         self._write_datum(tab, x, y, col, row, mag)
         self.graph.add_datum((x, mag), series=sid)
         self.graph.redraw()
@@ -195,10 +195,12 @@ class PowerMapper(Loggable, ConsumerMixin):
         i = 0
         while 1:
             if not self._alive:
+                self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%% not alive')
                 break
             try:
                 row, ny = row_gen.next()
             except StopIteration:
+                self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%% Stop iteration')
                 break
 
             if i % 2 == 0:
@@ -237,7 +239,6 @@ class PowerMapper(Loggable, ConsumerMixin):
             yaxis = sc.axes['y']
             while 1:
                 time.sleep(p)
-
                 x, y = xaxis.position, yaxis.position
                 if apm:
                     mag = apm.read_power_meter(verbose=False)
@@ -246,15 +247,17 @@ class PowerMapper(Loggable, ConsumerMixin):
 
 #                self.debug('x={}, y={}'.format(x, y))
                 if not sc.timer.isActive():
+                    self.debug('%%%%%%%%%%%%%%%%%%%%%% timer not active')
                     self.add_consumable((tab, x, y, 1, row, mag, sid))
                     break
                 else:
                     self.add_consumable((tab, x, y, 0, row, mag, sid))
 
-
             self.debug('row {} y={} complete'.format(row, ny))
 
             i += 1
+
+        self.debug('scan complete')
 
 
     def _discrete_scan(self, cx, cy, padding, step_len):

@@ -82,6 +82,9 @@ class LaserCalibrationTask(BaseLaserTask):
                        if isinstance(ed, PowerMapEditor)])
 
         editor = PowerMapEditor(name='Power Map {:03n}'.format(n + 1))
+        if self.active_editor:
+            editor.editor = self.active_editor.editor
+
         self._open_editor(editor)
 
     def new_power_calibration(self):

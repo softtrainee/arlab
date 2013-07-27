@@ -144,7 +144,7 @@ class Camera(ConfigLoadable):
         config = self.get_configuration(self.config_path)
 
 
-        config.set('Zoom', 'zoom_coefficients',
+        config.set('Zoom', 'coefficients',
                    ','.join(map(str, self.zoom_coefficients)))
 #                    self.calibration_data.xcoeff_str)
 #         config.set('General', 'ycoefficients', self.calibration_data.ycoeff_str)
