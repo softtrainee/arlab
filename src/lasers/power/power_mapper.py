@@ -104,7 +104,15 @@ class PowerMapper(Loggable, ConsumerMixin):
     def do_power_mapping(self, bd, rp, cx, cy, padding, step_len):
         self._padding = padding
         self._bounds = [cx - padding, cx + padding, cy - padding, cy + padding]
+        xl, xh = cx - padding, cx + padding
+        yl, yh = cy - padding, cy + padding
 
+        xi = linspace(xl, xh, 25)
+        yi = linspace(yl, yh, 25)
+        X = xi[None, :]
+        Y = yi[:, None]
+
+        self.area = (X, Y)
         self.info('executing power map')
         self.info('beam diameter={} request_power={}'.format(bd, rp))
 
@@ -123,10 +131,11 @@ class PowerMapper(Loggable, ConsumerMixin):
                 self._discrete_scan(cx, cy, padding, step_len)
             else:
                 self._continuous_scan(cx, cy, padding, step_len)
-                self._measure_properties()
 
             self.stop()
+
             self.completed = True
+            self._measure_properties()
 
             # stop the consumer
             self._should_consume = False
@@ -134,12 +143,15 @@ class PowerMapper(Loggable, ConsumerMixin):
         else:
             self.warning_dialog('No Laser Manager available')
 
-    def _add_data(self, v):
-        tab, x, y, col, row, mag, sid = v
+    def _add_data(self, data):
+
+
+#        def _refresh_data(v):
+        tab, x, y, col, row, mag, sid = data
+
 #        self.debug('{} {} {} {} {}'.format(*v[1:]))
         self._write_datum(tab, x, y, col, row, mag)
         self.graph.add_datum((x, mag), series=sid)
-        self.graph.redraw()
 
         self._xs = hstack((self._xs, x))
         self._ys = hstack((self._ys, y))
@@ -148,22 +160,16 @@ class PowerMapper(Loggable, ConsumerMixin):
         xl, xh = self._bounds[:2]
         yl, yh = self._bounds[2:]
 
-        if col % 5 == 0 and row >= 3:
+        if col % 10 == 0 and row:
             cg = self.contour_graph
-
-            xi = linspace(xl, xh, 50)
-            yi = linspace(yl, yh, 50)
-            X = xi[None, :]
-            Y = yi[:, None]
-
             xx = self._xs
             yy = self._ys
             z = self._zs
 
 #             print 'xx-----', xx
 #             print 'yy-----', yy
-            zd = griddata((xx, yy), z, (X, Y),
-                        method='cubic',
+            zd = griddata((xx, yy), z, self.area,
+#                        method='cubic',
                         fill_value=0)
 
             zd = rot90(zd, k=2)
@@ -172,12 +178,12 @@ class PowerMapper(Loggable, ConsumerMixin):
             if not cg.plots[0].plots.keys():
                 cg.new_series(z=zd,
                               xbounds=(xl, xh),
-                              ybounds=(xl, xh),
+                              ybounds=(yl, yh),
                               style='contour')
             else:
                 cg.plots[0].data.set_data('z0', zd)
 
-            cg.redraw()
+#        invoke_in_main_thread(_refresh_data, data)
 
     def _continuous_scan(self, cx, cy, padding, step_len):
         self.info('doing continuous scan')
@@ -239,12 +245,13 @@ class PowerMapper(Loggable, ConsumerMixin):
 #                     mag = row + random.random()
 #                     self.add_consumable((tab, x, y, i, row, mag, sid))
 #             else:
-            p = sc.timer.get_interval()
-            self.debug('power map timer {}'.format(p))
             xaxis = sc.axes['x']
             yaxis = sc.axes['y']
             col = 0
+            p = sc.timer.get_interval()
+            self.debug('power map timer {}'.format(p))
             while 1:
+#                self.debug('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ power map iteration {}'.format(p))
                 time.sleep(p)
                 x, y = xaxis.position, yaxis.position
                 if apm:
@@ -256,11 +263,14 @@ class PowerMapper(Loggable, ConsumerMixin):
                 v = (tab, x, y, col, row, mag, sid)
                 if not sc.timer.isActive():
                     self.debug('%%%%%%%%%%%%%%%%%%%%%% timer not active')
-                    invoke_in_main_thread(self._add_data, v)
+#                    invoke_in_main_thread(self._add_data, v)
 #                    self.add_consumable((tab, x, y, 1, row, mag, sid))
+                    self.add_consumable(v)
                     break
                 else:
-                    invoke_in_main_thread(self._add_data, v)
+                    self.add_consumable(v)
+#                    self._add_data(v)
+#                    invoke_in_main_thread(self._add_data, v)
                     col += 1
 #                    self.add_consumable((tab, x, y, 0, row, mag, sid))
 
@@ -269,14 +279,6 @@ class PowerMapper(Loggable, ConsumerMixin):
             i += 1
 
         self.debug('scan complete')
-
-    def _measure_properties(self):
-        z = self.contour_graph.plots[0].data.get_data('z0')
-        from skimage.morphology import label
-        from skimage.measure._regionprops import regionprops
-
-        print regionprops(label(z), ['EquivDiameter'])
-
 
     def _row_generator(self, cx, cy, padding, step_len):
         nsteps = int(padding / step_len)
@@ -307,6 +309,8 @@ class PowerMapper(Loggable, ConsumerMixin):
 
         return len(xsteps), gen()
 
+    def _measure_properties(self):
+        pass
 #===============================================================================
 # data
 #===============================================================================

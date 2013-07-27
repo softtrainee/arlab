@@ -15,9 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, String, Bool, Any, Instance, List, Float, Tuple, Int
-from traitsui.api import View, Item  # , TableEditor
-import apptools.sweet_pickle as pickle
+from traits.api import  Bool, Any, Float, Tuple, Int, Str
+#from traitsui.api import View, Item  # , TableEditor
+#import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 from numpy import polyval, exp
 #============= local library imports  ==========================
@@ -129,6 +129,7 @@ class Camera(ConfigLoadable):
 #     calibration_data = Instance(CalibrationData, ())
     focus_z = Float
     fps = Int
+    zoom_coefficients = Str
 
 #     def save_focus(self):
 #         self.info('saving focus position to {}'.format(self.config_path))
@@ -194,8 +195,12 @@ class Camera(ConfigLoadable):
             ff = 'lambda p,x: {}'.format(self.zoom_fitfunc)
             func = eval(ff)
 
-#         print func, self.zoom_fitfunc
-        pxpermm = func(map(float, self.zoom_coefficients.split(',')), zoom)
+        if self.zoom_coefficients:
+    #         print func, self.zoom_fitfunc
+            pxpermm = func(map(float, self.zoom_coefficients.split(',')), zoom)
+        else:
+            pxpermm = 1
+
         return pxpermm
 
     def set_limits_by_zoom(self, zoom, cx, cy, canvas=None):

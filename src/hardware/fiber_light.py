@@ -36,7 +36,7 @@ class FiberLight(AbstractDevice):
     power = Event
     power_label = Property(depends_on='state')
     state = Bool
-    auto_onoff = Bool(True)
+    auto_onoff = Bool(False)
 
     def load_additional_args(self, config):
         '''

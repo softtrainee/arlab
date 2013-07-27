@@ -111,13 +111,14 @@ class Manager(Viewable, RPCable):
     _error_code = None
 
 
-    def __init__(self, *args, **kw):
-        '''
-
-        '''
-        if self.name is None:
-            self.name = self.__class__.__name__
-        super(Manager, self).__init__(*args, **kw)
+#    def __init__(self, *args, **kw):
+#        '''
+#
+#        '''
+#        super(Manager, self).__init__(*args, **kw)
+#
+#        if self.name is None:
+#            self.name = self.__class__.__name__
 
     def finish_loading(self):
         '''
