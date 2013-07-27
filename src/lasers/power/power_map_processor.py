@@ -21,7 +21,7 @@ from traits.api import Bool
 # from traitsui.api import View, Item, Group, HGroup, VGroup, HSplit, VSplit
 #============= standard library imports ========================
 # from tables import openFile
-from numpy import transpose, array, shape, max, linspace, rot90
+from numpy import transpose, array, shape, max, linspace, rot90, fliplr, flipud
 #============= local library imports  ==========================
 from src.graph.contour_graph import ContourGraph
 from src.managers.data_managers.h5_data_manager import H5DataManager
@@ -60,7 +60,7 @@ class PowerMapProcessor:
                           )
         cplot.index_axis.title = 'mm'
         cplot.value_axis.title = 'mm'
-        print z
+
         plot, names, rd = cg.new_series(x=[], y=[], z=z, style='contour',
                       xbounds=bounds,
                       ybounds=bounds,
@@ -170,18 +170,19 @@ class PowerMapProcessor:
         xs, ys, power = array([(r['x'], r['y'], r['power'])
                                 for r in tab.iterrows()]).T
 #        xs, ys, power = array(xs), array(ys), array(power)
-        n = power.shape[0]
+#        n = power.shape[0]
 #        print n
-        xi = linspace(min(xs), max(xs), n)
-        yi = linspace(min(ys), max(ys), n)
+        xi = linspace(min(xs), max(xs), 25)
+        yi = linspace(min(ys), max(ys), 25)
 
         X = xi[None, :]
         Y = yi[:, None]
 
         power = griddata((xs, ys), power, (X, Y),
                          fill_value=0,
-                         method='linear')
-        return power, metadata
+                         method='cubic')
+        return rot90(power, k=2), metadata
+#        return flipud(fliplr(power)), metadata
 #        for row in tab.iterrows():
 #            x = int(row['col'])
 #            try:
