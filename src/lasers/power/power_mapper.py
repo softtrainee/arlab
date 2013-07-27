@@ -30,6 +30,7 @@ from scipy.interpolate.ndgriddata import griddata
 from src.graph.contour_graph import ContourGraph
 from src.graph.graph import Graph
 from chaco.plot_containers import HPlotContainer
+from src.ui.gui import invoke_in_main_thread
 
 
 def power_generator(nsteps):
@@ -102,8 +103,6 @@ class PowerMapper(Loggable, ConsumerMixin):
 
     def do_power_mapping(self, bd, rp, cx, cy, padding, step_len):
         self._padding = padding
-
-
         self._bounds = [cx - padding, cx + padding, cy - padding, cy + padding]
 
         self.info('executing power map')
@@ -116,7 +115,7 @@ class PowerMapper(Loggable, ConsumerMixin):
             # enable the laser
             lm.enable_laser()
 
-            lm.set_motor('beam', bd)
+            lm.set_motor('beam', bd, block=True)
 
             lm.set_laser_power(rp)
             discrete = False
@@ -124,7 +123,6 @@ class PowerMapper(Loggable, ConsumerMixin):
                 self._discrete_scan(cx, cy, padding, step_len)
             else:
                 self._continuous_scan(cx, cy, padding, step_len)
-
 
             self.stop()
             self.completed = True
@@ -137,7 +135,7 @@ class PowerMapper(Loggable, ConsumerMixin):
 
     def _add_data(self, v):
         tab, x, y, col, row, mag, sid = v
-        self.debug('{} {} {} {} {}'.format(*v[1:]))
+#        self.debug('{} {} {} {} {}'.format(*v[1:]))
         self._write_datum(tab, x, y, col, row, mag)
         self.graph.add_datum((x, mag), series=sid)
         self.graph.redraw()
@@ -146,15 +144,14 @@ class PowerMapper(Loggable, ConsumerMixin):
         self._ys = hstack((self._ys, y))
         self._zs = hstack((self._zs, mag))
 
-
         xl, xh = self._bounds[:2]
         yl, yh = self._bounds[2:]
 
-        if col and row > 1:
+        if col % 5 == 0 and row >= 3:
             cg = self.contour_graph
 
-            xi = linspace(xl, xh, 100)
-            yi = linspace(yl, yh, 100)
+            xi = linspace(xl, xh, 50)
+            yi = linspace(yl, yh, 50)
             X = xi[None, :]
             Y = yi[:, None]
 
@@ -203,24 +200,32 @@ class PowerMapper(Loggable, ConsumerMixin):
                 self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%% Stop iteration')
                 break
 
-            if i % 2 == 0:
-                sx = cx - padding
-                ex = cx + padding
-            else:
-                sx = cx + padding
-                ex = cx - padding
+
+#            sx = cx - padding
+#            ex = cx + padding
+            sx = cx + padding
+            ex = cx - padding
+#            if i % 2 == 0:
+#                sx = cx - padding
+#                ex = cx + padding
+#            else:
+#                sx = cx + padding
+#                ex = cx - padding
 
             self.info('move to start {},{}'.format(sx, ny))
             # move to start position
             sc.linear_move(sx, ny, block=True)
 
-            # move to start position
-            self.info('move to end {},{}'.format(ex, ny))
-            sc.linear_move(ex, ny, block=False, velocity=0.1, immediate=True)
+            #wait for detector to settle
+            time.sleep(5)
 
             self.graph.new_series(color='black')
             sid = len(self.graph.series[0]) - 1
 
+            # move to start position
+            self.info('move to end {},{}'.format(ex, ny))
+            sc.linear_move(ex, ny, block=False, velocity=0.1, immediate=True)
+            time.sleep(0.1)
 #             if lm.simulation:
 #                 n = 21
 #                 r = random.random()
@@ -237,6 +242,7 @@ class PowerMapper(Loggable, ConsumerMixin):
             self.debug('power map timer {}'.format(p))
             xaxis = sc.axes['x']
             yaxis = sc.axes['y']
+            col = 0
             while 1:
                 time.sleep(p)
                 x, y = xaxis.position, yaxis.position
@@ -246,12 +252,16 @@ class PowerMapper(Loggable, ConsumerMixin):
                     mag = row + random.random()
 
 #                self.debug('x={}, y={}'.format(x, y))
+                v = (tab, x, y, col, row, mag, sid)
                 if not sc.timer.isActive():
                     self.debug('%%%%%%%%%%%%%%%%%%%%%% timer not active')
-                    self.add_consumable((tab, x, y, 1, row, mag, sid))
+                    invoke_in_main_thread(self._add_data, v)
+#                    self.add_consumable((tab, x, y, 1, row, mag, sid))
                     break
                 else:
-                    self.add_consumable((tab, x, y, 0, row, mag, sid))
+                    invoke_in_main_thread(self._add_data, v)
+                    col += 1
+#                    self.add_consumable((tab, x, y, 0, row, mag, sid))
 
             self.debug('row {} y={} complete'.format(row, ny))
 
@@ -327,7 +337,8 @@ class PowerMapper(Loggable, ConsumerMixin):
 
     def _row_generator(self, cx, cy, padding, step_len):
         nsteps = int(padding / step_len)
-        ysteps = xrange(-nsteps, nsteps + 1)
+#        ysteps = xrange(-nsteps, nsteps + 1)
+        ysteps = xrange(nsteps + 1, -nsteps, -1)
 
         self.graph.set_x_limits(cx - padding, cx + padding, pad='0.1')
         def gen():

@@ -129,7 +129,8 @@ class KerrMotor(KerrDevice, ConsumerMixin):
             self.enabled = False
             value = self._convert_value(value)
             self.info('setting data position {}'.format(value))
-            self.data_position = value
+            self._set_motor(value)
+#            self.data_position = value
             if block:
                 self.info('waiting for move to complete')
                 self.block()

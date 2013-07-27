@@ -144,8 +144,7 @@ class Camera(ConfigLoadable):
         config = self.get_configuration(self.config_path)
 
 
-        config.set('Zoom', 'coefficients',
-                   ','.join(map(str, self.zoom_coefficients)))
+        config.set('Zoom', 'coefficients', self.zoom_coefficients)
 #                    self.calibration_data.xcoeff_str)
 #         config.set('General', 'ycoefficients', self.calibration_data.ycoeff_str)
         self.write_configuration(config, self.config_path)
@@ -167,7 +166,7 @@ class Camera(ConfigLoadable):
         self.set_attribute(config, 'fps', 'General', 'fps', cast='int', default=12)
 
         self.set_attribute(config, 'zoom_coefficients', 'Zoom', 'coefficients',
-                           default=[1, 0, 0]
+                           default='1,0,23'
                            )
         self.set_attribute(config, 'zoom_fitfunc', 'Zoom', 'fitfunc',
                            default='polynomial')
@@ -196,8 +195,7 @@ class Camera(ConfigLoadable):
             func = eval(ff)
 
 #         print func, self.zoom_fitfunc
-        pxpermm = func(self.zoom_coefficients, zoom)
-        print pxpermm
+        pxpermm = func(map(float, self.zoom_coefficients.split(',')), zoom)
         return pxpermm
 
     def set_limits_by_zoom(self, zoom, cx, cy, canvas=None):
