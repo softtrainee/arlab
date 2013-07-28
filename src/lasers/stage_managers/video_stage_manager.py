@@ -118,6 +118,7 @@ class VideoStageManager(StageManager):
     render_with_markup = Bool(False)
 
     def bind_preferences(self, pref_id):
+        self.debug('binding preferences')
         super(VideoStageManager, self).bind_preferences(pref_id)
 
         bind_preference(self.autocenter_manager, 'use_autocenter', '{}.use_autocenter'.format(pref_id))
@@ -343,16 +344,17 @@ class VideoStageManager(StageManager):
 
     def _start_recording(self, path=None, basename='vm_recording',
                          use_dialog=False, user='remote',):
-        self.info('start video recording ')
         if path is None:
             if use_dialog:
                 path = self.save_file_dialog()
             else:
                 vd = self.video_archiver.root
+                self.debug('video archiver root {}'.format(vd))
                 if vd is None:
                     vd = paths.video_dir
                 path, _ = unique_path(vd, basename, extension='avi')
 
+        self.info('start video recording {}'.format(path))
         d = os.path.dirname(path)
         if not os.path.isdir(d):
             self.warning('invalid directory {}'.format(d))

@@ -33,6 +33,7 @@ from cv_wrapper import swap_rb as cv_swap_rb
 #
 
 from src.globals import globalv
+from src.consumer_mixin import ConsumerMixin
 def convert_to_video(path, fps, name_filter='snapshot%03d.jpg',
                      ffmpeg=None,
                      output=None):
@@ -231,7 +232,7 @@ class Video(Image):
         else:
             func = self._cv_record
 
-        fps = 8.
+        fps = 5
         if self.cap is None:
             self.open()
 
@@ -274,7 +275,7 @@ class Video(Image):
             use ffmpeg to stitch a directory of jpegs into a video
             
         '''
-        remove_images = True
+        remove_images = False
         root = os.path.dirname(path)
         name = os.path.basename(path)
         name, _ext = os.path.splitext(name)
@@ -292,21 +293,25 @@ class Video(Image):
 #        frame = self.get_frame(swap_rb=False)
 
         if renderer is None:
-            frame = self.get_frame()
 #             save = lambda x: self.save(x, src=cv_swap_rb(frame))
             def save(p):
+                frame = self.get_frame()
                 if frame is not None:
                     src = cv_swap_rb(frame)
                     self.save(p, src)
         else:
             save = lambda x:renderer(x)
 
+        cm = ConsumerMixin()
+        cm.setup_consumer(save)
+        fps_1 = 1 / float(fps)
         while not stop.is_set():
             st = time.time()
             pn = os.path.join(image_dir, 'image_{:05n}.jpg'.format(cnt))
-            save(pn)
+            cm.add_consumable(pn)
             cnt += 1
-            time.sleep(max(0.001, 1 / fps - (time.time() - st)))
+            dur = time.time() - st
+            time.sleep(max(0, fps_1 - dur))
 
         self._convert_to_video(image_dir, fps, name_filter='image_%05d.jpg', output=path)
 

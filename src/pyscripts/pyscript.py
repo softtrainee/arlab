@@ -686,7 +686,9 @@ class PyScript(Loggable):
                          message='Waiting for {:0.1f}  {}'.format(timeout, message),
                          )
             self._wait_dialog = wd
-            self.manager.wait_dialog = wd
+            if self.manager:
+                self.manager.wait_dialog = wd
+
             st = time.time()
 
             wd.reset()

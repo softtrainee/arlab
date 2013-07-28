@@ -249,8 +249,9 @@ class PyScriptTask(EditorTask, ExecuteMixin):
     def open(self):
 #         path = '/Users/ross/Pychrondata_diode/scripts/measurement/jan_unknown.py'
 #         path = '/Users/ross/Pychrondata_diode/scripts/extra/jan_unknown.py'
-        path = '/Users/ross/Pychrondata_diode/scripts/extraction/jan_diode.py'
-        path = '/Users/ross/Pychrondata_demo/scripts/laser/zoom_scan.py'
+#        path = '/Users/ross/Pychrondata_diode/scripts/extraction/jan_diode.py'
+#        path = '/Users/ross/Pychrondata_demo/scripts/laser/zoom_scan.py'
+        path = os.path.join(paths.scripts_dir, 'lasers', 'video_test.py')
         self._open_file(path)
         return True
 

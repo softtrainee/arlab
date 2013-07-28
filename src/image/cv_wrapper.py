@@ -107,6 +107,9 @@ def crop(src, x, y, w, h):
 
 
 def save_image(src, path):
+    if not isinstance(src, ndarray):
+        src = asarray(src)
+
     imwrite(path, src)
 
 def colorspace(src, cs=None):
