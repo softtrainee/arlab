@@ -24,7 +24,7 @@ from pyface.tasks.task_window_layout import TaskWindowLayout
 class AnalysisEditAction(TaskAction):
     task_id = 'pychron.analysis_edit'
     def _create_window(self, app):
-        win = None
+#         win = None
         # search other windows
         task = app.open_task(self.task_id)
         return task.window

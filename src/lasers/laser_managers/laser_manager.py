@@ -36,7 +36,7 @@ class LaserManager(BaseLaserManager):
 
     laser_script_executor = Instance(LaserScriptExecutor)
 
-    record_lasing_video = Bool(False)
+#     record_lasing_video = Bool(False)
     record_lasing_power = Bool(False)
 
     monitor = Instance(LaserMonitor)
@@ -56,8 +56,8 @@ class LaserManager(BaseLaserManager):
         from apptools.preferences.preference_binding import bind_preference
         bind_preference(self, 'use_video', '{}.use_video'.format(pref_id))
         bind_preference(self, 'close_after_minutes', '{}.close_after'.format(pref_id))
-        bind_preference(self, 'record_lasing_video', '{}.record_lasing_video'.format(pref_id))
-        bind_preference(self, 'record_lasing_power', '{}.record_lasing_power'.format(pref_id))
+#         bind_preference(self, 'record_lasing_video', '{}.record_lasing_video'.format(pref_id))
+#         bind_preference(self, 'record_lasing_power', '{}.record_lasing_power'.format(pref_id))
         bind_preference(self, 'window_height', '{}.height'.format(pref_id))
         bind_preference(self, 'window_x', '{}.x'.format(pref_id))
         bind_preference(self, 'window_y', '{}.y'.format(pref_id))
@@ -177,6 +177,12 @@ class LaserManager(BaseLaserManager):
             self.warning_dialog(reason, sound='alarm1', title='AUTOMATIC LASER SHUTOFF')
             from src.remote_hardware.errors.laser_errors import LaserMonitorErrorCode
             self.error_code = LaserMonitorErrorCode(reason)
+
+    def start_video_recording(self, *args, **kw):
+        pass
+
+    def stop_video_recording(self, *args, **kw):
+        pass
 
     def start_power_recording(self, *args, **kw):
         pass

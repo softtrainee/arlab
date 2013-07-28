@@ -178,8 +178,7 @@ class VideoStageManager(StageManager):
             self._start_recording(**kw)
         self.is_recording = True
 
-
-    def stop_recording(self, user='remote', delay=0.1):
+    def stop_recording(self, user='remote', delay=None):
         '''
         '''
         def close():
@@ -191,7 +190,7 @@ class VideoStageManager(StageManager):
 
 
             # clean the video directory
-            self.clean_video_archive()
+#             self.clean_video_archive()
 
         if self.video._recording:
             if delay:
@@ -295,7 +294,7 @@ class VideoStageManager(StageManager):
             for s in self._stage_maps:
                 s.dump_correction_file()
 
-#        self.clean_video_archive()
+        self.clean_video_archive()
 
     def clean_video_archive(self):
         if self.use_video_archiver:

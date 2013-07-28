@@ -49,6 +49,15 @@ class Snapshot(Command):
 class Autofocus(Command):
     pass
 
+class StartVideoRecording(Command):
+    pass
+
+class StopVideoRecording(Command):
+    pass
+
+class VideoRecording(Command):
+    pass
+
 class TracePath(Command):
     pass
 
