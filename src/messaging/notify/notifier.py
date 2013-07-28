@@ -17,10 +17,11 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Int
 from traitsui.api import View, Item
-from src.loggable import Loggable
-import zmq
 #============= standard library imports ========================
+import time
+import zmq
 #============= local library imports  ==========================
+from src.loggable import Loggable
 
 class Notifier(Loggable):
 #    port=Int(8100)
@@ -30,6 +31,9 @@ class Notifier(Loggable):
             sock = context.socket(zmq.PUB)
             sock.bind('tcp://*:{}'.format(port))
             self._sock = sock
+            
+            #delay to allow publ sock to get setup
+            time.sleep(0.1)
 
     def send_notification(self, msg):
         if self._sock:
