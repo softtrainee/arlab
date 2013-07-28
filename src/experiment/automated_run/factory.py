@@ -38,6 +38,7 @@ from src.ui.thread import Thread
 from src.loggable import Loggable
 import yaml
 from src.experiment.utilities.human_error_checker import HumanErrorChecker
+from src.helpers.filetools import list_directory
 def EKlass(klass):
     return klass(enter_set=True, auto_set=False)
 
@@ -792,7 +793,7 @@ post_equilibration_script:name
     def _get_templates(self):
         p = paths.incremental_heat_template_dir
         extension = '.txt'
-        temps = self._ls_directory(p, extension)
+        temps = list_directory(p, extension)
         if self.template in temps:
             self.template = temps[temps.index(self.template)]
         else:

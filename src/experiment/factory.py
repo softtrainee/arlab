@@ -82,7 +82,7 @@ class ExperimentFactory(Loggable, ConsumerMixin):
             
             use consumermixin.add_consumable instead of frequency limiting
         '''
-        self.add_consumable(0)
+        self.add_consumable(1)
 
 #     _prev_add_time = None
     def _add_run(self, *args, **kw):
