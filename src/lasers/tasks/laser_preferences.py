@@ -21,6 +21,7 @@ from traitsui.api import View, UItem, Item, VGroup, HGroup, Group
 # from apptools.preferences.api import PreferencesHelper
 from envisage.ui.tasks.preferences_pane import PreferencesPane
 from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # def qt_color_convert(value):

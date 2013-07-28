@@ -283,7 +283,9 @@ class Image(HasTraits):
 #            pass
 
 
-    def save(self, path, src=None, width=640, height=480):
+    def save(self, path, src=None,
+#             width=640, height=480
+             ):
         if src is None:
             src = self.render()
 #            src = self.render_images(self.frames)
@@ -292,9 +294,10 @@ class Image(HasTraits):
 #        cvConvertImage(src, src, CV_CVTIMG_SWAP_RB)
 #        src = swapRB(src)
 #        save_image(resize(src, width, height, dst=new_dst(width, height, 3)), path)
-        save_image(resize(src, width, height,
-                          dst=(width, height, 3)
-                          ), path)
+#        save_image(resize(src, width, height,
+#                          dst=(width, height, 3)
+#                          ), path)
+        save_image(src, path)
 
     def _draw_crosshairs(self, src):
         r = 10
