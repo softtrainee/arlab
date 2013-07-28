@@ -25,6 +25,7 @@ from src.lasers.laser_managers.ilaser_manager import ILaserManager
 # from src.lasers.laser_managers.extraction_device import ILaserManager
 from src.pyscripts.valve_pyscript import ValvePyScript
 from src.constants import EXTRACTION_COLOR
+from keyring.backend import kwallet
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 
 
@@ -35,6 +36,16 @@ ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
     
 '''
 command_register = makeRegistry()
+class RecordingCTX(object):
+    def __init__(self, script, name):
+        self._script = script
+        self._name = name
+
+    def __enter__(self, *args, **kw):
+        self._script.start_video_recording(self._name)
+
+    def __exit__(self, *args, **kw):
+        self._script.stop_video_recording()
 
 class Ramper(object):
     def ramp(self, func, start, end, duration, rate=0, period=1):
@@ -146,6 +157,18 @@ class ExtractionPyScript(ValvePyScript):
 #===============================================================================
     @verbose_skip
     @command_register
+    def power_map(self, cx, cy, padding, bd, power):
+        pass
+
+    @verbose_skip
+    @command_register
+    def degas(self, lumens=0):
+        self._manager_action([('do_machine_vision_degas', (lumens,), {})],
+                             name=self.extract_device,
+                             protocol=ILaserManager)
+
+    @verbose_skip
+    @command_register
     def autofocus(self, set_zoom=True):
         self._manager_action([('do_autofocus', (), {'set_zoom':set_zoom})],
                              name=self.extract_device,
@@ -160,6 +183,26 @@ class ExtractionPyScript(ValvePyScript):
         if ps:
             ps = ps[0]
             self.snapshot_paths.append(ps[1])
+
+    @verbose_skip
+    @command_register
+    def video_recording(self, name='video'):
+
+        return RecordingCTX(self, name)
+
+    @verbose_skip
+    @command_register
+    def start_video_recording(self, name='video'):
+        self._manager_action([('start_video_recording', (), {'name':name})],
+                             name=self.extract_device,
+                             protocol=ILaserManager)
+
+    @verbose_skip
+    @command_register
+    def stop_video_recording(self):
+        self._manager_action([('stop_video_recording', (), {})],
+                             name=self.extract_device,
+                             protocol=ILaserManager)
 
     @verbose_skip
     @command_register

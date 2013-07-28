@@ -84,12 +84,12 @@ class FusionsLaserPreferences(LaserPreferences):
     video_archive_hours = Range(0, 23, 0)
     video_archive_days = Range(0, 31, 7)
 
-    recording_zoom = Range(0, 100.0, 0.0)
+#     recording_zoom = Range(0, 100.0, 0.0)
 
     record_patterning = Bool(False)
     record_brightness = Bool(True)
-    record_lasing_video = Bool(False)
-    record_lasing_power = Bool(False)
+#     record_lasing_video = Bool(False)
+#     record_lasing_power = Bool(False)
 
     use_calibrated_power = Bool(True)
     show_bounds_rect = Bool(True)
@@ -142,13 +142,14 @@ class FusionsLaserPreferencesPane(PreferencesPane):
                              show_border=True,
                              label='Archiver'
                            )
-        recgrp = Group(Item('record_lasing_video', label='Record Lasing'),
-                       Item('record_brightness',
-                            label='Record Brightness Measure',
-                            ),
+        recgrp = Group(
+#                        Item('record_lasing_video', label='Record Lasing'),
+#                        Item('record_brightness',
+#                             label='Record Brightness Measure',
+#                             ),
                        Item('video_directory', label='Save to',
                             enabled_when='record_lasing_video_video'),
-                       Item('recording_zoom', enabled_when='record_lasing_video'),
+#                        Item('recording_zoom', enabled_when='record_lasing_video'),
                        show_border=True,
                        label='Record'
                      )
@@ -203,13 +204,12 @@ class FusionsLaserPreferencesPane(PreferencesPane):
         patgrp = Group(Item('record_patterning'),
                        Item('show_patterning'), label='Pattern')
         powergrp = Group(
-                        Item('record_lasing_power'),
+#                         Item('record_lasing_power'),
                         Item('use_calibrated_power'),
                          label='Power')
         return [canvasgrp, videogrp,
                  patgrp, powergrp
                  ]
-
 
 class FusionsDiodePreferencesPane(FusionsLaserPreferencesPane):
     model_factory = FusionsDiodePreferences

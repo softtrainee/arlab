@@ -199,6 +199,14 @@ class PychronLaserManager(BaseLaserManager):
 #===============================================================================
 # pyscript commands
 #===============================================================================
+    def start_video_recording(self, name):
+        self.info('Start Video Recording')
+        self.ask('StartVideoRecording {}'.format(name))
+
+    def stop_video_recording(self):
+        self.info('Stop Video Recording')
+        self.ask('StopVideoRecording')
+
     def take_snapshot(self, name):
         self.info('Take snapshot')
         self._ask('Snapshot {}'.format(name))

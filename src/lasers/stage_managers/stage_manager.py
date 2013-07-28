@@ -121,7 +121,7 @@ class StageManager(Manager):
         super(StageManager, self).__init__(*args, **kw)
 #        self.add_output('Welcome')
         self.stage_controller = self._stage_controller_factory()
-        self.debug('Stage manager __init__ ')
+
 #    def opened(self, ui):
 #        self.keyboard_focus = True
 #        super(StageManager, self).opened(ui)
@@ -430,12 +430,12 @@ class StageManager(Manager):
 
             msg = 'homing all motors'
             homed = ['x', 'y', 'z']
-            home_kwargs = dict(x= -25, y= -25, z=50)
+            home_kwargs = dict(x=-25, y=-25, z=50)
 
         elif self.home_option == 'XY':
             msg = 'homing x,y'
             homed = ['x', 'y']
-            home_kwargs = dict(x= -25, y= -25)
+            home_kwargs = dict(x=-25, y=-25)
         else:
 #            define_home =
             msg = 'homing {}'.format(self.home_option)
@@ -762,7 +762,7 @@ class StageManager(Manager):
 
             self.linear_move(xi, yi, velocity=vi,
                              block=block,
-                             mode='absolute', # use absolute mode because commands are queued
+                             mode='absolute',  # use absolute mode because commands are queued
                              set_stage=False)
             if block:
                 if end_callback:

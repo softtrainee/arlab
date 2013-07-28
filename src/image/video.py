@@ -33,7 +33,7 @@ from cv_wrapper import swap_rb as cv_swap_rb
 #
 
 from src.globals import globalv
-def convert_to_video(self, path, fps, name_filter='snapshot%03d.jpg',
+def convert_to_video(path, fps, name_filter='snapshot%03d.jpg',
                      ffmpeg=None,
                      output=None):
     '''
@@ -293,7 +293,11 @@ class Video(Image):
 
         if renderer is None:
             frame = self.get_frame()
-            save = lambda x: self.save(x, src=cv_swap_rb(frame))
+#             save = lambda x: self.save(x, src=cv_swap_rb(frame))
+            def save(p):
+                if frame is not None:
+                    src = cv_swap_rb(frame)
+                    self.save(p, src)
         else:
             save = lambda x:renderer(x)
 
@@ -314,6 +318,7 @@ class Video(Image):
 
     def _convert_to_video(self, path, fps, name_filter='snapshot%03d.jpg', output=None):
         ffmpeg = self.ffmpeg_path
+
         convert_to_video(path, fps, name_filter, ffmpeg, output)
 
     def _cv_record(self, path, stop, fps, renderer=None):

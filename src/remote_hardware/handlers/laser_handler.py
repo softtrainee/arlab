@@ -63,6 +63,14 @@ class LaserHandler(BaseRemoteHardwareHandler):
         if mrm is None:
             self.info('multrun report manager unavailable')
         return mrm
+#===============================================================================
+# Commands
+#===============================================================================
+    def StartVideoRecording(self, manager, name, *args):
+        manager.start_video_recording(name)
+
+    def StopVideoRecording(self, manager, *args):
+        manager.stop_video_recording()
 
     def ReadLaserPower(self, manager, *args):
         '''
@@ -103,34 +111,35 @@ class LaserHandler(BaseRemoteHardwareHandler):
         elif isinstance(err, str):
             err = EnableErrorCode(err)
 
-        def record():
+#         def record():
+#
+#
+#             '''
+#                 getting the rid needs to be fixed
+#
+#                 the problem is that instances of pychron can be configured
+#                 with a laser but no extraction line manager
+#
+#                 so laser manager needs to be configured with an
+#                 rpc-multruns report manager
+#
+#             '''
+#
+#             mrm = self.get_mrm()
+#             rid = mrm.get_current_rid() if mrm else 'testrid_001'
+#             if manager.record_lasing_power:
+#                 manager.start_power_recording(rid)
+#
+#             try:
+#                 if manager.record_lasing_video:
+#                     manager.stage_manager.start_recording(basename=rid)
+#             except AttributeError:
+#                 # not a video stage manager
+#                 pass
+#
+#         t = Thread(target=record)
+#         t.start()
 
-
-            '''
-                getting the rid needs to be fixed
-                
-                the problem is that instances of pychron can be configured
-                with a laser but no extraction line manager
-                
-                so laser manager needs to be configured with an 
-                rpc-multruns report manager
-                
-            '''
-
-            mrm = self.get_mrm()
-            rid = mrm.get_current_rid() if mrm else 'testrid_001'
-            if manager.record_lasing_power:
-                manager.start_power_recording(rid)
-
-            try:
-                if manager.record_lasing_video:
-                    manager.stage_manager.start_recording(basename=rid)
-            except AttributeError:
-                # not a video stage manager
-                pass
-
-        t = Thread(target=record)
-        t.start()
         return self.error_response(err)
 
     def Disable(self, manager, *args):
@@ -140,15 +149,15 @@ class LaserHandler(BaseRemoteHardwareHandler):
         elif isinstance(err, str):
             err = DisableErrorCode(err)
 
-        if manager.record_lasing_power:
-            manager.stop_power_recording(delay=5)
-
-        if manager.record_lasing_video:
-            try:
-                manager.stage_manager.stop_recording(delay=5)
-            except AttributeError:
-                # not a video stage manager
-                pass
+#         if manager.record_lasing_power:
+#             manager.stop_power_recording(delay=5)
+#
+#         if manager.record_lasing_video:
+#             try:
+#                 manager.stage_manager.stop_recording(delay=5)
+#             except AttributeError:
+#                 # not a video stage manager
+#                 pass
 
         return self.error_response(err)
 
