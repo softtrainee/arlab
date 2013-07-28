@@ -58,18 +58,8 @@ class Script(Loggable):
     def _edit_fired(self):
         p = os.path.join(paths.scripts_dir, self.label.lower(), '{}_{}.py'.format(self.mass_spectrometer,
                                                                                   self.name))
-#        if self.kind == 'ExtractionLine':
         app = self.application
-        for win in app.windows:
-            if win.active_task.id == 'pychron.pyscript':
-                win.activate()
-                task = win.active_task
-                break
-        else:
-            from pyface.tasks.task_window_layout import TaskWindowLayout
-            win = app.create_window(TaskWindowLayout('pychron.pyscript'))
-            task = win.active_task
-            win.open()
+        task = app.open_task('pychron.pyscript')
 
         task.kind = self.kind
         task.open(path=p)
@@ -79,7 +69,7 @@ class Script(Loggable):
                            Label(self.label),
                            spring,
                            UItem('name',
-                                width= -125,
+                                width=-125,
                                 editor=EnumEditor(name='names')),
                            UItem('edit',
                                 enabled_when='name and name!="---"',

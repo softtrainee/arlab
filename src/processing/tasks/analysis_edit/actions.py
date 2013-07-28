@@ -26,15 +26,8 @@ class AnalysisEditAction(TaskAction):
     def _create_window(self, app):
         win = None
         # search other windows
-        _id = self.task_id
-        for win in app.windows:
-            if win.active_task.id == _id:
-                win.activate()
-                break
-        else:
-            win = app.create_window(TaskWindowLayout(_id))
-
-        return win
+        task = app.open_task(self.task_id)
+        return task.window
 
     def perform(self, event):
         app = event.task.window.application

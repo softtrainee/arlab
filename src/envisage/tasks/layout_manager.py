@@ -63,11 +63,17 @@ class LayoutManager(Loggable):
         if app:
             for _id, pos, size in self.selected.layouts:
 
-                win = next((win for win in app.windows
-                          if win.active_task.id == _id), None)
-                if win is None:
-                    win = app.create_window(TaskWindowLayout(_id))
-
+                task = app.get_task(_id)
+#                 for win in app.windows:
+#                     if win.active_task and win.active_task.id=_id:
+#                         break
+#                 else:
+#                     win = app.create_window(TaskWindowLayout(_id))
+#
+#                 win = next((win for win in app.windows
+#                             if win.active_task.id == _id), None)
+#                 if win is None:
+                win = task.window
                 win.trait_set(position=pos, size=size)
                 win.show(True)
 

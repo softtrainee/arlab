@@ -280,7 +280,6 @@ class ExperimentEditorTask(EditorTask):
 
             self.window.activate()
 
-
     def _test_auto_figure(self):
         self.use_auto_figure = True
 
@@ -387,7 +386,6 @@ class ExperimentEditorTask(EditorTask):
         load_name = self.manager.executor.experiment_queue.load_name
         self._update_load(load_name)
 
-
     @on_trait_change('manager:add_queues_flag')
     def _add_queues(self, new):
         self.debug('add_queues_flag trigger n={}'.format(self.manager.add_queues_count))
@@ -405,7 +403,6 @@ class ExperimentEditorTask(EditorTask):
                 except AttributeError:
                     pass
                 break
-
 
     @on_trait_change('manager:execute_event')
     def _execute(self):

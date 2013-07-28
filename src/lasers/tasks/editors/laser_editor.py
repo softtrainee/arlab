@@ -22,10 +22,16 @@ from src.envisage.tasks.base_editor import BaseTraitsEditor
 #============= local library imports  ==========================
 class LaserEditor(BaseTraitsEditor):
     component = Any
+    _execute_thread = None
+
     def do_execute(self, lm):
         self._laser_manager = lm
         return self._do_execute()
 
     def _do_execute(self):
         pass
+
+    def block(self):
+        if self._execute_thread:
+            self._execute_thread.join()
 #============= EOF =============================================

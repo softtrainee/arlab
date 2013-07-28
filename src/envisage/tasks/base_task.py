@@ -97,14 +97,7 @@ class myTaskWindowLaunchAction(TaskWindowLaunchAction):
     style = 'toggle'
     def perform(self, event):
         application = event.task.window.application
-        for win in application.windows:
-            if win.active_task:
-                if win.active_task.id == self.task_id:
-                    win.activate()
-                    break
-        else:
-            window = application.create_window(TaskWindowLayout(self.task_id))
-            window.open()
+        application.open_task(self.task_id)
 
         self.checked = True
 
@@ -172,9 +165,10 @@ class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
             for factory in factories:
 #         for factory in application.task_factories:
                 for win in application.windows:
-                    if win.active_task.id == factory.id:
-                        checked = True
-                        break
+                    if win.active_task:
+                        if win.active_task.id == factory.id:
+                            checked = True
+                            break
                 else:
                     checked = False
 

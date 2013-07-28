@@ -67,8 +67,6 @@ class PowerMapEditor(LaserEditor):
     completed = DelegatesTo('mapper')
     was_executed = False
 
-
-
     def load(self, path):
 
         pmp = PowerMapProcessor()
@@ -106,7 +104,7 @@ class PowerMapEditor(LaserEditor):
         t = Thread(target=mapper.do_power_mapping,
                    args=(bd, rp, cx, cy, padding, step_len))
         t.start()
-        self._thread = t
+        self._execute_thread = t
 
         return True
 

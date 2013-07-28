@@ -66,7 +66,7 @@ class ContourGraph(Graph):
 
                 self.plots[plotid].data.set_data(c, [])
                 names += (c,)
-            plot.plot(names, **rd)
+            return plot.plot(names, **rd)[0]
 
         else:
 
