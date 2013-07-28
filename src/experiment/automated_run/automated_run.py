@@ -1318,19 +1318,20 @@ anaylsis_type={}
         self.info('Analysis started at {}'.format(self._runtime))
 
     def _post_extraction_save(self):
+        is_degas = self.labnumber == 'dg'
+
         ext = self._save_extraction()
         self._db_extraction = ext
-
-        is_degas = self.labnumber == 'dg'
 
         db = self.db
 
         loadtable = db.get_loadtable(self.load_name)
         if loadtable is None:
-            loadtable = db.add_loadtable(self.load_name)
+            loadtable = db.add_load(self.load_name)
             db.flush()
 
-        db.add_load_position(loadtable, is_degas=is_degas)
+        lp=db.add_load_position(self.labnumber)
+        loadtable.measured_positions.append(lp)
 
     def _pre_measurement_save(self):
         self.info('pre measurement save')

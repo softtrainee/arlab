@@ -85,6 +85,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def add_load_position(self, labnumber, **kw):
         lp = loading_PositionsTable(**kw)
+        
         ln = self.get_labnumber(labnumber)
         if ln:
             lp.lab_identifier = ln.identifier

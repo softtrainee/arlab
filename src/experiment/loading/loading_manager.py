@@ -191,7 +191,7 @@ class LoadingManager(IsotopeDatabaseManager):
                           editable=editable
                           )
         self.canvas = c
-        if lt:
+        if lt and lt.holder_:
             h = lt.holder_.name
             c.load_tray_map(h)
             for pi in lt.loaded_positions:
