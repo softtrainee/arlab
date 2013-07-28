@@ -34,6 +34,21 @@ class BaseTasksApplication(TasksApplication, Loggable):
             win.open()
         return super(BaseTasksApplication, self).start()
 
+    def get_task(self, tid, activate=False):
+        for win in self.windows:
+            if win.active_task:
+                if win.active_task.id == tid:
+                    if tid:
+                        win.activate()
+                    break
+        else:
+            win = self.create_window(TaskWindowLayout(tid))
+            win.open()
+
+        return win.active_task
+    def open_task(self, tid):
+        return self.get_task(tid, True)
+
     def open_view(self, obj, **kw):
         info = obj.edit_traits(**kw)
         self.uis.append(info)

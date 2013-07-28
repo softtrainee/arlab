@@ -112,17 +112,8 @@ class NewPatternAction(LaserTaskAction):
 class LaserCalibrationAction(Action):
     def _get_task(self, event):
         app = event.task.window.application
-#         win = event.window
         task_id = 'pychron.laser.calibration'
-        for win in app.windows:
-            if win.active_task.id == task_id:
-                task = win.active_task
-                win.activate()
-        else:
-            win = app.create_window(TaskWindowLayout(task_id))
-            win.open()
-            task = win.active_task
-
+        task = app.open_task(task_id)
         return task
 
 class PowerMapAction(LaserCalibrationAction):
@@ -133,15 +124,10 @@ class PowerMapAction(LaserCalibrationAction):
 
 class OpenPowerMapAction(LaserCalibrationAction):
     name = 'Power Map'
+    accelerator = 'Ctrl+3'
     def perform(self, event):
         task = self._get_task(event)
         task.open_power_map()
-
-#     method = 'open_power_map'
-#     enabled_name = 'power_map_enabled'
-# class ExecutePatternAction(LaserTaskAction):
-#     name = 'Execute Pattern...'
-#     method = 'execute_pattern'
 
 class PowerCalibrationAction(LaserCalibrationAction):
     name = 'Power Calibration...'

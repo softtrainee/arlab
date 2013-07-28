@@ -27,6 +27,7 @@ from src.lasers.tasks.editors.power_calibration_editor import PowerCalibrationEd
 from src.lasers.tasks.laser_calibration_panes import LaserCalibrationControlPane, \
     LaserCalibrationExecutePane
 import os
+import time
 
 class BaseLaserTask(EditorTask):
     def activated(self):
@@ -69,7 +70,9 @@ class LaserCalibrationTask(BaseLaserTask):
     def open_power_map(self):
 #         p = self.open_file_dialog()
 #         p = '/Users/ross/Pychrondata_demo/data/scans/powermap-2013-07-17001.hdf5'
-        p = '/Users/ross/Sandbox/powermap-2013-07-26005.hdf5'
+        p = '/Users/ross/Sandbox/powermap/powermap-2013-07-26005.hdf5'
+        p = '/Users/ross/Sandbox/powermap/powermap-2013-07-27008.hdf5'
+#         p = '/Users/ross/Sandbox/powermap-2013-07-26005.hdf5'
         if p:
             editor = PowerMapEditor(
 #                                     name='Power Map {:03n}'.format(n + 1),
@@ -101,6 +104,13 @@ class LaserCalibrationTask(BaseLaserTask):
 #===============================================================================
 # handlers
 #===============================================================================
+    def execute_active_editor(self, block=False):
+        if self.active_editor.do_execute(self.manager):
+            self.executing = True
+
+        if block:
+            self.active_editor.block()
+
     def _execute_changed(self):
         if self.active_editor:
             if self.executing:
@@ -110,12 +120,10 @@ class LaserCalibrationTask(BaseLaserTask):
                 if self.active_editor.was_executed:
                     self.new_power_map()
 
-                if self.active_editor.do_execute(self.manager):
-                    self.executing = True
+                self.execute_active_editor()
         else:
             self.new_power_map()
-            if self.active_editor.do_execute(self.manager):
-                self.executing = True
+            self.execute_active_editor()
 
 
     def _active_editor_changed(self):

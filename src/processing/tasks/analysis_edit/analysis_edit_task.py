@@ -49,22 +49,22 @@ class AnalysisEditTask(EditorTask):
 
         self.controls_pane = ControlsPane()
         self.plot_editor_pane = PlotEditorPane()
-        panes=[
+        panes = [
                 self.unknowns_pane,
                 self.controls_pane,
                 self.plot_editor_pane,
 #                self.results_pane,
                 ]
-        cp=self._create_query_pane()
+        cp = self._create_query_pane()
         if cp:
             panes.append(cp)
         return panes
-    
+
     def _create_query_pane(self):
         if self.manager.db:
             selector = self.manager.db.selector
             selector._search_fired()
-    
+
             from src.processing.selection.data_selector import DataSelector
             ds = DataSelector(database_selector=selector)
 
@@ -80,18 +80,9 @@ class AnalysisEditTask(EditorTask):
         task = self._open_external_task(_id)
         task.new_ideogram(ans=ans, name=name)
 
-    def _open_external_task(self, _id):
+    def _open_external_task(self, tid):
         app = self.window.application
-        for win in app.windows:
-            if win.active_task:
-                if win.active_task.id == _id:
-                    win.activate()
-                    break
-        else:
-            win = app.create_window(TaskWindowLayout(_id))
-            win.open()
-
-        return win.active_task
+        return app.open_task(tid)
 
     def _open_recall_editor(self, recview):
         _id = 'pychron.recall'

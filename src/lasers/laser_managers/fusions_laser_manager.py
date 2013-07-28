@@ -112,6 +112,7 @@ class FusionsLaserManager(LaserManager):
     def refresh_canvas(self):
         if self.stage_manager:
             self.stage_manager.canvas.request_redraw()
+
 #===============================================================================
 #   IExtractionDevice interface
 #===============================================================================

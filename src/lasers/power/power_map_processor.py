@@ -29,6 +29,7 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 
 from scipy.interpolate.ndgriddata import griddata
 from numpy.lib.function_base import percentile
+import math
 
 class PowerMapProcessor(HasTraits):
     '''
@@ -60,6 +61,8 @@ class PowerMapProcessor(HasTraits):
         center_plot.index_axis.title = 'mm'
         center_plot.value_axis.title = 'mm'
 
+#         from skimage.morphology import label
+#         z = label(z)
         bounds = metadata['bounds']
         center_plot, names, rd = cg.new_series(z=z, style='contour',
                       xbounds=bounds,
@@ -68,7 +71,6 @@ class PowerMapProcessor(HasTraits):
 #                      colorbar=True,
 #                     levels=self.levels
                       )
-
 
         bottom_plot = cg.new_plot(
                             add=False,
@@ -102,13 +104,7 @@ class PowerMapProcessor(HasTraits):
 
         cg.show_crosshairs()
 
-        cx, cy, radius = self._measure_properties(z, metadata)
-        cg.new_series(x=[cx], y=[cy], type='scatter')
-        theta = linspace(-pi, pi)
-        xs = cx + radius * cos(theta)
-        ys = cy + radius * sin(theta)
-
-        cg.new_series(x=xs, y=ys)
+        self._plot_properties(z, metadata, cg)
 
 
         gridcontainer = cg._container_factory(kind='g',
@@ -129,19 +125,63 @@ class PowerMapProcessor(HasTraits):
 
         return cg
 
-    def _measure_properties(self, z, metadata):
+    def _plot_properties(self, z, metadata, cg):
+        props = self._measure_properties(z, metadata)
+        for prop in props:
+            cx, cy, radius, scale = self._extract_properties(z, prop, metadata)
+            s = cg.new_series(x=[cx], y=[cy], type='scatter', marker='circle')
+#             theta = linspace(-pi, pi)
+#             xs = cx + radius * cos(theta)
+#             ys = cy + radius * sin(theta)
+
+#             s = cg.new_series(x=xs, y=ys)
+
+            mal = prop['MajorAxisLength'] / scale * 0.5
+            mil = prop['MinorAxisLength'] / scale * 0.5
+            theta = prop['Orientation']
+            x1 = cx + math.cos(theta) * mal
+            y1 = cy - math.sin(theta) * mal
+
+            x2 = cx - math.sin(theta) * mil
+            y2 = cy - math.cos(theta) * mil
+
+            cg.new_series([cx, x1], [cy, y1],
+                          color=s.color,
+                          line_width=2)
+            cg.new_series([cx, x2], [cy, y2],
+                          color=s.color,
+                          line_width=2
+                          )
+
+            ts = linspace(0, 2 * pi)
+            cos_a, sin_a = cos(theta), sin(theta)
+            eX = mil * cos(ts) * cos_a - sin_a * mal * sin(ts) + cx
+            eY = mil * cos(ts) * sin_a + cos_a * mal * sin(ts) + cy
+
+            cg.new_series(eX, eY,
+                          color=s.color
+                          )
+
+    def _measure_properties(self, z, metadata, p=25):
         from skimage.morphology import label
         from skimage.measure._regionprops import regionprops
-        from skimage.exposure.exposure import rescale_intensity
+#         from skimage.exposure.exposure import rescale_intensity
 
-        nim = zeros_like(z).astype(int)
-        t = percentile(z, 75)
-        nim[z > t] = 1
+#         nim = zeros_like(z).astype(int)
+#         t = percentile(z, p)
+#         nim[z > t] = 1
+        nim = label(z)
+        z = nim
+        props = regionprops(nim, ['EquivDiameter', 'Centroid',
+                                  'MajorAxisLength', 'MinorAxisLength',
+                                  'Orientation'
+                                  ])
+        return props
 
-        props = regionprops(nim, ['EquivDiameter', 'Centroid'])
-        r, c = props[0]['Centroid']
+    def _extract_properties(self, z, prop, metadata):
+        r, c = prop['Centroid']
 
-        rr, cc = nim.shape
+        rr, cc = z.shape
 #         print r, c
         b = metadata['bounds']
         scale = rr / (b[1] - b[0])
@@ -149,9 +189,8 @@ class PowerMapProcessor(HasTraits):
         cx = c / scale + b[0]
         cy = r / scale + b[0]
 #         print cx, cy
-        radius = props[0]['EquivDiameter'] / (2.*scale)
-        return cx, cy, radius
-
+        radius = prop['EquivDiameter'] / (2.*scale)
+        return cx, cy, radius, scale
     def _extract_power_map_data(self, reader):
         '''
         '''
@@ -180,8 +219,8 @@ class PowerMapProcessor(HasTraits):
 #        xs, ys, power = array(xs), array(ys), array(power)
 #        n = power.shape[0]
 #        print n
-        xi = linspace(min(xs), max(xs), 25)
-        yi = linspace(min(ys), max(ys), 25)
+        xi = linspace(min(xs), max(xs), 50)
+        yi = linspace(min(ys), max(ys), 50)
 
         X = xi[None, :]
         Y = yi[:, None]
