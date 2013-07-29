@@ -15,40 +15,40 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Event, Property, Bool
 from traitsui.api import View, Item
+from src.ui.thread import Thread
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from numpy import invert, pi, percentile, zeros_like, hsplit, asarray, ogrid
-from skimage.draw import circle
-from matplotlib.cm import get_cmap
 
-class LumenDetector(HasTraits):
-    threshold = 100
-    mask_radius = 25
+class ExecuteMixin(HasTraits):
+    execute = Event
+    execute_label = Property(depends_on='executing')
+    executing = Bool
 
-    def get_value(self, src):
-        mask = self._mask(src)
-        self._preprocess(src)
+    def _get_execute_label(self):
+        return 'Stop' if self.executing else 'Start'
 
-        lum = src[mask]
-        # use mean of the 90th percentile as lumen
-        # measure. this is adhoc and should/could be modified
-        lumen = percentile(lum.flatten(), 90).mean()
+    def _execute_fired(self):
+        if self.executing:
+            self._cancel_execute()
+            self.executing = False
+        else:
+            if self._start_execute():
+                self.executing = True
+                t = Thread(target=self._do_execute)
+                t.start()
+                self._t = t
 
-        return src, lumen
+    def _cancel_execute(self):
+        pass
+    def _start_execute(self):
+        return True
 
-    def _mask(self, src):
-        radius = self.mask_radius
-        y, x = src.shape
-        Y, X = ogrid[0:y, 0:x]
-        mask = (X - x / 2) ** 2 + (Y - y / 2) ** 2 > radius * radius
-        src[mask] = 0
-        return mask
+    def _do_execute(self):
+        pass
 
-    def _preprocess(self, src):
-        threshold = self.threshold
-        src[src < threshold] = 0
-
+    def isAlive(self):
+        return self.executing
 
 #============= EOF =============================================

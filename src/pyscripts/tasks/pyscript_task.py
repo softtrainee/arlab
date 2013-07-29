@@ -32,31 +32,9 @@ from src.ui.preference_binding import bind_preference
 from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 import os
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
-from threading import Thread
+from src.execute_mixin import ExecuteMixin
 
-class ExecuteMixin(HasTraits):
-    execute = Event
-    execute_label = Property(depends_on='executing')
-    executing = Bool
 
-    def _get_execute_label(self):
-        return 'Stop' if self.executing else 'Start'
-
-    def _execute_fired(self):
-        if self.executing:
-            self._cancel_execute()
-            self.executing = False
-        else:
-            if self._start_execute():
-                self.executing = True
-                t = Thread(target=self._do_execute)
-                t.start()
-                self._t = t
-
-    def _cancel_execute(self):
-        pass
-    def _start_execute(self):
-        pass
 
 class PyScriptTask(EditorTask, ExecuteMixin):
     name = 'PyScript'

@@ -39,6 +39,7 @@ from laser_manager import LaserManager
 # from src.lasers.laser_managers.brightness_pid_manager import BrightnessPIDManager
 # from src.viewable import Viewable
 from src.helpers.filetools import str_to_bool
+from src.ui.thread import Thread
 # from src.ui.gui import invoke_in_main_thread
 # from src.lasers.laser_managers.degas_manager import DegasManager
 
@@ -109,6 +110,8 @@ class FusionsLaserManager(LaserManager):
     chiller = Any
 
     motor_event = Event
+
+    _degas_thread = None
 
     @on_trait_change('laser_controller:refresh_canvas')
     def refresh_canvas(self):
@@ -249,15 +252,29 @@ class FusionsLaserManager(LaserManager):
         if self.use_video:
             self.stage_manager.stop_recording()
 
-    def do_machine_vision_degas(self, lumens):
-        if self.use_video:
-            from src.mv.degas.degasser import Degasser
-            dm = Degasser(
-                          laser_manager=self,
-                          video=self.stage_manager.video,
-                          )
-            dm.degas(lumens)
+    def degasser_factory(self):
+        from src.mv.degas.degasser import Degasser
+        dm = Degasser(
+                      laser_manager=self,
+                      video=self.stage_manager.video,
+                      )
+        return dm
 
+    def do_machine_vision_degas(self, lumens, duration, new_thread=False):
+        if self.use_video:
+            dm = self.degasser_factory()
+            def func():
+                dm.degas(lumens, duration)
+
+            if new_thread:
+                self._degas_thread = Thread(target=func)
+                self._degas_thread.start()
+            else:
+                func()
+
+    def is_degassing(self):
+        if self._degas_thread:
+            return self._degas_thread.isRunning()
 #===============================================================================
 # pyscript interface
 #===============================================================================

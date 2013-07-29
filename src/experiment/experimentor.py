@@ -83,11 +83,11 @@ class Experimentor(IsotopeDatabaseManager):
     activate_editor_event = Event
     save_event = Event
 #    clear_display_event = Event
-#     def refresh_executable(self, qs=None):
-#         if qs is None:
-#             qs = self.experiment_queues
-#
-#         self.executor.executable = all([ei.isExecutable() for ei in qs])
+
+    def refresh_executable(self, qs=None):
+        if qs is None:
+            qs = self.experiment_queues
+        self.executor.executable = all([ei.isExecutable() for ei in qs])
 
     def update_queues(self):
         self._update_queues()
@@ -341,18 +341,21 @@ class Experimentor(IsotopeDatabaseManager):
         qs = self.experiment_queues
         self.stats.experiment_queues = qs
         self.stats.calculate()
-        self.executor.executable = all([ei.isExecutable() for ei in qs])
+        self.refresh_executable(qs)
+
+        self.debug('executor executable {}'.format(self.executor.executable))
 
     @on_trait_change('experiment_factory:run_factory:changed')
     def _queue_dirty(self):
+        print 'asdf'
         self.experiment_queue.changed = True
+#         executor = self.executor
+#         executor.executable = False
 
-        executor = self.executor
-        executor.executable = False
-        if executor.isAlive():
-            executor.prev_end_at_run_completion = executor.end_at_run_completion
-            executor.end_at_run_completion = True
-            executor.changed_flag = True
+#         if executor.isAlive():
+#             executor.prev_end_at_run_completion = executor.end_at_run_completion
+#             executor.end_at_run_completion = True
+#             executor.changed_flag = True
 
     @on_trait_change('experiment_queue:dclicked')
     def _dclicked_changed(self, new):

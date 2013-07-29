@@ -24,6 +24,7 @@ from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.ui.led_editor import LEDEditor
+from enable.component_editor import ComponentEditor
 # from src.lasers.stage_managers.video_stage_manager import VideoStageManager
 
 
@@ -340,6 +341,11 @@ class FusionsDiodeSupplementalPane(SupplementalPane):
                )
         return v
 
+class AuxilaryGraphPane(TraitsDockPane):
+    name = 'Auxilary Graph'
+    def traits_view(self):
+        v = View(UItem('auxilary_graph', editor=ComponentEditor()))
+        return v
 
 # from pyface.tasks.enaml_dock_pane import EnamlDockPane
 # import enaml

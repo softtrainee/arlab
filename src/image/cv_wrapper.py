@@ -155,7 +155,6 @@ def colorspace(src, cs=None):
 def grayspace(src):
     if isinstance(src, ndarray):
         from skimage.color.colorconv import is_gray
-        print is_gray
         if not is_gray(src):
             dst = rgb2gray(src)
         else:

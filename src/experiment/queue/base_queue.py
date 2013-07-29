@@ -59,7 +59,7 @@ class BaseExperimentQueue(Loggable):
 
     executable = Bool
     _no_update = False
-    initialized = False
+    initialized = True
 
     load_name = Str
 

@@ -27,10 +27,11 @@ from chaco.default_colormaps import hot, gray
 from scipy.ndimage.interpolation import zoom
 from src.image.cv_wrapper import grayspace
 from src.ui.gui import invoke_in_main_thread
+from src.viewable import Viewable
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class TestImage(HasTraits):
+class TestImage(Viewable):
     container = Instance(HPlotContainer)
     plotdata = Instance(ArrayPlotData)
 
@@ -64,7 +65,8 @@ class TestImage(HasTraits):
 
     def traits_view(self):
         v = View(UItem('container', editor=ComponentEditor()),
-                 resizable=True
+                 resizable=True,
+                 handler=self.handler_klass
                  )
         return v
 #============= EOF =============================================

@@ -46,6 +46,7 @@ class BaseTasksApplication(TasksApplication, Loggable):
             win.open()
 
         return win.active_task
+
     def open_task(self, tid):
         return self.get_task(tid, True)
 

@@ -322,6 +322,7 @@ class meas_ExtractionTable(Base, BaseMixin):
 #    experiment_blob = Column(BLOB)
     weight = Column(Float)
     sensitivity_multiplier = Column(Float)
+    is_degas = Column(Boolean)
 
     sensitivity_id = foreignkey('gen_SensitivityTable')
     extract_device_id = foreignkey('gen_ExtractionDeviceTable')
@@ -433,7 +434,7 @@ class loading_PositionsTable(Base, BaseMixin):
     load_identifier = Column(String(80), ForeignKey('loading_LoadTable.name'))
     lab_identifier = Column(String(80), ForeignKey('gen_LabTable.identifier'))
     position = Column(Integer)
-    
+
 class gen_LoadHolderTable(Base):
     @declared_attr
     def __tablename__(self):
