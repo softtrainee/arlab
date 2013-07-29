@@ -16,8 +16,8 @@
 
 #=============enthought library imports=======================
 from traits.api import Float, Property, Bool, Int, CInt, Button
-from traitsui.api import View, Item, HGroup, VGroup, EnumEditor, RangeEditor, \
-     Label, Group, spring
+from traitsui.api import View, Item, HGroup, VGroup, EnumEditor, \
+    RangeEditor, Label, Group, spring
 # from pyface.timer.api import Timer
 
 #=============standard library imports ========================
@@ -218,7 +218,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 #            progress.increment()
 
     def _update_position_changed(self):
-        self.debug('*****************************update position {}'.format(self.update_position))
+#        self.debug('*****************************update position {}'.format(self.update_position))
         try:
             self.progress.change_message('{} position = {}'.format(self.name, self.update_position))
         except AttributeError:
@@ -322,6 +322,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 
         self._home_motor()
         self.load_data_position()
+        self.information_dialog('Homing Complete')
 
     def _home_motor(self, progress=None, *args, **kw):
         '''
@@ -445,15 +446,16 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                                 )
         return status_byte
 
-    def load_data_position(self):
+    def load_data_position(self, set_pos=True):
         '''
         '''
         steps = self._get_motor_position(verbose=False)
         if steps is not None:
             pos = self.linear_mapper.map_data(steps)
-
+            pos = max(self.min, min(self.max, pos))
             self.update_position = pos
-            self._data_position = pos
+            if set_pos:
+                self._data_position = pos
 
             self.debug('Load data position {} {} steps= {}'.format(
                                                                   pos, self.units,
@@ -587,14 +589,25 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                 self.enabled = True
                 if self.timer is not None:
                     self.timer.Stop()
+
+                    time.sleep(0.25)
+                    self.load_data_position(set_pos=False)
+
+#                    cnt = 0
+#                    prev = None
+#                    while 1:
+#                        steps = self.load_data_position(set_pos=False)
+#                        if prev is not None and prev == steps:
+#                            cnt += 1
+#                            if cnt > 3:
+#                                break
+#
+#                        prev = steps
+#                        time.sleep(0.05)
 #                     self.update_position = self._data_position
 
         if not self.enabled:
-            pos = self._get_motor_position(verbose=False)
-            if pos is not None:
-
-                pos = self.linear_mapper.map_data(pos)
-                self.update_position = max(self.min, min(self.max, pos))
+            self.load_data_position(set_pos=False)
 
     def _get_data_position(self):
         '''
@@ -632,8 +645,8 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 
             invoke_in_main_thread(launch)
 
-            if self.parent.simulation:
-                self.update_position = self._data_position
+#            if self.parent.simulation:
+#                self.update_position = self._data_position
 
     def timer_factory(self):
         '''
@@ -688,7 +701,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                                                 low_name='min',
                                                 high_name='max', enabled=False),
                              ),
-                         HGroup(Item('home_button', show_label=False), spring)
+                         HGroup(spring, Item('home_button', show_label=False))
 #                          show_border=True,
 #                          label=self.display_name,
 #                          )
