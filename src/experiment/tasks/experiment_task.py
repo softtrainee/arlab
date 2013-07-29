@@ -238,15 +238,19 @@ class ExperimentEditorTask(EditorTask):
         editor.new_queue()
         self._open_editor(editor)
 
+        self.manager.executor.executable = False
+
     def _save_file(self, path):
+        if self.active_editor.save(path):
+            self.manager.refresh_executable()
+#             self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
+            self.debug('queues saved')
 
-        self.active_editor.save(path)
 
-        self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
+#         self.manager.()
 
 #         self.manager.update_info()
 #         self.manager.update_stats()
-#         self.manager.refresh_executable()
 #         self.manager.update_
 #
 #         '''
@@ -456,6 +460,10 @@ class ExperimentEditorTask(EditorTask):
         else:
             super(ExperimentEditorTask, self)._prompt_on_close(event)
 
+    @on_trait_change('active_editor:dirty')
+    def _update_active_editor_dirty(self):
+        if self.active_editor.dirty:
+            self.manager.executor.executable = False
 #===============================================================================
 # default/factory
 #===============================================================================

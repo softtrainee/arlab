@@ -1318,7 +1318,7 @@ anaylsis_type={}
         self.info('Analysis started at {}'.format(self._runtime))
 
     def _post_extraction_save(self):
-        is_degas = self.labnumber == 'dg'
+
 
         ext = self._save_extraction()
         self._db_extraction = ext
@@ -1330,7 +1330,7 @@ anaylsis_type={}
             loadtable = db.add_load(self.load_name)
             db.flush()
 
-        lp=db.add_load_position(self.labnumber)
+        lp = db.add_load_position(self.labnumber)
         loadtable.measured_positions.append(lp)
 
     def _pre_measurement_save(self):
@@ -1565,18 +1565,17 @@ anaylsis_type={}
         self.info('saving extraction')
         def func():
             db = self.db
+            sens = self.get_extraction_parameter('sensitivity_multiplier',
+                                                 default=1),
             ext = db.add_extraction(analysis,
-    #                          self.extraction_script.name,
-    #                          script_blob=self._assemble_extraction_blob(),
-                              extract_device=self.extract_device,
-    #                          experiment_blob=self.experiment_manager.experiment_blob(),
-                              extract_value=self.extract_value,
-    #                          position=self.position,
-                              extract_duration=self.duration,
-                              cleanup_duration=self.cleanup,
-                              weight=self.weight,
-                              sensitivity_multiplier=self.get_extraction_parameter('sensitivity_multiplier', default=1)
-                              )
+                                    extract_device=self.extract_device,
+                                    extract_value=self.extract_value,
+                                    extract_duration=self.duration,
+                                    cleanup_duration=self.cleanup,
+                                    weight=self.weight,
+                                    sensitivity_multiplier=sens,
+                                    is_degas=self.labnumber == 'dg'
+                                    )
 
             exp = db.add_script(self.experiment_manager.experiment_queue.name,
                               self.experiment_manager.experiment_blob()
@@ -1600,7 +1599,6 @@ anaylsis_type={}
 
             return ext
         return self._time_save(func, 'extraction')
-
 
     def _save_spectrometer_info(self, meas):
         self.info('saving spectrometer info')
@@ -1875,7 +1873,7 @@ anaylsis_type={}
             if not fn in warned_scripts:
                 warned_scripts.append(fn)
                 self.warning_dialog('Invalid Scriptb {}'.format(fn))
-#                 self.executable = False
+                self.executable = False
 
         self.info('loading script "{}"'.format(fname))
         func = getattr(self, '{}_script_factory'.format(name))

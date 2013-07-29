@@ -100,6 +100,10 @@ class LaserTaskAction(TaskAction):
         else:
             self.enabled = bool(self.object)
 
+class TestDegasAction(LaserTaskAction):
+    name = 'Test Degas...'
+    method = 'test_degas'
+
 class OpenPatternAction(LaserTaskAction):
     name = 'Open Pattern...'
     method = 'open_pattern'

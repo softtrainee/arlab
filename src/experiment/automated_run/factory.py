@@ -151,6 +151,9 @@ class AutomatedRunFactory(Loggable):
 #     def _template_changed(self):
 #         print self, self.template
     human_error_checker = Instance(HumanErrorChecker, ())
+
+    _update_thread = None
+
     def check_run_addition(self, runs, load_name):
         '''
             check if its ok to add runs to the queue.
@@ -842,8 +845,12 @@ post_equilibration_script:name
         if self.edit_mode and \
             self._selected_runs and \
                 not self.suppress_update:
+
+            if self._update_thread:
+                self._update_thread.join()
+
             t = Thread(target=func)
-            self._update_t = t
+            self._update_thread = t
             t.start()
 
 #===============================================================================

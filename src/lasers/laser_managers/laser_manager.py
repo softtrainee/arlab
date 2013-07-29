@@ -27,6 +27,7 @@ from src.lasers.laser_managers.pulse import Pulse
 from src.paths import paths
 from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
 from src.lasers.laser_managers.base_lase_manager import BaseLaserManager
+from enable.component import Component
 
 
 class LaserManager(BaseLaserManager):
@@ -48,6 +49,7 @@ class LaserManager(BaseLaserManager):
     status_text = Str
     pulse = Instance(Pulse)
 
+    auxilary_graph = Instance(Component)
 #===============================================================================
 # public interface
 #===============================================================================

@@ -122,12 +122,13 @@ class ExperimentEditor(BaseTraitsEditor):
     def _path_changed(self):
         self.queue.path = self.path
 
-    def _set_queue_dirty(self):
-#         print 'set qirty', self.queue._no_update, self.queue.initialized
+    def _set_queue_dirty(self, obj, name, old, new):
+        print 'ggg', obj, name, old, new
+        print 'set qirty', self.queue._no_update, self.queue.initialized
+
         if not self.queue._no_update and self.queue.initialized:
             self.dirty = True
-#         else:
-#             self.dirty = False
+
 #===========================================================================
 #
 #===========================================================================
@@ -153,15 +154,20 @@ class ExperimentEditor(BaseTraitsEditor):
         if self._validate_experiment_queues(queues):
             path = self._dump_experiment_queues(path, queues)
             self.path = path
-#             self.dirty = False
+            self.dirty = False
+
+            return True
+
 
     def _validate_experiment_queues(self, eqs):
         hec = HumanErrorChecker()
         for qi in eqs:
             qi.executable = True
+            qi.initialized = True
             err = hec.check(qi.automated_runs, test_all=True)
             if err:
                 qi.executable = False
+                qi.initialized = False
                 hec.report_errors(err)
                 break
 #             if qi.test_runs():

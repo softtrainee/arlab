@@ -274,6 +274,8 @@ class WatlowEZZone(CoreDevice):
 
             self.initialization_hook()
 
+            self.setup_consumer()
+
             return True
         else:
             self.warning('Failed connecting to Temperature Controller')
@@ -392,8 +394,8 @@ class WatlowEZZone(CoreDevice):
         '''
         if 'verbose' in kw and kw['verbose']:
             self.info('Read temperature')
-        
-        t=None
+
+        t = None
         if self.simulation:
 #            t = 4 + self.closed_loop_setpoint
             t = self.get_random_value() + self.closed_loop_setpoint
@@ -403,12 +405,12 @@ class WatlowEZZone(CoreDevice):
                                  nbytes=13,
                                  nregisters=self._process_memory_len, **kw)
                 if args:
-                    t,_=args
+                    t, _ = args
 #                if not args or not isinstance(args, (tuple, list)):
 #                    args = None, None
-#    
+#
 #                t, _ = args
-            
+
 #            t = self.read_process_value(1, **kw)
         # print t
         if t is not None:
@@ -502,11 +504,11 @@ class WatlowEZZone(CoreDevice):
         except KeyError, e:
             print e
 
-    def set_closed_loop_setpoint(self, setpoint, use_calibration=False, **kw):
+    def set_closed_loop_setpoint(self, setpoint, **kw):
         '''
         '''
         self._clsetpoint = setpoint
-        if self.calibration and use_calibration:
+        if  self.use_calibrated_temperature and self.calibration:
             setpoint = self.map_temperature(setpoint)
 
         self.calibrated_setpoint = setpoint
@@ -950,10 +952,12 @@ class WatlowEZZone(CoreDevice):
         self.set_thermocouple_type(1, self._thermocouple1_type)
 
     def _set_closed_loop_setpoint(self, v):
-        self.set_closed_loop_setpoint(v, use_calibration=self.use_calibrated_temperature)
+#         self.set_closed_loop_setpoint(v)
+        self.add_consumable((self.set_closed_loop_setpoint, v))
 
     def _set_open_loop_setpoint(self, v):
-        self.set_open_loop_setpoint(v)
+        self.add_consumable((self.set_open_loop_setpoint, v))
+#         self.set_open_loop_setpoint(v)
 
     def _set_control_mode(self, mode):
         self.set_control_mode(mode)

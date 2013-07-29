@@ -36,24 +36,27 @@ from traitsui.ui_traits import convert_bitmap as traitsui_convert_bitmap
 # from ctypes_opencv.cxcore import cvZero
 
 def convert_bitmap(image, width=None, height=None):
+    pix = None
     if isinstance(image, ImageResource):
         pix = traitsui_convert_bitmap(image)
     else:
         s = image.shape
-        im = QImage(image.tostring(),
-                     s[1], s[0],
-                    QImage.Format_RGB888
-#                      QImage.Format_RGB16
-                     )
+        if len(s) >= 2:
+            im = QImage(image.tostring(),
+                         s[1], s[0],
+                        QImage.Format_RGB888
+    #                      QImage.Format_RGB16
+                         )
 
-        pix = QPixmap.fromImage(QImage.rgbSwapped(im))
+            pix = QPixmap.fromImage(QImage.rgbSwapped(im))
 
-    if width > 0 and height > 0:
-        pix = pix.scaled(width, height)
-    elif width > 0:
-        pix = pix.scaledToWidth(width)
-    if height > 0:
-        pix = pix.scaledToHeight(height)
+    if pix:
+        if width > 0 and height > 0:
+            pix = pix.scaled(width, height)
+        elif width > 0:
+            pix = pix.scaledToWidth(width)
+        if height > 0:
+            pix = pix.scaledToHeight(height)
 
     return pix
 
@@ -68,13 +71,15 @@ class _ImageEditor(Editor):
 
         image_ctrl = QLabel()
 
-        w = self.item.width
+#         w = self.item.width
 #        if self.factory.scale:
 #            w *= self.factory.scale
-        image_ctrl.setPixmap(convert_bitmap(image,
-                                            width=w,
+        if image is not None:
+            image_ctrl.setPixmap(convert_bitmap(image,
+#                                             width=w,
 #                                            height=self.item.height
-                                            ))
+                                            )
+                             )
         self.image_ctrl = image_ctrl
 #        self.image_ctrl.setMinimumWidth(self.item.width)
 #        self.image_ctrl.setMinimumHeight(self.item.height)
@@ -113,9 +118,9 @@ class _ImageEditor(Editor):
 #         self.control.setPixmap(convert_bitmap(image, qsize.width()))
 
     def set_pixmap(self, image, w):
-
-
-        self.image_ctrl.setPixmap(convert_bitmap(image, w))
+        im = convert_bitmap(image, w)
+        if im:
+            self.image_ctrl.setPixmap(im)
 
 
 class ImageEditor(BasicEditorFactory):

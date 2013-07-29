@@ -199,6 +199,13 @@ class PychronLaserManager(BaseLaserManager):
 #===============================================================================
 # pyscript commands
 #===============================================================================
+    def do_machine_vision_degas(self, lumens, duration):
+        if lumens and duration:
+            self.info('Doing machine vision degas. lumens={}'.format(lumens))
+            self.ask('MachineVisionDegas {} {}'.format(lumens, duration))
+        else:
+            self.debug('lumens and duration not set {}, {}'.format(lumens, duration))
+
     def start_video_recording(self, name):
         self.info('Start Video Recording')
         self.ask('StartVideoRecording {}'.format(name))

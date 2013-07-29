@@ -66,6 +66,9 @@ class LaserHandler(BaseRemoteHardwareHandler):
 #===============================================================================
 # Commands
 #===============================================================================
+    def MachineVisionDegas(self, manager, lumens, duration, *args):
+        manager.do_machine_vision_degas(lumens, duration, new_thread=True)
+
     def StartVideoRecording(self, manager, name, *args):
         manager.start_video_recording(name)
 

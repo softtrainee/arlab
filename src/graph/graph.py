@@ -834,6 +834,7 @@ class Graph(Viewable, ContextMenuMixin):
         '''
         if plotlist is None:
             plotlist = xrange(len(data))
+
         for pi, d in zip(plotlist, data):
             self.add_datum(d,
                            plotid=pi,
@@ -844,13 +845,17 @@ class Graph(Viewable, ContextMenuMixin):
                    ymin_anchor=None, do_after=None, **kw):
         '''
         '''
-        def add():
-#            print plotid, series, self.series
+        def add(datum):
             names = self.series[plotid][series]
             plot = self.plots[plotid]
-            for i, name in enumerate(names):
+
+            if not hasattr(datum, '__iter__'):
+                datum = (datum,)
+
+            for i, (name, di) in enumerate(zip(names, datum)):
+
                 d = plot.data.get_data(name)
-                nd = np.hstack((d, float(datum[i])))
+                nd = np.hstack((d, di))
                 plot.data.set_data(name, nd)
 
                 if i == 1:
@@ -877,9 +882,9 @@ class Graph(Viewable, ContextMenuMixin):
                                   plotid=plotid)
 
         if do_after:
-            do_after_timer(do_after, add)
+            do_after_timer(do_after, add, datum)
         else:
-            add()
+            add(datum)
 
     def show_crosshairs(self):
         '''

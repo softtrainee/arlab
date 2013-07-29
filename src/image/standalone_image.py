@@ -18,7 +18,7 @@
 from traits.api import HasTraits, Any, Array, Str, Event
 from traitsui.api import View, Item, UItem
 from src.ui.image_editor import ImageEditor
-from numpy import asarray, array
+from numpy import asarray, array, ndarray
 from src.viewable import Viewable
 from scipy.ndimage.interpolation import zoom
 # from traitsui.editors.image_editor import ImageEditor
@@ -28,15 +28,18 @@ from scipy.ndimage.interpolation import zoom
 #============= local library imports  ==========================
 class StandAloneImage(Viewable):
 # class StandAloneImage(HasTraits):
-    image = Any
+#     image = Any
     source_frame = Array
     refresh = Event
+
     def traits_view(self):
         v = View(
                  UItem('source_frame',
-                       editor=ImageEditor(refresh='refresh')),
-                width=300,
-                height=300,
+                       editor=ImageEditor(refresh='refresh',
+
+                                          )),
+                       width=self.window_height,
+                       height=self.window_width,
 #                  handler=self.handler_klass,
 #                 resizable=True
                  )
@@ -46,5 +49,8 @@ class StandAloneImage(Viewable):
         self.source_frame = array(frame)
 
     def set_frame(self, frame):
-        self.source_frame = asarray(frame)
+        if not isinstance(frame, ndarray):
+            frame = asarray(frame)
+
+        self.source_frame = frame
 #============= EOF =============================================

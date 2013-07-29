@@ -30,7 +30,7 @@ from envisage.ui.tasks.task_extension import TaskExtension
 from src.lasers.tasks.laser_actions import OpenScannerAction, \
     OpenAutoTunerAction, NewPatternAction, \
     OpenPatternAction, PowerMapAction, PowerCalibrationAction, \
-    OpenPowerMapAction
+    OpenPowerMapAction, TestDegasAction
 from pyface.tasks.action.schema import SMenu, GroupSchema
 from pyface.action.group import Group
 from src.lasers.tasks.laser_calibration_task import LaserCalibrationTask
@@ -184,9 +184,14 @@ class FusionsPlugin(BaseLaserPlugin):
                                    factory=OpenPowerMapAction,
                                    path='MenuBar/File/Open'
                                    ),
+                    SchemaAddition(
+                                   factory=TestDegasAction,
+                                   path='MenuBar/Extraction'
+                                   ),
                               ]
                             )
                        ]
+
 class FusionsCO2Plugin(FusionsPlugin):
     id = 'pychron.fusions.co2'
     name = 'fusions_co2'

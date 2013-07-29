@@ -106,8 +106,10 @@ class ExperimentFactory(Loggable, ConsumerMixin):
                                                    auto_increment_id=self.auto_increment_id,
                                                    extract_group_cnt=eg
                                                    )
-        if self.run_factory.check_run_addition(new_runs, load_name):
-            self.queue.add_runs(new_runs, freq)
+#         if self.run_factory.check_run_addition(new_runs, load_name):
+        self.queue.add_runs(new_runs, freq)
+
+            # trigger dirty event
 
     def _edit_mode_button_fired(self):
         self.run_factory.edit_mode = not self.run_factory.edit_mode

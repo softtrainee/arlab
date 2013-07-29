@@ -27,7 +27,6 @@ from pyface.timer.do_later import do_later
 
 
 class ExperimentQueue(BaseExperimentQueue):
-    _cached_runs = None
     current_run = Any
     selected = Any
     executed_selected = Any
@@ -121,49 +120,17 @@ class ExperimentQueue(BaseExperimentQueue):
         err = hec.check(self.automated_runs, test_all=True)
         if err:
             hec.report_errors(err)
-#             self.executable = False
             return
 
         return True
-
-#     def test_runs(self):
-#         pass
-#         runs = self.cleaned_automated_runs
-#
-#         if runs:
-#             ar = runs[0].make_run(new_uuid=False)
-#
-#             failed = False
-# #             hec = HumanErrorChecker()
-# #
-# #             err = hec.check(runs, test_all=True)
-# #             if err:
-# #                 hec.report_errors(err)
-# #                 failed = True
-# #             else:
-#             for ri in runs:
-#                 for si in SCRIPT_NAMES:
-#                     sn = getattr(ri, si)
-#                     script = getattr(ar, si)
-#                     if script:
-#                         shash = hashlib.md5(script.text).digest()
-#
-#                         setattr(ar.script_info, '{}_name'.format(si), sn)
-#                         nscript = getattr(ar, si)
-#                         nhash = hashlib.md5(nscript.text).digest()
-#                         if shash != nhash:
-#                             if not nscript.syntax_ok():
-#                                 failed = True
-# #                                 return 'Error in script {}'.format(script.name)
-#
-#
-#             self.executable = not failed
 
     def new_runs_generator(self):
         runs = self.cleaned_automated_runs
         runs = [ri for ri in runs if ri.executable]
         rgen = (r for r in runs)
         return rgen, len(runs)
+
+#============= EOF =============================================
 #        rgen = (r for r in newruns)
 #        runs = self.executed_runs+self.cleaned_automated_runs
 #
@@ -197,4 +164,35 @@ class ExperimentQueue(BaseExperimentQueue):
 #        return rgen, n
 
 
-#============= EOF =============================================
+#     def test_runs(self):
+#         pass
+#         runs = self.cleaned_automated_runs
+#
+#         if runs:
+#             ar = runs[0].make_run(new_uuid=False)
+#
+#             failed = False
+# #             hec = HumanErrorChecker()
+# #
+# #             err = hec.check(runs, test_all=True)
+# #             if err:
+# #                 hec.report_errors(err)
+# #                 failed = True
+# #             else:
+#             for ri in runs:
+#                 for si in SCRIPT_NAMES:
+#                     sn = getattr(ri, si)
+#                     script = getattr(ar, si)
+#                     if script:
+#                         shash = hashlib.md5(script.text).digest()
+#
+#                         setattr(ar.script_info, '{}_name'.format(si), sn)
+#                         nscript = getattr(ar, si)
+#                         nhash = hashlib.md5(nscript.text).digest()
+#                         if shash != nhash:
+#                             if not nscript.syntax_ok():
+#                                 failed = True
+# #                                 return 'Error in script {}'.format(script.name)
+#
+#
+#             self.executable = not failed

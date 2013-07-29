@@ -16,7 +16,8 @@
 
 #=============enthought library imports=======================
 from traits.api import Float, Property, Bool, Int, CInt, Button
-from traitsui.api import View, Item, HGroup, VGroup, EnumEditor, RangeEditor, Label, Group
+from traitsui.api import View, Item, HGroup, VGroup, EnumEditor, RangeEditor, \
+     Label, Group, spring
 # from pyface.timer.api import Timer
 
 #=============standard library imports ========================
@@ -593,7 +594,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
             if pos is not None:
 
                 pos = self.linear_mapper.map_data(pos)
-                self.update_position = pos
+                self.update_position = max(self.min, min(self.max, pos))
 
     def _get_data_position(self):
         '''
@@ -687,7 +688,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                                                 low_name='min',
                                                 high_name='max', enabled=False),
                              ),
-                         Item('home_button', show_label=False)
+                         HGroup(Item('home_button', show_label=False), spring)
 #                          show_border=True,
 #                          label=self.display_name,
 #                          )

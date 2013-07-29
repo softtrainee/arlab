@@ -162,8 +162,8 @@ class ExtractionPyScript(ValvePyScript):
 
     @verbose_skip
     @command_register
-    def degas(self, lumens=0):
-        self._manager_action([('do_machine_vision_degas', (lumens,), {})],
+    def degas(self, lumens=0, duration=0):
+        self._manager_action([('do_machine_vision_degas', (lumens, duration), {})],
                              name=self.extract_device,
                              protocol=ILaserManager)
 

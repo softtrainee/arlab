@@ -44,5 +44,4 @@ class LaserPyScript(ExtractionPyScript):
 #         self._manager_action([('do_power_map', (cx, cy, padding, bd, power), {})],
 #                              name=self.extract_device,
 #                              protocol=ILaserManager)
-
 #============= EOF =============================================

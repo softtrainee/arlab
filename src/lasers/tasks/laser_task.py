@@ -22,7 +22,7 @@ from src.lasers.tasks.laser_panes import FusionsDiodePane, \
     FusionsDiodeControlPane, FusionsDiodeStagePane, PulsePane, OpticsPane, \
     FusionsCO2Pane, FusionsCO2StagePane, FusionsCO2ControlPane, \
     FusionsDiodeSupplementalPane, FusionsDiodeClientPane, FusionsCO2ClientPane, \
-    FusionsCO2AxesPane
+    FusionsCO2AxesPane, AuxilaryGraphPane
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 # from pyface.tasks.action.schema import SMenu
 # from src.lasers.tasks.laser_actions import OpenScannerAction
@@ -82,8 +82,12 @@ class FusionsTask(BaseLaserTask):
     def open_power_map(self):
         if self.manager:
             pm = self.manager.get_power_map_manager()
-
             self.window.application.open_view(pm)
+
+    def test_degas(self):
+        if self.manager:
+            v = self.manager.degasser_factory()
+            self.window.application.open_view(v)
 
 
 class FusionsCO2Task(FusionsTask):
@@ -111,6 +115,7 @@ class FusionsCO2Task(FusionsTask):
                     FusionsCO2ControlPane(model=self.manager),
                     PulsePane(model=self.manager),
                     OpticsPane(model=self.manager),
+                    AuxilaryGraphPane(model=self.manager),
                     ]
 
 class FusionsDiodeTask(FusionsTask):
@@ -135,5 +140,6 @@ class FusionsDiodeTask(FusionsTask):
 #                TestPane(model=self.manager),
                 PulsePane(model=self.manager),
                 OpticsPane(model=self.manager),
+                AuxilaryGraphPane(model=self.manager),
                 ]
 #============= EOF =============================================
