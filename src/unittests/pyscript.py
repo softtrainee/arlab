@@ -18,12 +18,32 @@
 import unittest
 import time
 from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
+from src.pyscripts.measurement_pyscript import MeasurementPyScript
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class PyscriptTest(unittest.TestCase):
+class PyscriptDurationTest(unittest.TestCase):
+    def setUp(self):
+        self._script = MeasurementPyScript()
+
+    def testDuration(self):
+        self._script.root = './data'
+        self._script.name = 'measurement_script.py'
+        self._script.bootstrap()
+
+        self._script.test()
+        etd = self._script.get_estimated_duration()
+        mc = 4
+        bs = 2
+        eq = 2
+        st = 4
+        td = mc + bs + eq + st
+        self.assertEqual(etd, td)
+
+class PyscriptMeasurementTest(unittest.TestCase):
     def setUp(self):
         from src.pyscripts.parameter_editor import MeasurementParameterEditor
         self.editor = MeasurementParameterEditor()
+
     @classmethod
     def setUpClass(cls):
         p = './data/measurement_script.py'

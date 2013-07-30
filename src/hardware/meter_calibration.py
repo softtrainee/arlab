@@ -28,6 +28,9 @@ class MeterCalibration(HasTraits):
     coefficients = List
     bounds = None
 
+    output_low = 0
+    output_high = 100
+
     def __init__(self, *args, **kw):
         if args:
             coeffs = args[0]
@@ -89,10 +92,13 @@ class MeterCalibration(HasTraits):
 
         if c is not None and len(c):
             c[-1] -= response
-            power = optimize.newton(poly1d(c), 1)
+
+            power = optimize.brentq(poly1d(c), self.output_low,
+                                               self.output_high)
             c[-1] += response
         else:
             power = response
+
         return power
 
     def print_string(self):

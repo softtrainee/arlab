@@ -143,7 +143,9 @@ def count_verbose_skip(func):
                                                                                            args, kw))
 #        if obj._cancel:
         if obj.testing_syntax:
+#             print func.func_name, obj._estimated_duration
             func(obj, calc_time=True, *args, **kw)
+#             print func.func_name, obj._estimated_duration
             return
 
         obj.debug('{} {} {}'.format(fname, args, kw))
@@ -333,6 +335,7 @@ class PyScript(Loggable):
 
     #                 sys.settrace(None)
                     exec code_or_err in safe_dict
+
                     safe_dict['main']()
     #                 db = PyScriptDebugger()
 
@@ -442,6 +445,8 @@ class PyScript(Loggable):
 #         self._interval_flag = Event()
 #         self._interval_stack = Queue()
 
+        self._interval_stack = LifoQueue()
+
         if self.root and self.name and load:
             with open(self.filename, 'r') as f:
                 self.text = f.read()
@@ -547,11 +552,10 @@ class PyScript(Loggable):
 
     @command_register
     def begin_interval(self, duration=0, name=None):
+        self._estimated_duration += duration
+
         if self._cancel:
             return
-
-        if self._interval_stack is None:
-            self._interval_stack = LifoQueue()
 
         def wait(t, f, n):
             self._sleep(t)

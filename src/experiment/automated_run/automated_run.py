@@ -54,6 +54,7 @@ from src.processing.arar_age import ArArAge
 from src.processing.isotope import IsotopicMeasurement
 from src.experiment.export.export_spec import ExportSpec
 from src.ui.gui import invoke_in_main_thread
+from src.consumer_mixin import ConsumerMixin
 
 
 class RunInfo(HasTraits):
@@ -1130,10 +1131,42 @@ anaylsis_type={}
 #        self.debug('fs {}'.format(fs))
         return fs
 
+    def _write_iteration(self, grpname, data_write_hook, fits, refresh, graph,
+                         series):
+
+        dets = self._active_detectors
+        def _write(data):
+            i, x, keys, signals = data
+            nfs = self._get_fit_block(i, fits)
+            if grpname == 'signal':
+                self.plot_panel.fits = nfs
+
+            self.signals = dict(zip(keys, signals))
+
+            for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+                signal = signals[keys.index(dn.name)]
+                graph.add_datum((x, signal),
+                                series=series,
+                                plotid=pi,
+                                update_y_limits=True,
+                                ypadding='0.5'
+                                )
+                if fi:
+                    graph.set_fit(fi, plotid=pi, series=0)
+
+            data_write_hook(x, keys, signals)
+
+            if refresh:
+                # only refresh regression every 5th iteration
+                if i % 5 == 0:
+                    graph.refresh()
+
+        return _write
 
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, starttime_offset,
                            series, fits, check_conditions, refresh):
+
         self.info('measuring {}. ncounts={}'.format(grpname, ncounts),
                   color=MEASUREMENT_COLOR)
 
@@ -1142,6 +1175,11 @@ anaylsis_type={}
             return True
 
         graph = self.plot_panel.graph
+
+        consumer = ConsumerMixin()
+        consumer.setup_consumer(self._write_iteration(grpname, data_write_hook,
+                                                      fits, refresh, graph))
+
         self._total_counts += ncounts
         mi, ma = graph.get_x_limits()
         dev = (ma - mi) * 0.05
@@ -1153,7 +1191,7 @@ anaylsis_type={}
         dets = self._active_detectors
         spec = self.spectrometer_manager.spectrometer
         ncounts = int(ncounts)
-        iter_cnt = 0
+        iter_cnt = 1
 
         nfs = self._get_fit_block(0, fits)
         for pi, (fi, dn) in enumerate(zip(nfs, dets)):
@@ -1163,20 +1201,19 @@ anaylsis_type={}
                              plotid=pi
                              )
 
+        m = self.integration_time * 0.99 if not globalv.automated_run_debug else 0.1
         while 1:
-#        for iter_cnt in xrange(1, ncounts + 1, 1):
             ck = self._check_iteration(iter_cnt, ncounts, check_conditions)
             if ck == 'break':
                 break
             elif ck == 'cancel':
                 return False
 
-            if iter_cnt and iter_cnt % 50 == 0:
+            if iter_cnt % 50 == 0:
                 self.info('collecting point {}'.format(iter_cnt))
-            _debug = globalv.automated_run_debug
-            m = self.integration_time * 0.99 if not _debug else 0.1
-            time.sleep(m)
+
             data = spec.get_intensities(tagged=True)
+
             if data is not None:
                 keys, signals = data
             else:
@@ -1191,58 +1228,38 @@ anaylsis_type={}
 
             x = time.time() - starttime  # if not self._debug else iter_cnt + starttime
 
-            self.signals = dict(zip(keys, signals))
+#             signal_dict = dict(zip(keys, signals))
+            v = (iter_cnt, x, keys, signals)
+            consumer.add_consumable(v)
 
-            nfs = self._get_fit_block(iter_cnt, fits)
-            for pi, (fi, dn) in enumerate(zip(nfs, dets)):
-                signal = signals[keys.index(dn.name)]
-                graph.add_datum((x, signal),
-                                series=series,
-                                plotid=pi,
-                                update_y_limits=True,
-                                ypadding='0.5'
-                                )
-                if fi:
-                    graph.set_fit(fi, plotid=pi, series=0)
+#             self.signals = dict(zip(keys, signals))
+#
+#             nfs = self._get_fit_block(iter_cnt, fits)
+#             for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+#                 signal = signals[keys.index(dn.name)]
+#                 graph.add_datum((x, signal),
+#                                 series=series,
+#                                 plotid=pi,
+#                                 update_y_limits=True,
+#                                 ypadding='0.5'
+#                                 )
+#                 if fi:
+#                     graph.set_fit(fi, plotid=pi, series=0)
+#
+#             if grpname == 'signal':
+#                 self.plot_panel.fits = nfs
+#
+#             data_write_hook(x, keys, signals)
+#             if refresh:
+#                 # only refresh regression every 5th iteration
+#                 if iter_cnt % 5 == 0:
+#                     graph.refresh()
 
-
-            if grpname == 'signal':
-                self.plot_panel.fits = nfs
-#            print len(graph.series[0]), series
-#            if len(graph.series[0]) < series + 1:
-# #                 graph_kw = dict(marker='circle', type='scatter', marker_size=1.25)
-#                for pi, (fi, dn) in enumerate(zip(nfs, dets)):
-#                    signal = signals[keys.index(dn.name)]
-#                    graph.new_series(x=[x], y=[signal],
-#                                     marker='circle', type='scatter',
-#                                     marker_size=1.25,
-#                                     fit=fi,
-#                                     plotid=pi
-#                                     )
-# #                 func = lambda x, signal, kw: graph.new_series(x=[x],
-# #                                                                  y=[signal],
-# #                                                                  **kw
-# #                                                                  )
-#            else:
-#                for pi, (fi, dn) in enumerate(zip(nfs, dets)):
-#                    signal = signals[keys.index(dn.name)]
-#                    graph.add_datum((x, signal),
-#                                    series=series,
-#                                    plotid=pi,
-#                                    update_y_limits=True,
-#                                    ypadding='0.5'
-#                                    )
-#                    if fi:
-#                        graph.set_fit(fi, plotid=pi, series=series - 1)
-
-
-            data_write_hook(x, keys, signals)
-            if refresh:
-                graph.refresh()
+            time.sleep(m)
             iter_cnt += 1
-#                invoke_in_main_thread(graph.refresh)
-#             do_after(100, graph._update_graph)
 
+        consumer.stop()
+        graph.refresh()
         return True
 
     def _check_conditions(self, conditions, cnt):
@@ -1257,7 +1274,7 @@ anaylsis_type={}
 
         # exit the while loop if counts greater than max of original counts and the plot_panel counts
         maxcounts = max(ncounts, self.plot_panel.ncounts)
-        if i >= maxcounts:
+        if i > maxcounts:
             return 'break'
 
         if check_conditions:
@@ -1288,11 +1305,11 @@ anaylsis_type={}
                 if not action_condition.resume:
                     return 'break'
 
-        if i >= self.measurement_script.ncounts:
+        if i > self.measurement_script.ncounts:
             self.info('script termination. measurement iteration executed {}/{} counts'.format(i, ncounts))
             return 'break'
 
-        if i >= self.plot_panel.ncounts:
+        if i > self.plot_panel.ncounts:
             self.info('user termination. measurement iteration executed {}/{} counts'.format(i, ncounts))
             self._total_counts -= (ncounts - i)
             return 'break'
@@ -1868,11 +1885,13 @@ anaylsis_type={}
 
     def _bootstrap_script(self, fname, name):
         global warned_scripts
+        import traceback
         def warn(fn):
             self.invalid_script = True
             if not fn in warned_scripts:
                 warned_scripts.append(fn)
-                self.warning_dialog('Invalid Scriptb {}'.format(fn))
+                e = traceback.format_exc()
+                self.warning_dialog('Invalid Scriptb {} {}'.format(fn, e))
                 self.executable = False
 
         self.info('loading script "{}"'.format(fname))
@@ -1886,8 +1905,8 @@ anaylsis_type={}
                     s.test()
 #                    s.test()
 # #                    setattr(self, '_{}_script'.format(name), s)
-#
                 except Exception, e:
+
                     warn(fname)
                     valid = False
 #                    setattr(self, '_{}_script'.format(name), None)

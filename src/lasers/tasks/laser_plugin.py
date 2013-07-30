@@ -28,8 +28,7 @@ from src.lasers.tasks.laser_preferences import FusionsDiodePreferencesPane, \
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.lasers.tasks.laser_actions import OpenScannerAction, \
-    OpenAutoTunerAction, NewPatternAction, \
-    OpenPatternAction, PowerMapAction, PowerCalibrationAction, \
+    OpenAutoTunerAction, PowerMapAction, PowerCalibrationAction, \
     OpenPowerMapAction, TestDegasAction
 from pyface.tasks.action.schema import SMenu, GroupSchema
 from pyface.action.group import Group
@@ -166,13 +165,13 @@ class FusionsPlugin(BaseLaserPlugin):
                                                        ),
                                  path='MenuBar/Extraction'
                                  ),
-                   SchemaAddition(id='pattern',
-                                  factory=lambda:Group(
-                                                       OpenPatternAction(),
-                                                       NewPatternAction(),
-                                                       ),
-                                  path='MenuBar/Extraction'
-                                  ),
+#                    SchemaAddition(id='pattern',
+#                                   factory=lambda:Group(
+#                                                        OpenPatternAction(),
+#                                                        NewPatternAction(),
+#                                                        ),
+#                                   path='MenuBar/Extraction'
+#                                   ),
                     SchemaAddition(id='calibration',
                                    factory=lambda: Group(
                                                          PowerMapAction(),

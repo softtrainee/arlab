@@ -23,13 +23,22 @@ from src.ui.thread import Thread
 from Queue import Queue, Empty
 
 class ConsumerMixin(object):
-    def setup_consumer(self, func=None, buftime=None):
+    def setup_consumer(self, func=None, buftime=None, auto_start=True):
         self._consume_func = func
         self._buftime = buftime  # ms
         self._consumer_queue = Queue()
         self._consumer = Thread(target=self._consume)
         self._should_consume = True
-        self._consumer.start()
+        if auto_start:
+            self._consumer.start()
+
+    def start(self):
+        if self._consumer:
+            self._consumer.start()
+
+    def stop(self):
+        if self._consumer:
+            self._should_consume = False
 
     def add_consumable(self, v):
         self._consumer_queue.put(v)
@@ -51,11 +60,12 @@ class ConsumerMixin(object):
         else:
             get_func = self._consumer_queue.get
 
+        cfunc = self._consume_func
         while self._should_consume:
             v = get_func()
             if v:
-                if self._consume_func:
-                    self._consume_func(v)
+                if cfunc:
+                    cfunc(v)
                 elif isinstance(v, tuple):
                     func, a = v
                     func(a)

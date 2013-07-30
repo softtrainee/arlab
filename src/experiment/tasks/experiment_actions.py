@@ -22,32 +22,13 @@ from pyface.action.api import Action
 from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.ui.progress_dialog import myProgressDialog
 from pyface.tasks.action.task_action import TaskAction
+
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-
-class SendTestNotificationAction(TaskAction):
-    name = 'Send Test Notification'
-    method = 'send_test_notification'
-    accelerator = 'Ctrl+Shift+N'
-
-
-class DeselectAction(TaskAction):
-    name = 'Deselect'
-    method = 'deselect'
-    accelerator = 'Ctrl+Shift+D'
-    tooltip = 'Deselect the selected run(s)'
-
 class ExperimentAction(Action):
     task_id = 'pychron.experiment'
-#    def _get_manager(self, event):
-#        return self._get_service(event, 'src.experiment.manager.ExperimentManager')
-#
-#    def _get_executor(self, event):
-#        return self._get_service(event, 'src.experiment.executor.ExperimentExecutor')
-#
-#    def _get_editor(self, event):
-#        return self._get_service(event, 'src.experiment.editor.ExperimentEditor')
+
 
     def _get_experimentor(self, event):
         return self._get_service(event, 'src.experiment.experimentor.Experimentor')
@@ -65,6 +46,60 @@ class ExperimentAction(Action):
         else:
             win = application.create_window(TaskWindowLayout(self.task_id))
             win.open()
+
+class ExperimentOnlyAction(TaskAction):
+    _enabled = None
+    def _task_changed(self):
+        if self.task:
+            if self.task.id == 'pychron.experiment':
+                enabled = True
+                if self.enabled_name:
+                    if self.object:
+                        enabled = bool(self._get_attr(self.object,
+                                                   self.enabled_name, False))
+                if enabled:
+                    self._enabled = True
+            else:
+                self._enabled = False
+
+    def _enabled_update(self):
+        '''
+             reimplement ListeningAction's _enabled_update
+        '''
+        if self.enabled_name:
+            if self.object:
+                self.enabled = bool(self._get_attr(self.object,
+                                                   self.enabled_name, False))
+            else:
+                self.enabled = False
+        elif self._enabled is not None:
+            self.enabled = self._enabled
+        else:
+            self.enabled = bool(self.object)
+
+class OpenPatternAction(ExperimentOnlyAction):
+    name = 'Open Pattern...'
+    method = 'open_pattern'
+
+
+class NewPatternAction(ExperimentOnlyAction):
+    name = 'New Pattern...'
+    method = 'new_pattern'
+
+
+class SendTestNotificationAction(TaskAction):
+    name = 'Send Test Notification'
+    method = 'send_test_notification'
+    accelerator = 'Ctrl+Shift+N'
+
+
+class DeselectAction(TaskAction):
+    name = 'Deselect'
+    method = 'deselect'
+    accelerator = 'Ctrl+Shift+D'
+    tooltip = 'Deselect the selected run(s)'
+
+
 
 class QueueAction(ExperimentAction):
     pass

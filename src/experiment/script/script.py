@@ -32,7 +32,7 @@ class Script(Loggable):
     label = Str
     mass_spectrometer = String
 
-    name = Str(NULL_STR)
+    name = Str
     names = Property(depends_on='mass_spectrometer')
     edit = Button
     kind = 'ExtractionLine'
@@ -110,7 +110,7 @@ class Script(Loggable):
 
     @cached_property
     def _get_names(self):
-        names = [NULL_STR]
+        names = ['']
         ms = self._load_script_names()
         if ms:
             msn = '{}_'.format(self.mass_spectrometer.lower())

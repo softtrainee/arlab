@@ -104,14 +104,14 @@ class TestDegasAction(LaserTaskAction):
     name = 'Test Degas...'
     method = 'test_degas'
 
-class OpenPatternAction(LaserTaskAction):
-    name = 'Open Pattern...'
-    method = 'open_pattern'
-
-
-class NewPatternAction(LaserTaskAction):
-    name = 'New Pattern...'
-    method = 'new_pattern'
+# class OpenPatternAction(LaserTaskAction):
+#     name = 'Open Pattern...'
+#     method = 'open_pattern'
+#
+#
+# class NewPatternAction(LaserTaskAction):
+#     name = 'New Pattern...'
+#     method = 'new_pattern'
 
 class LaserCalibrationAction(Action):
     def _get_task(self, event):

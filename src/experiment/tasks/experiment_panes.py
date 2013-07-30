@@ -258,7 +258,14 @@ class ExperimentFactoryPane(TraitsDockPane):
                              RFItem('beam_diameter'),
                              RFItem('ramp_duration', label='Ramp Dur. (s)'),
                              # Item('ramp_rate', label='Ramp Rate (C/s)'),
-                             RFItem('pattern', editor=EnumEditor(name=make_rf_name('patterns'))),
+                             HGroup(
+                                    RFItem('pattern',
+                                           editor=EnumEditor(name=make_rf_name('patterns'))),
+                                    RFItem('edit_pattern',
+                                           show_label=False,
+                                           editor=ButtonEditor(label_value=make_rf_name('edit_pattern_label'))
+                                           )
+                                    ),
                              label='Extract',
                              show_border=True
                              )
