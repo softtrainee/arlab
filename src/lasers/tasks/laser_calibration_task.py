@@ -134,6 +134,8 @@ class LaserCalibrationTask(BaseLaserTask):
     def _update_completed(self):
         self.executing = False
         self.active_editor.was_executed = True
+
+
 #===============================================================================
 # action handlers
 #===============================================================================

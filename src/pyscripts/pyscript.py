@@ -28,11 +28,11 @@ from src.pyscripts.wait_dialog import WaitDialog
 from src.loggable import Loggable
 
 
-from Queue import Queue, Empty
-from src.globals import globalv
-from src.ui.gui import invoke_in_main_thread
+from Queue import Queue, Empty, LifoQueue
+# from src.globals import globalv
+# from src.ui.gui import invoke_in_main_thread
 import sys
-import bdb
+# import bdb
 from src.ui.thread import Thread
 
 class DummyManager(Loggable):
@@ -70,6 +70,17 @@ class IntervalError(Exception):
     def __str__(self):
         return 'Poorly matched BeginInterval-CompleteInterval'
 
+
+class IntervalContext(object):
+    def __init__(self, obj, dur):
+        self.obj = obj
+        self.dur = dur
+
+    def __enter__(self):
+        self.obj.begin_interval(duration=self.dur)
+
+    def __exit__(self, *args):
+        self.obj.complete_interval()
 
 class MainError(Exception):
     def __str__(self):
@@ -183,8 +194,8 @@ class PyScript(Loggable):
     _ctx = Dict
     _text = Str
 
-    _interval_stack = Queue
-    _interval_flag = None
+    _interval_stack = None
+#     _interval_flag = None
 
     _cancel = Bool(False)
     _completed = False
@@ -428,8 +439,8 @@ class PyScript(Loggable):
         self._cancel_hook()
 
     def bootstrap(self, load=True, **kw):
-        self._interval_flag = Event()
-        self._interval_stack = Queue()
+#         self._interval_flag = Event()
+#         self._interval_stack = Queue()
 
         if self.root and self.name and load:
             with open(self.filename, 'r') as f:
@@ -508,53 +519,62 @@ class PyScript(Loggable):
         self.cancel()
 
     @command_register
+    def interval(self, dur):
+        return IntervalContext(self, dur)
+
+    @command_register
     def complete_interval(self):
+        try:
+            _, f, n = self._interval_stack.get(timeout=0.01)
+        except Empty:
+            raise IntervalError()
+
         if self.testing_syntax:
-            try:
-                pi = self._interval_stack.get(timeout=0.01)
-                if pi != 'b':
-                    raise IntervalError()
-            except Empty:
-                raise IntervalError()
             return
 
         if self._cancel:
             return
 
-        self.info('COMPLETE INTERVAL waiting for begin interval completion')
-        # wait until _interval_flag is set
-        while not self._interval_flag.isSet():
+        self.info('COMPLETE INTERVAL waiting for begin interval {} to complete'.format(n))
+        # wait until flag is set
+        while not f.isSet():
             if self._cancel:
                 break
             self._sleep(0.5)
 
         if not self._cancel:
-            self._interval_flag.clear()
+            f.clear()
 
-    @verbose_skip
     @command_register
-    def begin_interval(self, duration=0):
-        def wait(t):
+    def begin_interval(self, duration=0, name=None):
+        if self._cancel:
+            return
+
+        if self._interval_stack is None:
+            self._interval_stack = LifoQueue()
+
+        def wait(t, f, n):
             self._sleep(t)
             if not self._cancel:
-                self.info('interval finished')
-                if self._interval_flag:
-                    self._interval_flag.set()
+                self.info('{} finished'.format(n))
+                f.set()
 
         duration = float(duration)
-#        if self.testing_syntax or self._cancel:
-#            return
-        self._interval_stack.put('b')
 
-        self.info('BEGIN INTERVAL waiting for {}'.format(duration))
-        t = Thread(target=wait, args=(duration,))
-        t.start()
+        t, f = None, None
+        if name is None:
+            name = 'Interval {}'.format(self._interval_stack.qsize() + 1)
+
+        if not self.testing_syntax:
+            f = Event()
+            self.info('BEGIN INTERVAL {} waiting for {}'.format(name, duration))
+            t = Thread(target=wait, args=(duration, f, name))
+            t.start()
+
+        self._interval_stack.put((t, f, name))
 
     @command_register
     def sleep(self, duration=0, message=None):
-
-
-
         self._estimated_duration += duration
         if self.parent_script is not None:
             self.parent_script._estimated_duration += self._estimated_duration

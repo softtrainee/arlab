@@ -184,10 +184,8 @@ class ExtractionPyScript(ValvePyScript):
             ps = ps[0]
             self.snapshot_paths.append(ps[1])
 
-    @verbose_skip
     @command_register
     def video_recording(self, name='video'):
-
         return RecordingCTX(self, name)
 
     @verbose_skip

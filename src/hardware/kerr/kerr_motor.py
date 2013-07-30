@@ -16,8 +16,8 @@
 
 #=============enthought library imports=======================
 from traits.api import Float, Property, Bool, Int, CInt, Button
-from traitsui.api import View, Item, HGroup, VGroup, EnumEditor, \
-    RangeEditor, Label, Group, spring
+from traitsui.api import View, Item, HGroup, VGroup, EnumEditor, RangeEditor, \
+     Label, Group, spring
 # from pyface.timer.api import Timer
 
 #=============standard library imports ========================
@@ -33,6 +33,9 @@ from src.hardware.linear_mapper import LinearMapper
 from src.helpers.timer import Timer
 from src.consumer_mixin import ConsumerMixin
 from src.ui.progress_dialog import myProgressDialog
+from pyface.ui.qt4.progress_dialog import ProgressDialog
+from src.ui.qt.progress_editor import ProgressEditor
+# from pyface.progress_dialog import ProgressDialog
 
 SIGN = ['negative', 'positive']
 
@@ -81,6 +84,8 @@ class KerrMotor(KerrDevice, ConsumerMixin):
     units = 'mm'
 
     home_button = Button
+
+    home_status = Int
 
     def _get_display_name(self):
         return self.name.capitalize()
@@ -319,10 +324,12 @@ class KerrMotor(KerrDevice, ConsumerMixin):
     def _home_button_fired(self):
 #         self.progress = myProgressDialog(max=2)
 #         self.progress.open()
-
+        self.home_status = 0
         self._home_motor()
         self.load_data_position()
+        self.home_status = 1
         self.information_dialog('Homing Complete')
+        self.home_status = 0
 
     def _home_motor(self, progress=None, *args, **kw):
         '''
@@ -589,22 +596,9 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                 self.enabled = True
                 if self.timer is not None:
                     self.timer.Stop()
-
+#                     self.update_position = self._data_position
                     time.sleep(0.25)
                     self.load_data_position(set_pos=False)
-
-#                    cnt = 0
-#                    prev = None
-#                    while 1:
-#                        steps = self.load_data_position(set_pos=False)
-#                        if prev is not None and prev == steps:
-#                            cnt += 1
-#                            if cnt > 3:
-#                                break
-#
-#                        prev = steps
-#                        time.sleep(0.05)
-#                     self.update_position = self._data_position
 
         if not self.enabled:
             self.load_data_position(set_pos=False)
@@ -701,7 +695,13 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                                                 low_name='min',
                                                 high_name='max', enabled=False),
                              ),
-                         HGroup(spring, Item('home_button', show_label=False))
+                         HGroup(
+                                Item('home_status',
+                                      show_label=False,
+                                     editor=ProgressEditor(min=0, max=1,
+
+                                                           )),
+                                Item('home_button', show_label=False), spring)
 #                          show_border=True,
 #                          label=self.display_name,
 #                          )

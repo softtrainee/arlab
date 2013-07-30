@@ -20,18 +20,31 @@ from traitsui.api import View, Item
 from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 from src.pyscripts.pyscript import makeRegistry, verbose_skip
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
+from src.ui.gui import invoke_in_main_thread
+import time
 #============= standard library imports ========================
 #============= local library imports  ==========================
 command_register = makeRegistry()
 
 class LaserPyScript(ExtractionPyScript):
 
+    _task = None
     @verbose_skip
     @command_register
-    def power_map(self, cx, cy, padding, bd, power):
+    def power_map(self, *args, **kw):
+        self.debug('Opening power map task')
+        invoke_in_main_thread(self._open_power_map, *args)
+
+        # wait until task is opened
+        while self._task is None:
+            time.sleep(0.5)
+
+        self._task.execute_active_editor(block=True)
+        self.debug('power mapping complete')
+
+    def _open_power_map(self, cx, cy, padding, bd, power):
         app = self.application
         task = app.open_task('pychron.laser.calibration')
-
         task.new_power_map()
         task.active_editor.editor.trait_set(center_x=cx,
                                             center_y=cy,
@@ -39,7 +52,11 @@ class LaserPyScript(ExtractionPyScript):
                                             padding=padding,
                                             request_power=power,
                                             )
-        task.execute_active_editor(block=True)
+        self._task = task
+
+#     def _power_map(self, cx, cy, padding, bd, power):
+#         print cx, cy, padding
+#         task.execute_active_editor(block=True)
 
 #         self._manager_action([('do_power_map', (cx, cy, padding, bd, power), {})],
 #                              name=self.extract_device,

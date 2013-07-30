@@ -61,6 +61,12 @@ class VideoRecording(Command):
 class TracePath(Command):
     pass
 
+class Degas(Command):
+    pass
+
+class PowerMap(Command):
+    pass
+
 class Open(ValveCommand):
     description = 'Open a valve'
     example = '''1. open("V")
