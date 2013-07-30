@@ -33,6 +33,7 @@ from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 import os
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.execute_mixin import ExecuteMixin
+from src.pyscripts.laser_pyscript import LaserPyScript
 
 
 
@@ -99,12 +100,16 @@ class PyScriptTask(EditorTask, ExecuteMixin):
         ae = self.active_editor
         if isinstance(ae, ExtractionEditor):
             root, fn = os.path.split(ae.path)
+            kind = self._extract_kind(ae.path)
+            klass = ExtractionPyScript
+            if kind == 'Laser':
+                klass = LaserPyScript
 
-            script = ExtractionPyScript(
-                                        application=self.window.application,
-                                        root=root,
-                                        name=fn,
-                                        runner=self._runner)
+            script = klass(
+                            application=self.window.application,
+                            root=root,
+                            name=fn,
+                            runner=self._runner)
 
             if script.bootstrap():
                 script.set_default_context()
@@ -229,7 +234,8 @@ class PyScriptTask(EditorTask, ExecuteMixin):
 #         path = '/Users/ross/Pychrondata_diode/scripts/extra/jan_unknown.py'
 #        path = '/Users/ross/Pychrondata_diode/scripts/extraction/jan_diode.py'
 #        path = '/Users/ross/Pychrondata_demo/scripts/laser/zoom_scan.py'
-        path = os.path.join(paths.scripts_dir, 'lasers', 'video_test.py')
+#         path = os.path.join(paths.scripts_dir, 'lasers', 'video_test.py')
+        path = os.path.join(paths.scripts_dir, 'laser', 'power_map.py')
         self._open_file(path)
         return True
 

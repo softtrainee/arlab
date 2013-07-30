@@ -44,7 +44,7 @@ class PID(object):
         return output
 
 class Degasser(MachineVisionManager, ExecuteMixin):
-    _period = 0.5
+    _period = 0.05
     crop_width = Int(5)
     crop_height = Int(5)
 
@@ -160,6 +160,7 @@ class Degasser(MachineVisionManager, ExecuteMixin):
         return g
 
     def _do_execute(self):
+
         self.debug('starting test degas {} {}'.format(self._test_lumens, self._test_duration))
         self._testing = True
         self.degas(self._test_lumens, self._test_duration)
@@ -179,6 +180,11 @@ class Degasser(MachineVisionManager, ExecuteMixin):
         return v
 
 if __name__ == '__main__':
-    d = Degasser()
+
+    from src.image.video import Video
+
+    d = Degasser(
+
+                 )
     d.configure_traits()
 #============= EOF =============================================

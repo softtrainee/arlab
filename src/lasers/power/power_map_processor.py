@@ -17,7 +17,7 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Bool, HasTraits
+from traits.api import Bool, HasTraits, Instance
 # from traitsui.api import View, Item, Group, HGroup, VGroup, HSplit, VSplit
 #============= standard library imports ========================
 # from tables import openFile
@@ -38,6 +38,13 @@ class PowerMapProcessor(HasTraits):
     color_map = 'hot'
     levels = 15
     interpolation_factor = 5
+    graph = Instance(ContourGraph)
+
+    def set_percentile(self, n):
+        cg = self.graph
+        args = self._measure_properties(self._data, self._metadata, n)
+        if args:
+            cg.plots[0].data.set_data('z0', args[1])
 
     def load_graph(self, reader, window_title=''):
         cg = ContourGraph(
@@ -49,6 +56,9 @@ class PowerMapProcessor(HasTraits):
                           )
 
         z, metadata = self._extract_power_map_data(reader)
+        self._data = z
+        self._metadata = metadata
+
 
         center_plot = cg.new_plot(
                             add=False,
@@ -85,7 +95,8 @@ class PowerMapProcessor(HasTraits):
                               resizable='v',
                               padding=0,
                               )
-        right_plot.y_axis.orientation = 'right'
+        right_plot.x_axis.orientation = 'right'
+        right_plot.y_axis.orientation = 'top'
 
         center = center_plot.plots['plot0'][0]
         options = dict(style='cmap_scatter',
@@ -96,15 +107,27 @@ class PowerMapProcessor(HasTraits):
 
         cg.new_series(plotid=1, render_style='connectedpoints')
         cg.new_series(plotid=1, **options)
-        cg.new_series(plotid=2, render_style='connectedpoints')
-        cg.new_series(plotid=2, **options)
+
+        right_plot.x_axis.orientation = 'right'
+        right_plot.y_axis.orientation = 'top'
+
+        right_plot.x_axis.mapper = center_plot.value_mapper
+        right_plot.y_axis.mapper = bottom_plot.value_mapper
+        right_plot.x_axis.axis_line_visible = False
+        right_plot.y_axis.axis_line_visible = False
+
+        s = cg.new_series(plotid=2, render_style='connectedpoints')[0]
+        s.orientation = 'v'
+        s = cg.new_series(plotid=2, **options)[0]
+        s.orientation = 'v'
 
         center.index.on_trait_change(cg.metadata_changed,
                                            'metadata_changed')
 
-        cg.show_crosshairs()
+        cg.show_crosshairs('blue')
 
-        self._plot_properties(z, metadata, cg)
+#         z = self._plot_properties(z, metadata, cg)
+#         cg.plots[0].data.set_data('z0', z)
 
 
         gridcontainer = cg._container_factory(kind='g',
@@ -123,60 +146,23 @@ class PowerMapProcessor(HasTraits):
         cg.plotcontainer.add(cb)
         cg.plotcontainer.add(gridcontainer)
 
+        self.graph = cg
         return cg
 
-    def _plot_properties(self, z, metadata, cg):
-        props = self._measure_properties(z, metadata)
-        for prop in props:
-            cx, cy, radius, scale = self._extract_properties(z, prop, metadata)
-            s = cg.new_series(x=[cx], y=[cy], type='scatter', marker='circle')
-#             theta = linspace(-pi, pi)
-#             xs = cx + radius * cos(theta)
-#             ys = cy + radius * sin(theta)
-
-#             s = cg.new_series(x=xs, y=ys)
-
-            mal = prop['MajorAxisLength'] / scale * 0.5
-            mil = prop['MinorAxisLength'] / scale * 0.5
-            theta = prop['Orientation']
-            x1 = cx + math.cos(theta) * mal
-            y1 = cy - math.sin(theta) * mal
-
-            x2 = cx - math.sin(theta) * mil
-            y2 = cy - math.cos(theta) * mil
-
-            cg.new_series([cx, x1], [cy, y1],
-                          color=s.color,
-                          line_width=2)
-            cg.new_series([cx, x2], [cy, y2],
-                          color=s.color,
-                          line_width=2
-                          )
-
-            ts = linspace(0, 2 * pi)
-            cos_a, sin_a = cos(theta), sin(theta)
-            eX = mil * cos(ts) * cos_a - sin_a * mal * sin(ts) + cx
-            eY = mil * cos(ts) * sin_a + cos_a * mal * sin(ts) + cy
-
-            cg.new_series(eX, eY,
-                          color=s.color
-                          )
-
     def _measure_properties(self, z, metadata, p=25):
-        from skimage.morphology import label
         from skimage.measure._regionprops import regionprops
-#         from skimage.exposure.exposure import rescale_intensity
+        nim = z.copy()
+        t = percentile(z, p)
+        nim[z < t] = 0
 
-#         nim = zeros_like(z).astype(int)
-#         t = percentile(z, p)
-#         nim[z > t] = 1
-        nim = label(z)
-        z = nim
-        props = regionprops(nim, ['EquivDiameter', 'Centroid',
-                                  'MajorAxisLength', 'MinorAxisLength',
-                                  'Orientation'
-                                  ])
-        return props
+        try:
+            props = regionprops(nim.astype(int), ['EquivDiameter', 'Centroid',
+                                      'MajorAxisLength', 'MinorAxisLength',
+                                      'Orientation'
+                                      ])
+            return props, nim
+        except TypeError:
+            pass
 
     def _extract_properties(self, z, prop, metadata):
         r, c = prop['Centroid']
@@ -342,6 +328,49 @@ class PowerMapProcessor(HasTraits):
 #    if os.path.isfile(pa):
 #        p.open_power_map(pa)
 #============= EOF ====================================
+#     def _plot_properties(self, z, metadata, cg):
+# #         for prop in props:
+# #         for pp in (25, 50, 75, 95):
+#         for pp in (95,):
+#             props, nim = self._measure_properties(z, metadata, p=pp)
+#             for prop in props:
+#                 cx, cy, radius, scale = self._extract_properties(z, prop, metadata)
+#                 s = cg.new_series(x=[cx], y=[cy], type='scatter', marker='circle')
+#     #             theta = linspace(-pi, pi)
+#     #             xs = cx + radius * cos(theta)
+#     #             ys = cy + radius * sin(theta)
+#
+#     #             s = cg.new_series(x=xs, y=ys)
+#
+#                 mal = prop['MajorAxisLength'] / scale * 0.5
+#                 mil = prop['MinorAxisLength'] / scale * 0.5
+#
+#                 theta = prop['Orientation']
+#                 x1 = cx + math.cos(theta) * mal
+#                 y1 = cy - math.sin(theta) * mal
+#
+#                 x2 = cx - math.sin(theta) * mil
+#                 y2 = cy - math.cos(theta) * mil
+#
+#                 cg.new_series([cx, x1], [cy, y1],
+#                               color=s.color,
+#                               line_width=2)
+#                 cg.new_series([cx, x2], [cy, y2],
+#                               color=s.color,
+#                               line_width=2
+#                               )
+#
+#                 ts = linspace(0, 2 * pi)
+#
+#                 cos_a, sin_a = cos(theta), sin(theta)
+#
+#                 eX = mil * cos(ts) * cos_a - sin_a * mal * sin(ts) + cx
+#                 eY = mil * cos(ts) * sin_a + cos_a * mal * sin(ts) + cy
+#
+#                 cg.new_series(eX, eY,
+#                               color=s.color
+#                               )
+#         return nim
 #            try:
 #                x = int(row['col'])
 #            except:

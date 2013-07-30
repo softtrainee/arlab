@@ -886,11 +886,11 @@ class Graph(Viewable, ContextMenuMixin):
         else:
             add(datum)
 
-    def show_crosshairs(self):
+    def show_crosshairs(self, color='black'):
         '''
         '''
         self.crosshairs_enabled = True
-        self._crosshairs_factory()
+        self._crosshairs_factory(color=color)
         self.plotcontainer.request_redraw()
 
     def destroy_crosshairs(self):
@@ -1060,13 +1060,13 @@ class Graph(Viewable, ContextMenuMixin):
         # container.tools.append(gt)
         return container
 
-    def _crosshairs_factory(self, plot=None):
+    def _crosshairs_factory(self, plot=None, color='black'):
         '''
         '''
         if plot is None:
             plot = self.plots[0].plots['plot0'][0]
-        self._add_line_inspector(plot, axis='x', color='black')
-        self._add_line_inspector(plot, axis='y', color='black')
+        self._add_line_inspector(plot, axis='x', color=color)
+        self._add_line_inspector(plot, axis='y', color=color)
 
     def _plot_factory(self, **kw):
         '''

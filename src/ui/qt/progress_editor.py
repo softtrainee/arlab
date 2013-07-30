@@ -15,41 +15,33 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Int
 from traitsui.api import View, Item
+from traitsui.qt4.basic_editor_factory import BasicEditorFactory
+from traitsui.qt4.editor import Editor
 #============= standard library imports ========================
+from PySide.QtGui import QProgressBar
 #============= local library imports  ==========================
-from numpy import invert, pi, percentile, zeros_like, hsplit, asarray, ogrid
-from skimage.draw import circle
-from matplotlib.cm import get_cmap
 
-class LumenDetector(HasTraits):
-    threshold = 100
-    mask_radius = 25
+class _ProgressEditor(Editor):
+    def init(self, parent):
+        self.control = self._create_control()
+        self.control.setMaximum(self.factory.max)
+        self.control.setMinimum(self.factory.min)
 
-    def get_value(self, src):
-        mask = self._mask(src)
-        self._preprocess(src)
+    def _create_control(self):
+        pb = QProgressBar()
+        return pb
 
-        lum = src[mask]
-#         # use mean of the 90th percentile as lumen
-#         # measure. this is adhoc and should/could be modified
-        lumen = percentile(lum.flatten(), 90).mean()
+    def update_editor(self):
+        self.control.setValue(self.value)
 
-        return src, lumen
 
-    def _mask(self, src):
-        radius = self.mask_radius
-        h, w = src.shape
-        c = circle(h / 2., w / 2., radius)
-        mask = zeros_like(src, dtype=bool)
-        mask[c] = True
-        src[invert(mask)] = 0
-        return mask
 
-    def _preprocess(self, src):
-        threshold = self.threshold
-        src[src < threshold] = 0
+class ProgressEditor(BasicEditorFactory):
+    klass = _ProgressEditor
+    min = Int
+    max = Int
 
 
 #============= EOF =============================================

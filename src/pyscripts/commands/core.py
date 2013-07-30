@@ -204,6 +204,8 @@ class CompleteInterval(Command):
     def get_text(self):
         return self.indent('complete_interval()')
 
+class Interval(Command):
+    pass
 
 class Exit(Command):
     def get_text(self):

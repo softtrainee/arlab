@@ -16,8 +16,9 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property, Unicode, List, \
-    Instance, Float, Int, Bool, Event, DelegatesTo, Any
-from traitsui.api import View, Item, UItem, VGroup, ButtonEditor
+    Instance, Float, Int, Bool, Event, DelegatesTo, Any, Range
+from traitsui.api import View, Item, UItem, VGroup, ButtonEditor, \
+    HGroup, spring
 from src.envisage.tasks.base_editor import BaseTraitsEditor
 from src.loggable import Loggable
 from src.canvas.canvas2D.raster_canvas import RasterCanvas
@@ -60,12 +61,18 @@ class PowerMapControls(HasTraits):
         return v
 
 class PowerMapEditor(LaserEditor):
-
+    percentile_threshold = Range(1, 99)
     canvas = Instance(RasterCanvas, ())
     editor = Instance(PowerMapControls, ())
     mapper = Instance(PowerMapper, ())
     completed = DelegatesTo('mapper')
     was_executed = False
+
+    processor = Instance(PowerMapProcessor)
+
+    def _percentile_threshold_changed(self, new):
+        if self.processor:
+            self.processor.set_percentile(new)
 
     def load(self, path):
 
@@ -77,7 +84,7 @@ class PowerMapEditor(LaserEditor):
 
         self.component = cg.plotcontainer
         self.was_executed = True
-
+        self.processor = pmp
 #     def do_execute(self, lm):
     def _do_execute(self):
         mapper = self.mapper
@@ -113,6 +120,9 @@ class PowerMapEditor(LaserEditor):
 
     def traits_view(self):
         v = View(
+                 HGroup(spring, Item('percentile_threshold', label='Percentile'),
+                        visible_when='was_executed'
+                        ),
                  UItem('component', editor=ComponentEditor())
                  )
         return v

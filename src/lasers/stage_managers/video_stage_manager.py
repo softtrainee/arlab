@@ -44,6 +44,7 @@ from stage_manager import StageManager
 # from src.mv.autocenter_manager import AutoCenterManager
 # from src.mv.focus.autofocus_manager import AutoFocusManager
 from src.ui.stage_component_editor import VideoComponentEditor
+from src.ui.gui import invoke_in_main_thread
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -300,7 +301,8 @@ class VideoStageManager(StageManager):
     def clean_video_archive(self):
         if self.use_video_archiver:
             self.info('Cleaning video directory')
-            self.video_archiver.clean()
+            invoke_in_main_thread(self.video_archiver.clean)
+#             self.video_archiver.clean()
 
     def _upload(self, path):
         if self.use_media_server and self.auto_upload:
