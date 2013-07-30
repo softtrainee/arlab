@@ -132,8 +132,22 @@ class Pattern(Viewable):
             self.calculate_transit_time()
 
     def calculate_transit_time(self):
-        self.calculated_transit_time = ((self._get_path_length() /
-                                        max(self.velocity, 0.001)) + self._get_delay()) * self.niterations
+        n = self.niterations
+
+        c = -self._get_path_length()
+        b = self.velocity
+
+        acceleration = 1
+        a = 0.5 * acceleration
+#         0 = -c+ b * t + 0.5 * a * t ** 2
+
+        t1 = -b + (b ** 2 - 4 * a * c) / (2.0 * a)
+        t2 = -b - (b ** 2 - 4 * a * c) / (2.0 * a)
+
+        self.calculated_transit_time = (max(t1, t2) + self._get_delay()) * n
+
+#         self.calculated_transit_time = ((self._get_path_length() /
+#                                         max(self.velocity, 0.001)) + self._get_delay()) * self.niterations
 
     def _get_path_length(self):
         return 0
@@ -403,8 +417,8 @@ class PolygonPattern(Pattern):
         return (self.nsides * self.radius *
                 math.sin(math.radians(360 / self.nsides)) + 2 * self.radius)
 
-    def _get_delay(self):
-        return 0.1 * self.nsides
+#     def _get_delay(self):
+#         return 0.1 * self.nsides
 
     def get_parameter_group(self):
         return Group(Item('radius'),

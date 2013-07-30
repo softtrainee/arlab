@@ -37,6 +37,7 @@ from apptools.preferences.preference_binding import bind_preference
 from src.experiment.loading.panes import LoadDockPane, LoadTablePane
 from src.experiment.loading.loading_manager import LoadingManager
 from src.messaging.notify.notifier import Notifier
+from src.lasers.pattern.pattern_maker_view import PatternMakerView
 
 
 class ExperimentEditorTask(EditorTask):
@@ -84,6 +85,15 @@ class ExperimentEditorTask(EditorTask):
                                          ),
                           top=PaneItem('pychron.experiment.controls')
                           )
+
+    def new_pattern(self):
+        pm = PatternMakerView()
+        self.window.application.open_view(pm)
+
+    def open_pattern(self):
+        pm = PatternMakerView()
+        if pm.load_pattern():
+            self.window.application.open_view(pm)
 
     def send_test_notification(self):
         self.debug('sending test notification')

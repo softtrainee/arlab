@@ -39,11 +39,14 @@ from src.loggable import Loggable
 import yaml
 from src.experiment.utilities.human_error_checker import HumanErrorChecker
 from src.helpers.filetools import list_directory
+from src.lasers.pattern.pattern_maker_view import PatternMakerView
+
+
 def EKlass(klass):
     return klass(enter_set=True, auto_set=False)
 
 # class AutomatedRunFactory(Viewable, ScriptMixin):
-class AutomatedRunFactory(Loggable):
+class AutomatedRunFactory(Viewable):
     db = Any
 
     labnumber = String(enter_set=True, auto_set=False)
@@ -83,7 +86,7 @@ class AutomatedRunFactory(Loggable):
                              depends_on='_extract_value')
     _extract_value = Float
     extract_units = Str(NULL_STR)
-    extract_units_names = List(['---', 'watts', 'temp', 'percent'])
+    extract_units_names = List(['', 'watts', 'temp', 'percent'])
     _default_extract_units = 'watts'
 
     extract_group = Int(enter_set=True, auto_set=False)
@@ -97,9 +100,12 @@ class AutomatedRunFactory(Loggable):
     _beam_diameter = Any
 
     pattern = Str
-    patterns = List
-#     patterns = Property
+#     patterns = List
+    patterns = Property(depends_on='_patterns')
+    _patterns = List
 
+    edit_pattern = Event
+    edit_pattern_label = Property(depends_on='pattern')
     #===========================================================================
     # templates
     #===========================================================================
@@ -272,10 +278,18 @@ class AutomatedRunFactory(Loggable):
 #===============================================================================
 # private
 #===============================================================================
+    def _new_pattern(self):
+        pm = PatternMakerView()
+
+        if self._use_pattern():
+            if pm.load_pattern(self.pattern):
+                return pm
+        else:
+            return pm
+
     def _new_template(self):
         template = IncrementalHeatTemplate()
-        if self.template and \
-            self.template not in ('Step Heat Template', LINE_STR):
+        if self._use_template():
             template.load(os.path.join(paths.incremental_heat_template_dir,
                                        '{}.txt'.format(self.template)
                                        )
@@ -618,11 +632,23 @@ post_equilibration_script:name
         self.template = os.path.splitext(self._template.name)[0]
         del self._template
 
+    def _pattern_closed(self):
+        self.load_patterns()
+        self.pattern = os.path.splitext(self._pattern.name)[0]
+        del self._pattern
+
+
     def _edit_template_fired(self):
         temp = self._new_template()
         temp.on_trait_change(self._template_closed, 'close_event')
         self.open_view(temp)
         self._template = temp
+
+    def _edit_pattern_fired(self):
+        pat = self._new_pattern()
+        pat.on_trait_change(self._pattern_closed, 'close_event')
+        self.open_view(pat)
+        self._pattern = pat
 
     def _edit_mode_button_fired(self):
         self.edit_mode = not self.edit_mode
@@ -779,18 +805,26 @@ post_equilibration_script:name
         else:
             self.extract_units = NULL_STR
 
+    def _get_edit_pattern_label(self):
+        return 'Edit' if self._use_pattern() else 'New'
+
+    def _use_pattern(self):
+        return self.pattern and not self.pattern in (LINE_STR,)
+
     def _use_template(self):
         return self.template and not self.template in ('Step Heat Template', LINE_STR)
 
     def _get_edit_template_label(self):
         return 'Edit' if self._use_template() else 'New'
-
 #     @cached_property
-#     def _get_patterns(self):
-#         p = paths.pattern_dir
-#         extension = '.lp,.txt'
-#         patterns = self._ls_directory(p, extension)
-#         return ['', ] + patterns
+    def _get_patterns(self):
+        return self._patterns
+
+    def set_patterns(self, ps):
+        p = paths.pattern_dir
+        extension = '.lp'
+        patterns = list_directory(p, extension)
+        self._patterns = ['', ] + ps + [LINE_STR] + patterns
 
 #     @cached_property
     def _get_templates(self):
@@ -952,7 +986,6 @@ post_equilibration_script:name
         for si in SCRIPT_NAMES:
             script = getattr(self, si)
             setattr(script, name, new)
-
 
     def _script_factory(self, label, name, kind='ExtractionLine'):
         return Script(label=label,

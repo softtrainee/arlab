@@ -28,7 +28,7 @@ from src.paths import paths
 from src.pyscripts.valve_pyscript import ValvePyScript
 from src.constants import MEASUREMENT_COLOR
 
-estimated_duration_ff = 1.35
+estimated_duration_ff = 1
 
 
 
@@ -124,17 +124,17 @@ class MeasurementPyScript(ValvePyScript):
         '''
             if detector is not none then it is peak hopped
         '''
-        if calc_time:
-            if not detector:
-                ns = ncounts
-            else:
-                ns = ncounts * cycles
-
-            self._estimated_duration += ns * estimated_duration_ff
-            return
-
         if self.abbreviated_count_ratio:
             ncounts *= self.abbreviated_count_ratio
+
+        if calc_time:
+            if not detector:
+                ns = ncounts * cycles
+            else:
+                ns = ncounts
+
+            self._estimated_duration += ns * estimated_duration_ff + settling_time
+            return
 
         self.ncounts = ncounts
         if not self._automated_run_call('py_baselines', ncounts,
@@ -191,7 +191,7 @@ class MeasurementPyScript(ValvePyScript):
     @command_register
     def peak_center(self, detector='AX', isotope='Ar40', period=850, calc_time=False):
         if calc_time:
-            self._estimated_duration += 45
+            self._estimated_duration += 36
             return
 
         self._automated_run_call('py_peak_center', detector=detector,

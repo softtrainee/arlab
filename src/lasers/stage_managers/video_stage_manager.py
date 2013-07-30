@@ -301,8 +301,8 @@ class VideoStageManager(StageManager):
     def clean_video_archive(self):
         if self.use_video_archiver:
             self.info('Cleaning video directory')
-            invoke_in_main_thread(self.video_archiver.clean)
-#             self.video_archiver.clean()
+
+            self.video_archiver.clean(spawn_process=False)
 
     def _upload(self, path):
         if self.use_media_server and self.auto_upload:

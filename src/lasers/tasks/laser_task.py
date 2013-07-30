@@ -69,15 +69,17 @@ class FusionsTask(BaseLaserTask):
             if pc:
                 self.window.application.open_view(pc)
 
-    def open_pattern(self):
-        if self.manager:
-            self.manager.open_pattern_maker()
-    def new_pattern(self):
-        if self.manager:
-            self.manager.new_pattern_maker()
-    def execute_pattern(self):
-        if self.manager:
-            self.manager.execute_pattern()
+#     def open_pattern(self):
+#         if self.manager:
+#             self.manager.open_pattern_maker()
+#
+#     def new_pattern(self):
+#         if self.manager:
+#             self.manager.new_pattern_maker()
+#
+#     def execute_pattern(self):
+#         if self.manager:
+#             self.manager.execute_pattern()
 
     def open_power_map(self):
         if self.manager:

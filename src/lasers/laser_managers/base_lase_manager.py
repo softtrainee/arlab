@@ -98,16 +98,16 @@ class BaseLaserManager(Manager):
         patterns = list_directory(p, extension)
         return ['', ] + patterns
 
-    def new_pattern_maker(self):
-        pm = PatternMakerView()
-        self.open_view(pm)
-
-    def open_pattern_maker(self):
-        pm = PatternMakerView(
-                              executor=self.pattern_executor
-                              )
-        if pm.load_pattern():
-            self.open_view(pm)
+#     def new_pattern_maker(self):
+#         pm = PatternMakerView()
+#         self.open_view(pm)
+#
+#     def open_pattern_maker(self):
+#         pm = PatternMakerView(
+#                               executor=self.pattern_executor
+#                               )
+#         if pm.load_pattern():
+#             self.open_view(pm)
 
     def execute_pattern(self, name=None, block=False):
         pm = self.pattern_executor
@@ -189,7 +189,7 @@ class BaseLaserManager(Manager):
             sm.stage_controller.parent = sm
             if self.plugin_id:
                 sm.bind_preferences(self.plugin_id)
-            sm.visualizer = self.stage_manager.visualizer
+#             sm.visualizer = self.stage_manager.visualizer
 
             sm.load()
 

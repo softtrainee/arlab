@@ -159,7 +159,7 @@ extract_device, delay_+, tray, username, load_name]''')
         self.run_factory = self._run_factory_factory()
 #         self.run_factory.update_templates_needed = True
         self.run_factory.load_templates()
-        self.run_factory.patterns = self._get_patterns(ed)
+        self.run_factory.set_patterns(self._get_patterns(ed))
         if self.queue:
             self.queue.set_extract_device(ed)
 

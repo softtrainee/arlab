@@ -131,11 +131,11 @@ class PychronLaserManager(BaseLaserManager):
 #
 #            return True
 
-    def _execute_pattern(self, name):
+    def _execute_pattern(self, pat):
         '''
         '''
-#        name = pattern.name
-        self.info('executing pattern {}'.format(name))
+#        pat = pattern.pat
+        self.info('executing pattern {}'.format(pat))
 #        pm = self.pattern_executor
 
 #        pm.start()
@@ -145,15 +145,15 @@ class PychronLaserManager(BaseLaserManager):
 #        if xyz:
 #            pm.set_current_position(*xyz)
 #        '''
-#            look for pattern name in local pattern dir
+#            look for pattern pat in local pattern dir
 #            if exists send the pickled pattern string instead of
-#            the name
+#            the pat
 #        '''
-#        if pm.is_local_pattern(name):
-#            txt = pickle.dumps(pattern)
-#            msg = 'DoPattern <local pickle> {}'.format(name)
+#         if pm.is_local_pattern(pat):
+#             txt = pickle.dumps(pattern)
+#             msg = 'DoPattern <local pickle> {}'.format(pat)
 #        else:
-#            msg = 'Do Pattern {}'.format(name)
+#            msg = 'Do Pattern {}'.format(pat)
 
 
 #        '''
@@ -161,10 +161,16 @@ class PychronLaserManager(BaseLaserManager):
 #            if is local pattern then txt is a binary str
 #            log msg instead of cmd
 #        '''
-        if not name.endswith('.lp'):
-            name = '{}.lp'.format(name)
 
-        cmd = 'DoPattern {}'.format(name)
+        if not pat.endswith('.lp'):
+            pat = '{}.lp'.format(pat)
+
+        path = os.path.join(paths.pattern_dir, pat)
+        if os.path.isfile(path):
+            self.debug('Using local pattern {}'.format(pat))
+            pat = pickle.dumps(path)
+
+        cmd = 'DoPattern {}'.format(pat)
         self._ask(cmd, verbose=False)
 #        self._communicator.info(msg)
 

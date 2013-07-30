@@ -15,6 +15,7 @@
 #===============================================================================
 
 from traits.etsconfig.etsconfig import ETSConfig
+import os
 ETSConfig.toolkit = 'qt4'
 
 #============= enthought library imports =======================
@@ -42,41 +43,45 @@ class PatternMakerView(Saveable, Patternable):
                         depends_on='_kind')
     _kind = Str('CircularContour')
 
-    executor = Any
-    execute_button = Button('Execute')
+#     executor = Any
+#     execute_button = Button('Execute')
 #     execute_button = Event
-    execute_label = Property(depends_on='executor._alive')
-    execute_enabled = Property
-    def _get_execute_enabled(self):
+#     execute_label = Property(depends_on='executor._alive')
+#     execute_enabled = Property
+#     def _get_execute_enabled(self):
 #         if self.executor:
 #             if self.pattern.name:
-        return self.executor and self.pattern.name
+#         return self.executor and self.pattern.name
 
-    def _get_execute_label(self):
-        if self.executor:
-            return 'Stop' if self.executor.isPatterning() else 'Start'
-        else:
-            return 'Start'
+#     def _get_execute_label(self):
+#         if self.executor:
+#             return 'Stop' if self.executor.isPatterning() else 'Start'
+#         else:
+#             return 'Start'
 
-    def _execute_button_fired(self):
-        if self.executor:
-            if self.executor.isPatterning():
-                self.executor.stop()
-            else:
+#     def _execute_button_fired(self):
+#         if self.executor:
+#             if self.executor.isPatterning():
+#                 self.executor.stop()
+#             else:
 
-                self.executor.load_pattern(self.pattern.name)
-                self.executor.execute(block=False)
+#                 self.executor.load_pattern(self.pattern.name)
+#                 self.executor.execute(block=False)
 
-    def load_pattern(self):
-        p = self.open_file_dialog(default_directory=paths.pattern_dir)
-        if p:
-            with open(p, 'r') as fp:
-                pattern = self._load_pattern(fp, p)
+    def load_pattern(self, path=None):
+        if path is None:
+            path = self.open_file_dialog(default_directory=paths.pattern_dir)
+        elif not os.path.isfile(path):
+            path = os.path.join(paths.pattern_dir, path)
+
+        if path and os.path.isfile(path):
+            with open(path, 'r') as fp:
+                pattern = self._load_pattern(fp, path)
                 if pattern:
                     self._kind = pattern.__class__.__name__.replace('Pattern', '')
                     return True
 
-            self.warning_dialog('{} is not a valid pattern file'.format(p))
+            self.warning_dialog('{} is not a valid pattern file'.format(path))
 
     @on_trait_change('pattern:+')
     def pattern_dirty(self):
@@ -106,13 +111,13 @@ class PatternMakerView(Saveable, Patternable):
                  Item('pattern_name',
                       style='readonly', show_label=False),
                  Item('kind', show_label=False),
-                 HGroup(Item('execute_button',
-                             show_label=False,
-                             editor=ButtonEditor(label_value='execute_label'),
-                             enabled_when='execute_enabled'
-                             ),
-                        spring,
-                        ),
+#                  HGroup(Item('execute_button',
+#                              show_label=False,
+#                              editor=ButtonEditor(label_value='execute_label'),
+#                              enabled_when='execute_enabled'
+#                              ),
+#                         spring,
+#                         ),
                  Item('pattern',
                       style='custom',
                       editor=InstanceEditor(view='maker_view'),
