@@ -85,7 +85,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def add_load_position(self, labnumber, **kw):
         lp = loading_PositionsTable(**kw)
-        
+
         ln = self.get_labnumber(labnumber)
         if ln:
             lp.lab_identifier = ln.identifier
@@ -149,7 +149,8 @@ class IsotopeAdapter(DatabaseAdapter):
         history = getattr(self, 'get_{}_history'.format(key))(history)
         if history:
             try:
-                getattr(history, key).append(item)
+                item.history_id = history.id
+#                 getattr(history, key).append(item)
             except AttributeError, e:
                 self.debug('add_series_item key={}, error={}'.format(key, e))
                 setattr(history, key, item)
