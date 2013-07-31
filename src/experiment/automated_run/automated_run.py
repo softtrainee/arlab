@@ -644,26 +644,33 @@ anaylsis_type={}
 #            self._measurement_script.truncate()
 #        elif style == 'Quick':
 #            self._measurement_script.truncate('quick')
+    def cleanup(self):
+        self.db.reset()
 
-    def finish(self):
-#        del self.info_display
+        del self.signals
+        del self._processed_signals_dict
         if self.plot_panel:
             self.plot_panel.automated_run = None
-#            self.plot_panel.on_trait_change(self._plot_panel_closed,
-#                                            'close_event', remove=True)
-#            self.plot_panel.close_ui()
 
-#            del self.plot_panel
+        del self.monitor
+        del self.peak_center
 
-#        if self.peak_plot_panel:
-#            self.peak_plot_panel.close_ui()
+        del self.measurement_script
+        del self.extraction_script
+        del self.post_equilibration_script
+        del self.post_measurement_script
+        del self.extraction_line_manager
+        del self.ion_optics_manager
+        del self.termination_conditions
+        del self.truncation_conditions
+        del self.action_conditions
 
-#        if self.peak_plot_panel:
-#            self.peak_plot_panel.close_ui()
+        self.data_manager.close_file()
+
+    def finish(self):
 
         if self.peak_center:
             self.peak_center.graph.close_ui()
-#            del self.peak_center
 
         if self.coincidence_scan:
             self.coincidence_scan.graph.close_ui()
@@ -673,6 +680,7 @@ anaylsis_type={}
 
         if self.state not in ('not run', 'canceled', 'success', 'truncated'):
             self.state = 'failed'
+
 
     def info(self, msg, color=None, *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
@@ -1388,7 +1396,7 @@ anaylsis_type={}
             self.warning('could not process isotope signals. saving to database')
             return
 
-        self._processed_signals_dict = ss
+#         self._processed_signals_dict = ss
 
         ln = self.labnumber
 #        ln = convert_identifier(ln)
@@ -1543,8 +1551,6 @@ anaylsis_type={}
 
         return self._time_save(func, 'sensitivity')
 
-
-
     def _save_peak_center(self, analysis, tab):
         self.info('saving peakcenter')
         def func():
@@ -1648,8 +1654,10 @@ anaylsis_type={}
 
             self.info('{} adding detector intercalibration history for {}'.format(user, self.runid))
 
+            tt = time.time()
             history = db.add_detector_intercalibration_history(analysis, user=user)
-            db.flush()
+            self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% add detector history save time ={}'.format(time.time() - tt))
+#             db.flush()
             analysis.selected_histories.selected_detector_intercalibration = history
             uv, ue = ic.nominal_value, ic.std_dev
             db.add_detector_intercalibration(history, 'CDD',
