@@ -324,10 +324,10 @@ class KerrMotor(KerrDevice, ConsumerMixin):
     def _home_button_fired(self):
 #         self.progress = myProgressDialog(max=2)
 #         self.progress.open()
-        self.home_status = 0
+        self.home_status = 1
         self._home_motor()
         self.load_data_position()
-        self.home_status = 1
+        self.home_status = 2
         self.information_dialog('Homing Complete')
         self.home_status = 0
 
@@ -403,7 +403,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 
         while not self.parent.simulation:
 
-            steps = self.load_data_position()
+            steps = self.load_data_position(set_pos=False)
 #             steps = self._get_motor_position(verbose=True)
 #             print 'ffff', steps
             if progress is not None:
@@ -698,7 +698,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                          HGroup(
                                 Item('home_status',
                                       show_label=False,
-                                     editor=ProgressEditor(min=0, max=1,
+                                     editor=ProgressEditor(min=0, max=2,
 
                                                            )),
                                 Item('home_button', show_label=False), spring)
