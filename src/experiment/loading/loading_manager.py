@@ -214,7 +214,9 @@ class LoadingManager(IsotopeDatabaseManager):
             loadtable = self.db.get_loadtable(loadtable)
 
         self.positions = []
-        self.tray = loadtable.holder_.name
+        if loadtable.holder_:
+            self.tray = loadtable.holder_.name
+            
         for ln, poss in groupby(loadtable.loaded_positions,
                                         key=lambda x:x.lab_identifier):
             pos = []

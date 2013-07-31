@@ -644,28 +644,31 @@ anaylsis_type={}
 #            self._measurement_script.truncate()
 #        elif style == 'Quick':
 #            self._measurement_script.truncate('quick')
-    def cleanup(self):
-        self.db.reset()
-
-        del self.signals
-        del self._processed_signals_dict
+    def teardown(self):
         if self.plot_panel:
             self.plot_panel.automated_run = None
 
-        del self.monitor
-        del self.peak_center
-
-        del self.measurement_script
-        del self.extraction_script
-        del self.post_equilibration_script
-        del self.post_measurement_script
-        del self.extraction_line_manager
-        del self.ion_optics_manager
-        del self.termination_conditions
-        del self.truncation_conditions
-        del self.action_conditions
-
-        self.data_manager.close_file()
+#         for attr in ('signals'):
+            
+        if self.signals: 
+            del self.signals
+        if self._processed_signals_dict:
+            del self._processed_signals_dict
+#         del self.monitor
+#         del self.peak_center
+# 
+#         del self.measurement_script
+#         del self.extraction_script
+#         del self.post_equilibration_script
+#         del self.post_measurement_script
+#         del self.extraction_line_manager
+#         del self.ion_optics_manager
+#         del self.termination_conditions
+#         del self.truncation_conditions
+#         del self.action_conditions
+#     def _del(self,p):
+#         try:
+#             del p
 
     def finish(self):
 
@@ -1139,8 +1142,8 @@ anaylsis_type={}
 #        self.debug('fs {}'.format(fs))
         return fs
 
-    def _write_iteration(self, grpname, data_write_hook, fits, refresh, graph,
-                         series):
+    def _write_iteration(self, grpname, data_write_hook, 
+                         series, fits, refresh, graph):
 
         dets = self._active_detectors
         def _write(data):
@@ -1186,7 +1189,7 @@ anaylsis_type={}
 
         consumer = ConsumerMixin()
         consumer.setup_consumer(self._write_iteration(grpname, data_write_hook,
-                                                      fits, refresh, graph))
+                                                      series, fits, refresh, graph))
 
         self._total_counts += ncounts
         mi, ma = graph.get_x_limits()
@@ -1344,20 +1347,17 @@ anaylsis_type={}
 
     def _post_extraction_save(self):
 
-
-        ext = self._save_extraction()
-        self._db_extraction = ext
-
         db = self.db
-
         loadtable = db.get_loadtable(self.load_name)
         if loadtable is None:
             loadtable = db.add_load(self.load_name)
             db.flush()
 
-        lp = db.add_load_position(self.labnumber)
-        loadtable.measured_positions.append(lp)
-
+        ext = self._save_extraction(loadtable=loadtable)
+        
+        db.commit()
+        self._db_extraction_id = ext.id
+    
     def _pre_measurement_save(self):
         self.info('pre measurement save')
         dm = self.data_manager
@@ -1378,7 +1378,7 @@ anaylsis_type={}
 
     def _post_measurement_save(self):
         self.info('post measurement save')
-
+        
         if not self._save_enabled:
             self.info('Database saving disabled')
             return
@@ -1396,7 +1396,7 @@ anaylsis_type={}
             self.warning('could not process isotope signals. saving to database')
             return
 
-#         self._processed_signals_dict = ss
+        self._processed_signals_dict = ss
 
         ln = self.labnumber
 #        ln = convert_identifier(ln)
@@ -1449,15 +1449,17 @@ anaylsis_type={}
 
             # save extraction
 #             ext = self._save_extraction(a)
-            ext = self._db_extraction
-            a.extraction = ext
-
+            ext = self._db_extraction_id
+            print ext
+            dbext=db.get_extraction(ext, key='id')
+            
+            a.extractio_id = dbext.id
 
             # save measurement
             meas = self._save_measurement(a)
 
             # save sensitivity info to extraction
-            self._save_sensitivity(ext, meas)
+            self._save_sensitivity(dbext, meas)
 
             self._save_spectrometer_info(meas)
 
@@ -1485,10 +1487,11 @@ anaylsis_type={}
 
             self.debug('pychron save time= {:0.3f} '.format(time.time() - pt))
 
-        # save to massspec
-        mt = time.time()
-        self._save_to_massspec()
-        self.debug('mass spec save time= {:0.3f}'.format(time.time() - mt))
+        if self.massspec_importer.db.connected:
+            # save to massspec
+            mt = time.time()
+            self._save_to_massspec()
+            self.debug('mass spec save time= {:0.3f}'.format(time.time() - mt))
 
     def _preliminary_processing(self, p):
         self.info('organizing data for database save')
@@ -1584,7 +1587,7 @@ anaylsis_type={}
             return meas
         return self._time_save(func, 'measurement')
 
-    def _save_extraction(self, analysis=None):
+    def _save_extraction(self, analysis=None, loadtable=None):
         self.info('saving extraction')
         def func():
             db = self.db
@@ -1613,13 +1616,19 @@ anaylsis_type={}
             for pi in self.get_position_list():
                 if isinstance(pi, tuple):
                     if len(pi) > 1:
-                        db.add_analysis_position(ext, x=pi[0], y=pi[1])
+                        
                         if len(pi) == 3:
-                            db.add_analysis_position(ext, x=pi[0], y=pi[1], z=pi[2])
+                            dbpos=db.add_analysis_position(ext, x=pi[0], y=pi[1], z=pi[2])
+                        else:
+                            dbpos=db.add_analysis_position(ext, x=pi[0], y=pi[1])
 
                 else:
-                    db.add_analysis_position(ext, pi)
-
+                    dbpos=db.add_analysis_position(ext, pi)
+            
+                if loadtable:
+#                 lp = db.add_load_position(self.labnumber)
+                    loadtable.measured_positions.append(dbpos)
+                
             return ext
         return self._time_save(func, 'extraction')
 
@@ -1630,9 +1639,10 @@ anaylsis_type={}
             if self.spectrometer_manager:
                 spec_dict = self.spectrometer_manager.make_parameters_dict()
                 db.add_spectrometer_parameters(meas, spec_dict)
-                for det, deflection in self.spectrometer_manager.make_deflections_dict().iteritems():
+                for det, deflection in spec_dict.iteritems():
                     det = db.add_detector(det)
                     db.add_deflection(meas, det, deflection)
+                    
         return self._time_save(func, 'spectrometer_info')
 
     def _save_detector_intercalibration(self, analysis):
