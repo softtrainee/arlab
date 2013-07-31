@@ -153,6 +153,7 @@ class IsotopeDatabaseManager(Manager):
             for ai in ans:
                 msg = 'loading {}'.format(ai.record_id)
                 progress.change_message(msg)
+                self.debug(msg)
 
                 func(ai)
                 progress.increment()

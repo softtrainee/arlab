@@ -87,7 +87,6 @@ class Series(Plotter):
         y = array(y)
         y = y[::-1]
 #         y *= (1 / options.scalar)
-
         plot, scatter, _l = g.new_series(x, y,
                                         display_index=ArrayDataSource(data=ox),
                                         type='scatter',
@@ -134,11 +133,16 @@ class Series(Plotter):
                 v, e = u.nominal_value, u.std_dev
                 v = e / float(v * v) * 100
                 v = math.log(v)
-                return a.timestamp, v, 0
+                return a.timestamp, v, 1e-20
         else:
             def get_v(a):
                 v = a.get_signal_value(k)
-                return a.timestamp, v.nominal_value, v.std_dev
+                if v:
+                    n,e= v.nominal_value, v.std_dev
+                else:
+                    n,e=0,1e-20
+                return a.timestamp,n,e
+            
         return zip(*[get_v(ai) for ai in analyses])
 
 #     def get_value(self, analysis, k):

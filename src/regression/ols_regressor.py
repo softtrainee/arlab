@@ -46,7 +46,8 @@ class OLSRegressor(BaseRegressor):
 #            self._ols = OLS(ys, vander(xs, self.degree + 1))
 #            self._result = self._ols.fit()
     def __degree_changed(self):
-        self.calculate()
+        if self._degree:
+            self.calculate()
 
     def calculate(self):
         '''

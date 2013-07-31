@@ -34,6 +34,7 @@ from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     BatchEditAction, RefitIsotopeEvolutionAction, SCLFTableAction
 from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
 from pyface.tasks.action.schema import SMenu
+from src.processing.tasks.figures.auto_figure_preferences import AutoFigurePreferencesPane
 # from launchers.password_gen import args
 
 #============= standard library imports ========================
@@ -179,4 +180,8 @@ class ProcessingPlugin(BaseTaskPlugin):
 #    def _task_factory(self):
 # #        processor = self.application.get_service(Processor)
 #        return ProcessingTask(manager=self._processor_factory())
+
+    def _preferences_panes_default(self):
+        return [AutoFigurePreferencesPane,
+                ]
 #============= EOF =============================================

@@ -294,7 +294,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
         fy = r.predict(fx)
         ci = r.calculate_ci(fx)
-
         if ci is not None:
             ly, uy = ci
         else:
@@ -379,7 +378,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                                     degree=fit)
         if apply_filter:
             r = self._apply_outlier_filter(r, ox, oy, index, fod)
-
 
         return r
 
