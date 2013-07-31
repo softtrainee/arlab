@@ -597,17 +597,19 @@ class IsotopeAdapter(DatabaseAdapter):
                                                   **params)
 
         if meas:
-            sp.measurements.append(meas)
+            meas.spectrometer_parameters_id=sp.id
 
         return sp
 
     def add_deflection(self, meas, det, value):
         sp = meas_SpectrometerDeflectionsTable(deflection=value)
         if meas:
-            meas.deflections.append(sp)
+            sp.measurement_id=meas.id
+#             meas.deflections.append(sp)
             det = self.get_detector(det)
             if det:
-                det.deflections.append(sp)
+                sp.detector_id=det.id
+#                 det.deflections.append(sp)
 
         return sp
 
@@ -761,7 +763,10 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_experiment(self, value, key='name'):
         return self._retrieve_item(meas_ExperimentTable, value, key)
-
+    
+    def get_extraction(self, value, key='id'):
+        return self._retrieve_item(meas_ExtractionTable, value, key)
+    
 #    def get_extraction(self, value):
 #        return self._retrieve_item(meas_ExtractionTable, value, key='hash')
 

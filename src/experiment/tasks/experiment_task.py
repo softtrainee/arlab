@@ -99,7 +99,7 @@ class ExperimentEditorTask(EditorTask):
         self.debug('sending test notification')
         db = self.manager.db
 #         an=db.get_last_analysis('bu-FD-o')
-        an = db.get_last_analysis('22598')
+        an = db.get_last_analysis('ba-01-o')
         an = self.manager.make_analyses([an])[0]
         if an:
             self.debug('test push {}'.format(an.record_id))
@@ -398,7 +398,8 @@ class ExperimentEditorTask(EditorTask):
             self._publish_notification(new)
 
         load_name = self.manager.executor.experiment_queue.load_name
-        self._update_load(load_name)
+        if load_name:
+            self._update_load(load_name)
 
     @on_trait_change('manager:add_queues_flag')
     def _add_queues(self, new):

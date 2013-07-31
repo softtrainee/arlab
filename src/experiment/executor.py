@@ -285,7 +285,8 @@ class ExperimentExecutor(Experimentable):
         else:
             if self._end_flag:
                 self._end_flag.set()
-            self.extraction_state_label = ''
+            invoke_in_main_thread(self.trait_set, extraction_state_label='')
+#             self.extraction_state_label = ''
 
 #        if state:
 # #            self.end_flag
@@ -675,7 +676,7 @@ class ExperimentExecutor(Experimentable):
                             self._prev_blanks = pb
 
                 self._report_execution_state(run)
-                run.cleanup()
+                run.teardown()
 
             if self.end_at_run_completion:
                 break
@@ -715,7 +716,7 @@ class ExperimentExecutor(Experimentable):
         run = self._setup_automated_run(cnt, run)
         run.pre_extraction_save()
         self.info('========== {} =========='.format(run.runid))
-
+        from threading import Thread 
         ta = Thread(name=run.runid,
                    target=self._do_automated_run,
                    args=(run,)
@@ -814,10 +815,10 @@ class ExperimentExecutor(Experimentable):
                     self.err_message = 'Extraction Failed'
                     self._alive = False
 
-                self.extraction_state_label = ''
+                invoke_in_main_thread(self.trait_set, extraction_state_label = '')
                 return
 
-            self.extraction_state_label = ''
+            invoke_in_main_thread(self.trait_set, extraction_state_label = '')
             return True
 
         def measurement():
@@ -911,11 +912,16 @@ class ExperimentExecutor(Experimentable):
     def _end_runs(self):
 #         self._last_ran = None
         self.stats.stop_timer()
-        self.extraction_state = False
-        self.extraction_state_color = 'green'
-        self.extraction_state_label = '{} Finished'.format(self.experiment_queue.name)
 
         self.db.reset()
+        
+        def _set_extraction_state():
+            self.extraction_state = False
+            self.extraction_state_color = 'green'
+            self.extraction_state_label = '{} Finished'.format(self.experiment_queue.name)
+        invoke_in_main_thread(_set_extraction_state)
+        
+        
 
 #     def _get_all_automated_runs(self):
 #         ans = super(ExperimentExecutor, self)._get_all_automated_runs()
