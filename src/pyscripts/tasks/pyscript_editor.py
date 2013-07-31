@@ -153,7 +153,7 @@ class PyScriptEditor(Editor):
     kind = String
     commands = Property(depends_on='kind')
 
-    auto_detab = True
+    auto_detab = Bool(True)
     highlight_line = Int
     trace_delay = Int  # ms
 
@@ -251,27 +251,24 @@ class PyScriptEditor(Editor):
         else:
             text = ''
 
-
         if self.auto_detab:
             text = self._detab(text)
-
+            self.save(path, text)
         self.control.code.setPlainText(text)
-
 
         self.dirty = False
 
-    def dump(self, path):
-        with open(path, 'w') as fp:
+    def dump(self, path, txt=None):
+        if txt is None:
             txt = self.getText()
-            if txt:
+        if txt:
+            with open(path, 'w') as fp:
                 fp.write(txt)
     save = dump
 #    def save(self, path):
 #        self.dump(path)
     def _detab(self, txt):
-        return txt.replace('\t', '    ')
-
-
+        return txt.replace('\t', ' ' * 4)
 
 class MeasurementEditor(PyScriptEditor):
 #    editor = Instance(MeasurementParameterEditor, ())

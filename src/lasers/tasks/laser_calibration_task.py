@@ -111,6 +111,14 @@ class LaserCalibrationTask(BaseLaserTask):
         if block:
             self.active_editor.block()
 
+#    def execute_last_editor(self, block=False):
+#        editor = self.editor_area.editors[-1]
+#        if editor.do_execute(self.manager):
+#            self.executing = True
+#
+#        if block:
+#            self.editor.block()
+
     def _execute_changed(self):
         if self.active_editor:
             if self.executing:

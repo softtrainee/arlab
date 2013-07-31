@@ -32,6 +32,7 @@ class LaserPyScript(ExtractionPyScript):
     @verbose_skip
     @command_register
     def power_map(self, *args, **kw):
+        self._task = None
         self.debug('Opening power map task')
         invoke_in_main_thread(self._open_power_map, *args)
 
@@ -42,7 +43,7 @@ class LaserPyScript(ExtractionPyScript):
         self._task.execute_active_editor(block=True)
         self.debug('power mapping complete')
 
-    def _open_power_map(self, cx, cy, padding, bd, power):
+    def _open_power_map(self, cx, cy, padding, step_length, bd, power):
         app = self.application
         task = app.open_task('pychron.laser.calibration')
         task.new_power_map()
@@ -51,6 +52,7 @@ class LaserPyScript(ExtractionPyScript):
                                             beam_diameter=bd,
                                             padding=padding,
                                             request_power=power,
+                                            step_length=step_length
                                             )
         self._task = task
 
