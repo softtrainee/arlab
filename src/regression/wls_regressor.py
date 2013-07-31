@@ -38,10 +38,9 @@ class WeightedPolynomialRegressor(OLSRegressor):
         xs = asarray(xs)
         es = asarray(self.yserr)
         ys = self.ys
-
         X = self._get_X()
         self._wls = WLS(ys, X,
-                        weights=1 / es ** 2
+                        weights=1 / es
                         )
         self._result = self._wls.fit()
 

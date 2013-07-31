@@ -33,18 +33,21 @@ from src.processing.plotters.spectrum import Spectrum
 from src.processing.plotters.ideogram import Ideogram
 from src.processing.plotters.inverse_isochron import InverseIsochron
 from src.processing.plotters.series import Series
+from src.database.core.query import compile_query
 
 
 class Processor(IsotopeDatabaseManager):
     def load_series(self, analysis_type, ms, ed, weeks=0, days=0, hours=0):
+        self.debug('{} {} {}'.format(analysis_type, ms, ed))
         db = self.db
         sess = db.get_session()
         q = sess.query(meas_AnalysisTable)
         q = q.join(meas_MeasurementTable)
-        q = q.join(meas_ExtractionTable)
         q = q.join(gen_AnalysisTypeTable)
         q = q.join(gen_MassSpectrometerTable)
-        q = q.join(gen_ExtractionDeviceTable)
+        if ed:
+            q = q.join(meas_ExtractionTable)
+            q = q.join(gen_ExtractionDeviceTable)
 #         q = q.join(gen_LabTable)
 
         d = datetime.today()
@@ -60,6 +63,7 @@ class Processor(IsotopeDatabaseManager):
 #             print ed
             q = q.filter(gen_ExtractionDeviceTable.name == ed)
 
+        self.debug(compile_query(q))
         return self._make_analyses_from_query(q)
 
 
@@ -84,6 +88,7 @@ class Processor(IsotopeDatabaseManager):
         ans = None
         try:
             ans = q.all()
+            self.debug('{}'.format(ans))
         except Exception, e:
             import traceback
             traceback.print_exc()

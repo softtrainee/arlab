@@ -25,6 +25,7 @@ from src.processing.tasks.figures.figure_editor import IdeogramEditor, \
 from src.processing.tasks.figures.auto_figure_panes import AutoFigureControlPane
 from src.messaging.notify.subscriber import Subscriber
 from src.ui.gui import invoke_in_main_thread
+from apptools.preferences.preference_binding import bind_preference
 # from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -42,7 +43,13 @@ class AutoFigureTask(FigureTask):
     
     host=Str('129.138.12.141')
     port=Int(8101)
-    
+    def __init__(self, *args, **kw):
+        super(AutoFigureTask,self).__init__(*args, **kw)
+        
+        bind_preference(self, 'host', 'pychron.auto_figure.host')
+        bind_preference(self, 'port', 'pychron.auto_figure.port')
+        
+        
     def activated(self):
         if not self.attached:
 
@@ -51,13 +58,16 @@ class AutoFigureTask(FigureTask):
                 
                 allow to save and select from favorites    
             '''
+            sub_str='RunAdded'
+            self.info('starting subscription to {}:{} "{}"'.format(self.host, self.port, sub_str))
             sub = Subscriber(host=self.host,
-                                  port=self.port)
+                             port=self.port)
             sub.connect()
-            sub.subscribe('RunAdded')
+            sub.subscribe(sub_str)
             sub.listen(self.sub_refresh_plots)
             
     def sub_refresh_plots(self, last_run):
+        self.manager.db.reset()
         invoke_in_main_thread(self.refresh_plots, last_run)
         
     def refresh_plots(self, last_run):
@@ -70,6 +80,7 @@ class AutoFigureTask(FigureTask):
         '''
         if isinstance(last_run, (str, unicode)):
             args = self._get_args(last_run)
+            self.debug('{} {}'.format(args, last_run))
             if args:
                 ln, at, sample, eg, al, ms, ed = args
             else:
@@ -103,7 +114,10 @@ class AutoFigureTask(FigureTask):
             eg = an.step
             al = an.aliquot
             ms = an.measurement.mass_spectrometer.name
-            ed = an.extraction.extraction_device.name
+            if an.extraction:
+                ed = an.extraction.extraction_device.name
+            else:
+                ed=''
 
             return ln, at, sample, eg, al, ms, ed
 
@@ -122,7 +136,6 @@ class AutoFigureTask(FigureTask):
             days, hours = afc.days, afc.hours
         else:
             days, hours = 1, 0
-
         self.plot_series(ln, at, ms, ed,
                          days=days, hours=hours)
 
@@ -162,7 +175,6 @@ class AutoFigureTask(FigureTask):
         else:
             unks = self.manager.load_series(at, ms, ed,
                                             **kw)
-            
             if unks:
                 self.manager.load_analyses(unks)
                 self.new_series(unks, klass,
