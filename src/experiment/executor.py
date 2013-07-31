@@ -675,6 +675,7 @@ class ExperimentExecutor(Experimentable):
                             self._prev_blanks = pb
 
                 self._report_execution_state(run)
+                run.cleanup()
 
             if self.end_at_run_completion:
                 break
@@ -911,9 +912,9 @@ class ExperimentExecutor(Experimentable):
 #         self._last_ran = None
         self.stats.stop_timer()
         self.extraction_state = False
-        self.extraction_state_color='green'
+        self.extraction_state_color = 'green'
         self.extraction_state_label = '{} Finished'.format(self.experiment_queue.name)
-        
+
         self.db.reset()
 
 #     def _get_all_automated_runs(self):
