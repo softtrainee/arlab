@@ -24,7 +24,7 @@ from src.displays.gdisplays import gLoggerDisplay
 #============= local library imports  ==========================
 
 class LoggerTask(BaseTask):
-
+    name = 'Logger'
     def create_central_pane(self):
         return DisplayPane(logger=gLoggerDisplay)
 #============= EOF =============================================
