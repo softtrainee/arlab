@@ -372,7 +372,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
                 import traceback
                 self.debug(traceback.format_exc())
                 sess.rollback()
-                return __retrieve()
+#                 return __retrieve()
 
             except MultipleResultsFound:
                 self.debug('multiples row found for {} {} {}. Trying to get last row'.format(table.__tablename__, key, value))
@@ -387,7 +387,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             except NoResultFound:
                 self.debug('no row found for {} {} {}'.format(table.__tablename__, key, value))
 
-        # __retrieve is recursively called if a StatementError is raised
+        # no longer true: __retrieve is recursively called if a StatementError is raised
         return __retrieve()
 
     @deprecated

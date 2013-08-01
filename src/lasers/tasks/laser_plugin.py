@@ -235,8 +235,10 @@ class FusionsDiodePlugin(FusionsPlugin):
             return OpenAutoTunerAction(self._get_manager())
 
         exts = super(FusionsDiodePlugin, self)._my_task_extensions_default()
-        return exts + [TaskExtension(actions=[
-                        SchemaAddition(id='fusions_diode_group',
+        return exts + [TaskExtension(
+                                     task_id='pychron.fusions.diode',
+                                     actions=[
+                         SchemaAddition(id='fusions_diode_group',
                          factory=lambda: GroupSchema(id='FusionsDiodeGroup'
                                                ),
                          path='MenuBar/Extraction'

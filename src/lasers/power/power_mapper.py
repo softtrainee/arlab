@@ -102,6 +102,10 @@ class PowerMapper(Loggable, ConsumerMixin):
             sm = lm.stage_manager
             sm.stop()
 
+        dm = self.data_manager
+        if dm:
+            dm.close_file()
+
     def do_power_mapping(self, bd, rp, cx, cy, padding, step_len):
         self._padding = padding
         self._beam_diameter = bd

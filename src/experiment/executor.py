@@ -312,6 +312,7 @@ class ExperimentExecutor(Experimentable):
             self.stats.nruns_finished = 0
             self._canceled = False
             self._abort_overlap_signal = Flag()
+            self.extraction_state_label = ''
 
             t = Thread(target=self._execute)
             t.start()
