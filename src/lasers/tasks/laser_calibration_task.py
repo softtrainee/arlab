@@ -68,25 +68,21 @@ class LaserCalibrationTask(BaseLaserTask):
         return [lp, ep]
 
     def open_power_map(self):
-#         p = self.open_file_dialog()
+        p = self.open_file_dialog()
 #         p = '/Users/ross/Pychrondata_demo/data/scans/powermap-2013-07-17001.hdf5'
-        p = '/Users/ross/Sandbox/powermap/powermap-2013-07-26005.hdf5'
+#        p = '/Users/ross/Sandbox/powermap/powermap-2013-07-26005.hdf5'
 #         p = '/Users/ross/Sandbox/powermap/powermap-2013-07-27008.hdf5'
-        p = '/Users/ross/Sandbox/powermap/Archive 2/powermap-2013-07-31001.hdf5'
+#        p = '/Users/ross/Sandbox/powermap/Archive 2/powermap-2013-07-31001.hdf5'
 #         p = '/Users/ross/Sandbox/powermap/Archive 2/powermap-2013-07-31002.hdf5'
 #         p = '/Users/ross/Sandbox/powermap-2013-07-26005.hdf5'
-#         if p:
-
-        for i in [2, 6, 11, 12, 13, 14, 19, 20, 21]:
+        if p:
             try:
-                p = '/Users/ross/Sandbox/powermap/Archive 2/powermap-2013-07-31{:03n}.hdf5'.format(i)
+#                p = '/Users/ross/Sandbox/powermap/Archive 2/powermap-2013-07-31{:03n}.hdf5'.format(i)
                 editor = PowerMapEditor(
     #                                     name='Power Map {:03n}'.format(n + 1),
                                         name='Power Map {}'.format(os.path.basename(p))
                                         )
                 editor.load(p)
-
-
                 self._open_editor(editor)
             except Exception:
                 self.debug('invalid power map file {}'.format(p))

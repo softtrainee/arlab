@@ -104,12 +104,14 @@ class PowerMapper(Loggable, ConsumerMixin):
 
     def do_power_mapping(self, bd, rp, cx, cy, padding, step_len):
         self._padding = padding
+        self._beam_diameter = bd
+        self._power = rp
         xl, xh = cx - padding, cx + padding
         yl, yh = cy - padding, cy + padding
         self._bounds = [xl, xh, yl, yh]
 
-        xi = linspace(xl, xh, 25)
-        yi = linspace(yl, yh, 25)
+        xi = linspace(-padding, padding, 25)
+        yi = linspace(-padding, padding, 25)
         X = xi[None, :]
         Y = yi[:, None]
 
@@ -178,8 +180,10 @@ class PowerMapper(Loggable, ConsumerMixin):
 #             print zd
             if not cg.plots[0].plots.keys():
                 cg.new_series(z=zd,
-                              xbounds=(xl, xh),
-                              ybounds=(yl, yh),
+                              xbounds=(-self._padding, self._padding),
+                              ybounds=(-self._padding, self._padding),
+#                              xbounds=(xl, xh),
+#                              ybounds=(yl, yh),
                               style='contour')
             else:
                 cg.plots[0].data.set_data('z0', zd)
@@ -286,7 +290,7 @@ class PowerMapper(Loggable, ConsumerMixin):
 #        ysteps = xrange(-nsteps, nsteps + 1)
         ysteps = xrange(nsteps + 1, -nsteps, -1)
 
-        self.graph.set_x_limits(cx - padding, cx + padding, pad='0.1')
+        self.graph.set_x_limits(-padding, padding, pad='0.1')
         def gen():
             for j, yi in enumerate(ysteps):
                 ny = (yi * step_len) + cy
@@ -327,6 +331,8 @@ class PowerMapper(Loggable, ConsumerMixin):
                      )
         t = dm.new_table('/', 'power_map', table_style='PowerMap')
         t._v_attrs['bounds'] = padding
+        t._v_attrs['beam_diameter'] = self._beam_diameter
+        t._v_attrs['power'] = self._power
         return t
 
     def _write_datum(self, tab, nx, ny, c, r, mag):
