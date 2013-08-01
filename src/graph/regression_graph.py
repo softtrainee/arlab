@@ -206,7 +206,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         else:
             self.regression_results = self.regressors
 
-        self.regressors = None
 
 
     def _plot_regression(self, plot, scatter, line, uline, lline):

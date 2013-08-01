@@ -1169,11 +1169,9 @@ anaylsis_type={}
 
             if refresh:
                 # only refresh regression every 5th iteration
-
-                # test if graph.refresh is consuming memory
-#                 if i % 50 == 0:
-#                     graph.refresh()
-                pass
+#                 test if graph.refresh is consuming memory
+                if i % 10 == 0:
+                    graph.refresh()
 
         return _write
 
@@ -1606,7 +1604,7 @@ anaylsis_type={}
                                     is_degas=self.labnumber == 'dg'
                                     )
 
-            exp = db.add_sript(self.experiment_manager.experiment_queue.name,
+            exp = db.add_script(self.experiment_manager.experiment_queue.name,
                               self.experiment_manager.experiment_blob()
                               )
             ext.experiment_blob_id = exp.id
