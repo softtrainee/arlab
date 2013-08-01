@@ -191,7 +191,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         for plot in self.plots:
             ks = plot.plots.keys()
             try:
-                scatters, kkk = zip(*[(plot.plots[k][0], k) for k in ks if k.startswith('data')])
+                scatters, kkk = zip(*[(plot.plots[k][0], k)
+                                      for k in ks if k.startswith('data')])
                 ind = kkk[0][-1]
                 fls = [plot.plots[kk][0] for kk in ks if kk == 'fit{}'.format(ind)]
                 uls = [plot.plots[kk][0] for kk in ks if kk == 'upper CI{}'.format(ind)]
@@ -204,6 +205,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 break
         else:
             self.regression_results = self.regressors
+
+        self.regressors = None
 
 
     def _plot_regression(self, plot, scatter, line, uline, lline):
@@ -272,8 +275,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         selection = meta.get('selections', [])
 
         if selection:
-            x = delete(x[:], selection, 0)
-            y = delete(y[:], selection, 0)
+            x = delete(x, selection, 0)
+            y = delete(y, selection, 0)
 
         low = plot.index_range.low
         high = plot.index_range.high

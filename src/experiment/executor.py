@@ -21,7 +21,7 @@ from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 from threading import Event as Flag
-from threading import Lock
+from threading import Thread
 import time
 import os
 #============= local library imports  ==========================
@@ -43,16 +43,14 @@ from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
 from src.displays.display import DisplayController
 from src.experiment.experimentable import Experimentable
-from src.ui.thread import Thread
+# from src.ui.thread import Thread
 from src.pyscripts.wait_dialog import WaitDialog
 from src.experiment.automated_run.automated_run import AutomatedRun
 from pyface.constant import CANCEL, NO, YES
 from src.ui.qt.gui import invoke_in_main_thread
-from src.helpers.ctx_managers import no_update
+# from src.helpers.ctx_managers import no_update
 from sqlalchemy.orm.exc import NoResultFound
-
-# @todo: display total time in iso format
-# @todo: display current exp sets mass spectrometer, extract device and tray
+from src.consumer_mixin import ConsumerMixin
 
 BLANK_MESSAGE = '''First "{}" not preceeded by a blank. 
 If "Yes" use last "blank_{}" 
@@ -286,13 +284,7 @@ class ExperimentExecutor(Experimentable):
             if self._end_flag:
                 self._end_flag.set()
             invoke_in_main_thread(self.trait_set, extraction_state_label='')
-#             self.extraction_state_label = ''
 
-#        if state:
-# #            self.end_flag
-#            t = Thread(target=loop)
-#            t.start()
-#            self._state_thread = t
 
     def clear_run_states(self):
         for exp in self.experiment_queues:
@@ -618,41 +610,27 @@ class ExperimentExecutor(Experimentable):
         cnt = 0
         totalcnt = 0
 
+        consumer = ConsumerMixin()
+        consumer.setup_consumer(func=self._overlapped_run)
+        delay = exp.delay_between_analyses
         while self.isAlive():
             self.db.reset()
-            force_delay = False
 
-            # check for mods
-#             if self._check_for_file_mods():
-#                 self._reload_from_disk()
-#                 cnt = 0
-#                 self.info('%%%%%%%%%%%%%%%%%%%% Queue Modified %%%%%%%%%%%%%%%%%%%%')
-#                 rgen, nruns = exp.new_runs_generator(self._last_ran)
-#                 force_delay = True
-#
             if self._triggered_run:
                 rgen, nruns = exp.new_runs_generator()
                 self._triggered_run = False
 
-            if force_delay or (self.isAlive() and \
+            if (self.isAlive() and \
                                cnt < nruns and \
                                         not cnt == 0):
                 # delay between runs
-                delay = exp.delay_between_analyses
                 self._delay(delay)
-
-#             if self._check_for_file_mods():
-#                 self._reload_from_disk()
-#                 cnt = 0
-#                 self.info('%%%%%%%%%%%%%%%%%%%% Queue Modified %%%%%%%%%%%%%%%%%%%%')
-#                 rgen, nruns = exp.new_runs_generator(self._last_ran)
 
             runargs = None
             try:
                 runspec = rgen.next()
                 if not runspec.skip:
                     runargs = self._launch_run(runspec, cnt)
-
             except StopIteration:
                 break
 
@@ -661,22 +639,32 @@ class ExperimentExecutor(Experimentable):
                 t, run = runargs
 #                 self._last_ran = runspec
 
+                '''
+                    overlay not fully implemented
+                '''
                 if run.analysis_type == 'unknown' and run.overlap:
                     self.info('overlaping')
                     run.wait_for_overlap()
+                    self.debug('overlap finished. starting next run')
+
+                    self._executing_queue.put((t, run))
+                    totalcnt += 1
+
                 else:
                     t.join()
 
-                self.debug('current run finished')
-                if self.isAlive():
-                    totalcnt += 1
-                    if run.analysis_type.startswith('blank'):
-                        pb = run.get_baseline_corrected_signals()
-                        if pb is not None:
-                            self._prev_blanks = pb
+                    self.debug('{} finished'.format(run.runid))
+                    if self.isAlive():
+                        totalcnt += 1
+                        if run.analysis_type.startswith('blank'):
+                            pb = run.get_baseline_corrected_signals()
+                            if pb is not None:
+                                self._prev_blanks = pb
 
-                self._report_execution_state(run)
-                run.teardown()
+                    self._report_execution_state(run)
+                    run.teardown()
+                    import gc
+                    gc.collect()
 
             if self.end_at_run_completion:
                 break
@@ -694,7 +682,21 @@ class ExperimentExecutor(Experimentable):
         if run:
             self.info('Queue {:02n}. Automated runs ended at {}, runs executed={}'.format(iexp, run.runid, totalcnt))
 
+        consumer.stop()
         return totalcnt
+
+    def _overlapped_run(self, v):
+        t, run = v
+        while t.is_alive():
+            time.sleep(1)
+
+        self.debug('{} finished'.format(run.runid))
+        if run.analysis_type.startswith('blank'):
+            pb = run.get_baseline_corrected_signals()
+            if pb is not None:
+                self._prev_blanks = pb
+        self._report_execution_state(run)
+        run.teardown()
 
     def _report_execution_state(self, run):
         if self.err_message:
@@ -716,7 +718,7 @@ class ExperimentExecutor(Experimentable):
         run = self._setup_automated_run(cnt, run)
         run.pre_extraction_save()
         self.info('========== {} =========='.format(run.runid))
-        from threading import Thread 
+
         ta = Thread(name=run.runid,
                    target=self._do_automated_run,
                    args=(run,)
@@ -815,10 +817,10 @@ class ExperimentExecutor(Experimentable):
                     self.err_message = 'Extraction Failed'
                     self._alive = False
 
-                invoke_in_main_thread(self.trait_set, extraction_state_label = '')
+                invoke_in_main_thread(self.trait_set, extraction_state_label='')
                 return
 
-            invoke_in_main_thread(self.trait_set, extraction_state_label = '')
+            invoke_in_main_thread(self.trait_set, extraction_state_label='')
             return True
 
         def measurement():
@@ -914,14 +916,14 @@ class ExperimentExecutor(Experimentable):
         self.stats.stop_timer()
 
         self.db.reset()
-        
+
         def _set_extraction_state():
             self.extraction_state = False
             self.extraction_state_color = 'green'
             self.extraction_state_label = '{} Finished'.format(self.experiment_queue.name)
         invoke_in_main_thread(_set_extraction_state)
-        
-        
+
+
 
 #     def _get_all_automated_runs(self):
 #         ans = super(ExperimentExecutor, self)._get_all_automated_runs()

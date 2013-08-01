@@ -22,13 +22,13 @@ from traits.api import Bool, HasTraits, Instance
 #============= standard library imports ========================
 # from tables import openFile
 from numpy import transpose, array, shape, max, linspace, rot90, \
-    fliplr, flipud, zeros_like, pi, sin, cos
+    fliplr, flipud, zeros_like, pi, sin, cos, min, percentile
 #============= local library imports  ==========================
 from src.graph.contour_graph import ContourGraph
 from src.managers.data_managers.h5_data_manager import H5DataManager
 
 from scipy.interpolate.ndgriddata import griddata
-from numpy.lib.function_base import percentile
+# from numpy.lib.function_base import percentile
 import math
 
 class PowerMapProcessor(HasTraits):
@@ -40,7 +40,7 @@ class PowerMapProcessor(HasTraits):
     interpolation_factor = 5
     graph = Instance(ContourGraph)
 
-    def set_percentile(self, n):
+    def set_percent_threshold(self, n):
         cg = self.graph
         args = self._measure_properties(self._data, self._metadata, n)
         if args:
@@ -152,17 +152,30 @@ class PowerMapProcessor(HasTraits):
     def _measure_properties(self, z, metadata, p=25):
         from skimage.measure._regionprops import regionprops
         nim = z.copy()
-        t = percentile(z, p)
+#         nz = z[z > min(z) * 3]
+
+#         for zi in z:
+#             print zi
+
+        mz = min(z)
+        r = max(z) - mz
+        t = p * 0.01 * r + mz
+#         print 'aaaa', max(z), min(z)
+#         print 'bbbb', t, p
+#         t2 = percentile(nz, p)
+#         t = percentile(z, p)
+#         print 'nz ', t2, 'z ', t1
         nim[z < t] = 0
 
+        props = None
         try:
             props = regionprops(nim.astype(int), ['EquivDiameter', 'Centroid',
                                       'MajorAxisLength', 'MinorAxisLength',
                                       'Orientation'
                                       ])
-            return props, nim
-        except TypeError:
+        except TypeError, e:
             pass
+        return props, nim
 
     def _extract_properties(self, z, prop, metadata):
         r, c = prop['Centroid']

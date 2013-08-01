@@ -83,8 +83,8 @@ class KerrMotor(KerrDevice, ConsumerMixin):
     locked = False
     units = 'mm'
 
-    home_button = Button
-
+    home_button = Button('Home')
+    homing_position = Int
     home_status = Int
 
     def _get_display_name(self):
@@ -364,7 +364,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
             instead we will poll the motor position until n successive positions are equal ie at a limt
         '''
 
-        self.block(4, progress=progress)
+        self.block(4, progress=progress, homing=True)
 
         # we are homed and should reset position
 
@@ -395,7 +395,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 #                 do_after(25, progress.change_message, '{} position = {}'.format(self.name, pos))
             time.sleep(0.5)
 
-    def block(self, n=3, tolerance=1, progress=None):
+    def block(self, n=3, tolerance=1, progress=None, homing=False):
         '''
         '''
         fail_cnt = 0
@@ -404,8 +404,9 @@ class KerrMotor(KerrDevice, ConsumerMixin):
         while not self.parent.simulation:
 
             steps = self.load_data_position(set_pos=False)
-#             steps = self._get_motor_position(verbose=True)
-#             print 'ffff', steps
+            if homing:
+                self.home_position = steps
+
             if progress is not None:
                 progress.change_message('{} position = {}'.format(self.name, steps))
 
@@ -421,7 +422,8 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                     break
                 else:
                     pos_buffer.pop(0)
-            time.sleep(0.05)
+
+            time.sleep(0.1)
 
         if fail_cnt > 5:
             self.warning('Problem Communicating')
@@ -701,6 +703,8 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                                      editor=ProgressEditor(min=0, max=2,
 
                                                            )),
+                                Item('home_position', style='readonly', width=150,
+                                     label='Steps'),
                                 Item('home_button', show_label=False), spring)
 #                          show_border=True,
 #                          label=self.display_name,

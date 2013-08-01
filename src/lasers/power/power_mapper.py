@@ -73,13 +73,14 @@ class PowerMapper(Loggable, ConsumerMixin):
         cg.new_plot(title='Beam Space',
                     xtitle='X mm',
                     ytitle='Y mm',
+                    aspect_ratio=1
                     )
 
         g = Graph()
-        g.new_plot(
-                   title='Motor Space',
-                   xtitle='X mm',
-                     ytitle='Power')
+        g.new_plot(title='Motor Space',
+                     xtitle='X mm',
+                     ytitle='Power',
+                     )
         g.new_series(
                      )
 
@@ -103,9 +104,9 @@ class PowerMapper(Loggable, ConsumerMixin):
 
     def do_power_mapping(self, bd, rp, cx, cy, padding, step_len):
         self._padding = padding
-        self._bounds = [cx - padding, cx + padding, cy - padding, cy + padding]
         xl, xh = cx - padding, cx + padding
         yl, yh = cy - padding, cy + padding
+        self._bounds = [xl, xh, yl, yh]
 
         xi = linspace(xl, xh, 25)
         yi = linspace(yl, yh, 25)
@@ -253,7 +254,7 @@ class PowerMapper(Loggable, ConsumerMixin):
             while 1:
 #                self.debug('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ power map iteration {}'.format(p))
                 time.sleep(p)
-                x, y = xaxis.position, yaxis.position
+                x, y = xaxis.position - cx, yaxis.position - cy
                 if apm:
                     mag = apm.read_power_meter(verbose=False)
                 else:
