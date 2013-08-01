@@ -40,6 +40,12 @@ class PowerMapProcessor(HasTraits):
     interpolation_factor = 5
     graph = Instance(ContourGraph)
 
+    def extract_attrs(self, attrs):
+        rs = []
+        for ai in attrs:
+            rs.append(self._metadata[ai])
+
+        return rs
     def set_percent_threshold(self, n):
         cg = self.graph
         args = self._measure_properties(self._data, self._metadata, n)
@@ -211,6 +217,21 @@ class PowerMapProcessor(HasTraits):
             b = 1
 
         metadata['bounds'] = -float(b), float(b)
+
+        try:
+            bd = tab._v_attrs['beam_diameter']
+        except Exception, e:
+            print e
+            bd = 0
+
+        try:
+            po = tab._v_attrs['power']
+        except Exception, e:
+            print e
+            po = 0
+
+        metadata['beam_diameter'] = bd
+        metadata['power'] = po
 
         xs, ys, power = array([(r['x'], r['y'], r['power'])
                                 for r in tab.iterrows()]).T

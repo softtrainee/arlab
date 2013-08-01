@@ -62,6 +62,10 @@ class PowerMapControls(HasTraits):
 
 class PowerMapEditor(LaserEditor):
     percent_threshold = Range(0.0, 100.0)
+
+    beam_diameter = Float
+    power = Float
+
     canvas = Instance(RasterCanvas, ())
     editor = Instance(PowerMapControls, ())
     mapper = Instance(PowerMapper, ())
@@ -82,6 +86,7 @@ class PowerMapEditor(LaserEditor):
         reader.open_data(path)
         cg = pmp.load_graph(reader)
 
+        self.beam_diameter, self.power = pmp.extract_attrs(['beam_diameter', 'power'])
         self.component = cg.plotcontainer
         self.was_executed = True
         self.processor = pmp
@@ -119,7 +124,10 @@ class PowerMapEditor(LaserEditor):
 
     def traits_view(self):
         v = View(
-                 HGroup(spring, Item('percent_threshold', label='% Threshold'),
+                 HGroup(spring,
+                        Item('beam_diameter', style='readonly'),
+                        Item('power', style='readonly'),
+                        Item('percent_threshold', label='% Threshold'),
                         visible_when='was_executed'
                         ),
                  UItem('component', editor=ComponentEditor())
