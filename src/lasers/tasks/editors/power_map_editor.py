@@ -61,7 +61,7 @@ class PowerMapControls(HasTraits):
         return v
 
 class PowerMapEditor(LaserEditor):
-    percentile_threshold = Range(1, 99)
+    percent_threshold = Range(0.0, 100.0)
     canvas = Instance(RasterCanvas, ())
     editor = Instance(PowerMapControls, ())
     mapper = Instance(PowerMapper, ())
@@ -70,9 +70,9 @@ class PowerMapEditor(LaserEditor):
 
     processor = Instance(PowerMapProcessor)
 
-    def _percentile_threshold_changed(self, new):
+    def _percent_threshold_changed(self, new):
         if self.processor:
-            self.processor.set_percentile(new)
+            self.processor.set_percent_threshold(new)
 
     def load(self, path):
 
@@ -85,7 +85,7 @@ class PowerMapEditor(LaserEditor):
         self.component = cg.plotcontainer
         self.was_executed = True
         self.processor = pmp
-#     def do_execute(self, lm):
+
     def _do_execute(self):
         mapper = self.mapper
         mapper.laser_manager = self._laser_manager
@@ -107,7 +107,6 @@ class PowerMapEditor(LaserEditor):
         cy = editor.center_y
         step_len = editor.step_length
 
-#         mapper.do_power_mapping(bd, rp, cx, cy, padding, step_len)
         t = Thread(target=mapper.do_power_mapping,
                    args=(bd, rp, cx, cy, padding, step_len))
         t.start()
@@ -120,7 +119,7 @@ class PowerMapEditor(LaserEditor):
 
     def traits_view(self):
         v = View(
-                 HGroup(spring, Item('percentile_threshold', label='Percentile'),
+                 HGroup(spring, Item('percent_threshold', label='% Threshold'),
                         visible_when='was_executed'
                         ),
                  UItem('component', editor=ComponentEditor())

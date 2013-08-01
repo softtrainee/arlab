@@ -32,11 +32,10 @@ SCRIPT_PKGS = dict(Bakeout='src.pyscripts.bakeout_pyscript',
                     )
 
 from pyface.ui.qt4.code_editor.code_widget import AdvancedCodeWidget
-class CodeWidget(AdvancedCodeWidget):
+class myCodeWidget(AdvancedCodeWidget):
     commands = None
     def __init__(self, parent, commands=None, *args, **kw):
-
-        super(CodeWidget, self).__init__(parent, *args, **kw)
+        super(myCodeWidget, self).__init__(parent, *args, **kw)
         self.commands = commands
         self.setAcceptDrops(True)
 
@@ -62,7 +61,7 @@ class CodeWidget(AdvancedCodeWidget):
 
                 block = cur.block()
                 line = block.text()
-                indent = self._get_indent_position(line)
+                indent = self.code._get_indent_position(line)
                 line = line.strip()
                 token = line.split(' ')[0]
                 token = token.strip()
@@ -73,14 +72,6 @@ class CodeWidget(AdvancedCodeWidget):
                 indent = ' ' * indent
                 cur.movePosition(QTextCursor.EndOfLine)
                 cur.insertText('\n{}{}'.format(indent, text))
-
-    def _get_indent_position(self, line):
-        trimmed = line.lstrip()
-        if len(trimmed) != 0:
-            return line.index(trimmed)
-        else:
-            # if line is all spaces, treat it as the indent position
-            return len(line)
 
     def highlight_line(self, lineno):
         selection = QTextEdit.ExtraSelection()
@@ -95,6 +86,7 @@ class CodeWidget(AdvancedCodeWidget):
         selection.cursor.setPosition(pos)
         selection.cursor.clearSelection()
         self.code.setExtraSelections([selection])
+
 
 class Commands(HasTraits):
     script_commands = List
@@ -183,7 +175,7 @@ class PyScriptEditor(Editor):
 
     def _create_control(self, parent):
 
-        self.control = control = CodeWidget(parent,
+        self.control = control = myCodeWidget(parent,
                                             commands=self.commands
                                             )
 #        self.control = control = AdvancedCodeWidget(parent)

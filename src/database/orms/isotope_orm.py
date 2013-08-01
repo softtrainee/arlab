@@ -393,10 +393,11 @@ class meas_ScriptTable(Base, NameMixin):
     blob = Column(BLOB)
     measurements = relationship('meas_MeasurementTable', backref='script')
     extractions = relationship('meas_ExtractionTable',
-                               primaryjoin='meas_ExtractionTable.experiment_blob_id==meas_ScriptTable.id',
-                               backref='script')
-    experiments = relationship('meas_ExtractionTable',
                                primaryjoin='meas_ExtractionTable.script_id==meas_ScriptTable.id',
+                               backref='script')
+
+    experiments = relationship('meas_ExtractionTable',
+                               primaryjoin='meas_ExtractionTable.experiment_blob_id==meas_ScriptTable.id',
                                backref='experiment')
 
 class meas_MonitorTable(Base, NameMixin):

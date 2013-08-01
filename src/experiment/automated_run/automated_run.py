@@ -649,14 +649,14 @@ anaylsis_type={}
             self.plot_panel.automated_run = None
 
 #         for attr in ('signals'):
-            
-        if self.signals: 
+
+        if self.signals:
             del self.signals
         if self._processed_signals_dict:
             del self._processed_signals_dict
 #         del self.monitor
 #         del self.peak_center
-# 
+#
 #         del self.measurement_script
 #         del self.extraction_script
 #         del self.post_equilibration_script
@@ -1142,7 +1142,7 @@ anaylsis_type={}
 #        self.debug('fs {}'.format(fs))
         return fs
 
-    def _write_iteration(self, grpname, data_write_hook, 
+    def _write_iteration(self, grpname, data_write_hook,
                          series, fits, refresh, graph):
 
         dets = self._active_detectors
@@ -1169,8 +1169,11 @@ anaylsis_type={}
 
             if refresh:
                 # only refresh regression every 5th iteration
-                if i % 5 == 0:
-                    graph.refresh()
+
+                # test if graph.refresh is consuming memory
+#                 if i % 50 == 0:
+#                     graph.refresh()
+                pass
 
         return _write
 
@@ -1354,10 +1357,10 @@ anaylsis_type={}
             db.flush()
 
         ext = self._save_extraction(loadtable=loadtable)
-        
+
         db.commit()
         self._db_extraction_id = ext.id
-    
+
     def _pre_measurement_save(self):
         self.info('pre measurement save')
         dm = self.data_manager
@@ -1378,7 +1381,7 @@ anaylsis_type={}
 
     def _post_measurement_save(self):
         self.info('post measurement save')
-        
+
         if not self._save_enabled:
             self.info('Database saving disabled')
             return
@@ -1451,8 +1454,8 @@ anaylsis_type={}
 #             ext = self._save_extraction(a)
             ext = self._db_extraction_id
             print ext
-            dbext=db.get_extraction(ext, key='id')
-            
+            dbext = db.get_extraction(ext, key='id')
+
             a.extractio_id = dbext.id
 
             # save measurement
@@ -1603,32 +1606,34 @@ anaylsis_type={}
                                     is_degas=self.labnumber == 'dg'
                                     )
 
-            exp = db.add_script(self.experiment_manager.experiment_queue.name,
+            exp = db.add_sript(self.experiment_manager.experiment_queue.name,
                               self.experiment_manager.experiment_blob()
                               )
-            exp.experiments.append(ext)
+            ext.experiment_blob_id = exp.id
+#             exp.experiments.append(ext)
 
             if self.extraction_script:
                 script = db.add_script(self.extraction_script.name,
                                        self._assemble_extraction_blob())
-                script.extractions.append(ext)
+                ext.script_id = script.id
+#                 script.extractions.append(ext)
 
             for pi in self.get_position_list():
                 if isinstance(pi, tuple):
                     if len(pi) > 1:
-                        
+
                         if len(pi) == 3:
-                            dbpos=db.add_analysis_position(ext, x=pi[0], y=pi[1], z=pi[2])
+                            dbpos = db.add_analysis_position(ext, x=pi[0], y=pi[1], z=pi[2])
                         else:
-                            dbpos=db.add_analysis_position(ext, x=pi[0], y=pi[1])
+                            dbpos = db.add_analysis_position(ext, x=pi[0], y=pi[1])
 
                 else:
-                    dbpos=db.add_analysis_position(ext, pi)
-            
+                    dbpos = db.add_analysis_position(ext, pi)
+
                 if loadtable:
 #                 lp = db.add_load_position(self.labnumber)
                     loadtable.measured_positions.append(dbpos)
-                
+
             return ext
         return self._time_save(func, 'extraction')
 
@@ -1642,7 +1647,7 @@ anaylsis_type={}
                 for det, deflection in spec_dict.iteritems():
                     det = db.add_detector(det)
                     db.add_deflection(meas, det, deflection)
-                    
+
         return self._time_save(func, 'spectrometer_info')
 
     def _save_detector_intercalibration(self, analysis):
