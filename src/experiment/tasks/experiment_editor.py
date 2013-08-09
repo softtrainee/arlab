@@ -123,8 +123,8 @@ class ExperimentEditor(BaseTraitsEditor):
         self.queue.path = self.path
 
     def _set_queue_dirty(self, obj, name, old, new):
-        print 'ggg', obj, name, old, new
-        print 'set qirty', self.queue._no_update, self.queue.initialized
+#         print 'ggg', obj, name, old, new
+#         print 'set qirty', self.queue._no_update, self.queue.initialized
 
         if not self.queue._no_update and self.queue.initialized:
             self.dirty = True

@@ -685,9 +685,9 @@ class IsotopeAdapter(DatabaseAdapter):
         q = q.filter(getattr(meas_AnalysisTable, 'labnumber') == ln)
         if aliquot:
             q = q.filter(meas_AnalysisTable.aliquot == aliquot)
-            q = q.order_by(meas_AnalysisTable.step.desc())
+#             q = q.order_by(meas_AnalysisTable.step.asc())
 
-        q = q.order_by(meas_AnalysisTable.aliquot.desc())
+        q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
 #         q = q.limit(1)
         try:
             return q.first()

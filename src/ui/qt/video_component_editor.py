@@ -38,7 +38,8 @@ class _VideoComponentEditor(_LaserComponentEditor):
    
         '''
         super(_VideoComponentEditor, self).init(parent)
-
+        
+        print 'start play timer'
         self.playTimer = QTimer(self.control)
         self.playTimer.timeout.connect(self.update)
         if self.value.fps:

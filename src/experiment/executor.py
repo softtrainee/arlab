@@ -25,6 +25,7 @@ from threading import Thread
 import time
 import os
 #============= local library imports  ==========================
+from src.ui.thread import Thread as uThread
 from src.globals import globalv
 from src.managers.manager import Manager
 from src.pyscripts.pyscript_runner import PyScriptRunner, RemotePyScriptRunner
@@ -272,7 +273,7 @@ class ExperimentExecutor(Experimentable):
 
             time.sleep(0.1)
             self._end_flag = Flag()
-            t = Thread(target=loop,
+            t = uThread(target=loop,
                        args=(self._end_flag,
                              '*** {} ***'.format(state.upper()),
                              color,
@@ -318,7 +319,7 @@ class ExperimentExecutor(Experimentable):
             t.start()
 
             self.debug('execution started')
-            self._execute_thread = t
+#             self._execute_thread = t
 
             self._was_executed = True
             return True
@@ -664,6 +665,7 @@ class ExperimentExecutor(Experimentable):
 
                     self._report_execution_state(run)
                     run.teardown()
+                    
                     import gc
                     gc.collect()
 
