@@ -77,7 +77,11 @@ class PychronLaserManager(BaseLaserManager):
         self.test_connection()
         if self.connected:
             self.opened(None)
-
+            
+    def shutdown(self):
+        if self._communicator:
+            self._communicator.close()
+        
     def test_connection(self):
         self.connected = self._communicator.open()
         self.debug('test connection. connected= {}'.format(self.connected))
@@ -194,12 +198,13 @@ class PychronLaserManager(BaseLaserManager):
 
     def get_pattern_names(self):
         # get contents of local pattern_dir
-        ps = super(PychronLaserManager, self).get_pattern_names()
+#         ps = super(PychronLaserManager, self).get_pattern_names()
 
+        ps=[]
         # get contents of remote pattern_dir
         pn = self._ask('GetPatternNames')
         if pn:
-            ps.extend(pn)
+            ps.extend(pn.split(','))
 
         return ps
 #===============================================================================

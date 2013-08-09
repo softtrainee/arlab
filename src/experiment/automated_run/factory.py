@@ -100,9 +100,9 @@ class AutomatedRunFactory(Viewable):
     _beam_diameter = Any
 
     pattern = Str
-#     patterns = List
-    patterns = Property(depends_on='_patterns')
-    _patterns = List
+    patterns = List
+#     patterns = Property(depends_on='_patterns')
+#     _patterns = List
 
     edit_pattern = Event
     edit_pattern_label = Property(depends_on='pattern')
@@ -178,7 +178,10 @@ class AutomatedRunFactory(Viewable):
 
     def load_templates(self):
         self.templates = self._get_templates()
-
+    
+    def load_patterns(self, ps):
+        self.patterns=self._get_patterns(ps)
+        
     def use_frequency(self):
         return self.labnumber in ANALYSIS_MAPPING and self.frequency
 
@@ -816,17 +819,13 @@ post_equilibration_script:name
 
     def _get_edit_template_label(self):
         return 'Edit' if self._use_template() else 'New'
-#     @cached_property
-    def _get_patterns(self):
-        return self._patterns
-
-    def set_patterns(self, ps):
+    
+    def _get_patterns(self, ps):
         p = paths.pattern_dir
         extension = '.lp'
         patterns = list_directory(p, extension)
-        self._patterns = ['', ] + ps + [LINE_STR] + patterns
+        return ['', ] + ps + [LINE_STR] + patterns
 
-#     @cached_property
     def _get_templates(self):
         p = paths.incremental_heat_template_dir
         extension = '.txt'
@@ -837,7 +836,7 @@ post_equilibration_script:name
             self.template = 'Step Heat Template'
 
         return ['Step Heat Template', LINE_STR] + temps
-
+    
     def _aliquot_changed(self):
         if self.edit_mode:
             for si in self._selected_runs:

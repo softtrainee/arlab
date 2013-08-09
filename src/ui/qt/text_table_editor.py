@@ -196,7 +196,7 @@ class _FastTextTableEditor(_TextTableEditor):
                 if c:
                     fmt.setBackground(c)
 
-                txt = ''.join(['{{:<{}s}}'.format(cell.width).format(cell.text)
+                txt = ''.join([u'{{:<{}s}}'.format(cell.width).format(cell.text)
                               for cell in row.cells
                               ])
                 cursor.insertText(txt + '\n', fmt)

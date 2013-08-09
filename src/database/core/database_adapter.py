@@ -110,7 +110,7 @@ class DatabaseAdapter(Loggable):
                 url = self.url
                 if url is not None:
                     self.info('connecting to database {}'.format(url))
-                    engine = create_engine(url, echo='debug')
+                    engine = create_engine(url, echo=False)
                     self.session_factory = sessionmaker(bind=engine,
                                                         autoflush=False)
                     if test:

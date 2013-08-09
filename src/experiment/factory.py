@@ -159,16 +159,17 @@ extract_device, delay_+, tray, username, load_name]''')
         self.run_factory = self._run_factory_factory()
 #         self.run_factory.update_templates_needed = True
         self.run_factory.load_templates()
-        self.run_factory.set_patterns(self._get_patterns(ed))
+        
+        self.run_factory.load_patterns(self._get_patterns(ed))
         if self.queue:
             self.queue.set_extract_device(ed)
 
     def _get_patterns(self, ed):
         ps = []
+        ed=ed.replace(' ','_').lower()
         man = self.application.get_service(ILaserManager, 'name=="{}"'.format(ed))
         if man:
             ps = man.get_pattern_names()
-
         return ps
 #===============================================================================
 # property get/set
