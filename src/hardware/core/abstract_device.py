@@ -35,7 +35,7 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
     implements(ICoreDevice)
 
     _cdevice = Instance(CoreDevice)
-#     _communicator = DelegatesTo('_cdevice')
+    _communicator = DelegatesTo('_cdevice')
 
     dev_klass = Property(depends_on='_cdevice')
 #     simulation = Property(depends_on='_cdevice')
@@ -62,8 +62,9 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
     def __getattr__(self, attr):
         try:
             return getattr(self._cdevice, attr)
-        except AttributeError:
-            pass
+        except AttributeError, e:
+            self.debug(e)
+            
 
     def _get_dev_klass(self):
         return self._cdevice.__class__.__name__
@@ -91,15 +92,15 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
     def post_initialize(self, *args, **kw):
         self.setup_scan()
 
-#     def open(self, **kw):
-#         '''
-#         '''
-#         if self._cdevice is not None:
-#             return self._cdevice.open(**kw)
+    def open(self, **kw):
+        '''
+        '''
+        if self._cdevice is not None:
+            return self._cdevice.open(**kw)
 
-#     def setup_scan(self, *args, **kw):
-#         if self._cdevice is not None:
-#             return self._cdevice.setup_scan(*args, **kw)
+    def setup_scan(self, *args, **kw):
+        if self._cdevice is not None:
+            return self._cdevice.setup_scan(*args, **kw)
 
     def load(self, *args, **kw):
         '''

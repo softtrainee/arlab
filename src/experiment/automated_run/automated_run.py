@@ -1170,7 +1170,7 @@ anaylsis_type={}
             if refresh:
                 # only refresh regression every 5th iteration
 #                 test if graph.refresh is consuming memory
-                if i % 10 == 0:
+                if i % 5 == 0 or i<10:
                     graph.refresh()
 
         return _write
@@ -1644,7 +1644,8 @@ anaylsis_type={}
             if self.spectrometer_manager:
                 spec_dict = self.spectrometer_manager.make_parameters_dict()
                 db.add_spectrometer_parameters(meas, spec_dict)
-                for det, deflection in spec_dict.iteritems():
+                defl_dict=self.spectrometer_manager.make_deflections_dict()
+                for det, deflection in defl_dict.iteritems():
                     det = db.add_detector(det)
                     db.add_deflection(meas, det, deflection)
 
@@ -1820,10 +1821,12 @@ anaylsis_type={}
 
         rs_name, rs_text = self._assemble_script_blob()
         rid = make_rid(self.labnumber, self.aliquot, self.step)
+        fb=self._get_fit_block(self._total_counts, self.fits)
+        
         exp = ExportSpec(rid=rid,
                          runscript_name=rs_name,
                          runscript_text=rs_text,
-                         signal_fits=self.fits,
+                         signal_fits=fb,
                          baseline_fits=baseline_fits,
                          signal_intercepts=sig_ints,
                          baseline_intercepts=base_ints,
