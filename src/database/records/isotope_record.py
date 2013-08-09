@@ -52,7 +52,7 @@ from src.database.records.ui.analysis_summary import AnalysisSummary
 from src.database.records.ui.fit_selector import FitSelector
 from src.helpers.isotope_utils import sort_isotopes
 from collections import namedtuple
-from src.simple_timeit import timethis
+from src.codetools.simple_timeit import timethis
 # from src.database.records.isotope import Isotope, Baseline, Blank, Background
 Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_outlier_std_devs')
 

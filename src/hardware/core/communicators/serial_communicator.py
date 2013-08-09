@@ -67,6 +67,10 @@ class SerialCommunicator(Communicator):
     read_terminator = None
     clear_output = False
 
+    def close(self):
+        if self.handle:
+            self.handle.close()
+
     def reset(self):
         handle = self.handle
         try:

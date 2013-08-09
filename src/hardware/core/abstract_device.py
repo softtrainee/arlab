@@ -35,10 +35,10 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
     implements(ICoreDevice)
 
     _cdevice = Instance(CoreDevice)
-    _communicator = DelegatesTo('_cdevice')
+#     _communicator = DelegatesTo('_cdevice')
 
     dev_klass = Property(depends_on='_cdevice')
-    simulation = Property(depends_on='_cdevice')
+#     simulation = Property(depends_on='_cdevice')
 #    reinitialize = DelegatesTo('_cdevice')
 #    com_class = Property(depends_on='_cdevice')
 
@@ -76,26 +76,26 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
         except ImportError, e:
             self.warning(e)
 
-    def ask(self, cmd, **kw):
-        '''
-        '''
-        if self._cdevice is not None:
-            return self._cdevice.ask(cmd)
-
-    def initialize(self, *args, **kw):
-        '''
-        '''
-        if self._cdevice is not None:
-            return self._cdevice.initialize(*args, **kw)
+#     def ask(self, cmd, **kw):
+#         '''
+#         '''
+#         if self._cdevice is not None:
+#             return self._cdevice.ask(cmd)
+#
+#     def initialize(self, *args, **kw):
+#         '''
+#         '''
+#         if self._cdevice is not None:
+#             return self._cdevice.initialize(*args, **kw)
 
     def post_initialize(self, *args, **kw):
         self.setup_scan()
 
-    def open(self, **kw):
-        '''
-        '''
-        if self._cdevice is not None:
-            return self._cdevice.open(**kw)
+#     def open(self, **kw):
+#         '''
+#         '''
+#         if self._cdevice is not None:
+#             return self._cdevice.open(**kw)
 
 #     def setup_scan(self, *args, **kw):
 #         if self._cdevice is not None:
@@ -124,13 +124,13 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
 #        if self._cdevice is not None:
 #            return self._cdevice.com_class
 #
-    def _get_simulation(self):
-        '''
-        '''
-        r = True
-        if self._cdevice is not None:
-            r = self._cdevice.simulation
-        return r
+#     def _get_simulation(self):
+#         '''
+#         '''
+#         r = True
+#         if self._cdevice is not None:
+#             r = self._cdevice.simulation
+#         return r
 
 #    def info_view(self):
 #        v = View()

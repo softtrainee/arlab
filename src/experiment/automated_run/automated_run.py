@@ -1444,7 +1444,9 @@ anaylsis_type={}
 
             if experiment is not None:
                 # added analysis to experiment
-                experiment.analyses.append(a)
+#                 experiment.analyses.append(a)
+                a.experiment_id = experiment.id
+
             else:
                 self.warning('no experiment found for {}'.format(self.experiment_identifier))
 

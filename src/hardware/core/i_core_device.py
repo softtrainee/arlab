@@ -32,5 +32,9 @@ class ICoreDevice(Interface):
     def set(self, *args, **kw):
         '''
         '''
+
+    def close(self, *args, **kw):
+        '''
+        '''
 #============= views ===================================
 #============= EOF ====================================

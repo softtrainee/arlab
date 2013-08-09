@@ -216,7 +216,7 @@ class MassSpecDatabaseImporter(Loggable):
 
         analysis.ChangeableItemsID = item.ChangeableItemsID
 
-#        from src.simple_timeit import timethis
+#        from src.codetools.simple_timeit import timethis
         for ((det, isok), si, bi, ublank, signal, baseline, sfit, bfit) in spec.iter():
 
             #===================================================================

@@ -53,7 +53,7 @@ from numpy import Inf, polyfit
 from enable.component_editor import ComponentEditor
 # from src.graph.regression_graph import StackedRegressionGraph
 from chaco.plot_containers import GridPlotContainer
-from src.simple_timeit import timethis
+from src.codetools.simple_timeit import timethis
 from src.processing.tasks.analysis_edit.fits import IsoEvoFitSelector
 # from src.processing.equilibration_utils import calc_optimal_eqtime
 #============= local library imports  ==========================

@@ -20,6 +20,7 @@ from src.loggable import Loggable
 from envisage.ui.tasks.tasks_application import TasksApplication
 from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.globals import globalv
+from src.hardware.core.i_core_device import ICoreDevice
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -55,6 +56,9 @@ class BaseTasksApplication(TasksApplication, Loggable):
         self.uis.append(info)
 
     def exit(self):
+
+        self._cleanup_services()
+
         import copy
         uis = copy.copy(self.uis)
         for ui in uis:
@@ -64,4 +68,11 @@ class BaseTasksApplication(TasksApplication, Loggable):
                 pass
 
         super(BaseTasksApplication, self).exit()
+
+    def _cleanup_services(self):
+        for si in self.get_services(ICoreDevice):
+            si.close()
+
+
+
 #============= EOF =============================================
