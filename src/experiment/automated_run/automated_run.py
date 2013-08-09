@@ -2010,7 +2010,7 @@ anaylsis_type={}
         '''
         hdn = self.extract_device.replace(' ', '_').lower()
         an = self.analysis_type.split('_')[0]
-
+        self.debug('######################### setup context extract value= {}'.format(self.extract_value))
         script.setup_context(tray=self.tray,
                             position=self.get_position_list(),
                             disable_between_positions=self.disable_between_positions,

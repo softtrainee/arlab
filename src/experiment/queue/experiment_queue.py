@@ -24,6 +24,7 @@ from src.experiment.utilities.identifier import make_runid
 from src.experiment.utilities.human_error_checker import HumanErrorChecker
 from src.experiment.queue.experiment_queue_action import ExperimentQueueAction
 from pyface.timer.do_later import do_later
+from src.ui.gui import invoke_in_main_thread
 
 
 class ExperimentQueue(BaseExperimentQueue):
@@ -81,7 +82,8 @@ class ExperimentQueue(BaseExperimentQueue):
         if new:
             idx = self.automated_runs.index(new[-1])
             self.debug('SSSSSSSSSSSSSS set AR scroll to {}'.format(idx))
-            do_later(self.trait_set, automated_runs_scroll_to_row=idx)
+            invoke_in_main_thread(self.trait_set, automated_runs_scroll_to_row=idx)
+#             do_later(self.trait_set, automated_runs_scroll_to_row=idx)
 
 #         if new > 1:
 #             if self._test:
