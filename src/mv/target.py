@@ -21,7 +21,7 @@ from numpy import array
 #============= local library imports  ==========================
 # from src.geometry.convex_hull import convex_hull_area
 from src.geometry.centroid import calculate_centroid
-from src.simple_timeit import timethis
+from src.codetools.simple_timeit import timethis
 from src.geometry.convex_hull import convex_hull_area
 # from src.geometry.centroid.calculate_centroid import calculate_centroid
 

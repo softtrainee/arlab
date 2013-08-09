@@ -23,7 +23,7 @@ from PySide.QtGui import QTextEdit, QPalette, QTextCursor, QTextTableFormat, QTe
     QTextTableCellFormat, QBrush, QColor, QFont, QPlainTextEdit, QTextCharFormat
 from traitsui.basic_editor_factory import BasicEditorFactory
 import time
-from src.simple_timeit import timethis
+from src.codetools.simple_timeit import timethis
 #============= local library imports  ==========================
 class edit_block(object):
     def __init__(self, cursor):

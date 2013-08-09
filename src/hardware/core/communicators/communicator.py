@@ -43,6 +43,9 @@ class Communicator(ConfigLoadable):
         super(Communicator, self).__init__(*args, **kw)
         self._lock = Lock()
 
+    def close(self):
+        pass
+
     def delay(self, ms):
         '''
           

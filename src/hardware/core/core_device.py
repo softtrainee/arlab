@@ -93,7 +93,9 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator, ConsumerMixin):
     _scheduler_name = None
 
 
-
+    def close(self):
+        if self._communicator:
+            self._communicator.close()
 
     def _communicate_hook(self, cmd, r):
         self.last_command = cmd

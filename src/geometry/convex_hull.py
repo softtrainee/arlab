@@ -83,7 +83,7 @@ def convex_hull_area(pts):
     '''
         http://en.wikipedia.org/wiki/Polygon#Area_and_centroid
     '''
-    from src.simple_timeit import timethis
+    from src.codetools.simple_timeit import timethis
     hull = timethis(convex_hull, args=(pts,))
 #    hull = convex_hull(pts)
     x, y = zip(*hull)

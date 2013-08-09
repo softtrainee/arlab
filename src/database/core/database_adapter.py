@@ -88,6 +88,10 @@ class DatabaseAdapter(Loggable):
             self.sess.close()
             self.sess = None
 
+            import gc
+            gc.collect()
+
+
     def connect(self, test=True, force=False):
         '''
         '''
@@ -106,7 +110,7 @@ class DatabaseAdapter(Loggable):
                 url = self.url
                 if url is not None:
                     self.info('connecting to database {}'.format(url))
-                    engine = create_engine(url)
+                    engine = create_engine(url, echo='debug')
                     self.session_factory = sessionmaker(bind=engine,
                                                         autoflush=False)
                     if test:
@@ -125,7 +129,8 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
         return self.connected
 
     def new_session(self):
-        sess = scoped_session(self.session_factory)
+        sess = self.session_factory()
+#         sess = scoped_session(self.session_factory)
         return sess
 
     def initialize_database(self):

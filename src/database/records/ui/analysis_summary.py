@@ -30,7 +30,7 @@ from src.ui.text_table import BoldCell, TextCell, TextRow, \
     HeaderRow
 from src.experiment.display_signal import DisplaySignal, DisplayRatio, \
     DisplayEntry
-from src.simple_timeit import timethis
+from src.codetools.simple_timeit import timethis
 #============= standard library imports ========================
 #============= local library imports  ==========================
 PLUSMINUS_SIGMA = u'{}1{}'.format(PLUSMINUS, SIGMA)

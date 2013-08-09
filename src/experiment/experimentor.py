@@ -36,7 +36,7 @@ from src.experiment.experimentable import Experimentable
 from src.experiment.utilities.identifier import convert_identifier, \
     ANALYSIS_MAPPING
 from src.deprecate import deprecated
-from src.simple_timeit import timethis
+from src.codetools.simple_timeit import timethis
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 LAlphas = list(ALPHAS)
 

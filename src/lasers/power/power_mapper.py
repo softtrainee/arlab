@@ -30,7 +30,7 @@ from scipy.interpolate.ndgriddata import griddata
 from src.graph.contour_graph import ContourGraph
 from src.graph.graph import Graph
 from chaco.plot_containers import HPlotContainer
-from src.ui.gui import invoke_in_main_thread
+# from src.ui.gui import invoke_in_main_thread
 
 
 def power_generator(nsteps):

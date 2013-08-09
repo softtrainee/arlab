@@ -46,6 +46,7 @@ class PowerMapProcessor(HasTraits):
             rs.append(self._metadata[ai])
 
         return rs
+
     def set_percent_threshold(self, n):
         cg = self.graph
         args = self._measure_properties(self._data, self._metadata, n)
@@ -65,7 +66,6 @@ class PowerMapProcessor(HasTraits):
         self._data = z
         self._metadata = metadata
 
-
         center_plot = cg.new_plot(
                             add=False,
                             padding=0,
@@ -74,8 +74,8 @@ class PowerMapProcessor(HasTraits):
                             resizable=''
 #                             aspect_ratio=1
                             )
-        center_plot.index_axis.title = 'mm'
-        center_plot.value_axis.title = 'mm'
+        center_plot.index_axis.visible = False
+        center_plot.value_axis.visible = False
 
 #         from skimage.morphology import label
 #         z = label(z)
@@ -93,6 +93,8 @@ class PowerMapProcessor(HasTraits):
                             height=150,
                             resizable='h',
                             padding=0,
+                            xtitle='mm',
+                            ytitle='power'
                             )
 
         right_plot = cg.new_plot(
@@ -100,9 +102,13 @@ class PowerMapProcessor(HasTraits):
                               width=150,
                               resizable='v',
                               padding=0,
+                              xtitle='mm',
+                              ytitle='power'
                               )
         right_plot.x_axis.orientation = 'right'
+#         right_plot.x_axis.title = 'mm'
         right_plot.y_axis.orientation = 'top'
+#         right_plot.y_axis.title = 'power'
 
         center = center_plot.plots['plot0'][0]
         options = dict(style='cmap_scatter',
@@ -139,7 +145,8 @@ class PowerMapProcessor(HasTraits):
         gridcontainer = cg._container_factory(kind='g',
                                               padding=40,
                                               shape=(2, 2),
-                                              spacing=(12, 12))
+                                              spacing=(12, 12)
+                                              )
 
         gridcontainer.add(center_plot)
         gridcontainer.add(right_plot)
