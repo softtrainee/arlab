@@ -164,8 +164,8 @@ class PowerMapper(Loggable, ConsumerMixin):
         self._ys = hstack((self._ys, y))
         self._zs = hstack((self._zs, mag))
 
-        xl, xh = self._bounds[:2]
-        yl, yh = self._bounds[2:]
+#         xl, xh = self._bounds[:2]
+#         yl, yh = self._bounds[2:]
 
         if col % 10 == 0 and row:
             cg = self.contour_graph
@@ -198,6 +198,8 @@ class PowerMapper(Loggable, ConsumerMixin):
         self.info('doing continuous scan')
 
         _nrows, row_gen = self._row_generator(cx, cy, padding, step_len)
+        endpt_gen = self._endpoints_generator(cx, padding)
+
         lm = self.laser_manager
         sm = lm.stage_manager
         apm = lm.get_device('analog_power_meter')
@@ -205,7 +207,6 @@ class PowerMapper(Loggable, ConsumerMixin):
         tab = self._new_data_table(padding)
 
         sc = sm.stage_controller
-        i = 0
         while 1:
             if not self._alive:
                 self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%% not alive')
@@ -213,27 +214,17 @@ class PowerMapper(Loggable, ConsumerMixin):
             try:
                 row, ny = row_gen.next()
             except StopIteration:
-                self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%% Stop iteration')
+                self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%% Stop iteration1')
                 break
-
-
-#            sx = cx - padding
-#            ex = cx + padding
-            sx = cx + padding
-            ex = cx - padding
-#            if i % 2 == 0:
-#                sx = cx - padding
-#                ex = cx + padding
-#            else:
-#                sx = cx + padding
-#                ex = cx - padding
+            try:
+                sx, ex = endpt_gen.next()
+            except StopIteration:
+                self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%% Stop iteration2')
+                break
 
             self.info('move to start {},{}'.format(sx, ny))
             # move to start position
             sc.linear_move(sx, ny, block=True)
-
-            # wait for detector to settle
-            time.sleep(5)
 
             self.graph.new_series(color='black')
             sid = len(self.graph.series[0]) - 1
@@ -272,22 +263,24 @@ class PowerMapper(Loggable, ConsumerMixin):
                 v = (tab, x, y, col, row, mag, sid)
                 if not sc.timer.isActive():
                     self.debug('%%%%%%%%%%%%%%%%%%%%%% timer not active')
-#                    invoke_in_main_thread(self._add_data, v)
-#                    self.add_consumable((tab, x, y, 1, row, mag, sid))
                     self.add_consumable(v)
                     break
                 else:
                     self.add_consumable(v)
-#                    self._add_data(v)
-#                    invoke_in_main_thread(self._add_data, v)
                     col += 1
-#                    self.add_consumable((tab, x, y, 0, row, mag, sid))
 
             self.debug('row {} y={} complete'.format(row, ny))
 
-            i += 1
-
         self.debug('scan complete')
+
+    def _endpoints_generator(self, cx, padding):
+        def gen():
+            a = True
+            while 1:
+                s, e = cx + padding, cx - padding
+                yield s, e if a else e, s
+
+        return gen()
 
     def _row_generator(self, cx, cy, padding, step_len):
         nsteps = int(padding / step_len)

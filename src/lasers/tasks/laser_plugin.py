@@ -36,6 +36,15 @@ from src.lasers.tasks.laser_calibration_task import LaserCalibrationTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
+class CoreLaserPlugin(BaseTaskPlugin):
+    def _my_task_extensions_default(self):
+        actions = [SchemaAddition(factory=OpenPowerMapAction,
+                                  path='MenuBar/File/Open'
+                                )
+                   ]
+        return [TaskExtension(actions=actions)
+                ]
+
 class BaseLaserPlugin(BaseTaskPlugin):
     MANAGERS = 'pychron.hardware.managers'
 
@@ -126,12 +135,12 @@ class FusionsPlugin(BaseLaserPlugin):
                             name=self.task_name,
                             accelerator='Ctrl+l'
                             ),
-                TaskFactory(id='pychron.laser.calibration',
-                            task_group='hardware',
-                            factory=self._calibration_task_factory,
-                            name='Laser Calibration',
-                            accelerator='Ctrl+2'
-                            ),
+#                 TaskFactory(id='pychron.laser.calibration',
+#                             task_group='hardware',
+#                             factory=self._calibration_task_factory,
+#                             name='Laser Calibration',
+#                             accelerator='Ctrl+2'
+#                             ),
                 ]
 
     def _calibration_task_factory(self):
@@ -172,21 +181,21 @@ class FusionsPlugin(BaseLaserPlugin):
 #                                                        ),
 #                                   path='MenuBar/Extraction'
 #                                   ),
-                    SchemaAddition(id='calibration',
-                                   factory=lambda: Group(
-                                                         PowerMapAction(),
-                                                         PowerCalibrationAction(),
-                                                         ),
-                                   path='MenuBar/Extraction'
-                                   ),
-                    SchemaAddition(
-                                   factory=OpenPowerMapAction,
-                                   path='MenuBar/File/Open'
-                                   ),
-                    SchemaAddition(
-                                   factory=TestDegasAction,
-                                   path='MenuBar/Extraction'
-                                   ),
+#                     SchemaAddition(id='calibration',
+#                                    factory=lambda: Group(
+#                                                          PowerMapAction(),
+#                                                          PowerCalibrationAction(),
+#                                                          ),
+#                                    path='MenuBar/Extraction'
+#                                    ),
+#                     SchemaAddition(
+#                                    factory=OpenPowerMapAction,
+#                                    path='MenuBar/File/Open'
+#                                    ),
+#                     SchemaAddition(
+#                                    factory=TestDegasAction,
+#                                    path='MenuBar/Extraction'
+#                                    ),
                               ]
                             )
                        ]

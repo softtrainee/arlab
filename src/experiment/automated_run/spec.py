@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, CInt, Int, Bool, Float, Property, Enum, Either, on_trait_change, CStr
+from traits.api import HasTraits, Str, CInt, Int, Bool, Float, Property, \
+     Enum, Either, on_trait_change, CStr, Instance
 #============= standard library imports ========================
 import uuid
 #============= local library imports  ==========================
@@ -30,6 +31,7 @@ class AutomatedRunSpec(Loggable):
         this class is used to as a simple container and factory for 
         an AutomatedRun. the AutomatedRun does the actual work. ie extraction and measurement
     '''
+#     automated_run = Instance(AutomatedRun)
 #    state = Property(depends_on='_state')
     state = Enum('not run', 'extraction',
                  'measurement', 'success',
@@ -164,11 +166,7 @@ class AutomatedRunSpec(Loggable):
         if new_uuid:
             self.uuid = str(uuid.uuid4())
             arun.uuid = self.uuid
-#        arun
-
-        # bind to the runs state
-        arun.on_trait_change(self._update_state, 'state')
-#         arun.on_trait_change(self._update_aliquot, 'aliquot')
+            arun.spec = self
 
         return arun
 
@@ -230,6 +228,7 @@ class AutomatedRunSpec(Loggable):
 #===============================================================================
 # handlers
 #===============================================================================
+    @on_trait_change('automated_run:state')
     def _update_state(self, new):
         self.state = new
 
