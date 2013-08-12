@@ -615,6 +615,8 @@ class ExperimentExecutor(Experimentable):
         consumer = ConsumerMixin()
         consumer.setup_consumer(func=self._overlapped_run)
         delay = exp.delay_between_analyses
+        
+        last_runid=None
         while self.isAlive():
             self.db.reset()
 
@@ -664,9 +666,9 @@ class ExperimentExecutor(Experimentable):
                                 self._prev_blanks = pb
 
                     self._report_execution_state(run)
+                    last_runid=run.runid
                     run.teardown()
                     
-
             if self.end_at_run_completion:
                 break
 
@@ -680,8 +682,8 @@ class ExperimentExecutor(Experimentable):
             self.warning('error: {}'.format(self.err_message))
 
         self._end_runs()
-        if run:
-            self.info('Queue {:02n}. Automated runs ended at {}, runs executed={}'.format(iexp, run.runid, totalcnt))
+        if last_runid:
+            self.info('Queue {:02n}. Automated runs ended at {}, runs executed={}'.format(iexp, last_runid, totalcnt))
 
         consumer.stop()
         return totalcnt
@@ -793,7 +795,6 @@ class ExperimentExecutor(Experimentable):
 #        arun.repository = repo
         arun.info_display = self.info_display
 
-        arun.username = self.username
         arun.load_name = exp.load_name
 
         mon, _ = self._monitor_factory()
@@ -865,9 +866,8 @@ class ExperimentExecutor(Experimentable):
         if arun.state in ('success', 'truncated'):
             self.run_completed = arun
 
-        arun.finish()
-
         self.info('Automated run {} {}'.format(arun.runid, arun.state))
+        arun.finish()
 
         # check to see if action should be taken
 #         self._check_run_at_end(arun)

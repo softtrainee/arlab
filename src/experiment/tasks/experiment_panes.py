@@ -405,7 +405,7 @@ class ExplanationPane(TraitsDockPane):
 class IsotopeEvolutionPane(TraitsDockPane):
     id = 'pychron.experiment.isotope_evolution'
     name = 'Isotope Evolutions'
-    plot_panel = Instance('src.experiment.plot_panel_new.PlotPanel')
+    plot_panel = Instance('src.experiment.plot_panel.PlotPanel')
     def traits_view(self):
         v = View(UItem('plot_panel',
 #                        editor=InstanceEditor(view='graph_view'),
@@ -419,7 +419,7 @@ class IsotopeEvolutionPane(TraitsDockPane):
 class SummaryPane(TraitsDockPane):
     id = 'pychron.experiment.summary'
     name = 'Summary'
-    plot_panel = Instance('src.experiment.plot_panel_new.PlotPanel')
+    plot_panel = Instance('src.experiment.plot_panel.PlotPanel')
     def traits_view(self):
         v = View(UItem('plot_panel', editor=InstanceEditor(view='summary_view'),
                        style='custom'))
