@@ -17,8 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Any, Str, Int, CStr, CInt, List, Property, \
      Event, Float, Instance, Bool, cached_property, Dict, HasTraits, \
-     String, Either
-from pyface.timer.api import do_after
+     String
 #============= standard library imports ========================
 import os
 import time
@@ -31,14 +30,11 @@ from uncertainties import ufloat
 from numpy import Inf
 #============= local library imports  ==========================
 from src.globals import globalv
-
 from src.loggable import Loggable
 from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
-# from src.repo.repository import Repository
-# from src.experiment.plot_panel import PlotPanel
 from src.experiment.plot_panel_new import PlotPanel
 from src.experiment.utilities.identifier import convert_identifier, make_rid, \
     make_runid
@@ -61,7 +57,7 @@ class RunInfo(HasTraits):
     sample = Str
     irrad_level = Str
 
-#
+
 class ScriptInfo(HasTraits):
     measurement_script_name = Str
     extraction_script_name = Str
@@ -396,6 +392,7 @@ class AutomatedRun(Loggable):
             if ion is not None:
                 if detector is None:
                     detector = self._active_detectors[0].name
+
                 ion.position(mass, detector, False)
                 self.info('Delaying {}s for detectors to settle'.format(settling_time))
                 time.sleep(settling_time)
@@ -1172,7 +1169,7 @@ anaylsis_type={}
             if refresh:
                 # only refresh regression every 5th iteration
 #                 test if graph.refresh is consuming memory
-                if i % 5 == 0 or i<10:
+                if i % 5 == 0 or i < 10:
                     graph.refresh()
 
         return _write
@@ -1646,7 +1643,7 @@ anaylsis_type={}
             if self.spectrometer_manager:
                 spec_dict = self.spectrometer_manager.make_parameters_dict()
                 db.add_spectrometer_parameters(meas, spec_dict)
-                defl_dict=self.spectrometer_manager.make_deflections_dict()
+                defl_dict = self.spectrometer_manager.make_deflections_dict()
                 for det, deflection in defl_dict.iteritems():
                     det = db.add_detector(det)
                     db.add_deflection(meas, det, deflection)
@@ -1823,8 +1820,8 @@ anaylsis_type={}
 
         rs_name, rs_text = self._assemble_script_blob()
         rid = make_rid(self.labnumber, self.aliquot, self.step)
-        fb=self._get_fit_block(self._total_counts, self.fits)
-        
+        fb = self._get_fit_block(self._total_counts, self.fits)
+
         exp = ExportSpec(rid=rid,
                          runscript_name=rs_name,
                          runscript_text=rs_text,

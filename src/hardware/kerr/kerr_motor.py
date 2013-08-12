@@ -163,7 +163,6 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                 ('Homing', 'home_delay'),
                 ('Homing', 'home_velocity'),
                 ('Homing', 'home_acceleration'),
-                ('Homing', 'home_position'),
                 ('Homing', 'home_at_startup', 'boolean'),
                 ('General', 'min'),
                 ('General', 'max'),
@@ -405,7 +404,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
 
             steps = self.load_data_position(set_pos=False)
             if homing:
-                self.home_position = steps
+                invoke_in_main_thread(self.trait_set, home_position=steps)
 
             if progress is not None:
                 progress.change_message('{} position = {}'.format(self.name, steps))
