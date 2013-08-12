@@ -104,6 +104,8 @@ class FusionsLogicBoard(CoreDevice):
         # no handle or response is none
         resp = True
         if self._test_comms:
+#            self.tell('\r')
+#            self._communicator.write('\r')
             resp = True if self.ask(';LB.VER') else False
 
 #        resp = self._disable_laser_()

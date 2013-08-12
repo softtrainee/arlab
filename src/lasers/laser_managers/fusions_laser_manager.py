@@ -162,11 +162,11 @@ class FusionsLaserManager(LaserManager):
     def set_light_intensity(self, v):
         self.fiber_light.intensity = v
 
-    def kill(self, **kw):
-        if self.step_heat_manager is not None:
-            self.step_heat_manager.kill(**kw)
+#    def kill(self, **kw):
+#        if self.step_heat_manager is not None:
+#            self.step_heat_manager.kill(**kw)
 
-        super(FusionsLaserManager, self).kill(**kw)
+#        super(FusionsLaserManager, self).kill(**kw)
 
     @on_trait_change('pointer')
     def pointer_ononff(self):
