@@ -699,12 +699,16 @@ class PyScript(Loggable):
             time.sleep(v)
 
     def _block(self, timeout, message=None, dialog=False):
+        st = time.time()
         if dialog:
             if message is None:
                 message = ''
 
 #            evt = Event()
-            wd = WaitDialog()
+            wd = self._wait_dialog
+            if wd is None:
+                wd = WaitDialog()
+
             wd.trait_set(wtime=timeout,
                          parent=self,
                          message='Waiting for {:0.1f}  {}'.format(timeout, message),
@@ -713,16 +717,8 @@ class PyScript(Loggable):
             if self.manager:
                 self.manager.wait_dialog = wd
 
-            st = time.time()
-
             wd.reset()
             wd.start(block=True)
-#            wd.edit_traits(kind='livemoadl')
-#            invoke_in_main_thread(wd.edit_traits)
-#            while not evt.is_set():
-#                time.sleep(0.1)
-#            evt.wait(timeout=timeout + 0.25)
-#            wd.stop()
 
             if wd._canceled:
                 self.cancel()
@@ -730,7 +726,6 @@ class PyScript(Loggable):
                 self.info('continuing script after {:0.3f} s'.format(time.time() - st))
 
         else:
-            st = time.time()
             while time.time() - st < timeout:
                 if self._cancel:
                     break

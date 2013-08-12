@@ -113,6 +113,8 @@ class AutomatedRun(Loggable):
 #    peak_plot_panel = Any
     arar_age = Instance(ArArAge)
 
+    spec = Any
+
     experiment_identifier = Int
 #    experiment_name = Str
     labnumber = Str
@@ -219,8 +221,7 @@ class AutomatedRun(Loggable):
 
     load_name = Str
 
-    def _state_changed(self, old, new):
-        self.debug('state changed from {} to {}'.format(old, new))
+
 #===============================================================================
 # pyscript interface
 #===============================================================================
@@ -684,6 +685,7 @@ anaylsis_type={}
         if self.state not in ('not run', 'canceled', 'success', 'truncated'):
             self.state = 'failed'
 
+        self.spec = None
 
     def info(self, msg, color=None, *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
@@ -2120,8 +2122,13 @@ anaylsis_type={}
 
     def _get_runid(self):
         return make_runid(self.labnumber, self.aliquot, self.step)
-
-
+#===============================================================================
+# handles
+#===============================================================================
+    def _state_changed(self, old, new):
+        self.debug('state changed from {} to {}'.format(old, new))
+        if self.spec:
+            self.spec.state = self.state
 
 #============= EOF =============================================
 

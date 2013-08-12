@@ -21,8 +21,6 @@ from pyface.action.action import Action
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.lasers.laser_managers.pychron_laser_manager import PychronLaserManager
 from pyface.tasks.action.task_action import TaskAction
-from pyface.tasks.task_layout import TaskLayout
-from pyface.tasks.task_window_layout import TaskWindowLayout
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

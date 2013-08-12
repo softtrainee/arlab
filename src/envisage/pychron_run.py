@@ -14,37 +14,19 @@
 # limitations under the License.
 #===============================================================================
 #============= enthought library imports =======================
-from traits.api import Str
-from traitsui.api import View, Group, Item
+
 from envisage.core_plugin import CorePlugin
-# from envisage.ui.workbench.workbench_plugin import WorkbenchPlugin as ETSWorkbenchPlugin
-# from envisage.ui.workbench.workbench_preferences_page import WorkbenchPreferencesPage as ETSWorkbenchPreferencesPage
 from envisage.api import Plugin
-#============= standard library imports ========================
-#============= local library imports  ==========================
-# from pychron_application import Pychron
-
-# from plugins.pychron_workbench_plugin import PychronWorkbenchPlugin
-# from plugins.pychron_workbench_ui_plugin import PychronWorkbenchUIPlugin
-
-# from src.helpers.paths import plugins_dir
-
-
-# from src.helpers.logger_setup import add_console
-from src.displays.gdisplays import gLoggerDisplay, gTraceDisplay, gWarningDisplay, \
-    gMessageDisplay
-from src.globals import globalv
-# import logging
-from src.helpers.logger_setup import new_logger
 from envisage.ui.tasks.tasks_plugin import TasksPlugin
-# from src.envisage.tasks.pychron_application import Pychron
+#============= standard library imports ========================
 import os
+#============= local library imports  ==========================
+from src.displays.gdisplays import gTraceDisplay
+from src.globals import globalv
+from src.helpers.logger_setup import new_logger
 from src.logger.tasks.logger_plugin import LoggerPlugin
-from pyface.tasks.task_window_layout import TaskWindowLayout
 
 logger = new_logger('launcher')
-# logger = logging.getLogger('launcher')
-# logger = add_console(name='{:<30}'.format('launcher'), display=gLoggerDisplay)
 
 PACKAGE_DICT = dict(
 #                   DatabasePlugin='src.database.plugins.database_plugin',
@@ -58,6 +40,7 @@ PACKAGE_DICT = dict(
 
                    FusionsDiodePlugin='src.lasers.tasks.laser_plugin',
                    FusionsCO2Plugin='src.lasers.tasks.laser_plugin',
+                   CoreLaserPlugin='src.lasers.tasks.laser_plugin',
 #                   FusionsDiodePlugin='src.lasers.plugins.fusions.diode.plugin',
 #                   FusionsCO2Plugin='src.lasers.plugins.fusions.co2.plugin',
 #                   FusionsUVPlugin='src.lasers.plugins.fusions.uv.plugin',
@@ -102,63 +85,72 @@ def get_hardware_plugins():
             ps = [HardwarePlugin(), ]
     return ps
 
+def get_klass(package, name):
+    try:
+        m = __import__(package, globals(), locals(), [name], -1)
+        klass = getattr(m, name)
+
+    except ImportError, e:
+        import traceback
+        traceback.print_exc()
+        klass = None
+        logger.warning('****** {} could not be imported {} ******'.format(name, e),
+                       extra={'threadName_':'Launcher'}
+                       )
+    return klass
+
+def get_plugin(pname):
+    gdict = globals()
+    klass = None
+    if not pname.endswith('Plugin'):
+        pname = '{}Plugin'.format(pname)
+
+    if pname in gdict:
+        klass = gdict[pname]
+    elif pname in PACKAGE_DICT:
+        package = PACKAGE_DICT[pname]
+        klass = get_klass(package, pname)
+    elif not pname.endswith('UIPlugin'):
+        # dont warn if uiplugin not available
+        logger.warning('***** {} not available ******'.format(pname),
+                       extra={'threadName_':'Launcher'}
+                       )
+
+    if klass is not None:
+        plugin = klass()
+        if isinstance(plugin, Plugin):
+            check = plugin.check()
+            if check is True:
+                return plugin
+            else:
+                logger.warning('****** {} not available {}******'.format(klass, check),
+                               extra={'threadName_':'Launcher'})
+        else:
+            logger.warning('***** Invalid {} needs to be a subclass of Plugin ******'.format(klass),
+                           extra={'threadName_':'Launcher'})
+
 
 def get_user_plugins():
     '''
     '''
-    def get_klass(package, name):
-        try:
-            m = __import__(package, gdict, locals(), [name], -1)
-            klass = getattr(m, name)
-
-        except ImportError, e:
-            import traceback
-            traceback.print_exc()
-            klass = None
-            logger.warning('****** {} could not be imported {} ******'.format(name, e),
-                           extra={'threadName_':'Launcher'}
-                           )
-        return klass
-
     # append plugins dir to the sys path
 #    sys.path.append(plugins_dir)
     from src.helpers.parsers.initialization_parser import InitializationParser
     plugins = []
     ps = InitializationParser().get_plugins()
+
+    core_added = False
     for p in ps:
-        pp = []
-        gdict = globals()
-        pp.append(p + 'Plugin')
-        # add UI
-#        uip = p + 'UIPlugin'
-#        pp.append(uip)
+        # if laser plugin add CoreLaserPlugin
+        if p in ('FusionsCO2', 'FusionsDiode'):
+            plugin = get_plugin('CoreLaserPlugin')
+            if plugin and not core_added:
+                core_added = True
+                plugins.append(plugin)
 
-        for pname in pp:
-            klass = None
-            if pname in gdict:
-                klass = gdict[pname]
-            elif pname in PACKAGE_DICT:
-                package = PACKAGE_DICT[pname]
-                klass = get_klass(package, pname)
-            elif not pname.endswith('UIPlugin'):
-                # dont warn if uiplugin not available
-                logger.warning('***** {} not available ******'.format(pname),
-                               extra={'threadName_':'Launcher'}
-                               )
-
-            if klass is not None:
-                plugin = klass()
-                if isinstance(plugin, Plugin):
-
-                    check = plugin.check()
-                    if check is True:
-                        plugins.append(plugin)
-                    else:
-                        logger.warning('****** {} not available {}******'.format(klass, check),
-                                       extra={'threadName_':'Launcher'})
-                else:
-                    logger.warning('***** Invalid {} needs to be a subclass of Plugin ******'.format(klass),
-                                   extra={'threadName_':'Launcher'})
+        plugin = get_plugin(p)
+        if plugin:
+            plugins.append(plugin)
 
     return plugins
 
@@ -176,20 +168,7 @@ def app_factory(klass):
     plugins += get_hardware_plugins()
     plugins += get_user_plugins()
 
-#    print plugins
     app = klass(plugins=plugins)
-#
-#     gLoggerDisplay.application = app
-#     gMessageDisplay.application = app
-#     gWarningDisplay.application = app
-#     gTraceDisplay.application = app
-#
-#     if globalv.open_logger_on_launch:
-#         win = app.create_window(TaskWindowLayout('pychron.logger'))
-#         win.open()
-
-#         gLoggerDisplay.open_view(gLoggerDisplay)
-
     return app
 
 def check_dependencies():
@@ -217,7 +196,7 @@ def check_dependencies():
 
     return True
 
-# app = None
+
 def launch(klass):
     '''
     '''
@@ -225,17 +204,7 @@ def launch(klass):
     if not check_dependencies():
         return
 
-#     global app
     app = app_factory(klass)
-
-    if globalv.test:
-
-        def start_test():
-            # run the test suite
-            from src.testing.testrunner import run_tests
-#            run_tests(logger)
-
-        app.on_trait_change(start_test, 'started')
 
     try:
         app.run()
@@ -253,42 +222,9 @@ def launch(klass):
         gTraceDisplay.add_text(tb)
         gTraceDisplay.edit_traits(kind='livemodal')
 
-#        logger.warning(err)
-#        warning(app.workbench.active_window, tb)
         app.exit()
 
-#    for gi in [gLoggerDisplay, gTraceDisplay, gWarningDisplay]:
-#        gi.close_ui()
-
-#    logger.info('Quitting Pychron')
-#    app.exit()
-
-
     return
-
-
-# import unittest
-# class tempTest(unittest.TestCase):
-#    def testTemp(self):
-#        global app
-#
-#        man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
-#        self.assertNotEqual(man, 'ne')
-#        self.assertNotEqual(man, None)
-#        self.assertEqual(man, None)
-#
-# def run_tests():
-#    def _run():
-#        import time
-#        time.sleep(3)
-#        loader = unittest.TestLoader()
-#        suite = loader.loadTestsFromTestCase(tempTest)
-#        runner = unittest.TextTestRunner()
-#        runner.run(suite)
-#
-#    from threading import Thread
-#    t = Thread(target=_run)
-#    t.start()
 
 
 

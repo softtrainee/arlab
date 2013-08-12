@@ -666,8 +666,6 @@ class ExperimentExecutor(Experimentable):
                     self._report_execution_state(run)
                     run.teardown()
                     
-                    import gc
-                    gc.collect()
 
             if self.end_at_run_completion:
                 break

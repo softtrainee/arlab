@@ -25,8 +25,8 @@ from src.managers.manager import Manager
 from src.ui.progress_dialog import myProgressDialog
 from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
 from src.processing.analysis import Analysis, NonDBAnalysis
-from src.constants import NULL_STR
-from src.ui.gui import invoke_in_main_thread
+# from src.constants import NULL_STR
+# from src.ui.gui import invoke_in_main_thread
 
 
 class IsotopeDatabaseManager(Manager):
@@ -52,7 +52,6 @@ class IsotopeDatabaseManager(Manager):
                 self.debug('bind exception. {}'.format(e))
 
         if connect and not self.db.connect():
-            self.warning_dialog('Not Connected to Database {}'.format(self.db.url))
             self.db = None
 
     def load(self):
@@ -167,7 +166,6 @@ class IsotopeDatabaseManager(Manager):
         pd.open()
         return pd
 
-
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -176,26 +174,30 @@ class IsotopeDatabaseManager(Manager):
 #         self.irradiation = NULL_STR
 #        r = ['NM-Test', 'NM-100', 'NM-200']
 #         r = [NULL_STR] +
-        r = [str(ri.name) for ri in self.db.get_irradiations()
-                        if ri.name]
+        r = []
+        if self.db:
+            r = [str(ri.name) for ri in self.db.get_irradiations()
+                            if ri.name]
 
-        if r and not self.irradiation:
-            self.irradiation = r[0]
+            if r and not self.irradiation:
+                self.irradiation = r[0]
 
         return r
 
     @cached_property
     def _get_levels(self):
+
 #         self.level = NULL_STR
         r = []
-        irrad = self.db.get_irradiation(self.irradiation)
-        if irrad:
-#             r = [NULL_STR] + sorted([str(ri.name) for ri in irrad.levels])
-            r = sorted([str(ri.name) for ri in irrad.levels
-                                        if ri.name])
-            if r and not self.level:
-                self.level = r[0]
-#            if r and not self.level:
+        if self.db:
+            irrad = self.db.get_irradiation(self.irradiation)
+            if irrad:
+    #             r = [NULL_STR] + sorted([str(ri.name) for ri in irrad.levels])
+                r = sorted([str(ri.name) for ri in irrad.levels
+                                            if ri.name])
+                if r and not self.level:
+                    self.level = r[0]
+    #            if r and not self.level:
 
         return r
 #============= EOF =============================================

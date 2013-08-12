@@ -33,7 +33,9 @@ class LabnumberEntryTask(BaseManagerTask):
         return LabnumberEntry()
 
     def _importer_default(self):
-        return ImportManager()
+        return ImportManager(db=self.manager.db,
+                             connect=False
+                             )
 
     def _default_layout_default(self):
         return TaskLayout(
