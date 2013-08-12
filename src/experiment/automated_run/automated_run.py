@@ -35,7 +35,7 @@ from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
-from src.experiment.plot_panel_new import PlotPanel
+from src.experiment.plot_panel import PlotPanel
 from src.experiment.utilities.identifier import convert_identifier, make_rid, \
     make_runid
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
@@ -51,11 +51,6 @@ from src.processing.isotope import IsotopicMeasurement
 from src.experiment.export.export_spec import ExportSpec
 from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import ConsumerMixin
-
-
-class RunInfo(HasTraits):
-    sample = Str
-    irrad_level = Str
 
 
 class ScriptInfo(HasTraits):
@@ -87,6 +82,8 @@ def assemble_script_blob(scripts, kinds=None):
 
 warned_scripts = []
 
+def SpecProperty():
+    return Property(depends_on='spec')
 
 class AutomatedRun(Loggable):
     spectrometer_manager = Any
@@ -98,78 +95,88 @@ class AutomatedRun(Loggable):
     db = Instance(IsotopeAdapter)
     local_lab_db = Instance(LocalLabAdapter)
     massspec_importer = Instance(MassSpecDatabaseImporter)
-#    repository = Instance(Repository)
 
-#    run_info = Instance(RunInfo, ())
     script_info = Instance(ScriptInfo, ())
 
     runner = Any
     monitor = Any
     plot_panel = Any
-#    peak_plot_panel = Any
     arar_age = Instance(ArArAge)
 
     spec = Any
 
-    experiment_identifier = Int
+    labnumber = SpecProperty()
+    step = SpecProperty()
+    aliquot = SpecProperty()
+    sample = SpecProperty()
+    irradiation = SpecProperty()
+    extract_group = SpecProperty()
+    extract_value = SpecProperty()
+    extract_units = SpecProperty()
+    mass_spectrometer = SpecProperty()
+    extract_device = SpecProperty()
+    duration = SpecProperty()
+    tray = SpecProperty()
+    position = SpecProperty()
+    overlap = SpecProperty()
+    cleanup = SpecProperty()
+    ramp_rate = SpecProperty()
+    ramp_duration = SpecProperty()
+    weight = SpecProperty()
+    comment = SpecProperty()
+    pattern = SpecProperty()
+    beam_diameter = SpecProperty()
+    analysis_type = SpecProperty()
+    disable_between_positions = SpecProperty()
+    username = SpecProperty()
+    skip = SpecProperty()
+    end_after = SpecProperty()
+    load_name = SpecProperty()
+
 #    experiment_name = Str
-    labnumber = Str
-    step = Str
-    aliquot = CInt
+#     labnumber = Str
+#     step = Str
+#     aliquot = CInt
+#     sample = Str
+#     irradiation = Str
+#     extract_group = CInt
+#     extract_value = Float
+#     extract_units = Str(NULL_STR)
+#
+#     mass_spectrometer = Str
+#     extract_device = Str
+#     duration = Float
+#
+#     tray = Str
+#     position = Str
+#     autocenter = Bool
+#     overlap = CInt
+#     cleanup = CInt
+#     ramp_rate = Float
+#     ramp_duration = Float
+#
+#     weight = Float
+#     comment = Str
+#     pattern = Str
+#     beam_diameter = None
+#     username = None
+#     skip = Bool
+#     analysis_type = Str
+#     disable_between_positions = Bool(False)
+
+    experiment_identifier = Int
     user_defined_aliquot = False
-    sample = Str
-    irradiation = Str
-
     state = String('not run')
-    extract_group = CInt
-    extract_value = Float
-    extract_units = Str(NULL_STR)
-
-    mass_spectrometer = Str
-    extract_device = Str
-    duration = Float
-
-    tray = Str
-    position = Str
-#    endposition = Int
-#    multiposition = Bool
-
-    autocenter = Bool
-    overlap = CInt
-    cleanup = CInt
-    ramp_rate = Float
-    ramp_duration = Float
-
-    weight = Float
-    comment = Str
-    pattern = Str
-    beam_diameter = None
 
     ic_factor = Any
-
-    analysis_type = Str
-    disable_between_positions = Bool(False)
 
     scripts = Dict
     signals = Dict
 
-    sample_data_record = Any
-
-    measurement_script_dirty = Event
-    measurement_script = Property(depends_on='measurement_script_dirty')
-    _measurement_script = Any
-
-    post_measurement_script_dirty = Event
-    post_measurement_script = Property(depends_on='post_measurement_script_dirty')
-    _post_measurement_script = Any
-
-    post_equilibration_script_dirty = Event
-    post_equilibration_script = Property(depends_on='post_equilibration_script_dirty')
-    _post_equilibration_script = Any
-
-    extraction_script_dirty = Event
-    extraction_script = Property(depends_on='extraction_script_dirty')
-    _extraction_script = Any
+    measurement_script = Property
+    post_measurement_script = Property
+    post_equilibration_script = Property
+    extraction_script = Property
 
     _active_detectors = List
     _loaded = False
@@ -177,18 +184,14 @@ class AutomatedRun(Loggable):
     _rundate = None
     _runtime = None
     _timestamp = None
+    _alive = False
+    _save_isotopes = List
+    _truncate_signal = Bool
 
     valid_scripts = Dict
-    _alive = False
-
     peak_center = None
     coincidence_scan = None
-
-    username = None
-    _save_isotopes = List
     update = Event
-
-    _truncate_signal = Bool
 
 #    condition_truncated = Bool
     truncated = Bool
@@ -205,7 +208,6 @@ class AutomatedRun(Loggable):
     _total_counts = 0
     _processed_signals_dict = None
 
-    skip = Bool
     fits = List
     runid = Property
 
@@ -214,8 +216,6 @@ class AutomatedRun(Loggable):
 
 #    save_error_flag = False
     invalid_script = False
-
-    load_name = Str
 
 
 #===============================================================================
@@ -725,9 +725,8 @@ anaylsis_type={}
                 self.arar_age.labnumber_record = ln
 
             self.measuring = False
-            self.update = True
+#             self.update = True
             self.truncated = False
-#            self.condition_truncated = False
 
             self.overlap_evt = TEvent()
             self.info('Start automated run {}'.format(self.runid))
@@ -751,14 +750,6 @@ anaylsis_type={}
             # immediately check the monitor conditions
             if self.monitor.check():
                 return _start()
-
-#    def cancel(self):
-#        self._alive = False
-#        for s in ['extraction', 'measurement', 'post_equilibration', 'post_measurement']:
-#            script = getattr(self, '{}_script'.format(s))
-#            if script is not None:
-#                script.cancel()
-#        self.finish()
 
     def wait_for_overlap(self):
         '''
@@ -846,9 +837,6 @@ anaylsis_type={}
         if not self.post_measurement_script:
             return True
 
-#        if not self._alive and not self._truncate_signal:
-#            return
-
         if not self._alive:
             return
 
@@ -902,7 +890,6 @@ anaylsis_type={}
     def _open_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
 
         if plot_panel is None:
-#            title = 'Plot Panel {}'.format(self.runid)
             title = self.runid
             if self.sample:
                 title = '{} {}'.format(title, self.sample)
@@ -910,20 +897,15 @@ anaylsis_type={}
                 title = '{} {}'.format(title, self.irradiation)
 
             plot_panel = PlotPanel(
-#                             window_y=0.05,  # + 0.01 * self.index,
-#                             window_x=0.6,  # + 0.01 * self.index,
                              plot_title=title,
                              stack_order=stack_order,
                              info_func=self.info,
                              arar_age=self.arar_age,
                              sample=self.sample,
                              irradiation=self.irradiation,
-
                              )
 
             plot_panel.reset()
-#            plot_panel.on_trait_change(self._plot_panel_closed, 'close_event')
-#            self.experiment_manager.open_view(plot_panel)
 
         return plot_panel
 
@@ -1006,7 +988,6 @@ anaylsis_type={}
                     # update the plot_panel labels
                     for det, pi in zip(self._active_detectors, self.plot_panel.graph.plots):
                         pi.y_axis.title = '{} {} (fA)'.format(det.name, det.isotope)
-    #                self.plot_panel.isotopes = [d.isotope for d in self._active_detectors]
                 except Exception, e:
                     print 'set_position exception', e
 
@@ -1041,10 +1022,6 @@ anaylsis_type={}
         if (self._total_counts + dev) > ma:
             graph.set_x_limits(0, self._total_counts + (ma - mi) * 0.25)
 
-#        _debug = globalv.automated_run_debug
-#        p.series_cnt += 1
-#        ti = self.integration_time * 0.99 if not _debug else 0.1
-
         original_idx = [(di.name, di.isotope) for di in self._active_detectors]
 
         def idx_func(isot):
@@ -1060,10 +1037,6 @@ anaylsis_type={}
                 break
             elif ck == 'cancel':
                 return False
-
-#        for _ in xrange(0, ncycles, 1):
-#            if not self._alive:
-#                return False
 
             for hopstr , counts in hops:
                 if not self._alive:
@@ -1239,32 +1212,9 @@ anaylsis_type={}
 
             x = time.time() - starttime  # if not self._debug else iter_cnt + starttime
 
-#             signal_dict = dict(zip(keys, signals))
             v = (iter_cnt, x, keys, signals)
             consumer.add_consumable(v)
 
-#             self.signals = dict(zip(keys, signals))
-#
-#             nfs = self._get_fit_block(iter_cnt, fits)
-#             for pi, (fi, dn) in enumerate(zip(nfs, dets)):
-#                 signal = signals[keys.index(dn.name)]
-#                 graph.add_datum((x, signal),
-#                                 series=series,
-#                                 plotid=pi,
-#                                 update_y_limits=True,
-#                                 ypadding='0.5'
-#                                 )
-#                 if fi:
-#                     graph.set_fit(fi, plotid=pi, series=0)
-#
-#             if grpname == 'signal':
-#                 self.plot_panel.fits = nfs
-#
-#             data_write_hook(x, keys, signals)
-#             if refresh:
-#                 # only refresh regression every 5th iteration
-#                 if iter_cnt % 5 == 0:
-#                     graph.refresh()
 
             time.sleep(m)
             iter_cnt += 1
@@ -1399,7 +1349,6 @@ anaylsis_type={}
         self._processed_signals_dict = ss
 
         ln = self.labnumber
-#        ln = convert_identifier(ln)
         aliquot = self.aliquot
 
         # save to local sqlite database for backup and reference
@@ -1420,9 +1369,6 @@ anaylsis_type={}
             lab = db.get_labnumber(ln)
 
             experiment = db.get_experiment(self.experiment_identifier, key='id')
-#            experiment = db.get_experiment(self.experiment_name)
-#            if experiment is None:
-#                experiment = db.add_experiment(self.experiment_name)
 
             endtime = get_datetime().time()
             self.info('analysis finished at {}'.format(endtime))
@@ -1443,18 +1389,14 @@ anaylsis_type={}
 
             if experiment is not None:
                 # added analysis to experiment
-#                 experiment.analyses.append(a)
                 a.experiment_id = experiment.id
 
             else:
                 self.warning('no experiment found for {}'.format(self.experiment_identifier))
 
             # save extraction
-#             ext = self._save_extraction(a)
             ext = self._db_extraction_id
-            print ext
             dbext = db.get_extraction(ext, key='id')
-
             a.extractio_id = dbext.id
 
             # save measurement
@@ -1462,11 +1404,9 @@ anaylsis_type={}
 
             # save sensitivity info to extraction
             self._save_sensitivity(dbext, meas)
-
             self._save_spectrometer_info(meas)
 
             # add selected history
-
             db.add_selected_histories(a)
             self._save_isotope_info(a, ss)
 
@@ -1579,8 +1519,6 @@ anaylsis_type={}
                                   analysis,
                                   self.analysis_type,
                                   self.mass_spectrometer,
-    #                              self.measurement_script.name,
-    #                              script_blob=self.measurement_script.toblob()
                                   )
             script = db.add_script(self.measurement_script.name,
                                 self.measurement_script.toblob())
@@ -1609,13 +1547,11 @@ anaylsis_type={}
                               self.experiment_manager.experiment_blob()
                               )
             ext.experiment_blob_id = exp.id
-#             exp.experiments.append(ext)
 
             if self.extraction_script:
                 script = db.add_script(self.extraction_script.name,
                                        self._assemble_extraction_blob())
                 ext.script_id = script.id
-#                 script.extractions.append(ext)
 
             for pi in self.get_position_list():
                 if isinstance(pi, tuple):
@@ -1630,7 +1566,6 @@ anaylsis_type={}
                     dbpos = db.add_analysis_position(ext, pi)
 
                 if loadtable:
-#                 lp = db.add_load_position(self.labnumber)
                     loadtable.measured_positions.append(dbpos)
 
             return ext
@@ -1746,13 +1681,8 @@ anaylsis_type={}
                                           signal_=float(s.value), signal_err=float(s.error),
                                           )
 
-#                db.flush()
-#                self.debug('isotope {}{} save time= {:0.3f}'.format(iso, kind, time.time() - st))
-
         return self._time_save(func, 'isotope info')
 
-#        if globalv.experiment_savedb:
-#            db.commit()
     def _save_monitor_info(self, analysis):
         if self.monitor:
             self.info('saving monitor info')
@@ -1800,12 +1730,8 @@ anaylsis_type={}
             else:
                 blanks.append(ufloat(0, 0))
 
-#        signals=self._processed_signals_dict
-#        sig_ints = dict()
-#        base_ints = dict()
         sig_ints = []
         base_ints = []
-#        for k,v in self._processed_signals_dict:
         psignals = self._processed_signals_dict
         for iso, _, kind in self._save_isotopes:
             if kind == 'signal':
@@ -1813,8 +1739,6 @@ anaylsis_type={}
                 bi = psignals['{}baseline'.format(iso)]
                 sig_ints.append(si.uvalue)
                 base_ints.append(bi.uvalue)
-#                sig_ints[iso] = si.uvalue
-#                base_ints[iso] = bi.uvalue
 
         baseline_fits = ['Average Y', ] * len(self._active_detectors)
 
@@ -1839,23 +1763,17 @@ anaylsis_type={}
 
         exp.load_record(self)
 
-#        self.massspec_importer.add_analysis(exp)
-#        self.info('analysis added to mass spec database')
-#        self.save_error_flag = False
         try:
             self.massspec_importer.add_analysis(exp)
             self.info('analysis added to mass spec database')
         except Exception:
             import traceback
             tb = traceback.format_exc()
-#            self.warning(tb)
-#            print tb
             self.message('''Could not save to Mass Spec database.\n 
 #====Error================================
 {}
 #=========================================
 '''.format(tb))
-#            self.save_error_flag = True
 
             if not globalv.experiment_debug:
                 self.experiment_manager.cancel(cancel_run=True,
@@ -1976,11 +1894,8 @@ anaylsis_type={}
 
         elif ',' in pos:
             # interpert as list of holenumbers
-#            ps = map(int, pos.split(','))
             ps = list(pos.split(','))
         else:
-#            if pos:
-#                pos = int(pos)
 
             ps = [pos]
 
@@ -2095,30 +2010,86 @@ anaylsis_type={}
 
         return default
 
-
-
     @cached_property
     def _get_post_measurement_script(self):
-        self._post_measurement_script = self._load_script('post_measurement')
-        return self._post_measurement_script
+        return self._load_script('post_measurement')
 
     @cached_property
     def _get_post_equilibration_script(self):
-        self._post_equilibration_script = self._load_script('post_equilibration')
-        return self._post_equilibration_script
+        return self._load_script('post_equilibration')
 
     @cached_property
     def _get_measurement_script(self):
-        self._measurement_script = self._load_script('measurement')
-        return self._measurement_script
+        return self._load_script('measurement')
 
     @cached_property
     def _get_extraction_script(self):
-        self._extraction_script = self._load_script('extraction')
-        return self._extraction_script
+        return self._load_script('extraction')
 
     def _get_runid(self):
         return make_runid(self.labnumber, self.aliquot, self.step)
+
+#===============================================================================
+# spec properties
+#===============================================================================
+    def _get_labnumber(self):
+        return self._get_spec_attr('labnumber')
+
+    def _get_step(self):
+        return self._get_spec_attr('step')
+    def _get_aliquot(self):
+        return self._get_spec_attr('aliquot')
+    def _get_sample(self):
+        return self._get_spec_attr('sample')
+    def _get_irradiation(self):
+        return self._get_spec_attr('irradiation')
+    def _get_extract_group(self):
+        return self._get_spec_attr('extract_group')
+    def _get_extract_value(self):
+        return self._get_spec_attr('extract_value')
+    def _get_extract_units(self):
+        return self._get_spec_attr('extract_units')
+    def _get_mass_spectrometer(self):
+        return self._get_spec_attr('mass_spectrometer')
+    def _get_extract_device(self):
+        return self._get_spec_attr('extract_device')
+    def _get_duration(self):
+        return self._get_spec_attr('duration')
+    def _get_tray(self):
+        return self._get_spec_attr('tray')
+    def _get_position(self):
+        return self._get_spec_attr('position')
+    def _get_overlap(self):
+        return self._get_spec_attr('overlap')
+    def _get_cleanup(self):
+        return self._get_spec_attr('cleanup')
+    def _get_ramp_rate(self):
+        return self._get_spec_attr('ramp_rate')
+    def _get_ramp_duration(self):
+        return self._get_spec_attr('ramp_duration')
+    def _get_weight(self):
+        return self._get_spec_attr('weight')
+    def _get_comment(self):
+        return self._get_spec_attr('comment')
+    def _get_pattern(self):
+        return self._get_spec_attr('pattern')
+    def _get_beam_diameter(self):
+        return self._get_spec_attr('beam_diameter')
+    def _get_analysis_type(self):
+        return self._get_spec_attr('analysis_type')
+    def _get_disable_between_positions(self):
+        return self._get_spec_attr('disable_between_positions')
+    def _get_username(self):
+        return self._get_spec_attr('username')
+    def _get_skip(self):
+        return self._get_spec_attr('skip')
+    def _get_end_after(self):
+        return self._get_spec_attr('end_after')
+    def _get_load_name(self):
+        return self._get_spec_attr('load_name')
+    def _get_spec_attr(self, attr):
+        if self.spec:
+            return getattr(self.spec, attr)
 #===============================================================================
 # handles
 #===============================================================================
