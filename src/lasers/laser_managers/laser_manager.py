@@ -28,6 +28,7 @@ from src.paths import paths
 from src.lasers.laser_managers.laser_script_executor import LaserScriptExecutor
 from src.lasers.laser_managers.base_lase_manager import BaseLaserManager
 from enable.component import Component
+from src.helpers.filetools import list_directory
 
 
 class LaserManager(BaseLaserManager):
@@ -71,7 +72,7 @@ class LaserManager(BaseLaserManager):
         self.stage_manager.set_xy(*xy)
 
     def get_pattern_names(self):
-        return self.get_file_list(paths.pattern_dir, extension='.lp')
+        return list_directory(paths.pattern_dir, extension='.lp')
 
     def enable_laser(self):
         self.info('enable laser')

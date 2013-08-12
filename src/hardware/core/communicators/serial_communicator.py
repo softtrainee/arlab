@@ -91,6 +91,10 @@ class SerialCommunicator(Communicator):
         except Exception:
             self.warning('failed to reset connection')
 
+    def close(self):
+        if self.handle:
+            self.debug('closing handle {}'.format(self.handle))
+            self.handle.close()
 
     def load(self, config, path):
         '''

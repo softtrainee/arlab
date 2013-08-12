@@ -92,7 +92,6 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator, ConsumerMixin):
 
     _scheduler_name = None
 
-
     def close(self):
         if self._communicator:
             self._communicator.close()
