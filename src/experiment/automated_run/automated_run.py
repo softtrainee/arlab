@@ -128,10 +128,9 @@ class AutomatedRun(Loggable):
     beam_diameter = SpecProperty()
     analysis_type = SpecProperty()
     disable_between_positions = SpecProperty()
-    username = SpecProperty()
+
     skip = SpecProperty()
-    end_after = SpecProperty()
-    load_name = SpecProperty()
+    username = SpecProperty()
 
 #    experiment_name = Str
 #     labnumber = Str
@@ -652,6 +651,8 @@ anaylsis_type={}
             del self.signals
         if self._processed_signals_dict:
             del self._processed_signals_dict
+        
+        self.spec=None
 #         del self.monitor
 #         del self.peak_center
 #
@@ -681,8 +682,6 @@ anaylsis_type={}
 
         if self.state not in ('not run', 'canceled', 'success', 'truncated'):
             self.state = 'failed'
-
-        self.spec = None
 
     def info(self, msg, color=None, *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
@@ -2037,8 +2036,10 @@ anaylsis_type={}
 
     def _get_step(self):
         return self._get_spec_attr('step')
+    
     def _get_aliquot(self):
-        return self._get_spec_attr('aliquot')
+        return self._get_spec_attr('aliquot', cast=int)
+    
     def _get_sample(self):
         return self._get_spec_attr('sample')
     def _get_irradiation(self):
@@ -2079,17 +2080,19 @@ anaylsis_type={}
         return self._get_spec_attr('analysis_type')
     def _get_disable_between_positions(self):
         return self._get_spec_attr('disable_between_positions')
-    def _get_username(self):
-        return self._get_spec_attr('username')
+
     def _get_skip(self):
         return self._get_spec_attr('skip')
-    def _get_end_after(self):
-        return self._get_spec_attr('end_after')
-    def _get_load_name(self):
-        return self._get_spec_attr('load_name')
-    def _get_spec_attr(self, attr):
+    def _get_username(self):
+        return self._get_spec_attr('username')
+    
+    def _get_spec_attr(self, attr, cast=None):
+        r=None
         if self.spec:
-            return getattr(self.spec, attr)
+            r=getattr(self.spec, attr)
+            if cast is not None:
+                r=cast(r)
+        return r
 #===============================================================================
 # handles
 #===============================================================================

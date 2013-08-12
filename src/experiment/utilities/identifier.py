@@ -143,7 +143,7 @@ def get_analysis_type(idn):
 
 def make_runid(ln, a, s):
     if not isinstance(a, str):
-        a = '{:02n}'.format(a)
+        a = '{:02n}'.format(int(a))
 
     return '{}-{}{}'.format(ln, a, s)
 

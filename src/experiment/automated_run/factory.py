@@ -293,10 +293,12 @@ class AutomatedRunFactory(Viewable):
     def _new_template(self):
         template = IncrementalHeatTemplate()
         if self._use_template():
-            template.load(os.path.join(paths.incremental_heat_template_dir,
-                                       '{}.txt'.format(self.template)
-                                       )
-                          )
+            t=self.template
+            if not t.endswith('.txt'):
+                t='{}.txt'.format(t)
+            t=os.path.join(paths.incremental_heat_template_dir, t)
+            template.load(t)
+            
         return template
 
     def _render_template(self, cnt):
