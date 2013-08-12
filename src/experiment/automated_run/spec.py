@@ -78,6 +78,7 @@ class AutomatedRunSpec(Loggable):
     pattern = Str
     beam_diameter = CStr
     ramp_duration = Float
+    disable_between_positions = Bool(False)
     #===========================================================================
     # info
     #===========================================================================
@@ -155,17 +156,17 @@ class AutomatedRunSpec(Loggable):
 
     def make_run(self, new_uuid=True):
         arun = self.run_klass()
-        attrs = self._get_run_attrs()
-        for ai in attrs:
-            setattr(arun, ai, getattr(self, ai))
+
+#         attrs = self._get_run_attrs()
+#         for ai in attrs:
+#             setattr(arun, ai, getattr(self, ai))
 
         for si in SCRIPT_KEYS:
             setattr(arun.script_info, '{}_script_name'.format(si),
                     getattr(self, '{}_script'.format(si)))
 
         if new_uuid:
-            self.uuid = str(uuid.uuid4())
-            arun.uuid = self.uuid
+            arun.uuid = str(uuid.uuid4())
             arun.spec = self
 
         return arun
