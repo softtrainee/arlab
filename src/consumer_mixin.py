@@ -44,24 +44,26 @@ class ConsumerMixin(object):
         self._consumer_queue.put(v)
 
     def _consume(self):
-        if self._buftime:
-            def get_func():
-                bt = self._buftime / 1000.
-                q = self._consumer_queue
-                v = None
-                while 1:
-                    try:
-                        v = q.get(timeout=bt)
-                    except Empty:
-                        break
-
-                return v
-
+        bt = self._buftime
+        if bt:
+            bt = bt / 1000.
         else:
-            get_func = self._consumer_queue.get
+            bt = 1
+
+        def get_func():
+            q = self._consumer_queue
+            v = None
+            while 1:
+                try:
+                    v = q.get(timeout=bt)
+                except Empty:
+                    break
+
+            return v
 
         cfunc = self._consume_func
-        while self._should_consume:
+
+        while 1:
             v = get_func()
             if v:
                 if cfunc:
@@ -69,5 +71,8 @@ class ConsumerMixin(object):
                 elif isinstance(v, tuple):
                     func, a = v
                     func(a)
+
+            if not self._should_consume:
+                break
 
 #============= EOF =============================================
