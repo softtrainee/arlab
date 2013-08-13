@@ -20,7 +20,6 @@ from traits.api import Any, Instance, Int, Property, List, on_trait_change, Dict
 from traitsui.api import View, Item, Group, HGroup, spring, VSplit, UItem, \
     HSplit, VGroup
 from src.graph.graph import Graph
-from src.viewable import ViewableHandler, Viewable
 
 from src.graph.regression_graph import StackedRegressionGraph
 from uncertainties import ufloat
@@ -29,9 +28,8 @@ from src.constants import PLUSMINUS
 from src.processing.arar_age import ArArAge
 # from src.helpers.formatting import floatfmt
 from src.displays.display import DisplayController
-from src.ui.text_table import TextTableAdapter, SimpleTextTableAdapter, \
-    RatiosAdapter, ValueErrorAdapter, MultiTextTableAdapter
-from src.ui.qt.text_table_editor import TextTableEditor, FastTextTableEditor
+from src.ui.text_table import RatiosAdapter, ValueErrorAdapter, MultiTextTableAdapter
+from src.ui.qt.text_table_editor import FastTextTableEditor
 # from src.database.records.ui.analysis_summary import SignalAdapter
 from src.experiment.display_signal import DisplaySignal, DisplayRatio, DisplayValue
 from src.loggable import Loggable
@@ -115,13 +113,13 @@ class PlotPanel(Loggable):
     isbaseline = Bool(False)
 
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
-    info_func=None
-    
+    info_func = None
+
     def info(self, *args, **kw):
         if self.info_func:
             self.info_func(*args, **kw)
         else:
-            super(PlotPanel,self).info(*args, **kw)
+            super(PlotPanel, self).info(*args, **kw)
     def reset(self):
         self.clear_displays()
         self.graph = self._graph_factory()

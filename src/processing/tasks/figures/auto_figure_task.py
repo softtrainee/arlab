@@ -40,16 +40,16 @@ class AutoFigureTask(FigureTask):
 
     use_single_ideogram = Bool(True)
     attached = False
-    
-    host=Str('129.138.12.141')
-    port=Int(8101)
+
+    host = Str('129.138.12.141')
+    port = Int(8101)
     def __init__(self, *args, **kw):
-        super(AutoFigureTask,self).__init__(*args, **kw)
-        
+        super(AutoFigureTask, self).__init__(*args, **kw)
+
         bind_preference(self, 'host', 'pychron.auto_figure.host')
         bind_preference(self, 'port', 'pychron.auto_figure.port')
-        
-        
+
+
     def activated(self):
         if not self.attached:
 
@@ -58,18 +58,18 @@ class AutoFigureTask(FigureTask):
                 
                 allow to save and select from favorites    
             '''
-            sub_str='RunAdded'
+            sub_str = 'RunAdded'
             self.info('starting subscription to {}:{} "{}"'.format(self.host, self.port, sub_str))
             sub = Subscriber(host=self.host,
                              port=self.port)
             sub.connect()
             sub.subscribe(sub_str)
             sub.listen(self.sub_refresh_plots)
-            
+
     def sub_refresh_plots(self, last_run):
         self.manager.db.reset()
         invoke_in_main_thread(self.refresh_plots, last_run)
-        
+
     def refresh_plots(self, last_run):
         '''
             if last run is part of a step heat experiment
@@ -87,24 +87,25 @@ class AutoFigureTask(FigureTask):
                 return
 
         else:
-            ln = last_run.labnumber
-            at = last_run.analysis_type
-            sample = last_run.sample
-            eg = last_run.extract_group
-            al = last_run.aliquot
-            ms = last_run.mass_spectrometer
-            ed = last_run.extract_device
+            spec = last_run.spec
+            ln = spec.labnumber
+            at = spec.analysis_type
+            sample = spec.sample
+            eg = spec.extract_group
+            al = spec.aliquot
+            ms = spec.mass_spectrometer
+            ed = spec.extract_device
 
         if at == 'unknown':
             self._refresh_unknown(ln, sample, eg, al)
         else:
-            self._refresh_series(ln,ms, ed, at)
+            self._refresh_series(ln, ms, ed, at)
 
     def _get_args(self, uuid):
         an = self.manager.db.get_analysis(uuid, key='uuid')
         if an is not None:
             ln = an.labnumber.identifier
-            
+
             at = an.measurement.analysis_type.name
 
             sample = ''
@@ -117,7 +118,7 @@ class AutoFigureTask(FigureTask):
             if an.extraction:
                 ed = an.extraction.extraction_device.name
             else:
-                ed=''
+                ed = ''
 
             return ln, at, sample, eg, al, ms, ed
 
@@ -127,9 +128,9 @@ class AutoFigureTask(FigureTask):
             if extract_group:
                 self.plot_sample_spectrum(sample, aliquot)
             else:
-                self.plot_sample_ideogram(ln,sample)
+                self.plot_sample_ideogram(ln, sample)
 
-    def _refresh_series(self,ln, ms, ed, at):
+    def _refresh_series(self, ln, ms, ed, at):
         editor = self._get_editor(AutoSeriesEditor)
         if editor:
             afc = editor.auto_figure_control

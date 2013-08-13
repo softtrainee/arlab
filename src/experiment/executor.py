@@ -615,8 +615,8 @@ class ExperimentExecutor(Experimentable):
         consumer = ConsumerMixin()
         consumer.setup_consumer(func=self._overlapped_run)
         delay = exp.delay_between_analyses
-        
-        last_runid=None
+
+        last_runid = None
         while self.isAlive():
             self.db.reset()
 
@@ -646,7 +646,7 @@ class ExperimentExecutor(Experimentable):
                 '''
                     overlay not fully implemented
                 '''
-                if run.analysis_type == 'unknown' and run.overlap:
+                if runspec.analysis_type == 'unknown' and runspec.overlap:
                     self.info('overlaping')
                     run.wait_for_overlap()
                     self.debug('overlap finished. starting next run')
@@ -660,15 +660,15 @@ class ExperimentExecutor(Experimentable):
                     self.debug('{} finished'.format(run.runid))
                     if self.isAlive():
                         totalcnt += 1
-                        if run.analysis_type.startswith('blank'):
+                        if runspec.analysis_type.startswith('blank'):
                             pb = run.get_baseline_corrected_signals()
                             if pb is not None:
                                 self._prev_blanks = pb
 
                     self._report_execution_state(run)
-                    last_runid=run.runid
+                    last_runid = run.runid
                     run.teardown()
-                    
+
             if self.end_at_run_completion:
                 break
 
@@ -719,7 +719,6 @@ class ExperimentExecutor(Experimentable):
 
     def _launch_run(self, run, cnt):
         run = self._setup_automated_run(cnt, run)
-        run.pre_extraction_save()
         self.info('========== {} =========='.format(run.runid))
 
         ta = Thread(name=run.runid,
@@ -771,7 +770,7 @@ class ExperimentExecutor(Experimentable):
 #        exp.current_run = arun
         self.current_run = arun
         self.debug('setup run {} of {}'.format(i, exp.name))
-        self.debug('%%%%%%%%%%%%%%% Comment= {} %%%%%%%%%%%%%'.format(arun.comment))
+        self.debug('%%%%%%%%%%%%%%% Comment= {} %%%%%%%%%%%%%'.format(arv.comment))
 
         '''
             save this runs uuid to a hidden file
@@ -782,6 +781,7 @@ class ExperimentExecutor(Experimentable):
 #        arun.index = i
 #        arun.experiment_name = exp.path
         arun.experiment_identifier = exp.database_identifier
+
         arun.experiment_manager = self
         arun.spectrometer_manager = self.spectrometer_manager
         arun.extraction_line_manager = self.extraction_line_manager
@@ -793,7 +793,7 @@ class ExperimentExecutor(Experimentable):
 
         arun.integration_time = 1.04
 #        arun.repository = repo
-        arun.info_display = self.info_display
+#         arun.info_display = self.info_display
 
         arun.load_name = exp.load_name
 

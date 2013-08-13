@@ -180,6 +180,7 @@ class FusionsDiodeManager(FusionsLaserManager):
         self.temperature_controller.set_open_loop_setpoint(0.0)
 
     def set_laser_output(self, value, units):
+        self.debug('set laser output value={} units={}'.format(value, units))
         if units == 'temp':
             self.set_laser_temperature(value)
         else:
