@@ -31,7 +31,8 @@ named_register = makeNamedRegistry(command_register)
 class ValvePyScript(PyScript):
     runner = Any
     def _runner_changed(self):
-        self.runner.scripts.append(self)
+        if self.runner:
+            self.runner.scripts.append(self)
 
     def get_command_register(self):
         return command_register.commands.items()

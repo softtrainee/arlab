@@ -51,6 +51,7 @@ from src.processing.isotope import IsotopicMeasurement
 from src.experiment.export.export_spec import ExportSpec
 from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import ConsumerMixin
+from enable.savage.svg.attributes import none
 
 
 class ScriptInfo(HasTraits):
@@ -105,63 +106,7 @@ class AutomatedRun(Loggable):
 
     spec = Any
 
-    labnumber = SpecProperty()
-    step = SpecProperty()
-    aliquot = SpecProperty()
-    sample = SpecProperty()
-    irradiation = SpecProperty()
-    extract_group = SpecProperty()
-    extract_value = SpecProperty()
-    extract_units = SpecProperty()
-    mass_spectrometer = SpecProperty()
-    extract_device = SpecProperty()
-    duration = SpecProperty()
-    tray = SpecProperty()
-    position = SpecProperty()
-    overlap = SpecProperty()
-    cleanup = SpecProperty()
-    ramp_rate = SpecProperty()
-    ramp_duration = SpecProperty()
-    weight = SpecProperty()
-    comment = SpecProperty()
-    pattern = SpecProperty()
-    beam_diameter = SpecProperty()
-    analysis_type = SpecProperty()
-    disable_between_positions = SpecProperty()
-
-    skip = SpecProperty()
-    username = SpecProperty()
-
-#    experiment_name = Str
-#     labnumber = Str
-#     step = Str
-#     aliquot = CInt
-#     sample = Str
-#     irradiation = Str
-#     extract_group = CInt
-#     extract_value = Float
-#     extract_units = Str(NULL_STR)
-#
-#     mass_spectrometer = Str
-#     extract_device = Str
-#     duration = Float
-#
-#     tray = Str
-#     position = Str
-#     autocenter = Bool
-#     overlap = CInt
-#     cleanup = CInt
-#     ramp_rate = Float
-#     ramp_duration = Float
-#
-#     weight = Float
-#     comment = Str
-#     pattern = Str
-#     beam_diameter = None
-#     username = None
-#     skip = Bool
-#     analysis_type = Str
-#     disable_between_positions = Bool(False)
+    uuid = Str
 
     experiment_identifier = Int
     user_defined_aliquot = False
@@ -198,8 +143,6 @@ class AutomatedRun(Loggable):
     measuring = Bool(False)
     dirty = Bool(False)
 
-    uuid = Str
-
     termination_conditions = List
     truncation_conditions = List
     action_conditions = List
@@ -233,7 +176,7 @@ class AutomatedRun(Loggable):
             self.warning('no spectrometer manager')
             return
 
-        p = self._open_plot_panel(self.plot_panel, stack_order='top_to_bottom')
+        p = self._new_plot_panel(self.plot_panel, stack_order='top_to_bottom')
         self.plot_panel = p
 
         spec = self.spectrometer_manager.spectrometer
@@ -243,10 +186,11 @@ class AutomatedRun(Loggable):
         # set plot_panels, baselines, backgrounds
         p.baselines = baselines = self.experiment_manager._prev_baselines
         p.blanks = blanks = self.experiment_manager._prev_blanks
-        p.correct_for_blank = True if (not self.analysis_type.startswith('blank') and not self.analysis_type.startswith('background')) else False
+        p.correct_for_blank = True if (not self.spec.analysis_type.startswith('blank') \
+                                        and not self.spec.analysis_type.startswith('background')) else False
 
         # sync the arar_age object's signals
-        if self.use_arar_age():
+        if self._use_arar_age():
             if not blanks:
                 blanks = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
 
@@ -258,19 +202,6 @@ class AutomatedRun(Loggable):
 
             for iso, v in baselines.iteritems():
                 self.arar_age.set_baseline(iso, v)
-
-
-#        g = p.graph
-#        g.suppress_regression = True
-#        # construct plot panels graph
-#        for _, l in enumerate(dets):
-#            det = spec.get_detector(l)
-#            g.new_plot(ytitle='{} {} (fA)'.format(det.name, det.isotope))
-#        g.set_x_limits(min=0, max=400)
-#
-#        g.suppress_regression = False
-#        p.detectors = self._active_detectors
-
 
     def py_set_regress_fits(self, fits, series=0):
         '''
@@ -327,6 +258,7 @@ class AutomatedRun(Loggable):
 
         self._build_tables(gn, fits)
         check_conditions = True
+
         return self._measure_iteration(gn,
                                 self._get_data_writer(gn),
                                 ncounts, starttime, starttime_offset,
@@ -511,73 +443,6 @@ class AutomatedRun(Loggable):
     def py_clear_actions(self):
         self.action_conditions = []
 
-#===============================================================================
-#
-#===============================================================================
-#    def test(self):
-#        def _test(script):
-#            if script:
-#                try:
-#                    script.test()
-#                except Exception, e:
-#                    return
-#            return True
-#
-#        for si in SCRIPT_KEYS:
-#            setattr(self, '{}_script_dirty'.format(si), True)
-#
-#        ok = True
-#        if not _test(self.measurement_script):
-#            ok = False
-#        elif not _test(self.extraction_script):
-#            ok = False
-#        elif not _test(self.post_measurement_script):
-#            ok = False
-#            return
-#        elif not _test(self.post_equilibration_script):
-#            ok = False
-#
-#        return ok
-
-    def assemble_report(self):
-        signal_string = ''
-        signals = self.get_baseline_corrected_signals()
-        if signals:
-            for ai in self._active_detectors:
-                det = ai.name
-                iso = ai.isotope
-                v = signals[iso]
-                signal_string += '{} {} {}\n'.format(det, iso, v)
-
-#        signal_string = '\n'.join(['{} {}'.format(k, v) for k, v in self.signals.iteritems()])
-        age = ''
-        if self.arar_age:
-            age = self.arar_age.age
-        age_string = 'age={}'.format(age)
-
-        return '''runid={} timestamp={} {}
-anaylsis_type={}        
-#===============================================================================
-# signals
-#===============================================================================
-{}
-{}
-'''.format(self.runid, self._rundate, self._runtime, self.analysis_type,
-           signal_string, age_string)
-
-    def get_baseline_corrected_signals(self):
-        if self._processed_signals_dict is not None:
-            d = dict()
-            signals = self._processed_signals_dict
-            for iso, _, kind in self._save_isotopes:
-                if kind == 'signal':
-                    si = signals['{}signal'.format(iso)]
-                    bi = signals['{}baseline'.format(iso)]
-                    d[iso] = si - bi
-            return d
-
-    def get_position_list(self):
-        return self._make_iterable(self.position)
 
 #===============================================================================
 # run termination
@@ -630,44 +495,25 @@ anaylsis_type={}
 #===============================================================================
 #
 #===============================================================================
-
-#    def truncate(self, style):
-#        self.info('truncating current run with style= {}'.format(style))
-#        self.state = 'truncate'
-#        self._truncate_signal = True
-#
-#        if style == 'Immediate':
-#            self._alive = False
-#            self._measurement_script.truncate()
-#        elif style == 'Quick':
-#            self._measurement_script.truncate('quick')
     def teardown(self):
         if self.plot_panel:
             self.plot_panel.automated_run = None
 
-#         for attr in ('signals'):
+        self.plot_panel = None
+        self.signals = dict()
+        self._processed_signals_dict = dict()
+        self.spec = None
 
-        if self.signals:
-            del self.signals
-        if self._processed_signals_dict:
-            del self._processed_signals_dict
-        
-        self.spec=None
-#         del self.monitor
-#         del self.peak_center
-#
-#         del self.measurement_script
-#         del self.extraction_script
-#         del self.post_equilibration_script
-#         del self.post_measurement_script
-#         del self.extraction_line_manager
-#         del self.ion_optics_manager
-#         del self.termination_conditions
-#         del self.truncation_conditions
-#         del self.action_conditions
-#     def _del(self,p):
-#         try:
-#             del p
+        self.experiment_manager = None
+        self.spectrometer_manager = None
+        self.extraction_line_manager = None
+        self.ion_optics_manager = None
+        self.data_manager = None
+        self.db = None
+        self.massspec_importer = None
+
+        self.runner = None
+        self.monitor = None
 
     def finish(self):
 
@@ -694,22 +540,10 @@ anaylsis_type={}
 
             self.experiment_manager.info(msg, color=color, log=False)
 
-    def get_measurement_parameter(self, key, default=None):
-        return self._get_yaml_parameter(self.measurement_script, key, default)
-
-    def get_extraction_parameter(self, key, default=None):
-        return self._get_yaml_parameter(self.extraction_script, key, default)
-
-    def use_arar_age(self):
-        ln = self.labnumber
-        if '-' in ln:
-            ln = ln.split('-')[0]
-
-        return self.analysis_type == 'unknown' or ln in ('c',)
 
     def start(self):
         def _start():
-            if self.use_arar_age():
+            if self._use_arar_age():
                 # load arar_age object for age calculation
                 self.arar_age = ArArAge()
                 es = self.extraction_script
@@ -718,7 +552,7 @@ anaylsis_type={}
                     v = self._get_yaml_parameter(es, 'sensitivity_multiplier', default=1)
                     self.arar_age.sensitivity_multiplier = v
 
-                ln = self.labnumber
+                ln = self.spec.labnumber
                 ln = convert_identifier(ln)
                 ln = self.db.get_labnumber(ln)
                 self.arar_age.labnumber_record = ln
@@ -776,13 +610,14 @@ anaylsis_type={}
         if not self.extraction_script:
             return
 
+        self._pre_extraction_save()
+
         self.info_color = EXTRACTION_COLOR
         self.info('======== Extraction Started ========')
         self.state = 'extraction'
         self.extraction_script.manager = self.experiment_manager
         self.extraction_script.run_identifier = self.runid
 
-#        self._pre_extraction_save()
         if self.extraction_script.execute():
             self._post_extraction_save()
             self.info('======== Extraction Finished ========')
@@ -880,71 +715,107 @@ anaylsis_type={}
         self.info('========= Post Termination Finished ========')
         self.experiment_manager.executable = oex
 
-    def _plot_panel_closed(self):
-        if self.measuring:
-            from src.ui.thread import Thread as mThread
-            self._term_thread = mThread(target=self.cancel_run)
-            self._term_thread.start()
+#===============================================================================
+# utilities
+#===============================================================================
+    def assemble_report(self):
+        signal_string = ''
+        signals = self.get_baseline_corrected_signals()
+        if signals:
+            for ai in self._active_detectors:
+                det = ai.name
+                iso = ai.isotope
+                v = signals[iso]
+                signal_string += '{} {} {}\n'.format(det, iso, v)
 
-    def _open_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
+#        signal_string = '\n'.join(['{} {}'.format(k, v) for k, v in self.signals.iteritems()])
+        age = ''
+        if self.arar_age:
+            age = self.arar_age.age
+        age_string = 'age={}'.format(age)
+
+        return '''runid={} timestamp={} {}
+anaylsis_type={}        
+#===============================================================================
+# signals
+#===============================================================================
+{}
+{}
+'''.format(self.runid, self._rundate, self._runtime,
+           self.spec.analysis_type,
+           signal_string, age_string)
+
+    def get_baseline_corrected_signals(self):
+        if self._processed_signals_dict is not None:
+            d = dict()
+            signals = self._processed_signals_dict
+            for iso, _, kind in self._save_isotopes:
+                if kind == 'signal':
+                    si = signals['{}signal'.format(iso)]
+                    bi = signals['{}baseline'.format(iso)]
+                    d[iso] = si - bi
+            return d
+
+    def get_position_list(self):
+        return self._make_iterable(self.spec.position)
+
+#===============================================================================
+# private
+#===============================================================================
+#     def _plot_panel_closed(self):
+#         if self.measuring:
+#             from src.ui.thread import Thread as mThread
+#             self._term_thread = mThread(target=self.cancel_run)
+#             self._term_thread.start()
+    def _make_iterable(self, pos):
+        if '(' in pos and ')' in pos and ',' in pos:
+            # interpret as (x,y)
+            pos = pos.strip()[1:-1]
+            ps = [map(float, pos.split(','))]
+
+        elif ',' in pos:
+            # interpert as list of holenumbers
+            ps = list(pos.split(','))
+        else:
+            ps = [pos]
+
+        return ps
+
+    def _get_measurement_parameter(self, key, default=None):
+        return self._get_yaml_parameter(self.measurement_script, key, default)
+
+    def _get_extraction_parameter(self, key, default=None):
+        return self._get_yaml_parameter(self.extraction_script, key, default)
+
+    def _use_arar_age(self):
+        ln = self.spec.labnumber
+        if '-' in ln:
+            ln = ln.split('-')[0]
+
+        return self.spec.analysis_type == 'unknown' or ln in ('c',)
+
+    def _new_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
 
         if plot_panel is None:
             title = self.runid
-            if self.sample:
-                title = '{} {}'.format(title, self.sample)
-            if self.irradiation:
-                title = '{} {}'.format(title, self.irradiation)
+            sample, irradiation = self.spec.sample, self.spec.irradiation
+            if sample:
+                title = '{} {}'.format(title, sample)
+            if irradiation:
+                title = '{} {}'.format(title, irradiation)
 
             plot_panel = PlotPanel(
                              plot_title=title,
                              stack_order=stack_order,
                              info_func=self.info,
                              arar_age=self.arar_age,
-                             sample=self.sample,
-                             irradiation=self.irradiation,
+                             sample=sample,
+                             irradiation=irradiation,
                              )
 
             plot_panel.reset()
 
         return plot_panel
-
-    def _set_table_attr(self, name, grp, attr, value):
-        dm = self.data_manager
-        tab = dm.get_table(name, grp)
-        setattr(tab.attrs, attr, value)
-        tab.flush()
-
-    def _build_tables(self, gn, fits=None):
-        dm = self.data_manager
-#         if fits is not None:
-#             # use last fit block
-#             fits = fits[-1][1]
-
-        dm.new_group(gn)
-        for i, d in enumerate(self._active_detectors):
-            iso = d.isotope
-            name = d.name
-            isogrp = dm.new_group(iso, parent='/{}'.format(gn))
-            self._save_isotopes.append((iso, name, gn))
-
-#             _t = dm.new_table(isogrp, name)
-            dm.new_table(isogrp, name)
-#             try:
-#                 f = fits[i]
-#                 setattr(t.attrs, 'fit', f)
-#             except (IndexError, TypeError):
-#                 pass
-
-    def _build_peak_hop_tables(self, gn, hops):
-        dm = self.data_manager
-        dm.new_group(gn)
-
-        for hopstr, _cnt in hops:
-            for hi in hopstr.split(','):
-                iso, det = map(str.strip, hi.split(':'))
-                isogrp = dm.new_group(iso, parent='/{}'.format(gn))
-                _t = dm.new_table(isogrp, det)
-                self.debug('add group {} table {}'.format(iso, det))
 
     def _equilibrate(self, evt, eqtime=15, inlet=None, outlet=None,
                      delay=3,
@@ -1171,25 +1042,27 @@ anaylsis_type={}
         elif starttime_offset > mi:
             graph.set_x_limits(min=-starttime_offset)
 
-        dets = self._active_detectors
+#         dets = self._active_detectors
         spec = self.spectrometer_manager.spectrometer
         ncounts = int(ncounts)
         iter_cnt = 1
 
         nfs = self._get_fit_block(0, fits)
-        for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+#         for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+        for pi, fi in enumerate(nfs):
             graph.new_series(marker='circle', type='scatter',
                              marker_size=1.25,
                              fit=fi,
                              plotid=pi
                              )
 
-        m = self.integration_time * 0.99 if not globalv.automated_run_debug else 0.1
+        m = self.integration_time
         while 1:
             ck = self._check_iteration(iter_cnt, ncounts, check_conditions)
             if ck == 'break':
                 break
             elif ck == 'cancel':
+                consumer.stop()
                 return False
 
             if iter_cnt % 50 == 0:
@@ -1213,7 +1086,6 @@ anaylsis_type={}
 
             v = (iter_cnt, x, keys, signals)
             consumer.add_consumable(v)
-
 
             time.sleep(m)
             iter_cnt += 1
@@ -1287,7 +1159,7 @@ anaylsis_type={}
 #===============================================================================
 # save
 #===============================================================================
-    def pre_extraction_save(self):
+    def _pre_extraction_save(self):
         d = get_datetime()
         self._timestamp = d
         self._runtime = d.time()
@@ -1318,10 +1190,10 @@ anaylsis_type={}
 
         # save some metadata with the file
         attrs = frame.root._v_attrs
-        attrs['USER'] = self.username
+        attrs['USER'] = self.spec.username
         attrs['DATA_FORMAT_VERSION'] = '1.0'
         attrs['TIMESTAMP'] = time.time()
-        attrs['ANALYSIS_TYPE'] = self.analysis_type
+        attrs['ANALYSIS_TYPE'] = self.spec.analysis_type
 
         frame.flush()
 
@@ -1347,8 +1219,8 @@ anaylsis_type={}
 
         self._processed_signals_dict = ss
 
-        ln = self.labnumber
-        aliquot = self.aliquot
+        ln = self.spec.labnumber
+        aliquot = self.spec.aliquot
 
         # save to local sqlite database for backup and reference
 
@@ -1372,18 +1244,19 @@ anaylsis_type={}
             endtime = get_datetime().time()
             self.info('analysis finished at {}'.format(endtime))
 
-            dbuser = db.get_user(self.username)
+            un = self.spec.username
+            dbuser = db.get_user(un)
             if dbuser is None:
-                self.debug('user= {} does not existing. adding to database now'.format(self.username))
-                dbuser = db.add_user(self.username)
+                self.debug('user= {} does not existing. adding to database now'.format(un))
+                dbuser = db.add_user(un)
 
             a = db.add_analysis(lab,
                                 user=dbuser,
                                 uuid=self.uuid,
                                 endtime=endtime,
                                 aliquot=aliquot,
-                                step=self.step,
-                                comment=self.comment
+                                step=self.spec.step,
+                                comment=self.spec.comment
                                 )
 
             if experiment is not None:
@@ -1459,8 +1332,8 @@ anaylsis_type={}
             s = IsotopicMeasurement(xs=x, ys=y, fit=fit)
             rsignals['{}signal'.format(iso)] = s
 
-        self.baseline_fits = ['average_SEM', ] * len(baselines)
-        for fit, (iso, detname) in zip(self.baseline_fits, baselines):
+        baseline_fits = ['average_SEM', ] * len(baselines)
+        for fit, (iso, detname) in zip(baseline_fits, baselines):
             tab = dm.get_table(detname, '/baseline/{}'.format(iso))
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
             bs = IsotopicMeasurement(xs=x, ys=y, fit=fit)
@@ -1516,8 +1389,8 @@ anaylsis_type={}
 
             meas = db.add_measurement(
                                   analysis,
-                                  self.analysis_type,
-                                  self.mass_spectrometer,
+                                  self.spec.analysis_type,
+                                  self.spec.mass_spectrometer,
                                   )
             script = db.add_script(self.measurement_script.name,
                                 self.measurement_script.toblob())
@@ -1530,16 +1403,17 @@ anaylsis_type={}
         self.info('saving extraction')
         def func():
             db = self.db
-            sens = self.get_extraction_parameter('sensitivity_multiplier',
-                                                 default=1),
+            sens = self._get_extraction_parameter('sensitivity_multiplier',
+                                                 default=1)
+            spec = self.spec
             ext = db.add_extraction(analysis,
-                                    extract_device=self.extract_device,
-                                    extract_value=self.extract_value,
-                                    extract_duration=self.duration,
-                                    cleanup_duration=self.cleanup,
-                                    weight=self.weight,
+                                    extract_device=spec.extract_device,
+                                    extract_value=spec.extract_value,
+                                    extract_duration=spec.duration,
+                                    cleanup_duration=spec.cleanup,
+                                    weight=spec.weight,
                                     sensitivity_multiplier=sens,
-                                    is_degas=self.labnumber == 'dg'
+                                    is_degas=spec.labnumber == 'dg'
                                     )
 
             exp = db.add_script(self.experiment_manager.experiment_queue.name,
@@ -1598,7 +1472,7 @@ anaylsis_type={}
         def func():
             self.info('default ic_factor={}'.format(ic))
             db = self.db
-            user = self.username
+            user = self.spec.username
             user = user if user else NULL_STR
 
             self.info('{} adding detector intercalibration history for {}'.format(user, self.runid))
@@ -1622,15 +1496,15 @@ anaylsis_type={}
     def _save_history_info(self, analysis, name):
         db = self.db
 
-        if self.analysis_type.startswith('blank') or \
-            self.analysis_type.startswith('background'):
+        if self.spec.analysis_type.startswith('blank') or \
+            self.spec.analysis_type.startswith('background'):
             return
 
         pb = getattr(self.experiment_manager, '_prev_{}'.format(name))
         if not pb:
             return
 
-        user = self.username
+        user = self.spec.username
         user = user if user else '---'
 
         funchist = getattr(db, 'add_{}_history'.format(name))
@@ -1651,7 +1525,7 @@ anaylsis_type={}
             db = self.db
 
             # add fit history
-            dbhist = db.add_fit_history(analysis, user=self.username)
+            dbhist = db.add_fit_history(analysis, user=self.spec.username)
             for iso, detname, kind in self._save_isotopes:
 #                st = time.time()
                 det = db.get_detector(detname)
@@ -1742,7 +1616,7 @@ anaylsis_type={}
         baseline_fits = ['Average Y', ] * len(self._active_detectors)
 
         rs_name, rs_text = self._assemble_script_blob()
-        rid = make_rid(self.labnumber, self.aliquot, self.step)
+        rid = self.runid
         fb = self._get_fit_block(self._total_counts, self.fits)
 
         exp = ExportSpec(rid=rid,
@@ -1752,7 +1626,7 @@ anaylsis_type={}
                          baseline_fits=baseline_fits,
                          signal_intercepts=sig_ints,
                          baseline_intercepts=base_ints,
-                         spectrometer=self.mass_spectrometer.capitalize(),
+                         spectrometer=self.spec.mass_spectrometer.capitalize(),
 #                             spectrometer='Pychron {}'.format(self.mass_spectrometer.capitalize()),
                          baselines=baselines,
                          signals=signals,
@@ -1798,16 +1672,7 @@ anaylsis_type={}
         return assemble_script_blob(bs, kinds=okinds)
 
 #===============================================================================
-# handlers
-#===============================================================================
-    def _runner_changed(self):
-        for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:
-            sc = getattr(self, '{}_script'.format(s))
-            if sc is not None:
-                setattr(sc, 'runner', self.runner)
-
-#===============================================================================
-# factories
+# scripts
 #===============================================================================
     def _load_script(self, name):
         script = None
@@ -1837,7 +1702,7 @@ anaylsis_type={}
                 self.executable = False
 
         self.info('loading script "{}"'.format(fname))
-        func = getattr(self, '{}_script_factory'.format(name))
+        func = getattr(self, '_{}_script_factory'.format(name))
         s = func()
         valid = True
         if s and os.path.isfile(s.filename):
@@ -1860,7 +1725,7 @@ anaylsis_type={}
         self.valid_scripts[name] = valid
         return s
 
-    def measurement_script_factory(self):
+    def _measurement_script_factory(self):
 
         sname = self.script_info.measurement_script_name
         root = paths.measurement_dir
@@ -1868,44 +1733,23 @@ anaylsis_type={}
 
         ms = MeasurementPyScript(root=root,
             name=sname,
-#            automated_run=self,
             runner=self.runner
             )
         return ms
-#
-    def extraction_script_factory(self):
+
+    def _extraction_script_factory(self):
         root = paths.extraction_dir
-        return self._extraction_script_factory(root, self.script_info.extraction_script_name)
+        return self._ext_factory(root, self.script_info.extraction_script_name)
 
-    def post_measurement_script_factory(self):
+    def _post_measurement_script_factory(self):
         root = paths.post_measurement_dir
-        return self._extraction_script_factory(root, self.script_info.post_measurement_script_name)
+        return self._ext_factory(root, self.script_info.post_measurement_script_name)
 
-    def post_equilibration_script_factory(self):
+    def _post_equilibration_script_factory(self):
         root = paths.post_equilibration_dir
-        return self._extraction_script_factory(root, self.script_info.post_equilibration_script_name)
+        return self._ext_factory(root, self.script_info.post_equilibration_script_name)
 
-    def _make_iterable(self, pos):
-        if '(' in pos and ')' in pos and ',' in pos:
-            # interpret as (x,y)
-            pos = pos.strip()[1:-1]
-            ps = [map(float, pos.split(','))]
-
-        elif ',' in pos:
-            # interpert as list of holenumbers
-            ps = list(pos.split(','))
-        else:
-
-            ps = [pos]
-
-        return ps
-
-    def _make_script_name(self, name):
-        name = '{}_{}'.format(self.mass_spectrometer.lower(), name)
-        name = self._add_script_extension(name)
-        return name
-
-    def _extraction_script_factory(self, root, file_name):
+    def _ext_factory(self, root, file_name):
         file_name = self._make_script_name(file_name)
         if os.path.isfile(os.path.join(root, file_name)):
             klass = ExtractionPyScript
@@ -1917,30 +1761,53 @@ anaylsis_type={}
 
             return obj
 
+    def _make_script_name(self, name):
+        name = '{}_{}'.format(self.spec.mass_spectrometer.lower(), name)
+        name = self._add_script_extension(name)
+        return name
+
     def _setup_context(self, script):
         '''
             setup_context to expose variables to the pyscript
         '''
-        hdn = self.extract_device.replace(' ', '_').lower()
-        an = self.analysis_type.split('_')[0]
-        self.debug('######################### setup context extract value= {}'.format(self.extract_value))
-        script.setup_context(tray=self.tray,
+        spec = self.spec
+        hdn = spec.extract_device.replace(' ', '_').lower()
+        an = spec.analysis_type.split('_')[0]
+        self.debug('######################### setup context extract value= {}'.format(spec.extract_value))
+        script.setup_context(tray=spec.tray,
                             position=self.get_position_list(),
-                            disable_between_positions=self.disable_between_positions,
-                            duration=self.duration,
-                            extract_value=self.extract_value,
-                            extract_units=self.extract_units,
-                            cleanup=self.cleanup,
+                            disable_between_positions=spec.disable_between_positions,
+                            duration=spec.duration,
+                            extract_value=spec.extract_value,
+                            extract_units=spec.extract_units,
+                            cleanup=spec.cleanup,
                             extract_device=hdn,
                             analysis_type=an,
-                            ramp_rate=self.ramp_rate,
-                            pattern=self.pattern,
-                            beam_diameter=self.beam_diameter,
-                            ramp_duration=self.ramp_duration
+                            ramp_rate=spec.ramp_rate,
+                            pattern=spec.pattern,
+                            beam_diameter=spec.beam_diameter,
+                            ramp_duration=spec.ramp_duration
                             )
 
     def _add_script_extension(self, name, ext='.py'):
         return name if name.endswith(ext) else name + ext
+
+    def _get_yaml_parameter(self, script, key, default):
+        if not script:
+            return default
+
+        m = ast.parse(script._text)
+        docstr = ast.get_docstring(m)
+        if docstr is not None:
+            params = yaml.load(docstr)
+            try:
+                return params[key]
+            except KeyError:
+                pass
+            except TypeError:
+                self.warning('Invalid yaml docstring in {}. Could not retrieve {}'.format(script.name, key))
+
+        return default
 
     def _local_lab_db_factory(self):
         if self.local_lab_db:
@@ -1951,7 +1818,7 @@ anaylsis_type={}
         ldb.build_database()
         return ldb
 #===============================================================================
-# property get/set
+# data writing
 #===============================================================================
     def _get_data_writer(self, grpname, dets=None):
         dm = self.data_manager
@@ -1976,39 +1843,47 @@ anaylsis_type={}
 
         return write_data
 
-#    def _get_peakhop_data_writer(self, grpname):
-#        def write_data(x, det, iso, signal):
-#            '''
-#                root.peakhop.iso.det
-#            '''
-#            dm = self.data_manager
-# #            tab = dm.get_table(iso, '/{}/{}'.format(grpname, det))
-#            tab = dm.get_table(det, '/{}/{}'.format(grpname, iso))
-#            nrow = tab.row
-#            nrow['time'] = x
-#            nrow['value'] = signal
-#            nrow.append()
-#            tab.flush()
-#
-#        return write_data
+    def _set_table_attr(self, name, grp, attr, value):
+        dm = self.data_manager
+        tab = dm.get_table(name, grp)
+        setattr(tab.attrs, attr, value)
+        tab.flush()
 
-    def _get_yaml_parameter(self, script, key, default):
-        if not script:
-            return default
+    def _build_tables(self, gn, fits=None):
+        dm = self.data_manager
+#         if fits is not None:
+#             # use last fit block
+#             fits = fits[-1][1]
 
-        m = ast.parse(script._text)
-        docstr = ast.get_docstring(m)
-        if docstr is not None:
-            params = yaml.load(docstr)
-            try:
-                return params[key]
-            except KeyError:
-                pass
-            except TypeError:
-                self.warning('Invalid yaml docstring in {}. Could not retrieve {}'.format(script.name, key))
+        dm.new_group(gn)
+        for i, d in enumerate(self._active_detectors):
+            iso = d.isotope
+            name = d.name
+            isogrp = dm.new_group(iso, parent='/{}'.format(gn))
+            self._save_isotopes.append((iso, name, gn))
 
-        return default
+#             _t = dm.new_table(isogrp, name)
+            dm.new_table(isogrp, name)
+#             try:
+#                 f = fits[i]
+#                 setattr(t.attrs, 'fit', f)
+#             except (IndexError, TypeError):
+#                 pass
 
+    def _build_peak_hop_tables(self, gn, hops):
+        dm = self.data_manager
+        dm.new_group(gn)
+
+        for hopstr, _cnt in hops:
+            for hi in hopstr.split(','):
+                iso, det = map(str.strip, hi.split(':'))
+                isogrp = dm.new_group(iso, parent='/{}'.format(gn))
+                _t = dm.new_table(isogrp, det)
+                self.debug('add group {} table {}'.format(iso, det))
+
+#===============================================================================
+# property get/set
+#===============================================================================
     @cached_property
     def _get_post_measurement_script(self):
         return self._load_script('post_measurement')
@@ -2026,83 +1901,39 @@ anaylsis_type={}
         return self._load_script('extraction')
 
     def _get_runid(self):
-        return make_runid(self.labnumber, self.aliquot, self.step)
+        return make_runid(self.spec.labnumber,
+                          self.spec.aliquot,
+                          self.spec.step)
 
 #===============================================================================
-# spec properties
-#===============================================================================
-    def _get_labnumber(self):
-        return self._get_spec_attr('labnumber')
-
-    def _get_step(self):
-        return self._get_spec_attr('step')
-    
-    def _get_aliquot(self):
-        return self._get_spec_attr('aliquot', cast=int)
-    
-    def _get_sample(self):
-        return self._get_spec_attr('sample')
-    def _get_irradiation(self):
-        return self._get_spec_attr('irradiation')
-    def _get_extract_group(self):
-        return self._get_spec_attr('extract_group')
-    def _get_extract_value(self):
-        return self._get_spec_attr('extract_value')
-    def _get_extract_units(self):
-        return self._get_spec_attr('extract_units')
-    def _get_mass_spectrometer(self):
-        return self._get_spec_attr('mass_spectrometer')
-    def _get_extract_device(self):
-        return self._get_spec_attr('extract_device')
-    def _get_duration(self):
-        return self._get_spec_attr('duration')
-    def _get_tray(self):
-        return self._get_spec_attr('tray')
-    def _get_position(self):
-        return self._get_spec_attr('position')
-    def _get_overlap(self):
-        return self._get_spec_attr('overlap')
-    def _get_cleanup(self):
-        return self._get_spec_attr('cleanup')
-    def _get_ramp_rate(self):
-        return self._get_spec_attr('ramp_rate')
-    def _get_ramp_duration(self):
-        return self._get_spec_attr('ramp_duration')
-    def _get_weight(self):
-        return self._get_spec_attr('weight')
-    def _get_comment(self):
-        return self._get_spec_attr('comment')
-    def _get_pattern(self):
-        return self._get_spec_attr('pattern')
-    def _get_beam_diameter(self):
-        return self._get_spec_attr('beam_diameter')
-    def _get_analysis_type(self):
-        return self._get_spec_attr('analysis_type')
-    def _get_disable_between_positions(self):
-        return self._get_spec_attr('disable_between_positions')
-
-    def _get_skip(self):
-        return self._get_spec_attr('skip')
-    def _get_username(self):
-        return self._get_spec_attr('username')
-    
-    def _get_spec_attr(self, attr, cast=None):
-        r=None
-        if self.spec:
-            r=getattr(self.spec, attr)
-            if cast is not None:
-                r=cast(r)
-        return r
-#===============================================================================
-# handles
+# handlers
 #===============================================================================
     def _state_changed(self, old, new):
         self.debug('state changed from {} to {}'.format(old, new))
         if self.spec:
             self.spec.state = self.state
 
+    def _runner_changed(self):
+        for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:
+            sc = getattr(self, '{}_script'.format(s))
+            if sc is not None:
+                setattr(sc, 'runner', self.runner)
 #============= EOF =============================================
-
+#    def _get_peakhop_data_writer(self, grpname):
+#        def write_data(x, det, iso, signal):
+#            '''
+#                root.peakhop.iso.det
+#            '''
+#            dm = self.data_manager
+# #            tab = dm.get_table(iso, '/{}/{}'.format(grpname, det))
+#            tab = dm.get_table(det, '/{}/{}'.format(grpname, iso))
+#            nrow = tab.row
+#            nrow['time'] = x
+#            nrow['value'] = signal
+#            nrow.append()
+#            tab.flush()
+#
+#        return write_data
 # def _peak_hop_factory(self, detector, isotopes, ncycles, nintegrations, starttime, series,
 #                          name='',
 #                          masses=None
@@ -2114,7 +1945,7 @@ anaylsis_type={}
 #        p = self.peak_plot_panel
 #        if p is None:
 # #        name = 'peakhop_{}'.format(name)
-#            p = self._open_plot_panel(stack_order='top_to_bottom')
+#            p = self._new_plot_panel(stack_order='top_to_bottom')
 #            self.peak_plot_panel = p
 #            add_plot = True
 #            p.series_cnt = 0
