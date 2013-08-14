@@ -71,10 +71,12 @@ class OLSRegressor(BaseRegressor):
         X = self._get_X()
         if X is not None:
             try:
+#                 print ys
+#                 print X
                 self._ols = OLS(ys, X)
                 self._result = self._ols.fit()
             except Exception, e:
-                print e
+                print 'calculate', e
 #                print 'X', X
 #                print 'ys', ys
 #        print self.degree, self._result.summary()

@@ -129,11 +129,16 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #         print plot.plots.keys(), key, plot.plots.has_key(key), fi
         if plot.plots.has_key(key):
             scatter = plot.plots[key][0]
-    #         print scatter
-            scatter.fit = fi
-            scatter.index.metadata['selections'] = []
-            scatter.index.metadata['filtered'] = None
-            self.redraw()
+            if scatter.fit != fi:
+                lkey = 'line{}'.format(series)
+                if plot.plots.has_key(lkey):
+                    line = plot.plots[lkey][0]
+                    line.regressor = None
+
+                scatter.fit = fi
+                scatter.index.metadata['selections'] = []
+                scatter.index.metadata['filtered'] = None
+                self.redraw()
 
     def get_fit(self, plotid=0, series=0):
         try:
@@ -316,7 +321,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
     def _least_square_regress(self, r, x, y, ox, oy, index,
                       fit, fod, apply_filter):
         fitfunc, errfunc = fit
-        if r is None:
+        if r is None or not isinstance(r, LeastSquaresRegressor):
             r = LeastSquaresRegressor()
 
         r.trait_set(xs=x, ys=y,
@@ -330,7 +335,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
     def _mean_regress(self, r, x, y, ox, oy, index,
                       fit, fod, apply_filter):
-        if r is None:
+
+        if r is None or not isinstance(r, MeanRegressor):
             r = MeanRegressor()
 
         r.trait_set(xs=x, ys=y, fit=fit)
@@ -353,8 +359,9 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 es = delete(es, selection, 0)
             kw['xserr'] = es
 
-        if r is None:
+        if r is None or not isinstance(r, fit):
             r = fit()
+
         r.trait_set(**kw)
 
         if apply_filter:
@@ -402,7 +409,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                     reg.trait_set(xs=t_fx, ys=t_fy)
 
         except (KeyError, TypeError), e:
-            print e
+            print 'apply outlier filter', e
             index.metadata['selections'] = []
             index.metadata['filtered'] = None
 

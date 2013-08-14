@@ -38,6 +38,7 @@ from src.experiment.loading.panes import LoadDockPane, LoadTablePane
 from src.experiment.loading.loading_manager import LoadingManager
 from src.messaging.notify.notifier import Notifier
 from src.lasers.pattern.pattern_maker_view import PatternMakerView
+import shutil
 
 
 class ExperimentEditorTask(EditorTask):
@@ -407,17 +408,20 @@ class ExperimentEditorTask(EditorTask):
                 editor = self.editor_area.editors[0]
         if editor:
             p = editor.path
-            if editor.dirty:
-                n, _ = os.path.splitext(os.path.basename(p))
-                msg = '{} has been modified.\n Save changes?'.format(n)
-                if self.confirmation_dialog(msg):
-                    self._save_file(p)
-                else:
-                    return
+#             if editor.dirty:
+#                 n, _ = os.path.splitext(os.path.basename(p))
+#                 msg = '{} has been modified.\n Save changes?'.format(n)
+#                 if self.confirmation_dialog(msg):
+#                     self._save_file(p)
+#                 else:
+#                     return
 
             p = add_extension(p, '.txt')
 
             if os.path.isfile(p):
+                # make a backup copy of the original experiment file
+                shutil.copyfile(p, '{}.orig'.format(p))
+
                 group = editor.group
                 min_idx = editor.merge_id
                 text = open(p, 'r').read()

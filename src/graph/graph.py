@@ -1380,7 +1380,7 @@ class Graph(Viewable, ContextMenuMixin):
             ra = getattr(plot, '%s_range' % axis)
             return ra.low, ra.high
         except AttributeError, e:
-            print e
+            print 'get_limits', e
 
 #    def _set_limits(self, mi, ma, axis, plotid, auto, track, pad):
     def _set_limits(self, mi, ma, axis, plotid, pad, force=True):
