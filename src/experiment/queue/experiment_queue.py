@@ -37,6 +37,7 @@ class ExperimentQueue(BaseExperimentQueue):
     executed_runs_scroll_to_row = Int
     automated_runs_scroll_to_row = Int
     linked_copy_cache = List
+    queue_actions = List
 
     def set_run_inprogress(self, aid):
         run = self._find_run(aid)

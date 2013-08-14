@@ -187,7 +187,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #        if not regress:
 #            return
 
-        self.regressors = []
+#         self.regressors = []
         for plot in self.plots:
             ks = plot.plots.keys()
             try:
@@ -206,8 +206,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         else:
             self.regression_results = self.regressors
 
-
-
     def _plot_regression(self, plot, scatter, line, uline, lline):
         try:
 #            print id(plot), plot.visible
@@ -218,7 +216,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             args = self._regress(plot, scatter, line)
 
             if args:
-                fx, fy, ly, uy = args
+                r, fx, fy, ly, uy = args
                 line.index.set_data(fx)
                 line.value.set_data(fy)
 
@@ -227,6 +225,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
                 uline.index.set_data(fx)
                 uline.value.set_data(uy)
+                self.regressors.append(r)
+
         except KeyError:
             pass
 
@@ -277,22 +277,29 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             x = delete(x, selection, 0)
             y = delete(y, selection, 0)
 
-        low = plot.index_range.low
-        high = plot.index_range.high
-        fx = linspace(low, high, 200)
+        r = None
+        if line and hasattr(line, 'regressor'):
+            r = line.regressor
+
         if fit in [1, 2, 3]:
             if len(y) < fit + 1:
                 return
-            r = self._poly_regress(x, y, ox, oy, fx, index, fit, fod, apply_filter,
-                                               scatter, selection)
+            r = self._poly_regress(r, x, y, ox, oy, index, fit, fod,
+                                   apply_filter, scatter, selection)
         elif isinstance(fit, tuple):
-            r = self._least_square_regress(x, y, ox, oy, fx, index, fit, fod, apply_filter)
+            r = self._least_square_regress(r, x, y, ox, oy, index, fit, fod,
+                                           apply_filter)
         elif isinstance(fit, BaseRegressor):
-            r = self._custom_regress(x, y, ox, oy, fx, index, fit, fod, apply_filter,
-                                               scatter, selection)
+            r = self._custom_regress(r, x, y, ox, oy, index, fit, fod,
+                                     apply_filter, scatter, selection)
 
         else:
-            r = self._mean_regress(x, y, ox, oy, fx, index, fit, fod, apply_filter)
+            r = self._mean_regress(r, x, y, ox, oy, index, fit, fod,
+                                   apply_filter)
+
+        low = plot.index_range.low
+        high = plot.index_range.high
+        fx = linspace(low, high, 50)
 
         fy = r.predict(fx)
         ci = r.calculate_ci(fx)
@@ -304,48 +311,34 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         if line:
             line.regressor = r
 
-        self.regressors.append(r)
-        return fx, fy, ly, uy
+        return r, fx, fy, ly, uy
 
-    def _least_square_regress(self, x, y, ox, oy, fx, index,
+    def _least_square_regress(self, r, x, y, ox, oy, index,
                       fit, fod, apply_filter):
         fitfunc, errfunc = fit
+        if r is None:
+            r = LeastSquaresRegressor()
 
-        r = LeastSquaresRegressor(xs=x, ys=y,
-                                  fitfunc=fitfunc,
-                                  errfunc=errfunc)
+        r.trait_set(xs=x, ys=y,
+                    fitfunc=fitfunc,
+                    errfunc=errfunc)
 
         if apply_filter:
             r = self._apply_outlier_filter(r, ox, oy, index, fod)
 
         return r
 
-    def _mean_regress(self, x, y, ox, oy, fx, index,
+    def _mean_regress(self, r, x, y, ox, oy, index,
                       fit, fod, apply_filter):
+        if r is None:
+            r = MeanRegressor()
 
-        r = MeanRegressor(xs=x, ys=y, fit=fit)
+        r.trait_set(xs=x, ys=y, fit=fit)
         if apply_filter:
             r = self._apply_outlier_filter(r, ox, oy, index, fod)
         return r
-#        self.regressors.append(r)
 
-#        n = 10
-#        m = r.coefficients[0]
-# #            print fit, fit.endswith("SEM")
-#        fit = fit.lower()
-#        if fit.endswith('sem'):
-#            s = r.coefficient_errors[1]
-#            r.error_calc = 'sem'
-#        else:
-#            r.error_calc = 'sd'
-#            s = r.coefficient_errors[0]
-#
-#        fy = ones(n) * m
-#        uy = fy + s
-#        ly = fy - s
-#
-#        return r, fy, ly, uy
-    def _custom_regress(self, x, y, ox, oy, fx, index,
+    def _custom_regress(self, r, x, y, ox, oy, index,
                       fit, fod, apply_filter, scatter, selection):
         kw = dict(xs=x, ys=y)
         if hasattr(scatter, 'yerror'):
@@ -360,24 +353,29 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 es = delete(es, selection, 0)
             kw['xserr'] = es
 
-        r = fit(**kw)
+        if r is None:
+            r = fit()
+        r.trait_set(**kw)
+
         if apply_filter:
             r = self._apply_outlier_filter(r, ox, oy, index, fod)
+
         return r
 
-    def _poly_regress(self, x, y, ox, oy, fx, index,
+    def _poly_regress(self, r, x, y, ox, oy, index,
                       fit, fod, apply_filter, scatter, selection):
         if hasattr(scatter, 'yerror'):
             es = scatter.yerror.get_data()
             if selection:
                 es = delete(es, selection, 0)
 
-            r = WeightedPolynomialRegressor(xs=x, ys=y, yserr=es, degree=fit)
+            if r is None or not isinstance(r, WeightedPolynomialRegressor):
+                r = WeightedPolynomialRegressor(yserr=es)
         else:
+            if r is None or not isinstance(r, PolynomialRegressor):
+                r = PolynomialRegressor()
 
-            r = PolynomialRegressor(xs=x,
-                                    ys=y,
-                                    degree=fit)
+        r.trait_set(xs=x, ys=y, degree=fit)
         if apply_filter:
             r = self._apply_outlier_filter(r, ox, oy, index, fod)
 
@@ -386,7 +384,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
     def _apply_outlier_filter(self, reg, ox, oy, index, fod):
         try:
             if fod['filter_outliers']:
-                t_fx, t_fy = ox[:], oy[:]
+#                 t_fx, t_fy = ox[:], oy[:]
+                t_fx, t_fy = ox, oy
                 niterations = fod['filter_outlier_iterations']
                 n = fod['filter_outlier_std_devs']
                 for _ in range(niterations):

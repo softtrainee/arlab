@@ -120,6 +120,7 @@ class PlotPanel(Loggable):
             self.info_func(*args, **kw)
         else:
             super(PlotPanel, self).info(*args, **kw)
+
     def reset(self):
         self.clear_displays()
         self.graph = self._graph_factory()
@@ -169,10 +170,10 @@ class PlotPanel(Loggable):
                             arar_age.set_isotope(iso, (vv, ee))
 
                 except TypeError, e:
-                    print e
+                    print 'type error', e
                     break
                 except AssertionError, e:
-                    print e
+                    print 'assertion error', e
                     continue
             else:
                 if arar_age:

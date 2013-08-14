@@ -41,25 +41,27 @@ class ConsumerMixin(object):
             self._should_consume = False
 
     def add_consumable(self, v):
-        self._consumer_queue.put(v)
+        self._consumer_queue.put_nowait(v)
 
     def _consume(self):
         bt = self._buftime
         if bt:
             bt = bt / 1000.
+            def get_func():
+                q = self._consumer_queue
+                v = None
+                while 1:
+                    try:
+                        v = q.get(timeout=bt)
+                    except Empty:
+                        break
+                return v
         else:
-            bt = 1
-
-        def get_func():
-            q = self._consumer_queue
-            v = None
-            while 1:
+            def get_func():
                 try:
-                    v = q.get(timeout=bt)
+                    return self._consumer_queue.get(timeout=1)
                 except Empty:
-                    break
-
-            return v
+                    return
 
         cfunc = self._consume_func
 
@@ -74,5 +76,21 @@ class ConsumerMixin(object):
 
             if not self._should_consume:
                 break
+
+
+class consumable(object):
+    _func = None
+    def __init__(self, func=None):
+        self._func = func
+
+    def __enter__(self):
+        self._consumer = c = ConsumerMixin()
+        c.setup_consumer(func=self._func)
+        return c
+
+    def __exit__(self, *args, **kw):
+        print '__exit__'
+        self._consumer.stop()
+
 
 #============= EOF =============================================

@@ -83,6 +83,11 @@ class Experimentor(IsotopeDatabaseManager):
     activate_editor_event = Event
     save_event = Event
 #    clear_display_event = Event
+    def reset_run_generator(self):
+        if self.executor.isAlive():
+            self.debug('Queue modified. Reset run generator')
+#             self.executor.queue_modified = True
+            self.executor.reset_queue()
 
     def refresh_executable(self, qs=None):
         if qs is None:
@@ -286,13 +291,13 @@ class Experimentor(IsotopeDatabaseManager):
                     arun.assigned_aliquot = int(aliquot_start + aliquot_cnt + 1)
                     if special or not egroup:
                         aliquot_cnt += 1
-            
+
             if not special and egroup:
-                step_start=0
+                step_start = 0
                 an = db.get_last_analysis(cln, aliquot=aliquot)
                 if an and an.step and an.aliquot == arun.aliquot:
-                    step_start=LAlphas.index(an.step) + 1
-                        
+                    step_start = LAlphas.index(an.step) + 1
+
                 arun.step = int(step_start + step_cnt)
 #                 print arun.aliquot, arun.step, step_start, step_cnt
                 step_cnt += 1

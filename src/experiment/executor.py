@@ -87,9 +87,10 @@ class ExperimentExecutor(Experimentable):
     refresh_button = Event
     non_clear_update_needed = Event
     run_completed = Event
+    auto_save_event = Event
 
     can_cancel = Property(depends_on='_alive, delaying_between_runs')
-    refresh_label = Property(depends_on='_was_executed')
+#     refresh_label = Property(depends_on='_was_executed')
     execute_label = Property(depends_on='_alive')
 
     truncate_button = Button('Truncate Run')
@@ -112,7 +113,7 @@ class ExperimentExecutor(Experimentable):
 #     _last_ran = None
     _prev_baselines = Dict
     _prev_blanks = Dict
-    _was_executed = Bool(False)
+#     _was_executed = Bool(False)
     err_message = None
 
     db_kind = Str
@@ -134,7 +135,13 @@ class ExperimentExecutor(Experimentable):
     _canceled = False
 
     _abort_overlap_signal = None
-    _triggered_run = False
+#     _triggered_run = False
+
+    _queue_modified = False
+    _queue_dirty = False
+
+    def reset_queue(self):
+        self._queue_modified = True
 
     def isAlive(self):
         return self._alive
@@ -184,10 +191,9 @@ class ExperimentExecutor(Experimentable):
         self._execute_procedure(name)
 
     def reset(self):
-        self._was_executed = False
+#         self._was_executed = False
         self.experiment_queue = None
         self.experiment_queues = []
-
 
     def stop(self):
         if self.delaying_between_runs:
@@ -238,7 +244,7 @@ class ExperimentExecutor(Experimentable):
                 if arun:
                     arun.state = 'failed'
 
-    def set_extract_state(self, state, color='green'):
+    def set_extract_state(self, state, flash=0.75, color='green'):
 
         def loop(end_flag, label, color):
             '''
@@ -246,26 +252,31 @@ class ExperimentExecutor(Experimentable):
                 iperiod== iterations per second (inverse period == rate)
                 
             '''
-            freq = 0.75
+            freq = flash
+            if freq:
+                iperiod = 20
+                period = 1 / float(iperiod)
 
-            iperiod = 20
-            period = 1 / float(iperiod)
+                threshold = freq ** 2 * iperiod  # mod * freq
 
-            threshold = freq ** 2 * iperiod  # mod * freq
+                i = 0
+                kw = dict(extraction_state_label=label,
+                        extraction_state_color=color)
+                while not end_flag.is_set():
+                    if i % iperiod < threshold:
+                        invoke_in_main_thread(self.trait_set, **kw)
+                    else:
+                        invoke_in_main_thread(self.trait_set,
+                                              extraction_state_label='')
 
-            i = 0
-            while not end_flag.is_set():
-                if i % iperiod < threshold:
-                    kw = dict(extraction_state_label=label,
-                            extraction_state_color=color)
-                else:
-                    kw = dict(extraction_state_label='')
-                invoke_in_main_thread(self.trait_set, **kw)
-
-                time.sleep(period)
-                i += 1
-                if i > 1000:
-                    i = 0
+                    time.sleep(period)
+                    i += 1
+                    if i > 1000:
+                        i = 0
+            else:
+                invoke_in_main_thread(self.trait_set,
+                                      extraction_state_label=label,
+                                      extraction_state_color=color)
 
         if state:
             if self._state_thread:
@@ -321,7 +332,7 @@ class ExperimentExecutor(Experimentable):
             self.debug('execution started')
 #             self._execute_thread = t
 
-            self._was_executed = True
+#             self._was_executed = True
             return True
 
 #===============================================================================
@@ -507,26 +518,12 @@ class ExperimentExecutor(Experimentable):
 #===============================================================================
 
     def _execute(self):
-#         # test runs first
-#         for exp in self.experiment_queues:
-#             if exp.isExecutable()
-
-#             err = exp.test_runs()
-#             if err:
-#                 self.info('experiment canceled. {}'.format(err))
-#                 self.warning('experiment canceled')
-#                 return
         self.db.reset()
 
         self._execute_experiment_queues()
 
         self.err_message = False
-        self._was_executed = True
-#             else:
-#                 self.info('experiment canceled because no blank was configured')
-#                 self._alive = False
-
-
+#         self._was_executed = True
 
     def _execute_experiment_queues(self):
 
@@ -557,6 +554,24 @@ class ExperimentExecutor(Experimentable):
 
         self.info('Executed {:n} queues. total runs={:n}'.format(ec, rc))
         self._alive = False
+
+    def _wait_for_save(self):
+        st = time.time()
+        delay = 30
+        if not self.executable:
+            self.info('Waiting for save')
+
+        cnt = 0
+        while not self.executable:
+            time.sleep(1)
+            if time.time() - st < delay - 1:
+                self.set_extract_state('Waiting for save. Autosave in {} s'.format(delay - cnt),
+                                       flash=False
+                                       )
+                cnt += 1
+            else:
+                self.set_extract_state('')
+                self.auto_save_event = True
 
     def _delay(self, delay, message='between'):
         self.delay_between_runs_readback = delay
@@ -599,8 +614,6 @@ class ExperimentExecutor(Experimentable):
 
         self.info('Starting automated runs set= Set{}'.format(iexp))
 
-        self.db.reset()
-
         # save experiment to database
         self.info('saving experiment "{}" to database'.format(exp.name))
 
@@ -616,19 +629,26 @@ class ExperimentExecutor(Experimentable):
         consumer.setup_consumer(func=self._overlapped_run)
         delay = exp.delay_between_analyses
 
+        force_delay = False
         last_runid = None
         while self.isAlive():
+
+
+            self._wait_for_save()
+
             self.db.reset()
-
-            if self._triggered_run:
+            if self._queue_modified:
+                self.debug('Queue modified. making new run generator')
                 rgen, nruns = exp.new_runs_generator()
-                self._triggered_run = False
+                cnt = 0
+                self._queue_modified = False
+                force_delay = True
 
-            if (self.isAlive() and \
-                               cnt < nruns and \
-                                        not cnt == 0):
+            if force_delay or \
+                (self.isAlive() and cnt < nruns and not cnt == 0):
                 # delay between runs
                 self._delay(delay)
+                force_delay = False
 
             runargs = None
             try:
@@ -641,10 +661,8 @@ class ExperimentExecutor(Experimentable):
             cnt += 1
             if runargs:
                 t, run = runargs
-#                 self._last_ran = runspec
-
                 '''
-                    overlay not fully implemented
+                    ?? overlay not fully implemented ??
                 '''
                 if runspec.analysis_type == 'unknown' and runspec.overlap:
                     self.info('overlaping')
@@ -673,11 +691,6 @@ class ExperimentExecutor(Experimentable):
                 break
 
         if self.err_message:
-            '''
-                set last_run to None if this run wasnt successfully
-                experiment set will restart at last successful run
-            '''
-#             self._last_ran = None
             self.warning('automated runs did not complete successfully')
             self.warning('error: {}'.format(self.err_message))
 
@@ -866,11 +879,11 @@ class ExperimentExecutor(Experimentable):
         if arun.state in ('success', 'truncated'):
             self.run_completed = arun
 
+        # check to see if action should be taken
+        self._check_run_at_end(arun)
+
         self.info('Automated run {} {}'.format(arun.runid, arun.state))
         arun.finish()
-
-        # check to see if action should be taken
-#         self._check_run_at_end(arun)
 #===============================================================================
 #
 #===============================================================================
@@ -885,7 +898,7 @@ class ExperimentExecutor(Experimentable):
             execute the action and continue the queue
         '''
 
-        for action in self.experiment_queue.actions:
+        for action in self.experiment_queue.queue_actions:
             if action.check_run(run):
                 self._do_action(action)
                 break
@@ -900,7 +913,8 @@ class ExperimentExecutor(Experimentable):
 
                 run = exp.executed_runs[0]
                 exp.automated_runs.insert(0, run)
-                self._triggered_run = True
+                self._queue_modified = True
+#                 self._triggered_run = True
 
             else:
                 self.info('executed N {} {}s'.format(action.count + 1,
@@ -996,8 +1010,8 @@ class ExperimentExecutor(Experimentable):
     def _get_execute_label(self):
         return 'Start Queue' if not self._alive else 'Stop Queue'
 
-    def _get_refresh_label(self):
-        return 'Reset Queue' if self._was_executed else 'Refresh Queue'
+#     def _get_refresh_label(self):
+#         return 'Reset Queue' if self._was_executed else 'Refresh Queue'
 #    def _get_edit_enabled(self):
 #        if self.selected:
 #            states = [ri.state == 'not run' for ri in self.selected]
