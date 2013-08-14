@@ -286,7 +286,7 @@ class ExperimentEditorTask(EditorTask):
 #===============================================================================
     @on_trait_change('manager:executor:auto_save_event')
     def _auto_save(self):
-        self.active_editor.save()
+        self.save()
 
     @on_trait_change('source_pane:[selected_connection, source:+]')
     def _update_source(self, name, new):

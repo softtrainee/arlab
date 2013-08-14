@@ -21,14 +21,10 @@ from src.graph.tools.info_inspector import InfoInspector, InfoOverlay
 
 
 class RegressionInspectorTool(InfoInspector):
-#    def _build_metadata(self, xy):
-#        d = dict(regressor=self.component.regressor)
-#        return d
-
     def assemble_lines(self):
         reg = self.component.regressor
         lines = [reg.make_equation()]
-        lines += map(str.strip, map(str, reg.tostring().split(',')))
+        lines+=map(unicode.strip, map(unicode, reg.tostring().split(',')))
         return lines
 
 class RegressionInspectorOverlay(InfoOverlay):
