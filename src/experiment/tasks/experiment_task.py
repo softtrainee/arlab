@@ -178,7 +178,6 @@ class ExperimentEditorTask(EditorTask):
         path = self.open_file_dialog()
 
         if path:
-#            self.window.reset_layout()
             manager = self.manager
             if manager.verify_database_connection(inform=True):
                 if manager.load():
@@ -196,12 +195,6 @@ class ExperimentEditorTask(EditorTask):
                             # clear dirty flag
                             editor.dirty = False
 
-#                     qs = [ei.queue
-#                         for ei in self.editor_area.editors]
-
-
-#                     manager.test_queues(qs)
-#                     manager.refresh_executable()
                     manager.path = path
                     manager.executor.reset()
                     manager.update_info()
@@ -253,25 +246,8 @@ class ExperimentEditorTask(EditorTask):
     def _save_file(self, path):
         if self.active_editor.save(path):
             self.manager.refresh_executable()
-#             self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
             self.debug('queues saved')
-
-
-#         self.manager.()
-
-#         self.manager.update_info()
-#         self.manager.update_stats()
-#         self.manager.update_
-#
-#         '''
-#             if the queue is edited while the executor is running the end_at_run_completion is True
-#             set it to its previous value
-#         '''
-#         ex = self.manager.executor
-#         if ex.isAlive():
-#             if ex.changed_flag:
-#                 ex.end_at_run_completion = ex.prev_end_at_run_completion
-#             ex.changed_flag = False
+            self.manager.reset_run_generator()
 
     def _active_editor_changed(self):
         if self.active_editor:
@@ -307,6 +283,10 @@ class ExperimentEditorTask(EditorTask):
 #===============================================================================
 # handlers
 #===============================================================================
+    @on_trait_change('manager:executor:auto_save_event')
+    def _auto_save(self):
+        self.active_editor.save()
+
     @on_trait_change('source_pane:[selected_connection, source:+]')
     def _update_source(self, name, new):
         from src.image.video_source import parse_url
@@ -451,7 +431,7 @@ class ExperimentEditorTask(EditorTask):
                 if self.manager.execute_queues(qs, p, text, hash_val):
                     self._open_auto_figure()
 
-    @on_trait_change('manager:save_event')
+    @on_trait_change('manager:[save_event, executor:auto_save_event]')
     def _save_queue(self):
         self.save()
 
@@ -491,7 +471,8 @@ class ExperimentEditorTask(EditorTask):
         plugin = ip.get_plugin('Experiment', category='general')
         mode = ip.get_parameter(plugin, 'mode')
         exp = Experimentor(application=self.window.application,
-                           mode=mode)
+                           mode=mode,
+                           connect=False)
 
         return exp
 

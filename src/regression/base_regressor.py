@@ -15,17 +15,17 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Array, List, Event, Property, cached_property
+from traits.api import  HasTraits, Array, List, Event, Property, cached_property
 #============= standard library imports ========================
 import math
-from numpy import array, asarray, where
+from numpy import array, asarray, where, vectorize
 #============= local library imports  ==========================
 from tinv import tinv
 from src.loggable import Loggable
 from src.constants import PLUSMINUS, ALPHAS
 
 
-class BaseRegressor(Loggable):
+class BaseRegressor(HasTraits):
     xs = Array
     ys = Array
 #    xs = Any
@@ -167,9 +167,7 @@ class BaseRegressor(Loggable):
         raise NotImplementedError
 
     def calculate_residuals(self):
-        X = self.xs
-        Y = self.ys
-        return self.predict(X) - Y
+        return self.predict(self.xs) - self.ys
 
     def calculate_ci(self, rx):
         rmodel, cors = self._calculate_ci(rx)
@@ -214,11 +212,17 @@ class BaseRegressor(Loggable):
             syx = self.syx
             ssx = self.ssx
 #            for i, xi in enumerate(rx):
-            def _calc_interval(xi):
-                d = 1.0 / n + (xi - xm) ** 2 / ssx
-                return ti * syx * math.sqrt(d)
+#             def _calc_interval(xi):
+#                 d = 1.0 / n + (xi - xm) ** 2 / ssx
+#                 return ti * syx * math.sqrt(d)
 
-            cors = [_calc_interval(xi) for xi in rx]
+#             f = vectorize(_calc_interval)
+#             cors = f(rx)
+#             cors = [_calc_interval(xi) for xi in rx]
+
+            d = 1 + n ** -1 + (rx - xm) ** 2 / ssx
+            cors = ti * syx * d ** 0.5
+
             return cors
 #            lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
 #            return asarray(lci), asarray(uci)
@@ -236,7 +240,7 @@ class BaseRegressor(Loggable):
     @property
     def ssx(self):
         x = self.xs
-        xm = self.xs.mean()
+        xm = x.mean()
         return ((x - xm) ** 2).sum()
 
     def _get_fit(self):

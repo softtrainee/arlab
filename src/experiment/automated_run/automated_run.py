@@ -50,7 +50,7 @@ from src.processing.arar_age import ArArAge
 from src.processing.isotope import IsotopicMeasurement
 from src.experiment.export.export_spec import ExportSpec
 from src.ui.gui import invoke_in_main_thread
-from src.consumer_mixin import ConsumerMixin
+from src.consumer_mixin import ConsumerMixin, consumable
 from enable.savage.svg.attributes import none
 
 
@@ -498,22 +498,29 @@ class AutomatedRun(Loggable):
     def teardown(self):
         if self.plot_panel:
             self.plot_panel.automated_run = None
+#             self.plot_panel.reset()
 
-        self.plot_panel = None
+#         self.plot_panel = None
+#         del self.plot_panel
+
         self.signals = dict()
         self._processed_signals_dict = dict()
-        self.spec = None
+#         self.spec = None
 
-        self.experiment_manager = None
-        self.spectrometer_manager = None
-        self.extraction_line_manager = None
-        self.ion_optics_manager = None
-        self.data_manager = None
-        self.db = None
-        self.massspec_importer = None
+#         self.experiment_manager = None
+#         self.spectrometer_manager = None
+#         self.extraction_line_manager = None
+#         self.ion_optics_manager = None
+#         self.data_manager = None
+#         self.db = None
+#         self.massspec_importer = None
 
-        self.runner = None
-        self.monitor = None
+#         self.runner = None
+        if self.monitor:
+            self.monitor.automated_run = None
+
+#         self.monitor = None
+
 
     def finish(self):
 
@@ -539,7 +546,6 @@ class AutomatedRun(Loggable):
                 color = 'light green'
 
             self.experiment_manager.info(msg, color=color, log=False)
-
 
     def start(self):
         def _start():
@@ -587,16 +593,17 @@ class AutomatedRun(Loggable):
     def wait_for_overlap(self):
         '''
             by default overlap_evt is set 
-            after do_post_equilibration
+            after equilibration finished
         '''
         self.info('waiting for overlap signal')
         evt = self.overlap_evt
         evt.wait()
 
-        self.info('starting overlap delay {}'.format(self.overlap))
+        overlap = self.spec.overlap
+        self.info('starting overlap delay {}'.format(overlap))
         starttime = time.time()
         while self._alive:
-            if time.time() - starttime > self.overlap:
+            if time.time() - starttime > overlap:
                 break
             time.sleep(1.0)
 
@@ -846,6 +853,7 @@ anaylsis_type={}
 
             if do_post_equilibration:
                 self.do_post_equilibration()
+
             self.overlap_evt.set()
 
     def _set_magnet_position(self, pos, detector, dac=False, update_labels=True):
@@ -1010,10 +1018,11 @@ anaylsis_type={}
             data_write_hook(x, keys, signals)
 
             if refresh:
+#                 pass
                 # only refresh regression every 5th iteration
 #                 test if graph.refresh is consuming memory
-                if i % 5 == 0 or i < 10:
-                    graph.refresh()
+#                 if i % 5 == 0 or i < 10:
+                graph.refresh()
 
         return _write
 
@@ -1030,9 +1039,10 @@ anaylsis_type={}
 
         graph = self.plot_panel.graph
 
-        consumer = ConsumerMixin()
-        consumer.setup_consumer(self._write_iteration(grpname, data_write_hook,
-                                                      series, fits, refresh, graph))
+#         consumer = ConsumerMixin()
+#         consumer.setup_consumer(self._write_iteration(grpname, data_write_hook,
+#                                                       series, fits, refresh,
+#                                                       graph))
 
         self._total_counts += ncounts
         mi, ma = graph.get_x_limits()
@@ -1042,8 +1052,9 @@ anaylsis_type={}
         elif starttime_offset > mi:
             graph.set_x_limits(min=-starttime_offset)
 
-#         dets = self._active_detectors
-        spec = self.spectrometer_manager.spectrometer
+        spectrometer = self.spectrometer_manager.spectrometer
+        get_data = lambda: spectrometer.get_intensities(tagged=True)
+
         ncounts = int(ncounts)
         iter_cnt = 1
 
@@ -1057,40 +1068,44 @@ anaylsis_type={}
                              )
 
         m = self.integration_time
-        while 1:
-            ck = self._check_iteration(iter_cnt, ncounts, check_conditions)
-            if ck == 'break':
-                break
-            elif ck == 'cancel':
-                consumer.stop()
-                return False
 
-            if iter_cnt % 50 == 0:
-                self.info('collecting point {}'.format(iter_cnt))
+        func = self._make_write_iteration(grpname, data_write_hook,
+                                                    series, fits, refresh,
+                                                    graph)
+        with consumable(func) as con:
+            while 1:
+                ck = self._check_iteration(iter_cnt, ncounts, check_conditions)
+                if ck == 'break':
+                    break
+                elif ck == 'cancel':
+                    return False
 
-            data = spec.get_intensities(tagged=True)
+                if iter_cnt % 50 == 0:
+                    self.info('collecting point {}'.format(iter_cnt))
 
-            if data is not None:
-                keys, signals = data
-            else:
+    #             data = spec.get_intensities(tagged=True)
+                data = get_data()
+                if data is not None:
+                    keys, signals = data
+                else:
 
-                keys, signals = ('H2', 'H1', 'AX', 'L1', 'L2', 'CDD'), (1, 2, 3, 4, 5, 6)
-#                continue
+                    keys, signals = ('H2', 'H1', 'AX', 'L1', 'L2', 'CDD'), (1, 2, 3, 4, 5, 6)
+    #                continue
 
-            # if user forgot to set the time zero in measurement script
-            # do it here
-            if starttime is None:
-                starttime = time.time()
+                # if user forgot to set the time zero in measurement script
+                # do it here
+                if starttime is None:
+                    starttime = time.time()
 
-            x = time.time() - starttime  # if not self._debug else iter_cnt + starttime
+                x = time.time() - starttime  # if not self._debug else iter_cnt + starttime
 
-            v = (iter_cnt, x, keys, signals)
-            consumer.add_consumable(v)
+#                 consumer.add_consumable((iter_cnt, x, keys, signals))
+                con.add_consumable((iter_cnt, x, keys, signals))
 
-            time.sleep(m)
-            iter_cnt += 1
+                time.sleep(m)
+                iter_cnt += 1
 
-        consumer.stop()
+#         consumer.stop()
         graph.refresh()
         return True
 
