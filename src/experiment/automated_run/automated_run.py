@@ -36,13 +36,13 @@ from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
 from src.experiment.plot_panel import PlotPanel
-from src.experiment.utilities.identifier import convert_identifier, make_rid, \
+from src.experiment.utilities.identifier import convert_identifier, \
     make_runid
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.managers.data_managers.data_manager import DataManager
 from src.database.adapters.isotope_adapter import IsotopeAdapter
-from src.constants import NULL_STR, SCRIPT_KEYS, MEASUREMENT_COLOR, \
+from src.constants import NULL_STR, MEASUREMENT_COLOR, \
     EXTRACTION_COLOR
 from src.experiment.automated_run.condition import TruncationCondition, \
     ActionCondition, TerminationCondition
@@ -50,8 +50,8 @@ from src.processing.arar_age import ArArAge
 from src.processing.isotope import IsotopicMeasurement
 from src.experiment.export.export_spec import ExportSpec
 from src.ui.gui import invoke_in_main_thread
-from src.consumer_mixin import ConsumerMixin, consumable
-from enable.savage.svg.attributes import none
+from src.consumer_mixin import consumable
+from src.memory_usage import mem_log, mem_dump
 
 
 class ScriptInfo(HasTraits):
@@ -82,9 +82,7 @@ def assemble_script_blob(scripts, kinds=None):
 
 
 warned_scripts = []
-
-def SpecProperty():
-    return Property(depends_on='spec')
+        
 
 class AutomatedRun(Loggable):
     spectrometer_manager = Any
@@ -117,10 +115,15 @@ class AutomatedRun(Loggable):
     scripts = Dict
     signals = Dict
 
-    measurement_script = Property
-    post_measurement_script = Property
-    post_equilibration_script = Property
-    extraction_script = Property
+#     measurement_script = Property
+#     post_measurement_script = Property
+#     post_equilibration_script = Property
+#     extraction_script = Property
+
+    measurement_script = Instance(MeasurementPyScript)
+    post_measurement_script = Instance(ExtractionPyScript)
+    post_equilibration_script = Instance(ExtractionPyScript)
+    extraction_script = Instance(ExtractionPyScript)
 
     _active_detectors = List
     _loaded = False
@@ -164,11 +167,15 @@ class AutomatedRun(Loggable):
 # pyscript interface
 #===============================================================================
     def py_position_magnet(self, pos, detector, dac=False):
+        
+        mem_log('pre position magnet')
         if not self._alive:
             return
         self._set_magnet_position(pos, detector, dac=dac)
+        mem_log('post position magnet')
 
     def py_activate_detectors(self, dets):
+        mem_log('pre position activate detectors')
         if not self._alive:
             return
 
@@ -203,6 +210,8 @@ class AutomatedRun(Loggable):
             for iso, v in baselines.iteritems():
                 self.arar_age.set_baseline(iso, v)
 
+        mem_log('post position activate detectors')
+
     def py_set_regress_fits(self, fits, series=0):
         '''
             fits can be 
@@ -213,6 +222,7 @@ class AutomatedRun(Loggable):
             
             
         '''
+        mem_log('pre set regress fits')
         def make_fits(fi):
             if isinstance(fi, str):
                 fi = [fi, ] * n
@@ -236,15 +246,20 @@ class AutomatedRun(Loggable):
                 self.plot_panel.fits = fits
 
             self.fits = [(None, fits)]
-
-        self.debug('@@@@@@@@@@@@@@@@@ Fits {}'.format(self.fits))
-
+        
+        self.debug('=============== Fit Blocks =============')
+        for i,fb in enumerate(self.fits):
+            self.debug('{:02n} {}'.format(i+1,fb))
+        self.debug('========================================')
+        mem_log('post set regress fits')
+        
     def py_set_spectrometer_parameter(self, name, v):
         self.info('setting spectrometer parameter {} {}'.format(name, v))
         if self.spectrometer_manager:
             self.spectrometer_manager.spectrometer.set_parameter(name, v)
 
     def py_data_collection(self, ncounts, starttime, starttime_offset, series=0):
+        mem_log('pre data collection')
         if not self._alive:
             return
 
@@ -259,19 +274,21 @@ class AutomatedRun(Loggable):
         self._build_tables(gn, fits)
         check_conditions = True
 
-        return self._measure_iteration(gn,
+        result=self._measure_iteration(gn,
                                 self._get_data_writer(gn),
                                 ncounts, starttime, starttime_offset,
                                 series, fits,
                                 check_conditions,
                                 True  # refresh graph after each iteration
                                 )
-
+        mem_log('post data collection')
+        return result
+    
     def py_equilibration(self, eqtime=None, inlet=None, outlet=None,
                          do_post_equilibration=True,
                          delay=None
                          ):
-
+        mem_log('pre equilibration')
         evt = TEvent()
         if not self._alive:
             evt.set()
@@ -286,9 +303,12 @@ class AutomatedRun(Loggable):
                                                                                 do_post_equilibration=do_post_equilibration)
                  )
         t.start()
+        
+        mem_log('post equilibration')
         return evt
 
     def py_sniff(self, ncounts, starttime, starttime_offset, series=0):
+        mem_log('pre sniff')
         if not self._alive:
             return
 
@@ -300,18 +320,22 @@ class AutomatedRun(Loggable):
         gn = 'sniff'
         self._build_tables(gn)
         check_conditions = False
-        return self._measure_iteration(gn,
+        result=self._measure_iteration(gn,
                                 self._get_data_writer(gn),
                                 ncounts, starttime, starttime_offset,
                                 series, fits,
                                 check_conditions,
                                 False  # dont refresh after each iteration
                                 )
-
+        mem_log('post sniff')
+        return result
+    
     def py_baselines(self, ncounts, starttime, starttime_offset, mass, detector,
                     series=0, nintegrations=5, settling_time=4,
                     fit='average_SEM'
                     ):
+
+        mem_log('pre baseline')
         if not self._alive:
             return
 
@@ -347,6 +371,7 @@ class AutomatedRun(Loggable):
         if self.plot_panel:
             self.experiment_manager._prev_baselines = self.plot_panel.baselines
 
+        mem_log('post baseline')
         return result
 
     def py_peak_hop(self, cycles, hops, starttime, series=0, group='signal'):
@@ -498,6 +523,7 @@ class AutomatedRun(Loggable):
     def teardown(self):
         if self.plot_panel:
             self.plot_panel.automated_run = None
+            self.plot_panel.arar_age = None
 #             self.plot_panel.reset()
 
 #         self.plot_panel = None
@@ -519,6 +545,19 @@ class AutomatedRun(Loggable):
         if self.monitor:
             self.monitor.automated_run = None
 
+        self.extraction_script=None
+        self.measurement_script=None
+        self.post_equilibration_script=None
+        self.post_measurement_script=None
+        
+        self.py_clear_conditions()
+        
+        self.db.sess.expunge_all()
+        
+        self._save_isotopes = None
+        self._db_extraction_id=None
+        self.experiment_identifier=None
+        self.arar_age=None
 #         self.monitor = None
 
 
@@ -655,15 +694,17 @@ class AutomatedRun(Loggable):
         self._pre_measurement_save()
         self.measuring = True
         self._save_enabled = True
-
+        
+        mem_log('do measurement pre execute')
         if self.measurement_script.execute():
-            if self._alive:
-                self._post_measurement_save()
-
             self.info('======== Measurement Finished ========')
             self.measuring = False
             self.info_color = None
+            
+            mem_log('do measurement post execute')
+            
             return True
+        
         else:
             self.do_post_equilibration()
             self.do_post_measurement()
@@ -1010,7 +1051,7 @@ anaylsis_type={}
                                 series=series,
                                 plotid=pi,
                                 update_y_limits=True,
-                                ypadding='0.5'
+                                ypadding='0.1'
                                 )
                 if fi:
                     graph.set_fit(fi, plotid=pi, series=0)
@@ -1077,7 +1118,8 @@ anaylsis_type={}
 
                 if iter_cnt % 50 == 0:
                     self.info('collecting point {}'.format(iter_cnt))
-
+                    mem_log('collecting point {}'.format(iter_cnt))
+                    
     #             data = spec.get_intensities(tagged=True)
                 data = get_data()
                 if data is not None:
@@ -1206,7 +1248,10 @@ anaylsis_type={}
         attrs['ANALYSIS_TYPE'] = self.spec.analysis_type
 
         frame.flush()
-
+    
+    def post_measurement_save(self):
+        self._post_measurement_save()
+        
     def _post_measurement_save(self):
         self.info('post measurement save')
 
@@ -1217,7 +1262,7 @@ anaylsis_type={}
         cp = self.data_manager.get_current_path()
         # close h5 file
         self.data_manager.close_file()
-
+        mem_log('pre preliminary processing')
         # do preliminary processing of data
         # returns signals dict and peak_center table
         try:
@@ -1228,6 +1273,7 @@ anaylsis_type={}
             return
 
         self._processed_signals_dict = ss
+        mem_log('post preliminary processing')
 
         ln = self.spec.labnumber
         aliquot = self.spec.aliquot
@@ -1241,7 +1287,8 @@ anaylsis_type={}
                          collection_path=cp,
                          )
         ldb.commit()
-
+        ldb.close()
+        mem_log('post local db save')
         # save to a database
         db = self.db
         if db and db.connect(force=True):
@@ -1279,43 +1326,58 @@ anaylsis_type={}
             # save extraction
             ext = self._db_extraction_id
             dbext = db.get_extraction(ext, key='id')
-            a.extractio_id = dbext.id
+            a.extraction_id = dbext.id
 
+            mem_log('post analysis save')
             # save measurement
             meas = self._save_measurement(a)
+            mem_log('post save_measurement')
 
             # save sensitivity info to extraction
             self._save_sensitivity(dbext, meas)
+            mem_log('post save_sensitivity')
+
             self._save_spectrometer_info(meas)
+            mem_log('post save_spectrometer_info')
 
             # add selected history
             db.add_selected_histories(a)
             self._save_isotope_info(a, ss)
+            mem_log('post save_isotope_info')
 
             # save ic factor
             self._save_detector_intercalibration(a)
+            mem_log('post save_detector_intercalibration')
 
             # save blanks
             self._save_blank_info(a)
+            mem_log('post save_blank')
 
             # save peak center
             self._save_peak_center(a, pc)
+            mem_log('post save_peak_center')
 
             # save monitor
             self._save_monitor_info(a)
+            mem_log('post save_monitor')
 
+            mem_log('pre commit')
             db.commit()
-
+            
+            mem_log('post commit')
+            
             # tell the executor to remove this run from backup run recovery
             self.experiment_manager.remove_backup(self.uuid)
 
             self.debug('pychron save time= {:0.3f} '.format(time.time() - pt))
-
+            mem_log('post pychron save')
+            
         if self.massspec_importer.db.connected:
             # save to massspec
             mt = time.time()
             self._save_to_massspec()
             self.debug('mass spec save time= {:0.3f}'.format(time.time() - mt))
+            mem_log('post mass spec save')
 
     def _preliminary_processing(self, p):
         self.info('organizing data for database save')
@@ -1404,7 +1466,10 @@ anaylsis_type={}
                                   )
             script = db.add_script(self.measurement_script.name,
                                 self.measurement_script.toblob())
-            script.measurements.append(meas)
+            db.flush()
+            
+            meas.script_id=script.id
+#             script.measurements.append(meas)
 
             return meas
         return self._time_save(func, 'measurement')
@@ -1894,22 +1959,31 @@ anaylsis_type={}
 #===============================================================================
 # property get/set
 #===============================================================================
-    @cached_property
-    def _get_post_measurement_script(self):
-        return self._load_script('post_measurement')
+#     @cached_property
+#     def _get_post_measurement_script(self):
+#         return self._load_script('post_measurement')
+# 
+#     @cached_property
+#     def _get_post_equilibration_script(self):
+#         return self._load_script('post_equilibration')
+# 
+#     @cached_property
+#     def _get_measurement_script(self):
+#         return self._load_script('measurement')
+# 
+#     @cached_property
+#     def _get_extraction_script(self):
+#         return self._load_script('extraction')
 
-    @cached_property
-    def _get_post_equilibration_script(self):
-        return self._load_script('post_equilibration')
-
-    @cached_property
-    def _get_measurement_script(self):
+    def _measurement_script_default(self):
         return self._load_script('measurement')
-
-    @cached_property
-    def _get_extraction_script(self):
+    def _post_measurement_script_default(self):
+        return self._load_script('post_measurement')
+    def _post_equilibration_script_default(self):
+        return self._load_script('post_equilibration')
+    def _extraction_script_default(self):
         return self._load_script('extraction')
-
+        
     def _get_runid(self):
         return make_runid(self.spec.labnumber,
                           self.spec.aliquot,

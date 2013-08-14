@@ -183,6 +183,8 @@ class H5DataManager(DataManager):
         try:
             self.debug('flush and close file {}'.format(self._frame.filename))
             self._frame.close()
+            del self._frame
+            
         except Exception, e:
             print 'exception closing file', e
 

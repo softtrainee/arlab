@@ -461,10 +461,11 @@ class IsotopeAdapter(DatabaseAdapter):
             an.measurement = meas
 
         if at:
-            at.measurements.append(meas)
-
+#             at.measurements.append(meas)
+            meas.analysis_type_id=at.id
         if ms:
-            ms.measurements.append(meas)
+            meas.mass_spectrometer_id=ms.id
+#             ms.measurements.append(meas)
 
         return meas
 

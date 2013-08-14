@@ -203,29 +203,15 @@ class BaseRegressor(HasTraits):
             observations = array(observations)
             model = array(model)
 
-#            syx = math.sqrt(1. / (n - 2) * ((observations - model) ** 2).sum())
-#            ssx = ((x - xm) ** 2).sum()
-            # ssx = sum([(xi - xm) ** 2 for xi in x])
-
             ti = tinv(alpha, n - 2)
 
             syx = self.syx
             ssx = self.ssx
-#            for i, xi in enumerate(rx):
-#             def _calc_interval(xi):
-#                 d = 1.0 / n + (xi - xm) ** 2 / ssx
-#                 return ti * syx * math.sqrt(d)
 
-#             f = vectorize(_calc_interval)
-#             cors = f(rx)
-#             cors = [_calc_interval(xi) for xi in rx]
-
-            d = 1 + n ** -1 + (rx - xm) ** 2 / ssx
+            d = n ** -1 + (rx - xm) ** 2 / ssx
             cors = ti * syx * d ** 0.5
 
             return cors
-#            lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
-#            return asarray(lci), asarray(uci)
 
     @property
     def syx(self):

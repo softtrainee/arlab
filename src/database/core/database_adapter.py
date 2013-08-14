@@ -85,11 +85,14 @@ class DatabaseAdapter(Loggable):
     def reset(self):
         if self.sess:
             self.info('clearing current session. uncommitted changes will be deleted')
+            
+            self.sess.expunge_all()
             self.sess.close()
+            
             self.sess = None
 
-            import gc
-            gc.collect()
+#             import gc
+#             gc.collect()
 
 
     def connect(self, test=True, force=False):

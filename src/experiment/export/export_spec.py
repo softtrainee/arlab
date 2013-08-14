@@ -68,8 +68,8 @@ class ExportSpec(Loggable):
     power_achieved = Float(0)
     duration = Float(0)
     duration_at_request = Float(0)
-    first_stage_delay = Int(0)
-    second_stage_delay = Int(0)
+    first_stage_delay = CInt(0)
+    second_stage_delay = CInt(0)
     runscript_name = Str
     runscript_text = Str
     comment = Str
@@ -88,9 +88,9 @@ class ExportSpec(Loggable):
                  ]
 
         for exp_attr, run_attr in attrs:
-            if hasattr(record, run_attr):
+            if hasattr(record.spec, run_attr):
                 try:
-                    setattr(self, exp_attr, getattr(record, run_attr))
+                    setattr(self, exp_attr, getattr(record.spec, run_attr))
                 except TraitError, e:
                     self.debug(e)
 

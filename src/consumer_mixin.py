@@ -99,7 +99,6 @@ class consumable(object):
         return c
 
     def __exit__(self, *args, **kw):
-        print '__exit__'
         self._consumer.stop()
 
 

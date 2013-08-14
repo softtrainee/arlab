@@ -57,7 +57,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
     use_inspector_tool = True
     use_point_inspector = True
 
-    popup = None
+#     popup = None
 #    fits = List
 #    def clear(self):
 #        super(RegressionGraph, self).clear()
@@ -172,38 +172,23 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
 
     def _update_graph(self, *args, **kw):
-#        if self.suppress_regression:
-#            print 'speunca'
-#            return
-#        self.regressors = []
-#        print 'update graph', len(self.regressors)
-#        print self.plots
-#        for plot in self.plots:
-#            ks = plot.plots.keys()
-#            try:
-#                scatters, kkk = zip(*[(plot.plots[k][0], k) for k in ks if k.startswith('data')])
-#            except:
-#                return
 
-#        regress = True
-#        for si in scatters:
-#            if self
-
-#        if not regress:
-#            return
-
-#         self.regressors = []
+        self.regressors = []
         for plot in self.plots:
-            ks = plot.plots.keys()
+            ps=plot.plots
+            keys = ps.keys()
             try:
-                scatters, kkk = zip(*[(plot.plots[k][0], k)
-                                      for k in ks if k.startswith('data')])
-                ind = kkk[0][-1]
-                fls = [plot.plots[kk][0] for kk in ks if kk == 'fit{}'.format(ind)]
-                uls = [plot.plots[kk][0] for kk in ks if kk == 'upper CI{}'.format(ind)]
-                lls = [plot.plots[kk][0] for kk in ks if kk == 'lower CI{}'.format(ind)]
-
-                for si, fl, ul, ll in zip(scatters, fls, uls, lls):
+                args= [(ps[k][0], k)
+                        for k in keys if k.startswith('data')]
+#                 ind = kkk[0][-1]
+#                 fls = [plot.plots[kk][0] for kk in ks if kk == 'fit{}'.format(ind)]
+#                 uls = [plot.plots[kk][0] for kk in ks if kk == 'upper CI{}'.format(ind)]
+#                 lls = [plot.plots[kk][0] for kk in ks if kk == 'lower CI{}'.format(ind)]
+                for si, ki in args:
+                    ind=ki[-1]  
+                    fl=ps['fit{}'.format(ind)][0]
+                    ul=ps['upper CI{}'.format(ind)][0]
+                    ll=ps['lower CI{}'.format(ind)][0]
                     self._plot_regression(plot, si, fl, ul, ll)
 
             except ValueError, e:

@@ -52,6 +52,7 @@ from src.ui.qt.gui import invoke_in_main_thread
 # from src.helpers.ctx_managers import no_update
 from sqlalchemy.orm.exc import NoResultFound
 from src.consumer_mixin import ConsumerMixin, consumable
+from src.memory_usage import mem_log, mem_dump, mem_break
 
 BLANK_MESSAGE = '''First "{}" not preceeded by a blank. 
 If "Yes" use last "blank_{}" 
@@ -318,6 +319,7 @@ class ExperimentExecutor(Experimentable):
 
 
         self.debug('%%%%%%%%%%%%%%%%%%% Starting Execution')
+        mem_log('exp start')
                     # check for blank before starting the thread
         if self._pre_execute_check():
             self.stats.start_timer()
@@ -564,12 +566,13 @@ class ExperimentExecutor(Experimentable):
         cnt = 0
         while not self.executable:
             time.sleep(1)
-            if time.time() - st < delay - 1:
+            if time.time() - st < delay:
                 self.set_extract_state('Waiting for save. Autosave in {} s'.format(delay - cnt),
                                        flash=False
                                        )
                 cnt += 1
             else:
+                self.info('autosaving')
                 self.set_extract_state('')
                 self.auto_save_event = True
 
@@ -691,6 +694,7 @@ class ExperimentExecutor(Experimentable):
                         self._report_execution_state(run)
                         last_runid = run.runid
                         run.teardown()
+                        mem_log('{} post teardown'.format(last_runid))
 
                 if self.end_at_run_completion:
                     break
@@ -844,6 +848,7 @@ class ExperimentExecutor(Experimentable):
             return True
 
         def measurement():
+            mem_log('{} pre measurement'.format(arun.runid))
             self.measuring = True
             if not arun.do_measurement():
                 if not self._canceled:
@@ -851,7 +856,12 @@ class ExperimentExecutor(Experimentable):
                     self._alive = False
                 self.measuring = False
                 return
-
+            
+            mem_log('{} post measurement'.format(arun.runid))
+            
+            arun.post_measurement_save()
+            mem_log('post save {}'.format(arun.runid))
+            
             self.measuring = False
             return True
 
@@ -863,6 +873,9 @@ class ExperimentExecutor(Experimentable):
                 return
             return True
 
+        mem_break()
+        mem_log('{} started'.format(arun.runid))
+        
         self.measuring = False
         for step in (
                      start_run,
@@ -888,7 +901,10 @@ class ExperimentExecutor(Experimentable):
         self._check_run_at_end(arun)
 
         self.info('Automated run {} {}'.format(arun.runid, arun.state))
+        
         arun.finish()
+        mem_log('{} post finish'.format(arun.runid))
+        
 #===============================================================================
 #
 #===============================================================================

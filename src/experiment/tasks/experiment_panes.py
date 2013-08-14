@@ -101,8 +101,11 @@ class ExperimentFactoryPane(TraitsDockPane):
                                 ),
     #                  UCustom('run_factory', enabled_when='ok_run'),
                     VFold(
-                     self._get_info_group(),
-                     self._get_extract_group(),
+                          VGroup(
+                                self._get_info_group(),
+                                self._get_extract_group(),
+                                label='General'
+                                ),
 #                     self._get_position_group(),
                      self._get_script_group(),
                      enabled_when=make_qf_name('ok_make')
@@ -185,7 +188,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                                   )
                            ),
                        show_border=True,
-                       label='Info'
+                       label='Sample Info'
                        )
         return grp
 
@@ -200,23 +203,23 @@ class ExperimentFactoryPane(TraitsDockPane):
                         )
         return script_grp
 
-    def _get_position_group(self):
-        grp = VGroup(
- #                         Item('autocenter',
- #                              tooltip='Should the extract device try to autocenter on the sample'
- #                              ),
-                         HGroup(RFItem('position',
-                                     tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
-                                     ),
-                                RFItem('endposition', label='End',
-                                     enabled_when='position'
-                                     )
-                                ),
- #                         Item('multiposition', label='Multi. position run'),
-                         show_border=True,
-                         label='Position'
-                     )
-        return grp
+#     def _get_position_group(self):
+#         grp = VGroup(
+#  #                         Item('autocenter',
+#  #                              tooltip='Should the extract device try to autocenter on the sample'
+#  #                              ),
+#                          HGroup(RFItem('position',
+#                                      tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
+#                                      ),
+#                                 RFItem('endposition', label='End',
+#                                      enabled_when='position'
+#                                      )
+#                                 ),
+#  #                         Item('multiposition', label='Multi. position run'),
+#                          show_border=True,
+#                          label='Position'
+#                      )
+#         return grp
 
     def _get_extract_group(self):
         sspring = lambda width = 17:Spring(springy=False, width=width)
@@ -266,12 +269,22 @@ class ExperimentFactoryPane(TraitsDockPane):
                                            editor=ButtonEditor(label_value=make_rf_name('edit_pattern_label'))
                                            )
                                     ),
+                             
+                             HGroup(RFItem('position',
+                                     tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
+                                     ),
+                                RFItem('endposition', label='End',
+                                     enabled_when='position'
+                                     )
+                                ),
+                             
                              label='Extract',
                              show_border=True
                              )
-        return VGroup(extract_grp, self._get_position_group(),
-                      label='Extraction'
-                      )
+        return extract_grp
+#         return VGroup(extract_grp, self._get_position_group(),
+#                       label='Extraction'
+#                       )
 
 #===============================================================================
 # execution
