@@ -53,7 +53,7 @@ class ExperimentQueueAction(HasTraits):
         self.nrepeat = int(nr)
 
     def check_run(self, run):
-        if run.analysis_type == self.analysis_type:
+        if run.spec.analysis_type == self.analysis_type:
             if hasattr(run, self.attribute):
 
                 run_value = getattr(run, self.attribute)

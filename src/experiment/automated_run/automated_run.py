@@ -992,7 +992,7 @@ anaylsis_type={}
 #        self.debug('fs {}'.format(fs))
         return fs
 
-    def _write_iteration(self, grpname, data_write_hook,
+    def _make_write_iteration(self, grpname, data_write_hook,
                          series, fits, refresh, graph):
 
         dets = self._active_detectors
@@ -1038,11 +1038,6 @@ anaylsis_type={}
             return True
 
         graph = self.plot_panel.graph
-
-#         consumer = ConsumerMixin()
-#         consumer.setup_consumer(self._write_iteration(grpname, data_write_hook,
-#                                                       series, fits, refresh,
-#                                                       graph))
 
         self._total_counts += ncounts
         mi, ma = graph.get_x_limits()

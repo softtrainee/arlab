@@ -926,6 +926,10 @@ class ExperimentExecutor(Experimentable):
                                                      action.action))
                 self.cancel(confirm=False)
 
+        elif action.action == 'cancel':
+            self.cancel(confirm=False)
+
+
 #===============================================================================
 #
 #===============================================================================
