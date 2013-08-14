@@ -32,6 +32,16 @@ class ConsumerMixin(object):
         if auto_start:
             self._consumer.start()
 
+    def queue_size(self):
+        qs = 0
+        if self._consumer_queue:
+            qs = self._consumer_queue.qsize()
+        return qs
+
+    def is_empty(self):
+        if self._consumer_queue:
+            return self._consumer_queue.empty()
+
     def start(self):
         if self._consumer:
             self._consumer.start()

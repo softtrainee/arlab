@@ -33,7 +33,7 @@ from cv_wrapper import swap_rb as cv_swap_rb
 #
 
 from src.globals import globalv
-from src.consumer_mixin import ConsumerMixin
+from src.consumer_mixin import ConsumerMixin, consumable
 def convert_to_video(path, fps, name_filter='snapshot%03d.jpg',
                      ffmpeg=None,
                      output=None):
@@ -172,9 +172,6 @@ class Video(Image):
 
     def _get_frame(self, lock=True, **kw):
         cap = self.cap
-#            if lock:
-#            with self._lock:
-#            with self._lock:
         if globalv.video_test:
 #            if self.source_frame is None:
             p = globalv.video_test_path
@@ -187,41 +184,11 @@ class Video(Image):
             s, img = self.cap.read()
             if s:
                 return img
-#                    return self.cap.read()
-#                    return query_frame(cap)
-#                    pass
-#                    self.source_frame = query_frame(cap, frame=self.source_frame)
-#                    return self.source_frame
 
     def get_image_data(self, cmap=None, **kw):
         frame = self.get_frame(**kw)
         if frame is not None:
             return asarray(frame[:, :])
-
-
-# #        print arr.shape
-#        if cmap is not None:
-#            _, _, colors = transpose(arr)
-#            cmap = cm.get_cmap(cmap)
-#            arr = cmap(colors) * 255
-#            arr = asarray(arr, dtype='uint8')
-#            arr = swapaxes(arr, 0, 1)
-#
-#        return arr
-
-
-#        if not self._last_get:
-#            self._frame = self.get_frame(**kw).ndarray
-#            self._last_get = time.clock()
-#        else:
-# #            print time.clock() - self._last_get
-#            if time.clock() - self._last_get > 1 / 25.:
-#                self._frame = self.get_frame(**kw).ndarray
-#                self._last_get = time.clock()
-
-#        return self._frame
-
-#        return query_frame(self.cap).ndarray
 
     def start_recording(self, path, renderer=None):
         self._stop_recording_event = Event()
@@ -239,7 +206,8 @@ class Video(Image):
         if self.cap is not None:
             self._recording = True
 
-            t = Thread(target=func, args=(path, self._stop_recording_event, fps, renderer))
+            t = Thread(target=func, args=(path, self._stop_recording_event,
+                                          fps, renderer))
             t.start()
 
     def _ready_to_save(self):
@@ -302,16 +270,17 @@ class Video(Image):
         else:
             save = lambda x:renderer(x)
 
-        cm = ConsumerMixin()
-        cm.setup_consumer(save)
+#         cm = ConsumerMixin()
+#         cm.setup_consumer(save)
         fps_1 = 1 / float(fps)
-        while not stop.is_set():
-            st = time.time()
-            pn = os.path.join(image_dir, 'image_{:05n}.jpg'.format(cnt))
-            cm.add_consumable(pn)
-            cnt += 1
-            dur = time.time() - st
-            time.sleep(max(0, fps_1 - dur))
+        with consumable(func=save) as con:
+            while not stop.is_set():
+                st = time.time()
+                pn = os.path.join(image_dir, 'image_{:05n}.jpg'.format(cnt))
+                con.add_consumable(pn)
+                cnt += 1
+                dur = time.time() - st
+                time.sleep(max(0, fps_1 - dur))
 
         self._convert_to_video(image_dir, fps, name_filter='image_%05d.jpg', output=path)
 
