@@ -51,7 +51,7 @@ from pyface.constant import CANCEL, NO, YES
 from src.ui.qt.gui import invoke_in_main_thread
 # from src.helpers.ctx_managers import no_update
 from sqlalchemy.orm.exc import NoResultFound
-from src.consumer_mixin import ConsumerMixin
+from src.consumer_mixin import ConsumerMixin, consumable
 
 BLANK_MESSAGE = '''First "{}" not preceeded by a blank. 
 If "Yes" use last "blank_{}" 
@@ -631,80 +631,85 @@ class ExperimentExecutor(Experimentable):
 
         force_delay = False
         last_runid = None
-        while self.isAlive():
+        with consumable(func=self._overlapped_run) as con:
+            while self.isAlive():
+                self._wait_for_save()
 
+                self.db.reset()
+                if self._queue_modified:
+                    self.debug('Queue modified. making new run generator')
+                    rgen, nruns = exp.new_runs_generator()
+                    cnt = 0
+                    self._queue_modified = False
+                    force_delay = True
 
-            self._wait_for_save()
+                if force_delay or \
+                    (self.isAlive() and cnt < nruns and not cnt == 0):
+                    # delay between runs
+                    self._delay(delay)
+                    force_delay = False
 
-            self.db.reset()
-            if self._queue_modified:
-                self.debug('Queue modified. making new run generator')
-                rgen, nruns = exp.new_runs_generator()
-                cnt = 0
-                self._queue_modified = False
-                force_delay = True
+                runargs = None
+                try:
+                    runspec = rgen.next()
+                    # wait until only one previous run if overlapping
+                    while not con.is_empty() and con.queue_size() > 1:
+                        time.sleep(0.5)
 
-            if force_delay or \
-                (self.isAlive() and cnt < nruns and not cnt == 0):
-                # delay between runs
-                self._delay(delay)
-                force_delay = False
+                    if not runspec.skip:
+                        runargs = self._launch_run(runspec, cnt)
 
-            runargs = None
-            try:
-                runspec = rgen.next()
-                if not runspec.skip:
-                    runargs = self._launch_run(runspec, cnt)
-            except StopIteration:
-                break
+                except StopIteration:
+                    break
 
-            cnt += 1
-            if runargs:
-                t, run = runargs
-                '''
-                    ?? overlay not fully implemented ??
-                '''
-                if runspec.analysis_type == 'unknown' and runspec.overlap:
-                    self.info('overlaping')
-                    run.wait_for_overlap()
-                    self.debug('overlap finished. starting next run')
+                cnt += 1
+                if runargs:
+                    t, run = runargs
+                    '''
+                        ?? overlay not fully implemented ??
+                    '''
+                    if runspec.analysis_type == 'unknown' and runspec.overlap:
+                        self.info('overlaping')
+                        run.wait_for_overlap()
+                        self.debug('overlap finished. starting next run')
 
-                    self._executing_queue.put((t, run))
-                    totalcnt += 1
-
-                else:
-                    t.join()
-
-                    self.debug('{} finished'.format(run.runid))
-                    if self.isAlive():
+                        con.add_consumable((t, run))
+#                         self._executing_queue.put((t, run))
                         totalcnt += 1
-                        if runspec.analysis_type.startswith('blank'):
-                            pb = run.get_baseline_corrected_signals()
-                            if pb is not None:
-                                self._prev_blanks = pb
 
-                    self._report_execution_state(run)
-                    last_runid = run.runid
-                    run.teardown()
+                    else:
+                        t.join()
 
-            if self.end_at_run_completion:
-                break
+                        self.debug('{} finished'.format(run.runid))
+                        if self.isAlive():
+                            totalcnt += 1
+                            if runspec.analysis_type.startswith('blank'):
+                                pb = run.get_baseline_corrected_signals()
+                                if pb is not None:
+                                    self._prev_blanks = pb
 
-        if self.err_message:
-            self.warning('automated runs did not complete successfully')
-            self.warning('error: {}'.format(self.err_message))
+                        self._report_execution_state(run)
+                        last_runid = run.runid
+                        run.teardown()
 
-        self._end_runs()
-        if last_runid:
-            self.info('Queue {:02n}. Automated runs ended at {}, runs executed={}'.format(iexp, last_runid, totalcnt))
+                if self.end_at_run_completion:
+                    break
 
-        consumer.stop()
+            if self.err_message:
+                self.warning('automated runs did not complete successfully')
+                self.warning('error: {}'.format(self.err_message))
+
+            self._end_runs()
+            if last_runid:
+                self.info('Queue {:02n}. Automated runs ended at {}, runs executed={}'.format(iexp, last_runid, totalcnt))
+
         return totalcnt
 
     def _overlapped_run(self, v):
         t, run = v
-        while t.is_alive():
-            time.sleep(1)
+#         while t.is_alive():
+#             time.sleep(1)
+        t.join()
 
         self.debug('{} finished'.format(run.runid))
         if run.analysis_type.startswith('blank'):
