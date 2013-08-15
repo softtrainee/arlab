@@ -841,6 +841,9 @@ class StageManager(Manager):
 
 #        self.move_thread = None
 
+    def is_auto_correcting(self):
+        return False
+
     def _move_to_hole_hook(self, *args):
         pass
 

@@ -37,14 +37,14 @@ from src.canvas.canvas2D.camera import Camera
 # from src.machine_vision.autocenter_manager import AutocenterManager
 # from src.machine_vision.mosaic_manager import MosaicManager
 
-from camera_calibration_manager import CameraCalibrationManager
+# from camera_calibration_manager import CameraCalibrationManager
 from stage_manager import StageManager
 # from video_component_editor import VideoComponentEditor
 # from src.helpers.media import play_sound
 # from src.mv.autocenter_manager import AutoCenterManager
 # from src.mv.focus.autofocus_manager import AutoFocusManager
 from src.ui.stage_component_editor import VideoComponentEditor
-from src.ui.gui import invoke_in_main_thread
+# from src.ui.gui import invoke_in_main_thread
 
 try:
     from src.canvas.canvas2D.video_laser_tray_canvas import VideoLaserTrayCanvas
@@ -117,6 +117,8 @@ class VideoStageManager(StageManager):
     camera = Instance(Camera)
 
     render_with_markup = Bool(False)
+
+    _auto_correcting = False
 
     def bind_preferences(self, pref_id):
         self.debug('binding preferences')
@@ -381,10 +383,16 @@ class VideoStageManager(StageManager):
 
         self.video.start_recording(path, renderer)
 
+    def is_auto_correcting(self):
+        return self._auto_correcting
+
     def _move_to_hole_hook(self, holenum, correct):
         if correct and self.use_autocenter:
-#            sm = self._stage_map
+
+            self._auto_correcting = True
             pos, corrected, interp = self._autocenter(holenum=holenum, ntries=1)
+            self._auto_correcting = False
+
             self._update_visualizer(holenum, pos, interp)
 
     def _update_visualizer(self, holenum, pos, interp):

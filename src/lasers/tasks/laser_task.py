@@ -88,8 +88,9 @@ class FusionsTask(BaseLaserTask):
 
     def test_degas(self):
         if self.manager:
-            v = self.manager.degasser_factory()
-            self.window.application.open_view(v)
+            if self.manager.use_video:
+                v = self.manager.degasser_factory()
+                self.window.application.open_view(v)
 
 
 class FusionsCO2Task(FusionsTask):

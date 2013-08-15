@@ -24,6 +24,7 @@ from src.remote_hardware.errors import InvalidArgumentsErrorCode
 from src.remote_hardware.errors.laser_errors import LogicBoardCommErrorCode, \
     EnableErrorCode, DisableErrorCode, InvalidSampleHolderErrorCode, \
     InvalidMotorErrorCode
+from src.helpers.filetools import str_to_bool
 # from src.remote_hardware.errors.error import InvalidDirectoryErrorCode
 # from src.paths import paths
 # import os
@@ -227,6 +228,9 @@ class LaserHandler(BaseRemoteHardwareHandler):
         pos = x, y, z
         return ','.join(['{:0.5f}' .format(i) for i in pos])
 
+    def GetAutoCorrecting(self, manager):
+        return manager.stage_manager.is_auto_correcting()
+
     def GetDriveMoving(self, manager, *args):
         return manager.stage_manager.moving()
 
@@ -262,12 +266,16 @@ class LaserHandler(BaseRemoteHardwareHandler):
         err = manager.stage_manager.define_home(**kw)
         return self.error_response(err)
 
-    def GoToHole(self, manager, data, *args):
+
+    def GoToHole(self, manager, hole, autocenter, *args):
         try:
-            data = int(data)
-            err = manager.stage_manager.move_to_hole(str(data))
+            hole = int(hole)
+            autocenter = str_to_bool(autocenter)
+
+            err = manager.stage_manager.move_to_hole(str(hole),
+                                                     correct_position=autocenter)
         except (ValueError, TypeError):
-            err = InvalidArgumentsErrorCode('GoToHole', data)
+            err = InvalidArgumentsErrorCode('GoToHole', (hole, autocenter))
 
         return self.error_response(err)
 

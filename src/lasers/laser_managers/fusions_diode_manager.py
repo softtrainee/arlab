@@ -187,7 +187,8 @@ class FusionsDiodeManager(FusionsLaserManager):
             self.set_laser_power(value)
 
     def set_laser_temperature(self, temp):
-        return self._set_laser_power_hook(temp, mode='closed', use_calibration=self.use_calibrated_temperature)
+        return self._set_laser_power_hook(temp, mode='closed',
+                                          use_calibration=self.use_calibrated_temperature)
 
 
 #===============================================================================
@@ -203,7 +204,8 @@ class FusionsDiodeManager(FusionsLaserManager):
 
         func = getattr(tc, 'set_{}_loop_setpoint'.format(mode))
         func(float(power),
-             use_calibration=use_calibration)
+             use_calibration=use_calibration,
+             **kw)
 
     def _enable_hook(self):
         if super(FusionsDiodeManager, self)._enable_hook():  # logic board sucessfully enabled

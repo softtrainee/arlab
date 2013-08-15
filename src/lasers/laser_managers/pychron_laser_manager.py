@@ -302,8 +302,8 @@ class PychronLaserManager(BaseLaserManager):
 #===============================================================================
 # pyscript private
 #===============================================================================
-    def _move_to_position(self, pos):
-        cmd = 'GoToHole {}'.format(pos)
+    def _move_to_position(self, pos, autocenter):
+        cmd = 'GoToHole {} {}'.format(pos, autocenter)
         if isinstance(pos, tuple):
             cmd = 'SetXY {}'.format(pos[:2])
 #            if len(pos) == 3:
@@ -313,6 +313,9 @@ class PychronLaserManager(BaseLaserManager):
         self._ask(cmd)
         time.sleep(0.5)
         r = self._block()
+        if autocenter:
+            r = self._block(cmd='GetAutoCorrecting', period=0.5)
+
         self.update_position()
         return r
 
@@ -518,7 +521,7 @@ class PychronUVLaserManager(PychronLaserManager):
 #        r = self._block(cmd='GetMotorMoving {}'.format(name))
 #        return r
 
-    def _move_to_position(self, pos):
+    def _move_to_position(self, pos, autocenter):
 
         cmd = 'GoToPoint'
         if pos.startswith('t'):

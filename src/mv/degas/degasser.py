@@ -30,19 +30,27 @@ from numpy import random, zeros, ones
 from src.image.cv_wrapper import colorspace
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class PID(object):
+class PID(HasTraits):
     _integral_err = 0
     _prev_err = 0
-    Kp = 0.25
-    Ki = 0.0001
-    Kd = 0
+    Kp = Float(0.25)
+    Ki = Float(0.0001)
+    Kd = Float(0)
+    min_output = 0
+    max_output = 100
     def get_value(self, error, dt):
         self._integral_err += (error * dt)
         derivative = (error - self._prev_err) / dt
         output = (self.Kp * error) + (self.Ki * self._integral_err) + (self.Kd * derivative)
         self._prev_err = error
-        return output
-
+        return min(self.max_output, max(self.min_output, output))
+    def traits_view(self):
+        v = View(
+               Item('Kp'),
+               Item('Ki'),
+               Item('Kd'),
+               )
+        return v
 class Degasser(MachineVisionManager, ExecuteMixin):
     _period = 0.05
     crop_width = Int(5)
@@ -54,6 +62,7 @@ class Degasser(MachineVisionManager, ExecuteMixin):
     _test_image = Instance(TestImage)
     _testing = False
 
+    pid = Instance(PID, ())
 
     def degas(self, lumens, duration):
         '''
@@ -91,7 +100,7 @@ class Degasser(MachineVisionManager, ExecuteMixin):
         self._detector = LumenDetector()
         dt = self._period
 
-        pid = PID()
+        pid = self.pid
         st = time.time()
         i = 0
         while 1:
@@ -108,7 +117,7 @@ class Degasser(MachineVisionManager, ExecuteMixin):
             g.add_data(((tt, out), (tt, err), (tt, cl)))
 #             g.redraw()
 #             if i % 5 == 0:
-            self._set_power(out)
+            self._set_power(out, i)
 
             if tt > duration:
                 break
@@ -116,7 +125,7 @@ class Degasser(MachineVisionManager, ExecuteMixin):
             time.sleep(max(0, dt - et))
 
             i += 1
-            if i > 100:
+            if i > 1e6:
                 i = 0
 
         if self.laser_manager:
@@ -124,9 +133,9 @@ class Degasser(MachineVisionManager, ExecuteMixin):
 
         self.executing = False
 
-    def _set_power(self, pwr):
+    def _set_power(self, pwr, cnt):
         if self.laser_manager:
-            self.laser_manager.set_laser_power(pwr)
+            self.laser_manager.set_laser_power(pwr, verbose=cnt == 0)
 
     def _get_current_lumens(self, im, cw, ch):
         src = self.new_image_frame()
@@ -169,6 +178,7 @@ class Degasser(MachineVisionManager, ExecuteMixin):
         v = View(
                  UItem('execute', editor=ButtonEditor(label_value='execute_label')),
                  HGroup(Item('_test_lumens'), Item('_test_duration')),
+                 UItem('pid', style='custom'),
                  HGroup(UItem('_test_graph',
                               height=400,
                               style='custom'),

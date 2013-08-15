@@ -38,9 +38,21 @@ from src.lasers.tasks.laser_calibration_task import LaserCalibrationTask
 
 class CoreLaserPlugin(BaseTaskPlugin):
     def _my_task_extensions_default(self):
-        actions = [SchemaAddition(factory=OpenPowerMapAction,
+        actions = [
+                   SchemaAddition(factory=OpenPowerMapAction,
                                   path='MenuBar/File/Open'
-                                )
+                                ),
+                   SchemaAddition(id='calibration',
+                                   factory=lambda: Group(
+                                                         PowerMapAction(),
+                                                         PowerCalibrationAction(),
+                                                         ),
+                                   path='MenuBar/Extraction'
+                                   ),
+                    SchemaAddition(
+                                   factory=TestDegasAction,
+                                   path='MenuBar/Extraction'
+                                   )
                    ]
         return [TaskExtension(actions=actions)
                 ]
