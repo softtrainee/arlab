@@ -244,7 +244,7 @@ class ExtractionPyScript(ValvePyScript):
 
     @verbose_skip
     @command_register
-    def move_to_position(self, position=''):
+    def move_to_position(self, position='', autocenter=False):
         if position == '':
             position = self.position
 
@@ -256,11 +256,11 @@ class ExtractionPyScript(ValvePyScript):
             position_ok = False
 
         if position_ok:
-#            print self.extract_device, 'asdfasfdasdf'
-            self.info('{} move to position {}'.format(self.extract_device, position))
-            success = self._manager_action([('move_to_position', (position,), {})
+            self.info('{} move to position {}'.format(self.extract_device,
+                                                      position))
+            success = self._manager_action([('move_to_position',
+                                             (position, autocenter), {})
                                             ],
-#                                          protocol='src.lasers.laser_managers.laser_manager.ILaserManager',
                                           protocol=ILaserManager,
                                           name=self.extract_device
                                           )

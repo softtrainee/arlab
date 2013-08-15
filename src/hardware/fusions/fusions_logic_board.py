@@ -87,11 +87,12 @@ class FusionsLogicBoard(CoreDevice):
 
         return coeffs
 
-    def get_calibrated_power(self, request, calibration='watts'):
+    def get_calibrated_power(self, request, calibration='watts', verbose=True):
 #        coeffs = [1, 0]
 #        print self.config_path
         mc = self._calibration_factory(calibration)
-        self.info('using power coefficients  (e.g. ax2+bx+c) {}'.format(mc.print_string()))
+        if verbose:
+            self.info('using power coefficients  (e.g. ax2+bx+c) {}'.format(mc.print_string()))
         return mc.get_input(request)
 
     def initialize(self, *args, **kw):

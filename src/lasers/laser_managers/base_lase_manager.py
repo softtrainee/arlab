@@ -130,12 +130,12 @@ class BaseLaserManager(Manager):
         pm = PatternExecutor(application=self.application, controller=controller)
         return pm
 
-    def move_to_position(self, pos, *args, **kw):
+    def move_to_position(self, pos, autocenter, *args, **kw):
         if not isinstance(pos, list):
             pos = [pos]
 
         for pi in pos:
-            self._move_to_position(pi)
+            self._move_to_position(pi, autocenter)
 
         return True
 
@@ -158,7 +158,7 @@ class BaseLaserManager(Manager):
 
     def _get_calibrated_power(self, power, use_calibration=True, verbose=True):
         if self.use_calibrated_power and use_calibration:
-            power = max(0, self.laser_controller.get_calibrated_power(power))
+            power = max(0, self.laser_controller.get_calibrated_power(power, verbose=verbose))
         return power
 
     def _get_requested_power(self):

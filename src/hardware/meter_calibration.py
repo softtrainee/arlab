@@ -92,7 +92,6 @@ class MeterCalibration(HasTraits):
 
         if c is not None and len(c):
             c[-1] -= response
-
             power = optimize.brentq(poly1d(c), self.output_low,
                                                self.output_high)
             c[-1] += response

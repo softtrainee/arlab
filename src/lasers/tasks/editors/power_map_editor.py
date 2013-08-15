@@ -21,7 +21,7 @@ from traitsui.api import View, Item, UItem, VGroup, ButtonEditor, \
     HGroup, spring
 from src.envisage.tasks.base_editor import BaseTraitsEditor
 from src.loggable import Loggable
-from src.canvas.canvas2D.raster_canvas import RasterCanvas
+# from src.canvas.canvas2D.raster_canvas import RasterCanvas
 from enable.component_editor import ComponentEditor
 from src.lasers.power.power_mapper import PowerMapper
 from src.ui.thread import Thread
@@ -66,7 +66,7 @@ class PowerMapEditor(LaserEditor):
     beam_diameter = Float
     power = Float
 
-    canvas = Instance(RasterCanvas, ())
+#     canvas = Instance(RasterCanvas, ())
     editor = Instance(PowerMapControls, ())
     mapper = Instance(PowerMapper, ())
     completed = DelegatesTo('mapper')
@@ -98,13 +98,13 @@ class PowerMapEditor(LaserEditor):
         editor = self.editor
         padding = editor.padding
 
-        if editor.discrete_scan:
-            mapper.canvas = self.canvas
-            self.component = self.canvas
-        else:
+#         if editor.discrete_scan:
+#             mapper.canvas = self.canvas
+#             self.component = self.canvas
+#         else:
 
-            c = mapper.make_component(padding)
-            self.component = c
+        c = mapper.make_component(padding)
+        self.component = c
 
         bd = editor.beam_diameter
         rp = editor.request_power

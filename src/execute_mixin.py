@@ -17,7 +17,9 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Event, Property, Bool
 from traitsui.api import View, Item
-from src.ui.thread import Thread
+from threading import Thread
+# from src.ui.thread import Thread
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

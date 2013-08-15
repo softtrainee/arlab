@@ -16,12 +16,14 @@
 
 #=============enthought library imports=======================
 from traits.api import Color, Property, Tuple, Float, Any, Bool, Range, on_trait_change, \
-    Enum, List, Int
-from traitsui.api import View, Item, VGroup, HGroup, ColorEditor
+    Enum, List, Int, File, cached_property
+# from traitsui.api import View, Item, VGroup, HGroup, ColorEditor
 from chaco.api import AbstractOverlay
 from kiva import constants
-
+from kiva.agg.agg import GraphicsContextArray
 #=============standard library imports ========================
+from numpy import array
+from PIL import Image
 # import math
 #=============local library imports  ==========================
 from src.canvas.canvas2D.map_canvas import MapCanvas
@@ -30,6 +32,8 @@ from src.canvas.canvas2D.scene.primitives.laser_primitives import Transect, \
     VelocityPolyLine, RasterPolygon, LaserPoint, DrillPoint
 from src.regex import TRANSECT_REGEX, DRILL_REGEX
 from src.canvas.canvas2D.crosshairs_overlay import CrosshairsOverlay
+import os
+
 
 # class Point(HasTraits):
 #    x=Float
@@ -77,6 +81,54 @@ DIRECTIONS = {'Left':('x', 1), 'Right':('x', -1),
                  'Down':('y', 1), 'Up':('y', -1)
                  }
 
+class ImageOverlay(AbstractOverlay):
+    alpha = Range(0.0, 1.0, 1.0)
+
+    _image_cache_valid = False
+    _cached_image = None
+
+    path = File
+
+    def overlay(self, other_component, gc, view_bounds=None, mode="normal"):
+        with gc:
+#             gc.clip_to_rect(0, 0, scomponent.width, self.component.height)
+            gc.set_alpha(self.alpha)
+            if not self._image_cache_valid:
+                self._compute_cached_image()
+
+            if self._cached_image:
+                gc.draw_image(self._cached_image,
+                              rect=(other_component.x, other_component.y,
+                                    other_component.width, other_component.height)
+                              )
+
+    def _compute_cached_image(self):
+        pic = Image.open(self.path)
+        data = array(pic)
+        if not data.flags['C_CONTIGUOUS']:
+            data = data.copy()
+
+        if data.shape[2] == 3:
+            kiva_depth = "rgb24"
+        elif data.shape[2] == 4:
+            kiva_depth = "rgba32"
+        else:
+            raise RuntimeError, "Unknown colormap depth value: %i" \
+                                % data.value_depth
+
+        self._cached_image = GraphicsContextArray(data, pix_format=kiva_depth)
+        self._image_cache_valid = True
+
+    def _path_changed(self):
+        if self.path:
+            self.name = os.path.basename(self.path)
+            self.dirname = os.path.dirname(self.path)
+
+        self._image_cache_valid = False
+        self.request_redraw()
+
+    def _alpha_changed(self):
+        self.request_redraw()
 
 class LaserTrayCanvas(MapCanvas):
     '''
@@ -141,6 +193,10 @@ class LaserTrayCanvas(MapCanvas):
         super(LaserTrayCanvas, self).__init__(*args, **kw)
         self._add_bounds_rect()
         self._add_crosshairs()
+
+    def add_image_underlay(self, p, alpha=1.0):
+        im = ImageOverlay(path=p, alpha=alpha)
+        self.overlays.append(im)
 
     def clear_all(self):
         self._point_count = 1
