@@ -51,8 +51,7 @@ from src.processing.isotope import IsotopicMeasurement
 from src.experiment.export.export_spec import ExportSpec
 from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import consumable
-from src.memory_usage import mem_log
-
+from src.codetools.memory_usage import mem_log, mem_dump
 
 
 class ScriptInfo(HasTraits):
@@ -80,7 +79,6 @@ def assemble_script_blob(scripts, kinds=None):
             ts.append(blob)
 
     return 'Pychron Script', '\n'.join(ts)
-
 
 warned_scripts = []
 
@@ -163,23 +161,17 @@ class AutomatedRun(Loggable):
 #    save_error_flag = False
     invalid_script = False
 
-
 #===============================================================================
 # pyscript interface
 #===============================================================================
     def py_position_magnet(self, pos, detector, dac=False):
 
         mem_log('pre position magnet')
-#         import objgraph
-#         objgraph.show_growth(limit=10)
-        
+
         if not self._alive:
             return
         self._set_magnet_position(pos, detector, dac=dac)
-        
-#         objgraph.show_growth()
-#         objgraph.show_chain()
-        
+
         mem_log('post position magnet')
 
     def py_activate_detectors(self, dets):
@@ -226,9 +218,7 @@ class AutomatedRun(Loggable):
             1. 'linear'
             2. ('linear',)
             3. ('linear', 'linear')
-            4. ((0,100,'linear'),(100,None, 'parabolic')]
-            
-            
+            4. ((0,100,'linear'),(100,None, 'parabolic')] 
         '''
         mem_log('pre set regress fits')
         def make_fits(fi):
@@ -394,6 +384,7 @@ class AutomatedRun(Loggable):
 
 
     def py_peak_center(self, **kw):
+        mem_log('pre peak center')
         if not self._alive:
             return
         ion = self.ion_optics_manager
@@ -426,6 +417,8 @@ class AutomatedRun(Loggable):
                 attrs.center_signal = ys[1]
                 attrs.high_signal = ys[2]
                 tab.flush()
+
+        mem_log('post peak center')
 
     def py_coincidence_scan(self):
         sm = self.spectrometer_manager
@@ -554,8 +547,11 @@ class AutomatedRun(Loggable):
             self.monitor.automated_run = None
 
         if self.measurement_script:
-            self.measurement_script.automated_run=None
-            
+            self.measurement_script.automated_run = None
+
+        if self.measurement_script:
+            self.measurement_script.automated_run = None
+
         self.extraction_script = None
         self.measurement_script = None
         self.post_equilibration_script = None
@@ -1418,13 +1414,14 @@ anaylsis_type={}
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
             bs = IsotopicMeasurement(xs=x, ys=y, fit=fit)
 
-            rsignals['{}baseline'.format(iso)] =bs
+            rsignals['{}baseline'.format(iso)] = bs
 
         for (iso, detname) in sniffs:
             tab = dm.get_table(detname, '/sniff/{}'.format(iso))
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
             sn = IsotopicMeasurement(xs=x, ys=y)
-            
+
+
             rsignals['{}sniff'.format(iso)] = sn
 
         peak_center = dm.get_table('peak_center', '/')
@@ -1775,14 +1772,15 @@ anaylsis_type={}
         return script
 
     def _bootstrap_script(self, fname, name):
-        global warned_scripts
         import traceback
-        def warn(fn):
+        global warned_scripts
+
+        def warn(fn, e):
             self.invalid_script = True
             if not fn in warned_scripts:
                 warned_scripts.append(fn)
-                e = traceback.format_exc()
-                self.warning_dialog('Invalid Scriptb {} {}'.format(fn, e))
+#                 e = traceback.format_exc()
+                self.warning_dialog('Invalid Script {}\n{}'.format(fn, e))
                 self.executable = False
 
         self.info('loading script "{}"'.format(fname))
@@ -1797,14 +1795,15 @@ anaylsis_type={}
 #                    s.test()
 # #                    setattr(self, '_{}_script'.format(name), s)
                 except Exception, e:
-
-                    warn(fname)
+                    e = traceback.format_exc()
+                    warn(fname, e)
                     valid = False
 #                    setattr(self, '_{}_script'.format(name), None)
         else:
             valid = False
             fname = s.filename if s else fname
-            warn(fname)
+            e = 'Not a file'
+            warn(fname, e)
 
         self.valid_scripts[name] = valid
         return s

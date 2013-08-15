@@ -140,7 +140,8 @@ class LaserCalibrationTask(BaseLaserTask):
 
     def _active_editor_changed(self):
         if self.active_editor:
-            self.control_pane.editor = self.active_editor.editor
+            if hasattr(self.active_editor, 'editor'):
+                self.control_pane.editor = self.active_editor.editor
 
     @on_trait_change('active_editor:completed')
     def _update_completed(self):

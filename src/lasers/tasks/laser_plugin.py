@@ -30,7 +30,7 @@ from envisage.ui.tasks.task_extension import TaskExtension
 from src.lasers.tasks.laser_actions import OpenScannerAction, \
     OpenAutoTunerAction, PowerMapAction, PowerCalibrationAction, \
     OpenPowerMapAction, TestDegasAction
-from pyface.tasks.action.schema import SMenu, GroupSchema
+from pyface.tasks.action.schema import SMenu, GroupSchema, MenuSchema
 from pyface.action.group import Group
 from src.lasers.tasks.laser_calibration_task import LaserCalibrationTask
 #============= standard library imports ========================
@@ -42,27 +42,28 @@ class CoreLaserPlugin(BaseTaskPlugin):
                    SchemaAddition(factory=OpenPowerMapAction,
                                   path='MenuBar/File/Open'
                                 ),
-                   SchemaAddition(id='calibration',
-                                   factory=lambda: Group(
-                                                         PowerMapAction(),
-                                                         PowerCalibrationAction(),
-                                                         ),
-                                   path='MenuBar/Extraction'
-                                   ),
-                    SchemaAddition(
-                                   factory=TestDegasAction,
-                                   path='MenuBar/Extraction'
-                                   )
+#                    SchemaAddition(id='calibration',
+#                                   factory=lambda: Group(
+#                                                          PowerMapAction(),
+#                                                          PowerCalibrationAction(),
+#                                                          ),
+#                                    path='MenuBar/Extraction'
+#                                    ),
+#                     SchemaAddition(
+#                                    factory=TestDegasAction,
+#                                    path='MenuBar/Extraction'
+#                                    )
                    ]
-        return [TaskExtension(actions=actions)
+        return [TaskExtension(actions=actions),
+
                 ]
+
 
 class BaseLaserPlugin(BaseTaskPlugin):
     MANAGERS = 'pychron.hardware.managers'
 
     klass = None
     name = None
-
 
     def _service_offers_default(self):
         '''
@@ -140,25 +141,26 @@ class BaseLaserPlugin(BaseTaskPlugin):
 
 class FusionsPlugin(BaseLaserPlugin):
     task_name = Str
+
     def _tasks_default(self):
         return [TaskFactory(id=self.id,
                             task_group='hardware',
                             factory=self._task_factory,
                             name=self.task_name,
-                            accelerator='Ctrl+l'
+#                             accelerator='Ctrl+l'
+                            accelerator=self.accelerator
                             ),
-#                 TaskFactory(id='pychron.laser.calibration',
-#                             task_group='hardware',
-#                             factory=self._calibration_task_factory,
-#                             name='Laser Calibration',
-#                             accelerator='Ctrl+2'
-#                             ),
+                TaskFactory(id='pychron.laser.calibration',
+                            task_group='hardware',
+                            factory=self._calibration_task_factory,
+                            name='Laser Calibration',
+                            accelerator='Ctrl+2'
+                            ),
                 ]
 
     def _calibration_task_factory(self):
         t = LaserCalibrationTask(manager=self._get_manager())
         return t
-
 
     sources = List(contributes_to='pychron.video.sources')
     def _sources_default(self):
@@ -181,11 +183,11 @@ class FusionsPlugin(BaseLaserPlugin):
                                   before='Tools',
                                   after='View'
                                   ),
-                   SchemaAddition(id='fusions_laser_group',
-                                 factory=lambda: GroupSchema(id='FusionsLaserGroup'
-                                                       ),
-                                 path='MenuBar/Extraction'
-                                 ),
+#                    SchemaAddition(id='fusions_laser_group',
+#                                  factory=lambda: GroupSchema(id='FusionsLaserGroup'
+#                                                        ),
+#                                  path='MenuBar/Extraction'
+#                                  ),
 #                    SchemaAddition(id='pattern',
 #                                   factory=lambda:Group(
 #                                                        OpenPatternAction(),
@@ -217,6 +219,7 @@ class FusionsCO2Plugin(FusionsPlugin):
     name = 'fusions_co2'
     klass = ('src.lasers.laser_managers.fusions_co2_manager', 'FusionsCO2Manager')
     task_name = 'Fusions CO2'
+    accelerator = 'Ctrl+Shift+]'
 
     def _task_factory(self):
         t = FusionsCO2Task(manager=self._get_manager())
@@ -229,26 +232,37 @@ class FusionsCO2Plugin(FusionsPlugin):
         exts = super(FusionsCO2Plugin, self)._my_task_extensions_default()
         def factory_scan():
             return OpenScannerAction(self._get_manager())
-
-#         def factory_tune():
-#             return OpenAutoTunerAction(self._get_manager())
-
-        return exts + [TaskExtension(actions=[
-                                              SchemaAddition(id='fusions_co2_group',
-                                                     factory=lambda: GroupSchema(id='FusionsCO2Group'
-                                                                           ),
-                                                     path='MenuBar/Extraction'
-                                                     ),
-
-                                              ]
+        ext1 = TaskExtension(task_id='pychron.fusions.co2',
+                             actions=[
+#                                       SchemaAddition(id='fusions_co2_group',
+#                                              factory=lambda: MenuSchema(id='FusionsCO2',
+#                                                                         name='Fusions CO2'
+#                                                                    ),
+#                                              path='MenuBar/Extraction'
+#                                              ),
+                                      SchemaAddition(id='calibration',
+                                                   factory=lambda: Group(
+                                                                         PowerMapAction(),
+                                                                         PowerCalibrationAction(),
+                                                                         ),
+                                                   path='MenuBar/Extraction'
+                                                   ),
+                                      SchemaAddition(
+                                                   factory=TestDegasAction,
+                                                   path='MenuBar/Extraction'
+#                                                    path='MenuBar/Extraction'
+                                                   )
+                                     ]
                               )
-                       ]
+
+        return exts + [ext1]
 
 class FusionsDiodePlugin(FusionsPlugin):
     id = 'pychron.fusions.diode'
     name = 'fusions_diode'
     klass = ('src.lasers.laser_managers.fusions_diode_manager', 'FusionsDiodeManager')
     task_name = 'Fusions Diode'
+    accelerator = 'Ctrl+Shift+['
     def _my_task_extensions_default(self):
         def factory_scan():
             return OpenScannerAction(self._get_manager())
@@ -256,27 +270,43 @@ class FusionsDiodePlugin(FusionsPlugin):
             return OpenAutoTunerAction(self._get_manager())
 
         exts = super(FusionsDiodePlugin, self)._my_task_extensions_default()
-        return exts + [TaskExtension(
-                                     task_id='pychron.fusions.diode',
-                                     actions=[
-                         SchemaAddition(id='fusions_diode_group',
-                         factory=lambda: GroupSchema(id='FusionsDiodeGroup'
-                                               ),
-                         path='MenuBar/Extraction'
-                         ),
-                           SchemaAddition(id='fusions_diode_group',
-                                          factory=lambda: Group(),
-                                          path='MenuBar/Extraction'
-                                          ),
-                           SchemaAddition(id='open_scan',
-                                          factory=factory_scan,
-                                        path='MenuBar/Extraction/FusionsDiodeGroup'),
-                           SchemaAddition(id='open_autotune',
-                                          factory=factory_tune,
-                                        path='MenuBar/Extraction/FusionsDiodeGroup'),
-                                       ]
+
+        ext1 = TaskExtension(
+                             task_id='pychron.fusions.diode',
+                             actions=[
+#                                     SchemaAddition(id='fusions_diode_group',
+#                                                    factory=lambda: GroupSchema(id='FusionsDiodeGroup'),
+#                                                    path='MenuBar/Extraction'
+#                                                    ),
+#                                     SchemaAddition(id='fusions_diode_group',
+#                                                   factory=lambda: Group(),
+#                                                   path='MenuBar/Extraction'
+#                                                   ),
+                                    SchemaAddition(id='open_scan',
+                                                  factory=factory_scan,
+                                                path='MenuBar/Extraction'
+#                                                 path='MenuBar/Extraction/FusionsDiodeGroup'
+                                                ),
+                                    SchemaAddition(id='open_autotune',
+                                                  factory=factory_tune,
+                                                path='MenuBar/Extraction'
+#                                                 path='MenuBar/Extraction/FusionsDiodeGroup'
+                                                ),
+                                    SchemaAddition(id='calibration',
+                                                   factory=lambda: Group(
+                                                                         PowerMapAction(),
+                                                                         PowerCalibrationAction(),
+                                                                         ),
+                                                   path='MenuBar/Extraction'
+                                                   ),
+                                    SchemaAddition(
+                                                   factory=TestDegasAction,
+                                                   path='MenuBar/Extraction'
+                                                   )
+                                    ]
                               )
-                       ]
+
+        return exts + [ext1]
 
     def _preferences_panes_default(self):
         return [FusionsDiodePreferencesPane]
