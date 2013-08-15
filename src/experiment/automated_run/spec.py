@@ -25,6 +25,7 @@ from src.experiment.utilities.identifier import get_analysis_type, make_rid, \
     make_runid
 from src.constants import SCRIPT_KEYS, SCRIPT_NAMES, ALPHAS
 from src.loggable import Loggable
+import weakref
 
 class AutomatedRunSpec(Loggable):
     '''
@@ -171,7 +172,8 @@ class AutomatedRunSpec(Loggable):
 
         if new_uuid:
             arun.uuid = str(uuid.uuid4())
-        arun.spec = self
+        
+        arun.spec = weakref.ref(self)()
 
         return arun
 

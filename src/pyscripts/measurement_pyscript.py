@@ -27,6 +27,7 @@ from src.pyscripts.pyscript import verbose_skip, count_verbose_skip, \
 from src.paths import paths
 from src.pyscripts.valve_pyscript import ValvePyScript
 from src.constants import MEASUREMENT_COLOR
+import weakref
 
 estimated_duration_ff = 1
 
@@ -48,7 +49,7 @@ class MeasurementPyScript(ValvePyScript):
     abbreviated_count_ratio = None
 
     def reset(self, arun):
-        self.automated_run = arun
+        self.automated_run = weakref.ref(arun)()
 
         self._series_count = 0
         self._time_zero = None

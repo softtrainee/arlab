@@ -17,7 +17,7 @@
 
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Any, Property, Float, Event
+from traits.api import HasTraits, List, Any, Property, Float, Event,Array
 from traitsui.api import View, Item, VGroup, HGroup, Spring, \
     TableEditor, RangeEditor
 from traitsui.table_column import ObjectColumn
@@ -26,7 +26,7 @@ from traitsui.table_column import ObjectColumn
 import os
 import csv
 import time
-from numpy import polyval, polyfit
+from numpy import polyval, polyfit, array
 #============= local library imports  ==========================
 from src.paths import paths
 # import math
@@ -49,11 +49,16 @@ def get_float(func):
     return dec
 
 class Magnet(SpectrometerDevice):
-    mftable = List(
-                   # [[40, 39, 38, 36], [2, 5, 10, 26]]
-                   )
+#     mftable = List(
+#                    # [[40, 39, 38, 36], [2, 5, 10, 26]]
+#                    )
     # regressor = Instance(PolynomialRegressor, ())
+#     mftable=Array
 
+#     mf_masses=Array
+#     mf_dacs=Array
+#     mf_isos=List
+    
     dac = Property(depends_on='_dac')
     mass = Property(depends_on='_mass')
 
@@ -69,7 +74,7 @@ class Magnet(SpectrometerDevice):
 
     settling_time = 0.5
 
-    calibration_points = Property(depends_on='mftable')
+    calibration_points = List#Property(depends_on='mftable')
     detector = Any
 #    graph = Instance(Graph, ())
 
@@ -89,19 +94,30 @@ class Magnet(SpectrometerDevice):
 
 
         self.info('update mftable {} {}'.format(isotope, dac))
-        xs = self.mftable[0]
-        ys = self.mftable[1]
+        
+        isos,xs,ys=self.load_mftable()
+        
+#         iso=self.mf_isos
+        
+#         xs=self.mf_masses
+#         ys=self.mf_dacs
+#         xs = self.mftable[0]
+#         ys = self.mftable[1]
 
-        refindex = xs.index(isotope)
+        refindex = isos.index(isotope)
         delta = dac - ys[refindex]
         # need to calculate all ys
         # using simple linear offset
-        ys = [yi + delta for yi in ys]
+#         self.mf_dacs=ys+delta
+        ys+=delta
+#         for di,ci in zip(self.mf_dacs, self.calibration_points):
+#             ci.y=di
+#         self.mftable[1]=ys+delta
+#         ys = [yi + delta for yi in ys]
 
-        self.mftable = [xs, ys]
+#         self.mftable = array([xs, ys])
 
-
-        self.dump()
+        self.dump(isos,xs,ys)
 
 #    def set_graph(self, pts):
 #
@@ -195,6 +211,9 @@ class Magnet(SpectrometerDevice):
 # persistence
 #===============================================================================
     def load(self):
+        pass
+    
+    def load_mftable(self):
         p = os.path.join(paths.spectrometer_dir, 'mftable.csv')
         self.info('loading mftable {}'.format(p))
         if os.path.isfile(p):
@@ -202,11 +221,28 @@ class Magnet(SpectrometerDevice):
                 reader = csv.reader(f)
                 xs = []
                 ys = []
+                cp=[]
+                isos=[]
+                molweights = self.spectrometer.molecular_weights
                 for line in reader:
-                    xs.append(line[0])
-                    ys.append(float(line[1]))
-
-            self.mftable = [xs, ys]
+                    try:
+                        iso=line[0]
+                        x,y=molweights[iso],float(line[1])
+                        isos.append(iso)
+                        xs.append(x)
+                        ys.append(y)
+                        cp.append(CalibrationPoint(x=x,y=y))
+                        
+                    except KeyError:
+                        self.debug('no molecular weight for {}'.format(line[0]))
+#                     xs.append(line[0])
+#                     ys.append(float(line[1]))
+#                 self.mf_isos=isos
+#                 self.mf_dacs=array(ys)
+#                 self.mf_masses=array(xs)
+#                 self.calibration_points=cp
+            return array(isos),array(xs),array(ys)
+#             self.mftable = array([xs, ys])
         else:
             self.warning_dialog('No Magnet Field Table. Create {}'.format(p))
 
@@ -215,12 +251,15 @@ class Magnet(SpectrometerDevice):
         if d is not None:
             self._dac = d
 
-    def dump(self):
+    def dump(self, isos, xs, ys):
         p = os.path.join(paths.spectrometer_dir, 'mftable.csv')
         with open(p, 'w') as f:
             writer = csv.writer(f)
-            for x, y in zip(self.mftable[0], self.mftable[1]):
-                writer.writerow([x, y])
+#             for a in zip(self.mf_isos,self.mf_dacs):
+            for a in zip(isos, ys):
+#             for x,y in self.mftable.T:
+#             for x, y in zip(self.mftable[0], self.mftable[1]):
+                writer.writerow(a)
 
 #===============================================================================
 # mapping
@@ -234,15 +273,17 @@ class Magnet(SpectrometerDevice):
         return m
 
     def map_mass_to_dac(self, mass):
-        spec = self.spectrometer
-        molweights = spec.molecular_weights
-        if self.mftable:
+#         spec = self.spectrometer
+#         molweights = spec.molecular_weights
+#         if self.mftable is not None:
 
-            xs = [molweights[i] for i in self.mftable[0]]
-            ys = self.mftable[1]
-
-            dac = polyval(polyfit(xs, ys, 2), mass)
-            return dac
+#             xs = array([molweights[i] for i in self.mftable[0]])
+#             ys = self.mftable[1]
+#         xs=self.mf_masses
+#         ys=self.mf_dacs
+        _,xs,ys=self.load_mftable()
+        dac = polyval(polyfit(xs, ys, 2), mass)
+        return dac
 
     def map_dac_to_isotope(self, dac=None, det=None):
         if dac is None:
@@ -318,13 +359,13 @@ class Magnet(SpectrometerDevice):
     def _set_massmax(self, v):
         self._massmax = v
 
-    def _get_calibration_points(self):
-
-        if self.mftable:
-            molweights = MOLECULAR_WEIGHTS
-#            molweights = self.spectrometer.molecular_weights
-            xs, ys = self.mftable
-            return [CalibrationPoint(x=molweights[xi], y=yi) for xi, yi in zip(xs, ys)]
+#     def _get_calibration_points(self):
+# 
+#         if self.mftable is not None:
+#             molweights = MOLECULAR_WEIGHTS
+# #            molweights = self.spectrometer.molecular_weights
+#             xs, ys = self.mftable
+#             return [CalibrationPoint(x=molweights[xi], y=yi) for xi, yi in zip(xs, ys)]
 #===============================================================================
 # views
 #===============================================================================

@@ -176,23 +176,50 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         self.regressors = []
         for plot in self.plots:
             ps=plot.plots
-            keys = ps.keys()
+            ks = ps.keys()
             try:
-                args= [(ps[k][0], k)
-                        for k in keys if k.startswith('data')]
-#                 ind = kkk[0][-1]
-#                 fls = [plot.plots[kk][0] for kk in ks if kk == 'fit{}'.format(ind)]
-#                 uls = [plot.plots[kk][0] for kk in ks if kk == 'upper CI{}'.format(ind)]
-#                 lls = [plot.plots[kk][0] for kk in ks if kk == 'lower CI{}'.format(ind)]
-                for si, ki in args:
-                    ind=ki[-1]  
-                    fl=ps['fit{}'.format(ind)][0]
-                    ul=ps['upper CI{}'.format(ind)][0]
-                    ll=ps['lower CI{}'.format(ind)][0]
+                scatters, idxes = zip(*[(ps[k][0], k[4:]) for k in ks if k.startswith('data')])
+                idx = idxes[0]
+                
+                fls = (ps[kk][0] for kk in ks if kk == 'fit{}'.format(idx))
+                uls = (ps[kk][0] for kk in ks if kk == 'upper CI{}'.format(idx))
+                lls = (ps[kk][0] for kk in ks if kk == 'lower CI{}'.format(idx))
+                for si, fl, ul, ll in zip(scatters, fls, uls, lls):
                     self._plot_regression(plot, si, fl, ul, ll)
+#                 
+#                 for si in scatters:
+#                     try:
+#                         fl=ps['fit{}'.format(idx)][0]
+#                         ul=ps['upper CI{}'.format(idx)][0]
+#                         ll=ps['lower CI{}'.format(idx)][0]
+#                         self._plot_regression(plot, si, fl, ul, ll)
+#                     except KeyError:
+#                         continue
+                    
 
             except ValueError, e:
                 break
+            
+#             ps=plot.plots
+#             keys = ps.keys()
+#             try:
+#                 args= [(ps[k][0], k)
+#                         for k in keys if k.startswith('data')]
+#                 
+#                 
+# #                 ind = kkk[0][-1]
+# #                 fls = [plot.plots[kk][0] for kk in ks if kk == 'fit{}'.format(ind)]
+# #                 uls = [plot.plots[kk][0] for kk in ks if kk == 'upper CI{}'.format(ind)]
+# #                 lls = [plot.plots[kk][0] for kk in ks if kk == 'lower CI{}'.format(ind)]
+#                 for si, ki in args:
+#                     ind=ki[-1]  
+#                     fl=ps['fit{}'.format(ind)][0]
+#                     ul=ps['upper CI{}'.format(ind)][0]
+#                     ll=ps['lower CI{}'.format(ind)][0]
+#                     self._plot_regression(plot, si, fl, ul, ll)
+# 
+#             except ValueError, e:
+#                 break
         else:
             self.regression_results = self.regressors
 
