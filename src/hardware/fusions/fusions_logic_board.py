@@ -15,6 +15,7 @@
 #===============================================================================
 from src.hardware.kerr.kerr_manager import KerrManager
 from src.hardware.meter_calibration import MeterCalibration
+import weakref
 '''
 Fusions Control board
 a combination of the logic board and the kerr microcontroller
@@ -170,7 +171,7 @@ class FusionsLogicBoard(CoreDevice):
 #        self.info('adding motor {} klass={}'.format(name, klassname if klassname else 'KerrMotor'))
         self.info('adding motor {} klass={}'.format(name, m.__class__.__name__))
         self.motors.append(m)
-        setattr(self, '{}_motor'.format(name), m)
+        setattr(self, '{}_motor'.format(name), weakref.ref(m)())
 #        if name == 'beam':
 #            self.beam_motor = m
 #        elif name == 'zoom':

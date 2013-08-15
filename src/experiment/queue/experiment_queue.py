@@ -28,7 +28,7 @@ from src.ui.gui import invoke_in_main_thread
 
 
 class ExperimentQueue(BaseExperimentQueue):
-    current_run = Any
+#     current_run = Any
     selected = Any
     executed_selected = Any
     dclicked = Any

@@ -27,6 +27,7 @@ from src.loggable import Loggable
 from src.database.core.base_orm import MigrateVersionTable
 from src.deprecate import deprecated
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
+import weakref
 ATTR_KEYS = ['kind', 'username', 'host', 'name', 'password']
 
 
@@ -352,7 +353,6 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             print e
             return
 
-
     def _retrieve_item(self, table, value, key='name', last=None):
         sess = self.get_session()
         if sess is None:
@@ -441,7 +441,8 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 #            self.
 
     def selector_factory(self, **kw):
-        self.selector = self._selector_factory(**kw)
+        sel = self._selector_factory(**kw)
+        self.selector=weakref.ref(sel)()
         return self.selector
 
 #    def new_selector(self, **kw):

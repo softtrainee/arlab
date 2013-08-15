@@ -30,10 +30,14 @@ def mem_break():
     write_mem('#'+'='*49, '')
     
 def mem_log(msg):
-    PID=os.getpid()    
-    proc=psutil.Process(PID)
-    mem=proc.get_memory_info()
-    write_mem(msg, mem.rss/1024.**2)
+    mem=_get_current_mem()
+    write_mem(msg, mem)
+
+def mem_available():
+    mem=psutil.avail_phymem()
+    return mem*1024.**-2
+#     mem=_get_current_mem()
+    
     
 def mem_dump(path):
     dump=open(os.path.join(root, path),'w')
@@ -86,7 +90,13 @@ def mem_sort():
         
         
 #     with open(os.path.join(root, 'gcmem.txt'), 'w') as fp:
-        
+
+def _get_current_mem():
+    PID=os.getpid()    
+    proc=psutil.Process(PID)
+    mem=proc.get_memory_info()
+    return mem.rss/1024.**2
+
 if __name__ == '__main__':
     mem_sort()
         

@@ -51,7 +51,8 @@ from src.processing.isotope import IsotopicMeasurement
 from src.experiment.export.export_spec import ExportSpec
 from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import consumable
-from src.memory_usage import mem_log, mem_dump
+from src.memory_usage import mem_log
+
 
 
 class ScriptInfo(HasTraits):
@@ -113,7 +114,7 @@ class AutomatedRun(Loggable):
     ic_factor = Any
 
     scripts = Dict
-    signals = Dict
+#     signals = Dict
 
 #     measurement_script = Property
 #     post_measurement_script = Property
@@ -169,9 +170,16 @@ class AutomatedRun(Loggable):
     def py_position_magnet(self, pos, detector, dac=False):
 
         mem_log('pre position magnet')
+#         import objgraph
+#         objgraph.show_growth(limit=10)
+        
         if not self._alive:
             return
         self._set_magnet_position(pos, detector, dac=dac)
+        
+#         objgraph.show_growth()
+#         objgraph.show_chain()
+        
         mem_log('post position magnet')
 
     def py_activate_detectors(self, dets):
@@ -529,7 +537,7 @@ class AutomatedRun(Loggable):
 #         self.plot_panel = None
 #         del self.plot_panel
 
-        self.signals = dict()
+#         self.signals = dict()
         self._processed_signals_dict = dict()
 #         self.spec = None
 
@@ -545,6 +553,9 @@ class AutomatedRun(Loggable):
         if self.monitor:
             self.monitor.automated_run = None
 
+        if self.measurement_script:
+            self.measurement_script.automated_run=None
+            
         self.extraction_script = None
         self.measurement_script = None
         self.post_equilibration_script = None
@@ -552,12 +563,9 @@ class AutomatedRun(Loggable):
 
         self.py_clear_conditions()
 
-        self.db.sess.expunge_all()
-
-        self._save_isotopes = None
-        self._db_extraction_id = None
-        self.experiment_identifier = None
-        self.arar_age = None
+        self._save_isotopes = []
+#         self._db_extraction_id = None
+#         self.arar_age = None
 #         self.monitor = None
 
 
@@ -901,7 +909,9 @@ anaylsis_type={}
         ion = self.ion_optics_manager
 
         if ion is not None:
+            mem_log('pre position')
             ion.position(pos, detector, dac)
+            mem_log('post position')
             if update_labels:
                 try:
                     # update the plot_panel labels
@@ -1043,7 +1053,7 @@ anaylsis_type={}
             if grpname == 'signal':
                 self.plot_panel.fits = nfs
 
-            self.signals = dict(zip(keys, signals))
+#             self.signals = weakref.ref(dict(zip(keys, signals)))()
 
             for pi, (fi, dn) in enumerate(zip(nfs, dets)):
                 signal = signals[keys.index(dn.name)]
@@ -1408,12 +1418,13 @@ anaylsis_type={}
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
             bs = IsotopicMeasurement(xs=x, ys=y, fit=fit)
 
-            rsignals['{}baseline'.format(iso)] = bs
+            rsignals['{}baseline'.format(iso)] =bs
 
         for (iso, detname) in sniffs:
             tab = dm.get_table(detname, '/sniff/{}'.format(iso))
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
             sn = IsotopicMeasurement(xs=x, ys=y)
+            
             rsignals['{}sniff'.format(iso)] = sn
 
         peak_center = dm.get_table('peak_center', '/')
