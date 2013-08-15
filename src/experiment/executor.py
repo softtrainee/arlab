@@ -52,7 +52,7 @@ from src.ui.qt.gui import invoke_in_main_thread
 # from src.helpers.ctx_managers import no_update
 from sqlalchemy.orm.exc import NoResultFound
 from src.consumer_mixin import ConsumerMixin, consumable
-from src.memory_usage import mem_log, mem_dump, mem_break, mem_available
+from src.codetools.memory_usage import mem_log, mem_dump, mem_break
 
 BLANK_MESSAGE = '''First "{}" not preceeded by a blank. 
 If "Yes" use last "blank_{}" 
