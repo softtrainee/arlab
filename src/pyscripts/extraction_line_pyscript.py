@@ -90,10 +90,10 @@ class ExtractionPyScript(ValvePyScript):
         cm = super(ExtractionPyScript, self).get_command_register()
         return command_register.commands.items() + cm
 
-    def _post_execute_hook(self):
-        # remove ourselves from the script runner
-        if self.runner:
-            self.runner.scripts.remove(self)
+#     def _post_execute_hook(self):
+#         # remove ourselves from the script runner
+#         if self.runner:
+#             self.runner.scripts.remove(self)
 
     def set_default_context(self):
         '''

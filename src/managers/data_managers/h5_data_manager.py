@@ -86,10 +86,7 @@ class H5DataManager(DataManager):
         '''
         p = self._new_frame_path(*args, **kw)
         try:
-
-            fil = Filters(complevel=self.compression_level)
-
-            self._frame = openFile(p, mode='w', filters=fil)
+            self._frame = openFile(p, mode='w', filters=Filters(complevel=self.compression_level))
         except ValueError:
             pass
 
@@ -170,8 +167,7 @@ class H5DataManager(DataManager):
             path = out
 
         try:
-            fil = Filters(complevel=self.compression_level)
-            self._frame = openFile(path, mode, filters=fil)
+            self._frame = openFile(path, mode, filters=Filters(complevel=self.compression_level))
             return True
         except Exception:
             self._frame = None
