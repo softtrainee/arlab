@@ -18,9 +18,13 @@ import os
 import gc
 import sys
 import cPickle
-root = os.path.join(os.path.expanduser('~'), 'Desktop')
-p = 'mem.txt'
+from src.helpers.filetools import unique_path
+root = os.path.join(os.path.expanduser('~'), 'Desktop', 'memtest')
+if not os.path.isdir(root):
+    os.mkdir(root)
+
 def write_mem(msg, m):
+    p = unique_path(root, 'mem')
     with open(os.path.join(root, p), 'a') as fp:
         fp.write('{:<50s}:{}\n'.format(msg, m))
 
