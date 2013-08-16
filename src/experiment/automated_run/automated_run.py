@@ -126,6 +126,7 @@ class AutomatedRun(Loggable):
 
     _active_detectors = List
     _loaded = False
+    _measured = False
 
     _rundate = None
     _runtime = None
@@ -706,6 +707,7 @@ class AutomatedRun(Loggable):
             self.info_color = None
 
             mem_log('do measurement post execute')
+            self._measured = True
 
             return True
 
@@ -1256,7 +1258,8 @@ anaylsis_type={}
         frame.flush()
 
     def post_measurement_save(self):
-        self._post_measurement_save()
+        if self._measured:
+            self._post_measurement_save()
 
     def _post_measurement_save(self):
         self.info('post measurement save')

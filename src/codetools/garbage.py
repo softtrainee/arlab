@@ -15,34 +15,24 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int
-from traitsui.api import View, Item
+
 #============= standard library imports ========================
-import time
-import zmq
 #============= local library imports  ==========================
-from src.loggable import Loggable
+import gc
+import objgraph
+import inspect
 
-class Notifier(Loggable):
-#    port=Int(8100)
-    _sock = None
-    def setup(self, port):
-        if port:
-            context = zmq.Context()
-            sock = context.socket(zmq.PUB)
-            sock.bind('tcp://*:{}'.format(port))
-            self._sock = sock
+def count_instances(inst, chain=False):
+    gc.collect()
 
-            # delay to allow publ sock to get setup
-            time.sleep(0.1)
+    objs = filter(lambda x: isinstance(x, inst), gc.get_objects())
+    print '{:<50s}:{}'.format(str(inst), len(objs))
+    if chain:
+        for i, o in enumerate(objs):
+            show_chain(i, o)
 
-    def close(self):
-        self._sock.close()
-        self._sock = None
-
-    def send_notification(self, msg):
-        if self._sock:
-            self._sock.send(msg)
-        else:
-            self.debug('notifier not setup')
+def show_chain(i, obj):
+    objgraph.show_chain(
+     objgraph.find_backref_chain(obj, inspect.ismodule),
+     filename='chain.png')
 #============= EOF =============================================

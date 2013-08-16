@@ -52,7 +52,9 @@ from src.ui.qt.gui import invoke_in_main_thread
 # from src.helpers.ctx_managers import no_update
 from sqlalchemy.orm.exc import NoResultFound
 from src.consumer_mixin import ConsumerMixin, consumable
-from src.codetools.memory_usage import mem_log, mem_dump, mem_break
+from src.codetools.memory_usage import mem_log, mem_dump, mem_break, \
+    mem_available
+from src.codetools.garbage import count_instances
 
 BLANK_MESSAGE = '''First "{}" not preceeded by a blank. 
 If "Yes" use last "blank_{}" 
@@ -368,7 +370,7 @@ class ExperimentExecutor(Experimentable):
 
         if self._check_memory():
             return
-        
+
         dbr = self._get_preceeding_blank_or_background(inform=inform)
         if not dbr is True:
             if dbr is None:
@@ -567,14 +569,14 @@ class ExperimentExecutor(Experimentable):
             return True if out of memory
             otherwise None
         '''
-        #return amem in MB
-        amem=mem_available()
+        # return amem in MB
+        amem = mem_available()
         self.debug('Available memory {}. mem-threshold= {}'.format(amem, threshold))
-        if amem<threshold:
-            msg='Memory limit exceeded. Only {} MB available. Stopping Experiment'.format(amem)
+        if amem < threshold:
+            msg = 'Memory limit exceeded. Only {} MB available. Stopping Experiment'.format(amem)
             invoke_in_main_thread(self.warning_dialog, msg)
             return True
-        
+
     def _wait_for_save(self):
         st = time.time()
         delay = 30
@@ -654,14 +656,15 @@ class ExperimentExecutor(Experimentable):
         last_runid = None
         with consumable(func=self._overlapped_run) as con:
             while self.isAlive():
+
                 if self._check_memory():
                     break
 
                 self._wait_for_save()
-                
-                self.current_run=None
+
+                self.current_run = None
                 self.db.reset()
-            
+
                 if self._queue_modified:
                     self.debug('Queue modified. making new run generator')
                     rgen, nruns = exp.new_runs_generator()
@@ -714,10 +717,19 @@ class ExperimentExecutor(Experimentable):
                                 if pb is not None:
                                     self._prev_blanks = pb
 
+
                         self._report_execution_state(run)
                         last_runid = run.runid
                         run.teardown()
                         mem_log('{} post teardown'.format(last_runid))
+
+#                         count_instances(run.__class__)
+#                         from src.experiment.plot_panel import PlotPanel
+#                         count_instances(PlotPanel)
+#                         from src.pyscripts.measurement_pyscript import MeasurementPyScript
+#                         count_instances(MeasurementPyScript)
+#                         from src.pyscripts.pyscript import PyScript
+#                         count_instances(ExtractionPyScript)
 
                 if self.end_at_run_completion:
                     break
@@ -827,14 +839,14 @@ class ExperimentExecutor(Experimentable):
 #        arun.experiment_name = exp.path
         arun.experiment_identifier = exp.database_identifier
         arun.experiment_manager = self
-        
+
         arun.spectrometer_manager = self.spectrometer_manager
         arun.extraction_line_manager = self.extraction_line_manager
         arun.ion_optics_manager = self.ion_optics_manager
         arun.data_manager = self.data_manager
-        
+
         arun.db = self.db
-        
+
         arun.massspec_importer = self.massspec_importer
         arun.runner = self.pyscript_runner
 
@@ -846,7 +858,7 @@ class ExperimentExecutor(Experimentable):
         if mon is not None:
             mon.automated_run = arun
             arun.monitor = mon
-            
+
         return arun
 
     def _do_automated_run(self, arun):
@@ -880,12 +892,11 @@ class ExperimentExecutor(Experimentable):
                     self._alive = False
                 self.measuring = False
                 return
-            
+
             mem_log('{} post measurement'.format(arun.runid))
-            
             arun.post_measurement_save()
             mem_log('post save {}'.format(arun.runid))
-            
+
             self.measuring = False
             return True
 
@@ -899,7 +910,7 @@ class ExperimentExecutor(Experimentable):
 
         mem_break()
         mem_log('{} started'.format(arun.runid))
-        
+
         self.measuring = False
         for step in (
                      start_run,
@@ -925,10 +936,10 @@ class ExperimentExecutor(Experimentable):
         self._check_run_at_end(arun)
 
         self.info('Automated run {} {}'.format(arun.runid, arun.state))
-        
+
         arun.finish()
         mem_log('{} post finish'.format(arun.runid))
-        
+
 #===============================================================================
 #
 #===============================================================================
