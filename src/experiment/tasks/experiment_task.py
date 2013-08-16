@@ -113,6 +113,11 @@ class ExperimentEditorTask(EditorTask):
             self.active_editor.queue.selected = []
             self.active_editor.queue.executed_selected = []
 
+    def prepare_destroy(self):
+        if self.use_notifications:
+            self.notifier.close()
+            self.notifier = None
+
     def activated(self):
 
         bind_preference(self, 'use_auto_figure',

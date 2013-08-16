@@ -47,7 +47,7 @@ class AutomatedRunSpec(Loggable):
     mass_spectrometer = Str
     extract_device = Str
     username = Str
-    tray=Str
+    tray = Str
 
     #===========================================================================
     # run id
@@ -82,7 +82,7 @@ class AutomatedRunSpec(Loggable):
     ramp_duration = Float
     ramp_rate = Float
     disable_between_positions = Bool(False)
-    overlap=Bool(False)
+    overlap = Bool(False)
     #===========================================================================
     # info
     #===========================================================================
@@ -140,7 +140,7 @@ class AutomatedRunSpec(Loggable):
                 else:
                     if arun is None:
                         arun = self.make_run(new_uuid=False)
-            
+
                     arun.invalid_script = False
                     script = getattr(arun, si)
                     if script is not None:
@@ -152,7 +152,7 @@ class AutomatedRunSpec(Loggable):
                     elif arun.invalid_script:
                         script_oks.append(False)
             if arun:
-                arun.spec=None
+                arun.spec = None
             # set executable. if all scripts have OK syntax executable is True
             self.executable = all(script_oks)
             self._estimated_duration = s
@@ -172,8 +172,9 @@ class AutomatedRunSpec(Loggable):
 
         if new_uuid:
             arun.uuid = str(uuid.uuid4())
-        
-        arun.spec = weakref.ref(self)()
+
+        arun.spec = self
+#         arun.spec = weakref.ref(self)()
 
         return arun
 

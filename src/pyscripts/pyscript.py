@@ -34,6 +34,7 @@ from Queue import Queue, Empty, LifoQueue
 import sys
 # import bdb
 from src.ui.thread import Thread
+import weakref
 
 class DummyManager(Loggable):
     def open_valve(self, *args, **kw):
@@ -182,7 +183,7 @@ class PyScript(Loggable):
     syntax_checked = Property
 
     manager = Any
-    parent = Any
+#     parent = Any
     parent_script = Any
 
     root = Str
@@ -235,6 +236,7 @@ class PyScript(Loggable):
             if finished_callback:
                 finished_callback()
 
+            self._finished()
             return self._completed
 
         if new_thread:
@@ -429,8 +431,8 @@ class PyScript(Loggable):
             if not self._gosub_script._cancel:
                 self._gosub_script.cancel()
 
-        if self.parent:
-            self.parent._executing = False
+#         if self.parent:
+#             self.parent._executing = False
 
         if self.parent_script:
             if not self.parent_script._cancel:
@@ -495,7 +497,7 @@ class PyScript(Loggable):
 #                          path=p,
                           name=name,
                           manager=self.manager,
-                          parent_script=self,
+                          parent_script=weakref.ref(self)(),
 
                           _syntax_checked=self._syntax_checked,
                           _ctx=self._ctx,
@@ -649,12 +651,12 @@ class PyScript(Loggable):
         else:
             self.info('{} completed successfully'.format(self.name))
             self._completed = True
-            if self.parent:
-                self.parent._executing = False
-                try:
-                    del self.parent.scripts[self.hash_key]
-                except KeyError:
-                    pass
+#             if self.parent:
+#                 self.parent._executing = False
+#                 try:
+#                     del self.parent.scripts[self.hash_key]
+#                 except KeyError:
+#                     pass
 
     def _manager_action(self, func, name=None, protocol=None, *args, **kw):
         man = self.manager
@@ -680,7 +682,8 @@ class PyScript(Loggable):
 
     def _cancel_hook(self):
         pass
-
+    def _finished(self):
+        pass
 #==============================================================================
 # Sleep/ Wait
 #==============================================================================
@@ -710,7 +713,7 @@ class PyScript(Loggable):
                 wd = WaitDialog()
 
             wd.trait_set(wtime=timeout,
-                         parent=self,
+                         parent=weakref.ref(self)(),
                          message='Waiting for {:0.1f}  {}'.format(timeout, message),
                          )
             self._wait_dialog = wd
