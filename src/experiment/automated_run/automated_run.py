@@ -1271,6 +1271,7 @@ anaylsis_type={}
         cp = self.data_manager.get_current_path()
         # close h5 file
         self.data_manager.close_file()
+        
         mem_log('pre preliminary processing')
         # do preliminary processing of data
         # returns signals dict and peak_center table
@@ -1382,9 +1383,11 @@ anaylsis_type={}
         if self.massspec_importer.db.connected:
             # save to massspec
             mt = time.time()
-            self._save_to_massspec()
+            self._save_to_massspec(cp)
             self.debug('mass spec save time= {:0.3f}'.format(time.time() - mt))
             mem_log('post mass spec save')
+            
+        
 
     def _preliminary_processing(self, p):
         self.info('organizing data for database save')
@@ -1426,9 +1429,9 @@ anaylsis_type={}
 
 
             rsignals['{}sniff'.format(iso)] = sn
-
+        
+        dm.close_file()
         peak_center = dm.get_table('peak_center', '/')
-
         return rsignals, peak_center
 
     def _time_save(self, func, name, *args, **kw):
@@ -1654,8 +1657,10 @@ anaylsis_type={}
                     self.db.add_monitor(analysis, **params)
             return self._time_save(func, 'monitor info')
 
-    def _save_to_massspec(self):
-
+    def _save_to_massspec(self,p):
+        dm = self.data_manager
+        dm.open_data(p)
+        
         h = self.massspec_importer.db.host
         dn = self.massspec_importer.db.name
         self.info('saving to massspec database {}/{}'.format(h, dn))
@@ -1678,6 +1683,7 @@ anaylsis_type={}
                 if table:
                     si = [(row['time'], row['value']) for row in table.iterrows()]
                     signals.append(si)
+        dm.close_file()
 
         blanks = []
         pb = self.experiment_manager._prev_blanks
@@ -1945,11 +1951,12 @@ anaylsis_type={}
         for i, d in enumerate(self._active_detectors):
             iso = d.isotope
             name = d.name
-            isogrp = dm.new_group(iso, parent='/{}'.format(gn))
             self._save_isotopes.append((iso, name, gn))
 
-#             _t = dm.new_table(isogrp, name)
+            isogrp = dm.new_group(iso, parent='/{}'.format(gn))
             dm.new_table(isogrp, name)
+
+#             _t = dm.new_table(isogrp, name)
 #             try:
 #                 f = fits[i]
 #                 setattr(t.attrs, 'fit', f)

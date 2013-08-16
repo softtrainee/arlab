@@ -53,7 +53,7 @@ from src.ui.qt.gui import invoke_in_main_thread
 from sqlalchemy.orm.exc import NoResultFound
 from src.consumer_mixin import ConsumerMixin, consumable
 from src.codetools.memory_usage import mem_log, mem_dump, mem_break, \
-    mem_available
+    mem_available, end_growth, start_growth, calc_growth, show_referents
 from src.codetools.garbage import count_instances
 
 BLANK_MESSAGE = '''First "{}" not preceeded by a blank. 
@@ -654,6 +654,8 @@ class ExperimentExecutor(Experimentable):
 
         force_delay = False
         last_runid = None
+        
+        before=start_growth()
         with consumable(func=self._overlapped_run) as con:
             while self.isAlive():
 
@@ -686,8 +688,12 @@ class ExperimentExecutor(Experimentable):
                         time.sleep(0.5)
 
                     if not runspec.skip:
+                        
+#                         f=lambda:self._launch_run(runspec, cnt)
+#                         runargs=show_growth(self._launch_run, runspec, cnt)
+                        
                         runargs = self._launch_run(runspec, cnt)
-
+                        
                 except StopIteration:
                     break
 
@@ -708,7 +714,8 @@ class ExperimentExecutor(Experimentable):
 
                     else:
                         t.join()
-
+                        
+                        
                         self.debug('{} finished'.format(run.runid))
                         if self.isAlive():
                             totalcnt += 1
@@ -722,15 +729,23 @@ class ExperimentExecutor(Experimentable):
                         last_runid = run.runid
                         run.teardown()
                         mem_log('{} post teardown'.format(last_runid))
-
+                        
+                        calc_growth(before)
+                        
 #                         count_instances(run.__class__)
 #                         from src.experiment.plot_panel import PlotPanel
 #                         count_instances(PlotPanel)
 #                         from src.pyscripts.measurement_pyscript import MeasurementPyScript
 #                         count_instances(MeasurementPyScript)
 #                         from src.pyscripts.pyscript import PyScript
-#                         count_instances(ExtractionPyScript)
-
+#                         show_referents(ExtractionPyScript)
+                        from tables.group import RootGroup
+                        from tables.group import Group
+                        from tables.file import File
+#                         show_referents(RootGroup)
+#                         show_referents(Group)
+                        show_referents(File)
+                        
                 if self.end_at_run_completion:
                     break
 
