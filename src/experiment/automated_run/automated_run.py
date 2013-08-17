@@ -1276,7 +1276,7 @@ anaylsis_type={}
         # do preliminary processing of data
         # returns signals dict and peak_center table
         try:
-            ss, pc = self._preliminary_processing(cp)
+            ss = self._preliminary_processing(cp)
         except Exception, e:
             self.debug('preliminary_processing - {}'.format(e))
             self.warning('could not process isotope signals. saving to database')
@@ -1362,7 +1362,7 @@ anaylsis_type={}
             mem_log('post save_blank')
 
             # save peak center
-            self._save_peak_center(a, pc)
+            self._save_peak_center(a, cp)
             mem_log('post save_peak_center')
 
             # save monitor
@@ -1430,9 +1430,9 @@ anaylsis_type={}
 
             rsignals['{}sniff'.format(iso)] = sn
 
-        peak_center = dm.get_table('peak_center', '/')
+#         peak_center = dm.get_table('peak_center', '/')
         dm.close_file()
-        return rsignals, peak_center
+        return rsignals
 
     def _time_save(self, func, name, *args, **kw):
         st = time.time()
@@ -1452,18 +1452,20 @@ anaylsis_type={}
 
         return self._time_save(func, 'sensitivity')
 
-    def _save_peak_center(self, analysis, tab):
+    def _save_peak_center(self, analysis, cp):
         self.info('saving peakcenter')
         def func():
-            if tab is not None:
-                db = self.db
-                packed_xy = [struct.pack('<ff', r['time'], r['value']) for r in tab.iterrows()]
-                points = ''.join(packed_xy)
-                center = tab.attrs.center_dac
-                pc = db.add_peak_center(
-                                   analysis,
-                                   center=float(center), points=points)
-                return pc
+                dm=self.data_manager
+                with dm.open_table(cp, 'peak_center') as tab:
+                    if tab is not None:
+                        db = self.db
+                        packed_xy = [struct.pack('<ff', r['time'], r['value']) for r in tab.iterrows()]
+                        points = ''.join(packed_xy)
+                        center = tab.attrs.center_dac
+                        pc = db.add_peak_center(
+                                           analysis,
+                                           center=float(center), points=points)
+                        return pc
         return self._time_save(func, 'peakcenter')
 
     def _save_measurement(self, analysis):

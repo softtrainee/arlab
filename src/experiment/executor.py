@@ -47,14 +47,14 @@ from src.experiment.experimentable import Experimentable
 # from src.ui.thread import Thread
 from src.pyscripts.wait_dialog import WaitDialog
 from src.experiment.automated_run.automated_run import AutomatedRun
-from pyface.constant import CANCEL, NO, YES
+from pyface.constant import CANCEL, NO, YES, OK
 from src.ui.qt.gui import invoke_in_main_thread
 # from src.helpers.ctx_managers import no_update
 from sqlalchemy.orm.exc import NoResultFound
 from src.consumer_mixin import ConsumerMixin, consumable
 from src.codetools.memory_usage import mem_log, mem_dump, mem_break, \
-    mem_available, end_growth, start_growth, calc_growth, show_referents
-from src.codetools.garbage import count_instances
+    mem_available, calc_growth, show_referents,\
+    measure_type
 
 BLANK_MESSAGE = '''First "{}" not preceeded by a blank. 
 If "Yes" use last "blank_{}" 
@@ -215,17 +215,19 @@ class ExperimentExecutor(Experimentable):
             name = arun.runid
 
         if name:
-            ok_cancel = True
+            ret = YES
             if confirm:
                 m = 'Cancel {} in Progress'.format(name)
                 if msg:
                     m = '{}\n{}'.format(m, msg)
 
-                ok_cancel = self.confirmation_dialog(m,
-                                         title='Confirm Cancel'
+                ret = self.confirmation_dialog(m,
+                                         title='Confirm Cancel',
+                                         return_retval=True
                                          )
-
-            if ok_cancel:
+            
+            if ret==YES:
+                #stop queue
                 if style == 'queue':
                     self._alive = False
                     self.stats.stop_timer()
@@ -243,9 +245,30 @@ class ExperimentExecutor(Experimentable):
 
                     arun.cancel_run(state=state)
                     self.non_clear_update_needed = True
-            else:
-                if arun:
-                    arun.state = 'failed'
+               
+#             elif ret==NO:
+#                 
+#             if ok_cancel:
+#                 if style == 'queue':
+#                     self._alive = False
+#                     self.stats.stop_timer()
+#                 self.set_extract_state(False)
+# 
+#                 self._canceled = True
+#                 if arun:
+#                     if style == 'queue':
+#                         state = None
+#                         if cancel_run:
+#                             state = 'canceled'
+#                     else:
+#                         state = 'canceled'
+#                         arun.aliquot = 0
+# 
+#                     arun.cancel_run(state=state)
+#                     self.non_clear_update_needed = True
+#             else:
+#                 if arun:
+#                     arun.state = 'failed'
 
     def set_extract_state(self, state, flash=0.75, color='green'):
 
@@ -655,10 +678,10 @@ class ExperimentExecutor(Experimentable):
         force_delay = False
         last_runid = None
 
-        before = start_growth()
         with consumable(func=self._overlapped_run) as con:
             while self.isAlive():
 
+                before = measure_type(dict)
                 if self._check_memory():
                     break
 
@@ -730,7 +753,7 @@ class ExperimentExecutor(Experimentable):
                         run.teardown()
                         mem_log('{} post teardown'.format(last_runid))
 
-                        calc_growth(before)
+                        calc_growth(before, dict, cnt)
 
 #                         count_instances(run.__class__)
 #                         from src.experiment.plot_panel import PlotPanel

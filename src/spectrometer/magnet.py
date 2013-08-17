@@ -24,7 +24,7 @@ from traitsui.table_column import ObjectColumn
 import os
 import csv
 import time
-from numpy import polyval, polyfit, array
+from numpy import polyval, polyfit, array, min, nonzero
 #============= local library imports  ==========================
 from src.paths import paths
 # import math
@@ -95,28 +95,24 @@ class Magnet(SpectrometerDevice):
 
         isos, xs, ys = self._load_mftable()
 
-#         iso=self.mf_isos
+        try:
+            refindex=min(nonzero(isos == isotope)[0])
+#             refindex = isos.index(isotope)
+            
+            delta = dac - ys[refindex]
+            # need to calculate all ys
+            # using simple linear offset
+            ys += delta
 
-#         xs=self.mf_masses
-#         ys=self.mf_dacs
-#         xs = self.mftable[0]
-#         ys = self.mftable[1]
-
-        refindex = isos.index(isotope)
-        delta = dac - ys[refindex]
-        # need to calculate all ys
-        # using simple linear offset
-#         self.mf_dacs=ys+delta
-        ys += delta
-#         for di,ci in zip(self.mf_dacs, self.calibration_points):
-#             ci.y=di
-#         self.mftable[1]=ys+delta
-#         ys = [yi + delta for yi in ys]
-
-#         self.mftable = array([xs, ys])
-
-        self.dump(isos, xs, ys)
-
+    #         for di,ci in zip(self.mf_dacs, self.calibration_points):
+    #             ci.y=di
+    
+            self.dump(isos, xs, ys)
+        except ValueError:
+            import traceback
+            e=traceback.format_exc()
+            self.debug('Magnet update field table {}'.format(e))
+            
 #    def set_graph(self, pts):
 #
 #        g = Graph(container_dict=dict(padding=10))

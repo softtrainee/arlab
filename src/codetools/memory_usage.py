@@ -19,6 +19,7 @@ import gc
 import sys
 import cPickle
 from src.helpers.filetools import unique_path
+import csv
 
 root = os.path.join(os.path.expanduser('~'), 'Desktop', 'memtest')
 if not os.path.isdir(root):
@@ -104,29 +105,33 @@ def _get_current_mem():
 
 
 from collections import defaultdict
-def start_growth():
-    before = defaultdict(int)
-    for i in gc.get_objects():
-        before[type(i)] += 1
 
-    return before
 
-def end_growth():
-    after = defaultdict(int)
-    for i in gc.get_objects():
-        after[type(i)] += 1
+def measure_type(cls):
+    d = defaultdict(int)
+    if cls:
+        d[cls]=sum((1 for o in gc.get_objects() if type(o)==cls))
+    else:
+        for i in gc.get_objects():
+            d[type(i)] += 1
 
-    return after
+    return d
 
-def calc_growth(before):
+gp, _ = unique_path(root, 'growth')
+def calc_growth(before, cls=None, count=None, write=True):
     gc.collect()
-    after = end_growth()
-    for k, v in sorted([(ki, after[ki] - before[ki]) for ki in after if after[ki] - before[ki] > 0],
-                      key=lambda x:x[1],
+    after=measure_type(cls)
+#     after = end_growth()
+    for k, v,s in sorted([(ki, after[ki] - before[ki], get_size(ki)) for ki in after if after[ki] - before[ki] > 0],
+                      key=lambda x:x[2],
                       reverse=True
                       )[:20]:
-        print '{:<50s}: {} size:{}'.format(k, v, get_size(k))
-
+        msg='{:<50s}: {} size:{}'.format(k, v, s)
+        print msg, write, msg.split(' ')
+        if write:
+            with open(gp,'a') as fp:
+                fp.write('{}\n'.format(msg))
+            
 def show_referents(cls):
     obj = next((o for o in gc.get_objects() if type(o) == cls), None)
     if obj:
