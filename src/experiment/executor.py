@@ -654,8 +654,8 @@ class ExperimentExecutor(Experimentable):
 
         force_delay = False
         last_runid = None
-        
-        before=start_growth()
+
+        before = start_growth()
         with consumable(func=self._overlapped_run) as con:
             while self.isAlive():
 
@@ -688,12 +688,12 @@ class ExperimentExecutor(Experimentable):
                         time.sleep(0.5)
 
                     if not runspec.skip:
-                        
+
 #                         f=lambda:self._launch_run(runspec, cnt)
 #                         runargs=show_growth(self._launch_run, runspec, cnt)
-                        
+
                         runargs = self._launch_run(runspec, cnt)
-                        
+
                 except StopIteration:
                     break
 
@@ -714,8 +714,8 @@ class ExperimentExecutor(Experimentable):
 
                     else:
                         t.join()
-                        
-                        
+
+
                         self.debug('{} finished'.format(run.runid))
                         if self.isAlive():
                             totalcnt += 1
@@ -729,9 +729,9 @@ class ExperimentExecutor(Experimentable):
                         last_runid = run.runid
                         run.teardown()
                         mem_log('{} post teardown'.format(last_runid))
-                        
+
                         calc_growth(before)
-                        
+
 #                         count_instances(run.__class__)
 #                         from src.experiment.plot_panel import PlotPanel
 #                         count_instances(PlotPanel)
@@ -739,13 +739,13 @@ class ExperimentExecutor(Experimentable):
 #                         count_instances(MeasurementPyScript)
 #                         from src.pyscripts.pyscript import PyScript
 #                         show_referents(ExtractionPyScript)
-                        from tables.group import RootGroup
-                        from tables.group import Group
-                        from tables.file import File
+#                         from tables.group import RootGroup
+#                         from tables.group import Group
+#                         from tables.file import File
 #                         show_referents(RootGroup)
 #                         show_referents(Group)
-                        show_referents(File)
-                        
+#                         show_referents(File)
+
                 if self.end_at_run_completion:
                     break
 

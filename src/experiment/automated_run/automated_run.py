@@ -1271,7 +1271,7 @@ anaylsis_type={}
         cp = self.data_manager.get_current_path()
         # close h5 file
         self.data_manager.close_file()
-        
+
         mem_log('pre preliminary processing')
         # do preliminary processing of data
         # returns signals dict and peak_center table
@@ -1386,8 +1386,8 @@ anaylsis_type={}
             self._save_to_massspec(cp)
             self.debug('mass spec save time= {:0.3f}'.format(time.time() - mt))
             mem_log('post mass spec save')
-            
-        
+
+
 
     def _preliminary_processing(self, p):
         self.info('organizing data for database save')
@@ -1429,9 +1429,9 @@ anaylsis_type={}
 
 
             rsignals['{}sniff'.format(iso)] = sn
-        
-        dm.close_file()
+
         peak_center = dm.get_table('peak_center', '/')
+        dm.close_file()
         return rsignals, peak_center
 
     def _time_save(self, func, name, *args, **kw):
@@ -1657,10 +1657,10 @@ anaylsis_type={}
                     self.db.add_monitor(analysis, **params)
             return self._time_save(func, 'monitor info')
 
-    def _save_to_massspec(self,p):
+    def _save_to_massspec(self, p):
         dm = self.data_manager
         dm.open_data(p)
-        
+
         h = self.massspec_importer.db.host
         dn = self.massspec_importer.db.name
         self.info('saving to massspec database {}/{}'.format(h, dn))
