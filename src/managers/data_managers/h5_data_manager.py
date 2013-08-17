@@ -24,7 +24,16 @@ from tables import openFile, Filters
 from data_manager import DataManager
 from table_descriptions import table_description_factory
 import os
-
+def get_table(name, group, frame):
+    try:
+        if isinstance(group, str):
+            group = getattr(frame.root, group)
+        return getattr(group, name)
+    except AttributeError:
+        try:
+            return getattr(frame.root, name)
+        except AttributeError:
+            pass
 
 class H5DataManager(DataManager):
     '''
@@ -120,18 +129,11 @@ class H5DataManager(DataManager):
     def new_array(self, group, name, data):
         self._frame.createArray(group, name, data)
 
-    def get_table(self, name, group):
-        f = self._frame
+    def get_table(self, name, group, frame=None):
+        if frame is None:
+            frame = self._frame
 
-        try:
-            if isinstance(group, str):
-                group = getattr(f.root, group)
-            return getattr(group, name)
-        except AttributeError:
-            try:
-                return getattr(f.root, name)
-            except AttributeError:
-                pass
+        return get_table(name,group, frame)
 
     def get_group(self, name, grp=None):
         return next((g for g in self.get_groups(grp=grp) if g._v_name == name), None)
@@ -184,7 +186,23 @@ class H5DataManager(DataManager):
         except Exception, e:
             print 'exception closing file', e
 
-
+    def open_table(self, path, table, group='/'):
+        class TableCTX(object):
+            def __init__(self, p, t, g, complevel):
+                self._file = openFile(p, 'r', 
+                                      filters=Filters(complevel=complevel))
+                self._t=t
+                self._g=g
+                
+            def __enter__(self):
+                return get_table(self._t, self._g, self._file)
+                
+            def __exit__(self,*args):
+                self._file.close()
+                del self._file
+                
+        return TableCTX(path, table, group, self.compression_level)
+    
     def kill(self):
         self.close_file()
 #        for table in f.walkNodes('/', 'Table'):
