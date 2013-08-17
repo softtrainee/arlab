@@ -28,8 +28,10 @@ from src.spectrometer.jobs.cdd_operating_voltage_scan import CDDOperatingVoltage
 
 
 class SpectrometerManager(Manager):
-    spectrometer = Instance(Spectrometer, ())
+    spectrometer = Instance(Spectrometer)
     spectrometer_microcontroller = Any
+    def _spectrometer_default(self):
+        return Spectrometer(application=self.application)
 
     def make_parameters_dict(self):
         spec = self.spectrometer

@@ -86,17 +86,17 @@ class DatabaseAdapter(Loggable):
     def reset(self):
         if self.sess:
             self.info('clearing current session. uncommitted changes will be deleted')
-            
+
             self.sess.expunge_all()
             self.sess.close()
-            
+
             self.sess = None
 
 #             import gc
 #             gc.collect()
 
 
-    def connect(self, test=True, force=False):
+    def connect(self, test=True, force=False, warn=True):
         '''
         '''
         if force:
@@ -125,7 +125,7 @@ class DatabaseAdapter(Loggable):
                     if self.connected:
                         self.info('connected to db')
                         self.initialize_database()
-                    else:
+                    elif warn:
                         self.warning_dialog('Not Connected to Database {}.\nAccess Denied for user= {} \
 host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
@@ -442,7 +442,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
     def selector_factory(self, **kw):
         sel = self._selector_factory(**kw)
-        self.selector=weakref.ref(sel)()
+        self.selector = weakref.ref(sel)()
         return self.selector
 
 #    def new_selector(self, **kw):

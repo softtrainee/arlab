@@ -43,7 +43,6 @@ from threading import Thread
 from Queue import Queue
 from src.helpers.timer import Timer
 from src.constants import NULL_STR
-from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 from src.spectrometer.readout_view import ReadoutView
 from src.deprecate import deprecated
 from src.graph.tools.data_tool import DataTool, DataToolOverlay
@@ -293,9 +292,9 @@ class ScanManager(Manager):
 
             mass = self.magnet.mass
             if abs(mass) > 1e-5:
-
-                if self.isotope in MOLECULAR_WEIGHTS:
-                    mw = MOLECULAR_WEIGHTS[self.isotope]
+                molweights = self.spectrometer.molecular_weights
+                if self.isotope in molweights:
+                    mw = molweights[self.isotope]
                     if abs(mw - mass) > 0.1:
                         self.isotope = NULL_STR
 
@@ -599,6 +598,8 @@ class ScanManager(Manager):
 
 
 if __name__ == '__main__':
+
+    from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
     class Magnet(HasTraits):
         dac = Range(0.0, 6.0)
         def map_mass_to_dac(self, d):

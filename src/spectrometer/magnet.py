@@ -14,10 +14,8 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Any, Property, Float, Event,Array
+from traits.api import HasTraits, List, Any, Property, Float, Event, Array
 from traitsui.api import View, Item, VGroup, HGroup, Spring, \
     TableEditor, RangeEditor
 from traitsui.table_column import ObjectColumn
@@ -32,7 +30,7 @@ from src.paths import paths
 # import math
 # from src.graph.graph import Graph
 from src.spectrometer.spectrometer_device import SpectrometerDevice
-from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
+# from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 # from src.regression.ols_regressor import PolynomialRegressor
 
 class CalibrationPoint(HasTraits):
@@ -58,7 +56,7 @@ class Magnet(SpectrometerDevice):
 #     mf_masses=Array
 #     mf_dacs=Array
 #     mf_isos=List
-    
+
     dac = Property(depends_on='_dac')
     mass = Property(depends_on='_mass')
 
@@ -74,7 +72,7 @@ class Magnet(SpectrometerDevice):
 
     settling_time = 0.5
 
-    calibration_points = List#Property(depends_on='mftable')
+    calibration_points = List  # Property(depends_on='mftable')
     detector = Any
 #    graph = Instance(Graph, ())
 
@@ -94,11 +92,11 @@ class Magnet(SpectrometerDevice):
 
 
         self.info('update mftable {} {}'.format(isotope, dac))
-        
-        isos,xs,ys=self.load_mftable()
-        
+
+        isos, xs, ys = self._load_mftable()
+
 #         iso=self.mf_isos
-        
+
 #         xs=self.mf_masses
 #         ys=self.mf_dacs
 #         xs = self.mftable[0]
@@ -109,7 +107,7 @@ class Magnet(SpectrometerDevice):
         # need to calculate all ys
         # using simple linear offset
 #         self.mf_dacs=ys+delta
-        ys+=delta
+        ys += delta
 #         for di,ci in zip(self.mf_dacs, self.calibration_points):
 #             ci.y=di
 #         self.mftable[1]=ys+delta
@@ -117,7 +115,7 @@ class Magnet(SpectrometerDevice):
 
 #         self.mftable = array([xs, ys])
 
-        self.dump(isos,xs,ys)
+        self.dump(isos, xs, ys)
 
 #    def set_graph(self, pts):
 #
@@ -212,8 +210,8 @@ class Magnet(SpectrometerDevice):
 #===============================================================================
     def load(self):
         pass
-    
-    def load_mftable(self):
+
+    def _load_mftable(self):
         p = os.path.join(paths.spectrometer_dir, 'mftable.csv')
         self.info('loading mftable {}'.format(p))
         if os.path.isfile(p):
@@ -221,28 +219,23 @@ class Magnet(SpectrometerDevice):
                 reader = csv.reader(f)
                 xs = []
                 ys = []
-                cp=[]
-                isos=[]
+                cp = []
+                isos = []
+
                 molweights = self.spectrometer.molecular_weights
                 for line in reader:
                     try:
-                        iso=line[0]
-                        x,y=molweights[iso],float(line[1])
+                        iso = line[0]
+                        x, y = molweights[iso], float(line[1])
                         isos.append(iso)
                         xs.append(x)
                         ys.append(y)
-                        cp.append(CalibrationPoint(x=x,y=y))
-                        
+                        cp.append(CalibrationPoint(x=x, y=y))
+
                     except KeyError:
                         self.debug('no molecular weight for {}'.format(line[0]))
-#                     xs.append(line[0])
-#                     ys.append(float(line[1]))
-#                 self.mf_isos=isos
-#                 self.mf_dacs=array(ys)
-#                 self.mf_masses=array(xs)
-#                 self.calibration_points=cp
-            return array(isos),array(xs),array(ys)
-#             self.mftable = array([xs, ys])
+
+            return array(isos), array(xs), array(ys)
         else:
             self.warning_dialog('No Magnet Field Table. Create {}'.format(p))
 
@@ -265,23 +258,15 @@ class Magnet(SpectrometerDevice):
 # mapping
 #===============================================================================
     def map_dac_to_mass(self, d):
-        x, y = zip(*[(c.x, c.y) for c in  self.calibration_points])
-        a, b, c = polyfit(x, y, 2)
+        _, xs, ys = self._load_mftable()
+        a, b, c = polyfit(xs, ys, 2)
         c = c - d
         m = (-b + (b * b - 4 * a * c) ** 0.5) / (2 * a)
 
         return m
 
     def map_mass_to_dac(self, mass):
-#         spec = self.spectrometer
-#         molweights = spec.molecular_weights
-#         if self.mftable is not None:
-
-#             xs = array([molweights[i] for i in self.mftable[0]])
-#             ys = self.mftable[1]
-#         xs=self.mf_masses
-#         ys=self.mf_dacs
-        _,xs,ys=self.load_mftable()
+        _, xs, ys = self._load_mftable()
         dac = polyval(polyfit(xs, ys, 2), mass)
         return dac
 
@@ -295,12 +280,8 @@ class Magnet(SpectrometerDevice):
             dac = self.spectrometer.uncorrect_dac(det, dac)
 
         m = self.map_dac_to_mass(dac)
-        return next((k for k, v in MOLECULAR_WEIGHTS.iteritems() if abs(v - m) < 0.001), None)
-#    def __dac_changed(self):
-#        m = self.map_dac_to_mass(self._dac)
-# #        print 'get mass', m, type(m), nan, type(nan)
-#        if not isnan(m):
-#            self._mass = m
+        molweights = self.spectrometer.molecular_weights
+        return next((k for k, v in molweights.iteritems() if abs(v - m) < 0.001), None)
 
 #===============================================================================
 # property get/set
@@ -360,7 +341,7 @@ class Magnet(SpectrometerDevice):
         self._massmax = v
 
 #     def _get_calibration_points(self):
-# 
+#
 #         if self.mftable is not None:
 #             molweights = MOLECULAR_WEIGHTS
 # #            molweights = self.spectrometer.molecular_weights
@@ -384,10 +365,10 @@ class Magnet(SpectrometerDevice):
                                                         format='%0.3f')),
                          HGroup(Spring(springy=False,
                                        width=48),
-                                Item('massmin', width= -40), Spring(springy=False,
+                                Item('massmin', width=-40), Spring(springy=False,
                                                                     width=138,
                                                                     ),
-                                Item('massmax', width= -55),
+                                Item('massmax', width=-55),
 
                                 show_labels=False),
                         show_border=True,

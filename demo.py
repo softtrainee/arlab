@@ -17,55 +17,107 @@ from traits.etsconfig.etsconfig import ETSConfig
 ETSConfig.toolkit = 'qt4'
 import time
 
-from traits.api import HasTraits, Any, Int, Button, Float, List, Event
+from traits.api import HasTraits, Any, Int, Button, Float, List, Event, \
+    Instance
 from traitsui.api import View, Item
-from src.ui.qt.pie_clock_editor import PieClockEditor
-from src.ui.thread import Thread
+
+from src.canvas.canvas2D.laser_tray_canvas import LaserTrayCanvas
+from src.canvas.canvas2D.image_overlay_manager import ImageOverlayManager
+
+from enable.component_editor import ComponentEditor
 
 
 class Demo(HasTraits):
-    pie_clock = Float
-    test = Button
-#     slices = List
-    slices = List
-    update_slices = Event
-    def _test_fired(self):
-        t = Thread(target=self._test)
-        t.start()
-        self._t = t
-
-    def _test(self):
-#         slices = (5, 5, 5, 5, 5, 10)
-        slices = [5, 5, 5, 5, 5, 10]
-
-        self.slices = slices
-        self.update_slices = True
-#         self.slices = slices
-#         slices = self.slices
-        total = float(sum(slices))
-
-        for i in range(int(total)):
-            self.pie_clock = 360 / total * i
-            time.sleep(1)
-
-        self.pie_clock = 0
+    canvas = Instance(LaserTrayCanvas, ())
+    editor = Instance(ImageOverlayManager, ())
 
     def traits_view(self):
         v = View(
-                 Item('test'),
-                 Item('pie_clock',
+                 Item('canvas',
                       show_label=False,
-                      editor=PieClockEditor(
-                                            slices='slices',
-                                            update_slices='update_slices'
-                                            ),
-                      width=300,
-                      height=300,
-                    ),
-                 resizable=True
-                )
-        return v
+                      style='custom',
+                      editor=ComponentEditor()),
 
+                 Item('editor', style='custom', show_label=False),
+                 resizable=True
+                 )
+        return v
+# from src.ui.qt.pie_clock_editor import PieClockEditor
+# from src.ui.thread import Thread
+# class Demo(HasTraits):
+#     pie_clock = Float
+#     test = Button
+# #     slices = List
+#     slices = List
+#     update_slices = Event
+#     def _test_fired(self):
+#         t = Thread(target=self._test)
+#         t.start()
+#         self._t = t
+#
+#     def _test(self):
+# #         slices = (5, 5, 5, 5, 5, 10)
+#         slices = [5, 5, 5, 5, 5, 10]
+#
+#         self.slices = slices
+#         self.update_slices = True
+# #         self.slices = slices
+# #         slices = self.slices
+#         total = float(sum(slices))
+#
+#         for i in range(int(total)):
+#             self.pie_clock = 360 / total * i
+#             time.sleep(1)
+#
+#         self.pie_clock = 0
+#
+#     def traits_view(self):
+#         v = View(
+#                  Item('test'),
+#                  Item('pie_clock',
+#                       show_label=False,
+#                       editor=PieClockEditor(
+#                                             slices='slices',
+#                                             update_slices='update_slices'
+#                                             ),
+#                       width=300,
+#                       height=300,
+#                     ),
+#                  resizable=True
+#                 )
+#         return v
+def setup(d):
+    p = '/Users/ross/Sandbox/pos_err/diodefailsnapshot.jpg'
+
+    '''
+    add ability to define rigid transform for this image
+    table of calibration points
+    user can add/delete/edit rows
+    
+    move laser to calibration point
+    record laser x,y (mm) 
+    ask user for image x,y (mm)
+    
+    compute rigid transform
+    
+    add to calibration types?
+    Tray, Free, Image
+    
+    Image Calibration
+    - ask for image to load
+    - do a free calibration
+    
+    
+    
+    
+    '''
+    d.canvas.add_image_underlay(p, 0.5)
+
+    p = '/Users/ross/Sandbox/pos_err/pos_err_3_0-002.jpg'
+    d.canvas.add_image_underlay(p, 0.7)
+
+    d.editor.set_canvas(d.canvas)
 if __name__ == '__main__':
     d = Demo()
+    setup(d)
     d.configure_traits()
