@@ -462,9 +462,9 @@ class IsotopeAdapter(DatabaseAdapter):
 
         if at:
 #             at.measurements.append(meas)
-            meas.analysis_type_id=at.id
+            meas.analysis_type_id = at.id
         if ms:
-            meas.mass_spectrometer_id=ms.id
+            meas.mass_spectrometer_id = ms.id
 #             ms.measurements.append(meas)
 
         return meas
@@ -598,18 +598,18 @@ class IsotopeAdapter(DatabaseAdapter):
                                                   **params)
 
         if meas:
-            meas.spectrometer_parameters_id=sp.id
+            meas.spectrometer_parameters_id = sp.id
 
         return sp
 
     def add_deflection(self, meas, det, value):
         sp = meas_SpectrometerDeflectionsTable(deflection=value)
         if meas:
-            sp.measurement_id=meas.id
+            sp.measurement_id = meas.id
 #             meas.deflections.append(sp)
             det = self.get_detector(det)
             if det:
-                sp.detector_id=det.id
+                sp.detector_id = det.id
 #                 det.deflections.append(sp)
 
         return sp
@@ -764,10 +764,10 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_experiment(self, value, key='name'):
         return self._retrieve_item(meas_ExperimentTable, value, key)
-    
+
     def get_extraction(self, value, key='id'):
         return self._retrieve_item(meas_ExtractionTable, value, key)
-    
+
 #    def get_extraction(self, value):
 #        return self._retrieve_item(meas_ExtractionTable, value, key='hash')
 
@@ -938,6 +938,9 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_loads(self, **kw):
         return self._retrieve_items(loading_LoadTable, **kw)
+
+    def get_molecular_weights(self, **kw):
+        return self._retrieve_item(gen_MolecularWeightTable, **kw)
 #===============================================================================
 # deleters
 #===============================================================================

@@ -42,7 +42,7 @@ class IsotopeDatabaseManager(Manager):
     updated = Event
 
 
-    def __init__(self, bind=True, connect=True, *args, **kw):
+    def __init__(self, bind=True, connect=True, warn=True, *args, **kw):
         super(IsotopeDatabaseManager, self).__init__(*args, **kw)
 
         if bind:
@@ -51,8 +51,12 @@ class IsotopeDatabaseManager(Manager):
             except AttributeError, e:
                 self.debug('bind exception. {}'.format(e))
 
-        if connect and not self.db.connect():
+        if connect and not self.db.connect(warn=warn):
             self.db = None
+
+    def isConnected(self):
+        if self.db:
+            return self.db.connected
 
     def load(self):
         return self.populate_default_tables()
