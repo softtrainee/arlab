@@ -23,8 +23,8 @@ from src.helpers.filetools import unique_path
 root = os.path.join(os.path.expanduser('~'), 'Desktop', 'memtest')
 if not os.path.isdir(root):
     os.mkdir(root)
-    
-p,_ = unique_path(root, 'mem')
+
+p, _ = unique_path(root, 'mem')
 def write_mem(msg, m):
     with open(os.path.join(root, p), 'a') as fp:
         fp.write('{:<50s}:{}\n'.format(msg, m))
@@ -105,47 +105,55 @@ def _get_current_mem():
 
 from collections import defaultdict
 def start_growth():
-    before=defaultdict(int)
+    before = defaultdict(int)
     for i in gc.get_objects():
-        before[type(i)]+=1
-    
+        before[type(i)] += 1
+
     return before
 
-def end_growth():    
-    after=defaultdict(int)
+def end_growth():
+    after = defaultdict(int)
     for i in gc.get_objects():
-        after[type(i)]+=1
-    
+        after[type(i)] += 1
+
     return after
 
 def calc_growth(before):
     gc.collect()
-    after=end_growth()    
-    for k,v in sorted([(ki, after[ki]-before[ki]) for ki in after if after[ki]-before[ki]>0],
-                      key=lambda x:x[1]):
-        print '{:<50s}: {}'.format(k,v)
+    after = end_growth()
+    for k, v in sorted([(ki, after[ki] - before[ki]) for ki in after if after[ki] - before[ki] > 0],
+                      key=lambda x:x[1],
+                      reverse=True
+                      )[:20]:
+        print '{:<50s}: {} size:{}'.format(k, v, get_size(k))
 
 def show_referents(cls):
-    obj=next((o for o in gc.get_objects() if type(o)==cls),None)
+    obj = next((o for o in gc.get_objects() if type(o) == cls), None)
     if obj:
         print '================= referrers ================'
 #         print '{} referrers'.format(obj)
         for ri in gc.get_referrers(obj):
-            keys=''
+            keys = ''
             if isinstance(ri, dict):
-                keys=','.join(ri.keys())
-            
+                keys = ','.join(ri.keys())
+
             print '{:<30s} {} {}'.format(str(id(ri)), type(ri), ri, keys)
-    
+
         print '================== referents ================'
 #         print '{} referents'.format(obj)
         for ri in gc.get_referents(obj):
-            keys=''
+            keys = ''
             if isinstance(ri, dict):
-                keys=','.join(ri.keys())
-            
+                keys = ','.join(ri.keys())
+
             print '{:<30s} {} {}'.format(str(id(ri)), type(ri), ri, keys)
-    
+
+def get_size(cls, show=False):
+    vs = (sys.getsizeof(o) for o in gc.get_objects() if type(o) == cls)
+    v = sum(vs) * 1024 ** -2
+    if show:
+        print '{:<30s} {}'.format(cls, v)
+    return v
 
 if __name__ == '__main__':
     mem_sort()

@@ -940,7 +940,7 @@ class IsotopeAdapter(DatabaseAdapter):
         return self._retrieve_items(loading_LoadTable, **kw)
 
     def get_molecular_weights(self, **kw):
-        return self._retrieve_item(gen_MolecularWeightTable, **kw)
+        return self._retrieve_items(gen_MolecularWeightTable, **kw)
 #===============================================================================
 # deleters
 #===============================================================================
