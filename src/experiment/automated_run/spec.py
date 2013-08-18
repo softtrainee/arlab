@@ -173,8 +173,8 @@ class AutomatedRunSpec(Loggable):
         if new_uuid:
             arun.uuid = str(uuid.uuid4())
 
-        arun.spec = self
-#         arun.spec = weakref.ref(self)()
+#         arun.spec = self
+        arun.spec = weakref.ref(self)()
 
         return arun
 
@@ -236,9 +236,9 @@ class AutomatedRunSpec(Loggable):
 #===============================================================================
 # handlers
 #===============================================================================
-    @on_trait_change('automated_run:state')
-    def _update_state(self, new):
-        self.state = new
+#     @on_trait_change('automated_run:state')
+#     def _update_state(self, new):
+#         self.state = new
 
     def _update_aliquot(self, new):
         print 'upda', new

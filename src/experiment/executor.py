@@ -681,7 +681,8 @@ class ExperimentExecutor(Experimentable):
         with consumable(func=self._overlapped_run) as con:
             while self.isAlive():
 
-                before = measure_type(dict)
+#                 before = measure_type(dict)
+#                 before = measure_type()
                 if self._check_memory():
                     break
 
@@ -753,7 +754,7 @@ class ExperimentExecutor(Experimentable):
                         run.teardown()
                         mem_log('{} post teardown'.format(last_runid))
 
-                        calc_growth(before, dict, cnt)
+#                         calc_growth(before, count=cnt)
 
 #                         count_instances(run.__class__)
 #                         from src.experiment.plot_panel import PlotPanel

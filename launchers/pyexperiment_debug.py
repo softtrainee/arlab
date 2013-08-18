@@ -17,11 +17,15 @@
 #============= enthought library imports =======================
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = "qt4"
+
+# import gc
+# print gc.get_threshold()
+# gc.set_debug(gc.DEBUG_LEAK| gc.DEBUG_STATS)
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
 
-version_id = '_experiment-2.1.0'
+version_id = '_experiment-2.1.1'
 from helpers import build_version
 '''
     obsolete:

@@ -107,7 +107,7 @@ def _get_current_mem():
 from collections import defaultdict
 
 
-def measure_type(cls):
+def measure_type(cls=None):
     d = defaultdict(int)
     if cls:
         d[cls]=sum((1 for o in gc.get_objects() if type(o)==cls))
@@ -120,18 +120,35 @@ def measure_type(cls):
 gp, _ = unique_path(root, 'growth')
 def calc_growth(before, cls=None, count=None, write=True):
     gc.collect()
+    gc.collect()
+    gc.collect()
+    
     after=measure_type(cls)
-#     after = end_growth()
-    for k, v,s in sorted([(ki, after[ki] - before[ki], get_size(ki)) for ki in after if after[ki] - before[ki] > 0],
-                      key=lambda x:x[2],
+#     after = end_growth()        
+    for k, v in sorted([(ki, after[ki] - before[ki]) for ki in after if after[ki] - before[ki] > 0],
+                      key=lambda x:x[1],
                       reverse=True
-                      )[:20]:
-        msg='{:<50s}: {} size:{}'.format(k, v, s)
-        print msg, write, msg.split(' ')
+                      )[:50]:
+        s=get_size(k)
+        msg='{:<50s}: {} size: {}'.format(k, v, s)
+        print msg
         if write:
             with open(gp,'a') as fp:
                 fp.write('{}\n'.format(msg))
-            
+                
+        if cls==dict and count and count>1:
+            ds=get_type(cls)
+            def test(ki):
+                if isinstance(ki, str):
+                    return not ki.startswith('__')
+                  
+            for di in ds: 
+                ks=(k for k in di.keys() if test(k))
+                msg=','.join(ks).strip()
+                if msg:
+                    print 'keys: {}'.format(msg)
+                
+                
 def show_referents(cls):
     obj = next((o for o in gc.get_objects() if type(o) == cls), None)
     if obj:
@@ -152,9 +169,10 @@ def show_referents(cls):
                 keys = ','.join(ri.keys())
 
             print '{:<30s} {} {}'.format(str(id(ri)), type(ri), ri, keys)
-
+def get_type(cls):
+    return (o for o in gc.get_objects() if type(o) == cls)
 def get_size(cls, show=False):
-    vs = (sys.getsizeof(o) for o in gc.get_objects() if type(o) == cls)
+    vs = (sys.getsizeof(o) for o in get_type(cls))
     v = sum(vs) * 1024 ** -2
     if show:
         print '{:<30s} {}'.format(cls, v)
