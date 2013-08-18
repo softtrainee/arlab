@@ -698,7 +698,8 @@ class AutomatedRun(Loggable):
 
         self._pre_measurement_save()
         self.measuring = True
-        self._save_enabled = True
+#         self._save_enabled = True
+        self._save_enabled = False
 
         mem_log('do measurement pre execute')
         if self.measurement_script.execute():
@@ -1264,13 +1265,13 @@ anaylsis_type={}
     def _post_measurement_save(self):
         self.info('post measurement save')
 
-        if not self._save_enabled:
-            self.info('Database saving disabled')
-            return
-
         cp = self.data_manager.get_current_path()
         # close h5 file
         self.data_manager.close_file()
+
+        if not self._save_enabled:
+            self.info('Database saving disabled')
+            return
 
         mem_log('pre preliminary processing')
         # do preliminary processing of data

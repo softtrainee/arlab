@@ -124,7 +124,8 @@ class PlotPanel(Loggable):
     def reset(self):
         self.clear_displays()
         self.graph = self._graph_factory()
-
+        self.graph.on_trait_change(self._update_display, 'regression_results')
+        
     def create(self, dets):
         '''
             dets: list of Detector instances
@@ -151,7 +152,7 @@ class PlotPanel(Loggable):
     def clear_displays(self):
         self._print_results()
 
-    @on_trait_change('graph:regression_results')
+#     @on_trait_change('graph:regression_results')
     def _update_display(self, new):
         if new:
             arar_age = self.arar_age
