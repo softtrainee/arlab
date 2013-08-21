@@ -19,8 +19,8 @@ import gc
 import sys
 import cPickle
 from src.helpers.filetools import unique_path
-import csv
 
+USE_MEM_LOG = True
 root = os.path.join(os.path.expanduser('~'), 'Desktop', 'memtest')
 if not os.path.isdir(root):
     os.mkdir(root)
@@ -36,8 +36,16 @@ def mem_break():
     write_mem('#' + '=' * 49, '')
 
 def mem_log(msg):
-    mem = _get_current_mem()
-    write_mem(msg, mem)
+    if USE_MEM_LOG:
+        mem = _get_current_mem()
+        write_mem(msg, mem)
+
+def mem_log_func(func, *args, **kw):
+    n = func.func_name
+    mem_log('pre {}'.format(n))
+    r = func(*args, **kw)
+    mem_log('post {}'.format(n))
+    return r
 
 def mem_available():
     mem = psutil.avail_phymem()
@@ -93,8 +101,6 @@ def mem_sort():
         for oi in sorted(objs, key=lambda x: x['size'], reverse=True):
             fp.write('{name} {size} {referents}\n'.format(**oi))
 
-
-
 #     with open(os.path.join(root, 'gcmem.txt'), 'w') as fp:
 
 def _get_current_mem():
@@ -107,52 +113,70 @@ def _get_current_mem():
 from collections import defaultdict
 
 
-def measure_type(cls=None):
+def measure_type(cls=None, group=None):
     d = defaultdict(int)
     if cls:
-        d[cls]=sum((1 for o in gc.get_objects() if type(o)==cls))
+        d[cls] = sum((1 for o in gc.get_objects() if type(o) == cls))
     else:
-        for i in gc.get_objects():
+        objs = gc.get_objects()
+        if group:
+            objs = filter(lambda x: group in str(type(x)), objs)
+
+        for i in objs:
             d[type(i)] += 1
 
     return d
 
 gp, _ = unique_path(root, 'growth')
-def calc_growth(before, cls=None, count=None, write=True):
+def calc_growth(before, cls=None, group=None, count=None, write=True):
     gc.collect()
-    gc.collect()
-    gc.collect()
-    
-    after=measure_type(cls)
-#     after = end_growth()        
-    for k, v in sorted([(ki, after[ki] - before[ki]) for ki in after if after[ki] - before[ki] > 0],
+
+    after = measure_type(cls, group)
+#     after = end_growth()
+    ts = 0
+    for k, v in sorted([(ki, after[ki] - before[ki]) for ki in after if after[ki] - before[ki] > 1],
                       key=lambda x:x[1],
                       reverse=True
-                      )[:50]:
-        s=get_size(k)
-        msg='{:<50s}: {} size: {}'.format(k, v, s)
+                      ):
+        if cls and v > 1 :
+            obj = get_type(k).next()
+            print 'referrers'
+            for ri in gc.get_referrers(obj):
+                print ri
+
+            print 'referrents'
+            for ri in gc.get_referents(obj):
+                print ri
+
+        s = get_size(k)
+        if group:
+            ts += s
+        msg = '{:<70s}: {} size: {}'.format(k, v, s)
         print msg
         if write:
-            with open(gp,'a') as fp:
+            with open(gp, 'a') as fp:
                 fp.write('{}\n'.format(msg))
-                
-        if cls==dict and count and count>1:
-            ds=get_type(cls)
-            def test(ki):
-                if isinstance(ki, str):
-                    return not ki.startswith('__')
-                  
-            for di in ds: 
-                ks=(k for k in di.keys() if test(k))
-                msg=','.join(ks).strip()
-                if msg:
-                    print 'keys: {}'.format(msg)
-                
-                
-def show_referents(cls):
+
+    if ts:
+        print 'total size: {}'.format(ts)
+    gc.collect()
+#         if cls == dict and count and count > 1:
+#             ds = get_type(cls)
+#             def test(ki):
+#                 if isinstance(ki, str):
+#                     return not ki.startswith('__')
+#
+#             for di in ds:
+#                 ks = (k for k in di.keys() if test(k))
+#                 msg = ','.join(ks).strip()
+#                 if msg:
+#                     print 'keys: {}'.format(msg)
+
+
+def show_refs(cls):
     obj = next((o for o in gc.get_objects() if type(o) == cls), None)
     if obj:
-        print '================= referrers ================'
+        print '================= {} referrers ================'.format(cls)
 #         print '{} referrers'.format(obj)
         for ri in gc.get_referrers(obj):
             keys = ''
@@ -161,7 +185,7 @@ def show_referents(cls):
 
             print '{:<30s} {} {}'.format(str(id(ri)), type(ri), ri, keys)
 
-        print '================== referents ================'
+        print '================== {} referents ================'.format(cls)
 #         print '{} referents'.format(obj)
         for ri in gc.get_referents(obj):
             keys = ''
@@ -171,6 +195,7 @@ def show_referents(cls):
             print '{:<30s} {} {}'.format(str(id(ri)), type(ri), ri, keys)
 def get_type(cls):
     return (o for o in gc.get_objects() if type(o) == cls)
+
 def get_size(cls, show=False):
     vs = (sys.getsizeof(o) for o in get_type(cls))
     v = sum(vs) * 1024 ** -2
@@ -178,6 +203,41 @@ def get_size(cls, show=False):
         print '{:<30s} {}'.format(cls, v)
     return v
 
+def count_instances(inst, group=None, referrers=True, referents=False):
+    gc.collect()
+
+    if group:
+#         def t(x):
+#             try:
+#                 return group in x.__class__.__name__
+#             except:
+#                 pass
+        t = lambda x: group in str(type(x))
+        n = group
+    else:
+        t = lambda x: isinstance(x, inst)
+        n = str(inst)
+
+    objs = filter(t, gc.get_objects())
+
+    s = sum(sys.getsizeof(o) for o in objs) * 1024 ** -2
+    print '{:<50s}:{} {}'.format(n, len(objs), s)
+    if referrers:
+        for obj in objs:
+            show_referrers(obj)
+    if referents:
+        for obj in objs:
+            show_referents(obj)
+
+def show_referrers(obj):
+    print '============ {} referrers =========='.format(obj)
+    for ri in gc.get_referrers(obj):
+        print ri
+
+def show_referents(obj):
+    print '============ {} referents =========='.format(obj)
+    for ri in gc.get_referents(obj):
+        print ri
 if __name__ == '__main__':
     mem_sort()
 

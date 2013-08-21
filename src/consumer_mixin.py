@@ -19,7 +19,8 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-from src.ui.thread import Thread
+# from src.ui.thread import Thread
+from threading import Thread
 from Queue import Queue, Empty
 
 class ConsumerMixin(object):
@@ -90,6 +91,7 @@ class ConsumerMixin(object):
 
 class consumable(object):
     _func = None
+    _consumer = None
     def __init__(self, func=None):
         self._func = func
 
@@ -100,6 +102,9 @@ class consumable(object):
 
     def __exit__(self, *args, **kw):
         self._consumer.stop()
+
+        self._consumer = None
+        self._func = None
 
 
 #============= EOF =============================================

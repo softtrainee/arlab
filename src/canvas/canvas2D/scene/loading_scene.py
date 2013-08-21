@@ -24,10 +24,13 @@ from src.lasers.stage_managers.stage_map import StageMap
 from src.canvas.canvas2D.scene.primitives.primitives import Circle, \
     LoadIndicator
 from numpy import Inf
+import weakref
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class LoadingScene(Scene):
+    _xrange = -1, 1
+    _yrange = -1, 1
     def load(self, t):
         self.reset_layers()
 

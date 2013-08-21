@@ -629,7 +629,8 @@ class IsotopeAdapter(DatabaseAdapter):
 
             sample = self.get_sample(sample)
             if sample is not None:
-                sample.labnumbers.append(ln)
+                ln.sample_id = sample.id
+#                 sample.labnumbers.append(ln)
                 sname = sample.name
             else:
                 self.debug('sample {} does not exist'.format(sample))
@@ -646,7 +647,8 @@ class IsotopeAdapter(DatabaseAdapter):
 
         anal = meas_AnalysisTable(**kw)
         if labnumber is not None:
-            labnumber.analyses.append(anal)
+            anal.lab_id = labnumber.id
+#             labnumber.analyses.append(anal)
 
         self._add_item(anal)
         return anal

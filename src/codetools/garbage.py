@@ -22,14 +22,6 @@ import gc
 import objgraph
 import inspect
 
-def count_instances(inst, chain=False):
-    gc.collect()
-
-    objs = filter(lambda x: isinstance(x, inst), gc.get_objects())
-    print '{:<50s}:{}'.format(str(inst), len(objs))
-    if chain:
-        for i, o in enumerate(objs):
-            show_chain(i, o)
 
 def show_chain(i, obj):
     objgraph.show_chain(

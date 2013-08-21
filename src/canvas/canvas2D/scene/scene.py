@@ -24,16 +24,21 @@ from src.helpers.parsers.canvas_parser import CanvasParser
 from src.canvas.canvas2D.scene.primitives.primitives import Primitive
 from src.canvas.canvas2D.scene.browser import SceneBrowser
 from src.canvas.canvas2D.scene.layer import Layer
+import weakref
 class PrimitiveNode(TreeNode):
     add = List([Primitive])
     move = List([Primitive])
 #    def can_insert(self, obj):
 #        print obj, 'asdf'
 
+
+
+
 class Scene(HasTraits):
     layers = List
-    parser = Instance(CanvasParser)
-    scene_browser = Instance(SceneBrowser)
+    parser = None
+#     parser = Instance(CanvasParser)
+#     scene_browser = Instance(SceneBrowser)
     selected = Any
     layout_needed = Event
     font = None
@@ -47,6 +52,11 @@ class Scene(HasTraits):
                 ci.set_canvas(c)
 
     def reset_layers(self):
+
+        self.set_canvas(None)
+        for li in self.layers:
+            li.destroy()
+
         self.layers = [Layer(name='0'), Layer(name='1')]
 
     def load(self, pathname):
@@ -158,35 +168,35 @@ class Scene(HasTraits):
 
         return xv, yv
 
-    def traits_view(self):
-        nodes = [TreeNode(node_for=[SceneBrowser],
-                          children='layers',
-                          label='=layers',
-                          auto_open=True
-                          ),
-                 TreeNode(node_for=[Layer],
-                          label='label',
-                          children='components',
-                          auto_open=True
-                          ),
-                 PrimitiveNode(node_for=[Primitive],
-                               children='primitives',
-                               label='label',
-#                               auto_open=True
-                          ),
-                 ]
+#     def traits_view(self):
+#         nodes = [TreeNode(node_for=[SceneBrowser],
+#                           children='layers',
+#                           label='=layers',
+#                           auto_open=True
+#                           ),
+#                  TreeNode(node_for=[Layer],
+#                           label='label',
+#                           children='components',
+#                           auto_open=True
+#                           ),
+#                  PrimitiveNode(node_for=[Primitive],
+#                                children='primitives',
+#                                label='label',
+# #                               auto_open=True
+#                           ),
+#                  ]
+#
+#         editor = TreeEditor(nodes=nodes,
+#                             selected='selected',
+#                             orientation='vertical')
+#         v = View(Item('scene_browser',
+#                       show_label=False,
+#                       editor=editor))
+#         return v
 
-        editor = TreeEditor(nodes=nodes,
-                            selected='selected',
-                            orientation='vertical')
-        v = View(Item('scene_browser',
-                      show_label=False,
-                      editor=editor))
-        return v
 
-
-    def _scene_browser_default(self):
-        sb = SceneBrowser(layers=self.layers)
-#        self.on_trait_change(sb._update_layers, 'layers, layers[]')
-        return sb
+#     def _scene_browser_default(self):
+#         sb = SceneBrowser(layers=self.layers)
+# #        self.on_trait_change(sb._update_layers, 'layers, layers[]')
+#         return sb
 #============= EOF =============================================

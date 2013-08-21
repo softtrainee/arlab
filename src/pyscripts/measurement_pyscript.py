@@ -29,9 +29,7 @@ from src.pyscripts.valve_pyscript import ValvePyScript
 from src.constants import MEASUREMENT_COLOR
 import weakref
 
-estimated_duration_ff = 1
-
-
+ESTIMATED_DURATION_FF = 1.045
 
 command_register = makeRegistry()
 
@@ -87,9 +85,10 @@ class MeasurementPyScript(ValvePyScript):
 
     @count_verbose_skip
     @command_register
-    def sniff(self, ncounts=0, calc_time=False, integration_time=1):
+    def sniff(self, ncounts=0, calc_time=False,
+              integration_time=1.04):
         if calc_time:
-            self._estimated_duration += (ncounts * integration_time * estimated_duration_ff)
+            self._estimated_duration += (ncounts * integration_time * ESTIMATED_DURATION_FF)
             return
         self.ncounts = ncounts
         if not self._automated_run_call('py_sniff', ncounts,
@@ -101,9 +100,9 @@ class MeasurementPyScript(ValvePyScript):
 
     @count_verbose_skip
     @command_register
-    def multicollect(self, ncounts=200, integration_time=1, calc_time=False):
+    def multicollect(self, ncounts=200, integration_time=1.04, calc_time=False):
         if calc_time:
-            self._estimated_duration += (ncounts * integration_time * estimated_duration_ff)
+            self._estimated_duration += (ncounts * integration_time * ESTIMATED_DURATION_FF)
             return
 
         self.ncounts = ncounts
@@ -121,7 +120,9 @@ class MeasurementPyScript(ValvePyScript):
 
     @count_verbose_skip
     @command_register
-    def baselines(self, ncounts=1, cycles=5, mass=None, detector='', settling_time=4, calc_time=False):
+    def baselines(self, ncounts=1, cycles=5, mass=None, detector='',
+                  integration_time=1.04,
+                  settling_time=4, calc_time=False):
         '''
             if detector is not none then it is peak hopped
         '''
@@ -129,12 +130,12 @@ class MeasurementPyScript(ValvePyScript):
             ncounts *= self.abbreviated_count_ratio
 
         if calc_time:
-            if not detector:
-                ns = ncounts * cycles
-            else:
-                ns = ncounts
+            ns = ncounts
+            if detector:
+                ns *= cycles
 
-            self._estimated_duration += ns * estimated_duration_ff + settling_time
+            d = ns * integration_time * ESTIMATED_DURATION_FF + settling_time
+            self._estimated_duration += d
             return
 
         self.ncounts = ncounts
@@ -159,7 +160,7 @@ class MeasurementPyScript(ValvePyScript):
         if calc_time:
             # counts = sum of counts for each hop
             counts = sum([ci for _h, ci in hops])
-            self._estimated_duration += (ncycles * counts * estimated_duration_ff)
+            self._estimated_duration += (ncycles * counts * ESTIMATED_DURATION_FF)
             return
 
         group = 'signal'
@@ -178,7 +179,7 @@ class MeasurementPyScript(ValvePyScript):
 #    @command_register
 #    def peak_hop(self, detector=None, isotopes=None, cycles=5, integrations=5, calc_time=False):
 #        if calc_time:
-#            self._estimated_duration += (cycles * integrations * estimated_duration_ff)
+#            self._estimated_duration += (cycles * integrations * ESTIMATED_DURATION_FF)
 #            return
 #
 #        self._automated_run_call('py_peak_hop', detector, isotopes,

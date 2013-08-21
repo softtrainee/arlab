@@ -37,8 +37,9 @@ class AutomatedRunSpec(Loggable):
     state = Enum('not run', 'extraction',
                  'measurement', 'success',
                  'failed', 'truncated', 'canceled',
-                 'invalid'
+                 'invalid', 'test'
                  )
+
     skip = Bool(False)
     end_after = Bool(False)
     #===========================================================================
@@ -135,7 +136,8 @@ class AutomatedRunSpec(Loggable):
                         warned.append(name)
 
                     script, ok = script_context[name]
-                    s += script.get_estimated_duration()
+                    d = script.get_estimated_duration()
+                    s += d
                     script_oks.append(ok)
                 else:
                     if arun is None:
@@ -144,18 +146,23 @@ class AutomatedRunSpec(Loggable):
                     arun.invalid_script = False
                     script = getattr(arun, si)
                     if script is not None:
+
                         ok = script.syntax_ok()
                         script_oks.append(ok)
                         script_context[name] = script, ok
                         if ok:
-                            s += script.get_estimated_duration()
+                            arun.setup_context(script)
+                            s += script.calculate_estimated_duration()
+
                     elif arun.invalid_script:
                         script_oks.append(False)
             if arun:
                 arun.spec = None
             # set executable. if all scripts have OK syntax executable is True
             self.executable = all(script_oks)
-            self._estimated_duration = s
+
+            db_save_time = 1
+            self._estimated_duration = s + db_save_time
 
         return self._estimated_duration
 

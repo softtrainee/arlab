@@ -114,8 +114,8 @@ def parse_file(p, delimiter=None):
     '''
     '''
     if os.path.exists(p) and os.path.isfile(p):
-        with open(p, 'U') as file:
-            r = filetoarray(file)
+        with open(p, 'U') as fp:
+            r = filetoarray(fp)
             if delimiter:
                 r = [ri.split(delimiter) for ri in r]
 
@@ -126,8 +126,8 @@ def parse_setupfile(p):
     '''
     '''
 
-    file = parse_file(p)
-    if file:
+    fp = parse_file(p)
+    if fp:
         return [line.split(',') for line in file]
 
 def parse_canvasfile(p, kw):

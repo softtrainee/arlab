@@ -26,6 +26,9 @@ class Layer(HasTraits):
     label = Property(depends_on='name')
     visible = Bool(True)
 
+    def destroy(self):
+        del self.components
+
     def pop_item(self, idx, klass=None):
         if self.components:
             if klass is not None:

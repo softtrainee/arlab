@@ -27,7 +27,8 @@ import math
 from numpy import array
 #============= local library imports  ==========================
 from src.geometry.convex_hull import convex_hull
-from src.geometry.geometry import calc_point_along_line
+# from src.geometry.geometry import calc_point_along_line
+import weakref
 
 
 
@@ -673,7 +674,8 @@ class LoadIndicator(Circle):
         self._text.append((t, ox, oy))
 
     def _render_(self, gc):
-        Circle._render_(self, gc)
+        super(LoadIndicator, self)._render_(gc)
+#         Circle._render_(self, gc)
 
         x, y = self.get_xy()
         r = self.map_dimension(self.radius)

@@ -67,6 +67,9 @@ class ExperimentPreferences(BasePreferencesHelper):
     use_notifications = Bool
     notifications_port = Int
 
+    use_auto_save = Bool
+    auto_save_delay = Int
+
     @on_trait_change('db+')
     def db_attribute_changed(self, obj, name, old, new):
         if name == 'db_fav_name':
@@ -188,7 +191,6 @@ class ExperimentPreferencesPane(PreferencesPane):
                              )
 
         auto_figure_grp = Group(
-
                                 Item('use_auto_figure'),
                                 VGroup(
                                        Item('use_notifications'),
@@ -200,11 +202,22 @@ class ExperimentPreferencesPane(PreferencesPane):
                                        ),
                                 label='Auto Figure'
                                 )
+        editor_grp = Group(
+                        Item('use_auto_save',
+                             tooltip='If "Use auto save" experiment queue saved after "timeout" seconds'
+                             ),
+                        Item('auto_save_delay',
+                             label='Auto save timeout (s)',
+                             tooltip='If experiment queue is not saved then wait "timeout" seconds before saving or canceling'
+                             ),
+                           label='Editor'
+                           )
         return View(
 #                        user_grp,
                         db_grp,
                         massspec_grp,
                         auto_figure_grp,
+                        editor_grp
                     )
 
 #============= EOF =============================================

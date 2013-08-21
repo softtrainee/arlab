@@ -22,6 +22,15 @@ from src.constants import EXTRACTION_COLOR, MEASUREMENT_COLOR, SUCCESS_COLOR, \
     SKIP_COLOR, NOT_EXECUTABLE_COLOR, CANCELED_COLOR, TRUNCATED_COLOR, \
     FAILED_COLOR, END_AFTER_COLOR
 #============= local library imports  ==========================
+COLORS = {'success':SUCCESS_COLOR,
+                'extraction':EXTRACTION_COLOR,
+                'measurement':MEASUREMENT_COLOR,
+                'canceled':CANCELED_COLOR,
+                'truncated':TRUNCATED_COLOR,
+                'failed':FAILED_COLOR,
+                'end_after':END_AFTER_COLOR,
+                'invalid':'red'
+                }
 
 class AutomatedRunSpecAdapter(TabularAdapter):
     font = 'arial 10'
@@ -69,17 +78,6 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 
     def get_bg_color(self, obj, trait, row, column):
         item = self.item
-
-        COLORS = {'success':SUCCESS_COLOR,
-                'extraction':EXTRACTION_COLOR,
-                'measurement':MEASUREMENT_COLOR,
-                'canceled':CANCELED_COLOR,
-                'truncated':TRUNCATED_COLOR,
-                'failed':FAILED_COLOR,
-                'end_after':END_AFTER_COLOR,
-                'invalid':'red'
-                }
-
         if not item.executable:
             color = NOT_EXECUTABLE_COLOR
 
@@ -184,8 +182,8 @@ class UVAutomatedRunSpecAdapter(AutomatedRunSpecAdapter):
         cols.insert(9, ('Attenuator', 'attenuator'))
         return cols
 
-COLOR_STATES = dict(extraction='yellow', measurement='orange',
-                     success='green', fail='red', truncate='blue')
+# COLOR_STATES = dict(extraction='yellow', measurement='orange',
+#                      success='green', fail='red', truncate='blue')
 
 # class ExecuteAutomatedRunAdapter(AutomatedRunSpecAdapter):
 #    state_width = Int(20)

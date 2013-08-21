@@ -75,6 +75,7 @@ class AutomatedRunMonitor(Monitor):
     checks = List
     automated_run = Any
     def _load_hook(self, config):
+        self.checks = []
         for section in config.sections():
             if section.startswith('Check'):
                 pa = self.config_get(config, section, 'parameter')
