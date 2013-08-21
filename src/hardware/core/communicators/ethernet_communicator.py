@@ -45,7 +45,7 @@ class Handler(Loggable):
 
 class TCPHandler(Handler):
 
-    def get_packet(self):
+    def get_packet(self, cmd):
         pass
 
     def send_packet(self, p):
@@ -58,13 +58,13 @@ class TCPHandler(Handler):
 class UDPHandler(Handler):
     datasize = 2 ** 10
 
-    def open_socket(self, addr, timeout=0.75):
+    def open_socket(self, addr, timeout=1.0):
         self.address = addr
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         # self.sock.connect(addr)
         self.sock.settimeout(timeout)
 
-    def get_packet(self):
+    def get_packet(self, cmd):
         r = None
 #        cnt = 3
         cnt = 1
@@ -75,7 +75,7 @@ class UDPHandler(Handler):
             except socket.error, e:
                 pass
         else:
-            self.warning('get packet {}'.format(e))
+            self.warning('get packet for {} error: {}'.format(cmd,e))
 
         return r
 
@@ -118,8 +118,9 @@ class EthernetCommunicator(Communicator):
 
         handler = self.get_handler()
         # send a test command so see if wer have connection
-        if handler.send_packet('***'):
-            r = handler.get_packet()
+        cmd='***'
+        if handler.send_packet(cmd):
+            r = handler.get_packet(cmd)
             if r is None:
                 self.simulation = True
         else:
@@ -150,7 +151,7 @@ class EthernetCommunicator(Communicator):
 
         def _ask():
             if handler.send_packet(cmd):
-                return handler.get_packet()
+                return handler.get_packet(cmd)
 
         if self.simulation:
             if verbose:

@@ -37,8 +37,8 @@ def get_table(name, group, frame):
             pass
 
 class TableCTX(object):
-    def __init__(self, p, t, g, complevel):
-        self._file = openFile(p, 'r',
+    def __init__(self, p, t, g, complevel, mode):
+        self._file = openFile(p, mode,
                               filters=Filters(complevel=complevel))
         self._t = t
         self._g = g
@@ -227,14 +227,14 @@ class H5DataManager(DataManager):
         except Exception, e:
             print 'exception closing file', e
 
-    def open_file(self, path, mode):
+    def open_file(self, path, mode='a'):
         return FileCTX(
 #                        self,
                        weakref.ref(self)(),
                        path, mode, self.compression_level)
 
-    def open_table(self, path, table, group='/'):
-        return TableCTX(path, table, group, self.compression_level)
+    def open_table(self, path, table, group='/', mode='r'):
+        return TableCTX(path, table, group, self.compression_level, mode)
 
     def kill(self):
         self.close_file()
