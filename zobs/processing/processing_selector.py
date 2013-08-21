@@ -340,8 +340,8 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                            )
         selector_grp = VGroup(
                               HGroup(
-                                     Item('append', show_label=False, width= -80),
-                                     Item('replace', show_label=False, width= -80),
+                                     Item('append', show_label=False, width=-80),
+                                     Item('replace', show_label=False, width=-80),
 #                                     Spring(springy=False, width= -50),
                                      Item('object.selector.limit')
                                      ),
@@ -384,7 +384,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                                                                                        ),
                                                         ),
 #                                          width=0.25,
-                                          width= -140
+                                          width=-140
                                           ),
                                 grouping_grp
                               )

@@ -15,10 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Instance, Int, Property, List, on_trait_change, Dict, Bool, \
-    Str, CInt, HasTraits, Event
-from traitsui.api import View, Item, Group, HGroup, spring, VSplit, UItem, \
-    HSplit, VGroup
+from traits.api import Instance, Int, Property, List, on_trait_change, Dict, Bool, \
+    Str, CInt
+from traitsui.api import View, Item, Group, VSplit, UItem, VGroup
 from src.graph.graph import Graph
 
 from src.graph.regression_graph import StackedRegressionGraph
@@ -125,7 +124,7 @@ class PlotPanel(Loggable):
         self.clear_displays()
         self.graph = self._graph_factory()
         self.graph.on_trait_change(self._update_display, 'regression_results')
-        
+
     def create(self, dets):
         '''
             dets: list of Detector instances

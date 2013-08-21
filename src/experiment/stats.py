@@ -35,7 +35,9 @@ class ExperimentStats(Loggable):
     time_at = String
     total_time = Property(depends_on='_total_time')
     _total_time = Float
-    _timer = Any(transient=True)
+
+    _timer = Any
+
     delay_between_analyses = Float
     delay_before_analyses = Float
     _start_time = None
@@ -47,7 +49,7 @@ class ExperimentStats(Loggable):
 #            runs = self.experiment_queue.cleaned_automated_runs
         dur = self._calculate_duration(runs)
         # add an empirical fudge factor
-        ff = polyval(FUDGE_COEFFS, len(runs))
+#         ff = polyval(FUDGE_COEFFS, len(runs))
 
         self._total_time = dur  # + ff
         return self._total_time
@@ -125,15 +127,20 @@ class ExperimentStats(Loggable):
     def reset(self):
         self._start_time = None
         self.nruns_finished = 0
+        self._elapsed = 0
+
 
 class StatsGroup(ExperimentStats):
     experiment_queues = List
+    def reset(self):
+        ExperimentStats.reset(self)
+        self.calculate()
+
     def calculate(self):
         ''' 
             calculate the total duration
             calculate the estimated time of finish
         '''
-
         runs = [ai
                 for ei in self.experiment_queues
                     for ai in ei.cleaned_automated_runs]

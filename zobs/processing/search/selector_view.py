@@ -47,8 +47,8 @@ class SelectorView(HasTraits):
         v = View(
                  VGroup(
                         HGroup(
-                               Item('append', show_label=False, width= -80),
-                               Item('replace', show_label=False, width= -80),
+                               Item('append', show_label=False, width=-80),
+                               Item('replace', show_label=False, width=-80),
                                Item('object.selector.limit')
                                ),
                         Item('selector',

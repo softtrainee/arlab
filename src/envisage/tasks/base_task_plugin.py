@@ -15,12 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List
+from traits.api import List
 from envisage.plugin import Plugin
 from envisage.service_offer import ServiceOffer
-# from pyface.tasks.action.schema_addition import SchemaAddition
-# from src.envisage.tasks.base_task import myTaskWindowLaunchGroup
-# from envisage.ui.tasks.task_extension import TaskExtension
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

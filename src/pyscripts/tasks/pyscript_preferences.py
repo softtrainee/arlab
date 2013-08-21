@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Bool
-from traitsui.api import View, Item, UItem, Spring, Label, spring, VGroup, HGroup
+from traitsui.api import View, Item
 from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
 from envisage.ui.tasks.preferences_pane import PreferencesPane
 # from src.constants import PLUSMINUS

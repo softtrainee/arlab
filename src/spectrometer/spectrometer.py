@@ -28,7 +28,6 @@ from src.spectrometer.source import Source
 from src.spectrometer.magnet import Magnet
 from src.spectrometer.detector import Detector
 from src.spectrometer.spectrometer_device import SpectrometerDevice
-from src.paths import paths
 from src.constants import NULL_STR
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 # from src.graph.graph import Graph

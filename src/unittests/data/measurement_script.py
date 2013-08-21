@@ -1,4 +1,4 @@
-#!Measurement
+# !Measurement
 '''
 '''
 # counts
@@ -37,10 +37,10 @@ FITS = [
       ((0, 5), ('linear', 'linear')),
       ((5, None), ('linear', 'parabolic'))
       ]
-#FITS=('linear','linear')
+# FITS=('linear','linear')
 
 ACTIONS = [(False, ('age', '<', 10.6, 20, 10, '', False)),
-          ] 
+          ]
 
 TRUNCATIONS = [(False, ('age', '<', 10.6, 20, 10,)),
               ]

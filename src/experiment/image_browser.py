@@ -47,7 +47,7 @@ class ImageContainer(HasTraits):
     def traits_view(self):
         v = View(VGroup(
                         HGroup(spring, CustomLabel('name', color='maroon', size=16,
-                                                   height= -25,
+                                                   height=-25,
                                                    width=100,
                                                    ), spring),
                         Item('container', show_label=False, editor=ComponentEditor()),

@@ -31,7 +31,7 @@ class Bar(QFrame):
     color_scalar = 1
     bar_width = 100
 
-    def __init__(self, parent, ident= -1):
+    def __init__(self, parent, ident=-1):
         super(Bar, self).__init__()
         self._cmap = get_cmap('jet')
 

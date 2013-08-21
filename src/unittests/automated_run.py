@@ -15,8 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
 import unittest
 from src.experiment.automated_run.automated_run import AutomatedRun
 from src.experiment.automated_run.condition import TruncationCondition

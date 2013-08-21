@@ -78,9 +78,9 @@ class Processor(IsotopeDatabaseManager):
         if aliquot is not None:
             q = q.filter(meas_AnalysisTable.aliquot == aliquot)
 
-        if sample=='FC-2':
-            q=q.filter(gen_LabTable.identifier==labnumber)
-            
+        if sample == 'FC-2':
+            q = q.filter(gen_LabTable.identifier == labnumber)
+
 #        q = q.limit(10)
         return self._make_analyses_from_query(q)
 

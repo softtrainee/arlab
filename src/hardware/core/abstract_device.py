@@ -64,7 +64,7 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
             return getattr(self._cdevice, attr)
         except AttributeError, e:
             self.debug(e)
-            
+
 
     def _get_dev_klass(self):
         return self._cdevice.__class__.__name__

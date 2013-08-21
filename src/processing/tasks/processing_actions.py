@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str
-from traitsui.api import View, Item
+from traits.api import Str
 from pyface.action.action import Action
 from pyface.tasks.task_window_layout import TaskWindowLayout
 from pyface.tasks.action.task_action import TaskAction

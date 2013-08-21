@@ -24,7 +24,7 @@ from src.remote_hardware.errors import  InvalidArgumentsErrorCode, InvalidValveE
     ValveSoftwareLockErrorCode, ValveActuationErrorCode
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from dummies import DummyELM
-#from src.envisage.core.action_helper import open_manager
+# from src.envisage.core.action_helper import open_manager
 from src.remote_hardware.errors.extraction_line_errors import InvalidGaugeErrorCode
 
 EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'

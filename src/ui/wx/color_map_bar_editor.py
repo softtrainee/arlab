@@ -30,7 +30,7 @@ class Bar(wx.Control):
     high = 1
     color_scalar = 1
     bar_width = 100
-    def __init__(self, parent, ident= -1):
+    def __init__(self, parent, ident=-1):
         super(Bar, self).__init__(parent, ident, (0, 0), (self.bar_width, 15), style=wx.NO_BORDER)
         self.Bind(wx.EVT_PAINT, self._on_paint, self)
         self._cmap = get_cmap('jet')

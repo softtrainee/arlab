@@ -15,14 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Float, Enum, List, Str, Property
+from traits.api import Float, Enum
 from traitsui.api import View, Item, UItem, Spring, Label, spring, VGroup, HGroup
 from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
 from envisage.ui.tasks.preferences_pane import PreferencesPane
 from src.constants import PLUSMINUS
-from IPython.utils.traitlets import HasTraits
-from traitsui.table_column import ObjectColumn
-from traitsui.editors.table_editor import TableEditor
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

@@ -199,7 +199,7 @@ class ArArManager(EnvisageManager):
                                  )
         v = View(Item('engine',
                       show_label=False,
-                      height= -1.0,
+                      height=-1.0,
                       editor=tree_editor
                       ),
                  width=500,

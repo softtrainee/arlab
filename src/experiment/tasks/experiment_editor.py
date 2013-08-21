@@ -15,9 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, Event, Unicode, Bool, Property, Int, on_trait_change
-from traitsui.api import View, Item, UI, UItem, HGroup, spring, VGroup, VSplit, Label
-from pyface.tasks.api import Editor
+from traits.api import Instance, Unicode, Property
+from traitsui.api import View, UItem, VGroup, VSplit, Label
 
 #============= standard library imports ========================
 import os
@@ -38,8 +37,8 @@ class ExperimentEditor(BaseTraitsEditor):
     name = Property(Unicode, depends_on='path')
     tooltip = Property(Unicode, depends_on='path')
 
-    merge_id = Int(0)
-    group = Int(0)
+#     merge_id = Int(0)
+#     group = Int(0)
 
 #     dirty = Bool(False)
 
@@ -47,7 +46,6 @@ class ExperimentEditor(BaseTraitsEditor):
 #        self.control = self._create_control(parent)
     def _dirty_changed(self):
         self.debug('dirty changed {}'.format(self.dirty))
-
 
     def traits_view(self):
 
@@ -222,8 +220,8 @@ class ExperimentEditor(BaseTraitsEditor):
         if self.path:
             name = os.path.basename(self.path)
             name, _ = os.path.splitext(name)
-            if self.merge_id:
-                name = '{}-{:02n}'.format(name, self.merge_id)
+#             if self.merge_id:
+#                 name = '{}-{:02n}'.format(name, self.merge_id)
         else:
             name = 'Untitled'
         return name

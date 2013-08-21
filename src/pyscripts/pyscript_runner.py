@@ -84,11 +84,11 @@ class RemoteResource(object):
         resp = self.handle.ask('Read {}'.format(self.name), verbose=verbose)
         if resp is not None:
             return float(resp)
-        
+
     def get(self):
-        resp=self.read()
+        resp = self.read()
         return resp
-        
+
     def isSet(self):
         resp = self.read()
         if resp is not None:

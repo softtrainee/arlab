@@ -14,7 +14,7 @@
 # limitations under the License.
 #===============================================================================
 from traits.etsconfig.etsconfig import ETSConfig
-ETSConfig.toolkit='qt4'
+ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
 from traits.api import Instance, Button, Property, Bool, Int
 from traitsui.api import View, Item, ButtonEditor

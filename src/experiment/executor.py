@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
-    Instance, Str, Any, on_trait_change, String, List, Unicode, Color, Int
+    Instance, Str, String, List, Color, Int
 # from traitsui.api import View, Item, HGroup, Group, spring
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
@@ -47,14 +47,13 @@ from src.experiment.experimentable import Experimentable
 # from src.ui.thread import Thread
 from src.pyscripts.wait_dialog import WaitDialog
 from src.experiment.automated_run.automated_run import AutomatedRun
-from pyface.constant import CANCEL, NO, YES, OK
+from pyface.constant import CANCEL, NO, YES
 from src.ui.qt.gui import invoke_in_main_thread
 # from src.helpers.ctx_managers import no_update
 from sqlalchemy.orm.exc import NoResultFound
 from src.consumer_mixin import ConsumerMixin, consumable
-from src.codetools.memory_usage import mem_log, mem_dump, mem_break, \
-    mem_available, calc_growth, \
-    measure_type, count_instances, mem_log_func
+from src.codetools.memory_usage import mem_log, mem_break, \
+    mem_available, mem_log_func
 import weakref
 
 BLANK_MESSAGE = '''First "{}" not preceeded by a blank. 
@@ -175,7 +174,11 @@ class ExperimentExecutor(Experimentable):
         bind_preference(self.massspec_importer.db, 'password', '{}.massspec_password'.format(prefid))
 
     def experiment_blob(self):
-        return '{}\n{}'.format(self.experiment_queue.path, self.text)
+        path = self.experiment_queue.path
+        if os.path.isfile(path):
+            with open(self.experiment_queue.path) as fp:
+                text = fp.read()
+                return '{}\n{}'.format(self.experiment_queue.path, text)
 
     def add_backup(self, uuid_str):
         with open(paths.backup_recovery_file, 'a') as fp:
@@ -214,7 +217,7 @@ class ExperimentExecutor(Experimentable):
         arun = self.current_run
 #        arun = self.experiment_queue.current_run
         if style == 'queue':
-            name = os.path.basename(self.path)
+            name = os.path.basename(self.experiment_queue.path)
             name, _ = os.path.splitext(name)
         else:
             name = arun.runid
@@ -327,8 +330,9 @@ class ExperimentExecutor(Experimentable):
         mem_log('exp start')
                     # check for blank before starting the thread
         if self._pre_execute_check():
+            self.stats.reset()
             self.stats.start_timer()
-            self.stats.nruns_finished = 0
+
             self._canceled = False
             self._abort_overlap_signal = Flag()
             self.extraction_state_label = ''
@@ -1044,15 +1048,14 @@ class ExperimentExecutor(Experimentable):
                 self._cancel_thread = t
 #                self.cancel(style='run')
 
-    def _refresh_button_fired(self):
-        q = self.experiment_queue
-        q.initialized = False
-        q.automated_runs = q.executed_runs
-        q.initialized = True
-
-        self.update_needed = True
-        q.executed_runs = []
-
+#     def _refresh_button_fired(self):
+#         q = self.experiment_queue
+#         q.initialized = False
+#         q.automated_runs = q.executed_runs
+#         q.initialized = True
+#
+#         self.update_needed = True
+#         q.executed_runs = []
 
     def _truncate_button_fired(self):
         if self.current_run:

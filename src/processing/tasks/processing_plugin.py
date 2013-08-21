@@ -15,15 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
-from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from envisage.ui.tasks.task_factory import TaskFactory
-from src.processing.processor import Processor
-# from src.processing.tasks.processing_task import ProcessingTask
 from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.schema_addition import SchemaAddition
 from pyface.action.group import Group
+from pyface.tasks.action.schema import SMenu
+#============= standard library imports ========================
+#============= local library imports  ==========================
+
+from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
+from src.processing.processor import Processor
 from src.processing.tasks.processing_actions import IdeogramAction, \
     RecallAction, SpectrumAction, LabnumberEntryAction, \
     EquilibrationInspectorAction, InverseIsochronAction, GroupSelectedAction, \
@@ -33,12 +34,8 @@ from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     FluxAction, SeriesAction, IsotopeEvolutionAction, ICFactorAction, \
     BatchEditAction, RefitIsotopeEvolutionAction, SCLFTableAction
 from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
-from pyface.tasks.action.schema import SMenu
 from src.processing.tasks.figures.auto_figure_preferences import AutoFigurePreferencesPane
-# from launchers.password_gen import args
 
-#============= standard library imports ========================
-#============= local library imports  ==========================
 
 class ProcessingPlugin(BaseTaskPlugin):
     def _service_offers_default(self):

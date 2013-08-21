@@ -97,7 +97,7 @@ class CanvasGraphItem(HasTraits):
         find_min = poly.find_min
         npoints, lens, theta = raster(pts,
                          step=poly.scan_size,
-                         offset= -poly.offset if poly.use_outline else 0,
+                         offset=-poly.offset if poly.use_outline else 0,
                          use_convex_hull=use_convex_hull,
                          find_min=find_min,
                          theta=poly.theta

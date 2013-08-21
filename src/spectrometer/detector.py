@@ -26,7 +26,6 @@ from scipy import optimize
 #============= local library imports  ==========================
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.paths import paths
-import wx
 from src.constants import NULL_STR
 from src.ui.qt.color_square_editor import ColorSquareEditor
 

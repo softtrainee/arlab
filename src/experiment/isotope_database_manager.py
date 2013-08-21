@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, String, Property, Event, \
+from traits.api import Instance, String, Property, Event, \
     cached_property
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================

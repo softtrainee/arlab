@@ -15,15 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Instance
-from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from envisage.ui.tasks.task_factory import TaskFactory
-#============= standard library imports ========================
-#============= local library imports  ==========================
-from src.extraction_line.extraction_line_manager import ExtractionLineManager
-from src.extraction_line.tasks.extraction_line_task import ExtractionLineTask
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
+#============= standard library imports ========================
+#============= local library imports  ==========================
+from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
+from src.extraction_line.extraction_line_manager import ExtractionLineManager
+from src.extraction_line.tasks.extraction_line_task import ExtractionLineTask
 from src.extraction_line.tasks.extraction_line_actions import LoadCanvasAction, \
     RefreshCanvasAction
 

@@ -15,14 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Any, Event, Unicode, Int
-from traitsui.api import View, Item
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
-import hashlib
-import os
-from src.helpers.ctx_managers import no_update
+from traits.api import List, Any, Event, Unicode
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+
 
 class Experimentable(IsotopeDatabaseManager):
     experiment_queues = List
@@ -55,19 +52,19 @@ class Experimentable(IsotopeDatabaseManager):
         for ei, ti in zip(self.experiment_queues, ts):
 #                ei._cached_runs = None
             ei.load(ti)
-            
+
         self.update_needed = True
 #        self._update(all_info=True)
 
     def _update(self, *args, **kw):
         pass
 
-    def _check_for_file_mods(self):
-        path = self.path
-        if path:
-            with open(path, 'r') as f:
-                diskhash = hashlib.sha1(f.read()).hexdigest()
-            return self.text_hash != diskhash
+#     def _check_for_file_mods(self):
+#         path = self.path
+#         if path:
+#             with open(path, 'r') as f:
+#                 diskhash = hashlib.sha1(f.read()).hexdigest()
+#             return self.text_hash != diskhash
 
     def _parse_experiment_file(self, path):
         with open(path, 'r') as f:
@@ -83,15 +80,15 @@ class Experimentable(IsotopeDatabaseManager):
 
                 tis.append(l)
             ts.append(''.join(tis))
-            self.text_hash = hashlib.sha1(a).hexdigest()
-            self.text = a
+#             self.text_hash = hashlib.sha1(a).hexdigest()
+#             self.text = a
             return ts
 
-    def _path_changed(self):
-        if os.path.isfile(self.path):
-            with open(self.path, 'r') as fp:
-                a = fp.read()
-                self.text_hash = hashlib.sha1(a).hexdigest()
-                self.text = a
+#     def _path_changed(self):
+#         if os.path.isfile(self.path):
+#             with open(self.path, 'r') as fp:
+#                 a = fp.read()
+#                 self.text_hash = hashlib.sha1(a).hexdigest()
+#                 self.text = a
 
 #============= EOF =============================================

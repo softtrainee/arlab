@@ -254,7 +254,7 @@ def convert_color(color):
     return color
 
 
-def draw_point(src, pt, color=(255, 0, 0), thickness= -1):
+def draw_point(src, pt, color=(255, 0, 0), thickness=-1):
     '''
     '''
     if isinstance(pt, (tuple, list)):

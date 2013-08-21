@@ -307,7 +307,7 @@ if __name__ == '__main__':
     use_convex_hull = False
     npoints, lens = raster(poly,
                      step=750,
-                     offset= -500,
+                     offset=-500,
                      use_convex_hull=use_convex_hull, find_min=True)
 
     from src.graph.graph import Graph

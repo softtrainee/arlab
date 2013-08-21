@@ -15,18 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
-from src.canvas.canvas2D.scene.scene import Scene
+#============= standard library imports ========================
+from numpy import Inf
 import os
+#============= local library imports  ==========================
+from src.canvas.canvas2D.scene.scene import Scene
 from src.paths import paths
 from src.lasers.stage_managers.stage_map import StageMap
 from src.canvas.canvas2D.scene.primitives.primitives import Circle, \
     LoadIndicator
-from numpy import Inf
-import weakref
-#============= standard library imports ========================
-#============= local library imports  ==========================
 
 class LoadingScene(Scene):
     _xrange = -1, 1

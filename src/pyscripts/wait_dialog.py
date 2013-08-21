@@ -93,8 +93,8 @@ class WaitDialog(Loggable):
 
     def start(self, block=True, evt=None):
         if evt is None:
-            evt=Event()
-            
+            evt = Event()
+
         if evt:
             evt.clear()
             self.end_evt = evt
@@ -102,7 +102,7 @@ class WaitDialog(Loggable):
         self.timer = Timer(1000, self._update_time,
                            delay=1000)
         self._continued = False
-        
+
         if block:
             while not evt.is_set():
                 time.sleep(0.1)
@@ -197,64 +197,64 @@ class WaitDialog(Loggable):
 # #                    handler = WDHandler
 #                    )
 
-from traits.api import HasTraits, Button
-class Demo(HasTraits):
-    test = Button
-    def traits_view(self):
-        v = View('test')
-        return v
-
-    def _test_fired(self):
-        from src.ui.thread import Thread
-        t = Thread(target=self._wait)
-        t.start()
-        self._t = t
-
-    def _wait(self):
-        timeout = 50
-        message = 'foo'
-        evt = Event()
-        wd = WaitDialog(wtime=timeout,
-                            end_evt=evt,
-    #                        parent=self,
-    #                        title='{} - Wait'.format(self.logger_name),
-                            message='Waiting for {:0.1f}  {}'.format(timeout, message)
-                            )
-        invoke_in_main_thread(wd.edit_traits)
-        evt.wait(timeout=timeout + 0.25)
-#        print time.time() - st
-        print wd._canceled
-        print 'c', wd.was_canceled()
-        print 'o', wd.was_continued()
-
-#        wd.edit_traits(kind='livemodal')
-
+# from traits.api import HasTraits, Button
+# class Demo(HasTraits):
+#     test = Button
+#     def traits_view(self):
+#         v = View('test')
+#         return v
 #
-#        from threading import Thread
-#        def wait():
-#            st = time.time()
-#            t = 0
-#            while t < (timeout + 0.25) and not evt.is_set():
-#                time.sleep(0.5)
-#                t = time.time() - st
+#     def _test_fired(self):
+#         from src.ui.thread import Thread
+#         t = Thread(target=self._wait)
+#         t.start()
+#         self._t = t
+#
+#     def _wait(self):
+#         timeout = 50
+#         message = 'foo'
+#         evt = Event()
+#         wd = WaitDialog(wtime=timeout,
+#                             end_evt=evt,
+#     #                        parent=self,
+#     #                        title='{} - Wait'.format(self.logger_name),
+#                             message='Waiting for {:0.1f}  {}'.format(timeout, message)
+#                             )
+#         invoke_in_main_thread(wd.edit_traits)
+#         evt.wait(timeout=timeout + 0.25)
+# #        print time.time() - st
+#         print wd._canceled
+#         print 'c', wd.was_canceled()
+#         print 'o', wd.was_continued()
+#
+# #        wd.edit_traits(kind='livemodal')
+#
 # #
+# #        from threading import Thread
+# #        def wait():
+# #            st = time.time()
+# #            t = 0
+# #            while t < (timeout + 0.25) and not evt.is_set():
+# #                time.sleep(0.5)
+# #                t = time.time() - st
+# # #
+# #
+# #        t = Thread(target=wait)
+# #        t.start()
+# #        t.join()
+#         print 'wati comi'
 #
-#        t = Thread(target=wait)
-#        t.start()
-#        t.join()
-        print 'wati comi'
-
-#        st = time.time()
-#        t = 0
-#        while t < (timeout + 0.25) and not evt.is_set():
-#            time.sleep(0.5)
-#            t = time.time() - st
+# #        st = time.time()
+# #        t = 0
+# #        while t < (timeout + 0.25) and not evt.is_set():
+# #            time.sleep(0.5)
+# #            t = time.time() - st
+# #
+# # #        evt.wait(timeout=timeout + 0.25)
+# #        wd.stop()
 #
-# #        evt.wait(timeout=timeout + 0.25)
-#        wd.stop()
-
-if __name__ == '__main__':
-#     logging_setup('foo')
-    Demo().configure_traits()
+# if __name__ == '__main__':
+# #     logging_setup('foo')
+#     Demo().configure_traits()
 #============= views ===================================
 #============= EOF ====================================

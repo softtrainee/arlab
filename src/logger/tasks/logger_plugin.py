@@ -15,8 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
 from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from src.logger.tasks.logger_task import LoggerTask
 from envisage.ui.tasks.task_factory import TaskFactory

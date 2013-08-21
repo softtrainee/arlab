@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Int, Color, Str, List, Tuple, Event, Bool
-from traitsui.api import View, Item, UItem
+from traits.api import HasTraits, Int, Color, Str, Event, Bool
+from traitsui.api import View, UItem
 from src.lasers.scanner import ApplicationController
 from src.ui.display_editor import DisplayEditor
 from src.deprecate import deprecated

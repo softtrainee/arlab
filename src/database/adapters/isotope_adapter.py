@@ -37,7 +37,7 @@ from src.database.orms.isotope_orm import med_ImageTable, med_SnapshotTable
 
 # proc_
 from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, \
-    proc_DetectorIntercalibrationTable, proc_DetectorIntercalibrationSetTable, proc_SelectedHistoriesTable, \
+    proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
     proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable, \
     proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable, \
     proc_DetectorParamHistoryTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \

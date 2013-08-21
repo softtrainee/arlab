@@ -126,7 +126,7 @@ class KerrDevice(ConfigLoadable):
         return rbits
 
     def _get_io_bits(self):
-        return ['0', # bit 4
+        return ['0',  # bit 4
                 '1',
                 '1',
                 '1',

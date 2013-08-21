@@ -207,7 +207,7 @@ class ExtractSchedule(HasTraits):
                             ),
                      Item('steps',
                           show_label=False,
-                          width= -100,
+                          width=-100,
                           editor=editor),
                      HGroup(Item('add_button'),
                             spring,

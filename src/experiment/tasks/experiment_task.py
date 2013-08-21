@@ -15,21 +15,20 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Any, Bool, Instance, Int
+from traits.api import on_trait_change, Bool, Instance, Int
 # from traitsui.api import View, Item
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
-from pyface.constant import CANCEL, YES, NO
+from pyface.constant import CANCEL, NO
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 import shutil
 import weakref
-import hashlib
 import os
 #============= local library imports  ==========================
 # from src.envisage.tasks.base_task import BaseManagerTask
 from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPane, \
      ControlsPane, ConsolePane, ExplanationPane, WaitPane, IsotopeEvolutionPane, \
-    SummaryPane
+     SummaryPane
 # from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.envisage.tasks.editor_task import EditorTask
 from src.experiment.tasks.experiment_editor import ExperimentEditor
@@ -232,22 +231,32 @@ class ExperimentEditorTask(EditorTask):
         ts.append('\n'.join(tis))
         return ts
 
-    def merge(self):
-        eqs = [self.active_editor.queue]
-        self.active_editor.merge_id = 1
-        self.active_editor.group = self.group_count
-        self.group_count += 1
-        for i, ei in enumerate(self.editor_area.editors):
-            if not ei == self.active_editor:
-                eqs.append(ei.queue)
-                ei.merge_id = i + 2
-                ei.group = self.group_count
+    def reset_queues(self):
+        for editor in self.editor_area.editors:
+            editor.queue.reset()
 
-        path = self.save_file_dialog()
-        if path:
-            self.active_editor.save(path, eqs)
-            for ei in self.editor_area.editors:
-                ei.path = path
+        # reset the experimentors db session
+        # since the executor session will have made changes
+        self.manager.update_info(reset_db=True)
+        self.manager.executor.end_at_run_completion = False
+        self.manager.stats.reset()
+
+#     def merge(self):
+#         eqs = [self.active_editor.queue]
+#         self.active_editor.merge_id = 1
+#         self.active_editor.group = self.group_count
+#         self.group_count += 1
+#         for i, ei in enumerate(self.editor_area.editors):
+#             if not ei == self.active_editor:
+#                 eqs.append(ei.queue)
+#                 ei.merge_id = i + 2
+#                 ei.group = self.group_count
+#
+#         path = self.save_file_dialog()
+#         if path:
+#             self.active_editor.save(path, eqs)
+#             for ei in self.editor_area.editors:
+#                 ei.path = path
 
     def new(self):
         editor = ExperimentEditor()
@@ -413,41 +422,56 @@ class ExperimentEditorTask(EditorTask):
                 except AttributeError:
                     pass
                 break
+    def _backup_editor(self, editor):
+        p = editor.path
+        p = add_extension(p, '.txt')
+
+        if os.path.isfile(p):
+            # make a backup copy of the original experiment file
+            shutil.copyfile(p, '{}.orig'.format(p))
 
     @on_trait_change('manager:execute_event')
     def _execute(self):
-        editor = self.active_editor
-        if editor is None:
-            if self.editor_area.editors:
-                editor = self.editor_area.editors[0]
-        if editor:
-            p = editor.path
-#             if editor.dirty:
-#                 n, _ = os.path.splitext(os.path.basename(p))
-#                 msg = '{} has been modified.\n Save changes?'.format(n)
-#                 if self.confirmation_dialog(msg):
-#                     self._save_file(p)
-#                 else:
-#                     return
+        if self.editor_area.editors:
+            for ei in self.editor_area.editors:
+                self._backup_editor(ei)
 
-            p = add_extension(p, '.txt')
+            qs = [ei.queue for ei in self.editor_area.editors
+                    if ei != self.active_editor]
+            if self.active_editor:
+                qs.insert(0, self.active_editor.queue)
 
-            if os.path.isfile(p):
-                # make a backup copy of the original experiment file
-                shutil.copyfile(p, '{}.orig'.format(p))
+            # launch execution thread
+            # if successful open an auto figure task
+            if self.manager.execute_queues(qs):
+                self._open_auto_figure()
 
-                group = editor.group
-                min_idx = editor.merge_id
-                text = open(p, 'r').read()
-                hash_val = hashlib.sha1(text).hexdigest()
-                qs = [ei.queue
-                        for ei in self.editor_area.editors
-                            if ei.group == group and ei.merge_id >= min_idx]
-
-                # launch execution thread
-                # if successful open an auto figure task
-                if self.manager.execute_queues(qs, p, text, hash_val):
-                    self._open_auto_figure()
+#         editor = self.active_editor
+#         if editor is None:
+#             if self.editor_area.editors:
+#                 editor = self.editor_area.editors[0]
+#
+#         if editor:
+#             p = editor.path
+#             p = add_extension(p, '.txt')
+#
+#             if os.path.isfile(p):
+#                 # make a backup copy of the original experiment file
+#                 shutil.copyfile(p, '{}.orig'.format(p))
+#
+# #                 group = editor.group
+# #                 min_idx = editor.merge_id
+# #                 text = open(p, 'r').read()
+# #                 hash_val = hashlib.sha1(text).hexdigest()
+# #                 qs = [ei.queue
+# #                         for ei in self.editor_area.editors
+# #                             if ei.group == group and ei.merge_id >= min_idx]
+#                 qs = [ei.queue for ei in self.editor_area.editors]
+#                 # launch execution thread
+#                 # if successful open an auto figure task
+# #                 if self.manager.execute_queues(qs, p, text, hash_val):
+#                 if self.manager.execute_queues(qs, p):
+#                     self._open_auto_figure()
 
     @on_trait_change('manager:[save_event, executor:auto_save_event]')
     def _save_queue(self):

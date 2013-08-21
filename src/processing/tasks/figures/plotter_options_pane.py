@@ -34,7 +34,7 @@ class PlotterOptionsPane(TraitsDockPane):
                  UItem('pom',
                        editor=InstanceEditor(),
                        style='custom',
-                       width= -400
+                       width=-400
                        )
 #                 HGroup(
 #                    UItem('plotter_options',

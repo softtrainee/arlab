@@ -45,7 +45,7 @@ class Gauge(HasTraits):
     width = Int(100)
     def traits_view(self):
         v = View(HGroup(Item('display_name', show_label=False, style='readonly',
-                             width= -30,
+                             width=-30,
                              ),
                          Item('pressure',
                               format_str='%0.2e',

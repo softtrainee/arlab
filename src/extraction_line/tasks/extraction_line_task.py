@@ -15,15 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-
-from src.extraction_line.tasks.extraction_line_pane import CanvasPane, GaugePane, \
-    ExplanationPane
 from pyface.tasks.task_layout import TaskLayout, PaneItem
-from src.envisage.tasks.base_task import BaseHardwareTask
-from pyface.tasks.action.schema import SMenu
-from src.extraction_line.tasks.extraction_line_actions import RefreshCanvasAction
+
+# from pyface.tasks.action.schema import SMenu
+# from src.extraction_line.tasks.extraction_line_actions import RefreshCanvasAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.extraction_line.tasks.extraction_line_pane import CanvasPane, GaugePane, \
+    ExplanationPane
+from src.envisage.tasks.base_task import BaseHardwareTask
 
 class ExtractionLineTask(BaseHardwareTask):
     id = 'pychron.extraction_line'

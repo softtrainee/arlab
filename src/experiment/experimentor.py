@@ -15,9 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Instance, List, Property, \
-    on_trait_change, Bool, Any, Event, Button
-from pyface.file_dialog import FileDialog
+from traits.api import Instance, List, on_trait_change, Bool, Event
 # from traitsui.api import View, Item
 # from src.loggable import Loggable
 #============= standard library imports ========================
@@ -30,13 +28,10 @@ from src.experiment.factory import ExperimentFactory
 from src.constants import ALPHAS, NULL_STR
 from src.experiment.stats import StatsGroup
 from src.experiment.executor import ExperimentExecutor
-from src.paths import paths
 from src.experiment.utilities.file_listener import FileListener
-from src.experiment.experimentable import Experimentable
 from src.experiment.utilities.identifier import convert_identifier, \
     ANALYSIS_MAPPING
 from src.deprecate import deprecated
-from src.codetools.simple_timeit import timethis
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 LAlphas = list(ALPHAS)
 
@@ -127,7 +122,10 @@ class Experimentor(IsotopeDatabaseManager):
         if self.filelistener:
             self.filelistener.stop()
 
-    def update_info(self):
+    def update_info(self, reset_db=False):
+        if reset_db:
+            self.db.reset()
+
         self._update()
 #===============================================================================
 # info update
@@ -216,7 +214,6 @@ class Experimentor(IsotopeDatabaseManager):
             return sample, irradiationpos
 
         db = self.db
-#         oans = ans[:]
         groups = self._group_analyses(ans, exclude=exclude)
         for ln, analyses in groups:
             ln, special = get_is_special(ln)
@@ -304,18 +301,17 @@ class Experimentor(IsotopeDatabaseManager):
 
         return aliquot_start
 
-    def execute_queues(self, queues, path, text, text_hash):
+#     def execute_queues(self, queues, path, text, text_hash):
+    def execute_queues(self, queues):
         self.debug('setup executor')
 
         self.executor.trait_set(
                                 experiment_queues=queues,
                                 experiment_queue=queues[0],
-                                text=text,
-                                path=path,
-
-                                text_hash=text_hash,
+#                                 path=path,
                                 stats=self.stats,
-
+#                                 text=text,
+#                                 text_hash=text_hash,
                                 )
 
         return self.executor.execute()
@@ -375,20 +371,20 @@ class Experimentor(IsotopeDatabaseManager):
     @on_trait_change('executor:update_needed')
     def _refresh1(self):
         self.debug('update needed fired')
-        
+
         self.executor.clear_run_states()
         self.update_info()
 
     @on_trait_change('executor:non_clear_update_needed')
     def _refresh2(self):
         self.debug('non clear update needed fired')
-        
+
         self.update_info()
 
     @on_trait_change('experiment_factory:run_factory:update_info_needed')
     def _refresh3(self):
         self.debug('update info needed fired')
-        
+
         self.update_info()
         executor = self.executor
         executor.clear_run_states()
