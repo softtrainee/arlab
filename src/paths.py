@@ -119,7 +119,7 @@ class Paths():
     default_workspace_dir = None
     workspace_root_dir = None
     spectrometer_scans_dir = None
-    processing_dir = None
+    processed_dir = None
     image_cache_dir = None
     default_cache = None
     # initialization_dir = None
@@ -241,7 +241,7 @@ class Paths():
         self.isotope_dir = join(self.data_dir, 'isotopes')
         self.workspace_root_dir = join(self.data_dir, 'workspaces')
         self.default_workspace_dir = join(self.workspace_root_dir, 'collection')
-        self.processing_dir = join(self.data_dir, 'processing')
+        self.processed_dir = join(self.data_dir, 'processed')
         # initialization_dir = join(setup_dir, 'initializations')
         # device_creator_dir = join(device_dir, 'device_creator')
         self.image_cache_dir = join(self.data_dir, 'image_cache')

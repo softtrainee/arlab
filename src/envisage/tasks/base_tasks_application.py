@@ -29,10 +29,11 @@ class BaseTasksApplication(TasksApplication, Loggable):
     def start(self):
         if globalv.open_logger_on_launch:
             self._load_state()
-            win = self.create_window(TaskWindowLayout('pychron.logger',
-                                                      ),
-                                     )
-            win.open()
+            self.get_task('pychron.logger')
+#             win = self.create_window(TaskWindowLayout('pychron.logger',
+#                                                       ),
+#                                      )
+#             win.open()
         return super(BaseTasksApplication, self).start()
 
     def get_task(self, tid, activate=False):

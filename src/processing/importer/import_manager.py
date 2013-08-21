@@ -28,9 +28,10 @@ from traits.api import HasTraits, Enum, Instance, Str, Password, \
 from src.processing.importer.mass_spec_extractor import Extractor, \
     MassSpecExtractor
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
-from src.constants import NULL_STR, MINNA_BLUFF_IRRADIATIONS
+from src.constants import NULL_STR
 from collections import namedtuple
 import time
+from threading import Thread
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -150,25 +151,14 @@ class ImportManager(IsotopeDatabaseManager):
 
     _import_thread = None
     def _import_button_fired(self):
+        self.do_import()
+
+    def do_import(self, new_thread=True):
 #        self.import_kind = 'irradiation'
         if self.import_kind != NULL_STR:
-#            if self.import_kind == 'rid_list':
-#                '''
-#                    load the import list
-#                '''
-#                self.selected = self.names
-#            else:
-#                self.selected = [records('NM-216')]
             selected = None
             if self.selected:
                 selected = [(si.name, tuple()) for si in self.selected]
-
-#             selected = [
-#                         ('NM-205', ['E', ]),
-# #                        ('NM-205', ['F' ]),
-#                         ('NM-256', ['E', 'F', ])
-#                         ]
-#            selected = MINNA_BLUFF_IRRADIATIONS
 
             if selected:
 #                if self._import_thread and self._import_thread.isRunning():
@@ -186,13 +176,15 @@ class ImportManager(IsotopeDatabaseManager):
 
                     n = len(selected) * 2
                     pd = self.open_progress(n=n)
-                    from src.ui.thread import Thread
-#                    self._do_import(selected, pd)
-                    t = Thread(target=self._do_import, args=(selected, pd))
-                    t.start()
-                    self._import_thread = t
 
-
+                    if new_thread:
+                        t = Thread(target=self._do_import, args=(selected, pd))
+                        t.start()
+                        return t
+                    else:
+                        self._do_import(selected, pd)
+                        return True
+#                     self._import_thread = t
 
     def _data_source_changed(self):
         if self.data_source == 'MassSpec':

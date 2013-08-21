@@ -201,6 +201,8 @@ class SmartProjectAction(Action):
     accelerator = 'Ctrl+P'
     def perform(self, event):
         app = event.task.window.application
-        app.get_task('pychron.processing.smart_project')
+        task = app.get_task('pychron.processing.smart_project')
+
+        task.process_project_file()
 
 #============= EOF =============================================

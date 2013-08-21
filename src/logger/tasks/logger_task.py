@@ -20,6 +20,7 @@ from traitsui.api import View, Item
 from src.envisage.tasks.base_task import BaseTask
 from src.logger.tasks.logger_panes import DisplayPane
 from src.displays.gdisplays import gLoggerDisplay
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -27,4 +28,15 @@ class LoggerTask(BaseTask):
     name = 'Logger'
     def create_central_pane(self):
         return DisplayPane(logger=gLoggerDisplay)
+
+    def activated(self):
+        app = self.window.application
+
+        # if a logger window is already open close this window
+        for win in app.windows:
+            if win.active_task:
+                if win.active_task.id == 'pychron.logger' :
+                    do_later(self.window.close)
+                    break
+
 #============= EOF =============================================
