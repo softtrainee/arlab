@@ -15,7 +15,6 @@
 #===============================================================================
 
 
-
 #============= enthought library imports =======================
 from traits.api import Any
 from pyface.action.api import Action

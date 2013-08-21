@@ -40,7 +40,7 @@ from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
 from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
 from src.database.orms.isotope_orm import gen_ProjectTable, gen_SampleTable
 # from src.ui.thread import Thread
-from pyface.timer.do_later import do_later
+# from pyface.timer.do_later import do_later
 
 from src.managers.data_managers.xls_data_manager import XLSDataManager
 
@@ -501,29 +501,33 @@ class LabnumberEntry(IsotopeDatabaseManager):
                 self.warning_dialog('Level {} already exists for Irradiation {}'.format(self.irradiation))
 
     def _irradiation_changed(self):
-        self.irradiated_positions = []
+        self.level = ''
+#         self.irradiated_positions = []
 
-    _level_thread = None
+
+#     _level_thread = None
     def _level_changed(self):
 #         if self._level_thread:
 #             if self._level_thread.isRunning():
 #                 return
-
         self.debug('level changed')
+        self.irradiated_positions = []
+        if self.level:
+            self._update_level()
 
-        from threading import Thread
-        t = Thread(target=self._update_level)
-        t.start()
+#         from threading import Thread
+#         t = Thread(target=self._update_level)
+#         t.start()
 #         self._level_thread = t
 #         t.join()
 
     def _update_level(self, name=None):
+
         if name is None:
             name = self.level
 
-        self.irradiated_positions = []
-
         irrad = self.db.get_irradiation(self.irradiation)
+
         if not irrad:
             self.debug('no irradiation for {}'.format(self.irradiation))
             return
@@ -531,12 +535,13 @@ class LabnumberEntry(IsotopeDatabaseManager):
         level = next((li for li in irrad.levels if li.name == name), None)
         self.debug('dblevel {} for self.level {}'.format(level, name))
         if level:
+            self.debug('holder {}'.format(level.holder))
             if level.holder:
                 self._load_holder_positions(level.holder)
 
             positions = level.positions
             n = len(self.irradiated_positions)
-
+            self.debug('positions {} irrad position {}'.format(n, len(self.irradiated_positions)))
             if positions:
                 for pi in positions:
                     hi = pi.position - 1
@@ -591,7 +596,8 @@ class LabnumberEntry(IsotopeDatabaseManager):
             if material:
                 ir.material = material.name
 
-        ir.weight = str(dbpos.weight)
+        if dbpos.weight:
+            ir.weight = str(dbpos.weight)
 
         note = ln.note
         if note:

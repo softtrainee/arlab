@@ -82,7 +82,7 @@ class ExperimentExecutor(Experimentable):
     delay_between_runs_readback = Float
     delaying_between_runs = Bool(False)
     resume_runs = Bool(False)
-    changed_flag = Bool(False)
+#     changed_flag = Bool(False)
 
     show_sample_map = Button
     execute_button = Event
@@ -141,14 +141,14 @@ class ExperimentExecutor(Experimentable):
     _abort_overlap_signal = None
 #     _triggered_run = False
 
-    _queue_modified = False
-    _queue_dirty = False
+    queue_modified = False
+#     _queue_dirty = False
 
     auto_save_delay = Int(30)
     use_auto_save = Bool(True)
 
-    def reset_queue(self):
-        self._queue_modified = True
+    def set_queue_modified(self):
+        self.queue_modified = True
 
     def isAlive(self):
         return self._alive
@@ -691,11 +691,11 @@ class ExperimentExecutor(Experimentable):
                 # @todo: add preferences for timeout and whether to autosave or stop
                 self._wait_for_save()
 
-                if self._queue_modified:
+                if self.queue_modified:
                     self.debug('Queue modified. making new run generator')
                     rgen, nruns = exp.new_runs_generator()
                     cnt = 0
-                    self._queue_modified = False
+                    self.queue_modified = False
                     force_delay = True
 
                 if force_delay or \
@@ -982,7 +982,10 @@ class ExperimentExecutor(Experimentable):
 
                 run = exp.executed_runs[0]
                 exp.automated_runs.insert(0, run)
-                self._queue_modified = True
+
+                # experimentor handles the queue modified
+                # resets the database and updates info
+                self.queue_modified = True
 
             else:
                 self.info('executed N {} {}s'.format(action.count + 1,

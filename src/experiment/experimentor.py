@@ -82,7 +82,7 @@ class Experimentor(IsotopeDatabaseManager):
         if self.executor.isAlive():
             self.debug('Queue modified. Reset run generator')
 #             self.executor.queue_modified = True
-            self.executor.reset_queue()
+            self.executor.set_queue_modified()
 
     def refresh_executable(self, qs=None):
         if qs is None:
@@ -371,26 +371,26 @@ class Experimentor(IsotopeDatabaseManager):
     @on_trait_change('executor:update_needed')
     def _refresh1(self):
         self.debug('update needed fired')
-
         self.executor.clear_run_states()
         self.update_info()
 
     @on_trait_change('executor:non_clear_update_needed')
     def _refresh2(self):
         self.debug('non clear update needed fired')
-
         self.update_info()
 
     @on_trait_change('experiment_factory:run_factory:update_info_needed')
     def _refresh3(self):
         self.debug('update info needed fired')
-
         self.update_info()
-        executor = self.executor
-        executor.clear_run_states()
-#         if executor.isAlive():
-#             executor.end_at_run_completion = True
-#             executor.changed_flag = True
+        self.executor.clear_run_states()
+
+    @on_trait_change('executor:queue_modified')
+    def _refresh5(self, new):
+        if new:
+            self.debug('queue modified fired')
+            self.update_info(reset_db=True)
+
     @on_trait_change('experiment_factory:run_factory:refresh_table_needed')
     def _refresh4(self):
         for qi in self.experiment_queues:
