@@ -120,7 +120,7 @@ class MeasurementPyScript(ValvePyScript):
 
     @count_verbose_skip
     @command_register
-    def baselines(self, ncounts=1, cycles=5, mass=None, detector='',
+    def baselines(self, ncounts=1, mass=None, detector='',
                   integration_time=1.04,
                   settling_time=4, calc_time=False):
         '''
@@ -131,9 +131,6 @@ class MeasurementPyScript(ValvePyScript):
 
         if calc_time:
             ns = ncounts
-            if detector:
-                ns *= cycles
-
             d = ns * integration_time * ESTIMATED_DURATION_FF + settling_time
             self._estimated_duration += d
             return
@@ -146,7 +143,7 @@ class MeasurementPyScript(ValvePyScript):
                                         detector,
                                         settling_time=settling_time,
                                         series=self._series_count,
-                                        nintegrations=cycles):
+                                        ):
 #
             self.cancel()
         self._series_count += 1

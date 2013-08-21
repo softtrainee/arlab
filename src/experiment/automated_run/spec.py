@@ -136,8 +136,9 @@ class AutomatedRunSpec(Loggable):
                         warned.append(name)
 
                     script, ok = script_context[name]
-                    d = script.get_estimated_duration()
-                    s += d
+                    if si in ('measurement_script','extraction_script'):
+                        d = script.get_estimated_duration()
+                        s += d
                     script_oks.append(ok)
                 else:
                     if arun is None:
@@ -152,8 +153,9 @@ class AutomatedRunSpec(Loggable):
                         script_context[name] = script, ok
                         if ok:
                             arun.setup_context(script)
-                            s += script.calculate_estimated_duration()
-
+                            if si in ('measurement_script','extraction_script'):
+                                d = script.calculate_estimated_duration()
+                                s += d
                     elif arun.invalid_script:
                         script_oks.append(False)
             if arun:

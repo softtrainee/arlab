@@ -368,8 +368,8 @@ class ExperimentExecutor(Experimentable):
 # pre execute checking
 #===============================================================================
     def _pre_execute_check(self, inform=True):
-        self.debug('********************** NOT DOING PRE EXECUTE CHECK ')
-        return True
+#         self.debug('********************** NOT DOING PRE EXECUTE CHECK ')
+#         return True
 
         if self._check_memory():
             return
@@ -390,11 +390,11 @@ class ExperimentExecutor(Experimentable):
         if not self._check_managers(inform=inform):
             return
 
-
-        if self.monitor is None:
-            self.warning_dialog('Canceled! Error in the AutomatedRunMonitor configuration file')
-            self.info('experiment canceled because automated_run_monitor is not setup properly')
-            return
+#         if self.monitor is None:
+#             self.warning('No automated run monitor')
+#             self.warning_dialog('Canceled! Error in the AutomatedRunMonitor configuration file')
+#             self.info('experiment canceled because automated_run_monitor is not setup properly')
+#             return
 
         return True
 
@@ -1153,6 +1153,8 @@ class ExperimentExecutor(Experimentable):
             isok = mon.load()
             if isok:
                 return mon
+            else:
+                self.warning('no automated run monitor avaliable. Make sure config file is located at setupfiles/monitors/automated_run_monitor.cfg')
 
     def _pyscript_runner_default(self):
         if self.mode == 'client':
