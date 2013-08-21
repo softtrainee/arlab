@@ -42,8 +42,8 @@ def logging_setup(name, **kw):
     from src.helpers.archiver import Archiver
 
     # set up deprecation warnings
-#    import warnings
-#    warnings.simplefilter('default')
+#     import warnings
+#     warnings.simplefilter('default')
 
     # make sure we have a log directory
     bdir = os.path.join(paths.root, 'logs')
@@ -71,7 +71,8 @@ def logging_setup(name, **kw):
 #    if sys.version.split(' ')[0] < '2.4.0':
 #        logging.basicConfig()
 #    else:
-    root = logging.getLogger('')
+    root = logging.getLogger()
+    root.setLevel(gLEVEL)
     shandler = logging.StreamHandler()
 # #
 # # #        global rhandler

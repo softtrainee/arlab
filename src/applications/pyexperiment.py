@@ -25,9 +25,12 @@ from pyface.tasks.task_window_layout import TaskWindowLayout
 class PyExperiment(PychronApplication):
     id = 'pychron.experiment.application'
     name = 'pyExperiment'
-    default_layout = [
-                    TaskWindowLayout('tasks.hardware',),
-#                     TaskWindowLayout('pychron.experiment',),
-#                       TaskWindowLayout('pychron.spectrometer',),
-                      ]
+#     default_layout = [
+#                      TaskWindowLayout('tasks.hardware',),
+# #                     TaskWindowLayout('pychron.experiment',),
+# #                       TaskWindowLayout('pychron.spectrometer',),
+#                       ]
+#     def _default_layout_default(self):
+#         pass
+#         self.get_
 #============= EOF =============================================
