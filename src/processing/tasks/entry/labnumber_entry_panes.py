@@ -156,40 +156,40 @@ class IrradiationPane(TraitsDockPane):
     id = 'pychron.labnumber.irradiation'
     def traits_view(self):
         v = View(
-                            HGroup(
-                                   VGroup(HGroup(Item('irradiation',
-                                                      editor=EnumEditor(name='irradiations')
-                                                      ),
-                                                 Item('edit_irradiation_button',
-                                                      enabled_when='edit_irradiation_enabled',
-                                                      show_label=False)
-                                                 ),
-                                          HGroup(Item('level', editor=EnumEditor(name='levels')),
-                                                 spring,
-                                                 Item('edit_level_button',
-                                                      enabled_when='edit_level_enabled',
-                                                      show_label=False)
-                                                 ),
-                                          Item('add_irradiation_button', show_label=False),
-                                          Item('add_level_button', show_label=False),
- #                                        Item('irradiation_tray',
- #                                             editor=EnumEditor(name='irradiation_trays')
- #                                             )
-                                          ),
-                                   spring,
-                                   VGroup(
-                                          Item('tray_name', style='readonly', show_label=False),
-                                          Item('irradiation_tray_image',
-                                               editor=ImageEditor(),
-                                               height=200,
-                                               width=200,
-                                               style='custom',
-                                               show_label=False),
-                                          ),
+                   HGroup(
+                          VGroup(HGroup(Item('irradiation',
+                                             editor=EnumEditor(name='irradiations')
+                                             ),
+                                        Item('edit_irradiation_button',
+                                             enabled_when='edit_irradiation_enabled',
+                                             show_label=False)
                                         ),
+                                 HGroup(Item('level', editor=EnumEditor(name='levels')),
+                                        spring,
+                                        Item('edit_level_button',
+                                             enabled_when='edit_level_enabled',
+                                             show_label=False)
+                                        ),
+                                 Item('add_irradiation_button', show_label=False),
+                                 Item('add_level_button', show_label=False),
+#                                        Item('irradiation_tray',
+#                                             editor=EnumEditor(name='irradiation_trays')
+#                                             )
+                                 ),
+                          spring,
+                          VGroup(
+                                 Item('tray_name', style='readonly', show_label=False),
+#                                  Item('irradiation_tray_image',
+#                                       editor=ImageEditor(),
+#                                       height=100,
+#                                       width=200,
+#                                       style='custom',
+#                                       show_label=False),
+                                 ),
+                               ),
 #                            label='Irradiation',
 #                            show_border=True
-                            )
+                   )
         return v
 
 #     def traits_view(self):

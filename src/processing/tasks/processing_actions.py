@@ -107,16 +107,17 @@ class EquilibrationInspectorAction(Action):
 class FigureAction(Action):
     method = Str
     def perform(self, event):
-
-        task = event.task
-        if not task.id == 'pychron.processing.figures':
-            app = task.window.application
-            win = app.create_window(TaskWindowLayout(
-                                               'pychron.processing.figures'
-                                               )
-                              )
-            win.open()
-            task = win.active_task
+        app = event.task.window.application
+        task = app.get_task('pychron.processing.figures')
+#         task = event.task
+#         if not task.id == 'pychron.processing.figures':
+#             app = task.window.application
+#             win = app.create_window(TaskWindowLayout(
+#                                                'pychron.processing.figures'
+#                                                )
+#                               )
+#             win.open()
+#             task = win.active_task
 
         if hasattr(task, self.method):
             getattr(task, self.method)()
@@ -157,18 +158,19 @@ class RecallAction(Action):
     name = 'Recall'
     accelerator = 'Ctrl+R'
     def perform(self, event):
-
-        task = event.task
-        if not task.id == 'pychron.recall':
-            app = task.window.application
-            win = app.create_window(TaskWindowLayout(
-                                               'pychron.recall'
-                                               )
-                              )
-            win.open()
-            task = win.active_task
-        else:
-            task.window.activate()
+        app = event.task.window.application
+        app.get_task('pychron.recall')
+#         task = event.task
+#         if not task.id == 'pychron.recall':
+#             app = task.window.application
+#             win = app.create_window(TaskWindowLayout(
+#                                                'pychron.recall'
+#                                                )
+#                               )
+#             win.open()
+#             task = win.active_task
+#         else:
+#             task.window.activate()
 
 
 class LabnumberEntryAction(Action):
@@ -178,17 +180,27 @@ class LabnumberEntryAction(Action):
     task_id = 'pychron.labnumber_entry'
 
     def perform(self, event):
-        task = event.task
-        if not task.id == 'pychron.entry':
-            app = task.window.application
-            win = app.create_window(TaskWindowLayout(
-                                               'pychron.entry'
-                                               )
-                              )
-            win.open()
-        else:
-            task.window.activate()
+        pid = 'pychron.entry'
+        app = event.task.window.application
+        app.get_task(pid)
+
+#         task = event.task
+#         if not task.id == 'pychron.entry':
+#             app = task.window.application
+#             win = app.create_window(TaskWindowLayout(
+#                                                'pychron.entry'
+#                                                )
+#                               )
+#             win.open()
+#         else:
+#             task.window.activate()
 
 
+class SmartProjectAction(Action):
+    name = 'Smart Project'
+    accelerator = 'Ctrl+P'
+    def perform(self, event):
+        app = event.task.window.application
+        app.get_task('pychron.processing.smart_project')
 
 #============= EOF =============================================

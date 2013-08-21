@@ -28,13 +28,15 @@ from src.processing.processor import Processor
 from src.processing.tasks.processing_actions import IdeogramAction, \
     RecallAction, SpectrumAction, LabnumberEntryAction, \
     EquilibrationInspectorAction, InverseIsochronAction, GroupSelectedAction, \
-    GroupbyAliquotAction, GroupbyLabnumberAction, ClearGroupAction
+    GroupbyAliquotAction, GroupbyLabnumberAction, ClearGroupAction, \
+    SmartProjectAction
 
 from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     FluxAction, SeriesAction, IsotopeEvolutionAction, ICFactorAction, \
     BatchEditAction, RefitIsotopeEvolutionAction, SCLFTableAction
 from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
 from src.processing.tasks.figures.auto_figure_preferences import AutoFigurePreferencesPane
+from src.processing.tasks.smart_project.smart_project_task import SmartProjectTask
 
 
 class ProcessingPlugin(BaseTaskPlugin):
@@ -95,7 +97,7 @@ class ProcessingPlugin(BaseTaskPlugin):
                    ('data', data_menu, 'MenuBar',
                     {'before':'Tools', 'after':'View'}),
                    ('grouping_group', grouping_group, 'MenuBar/Data'),
-
+                   ('smart_project', SmartProjectAction, 'MenuBar/File')
                    ]),
                 self._make_task_extension([
                    ('optimal_equilibration', CalcOptimalEquilibrationAction, 'MenuBar/Tools')
@@ -125,6 +127,7 @@ class ProcessingPlugin(BaseTaskPlugin):
                         ('pychron.processing.figures', self._figure_task_factory, 'Figures'),
                         ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher'),
                         ('pychron.processing.auto_figure', self._auto_figure_task_factory, 'AutoFigure'),
+                        ('pychron.processing.smart_project', self._smart_project_task_factory, 'SmartProject'),
                         )
                 ]
 
@@ -174,6 +177,9 @@ class ProcessingPlugin(BaseTaskPlugin):
     def _publisher_task_factory(self):
         from src.processing.tasks.publisher.publisher_task import PublisherTask
         return PublisherTask(manager=self._processor_factory())
+
+    def _smart_project_task_factory(self):
+        return SmartProjectTask(manager=self._processor_factory())
 #    def _task_factory(self):
 # #        processor = self.application.get_service(Processor)
 #        return ProcessingTask(manager=self._processor_factory())

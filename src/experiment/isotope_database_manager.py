@@ -199,6 +199,7 @@ class IsotopeDatabaseManager(Manager):
     #             r = [NULL_STR] + sorted([str(ri.name) for ri in irrad.levels])
                 r = sorted([str(ri.name) for ri in irrad.levels
                                             if ri.name])
+
                 if r and not self.level:
                     self.level = r[0]
     #            if r and not self.level:
