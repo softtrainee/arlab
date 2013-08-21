@@ -269,18 +269,18 @@ class Ideogram(Plotter):
         nages = aux_namespace['nages']
         nerrors = aux_namespace['nerrors']
         start = aux_namespace['start']
-        
+
         n = zip(nages, nerrors, analyses)
         aages, xerrs, analyses = zip(*sorted(n))
         maa = start + len(aages)
         age_ys = linspace(start, maa, len(aages))
 
 #         tt = [ai.timestamp for ai in self.analyses]
-        ts=[ai.timestamp for ai in analyses]
-#        ts = array(ts) 
+        ts = [ai.timestamp for ai in analyses]
+#        ts = array(ts)
 #        ts-=min(ts)
 #        ts/=((max(ts)-min(ts))*.75)
-  
+
         self._add_aux_plot(g, aages, age_ys, xerrs, None, group_id,
                                value_format=lambda x: '{:d}'.format(int(x)),
                                additional_info=lambda x: x.age_string,
@@ -461,7 +461,7 @@ class Ideogram(Plotter):
                                    plotid=plotid,
                                    **kw
                                    )
-        
+
         if xerrors and x_error:
             self._add_error_bars(scatter, xerrors, 'x', 1)
 

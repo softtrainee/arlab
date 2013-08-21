@@ -178,10 +178,10 @@ class AutomatedRunFactory(Viewable):
 
     def load_templates(self):
         self.templates = self._get_templates()
-    
+
     def load_patterns(self, ps):
-        self.patterns=self._get_patterns(ps)
-        
+        self.patterns = self._get_patterns(ps)
+
     def use_frequency(self):
         return self.labnumber in ANALYSIS_MAPPING and self.frequency
 
@@ -293,12 +293,12 @@ class AutomatedRunFactory(Viewable):
     def _new_template(self):
         template = IncrementalHeatTemplate()
         if self._use_template():
-            t=self.template
+            t = self.template
             if not t.endswith('.txt'):
-                t='{}.txt'.format(t)
-            t=os.path.join(paths.incremental_heat_template_dir, t)
+                t = '{}.txt'.format(t)
+            t = os.path.join(paths.incremental_heat_template_dir, t)
             template.load(t)
-            
+
         return template
 
     def _render_template(self, cnt):
@@ -821,7 +821,7 @@ post_equilibration_script:name
 
     def _get_edit_template_label(self):
         return 'Edit' if self._use_template() else 'New'
-    
+
     def _get_patterns(self, ps):
         p = paths.pattern_dir
         extension = '.lp'
@@ -838,7 +838,7 @@ post_equilibration_script:name
             self.template = 'Step Heat Template'
 
         return ['Step Heat Template', LINE_STR] + temps
-    
+
     def _aliquot_changed(self):
         if self.edit_mode:
             for si in self._selected_runs:

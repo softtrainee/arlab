@@ -292,7 +292,7 @@ class IdeogramTable(PDFTable):
         df = 7
         for v in ('Constants used', 'Atmospheric argon ratios'):
             row = FooterRow(fontsize=df)
-            row.add_item(value=v, span= -1)
+            row.add_item(value=v, span=-1)
             rows.append(row)
 
         for n, d, v, e, r in (
@@ -309,11 +309,11 @@ class IdeogramTable(PDFTable):
                          )
             row.add_item(value=u'{} {}{}'.format(v, PLUSMINUS, e),
                          span=2)
-            row.add_item(value=r, span= -1)
+            row.add_item(value=r, span=-1)
             rows.append(row)
 
         row = FooterRow(fontsize=df)
-        row.add_item(value='Interferring isotope production ratios', span= -1)
+        row.add_item(value='Interferring isotope production ratios', span=-1)
         rows.append(row)
         for n, d, s, v, e, r in (
                           (40, 39, 'K'  , 295.5     , 0.5   , 'Nier (1950)'),
@@ -333,11 +333,11 @@ class IdeogramTable(PDFTable):
                          )
             row.add_item(value=u'{} {}{}'.format(v, PLUSMINUS, e),
                          span=2)
-            row.add_item(value=r, span= -1)
+            row.add_item(value=r, span=-1)
             rows.append(row)
 
         row = FooterRow(fontsize=df)
-        row.add_item(value='Decay constants', span= -1)
+        row.add_item(value='Decay constants', span=-1)
         rows.append(row)
 
         for i, E, dl, v, e, r in (
@@ -349,7 +349,7 @@ class IdeogramTable(PDFTable):
             row = FooterRow(fontsize=df)
             row.add_item(value=u'{}{} {}'.format(Superscript(i), E, dl), span=3)
             row.add_item(value=u'{} {}{} a{}'.format(v, PLUSMINUS, e, Superscript(-1)), span=2)
-            row.add_item(value=r, span= -1)
+            row.add_item(value=r, span=-1)
             rows.append(row)
 
         return rows

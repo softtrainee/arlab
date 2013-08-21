@@ -15,9 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
-from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
+# from traits.api import HasTraits
+# from traitsui.api import View, Item
+# from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

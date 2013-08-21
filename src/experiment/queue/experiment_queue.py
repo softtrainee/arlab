@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any , on_trait_change, Int, List, Str
+from traits.api import Any , on_trait_change, Int, List
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -23,7 +24,6 @@ from src.experiment.queue.base_queue import BaseExperimentQueue
 from src.experiment.utilities.identifier import make_runid
 from src.experiment.utilities.human_error_checker import HumanErrorChecker
 from src.experiment.queue.experiment_queue_action import ExperimentQueueAction
-from pyface.timer.do_later import do_later
 from src.ui.gui import invoke_in_main_thread
 
 
@@ -38,6 +38,22 @@ class ExperimentQueue(BaseExperimentQueue):
     automated_runs_scroll_to_row = Int
     linked_copy_cache = List
     queue_actions = List
+
+    def reset(self):
+        ans = self.automated_runs
+        ens = self.executed_runs
+        self._no_update = True
+        for ei in reversed(ens):
+            ei.state = 'not run'
+#             ei.aliquot = 0
+#             ei.assigned_aliquot=0
+#             ei.step = ''
+            ans.insert(0, ei)
+
+        self.executed_runs = []
+        self._no_update = False
+#         self.update_needed = True
+#         self.refresh_table_needed = True
 
     def set_run_inprogress(self, aid):
         run = self._find_run(aid)

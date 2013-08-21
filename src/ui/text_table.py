@@ -45,8 +45,8 @@ class TextCell(HasTraits):
                 self.text = self.format(text)
             else:
                 self.text = u'{}'.format(text)
-            
-#             if self.width:   
+
+#             if self.width:
 #                 self.text='{{:<{}s}}'.format(self.width).format(self.text)
 
 class HtmlCell(TextCell):

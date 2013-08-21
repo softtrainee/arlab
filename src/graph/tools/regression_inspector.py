@@ -24,7 +24,7 @@ class RegressionInspectorTool(InfoInspector):
     def assemble_lines(self):
         reg = self.component.regressor
         lines = [reg.make_equation()]
-        lines+=map(unicode.strip, map(unicode, reg.tostring().split(',')))
+        lines += map(unicode.strip, map(unicode, reg.tostring().split(',')))
         return lines
 
 class RegressionInspectorOverlay(InfoOverlay):

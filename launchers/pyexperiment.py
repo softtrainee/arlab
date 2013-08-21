@@ -54,7 +54,7 @@ def main():
 #===============================================================================
     from src.globals import globalv
     globalv._test = False
-    
+
     from src.applications.pyexperiment import PyExperiment as app
     launch(app)
     os._exit(0)

@@ -306,7 +306,7 @@ class HoleDetector(Detector):
             self._draw_indicator(src, new_point(true_cx - dev[0],
                                                true_cy - dev[1]), (255, 255, 0), 'circle', size=2)
 
-    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness= -1):
+    def _draw_indicator(self, src, center, color=(255, 0, 0), shape='circle', size=4, thickness=-1):
         if isinstance(center, tuple):
             center = new_point(*center)
         r = size

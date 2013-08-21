@@ -111,7 +111,7 @@ class Detector(HasTraits):
         v = View(HGroup(
                         UItem('use'),
                         UItem('label',
-                              width= -30,
+                              width=-30,
                               style='readonly'),
                         UItem('isotope',
                              editor=EnumEditor(name='isotopes'),

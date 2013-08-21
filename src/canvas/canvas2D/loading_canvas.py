@@ -31,12 +31,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
-from traitsui.api import View, Item
-from src.canvas.canvas2D.scene.scene_canvas import SceneCanvas
-from src.canvas.canvas2D.scene.loading_scene import LoadingScene
+from traits.api import Any
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.canvas.canvas2D.scene.scene_canvas import SceneCanvas
+from src.canvas.canvas2D.scene.loading_scene import LoadingScene
+
 
 class LoadingCanvas(SceneCanvas):
     use_pan = False

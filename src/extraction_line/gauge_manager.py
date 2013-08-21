@@ -86,7 +86,7 @@ class GaugeManager(Manager):
                                         columns=len(self.devices),
                                         style='custom',
                                         editor=InstanceEditor(view='gauge_view'))),
-                 height= -100
+                 height=-100
                  )
         return v
 #    controllers = List(GaugeControllers)

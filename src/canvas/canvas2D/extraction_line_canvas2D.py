@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Str, Property, cached_property, Dict
+from traits.api import Any, Str
 #============= standard library imports ========================`
 
 #============= local library imports  ==========================
@@ -23,7 +23,7 @@ from traits.api import Any, Str, Property, cached_property, Dict
 # from src.canvas.designer.valve import Valve
 from src.canvas.canvas2D.scene.primitives.primitives import Rectangle, Valve, Line, \
     Label, RoughValve, BaseValve, RoundedRectangle, BorderLine
-from pyface.wx.dialog import confirmation
+
 from src.canvas.scene_viewer import SceneCanvas
 from src.canvas.canvas2D.scene.extraction_line_scene import ExtractionLineScene
 from pyface.action.menu_manager import MenuManager

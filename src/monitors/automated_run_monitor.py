@@ -16,9 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Str, Property, Any, Array, Bool
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
-from numpy import vstack, hstack, array
+from numpy import vstack, array
 #============= local library imports  ==========================
 from src.monitors.monitor import Monitor
 from src.hardware.core.communicators.ethernet_communicator import EthernetCommunicator

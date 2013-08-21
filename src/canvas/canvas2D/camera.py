@@ -16,8 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import  Bool, Any, Float, Tuple, Int, Str
-#from traitsui.api import View, Item  # , TableEditor
-#import apptools.sweet_pickle as pickle
+# from traitsui.api import View, Item  # , TableEditor
+# import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 from numpy import polyval, exp
 #============= local library imports  ==========================

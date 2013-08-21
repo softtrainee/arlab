@@ -206,7 +206,7 @@ if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
     logging_setup('machine_visionasfd')
     t = TrayMapper(center_mx=3.596,
-                   center_my= -13.321,
+                   center_my=-13.321,
                    pxpermm=23)
     x = 0
     y = -15.9521

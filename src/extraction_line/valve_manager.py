@@ -131,12 +131,12 @@ class ValveManager(Manager):
                     s = word[k]
                     v.set_state(s)
                     elm.update_valve_state(k, s)
-            
-            
+
+
     def load_valve_lock_states(self):
         elm = self.extraction_line_manager
         word = self.get_lock_word()
-        #self.debug('valve lock word= {}'.format(word))
+        # self.debug('valve lock word= {}'.format(word))
         if word is not None:
             for k in self.valves.keys():
                 if word.has_key(k):
@@ -174,10 +174,10 @@ class ValveManager(Manager):
                     for i in xrange(0, len(word), 2):
                         packet = word[i:i + 2]
                         try:
-                            key,state = packet[0], packet[1]
+                            key, state = packet[0], packet[1]
                         except IndexError:
                             return d
-                        
+
                         if key.upper() in ALPHAS:
                             if state in ('0', '1'):
                                 d[key] = bool(int(state))
@@ -246,11 +246,11 @@ class ValveManager(Manager):
         st = time.time()
         states = []
         keys = []
-        prev_keys=[]
+        prev_keys = []
         if self._prev_keys:
-            clear_prev_keys=True
-            prev_keys=self._prev_keys
-            
+            clear_prev_keys = True
+            prev_keys = self._prev_keys
+
         for k, v in self.valves.iteritems():
             '''
                 querying a lot of valves can add up hence timeout.
@@ -268,16 +268,16 @@ class ValveManager(Manager):
             if time.time() - st > timeout:
                 break
         else:
-            #if loop completes before timeout dont save keys 
-            clear_prev_keys=True
-    
+            # if loop completes before timeout dont save keys
+            clear_prev_keys = True
+
         if clear_prev_keys:
-            keys=None
-            
-        self._prev_keys=keys
+            keys = None
+
+        self._prev_keys = keys
         return ','.join(states)
 
-        
+
 #    def _get_states(self, times_up_event, sq):
 #
 #        def _gstate(ki):

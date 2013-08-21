@@ -15,12 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
 import unittest
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.spectrometer.magnet import Magnet
 from src.spectrometer.spectrometer import Spectrometer
 
 class MagnetTest(unittest.TestCase):

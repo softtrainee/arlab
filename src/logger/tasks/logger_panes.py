@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance
-from traitsui.api import View, Item, UItem
+from traits.api import  Instance
+from traitsui.api import View, UItem
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 
 #============= standard library imports ========================

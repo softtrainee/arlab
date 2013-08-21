@@ -20,7 +20,6 @@
 from traits.api import Any
 from pyface.action.api import Action
 from pyface.tasks.task_window_layout import TaskWindowLayout
-from src.ui.progress_dialog import myProgressDialog
 from pyface.tasks.action.task_action import TaskAction
 
 #============= standard library imports ========================
@@ -28,7 +27,6 @@ from pyface.tasks.action.task_action import TaskAction
 #============= local library imports  ==========================
 class ExperimentAction(Action):
     task_id = 'pychron.experiment'
-
 
     def _get_experimentor(self, event):
         return self._get_service(event, 'src.experiment.experimentor.Experimentor')
@@ -249,6 +247,9 @@ class UpdateDatabaseAction(ExperimentAction):
                         progress=progress
                         )
 
+class ResetQueuesAction(TaskAction):
+    method = 'reset_queues'
+    name = 'Reset Queues'
 
 #===============================================================================
 # deprecated

@@ -201,7 +201,7 @@ class Client(HasTraits):
                      Item('receive_data_stream', show_label=False),
                      Item('command'),
                      Item('response', show_label=False, style='custom',
-                          width= -300
+                          width=-300
                           ),
                      Item('pcommand', editor=EnumEditor(name='object.sent_commands')),
                      Item('resend', show_label=False),

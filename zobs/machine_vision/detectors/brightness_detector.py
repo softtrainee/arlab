@@ -101,7 +101,7 @@ class BrightnessDetector(CO2HoleDetector):
             target_mask = colorspace(asMat(ones_like(gsrc.ndarray) * 255))
 
             # draw filled polygon representing target
-            draw_polygons(target_mask, [target.poly_points], thickness= -1, color=(0, 0, 0))
+            draw_polygons(target_mask, [target.poly_points], thickness=-1, color=(0, 0, 0))
 
             # subtract target mask from image
             d = niar - grayspace(target_mask).ndarray

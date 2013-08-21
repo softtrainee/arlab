@@ -17,10 +17,10 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Float, Int, on_trait_change, Bool
 from traitsui.api import View, Item, Group, VGroup
-from pyface.timer.do_later import do_later
-from traitsui.editors.range_editor import RangeEditor
-from numpy.core.numeric import Inf
-from src.ui.double_spinner import DoubleSpinnerEditor
+# from pyface.timer.do_later import do_later
+# from traitsui.editors.range_editor import RangeEditor
+# from numpy.core.numeric import Inf
+# from src.ui.double_spinner import DoubleSpinnerEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class EFloat(Float):

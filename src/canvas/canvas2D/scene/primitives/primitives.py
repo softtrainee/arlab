@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Any, Dict, Bool, Str, Property, List, Int, \
-    Array, Color, on_trait_change, String, Enum
+    Color, on_trait_change, String
 from traitsui.api import View, VGroup, HGroup, Item, Group
 from chaco.default_colormaps import color_map_name_dict
 from chaco.data_range_1d import DataRange1D

@@ -46,7 +46,7 @@ def make():
     apps = args.applications
     for name in apps:
         template = None
-        flavors=('diode', 'co2', 'valve', 'uv', 'experiment')
+        flavors = ('diode', 'co2', 'valve', 'uv', 'experiment')
         if name in flavors:
             template = Template()
             template.root = args.root[0]
@@ -172,7 +172,7 @@ class Maker(object):
 #                           '-b','/Users/argonlab2/Sandbox'),
               version=self.version,
               packages=pkgs
-              
+
               )
 
         eggname = 'pychron-{}-py2.7.egg'.format(self.version)
@@ -187,9 +187,9 @@ class Maker(object):
                         self._resource_path(eggname)
                         )
 
-        #remove build dir
-        p=os.path.join(self.root, 'build')
-        print 'removing entire build dir ',p
+        # remove build dir
+        p = os.path.join(self.root, 'build')
+        print 'removing entire build dir ', p
         shutil.rmtree(p)
 
     def make_argv(self):

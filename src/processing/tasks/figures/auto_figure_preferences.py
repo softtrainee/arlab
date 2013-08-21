@@ -32,8 +32,8 @@ class AutoFigurePreferences(BasePreferencesHelper):
     id = 'pychron.auto_figure.preferences_page'
 #    username = Str
 
-    host=Str
-    port=Int
+    host = Str
+    port = Int
 
 
 class AutoFigurePreferencesPane(PreferencesPane):

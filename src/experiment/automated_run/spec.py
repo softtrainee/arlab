@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, CInt, Int, Bool, Float, Property, \
-     Enum, Either, on_trait_change, CStr, Instance
+from traits.api import Str, CInt, Int, Bool, Float, Property, \
+     Enum, on_trait_change, CStr
 #============= standard library imports ========================
 import uuid
 #============= local library imports  ==========================
@@ -247,9 +247,9 @@ class AutomatedRunSpec(Loggable):
 #     def _update_state(self, new):
 #         self.state = new
 
-    def _update_aliquot(self, new):
-        print 'upda', new
-        self.aliquot = new
+#     def _update_aliquot(self, new):
+#         print 'upda', new
+#         self.aliquot = new
 
     @on_trait_change(''' 
     measurment_script, post_measurment_script,

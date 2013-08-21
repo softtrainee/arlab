@@ -15,16 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Instance, on_trait_change, Str, Dict, \
-    Color, Property, Any, Event
-from traitsui.api import View, Item, TreeEditor, TreeNode
+from traits.api import HasTraits, List, on_trait_change, Any, Event
+from traitsui.api import TreeNode
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.helpers.parsers.canvas_parser import CanvasParser
 from src.canvas.canvas2D.scene.primitives.primitives import Primitive
-from src.canvas.canvas2D.scene.browser import SceneBrowser
 from src.canvas.canvas2D.scene.layer import Layer
-import weakref
+
 class PrimitiveNode(TreeNode):
     add = List([Primitive])
     move = List([Primitive])

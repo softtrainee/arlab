@@ -15,11 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, Enum, Any, DelegatesTo, List, Property, Str, \
-     on_trait_change, Bool, Int, Button, Event, String, cached_property
-from traitsui.api import View, VGroup, HGroup, Group, Item, Spring, spring, Label, \
-     ListEditor, InstanceEditor, EnumEditor, HSplit
-from traits.api import HasTraits, Range, Float
+from traits.api import Instance, Enum, Any, DelegatesTo, List, Property, \
+     Bool, Int, Button, Event, String, cached_property, \
+     HasTraits, Range, Float
 # from pyface.timer.api import Timer
 #============= standard library imports ========================
 import random

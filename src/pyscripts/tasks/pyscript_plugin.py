@@ -15,22 +15,19 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
-from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from envisage.ui.tasks.task_factory import TaskFactory
-from src.pyscripts.tasks.pyscript_task import PyScriptTask
 from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.schema_addition import SchemaAddition
-from src.pyscripts.tasks.pyscript_actions import OpenPyScriptAction, \
-    NewPyScriptAction
 from pyface.tasks.action.task_action import TaskAction
 from pyface.tasks.action.schema import SMenu
-from src.pyscripts.tasks.pyscript_preferences import PyScriptPreferences, \
-    PyScriptPreferencesPane
-
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
+from src.pyscripts.tasks.pyscript_task import PyScriptTask
+from src.pyscripts.tasks.pyscript_actions import OpenPyScriptAction, \
+    NewPyScriptAction
+from src.pyscripts.tasks.pyscript_preferences import PyScriptPreferencesPane
+
 
 class PyScriptPlugin(BaseTaskPlugin):
     def _my_task_extensions_default(self):

@@ -47,7 +47,7 @@ class KerrMicrocontroller(KerrDevice):
         self._execute_hex_commands(commands, tell=True, delay=100)
 
 
-        #verify number of modules found
+        # verify number of modules found
 #        commands = [
 #                    (addr, '010E', 50, 'no op'),
 #                    (addr, '020E', 50, 'no op')

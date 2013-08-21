@@ -15,41 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
-from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
-# from src.experiment.manager import ExperimentManager
-# from src.experiment.editor import ExperimentEditor
-# from src.pyscripts.manager import PyScriptManager
-from src.experiment.signal_calculator import SignalCalculator
-# from envisage.import_manager import ImportManager
-from src.experiment.image_browser import ImageBrowser
-# from src.helpers.parsers.initialization_parser import InitializationParser
-# from src.experiment.export_manager import ExportManager
 from envisage.ui.tasks.task_factory import TaskFactory
-from src.experiment.tasks.experiment_task import ExperimentEditorTask
-from src.experiment.tasks.experiment_preferences import ExperimentPreferences, \
-    ExperimentPreferencesPane
-from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
-    OpenExperimentQueueAction, SaveExperimentQueueAction, \
-    SaveAsExperimentQueueAction, SignalCalculatorAction, MergeQueuesAction, \
-    UpdateDatabaseAction, DeselectAction, SendTestNotificationAction, \
-    NewPatternAction, OpenPatternAction
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
-# from src.experiment.experimentor import Experimentor
-# from src.experiment.entry.labnumber_entry import LabnumberEntry
-# from src.experiment.tasks.labnumber_entry_task import LabnumberEntryTask
-# from src.experiment.import_manager import ImportManager
+from pyface.action.group import Group
+#============= standard library imports ========================
+#============= local library imports  ==========================
+from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
+from src.experiment.signal_calculator import SignalCalculator
+from src.experiment.image_browser import ImageBrowser
+from src.experiment.tasks.experiment_task import ExperimentEditorTask
+from src.experiment.tasks.experiment_preferences import ExperimentPreferencesPane
+from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
+    OpenExperimentQueueAction, SaveExperimentQueueAction, \
+    SaveAsExperimentQueueAction, SignalCalculatorAction, \
+    UpdateDatabaseAction, DeselectAction, SendTestNotificationAction, \
+    NewPatternAction, OpenPatternAction, ResetQueuesAction
 from src.experiment.tasks.constants_preferences import ConstantsPreferencesPane
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.loading.load_task import LoadingTask
 from src.experiment.loading.actions import SaveLoadingAction
-from pyface.tasks.action.schema import SGroup
-from pyface.action.group import Group
-# from envisage.ui.action.group import Group
-#============= standard library imports ========================
-#============= local library imports  ==========================
 
 class ExperimentPlugin(BaseTaskPlugin):
     id = 'pychron.experiment'
@@ -75,7 +60,8 @@ class ExperimentPlugin(BaseTaskPlugin):
                                         SchemaAddition(
                                                        factory=lambda: Group(
                                                               DeselectAction(),
-                                                              MergeQueuesAction()
+#                                                               MergeQueuesAction(),
+                                                              ResetQueuesAction()
                                                               ),
                                                 path='MenuBar/Edit'
                                                ),

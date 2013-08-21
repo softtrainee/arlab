@@ -73,8 +73,8 @@ def logging_setup(name, **kw):
 #    else:
     root = logging.getLogger('')
     shandler = logging.StreamHandler()
-##
-## #        global rhandler
+# #
+# # #        global rhandler
     rhandler = RotatingFileHandler(
                     logpath, maxBytes=1e7, backupCount=5)
 #

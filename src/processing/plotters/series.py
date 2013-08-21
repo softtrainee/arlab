@@ -138,11 +138,11 @@ class Series(Plotter):
             def get_v(a):
                 v = a.get_signal_value(k)
                 if v:
-                    n,e= v.nominal_value, v.std_dev
+                    n, e = v.nominal_value, v.std_dev
                 else:
-                    n,e=0,1e-20
-                return a.timestamp,n,e
-            
+                    n, e = 0, 1e-20
+                return a.timestamp, n, e
+
         return zip(*[get_v(ai) for ai in analyses])
 
 #     def get_value(self, analysis, k):

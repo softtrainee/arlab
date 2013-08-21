@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Any, Property, Float, Event, Array
+from traits.api import HasTraits, List, Any, Property, Float, Event
 from traitsui.api import View, Item, VGroup, HGroup, Spring, \
     TableEditor, RangeEditor
 from traitsui.table_column import ObjectColumn
@@ -96,9 +96,9 @@ class Magnet(SpectrometerDevice):
         isos, xs, ys = self._load_mftable()
 
         try:
-            refindex=min(nonzero(isos == isotope)[0])
+            refindex = min(nonzero(isos == isotope)[0])
 #             refindex = isos.index(isotope)
-            
+
             delta = dac - ys[refindex]
             # need to calculate all ys
             # using simple linear offset
@@ -106,13 +106,13 @@ class Magnet(SpectrometerDevice):
 
     #         for di,ci in zip(self.mf_dacs, self.calibration_points):
     #             ci.y=di
-    
+
             self.dump(isos, xs, ys)
         except ValueError:
             import traceback
-            e=traceback.format_exc()
+            e = traceback.format_exc()
             self.debug('Magnet update field table {}'.format(e))
-            
+
 #    def set_graph(self, pts):
 #
 #        g = Graph(container_dict=dict(padding=10))
