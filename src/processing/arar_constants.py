@@ -15,10 +15,11 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, Property, Float, Enum
+from traits.api import HasTraits, Property, Float, Enum, Str
 # from apptools.preferences.package_globals import get_default_preferences
 
 from uncertainties import ufloat
+from src.constants import AGE_SCALARS
 #=============local library imports  ==========================
 
 class ArArConstants(HasTraits):
@@ -59,6 +60,12 @@ class ArArConstants(HasTraits):
     k3739_v = Float(0.01)
     k3739_e = Float(0.0001)
 
+    age_units = Str('Ma')
+    age_scalar = Property(depends_on='age_units')
+    abundance_sensitivity = Float
+    ic_factor_v = Float(1)
+    ic_factor_e = Float(0)
+
     def _get_fixed_k3739(self):
         return self._get_ufloat('k3739')
 
@@ -95,6 +102,13 @@ class ArArConstants(HasTraits):
         k = self.lambda_b + self.lambda_e
         return ufloat(k.nominal_value, k.std_dev)
 
+    def _get_age_scalar(self):
+#        return 1e6
+        try:
+            return AGE_SCALARS[self.age_units]
+# #            return AGE_SCALARS[constants.constants.age_units]
+        except KeyError:
+            return 1
 # dp = get_default_preferences()
 # scope = dp.get_scope('application')
 # constant_path = 'pychron.experiment.constants'

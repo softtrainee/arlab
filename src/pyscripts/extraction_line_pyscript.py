@@ -116,6 +116,14 @@ class ExtractionPyScript(ValvePyScript):
 # properties
 #===============================================================================
     @property
+    def duration(self):
+        return self.get_context()['duration']
+
+    @property
+    def cleanup(self):
+        return self.get_context()['cleanup']
+
+    @property
     def pattern(self):
         return self.get_context()['pattern']
 

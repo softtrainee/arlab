@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Any, Str, Int, CStr, CInt, List, Property, \
      Event, Float, Instance, Bool, cached_property, Dict, HasTraits, \
-     String
+     String, Enum
 #============= standard library imports ========================
 import os
 import time
@@ -25,7 +25,7 @@ import random
 import ast
 import yaml
 import struct
-from threading import Thread, Event as TEvent
+from threading import Thread, Event as TEvent, currentThread
 from uncertainties import ufloat
 from numpy import Inf
 #============= local library imports  ==========================
@@ -51,8 +51,9 @@ from src.processing.isotope import IsotopicMeasurement
 from src.experiment.export.export_spec import ExportSpec
 from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import consumable
-from src.codetools.memory_usage import mem_log, mem_dump
-
+from src.codetools.memory_usage import mem_log, mem_dump, mem_log_func
+# import gc
+# from memory_profiler import profile
 
 class ScriptInfo(HasTraits):
     measurement_script_name = Str
@@ -101,13 +102,19 @@ class AutomatedRun(Loggable):
     plot_panel = Any
     arar_age = Instance(ArArAge)
 
-    spec = Any
+    spec = None
 
     uuid = Str
 
     experiment_identifier = Int
     user_defined_aliquot = False
-    state = String('not run')
+
+    state = Str('not run')
+#     state = Enum('not run', 'extraction',
+#                  'measurement', 'success',
+#                  'failed', 'truncated', 'canceled',
+#                  'invalid'
+#                  )
 
     ic_factor = Any
 
@@ -162,21 +169,16 @@ class AutomatedRun(Loggable):
 #    save_error_flag = False
     invalid_script = False
 
+    _current_data_frame = None
 #===============================================================================
 # pyscript interface
 #===============================================================================
     def py_position_magnet(self, pos, detector, dac=False):
-
-        mem_log('pre position magnet')
-
         if not self._alive:
             return
         self._set_magnet_position(pos, detector, dac=dac)
 
-        mem_log('post position magnet')
-
     def py_activate_detectors(self, dets):
-        mem_log('pre position activate detectors')
         if not self._alive:
             return
 
@@ -188,12 +190,14 @@ class AutomatedRun(Loggable):
         self.plot_panel = p
 
         spec = self.spectrometer_manager.spectrometer
+
         self._active_detectors = [spec.get_detector(n) for n in dets]
         p.create(self._active_detectors)
 
         # set plot_panels, baselines, backgrounds
         p.baselines = baselines = self.experiment_manager._prev_baselines
         p.blanks = blanks = self.experiment_manager._prev_blanks
+
         p.correct_for_blank = True if (not self.spec.analysis_type.startswith('blank') \
                                         and not self.spec.analysis_type.startswith('background')) else False
 
@@ -211,8 +215,6 @@ class AutomatedRun(Loggable):
             for iso, v in baselines.iteritems():
                 self.arar_age.set_baseline(iso, v)
 
-        mem_log('post position activate detectors')
-
     def py_set_regress_fits(self, fits, series=0):
         '''
             fits can be 
@@ -221,7 +223,6 @@ class AutomatedRun(Loggable):
             3. ('linear', 'linear')
             4. ((0,100,'linear'),(100,None, 'parabolic')] 
         '''
-        mem_log('pre set regress fits')
         def make_fits(fi):
             if isinstance(fi, str):
                 fi = [fi, ] * n
@@ -250,7 +251,6 @@ class AutomatedRun(Loggable):
         for i, fb in enumerate(self.fits):
             self.debug('{:02n} {}'.format(i + 1, fb))
         self.debug('========================================')
-        mem_log('post set regress fits')
 
     def py_set_spectrometer_parameter(self, name, v):
         self.info('setting spectrometer parameter {} {}'.format(name, v))
@@ -306,6 +306,7 @@ class AutomatedRun(Loggable):
         mem_log('post equilibration')
         return evt
 
+
     def py_sniff(self, ncounts, starttime, starttime_offset, series=0):
         mem_log('pre sniff')
         if not self._alive:
@@ -317,10 +318,14 @@ class AutomatedRun(Loggable):
 
         fits = [(None, ['', ] * len(self._active_detectors))]
         gn = 'sniff'
+
         self._build_tables(gn)
+        mem_log('build tables')
+
         check_conditions = False
+        writer = self._get_data_writer(gn)
         result = self._measure_iteration(gn,
-                                self._get_data_writer(gn),
+                                writer,
                                 ncounts, starttime, starttime_offset,
                                 series, fits,
                                 check_conditions,
@@ -334,11 +339,11 @@ class AutomatedRun(Loggable):
                     fit='average_SEM'
                     ):
 
-        mem_log('pre baseline')
         if not self._alive:
             return
 
         ion = self.ion_optics_manager
+
 #        invoke_in_main_thread(self.plot_panel.show)
 #        self.plot_panel.show()
 
@@ -348,15 +353,19 @@ class AutomatedRun(Loggable):
                     detector = self._active_detectors[0].name
 
                 ion.position(mass, detector, False)
+
                 self.info('Delaying {}s for detectors to settle'.format(settling_time))
-                time.sleep(settling_time)
+
+                self._wait(settling_time)
 
         self.plot_panel._ncounts = ncounts
         self.plot_panel.isbaseline = True
 
         gn = 'baseline'
         fits = [(None, [fit, ] * len(self._active_detectors))]
+
         self._build_tables(gn)
+
         check_conditions = True
         result = self._measure_iteration(gn,
                             self._get_data_writer(gn),
@@ -370,7 +379,6 @@ class AutomatedRun(Loggable):
         if self.plot_panel:
             self.experiment_manager._prev_baselines = self.plot_panel.baselines
 
-        mem_log('post baseline')
         return result
 
     def py_peak_hop(self, cycles, hops, starttime, series=0, group='signal'):
@@ -523,48 +531,55 @@ class AutomatedRun(Loggable):
 #
 #===============================================================================
     def teardown(self):
-        if self.plot_panel:
-            self.plot_panel.automated_run = None
-            self.plot_panel.arar_age = None
-#             self.plot_panel.reset()
+#         gc.collect()
+        return
 
-#         self.plot_panel = None
-#         del self.plot_panel
-
-#         self.signals = dict()
-        self._processed_signals_dict = dict()
-#         self.spec = None
-
-#         self.experiment_manager = None
-#         self.spectrometer_manager = None
-#         self.extraction_line_manager = None
-#         self.ion_optics_manager = None
-#         self.data_manager = None
-#         self.db = None
-#         self.massspec_importer = None
-
-#         self.runner = None
-        if self.monitor:
-            self.monitor.automated_run = None
-
-        if self.measurement_script:
-            self.measurement_script.automated_run = None
-
-        if self.measurement_script:
-            self.measurement_script.automated_run = None
-
-        self.extraction_script = None
-        self.measurement_script = None
-        self.post_equilibration_script = None
-        self.post_measurement_script = None
-
-        self.py_clear_conditions()
-
-        self._save_isotopes = []
-#         self._db_extraction_id = None
+#         if self.plot_panel:
+#             self.plot_panel.automated_run = None
+#             self.plot_panel.arar_age = None
+#             self.plot_panel.info_func = None
+# #             self.plot_panel.reset()
+#
+# #         self.plot_panel = None
+# #         del self.plot_panel
+#
+# #         self.signals = dict()
+# #         self._processed_signals_dict = dict()
+#         del self._processed_signals_dict
+# #         self.spec = None
+#
+# #         self.experiment_manager = None
+# #         self.spectrometer_manager = None
+# #         self.extraction_line_manager = None
+# #         self.ion_optics_manager = None
+# #         self.data_manager = None
+# #         self.db = None
+# #         self.massspec_importer = None
+#
+# #         self.runner = None
+#         if self.monitor:
+#             self.monitor.automated_run = None
+#
+#         if self.measurement_script:
+#             self.measurement_script.automated_run = None
+#
+#         if self.measurement_script:
+#             self.measurement_script.automated_run = None
+#
+#         self.extraction_script = None
+#         self.measurement_script = None
+#         self.post_equilibration_script = None
+#         self.post_measurement_script = None
+#
+#         self.py_clear_conditions()
+#
+#         self._save_isotopes = []
+# #         self._db_extraction_id = None
+#         if self.arar_age:
+#             self.arar_age.labnumber_record = None
 #         self.arar_age = None
 #         self.monitor = None
-
+#         self.overlap_evt = None
 
     def finish(self):
 
@@ -580,6 +595,8 @@ class AutomatedRun(Loggable):
         if self.state not in ('not run', 'canceled', 'success', 'truncated'):
             self.state = 'failed'
 
+
+
     def info(self, msg, color=None, *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
         if self.experiment_manager:
@@ -592,47 +609,13 @@ class AutomatedRun(Loggable):
             self.experiment_manager.info(msg, color=color, log=False)
 
     def start(self):
-        def _start():
-            if self._use_arar_age():
-                # load arar_age object for age calculation
-                self.arar_age = ArArAge()
-                es = self.extraction_script
-                if es is not None:
-                    # get senstivity multiplier from extraction script
-                    v = self._get_yaml_parameter(es, 'sensitivity_multiplier', default=1)
-                    self.arar_age.sensitivity_multiplier = v
-
-                ln = self.spec.labnumber
-                ln = convert_identifier(ln)
-                ln = self.db.get_labnumber(ln)
-                self.arar_age.labnumber_record = ln
-
-            self.measuring = False
-#             self.update = True
-            self.truncated = False
-
-            self.overlap_evt = TEvent()
-            self.info('Start automated run {}'.format(self.runid))
-            self._alive = True
-            self._total_counts = 0
-
-            # setup the scripts
-            if self.measurement_script:
-                self.measurement_script.reset(self)
-
-            for si in ('extraction', 'post_measurement', 'post_equilibration'):
-                script = getattr(self, '{}_script'.format(si))
-                if script:
-                    self._setup_context(script)
-
-            return True
 
         if self.monitor is None:
-            return _start()
-        elif self.monitor.monitor():
+            return self._start()
+        elif self.monitor.check():
             # immediately check the monitor conditions
-            if self.monitor.check():
-                return _start()
+            if self.monitor.monitor():
+                return self._start()
 
     def wait_for_overlap(self):
         '''
@@ -651,6 +634,42 @@ class AutomatedRun(Loggable):
                 break
             time.sleep(1.0)
 
+    def _start(self):
+        if self._use_arar_age():
+
+            # load arar_age object for age calculation
+            self.arar_age = ArArAge()
+            es = self.extraction_script
+            if es is not None:
+                # get senstivity multiplier from extraction script
+                v = self._get_yaml_parameter(es, 'sensitivity_multiplier', default=1)
+                self.arar_age.sensitivity_multiplier = v
+
+            ln = self.spec.labnumber
+            ln = convert_identifier(ln)
+            ln = self.db.get_labnumber(ln)
+            self.arar_age.labnumber_record = ln
+
+        self.measuring = False
+#             self.update = True
+        self.truncated = False
+
+        self.overlap_evt = TEvent()
+        self.info('Start automated run {}'.format(self.runid))
+        self._alive = True
+        self._total_counts = 0
+
+        # setup the scripts
+        if self.measurement_script:
+            self.measurement_script.reset(self)
+
+        for si in ('extraction', 'post_measurement', 'post_equilibration'):
+            script = getattr(self, '{}_script'.format(si))
+            if script:
+                self._setup_context(script)
+
+        return True
+
 #===============================================================================
 # doers
 #===============================================================================
@@ -666,11 +685,15 @@ class AutomatedRun(Loggable):
         self.info_color = EXTRACTION_COLOR
         self.info('======== Extraction Started ========')
         self.state = 'extraction'
+
         self.extraction_script.manager = self.experiment_manager
         self.extraction_script.run_identifier = self.runid
 
+        mem_log('pre extract execute')
         if self.extraction_script.execute():
+            mem_log('post extract execute')
             self._post_extraction_save()
+
             self.info('======== Extraction Finished ========')
             self.info_color = None
             return True
@@ -690,24 +713,25 @@ class AutomatedRun(Loggable):
             return True
 
         self.measurement_script.manager = self.experiment_manager
+
         # use a measurement_script to explicitly define
         # measurement sequence
         self.info_color = MEASUREMENT_COLOR
         self.info('======== Measurement Started ========')
         self.state = 'measurement'
 
-        self._pre_measurement_save()
-        self.measuring = True
-#         self._save_enabled = True
-        self._save_enabled = False
+        mem_log_func(self._pre_measurement_save)
+#         self._pre_measurement_save()
 
-        mem_log('do measurement pre execute')
+        self.measuring = True
+        self._save_enabled = True
+#         self._save_enabled = False
+
         if self.measurement_script.execute():
             self.info('======== Measurement Finished ========')
             self.measuring = False
             self.info_color = None
 
-            mem_log('do measurement post execute')
             self._measured = True
 
             return True
@@ -814,6 +838,8 @@ anaylsis_type={}
     def get_position_list(self):
         return self._make_iterable(self.spec.position)
 
+    def setup_context(self, *args, **kw):
+        self._setup_context(*args, **kw)
 #===============================================================================
 # private
 #===============================================================================
@@ -822,6 +848,15 @@ anaylsis_type={}
 #             from src.ui.thread import Thread as mThread
 #             self._term_thread = mThread(target=self.cancel_run)
 #             self._term_thread.start()
+    def _wait(self, t):
+        st = time.time()
+        while 1:
+            if not self._alive or time.time() - st > t:
+                break
+
+#             gc.collect()
+            time.sleep(0.01)
+
     def _make_iterable(self, pos):
         if '(' in pos and ')' in pos and ',' in pos:
             # interpret as (x,y)
@@ -908,9 +943,7 @@ anaylsis_type={}
         ion = self.ion_optics_manager
 
         if ion is not None:
-            mem_log('pre position')
             ion.position(pos, detector, dac)
-            mem_log('post position')
             if update_labels:
                 try:
                     # update the plot_panel labels
@@ -1045,8 +1078,8 @@ anaylsis_type={}
     def _make_write_iteration(self, grpname, data_write_hook,
                          series, fits, refresh, graph):
 
-        dets = self._active_detectors
         def _write(data):
+            dets = self._active_detectors
             i, x, keys, signals = data
             nfs = self._get_fit_block(i, fits)
             if grpname == 'signal':
@@ -1065,7 +1098,7 @@ anaylsis_type={}
                 if fi:
                     graph.set_fit(fi, plotid=pi, series=0)
 
-            data_write_hook(x, keys, signals)
+            data_write_hook(dets, x, keys, signals)
 
             if refresh:
 #                 pass
@@ -1079,13 +1112,14 @@ anaylsis_type={}
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, starttime_offset,
                            series, fits, check_conditions, refresh):
-
-        self.info('measuring {}. ncounts={}'.format(grpname, ncounts),
-                  color=MEASUREMENT_COLOR)
+        st = time.time()
 
         if not self.spectrometer_manager:
             self.warning('no spectrometer manager')
             return True
+
+        self.info('measuring {}. ncounts={}'.format(grpname, ncounts),
+                  color=MEASUREMENT_COLOR)
 
         graph = self.plot_panel.graph
 
@@ -1097,8 +1131,8 @@ anaylsis_type={}
         elif starttime_offset > mi:
             graph.set_x_limits(min=-starttime_offset)
 
-        spectrometer = self.spectrometer_manager.spectrometer
-        get_data = lambda: spectrometer.get_intensities(tagged=True)
+#         spectrometer = self.spectrometer_manager.spectrometer
+        get_data = lambda: self.spectrometer_manager.spectrometer.get_intensities(tagged=True)
 
         ncounts = int(ncounts)
         iter_cnt = 1
@@ -1117,42 +1151,55 @@ anaylsis_type={}
         func = self._make_write_iteration(grpname, data_write_hook,
                                                     series, fits, refresh,
                                                     graph)
-        with consumable(func) as con:
-            while 1:
-                ck = self._check_iteration(iter_cnt, ncounts, check_conditions)
-                if ck == 'break':
-                    break
-                elif ck == 'cancel':
-                    return False
+        dm = self.data_manager
+        if starttime is None:
+            starttime = time.time()
 
-                if iter_cnt % 50 == 0:
-                    self.info('collecting point {}'.format(iter_cnt))
-                    mem_log('collecting point {}'.format(iter_cnt))
+        with dm.open_file(self._current_data_frame, 'a'):
+            time.sleep(0.1)
+            with consumable(func) as con:
+                while 1:
+                    ck = self._check_iteration(iter_cnt, ncounts, check_conditions)
+                    if ck == 'break':
+                        break
+                    elif ck == 'cancel':
+                        return False
 
-    #             data = spec.get_intensities(tagged=True)
-                data = get_data()
-                if data is not None:
-                    keys, signals = data
-                else:
+                    data = get_data()
+                    if data is not None:
+                        keys, signals = data
+                    else:
 
-                    keys, signals = ('H2', 'H1', 'AX', 'L1', 'L2', 'CDD'), (1, 2, 3, 4, 5, 6)
-    #                continue
+                        keys, signals = ('H2', 'H1', 'AX', 'L1', 'L2', 'CDD'), (1, 2, 3, 4, 5, 6)
 
-                # if user forgot to set the time zero in measurement script
-                # do it here
-                if starttime is None:
-                    starttime = time.time()
+                    # if user forgot to set the time zero in measurement script
+                    # do it here
 
-                x = time.time() - starttime  # if not self._debug else iter_cnt + starttime
 
-#                 consumer.add_consumable((iter_cnt, x, keys, signals))
-                con.add_consumable((iter_cnt, x, keys, signals))
+                    x = time.time() - starttime  # if not self._debug else iter_cnt + starttime
+                    con.add_consumable((iter_cnt, x, keys, signals))
 
-                time.sleep(m)
-                iter_cnt += 1
+                    if iter_cnt % 50 == 0:
+                        self.info('collecting point {}'.format(iter_cnt))
+                        mem_log('collecting point {}'.format(iter_cnt))
+
+                    self._wait(m)
+                    iter_cnt += 1
+#                     time.sleep(m)
+
 
 #         consumer.stop()
         graph.refresh()
+
+        t = time.time() - st
+        iter_cnt -= 1
+        et = iter_cnt * self.integration_time
+        self.debug('%%%%%%%%%%%%%%%%%%%%%%%% counts: {} {} {}'.format(iter_cnt, et, t))
+
+        del graph
+        del func
+        del get_data
+
         return True
 
     def _check_conditions(self, conditions, cnt):
@@ -1165,6 +1212,7 @@ anaylsis_type={}
         if self.plot_panel is None:
             return 'break'
 
+        j = i - 1
         # exit the while loop if counts greater than max of original counts and the plot_panel counts
         maxcounts = max(ncounts, self.plot_panel.ncounts)
         if i > maxcounts:
@@ -1173,14 +1221,14 @@ anaylsis_type={}
         if check_conditions:
             termination_condition = self._check_conditions(self.termination_conditions, i)
             if termination_condition:
-                self.info('termination condition {}. measurement iteration executed {}/{} counts'.format(termination_condition.message, i, ncounts),
+                self.info('termination condition {}. measurement iteration executed {}/{} counts'.format(termination_condition.message, j, ncounts),
                           color='red'
                           )
                 return 'cancel'
 
             truncation_condition = self._check_conditions(self.truncation_conditions, i)
             if truncation_condition:
-                self.info('truncation condition {}. measurement iteration executed {}/{} counts'.format(truncation_condition.message, i, ncounts),
+                self.info('truncation condition {}. measurement iteration executed {}/{} counts'.format(truncation_condition.message, j, ncounts),
                           color='red'
                           )
                 self.state = 'truncated'
@@ -1191,7 +1239,7 @@ anaylsis_type={}
 
             action_condition = self._check_conditions(self.action_conditions, i)
             if action_condition:
-                self.info('action condition {}. measurement iteration executed {}/{} counts'.format(action_condition.message, i, ncounts),
+                self.info('action condition {}. measurement iteration executed {}/{} counts'.format(action_condition.message, j, ncounts),
                           color='red'
                           )
                 action_condition.perform(self.measurement_script)
@@ -1199,22 +1247,22 @@ anaylsis_type={}
                     return 'break'
 
         if i > self.measurement_script.ncounts:
-            self.info('script termination. measurement iteration executed {}/{} counts'.format(i, ncounts))
+            self.info('script termination. measurement iteration executed {}/{} counts'.format(j, ncounts))
             return 'break'
 
         if i > self.plot_panel.ncounts:
-            self.info('user termination. measurement iteration executed {}/{} counts'.format(i, ncounts))
+            self.info('user termination. measurement iteration executed {}/{} counts'.format(j, ncounts))
             self._total_counts -= (ncounts - i)
             return 'break'
 
         if self._truncate_signal:
-            self.info('measurement iteration executed {}/{} counts'.format(i, ncounts))
+            self.info('measurement iteration executed {}/{} counts'.format(j, ncounts))
             self._truncate_signal = False
 
             return 'break'
 
         if not self._alive:
-            self.info('measurement iteration executed {}/{} counts'.format(i, ncounts))
+            self.info('measurement iteration executed {}/{} counts'.format(j, ncounts))
             return 'cancel'
 
 #===============================================================================
@@ -1236,9 +1284,10 @@ anaylsis_type={}
             db.flush()
 
         ext = self._save_extraction(loadtable=loadtable)
+        mem_log('post save extraction')
 
         db.commit()
-        self._db_extraction_id = ext.id
+        self._db_extraction_id = int(ext.id)
 
     def _pre_measurement_save(self):
         self.info('pre measurement save')
@@ -1247,35 +1296,30 @@ anaylsis_type={}
 
         name = self.uuid
         path = os.path.join(paths.isotope_dir, '{}.h5'.format(name))
-        frame = dm.new_frame(path=path)
+        self._current_data_frame = path
 
-        # save some metadata with the file
-        attrs = frame.root._v_attrs
-        attrs['USER'] = self.spec.username
-        attrs['DATA_FORMAT_VERSION'] = '1.0'
-        attrs['TIMESTAMP'] = time.time()
-        attrs['ANALYSIS_TYPE'] = self.spec.analysis_type
-
-        frame.flush()
+        with dm.new_frame_ctx(path) as frame:
+            # save some metadata with the file
+            attrs = frame.root._v_attrs
+            attrs['USER'] = self.spec.username
+            attrs['ANALYSIS_TYPE'] = self.spec.analysis_type
+            attrs['TIMESTAMP'] = time.time()
 
     def post_measurement_save(self):
         if self._measured:
             self._post_measurement_save()
 
+
     def _post_measurement_save(self):
         self.info('post measurement save')
-
-        cp = self.data_manager.get_current_path()
-        # close h5 file
-        self.data_manager.close_file()
 
         if not self._save_enabled:
             self.info('Database saving disabled')
             return
 
-        mem_log('pre preliminary processing')
+        cp = self._current_data_frame
         # do preliminary processing of data
-        # returns signals dict and peak_center table
+        # returns signals dict
         try:
             ss = self._preliminary_processing(cp)
         except Exception, e:
@@ -1284,7 +1328,6 @@ anaylsis_type={}
             return
 
         self._processed_signals_dict = ss
-        mem_log('post preliminary processing')
 
         ln = self.spec.labnumber
         aliquot = self.spec.aliquot
@@ -1299,7 +1342,7 @@ anaylsis_type={}
                          )
         ldb.commit()
         ldb.close()
-        mem_log('post local db save')
+
         # save to a database
         db = self.db
         if db and db.connect(force=True):
@@ -1337,43 +1380,31 @@ anaylsis_type={}
             dbext = db.get_extraction(ext, key='id')
             a.extraction_id = dbext.id
 
-            mem_log('post analysis save')
             # save measurement
             meas = self._save_measurement(a)
-            mem_log('post save_measurement')
 
             # save sensitivity info to extraction
             self._save_sensitivity(dbext, meas)
-            mem_log('post save_sensitivity')
 
             self._save_spectrometer_info(meas)
-            mem_log('post save_spectrometer_info')
 
             # add selected history
             db.add_selected_histories(a)
             self._save_isotope_info(a, ss)
-            mem_log('post save_isotope_info')
 
             # save ic factor
             self._save_detector_intercalibration(a)
-            mem_log('post save_detector_intercalibration')
 
             # save blanks
             self._save_blank_info(a)
-            mem_log('post save_blank')
 
             # save peak center
             self._save_peak_center(a, cp)
-            mem_log('post save_peak_center')
 
             # save monitor
             self._save_monitor_info(a)
-            mem_log('post save_monitor')
 
-            mem_log('pre commit')
             db.commit()
-
-            mem_log('post commit')
 
             # tell the executor to remove this run from backup run recovery
             self.experiment_manager.remove_backup(self.uuid)
@@ -1387,7 +1418,6 @@ anaylsis_type={}
             self._save_to_massspec(cp)
             self.debug('mass spec save time= {:0.3f}'.format(time.time() - mt))
             mem_log('post mass spec save')
-
 
 
     def _preliminary_processing(self, p):
@@ -1456,7 +1486,7 @@ anaylsis_type={}
     def _save_peak_center(self, analysis, cp):
         self.info('saving peakcenter')
         def func():
-                dm=self.data_manager
+                dm = self.data_manager
                 with dm.open_table(cp, 'peak_center') as tab:
                     if tab is not None:
                         db = self.db
@@ -1529,7 +1559,7 @@ anaylsis_type={}
                     dbpos = db.add_analysis_position(ext, pi)
 
                 if loadtable:
-                    loadtable.measured_positions.append(dbpos)
+                    dbpos.load_identifier = loadtable.name
 
             return ext
         return self._time_save(func, 'extraction')
@@ -1567,11 +1597,9 @@ anaylsis_type={}
 
             self.info('{} adding detector intercalibration history for {}'.format(user, self.runid))
 
-            tt = time.time()
             history = db.add_detector_intercalibration_history(analysis, user=user)
-            self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% add detector history save time ={}'.format(time.time() - tt))
-#             db.flush()
             analysis.selected_histories.selected_detector_intercalibration = history
+
             uv, ue = ic.nominal_value, ic.std_dev
             db.add_detector_intercalibration(history, 'CDD',
                                              user_value=float(uv),
@@ -1668,7 +1696,7 @@ anaylsis_type={}
         dn = self.massspec_importer.db.name
         self.info('saving to massspec database {}/{}'.format(h, dn))
 #        #save to mass spec database
-        dm = self.data_manager
+
         baselines = []
         signals = []
         detectors = []
@@ -1916,11 +1944,9 @@ anaylsis_type={}
 # data writing
 #===============================================================================
     def _get_data_writer(self, grpname, dets=None):
-        dm = self.data_manager
-        if dets is None:
-            dets = self._active_detectors
 
-        def write_data(x, keys, signals):
+        def write_data(dets, x, keys, signals):
+            dm = self.data_manager
             for det in dets:
                 k = det.name
                 try:
@@ -1949,15 +1975,27 @@ anaylsis_type={}
 #         if fits is not None:
 #             # use last fit block
 #             fits = fits[-1][1]
+#         with dm.open_file(self._current_data_frame, 'w') as frame:
+#         dm.new_group(gn)
+#         for i, d in enumerate(self._active_detectors):
+#             iso = d.isotope
+#             name = d.name
+#             self._save_isotopes.append((iso, name, gn))
+#
+#             isogrp = dm.new_group(iso, parent='/{}'.format(gn))
+#             dm.new_table(isogrp, name)
 
-        dm.new_group(gn)
-        for i, d in enumerate(self._active_detectors):
-            iso = d.isotope
-            name = d.name
-            self._save_isotopes.append((iso, name, gn))
+        with dm.open_file(self._current_data_frame, 'a'):
+            dm.new_group(gn)
+            for i, d in enumerate(self._active_detectors):
+                iso = d.isotope
+                name = d.name
+                self._save_isotopes.append((iso, name, gn))
 
-            isogrp = dm.new_group(iso, parent='/{}'.format(gn))
-            dm.new_table(isogrp, name)
+                isogrp = dm.new_group(iso, parent='/{}'.format(gn))
+                dm.new_table(isogrp, name)
+#             frame.flush()
+#             frame.close()
 
 #             _t = dm.new_table(isogrp, name)
 #             try:

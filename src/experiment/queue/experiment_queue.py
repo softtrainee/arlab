@@ -50,7 +50,7 @@ class ExperimentQueue(BaseExperimentQueue):
             self.automated_runs.remove(run)
             self.executed_runs.append(run)
             idx = len(self.executed_runs) - 1
-            invoke_in_main_thread(self.trait_set, executed_runs_scroll_to_row=idx)
+            invoke_in_main_thread(do_later, lambda:self.trait_set(executed_runs_scroll_to_row=idx))
 
         else:
             self.debug('Problem removing {}'.format(aid))
@@ -83,7 +83,7 @@ class ExperimentQueue(BaseExperimentQueue):
         if new:
             idx = self.automated_runs.index(new[-1])
             self.debug('SSSSSSSSSSSSSS set AR scroll to {}'.format(idx))
-            invoke_in_main_thread(self.trait_set, automated_runs_scroll_to_row=idx)
+            invoke_in_main_thread(do_later, lambda:self.trait_set(automated_runs_scroll_to_row=idx))
 #             do_later(self.trait_set, automated_runs_scroll_to_row=idx)
 
 #         if new > 1:
@@ -96,9 +96,9 @@ class ExperimentQueue(BaseExperimentQueue):
                 self.update_needed = True
 #                self.refresh_button = True
 
-#     @on_trait_change('automated_runs:state')
-#     def _refresh_table1(self):
-#         self.refresh_table_needed = True
+    @on_trait_change('automated_runs:state')
+    def _refresh_table1(self):
+        self.refresh_table_needed = True
 
     def _load_meta(self, meta):
         super(ExperimentQueue, self)._load_meta(meta)

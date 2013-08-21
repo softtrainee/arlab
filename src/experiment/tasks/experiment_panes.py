@@ -269,7 +269,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                                            editor=ButtonEditor(label_value=make_rf_name('edit_pattern_label'))
                                            )
                                     ),
-                             
+
                              HGroup(RFItem('position',
                                      tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
                                      ),
@@ -277,7 +277,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                                      enabled_when='position'
                                      )
                                 ),
-                             
+
                              label='Extract',
                              show_border=True
                              )
@@ -294,7 +294,8 @@ class WaitPane(TraitsDockPane):
     name = 'Wait'
     def traits_view(self):
         v = View(
-                 UItem('wait_dialog', style='custom')
+                 UItem('wait_dialog',
+                        style='custom'),
                  )
         return v
 
@@ -310,6 +311,11 @@ class StatsPane(TraitsDockPane):
 class ControlsPane(TraitsDockPane):
     name = 'Controls'
     id = 'pychron.experiment.controls'
+
+    movable = False
+    closable = False
+    floatable = False
+
     def traits_view(self):
         v = View(
                  HGroup(
@@ -330,8 +336,8 @@ class ControlsPane(TraitsDockPane):
 #                             ),
 #                        spring,
 
-                        #temporary disable refresh/reset queue button
-                        
+                        # temporary disable refresh/reset queue button
+
 #                         UItem('refresh_button',
 #                               enabled_when='not object._alive',
 #                               editor=ButtonEditor(label_value='refresh_label')

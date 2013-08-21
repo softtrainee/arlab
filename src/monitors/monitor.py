@@ -77,7 +77,7 @@ class Monitor(ConfigLoadable):
             self._stop_signal = Event()
 
             if self.load():
-                t = Thread(target=self._monitor_, args=(self._stop_signal,))
+                t = Thread(target=self._monitor_)
                 t.start()
                 return True
         else:
@@ -95,28 +95,28 @@ class Monitor(ConfigLoadable):
         return [getattr(self, h) for h in dir(self)
                      if '_fcheck' in h and h not in self._invalid_checks]
 
-    def _monitor_(self, stop_signal):
+    def _monitor_(self):
         '''
         '''
         # load before every monitor call so that changes to the config file
         # are incorpoated
-
         if self.manager is not None:
             # clear error
             self.manager.error_code = None
 
-            self.gntries = 0
-            self.reset_start_time()
-            funcs = [getattr(self, h) for h in dir(self)
-                     if '_fcheck' in h and h not in self._invalid_checks]
-            while not stop_signal.isSet():
-                for fi in self._get_checks():
-                    fi()
-                    if stop_signal.isSet():
-                        break
+        self.gntries = 0
+        self.reset_start_time()
+#             funcs = [getattr(self, h) for h in dir(self)
+#                      if '_fcheck' in h and h not in self._invalid_checks]
+        stop_signal = self._stop_signal
+        while not stop_signal.isSet():
+            for fi in self._get_checks():
+                fi()
+                if stop_signal.isSet():
+                    break
 
-                # sleep before running monitor again
-                time.sleep(self.sample_delay)
+            # sleep before running monitor again
+            time.sleep(self.sample_delay)
 #============= EOF ====================================
 #    def _monitor_(self, stop_signal):
 #        '''

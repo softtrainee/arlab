@@ -89,8 +89,7 @@ class MainError(Exception):
 
 def verbose_skip(func):
     def decorator(obj, *args, **kw):
-        if obj._truncate:
-            return
+
 
         fname = func.__name__
 #        print fname, obj.testing_syntax, obj._cancel
@@ -108,7 +107,7 @@ def verbose_skip(func):
                                                                                            args, kw))
 #        if obj.testing_syntax or obj._cancel:
 #            return
-        if obj.testing_syntax or obj._cancel:
+        if obj.testing_syntax or obj._cancel or obj._truncate:
             return
 
         obj.debug('{} {} {}'.format(fname, args, kw))
@@ -194,7 +193,7 @@ class PyScript(Loggable):
     cancel_flag = Bool
     hash_key = None
 
-    _ctx = Dict
+    _ctx = None
     _text = Str
 
     _interval_stack = None
@@ -213,6 +212,13 @@ class PyScript(Loggable):
     _graph_calc = False
 
     trace_line = Int
+
+    def calculate_estimated_duration(self):
+        self._estimated_duration = 0
+        self._set_syntax_checked(False)
+        self.test()
+        return self.get_estimated_duration()
+
     def traceit(self, frame, event, arg):
         if event == "line":
             co = frame.f_code
@@ -236,7 +242,7 @@ class PyScript(Loggable):
             if finished_callback:
                 finished_callback()
 
-            self._finished()
+            self.finished()
             return self._completed
 
         if new_thread:
@@ -378,6 +384,9 @@ class PyScript(Loggable):
         pass
 
     def setup_context(self, **kw):
+        if self._ctx is None:
+            self._ctx = dict()
+
         self._ctx.update(kw)
 
     def get_context(self):
@@ -394,7 +403,8 @@ class PyScript(Loggable):
         for v in self.get_variables():
             ctx[v] = getattr(self, v)
 
-        ctx.update(self._ctx)
+        if self._ctx:
+            ctx.update(self._ctx)
         return ctx
 
     def get_variables(self):
@@ -581,15 +591,16 @@ class PyScript(Loggable):
 
     @command_register
     def sleep(self, duration=0, message=None):
+
         self._estimated_duration += duration
         if self.parent_script is not None:
             self.parent_script._estimated_duration += self._estimated_duration
 
-        if self._graph_calc:
-            va = self._xs[-1] + duration
-            self._xs.append(va)
-            self._ys.append(self._ys[-1])
-            return
+#         if self._graph_calc:
+#             va = self._xs[-1] + duration
+#             self._xs.append(va)
+#             self._ys.append(self._ys[-1])
+#             return
 
         if self.testing_syntax or self._cancel:
             return
@@ -615,6 +626,10 @@ class PyScript(Loggable):
 
         except AttributeError, e:
             self.debug('m_info {}'.format(e))
+
+    def finished(self):
+#         self._ctx = None
+        self._finished()
 
 #===============================================================================
 # handlers

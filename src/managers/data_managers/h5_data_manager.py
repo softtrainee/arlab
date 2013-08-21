@@ -24,6 +24,7 @@ from tables import openFile, Filters
 from data_manager import DataManager
 from table_descriptions import table_description_factory
 import os
+import weakref
 def get_table(name, group, frame):
     try:
         if isinstance(group, str):
@@ -34,6 +35,40 @@ def get_table(name, group, frame):
             return getattr(frame.root, name)
         except AttributeError:
             pass
+
+class TableCTX(object):
+    def __init__(self, p, t, g, complevel):
+        self._file = openFile(p, 'r',
+                              filters=Filters(complevel=complevel))
+        self._t = t
+        self._g = g
+
+    def __enter__(self):
+        return get_table(self._t, self._g, self._file)
+
+    def __exit__(self, *args):
+        self._file.close()
+        del self._file
+
+class FileCTX(object):
+    def __init__(self, parent, p, m, complevel):
+        self._file = openFile(p, m,
+                              filters=Filters(complevel=complevel))
+        self._parent = parent
+
+        self._parent._frame = self._file
+
+    def __enter__(self):
+        return self._file
+
+    def __exit__(self, *args, **kw):
+#         self._file.flush()
+        self._file.close()
+        self._parent._frame = None
+
+#         del self._file
+#         del self._parent
+
 
 class H5DataManager(DataManager):
     '''
@@ -89,6 +124,10 @@ class H5DataManager(DataManager):
         except Exception, e:
             print e
 
+    def new_frame_ctx(self, *args, **kw):
+        p = self._new_frame_path(*args, **kw)
+        return self.open_file(p, 'w')
+
     def new_frame(self, *args, **kw):
         '''
 
@@ -111,6 +150,7 @@ class H5DataManager(DataManager):
             parent = self._frame.root
 
         grp = self.get_group(group_name, parent)
+
         if grp is None:
             grp = self._frame.createGroup(parent, group_name, description)
 
@@ -133,7 +173,7 @@ class H5DataManager(DataManager):
         if frame is None:
             frame = self._frame
 
-        return get_table(name,group, frame)
+        return get_table(name, group, frame)
 
     def get_group(self, name, grp=None):
         return next((g for g in self.get_groups(grp=grp) if g._v_name == name), None)
@@ -180,29 +220,22 @@ class H5DataManager(DataManager):
     def close_file(self):
         try:
             self.debug('flush and close file {}'.format(self._frame.filename))
+            self._frame.flush()
             self._frame.close()
             del self._frame
-            
+
         except Exception, e:
             print 'exception closing file', e
 
+    def open_file(self, path, mode):
+        return FileCTX(
+#                        self,
+                       weakref.ref(self)(),
+                       path, mode, self.compression_level)
+
     def open_table(self, path, table, group='/'):
-        class TableCTX(object):
-            def __init__(self, p, t, g, complevel):
-                self._file = openFile(p, 'r', 
-                                      filters=Filters(complevel=complevel))
-                self._t=t
-                self._g=g
-                
-            def __enter__(self):
-                return get_table(self._t, self._g, self._file)
-                
-            def __exit__(self,*args):
-                self._file.close()
-                del self._file
-                
         return TableCTX(path, table, group, self.compression_level)
-    
+
     def kill(self):
         self.close_file()
 #        for table in f.walkNodes('/', 'Table'):

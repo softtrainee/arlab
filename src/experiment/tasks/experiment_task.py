@@ -18,7 +18,13 @@
 from traits.api import HasTraits, on_trait_change, Any, Bool, Instance, Int
 # from traitsui.api import View, Item
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
+from pyface.constant import CANCEL, YES, NO
+from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
+import shutil
+import weakref
+import hashlib
+import os
 #============= local library imports  ==========================
 # from src.envisage.tasks.base_task import BaseManagerTask
 from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPane, \
@@ -28,17 +34,12 @@ from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPa
 from src.envisage.tasks.editor_task import EditorTask
 from src.experiment.tasks.experiment_editor import ExperimentEditor
 from src.paths import paths
-import hashlib
-import os
-from pyface.constant import CANCEL, YES, NO
 from src.helpers.filetools import add_extension
 from src.ui.gui import invoke_in_main_thread
-from apptools.preferences.preference_binding import bind_preference
 from src.experiment.loading.panes import LoadDockPane, LoadTablePane
 from src.experiment.loading.loading_manager import LoadingManager
 from src.messaging.notify.notifier import Notifier
 from src.lasers.pattern.pattern_maker_view import PatternMakerView
-import shutil
 
 
 class ExperimentEditorTask(EditorTask):
@@ -128,6 +129,12 @@ class ExperimentEditorTask(EditorTask):
 
         bind_preference(self, 'notifications_port',
                         'pychron.experiment.notifications_port')
+
+        bind_preference(self.manager.executor, 'use_auto_save',
+                        'pychron.experiment.use_auto_save')
+        bind_preference(self.manager.executor, 'auto_save_delay',
+                        'pychron.experiment.auto_save_delay')
+
         super(ExperimentEditorTask, self).activated()
 
     def create_dock_panes(self):
@@ -143,7 +150,7 @@ class ExperimentEditorTask(EditorTask):
                 ControlsPane(model=self.manager.executor),
                 ConsolePane(model=self.manager.executor),
                 WaitPane(model=self.manager.executor),
-                ExplanationPane(),
+#                 ExplanationPane(),
                 self.isotope_evolution_pane,
                 self.load_pane,
                 self.load_table_pane
@@ -342,12 +349,14 @@ class ExperimentEditorTask(EditorTask):
 
     @on_trait_change('manager.experiment_factory:queue_factory:load_name')
     def _update_load(self, new):
-
         lm = self.loading_manager
-        canvas = lm.make_canvas(new, editable=False)
+        if lm.db_load_name != new:
+            lm.db_load_name = new
+            canvas = lm.make_canvas(new, editable=False)
+            self.load_pane.component = weakref.ref(canvas)()
+
         lm.load_load(new, group_labnumbers=False)
 
-        self.load_pane.component = canvas
         self.load_pane.load_name = new
 
     @on_trait_change('active_editor:queue:update_needed')

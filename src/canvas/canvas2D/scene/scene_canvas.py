@@ -18,6 +18,7 @@
 from traits.api import Instance
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
 from src.canvas.canvas2D.scene.scene import Scene
+import weakref
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class SceneCanvas(BaseDataCanvas):
@@ -50,6 +51,6 @@ class SceneCanvas(BaseDataCanvas):
 
     def _draw_hook(self, gc, *args, **kw):
         if self.scene:
-            self.scene.render_components(gc, self)
+            self.scene.render_components(gc, weakref.ref(self)())
 
 #============= EOF =============================================

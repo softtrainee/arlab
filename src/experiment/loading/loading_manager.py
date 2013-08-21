@@ -138,6 +138,8 @@ class LoadingManager(IsotopeDatabaseManager):
 
     group_positions = Bool
     show_group_positions = Bool(False)
+
+    canvas = Any
 #     def save_loading(self):
 #         path = '/Users/ross/Sandbox/load_001.pdf'
 #         if path:
@@ -183,17 +185,23 @@ class LoadingManager(IsotopeDatabaseManager):
         return self.db_load_name
 
     def make_canvas(self, new, editable=True):
+
         db = self.db
         lt = db.get_loadtable(new)
-        c = LoadingCanvas(
-                          view_x_range=(-2, 2),
-                          view_y_range=(-2, 2),
-                          editable=editable
-                          )
-        self.canvas = c
+
+        c = self.canvas
+        if not c:
+            c = LoadingCanvas(
+                              view_x_range=(-2, 2),
+                              view_y_range=(-2, 2),
+                              editable=editable
+                              )
+            self.canvas = c
+
         if lt and lt.holder_:
             h = lt.holder_.name
             c.load_tray_map(h)
+
             for pi in lt.loaded_positions:
                 item = c.scene.get_item(str(pi.position))
                 if item:
@@ -216,13 +224,13 @@ class LoadingManager(IsotopeDatabaseManager):
         self.positions = []
         if loadtable.holder_:
             self.tray = loadtable.holder_.name
-            
+
         for ln, poss in groupby(loadtable.loaded_positions,
                                         key=lambda x:x.lab_identifier):
             pos = []
             for pi in poss:
-                pid = pi.position
-                item = self.canvas.scene.get_item(str(pid))
+                pid = str(pi.position)
+                item = self.canvas.scene.get_item(pid)
                 if item:
                     item.fill = True
 #                     print item
@@ -245,14 +253,15 @@ class LoadingManager(IsotopeDatabaseManager):
 
         sample = ln.sample.name if ln.sample else ''
 
-        lp = LoadPosition(labnumber=ln.identifier,
-              sample=sample,
-              irradiation=irrad.name,
-              level=level.name,
-              irrad_position=int(ip.position),
-              positions=pos
-              )
-        self.positions.append(lp)
+#         lp = LoadPosition(labnumber=ln.identifier,
+#               sample=sample,
+#               irradiation=irrad.name,
+#               level=level.name,
+#               irrad_position=int(ip.position),
+#               positions=pos
+#               )
+
+#         self.positions.append(lp)
 
 
     def save(self):

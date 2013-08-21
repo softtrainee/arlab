@@ -370,7 +370,11 @@ load: {}
 #===============================================================================
 # handlers
 #===============================================================================
+    def _delay_between_analyses_changed(self, new):
+        self.stats.delay_between_analyses = new
 
+    def _delay_before_analyses_changed(self, new):
+        self.stats.delay_before_analyses = new
 #===============================================================================
 # property get/set
 #===============================================================================

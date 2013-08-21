@@ -21,9 +21,10 @@ from traits.api import Property, String, Float, Any, Int, List
 from traitsui.api import View, Item, VGroup
 import datetime
 import time
+from numpy import polyval
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
+FUDGE_COEFFS = (0, 0, 0)  # x**n+x**n-1....+c
 
 class ExperimentStats(Loggable):
     elapsed = Property(depends_on='_elapsed')
@@ -36,6 +37,7 @@ class ExperimentStats(Loggable):
     _total_time = Float
     _timer = Any(transient=True)
     delay_between_analyses = Float
+    delay_before_analyses = Float
     _start_time = None
 
 #    experiment_queue = Any
@@ -44,8 +46,11 @@ class ExperimentStats(Loggable):
 #        if runs is None:
 #            runs = self.experiment_queue.cleaned_automated_runs
         dur = self._calculate_duration(runs)
-        self._total_time = dur
-        return dur
+        # add an empirical fudge factor
+        ff = polyval(FUDGE_COEFFS, len(runs))
+
+        self._total_time = dur  # + ff
+        return self._total_time
 
 #    def calculate_etf(self):
 #        runs = self.experiment_queue.cleaned_automated_runs
@@ -64,8 +69,13 @@ class ExperimentStats(Loggable):
         if runs:
             ni = len(runs)
             script_ctx = dict()
+
             dur = sum([a.get_estimated_duration(script_ctx, warned) for a in runs])
-            dur += (self.delay_between_analyses * ni)
+
+
+            btw = (self.delay_between_analyses * ni)
+            dur += btw + self.delay_before_analyses
+
         return dur
 
     def _get_elapsed(self):

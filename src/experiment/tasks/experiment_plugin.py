@@ -24,7 +24,7 @@ from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from src.experiment.signal_calculator import SignalCalculator
 # from envisage.import_manager import ImportManager
 from src.experiment.image_browser import ImageBrowser
-from src.helpers.parsers.initialization_parser import InitializationParser
+# from src.helpers.parsers.initialization_parser import InitializationParser
 # from src.experiment.export_manager import ExportManager
 from envisage.ui.tasks.task_factory import TaskFactory
 from src.experiment.tasks.experiment_task import ExperimentEditorTask
