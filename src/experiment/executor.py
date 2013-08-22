@@ -126,6 +126,8 @@ class ExperimentExecutor(Experimentable):
     mode = 'normal'
 
     measuring = Bool(False)
+    extracting = Bool(False)
+
     stats = Instance(StatsGroup)
 
     new_run_gen_needed = False
@@ -930,10 +932,13 @@ class ExperimentExecutor(Experimentable):
 
     def _extraction(self, ai):
         ret = True
+        self.extracting = True
         if not ai.do_extraction():
             ret = self._failed_execution_step('Extraction Failed')
 
         invoke_in_main_thread(self.trait_set, extraction_state_label='')
+
+        self.extracting = False
         return ret
 
     def _measurement(self, ai):

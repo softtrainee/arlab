@@ -143,16 +143,17 @@ class ExperimentEditorTask(EditorTask):
         self.load_pane = LoadDockPane()
         self.load_table_pane = LoadTablePane(model=self.loading_manager)
         self.experiment_factory_pane = ExperimentFactoryPane(model=self.manager.experiment_factory)
+        self.wait_pane = WaitPane(model=self.manager.executor)
         panes = [
                 self.experiment_factory_pane,
                 StatsPane(model=self.manager),
                 ControlsPane(model=self.manager.executor),
                 ConsolePane(model=self.manager.executor),
-                WaitPane(model=self.manager.executor),
 #                 ExplanationPane(),
                 self.isotope_evolution_pane,
                 self.load_pane,
-                self.load_table_pane
+                self.load_table_pane,
+                self.wait_pane
 #                 self.summary_pane,
                 ]
 
@@ -451,9 +452,13 @@ class ExperimentEditorTask(EditorTask):
             if self.manager.execute_queues(qs):
                 self._open_auto_figure()
 
-                # display some default controls
-                for p in (self.isotope_evolution_pane,):
-                    self._show_pane(p)
+    @on_trait_change('manager:executor:[measuring,extracting]')
+    def _update_measuring(self, name, new):
+        if new:
+            if name == 'measuring':
+                self._show_pane(self.isotope_evolution_pane)
+            elif name == 'extracting':
+                self._show_pane(self.wait_pane)
 
     @on_trait_change('active_editor:queue:dclicked')
     def _edit_event(self):
