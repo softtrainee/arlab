@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Range, Instance, Bool, \
-     Button, Any, DelegatesTo, Str, Float, Enum, HasTraits, List
+     Button, Any, Str, Float, Enum, HasTraits, List
 from traitsui.api import View, Item, EnumEditor, Handler
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================

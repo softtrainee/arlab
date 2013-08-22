@@ -16,18 +16,18 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits
-from traitsui.api import View, Item
+
 #============= standard library imports ========================
-from numpy import hstack, vstack, histogram, arange, array
+from numpy import  vstack, histogram, array
 from numpy.random import normal
-from multiprocessing import Pool, Process, Queue
+from multiprocessing import Pool
 
 from pylab import show, plot, axvline
 import time
-import math
+# import math
 from numpy.core.fromnumeric import argmax
-from scipy.stats.stats import mode
-from numpy.lib.function_base import median
+# from scipy.stats.stats import mode
+# from numpy.lib.function_base import median
 from src.time_series.time_series import smooth
 
 

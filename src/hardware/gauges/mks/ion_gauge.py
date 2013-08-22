@@ -108,9 +108,9 @@ class IonGauge(BaseMKSGauge):
         '''
 
         if not self.simulation:
-            type = 'filament'
-            q = self._build_query(self.address, type)
-            state = self._parse_response(type, self.ask(q, **kw))
+            t = 'filament'
+            q = self._build_query(self.address, t)
+            state = self._parse_response(t, self.ask(q, **kw))
 
         else:
             state = False

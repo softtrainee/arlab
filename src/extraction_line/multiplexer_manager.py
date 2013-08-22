@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Instance, Str, Button
-from traitsui.api import View, Item, HGroup, spring
+from traits.api import Instance, Str, Button
+from traitsui.api import Item, HGroup, spring
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.managers.manager import Manager

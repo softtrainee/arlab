@@ -15,14 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Str, Enum , Property, List, cached_property, \
-    Button
-from traitsui.api import View, Item, VGroup, EnumEditor, HGroup
+from traits.api import Int, Str, cached_property
 from src.experiment.automated_run.automated_run import AutomatedRun
-from src.constants import NULL_STR
-import os
-from src.paths import paths
-from src.experiment.automated_run.uv.automated_run import UVAutomatedRun
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

@@ -15,9 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Property, Float, Enum, cached_property
-from traitsui.api import View, Item, UItem
-# from enable.component_editor import ComponentEditor
+from traits.api import HasTraits, Any
+from traitsui.api import View, Item
+from enable.component_editor import ComponentEditor
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
@@ -25,7 +25,6 @@ import os
 # from src.canvas.canvas3D.canvas3D_editor import Canvas3DEditor
 
 from src.paths import paths
-from enable.component_editor import ComponentEditor
 
 
 class ExtractionLineCanvas(HasTraits):

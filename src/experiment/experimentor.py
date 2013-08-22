@@ -423,8 +423,14 @@ class Experimentor(IsotopeDatabaseManager):
         rf = ef.run_factory
         rf.edit_mode = False
         if new:
+
             if len(new) > 1:
                 self._set_factory_runs(new)
+
+            a = new[-1]
+            if not a.skip:
+                self.stats.calculate_at(a)
+                self.stats.calculate()
 
     def _set_factory_runs(self, new):
         ef = self.experiment_factory

@@ -15,19 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Instance, Button, Any, Enum, on_trait_change, \
-    Property, cached_property, Dict
-from traitsui.api import View, Item, Controller, UItem, spring, HGroup, \
-    VGroup, SetEditor
-from traitsui.tabular_adapter import TabularAdapter
+from traits.api import Instance, Button, on_trait_change
+from traitsui.api import View, UItem, spring, HGroup, \
+    VGroup
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from src.processing.publisher.loaded_table import LoadedTableController
 from src.processing.publisher.selected_table import SelectedTableController
 from src.processing.publisher.table_model import LoadedTable, SelectedTable
-from pyface.action.menu_manager import MenuManager
-from traitsui.menu import Action
 
 
 class Publisher(Loggable):

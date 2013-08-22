@@ -15,18 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
-from traitsui.api import View, Item
-from src.envisage.tasks.base_task import BaseHardwareTask, \
-    BaseExtractionLineTask
-from src.spectrometer.tasks.spectrometer_panes import ScanPane, ControlsPane, \
-    ReadoutPane, IntensitiesPane
+from traits.api import Any
 from pyface.tasks.task_layout import TaskLayout, PaneItem, Splitter, Tabbed
 from pyface.tasks.action.schema import SMenu
-from src.spectrometer.tasks.spectrometer_actions import PeakCenterAction
-# from src.experiment.tasks. import ControlsPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
+
+from src.spectrometer.tasks.spectrometer_actions import PeakCenterAction
+from src.envisage.tasks.base_task import BaseExtractionLineTask
+from src.spectrometer.tasks.spectrometer_panes import ScanPane, ControlsPane, \
+    ReadoutPane, IntensitiesPane
 
 class SpectrometerTask(BaseExtractionLineTask):
     scan_manager = Any

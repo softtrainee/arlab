@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Bool, on_trait_change, Any, Str, Event, List
+from traits.api import Bool, Str, Event, List
 from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
 from traitsui.editors.tabular_editor import TabularEditor
 

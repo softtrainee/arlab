@@ -23,9 +23,9 @@ from numpy.core.numeric import ones_like
 
 
 try:
-    from statsmodels.api import OLS, add_constant
+    from statsmodels.api import OLS
 except ImportError:
-    from scikits.statsmodels.api import OLS, add_constant
+    from scikits.statsmodels.api import OLS
 
 #============= local library imports  ==========================
 from base_regressor import BaseRegressor

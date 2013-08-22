@@ -25,9 +25,9 @@ import math
 #============= local library imports  ==========================
 from src.processing.arar_constants import ArArConstants
 from src.graph.graph import Graph
-from chaco.axis import PlotAxis
-from chaco.plot_factory import create_line_plot, add_default_axes
-from src.graph.guide_overlay import GuideOverlay
+# from chaco.axis import PlotAxis
+# from chaco.plot_factory import create_line_plot, add_default_axes
+# from src.graph.guide_overlay import GuideOverlay
 
 powerlaw = lambda pp, x: pp[0] * x ** pp[1]
 

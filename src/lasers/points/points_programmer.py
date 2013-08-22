@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import  Button, Event, Property, \
-    Any, Bool, Enum, Instance, cached_property, String, Color, Int
+    Any, Bool, Enum, Instance, cached_property, String
 from traitsui.api import View, Item, ButtonEditor, HGroup, VGroup
 #============= standard library imports ========================
 import yaml

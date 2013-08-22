@@ -16,20 +16,21 @@
 from traits.etsconfig.etsconfig import ETSConfig
 ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Button, Float, Instance
+from traits.api import HasTraits, Int, Float, Instance
 from traitsui.api import View, Item, UItem, ButtonEditor, HGroup
 
 from src.mv.machine_vision_manager import MachineVisionManager
+#============= standard library imports ========================
+from numpy import random
 import time
+#============= local library imports  ==========================
 from src.mv.lumen_detector import LumenDetector
 from src.graph.stream_graph import StreamStackedGraph
 from src.graph.stacked_graph import StackedGraph
-from src.mv.test_image import TestImage
 from src.execute_mixin import ExecuteMixin
-from numpy import random, zeros, ones
-from src.image.cv_wrapper import colorspace
-#============= standard library imports ========================
-#============= local library imports  ==========================
+from src.mv.test_image import TestImage
+
+
 class PID(HasTraits):
     _integral_err = 0
     _prev_err = 0

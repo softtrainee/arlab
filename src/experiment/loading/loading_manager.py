@@ -17,16 +17,14 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, cached_property, List, Str, \
      Property, Int, Event, Any, Bool
+from chaco.pdf_graphics_context import PdfPlotGraphicsContext
+#============= standard library imports ========================
+from reportlab.platypus.flowables import Flowable
+from itertools import groupby
+#============= local library imports  ==========================
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.canvas.canvas2D.loading_canvas import LoadingCanvas
-#============= standard library imports ========================
-#============= local library imports  ==========================
-from itertools import groupby
-from reportlab.platypus.doctemplate import SimpleDocTemplate
-from reportlab.platypus.flowables import Flowable
-from chaco.pdf_graphics_context import PdfPlotGraphicsContext
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.units import inch
+
 
 def make_bound(st):
     if len(st) > 1:
@@ -253,15 +251,15 @@ class LoadingManager(IsotopeDatabaseManager):
 
         sample = ln.sample.name if ln.sample else ''
 
-#         lp = LoadPosition(labnumber=ln.identifier,
-#               sample=sample,
-#               irradiation=irrad.name,
-#               level=level.name,
-#               irrad_position=int(ip.position),
-#               positions=pos
-#               )
+        lp = LoadPosition(labnumber=ln.identifier,
+              sample=sample,
+              irradiation=irrad.name,
+              level=level.name,
+              irrad_position=int(ip.position),
+              positions=pos
+              )
 
-#         self.positions.append(lp)
+        self.positions.append(lp)
 
 
     def save(self):

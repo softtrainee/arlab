@@ -27,15 +27,14 @@ import os
 from src.paths import paths
 from src.processing.entry.irradiation import Irradiation
 from src.processing.entry.level import Level
-from src.processing.entry.flux_monitor import FluxMonitor
-from src.processing.entry.db_entry import DBEntry
+# from src.processing.entry.flux_monitor import FluxMonitor
+# from src.processing.entry.db_entry import DBEntry
 # from src.irradiation.irradiated_position import IrradiatedPosition, \
 #    IrradiatedPositionAdapter
 from src.constants import NULL_STR, ALPHAS
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
-from src.processing.entry.irradiated_position import IrradiatedPositionAdapter, \
-    IrradiatedPosition
-import math
+from src.processing.entry.irradiated_position import IrradiatedPosition
+# import math
 from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
 from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
 from src.database.orms.isotope_orm import gen_ProjectTable, gen_SampleTable

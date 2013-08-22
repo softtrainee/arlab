@@ -108,7 +108,7 @@ def extract_data(p):
     x = []
     y = []
 
-    max = 40000
+    ma = 40000
     for i, row in enumerate(reader):
         if i == 0:
             continue
@@ -119,7 +119,7 @@ def extract_data(p):
         else:
             t = float(row[0]) - t_zero
 
-        if i == max:
+        if i == ma:
             break
         x.append(t)
         y.append(float(row[2]))

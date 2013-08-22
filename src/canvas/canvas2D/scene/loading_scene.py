@@ -22,8 +22,7 @@ import os
 from src.canvas.canvas2D.scene.scene import Scene
 from src.paths import paths
 from src.lasers.stage_managers.stage_map import StageMap
-from src.canvas.canvas2D.scene.primitives.primitives import Circle, \
-    LoadIndicator
+from src.canvas.canvas2D.scene.primitives.primitives import LoadIndicator
 
 class LoadingScene(Scene):
     _xrange = -1, 1

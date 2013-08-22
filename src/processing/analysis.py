@@ -22,8 +22,7 @@ from traits.api import HasTraits, Str, Int, Float, Property, Color, Any, cached_
 
 from src.loggable import Loggable
 
-from src.helpers import alphas
-from src.constants import PLUSMINUS, ALPHAS
+from src.constants import ALPHAS
 from uncertainties import ufloat
 
 class Marker(HasTraits):

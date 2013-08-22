@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Either, Int, Float, Any, Str, List, Event, \
+from traits.api import Either, Int, Float, Str, List, Event, \
     Bool
 from traitsui.api import View
 from traitsui.api import Handler

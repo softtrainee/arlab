@@ -15,16 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, List, Str, Float, Any, Event, cached_property
-from traitsui.api import View, Item, UItem, VSplit, VGroup, HGroup, HSplit
+from traits.api import HasTraits, Property, List, Any, Event
+from traitsui.api import View, UItem, VSplit, VGroup, HSplit
 
 # from src.processing.tasks.text_table import TextTable, TextRow, TextCell, BoldCell, TextTableAdapter
 # from traitsui.tabular_adapter import TabularAdapter
 from src.helpers.formatting import floatfmt, errorfmt, calc_percent_error, \
     pfloatfmt
-from src.constants import PLUSMINUS, NULL_STR, PLUSMINUS_ERR, SIGMA
+from src.constants import PLUSMINUS, NULL_STR, SIGMA
 from src.ui.qt.text_table_editor import TextTableEditor
-from kiva.fonttools import Font
+
 from src.ui.text_table import BoldCell, TextCell, TextRow, \
     TextTable, TextTableAdapter, SimpleTextTableAdapter, RatiosAdapter, HtmlCell, \
     HeaderRow

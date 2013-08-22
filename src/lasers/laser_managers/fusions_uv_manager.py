@@ -19,8 +19,7 @@
 #============= enthought library imports =======================
 from traits.api import Instance, Enum, Bool, Button, Str, DelegatesTo, Event, Property, \
     Int
-from traitsui.api import View, Item, Group, HGroup, VGroup, Label, \
-    EnumEditor, spring, ButtonEditor
+from traitsui.api import Item, HGroup, VGroup, spring
 
 #============= standard library imports ========================
 import time

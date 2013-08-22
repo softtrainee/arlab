@@ -365,8 +365,8 @@ class Modeler(Loggable):
 
                 # check to see limits are not inf or -inf
                 if xlim[0] != float('-inf') and xlim[1] != float('inf'):
-                    g.set_x_limits(min=xlim[0], max=xlim[1], plotid=i)
-                    g.set_y_limits(min=ylim[0], max=ylim[1], plotid=i)
+                    g.set_x_limits(min_=xlim[0], max_=xlim[1], plotid=i)
+                    g.set_y_limits(min_=ylim[0], max_=ylim[1], plotid=i)
 
             # sync open editors
             if graph_editor is not None:

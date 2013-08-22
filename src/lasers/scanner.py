@@ -15,19 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, List, Bool, Button, Event, String, \
-    Property, Float, Str, Tuple, File, Any, Int
-from traitsui.api import View, Item, Controller, UItem, ButtonEditor
+from traits.api import Instance, List, Bool, Event, \
+    Property, Float, Tuple, File, Int
+from traitsui.api import View, Item, UItem, ButtonEditor
 #============= standard library imports ========================
 import time
+import os
+import yaml
 #============= local library imports  ==========================
 from src.managers.data_managers.csv_data_manager import CSVDataManager
 from src.graph.stream_graph import StreamStackedGraph
 from src.helpers.timer import Timer
 from src.loggable import Loggable
-# from threading import Thread
-import os
-import yaml
 from src.application_controller import ApplicationController
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.ui.thread import Thread

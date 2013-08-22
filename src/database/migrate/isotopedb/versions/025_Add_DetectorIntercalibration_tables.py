@@ -1,6 +1,5 @@
 from sqlalchemy import *
 from migrate import *
-import datetime
 
 meta = MetaData()
 bht = Table('proc_DetectorIntercalibrationHistoryTable', meta,

@@ -67,7 +67,7 @@ class InitializationParser(XMLParser):
         cat.append(self.new_element('plugin', name, enabled='false'))
         self.save()
 
-    def get_plugins(self, category=None, all=False, element=False):
+    def get_plugins(self, category=None, all_=False, element=False):
         tree = self.get_root()
         tree = tree.find('plugins')
         if category:
@@ -81,7 +81,7 @@ class InitializationParser(XMLParser):
                 plugins = tree.getiterator(tag='plugin')
 
         return [p if element else p.text.strip()
-                for p in plugins if all or p.get('enabled').lower() == 'true']
+                for p in plugins if all_ or p.get('enabled').lower() == 'true']
 
 #    def get_plugins_as_elements(self, category):
 #        tree = self._tree.find('plugins')
@@ -112,10 +112,10 @@ class InitializationParser(XMLParser):
         return [t.tag for t in list(tree)]
 
     def get_parameters(self, *args, **kw):
-        return self._get_parameters(all=True, *args, **kw)
+        return self._get_parameters(all_=True, *args, **kw)
 
-    def get_parameter(self, subtree, name, all=True, **kw):
-        pa = self._get_parameters(subtree, name, all=all, **kw)
+    def get_parameter(self, subtree, name, all_=True, **kw):
+        pa = self._get_parameters(subtree, name, all_=all_, **kw)
         if pa:
             return pa[0]
 
@@ -225,17 +225,17 @@ class InitializationParser(XMLParser):
                 servers += hs
         return servers
 
-    def _get_parameters(self, subtree, tag, all=False, element=False):
+    def _get_parameters(self, subtree, tag, all_=False, element=False):
 
         return [d if element else d.text.strip()
                 for d in subtree.findall(tag)
                     if all or lower(d.get('enabled')) == 'true']
 
-    def get_managers(self, elem, all=False, element=False):
+    def get_managers(self, elem, all_=False, element=False):
         lower = lambda x: x.lower() if x else None
         return [m if element else m.text.strip()
                 for m in elem.findall('manager')
-                               if all or lower(m.get('enabled')) == 'true']
+                               if all_ or lower(m.get('enabled')) == 'true']
 
     def get_plugin(self, name, category=None):
         if '_' in name:

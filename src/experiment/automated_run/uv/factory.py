@@ -15,17 +15,17 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, String, Str, Property, Any, \
-     Float, Instance, Int, List, cached_property, on_trait_change, Button, \
+from traits.api import Str, Property, Int, List, Button, \
      cached_property
-from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, Group, Spring, spring
+from traitsui.api import Item, EnumEditor, HGroup, VGroup, Group
 #============= standard library imports ========================
+import os
 #============= local library imports  ==========================
 from src.experiment.automated_run.factory import AutomatedRunFactory
 from src.constants import NULL_STR
 from src.experiment.automated_run.uv.spec import UVAutomatedRunSpec
-import os
 from src.paths import paths
+
 
 class UVAutomatedRunFactory(AutomatedRunFactory):
     reprate = Int

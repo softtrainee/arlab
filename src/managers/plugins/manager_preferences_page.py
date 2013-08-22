@@ -73,7 +73,7 @@ class ManagerPreferencesPage(PreferencesPage):
         r = []
         # get the plugin this manager belongs to
         plugin = self.parser.get_plugin(self.plugin_name)
-        mans = self.parser.get_managers(plugin, element=True, all=True)
+        mans = self.parser.get_managers(plugin, element=True, all_=True)
         if mans is not None:
             r = [CItem(enabled=True if m.get('enabled').lower() == 'true' else False,
                        name=m.text.strip()
@@ -87,7 +87,7 @@ class ManagerPreferencesPage(PreferencesPage):
         # get the plugin this manager belongs to
         plugin = self.parser.get_plugin(self.plugin_name)
 
-        devs = self.parser.get_devices(plugin, element=True, all=True)
+        devs = self.parser.get_devices(plugin, element=True, all_=True)
         if devs is not None:
             r = [CItem(enabled=True if d.get('enabled').lower() == 'true' else False,
                        name=d.text.strip()

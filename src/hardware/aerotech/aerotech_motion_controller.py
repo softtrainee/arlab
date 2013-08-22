@@ -60,11 +60,6 @@ class AerotechMotionController(MotionController):
         if self.axes.has_key('y'):
             return self.axes.keys().index('y') == 0
 
-    def execute_command_buffer(self, buf):
-        if isinstance(buf, (list, tuple)):
-            buf = '\n'.join(buf)
-        self.ask(buf, handshake_only=True)
-
     def linear_move(self, x, y, sign_correct=True, block=False, velocity=None,
                     set_stage=True,
                     buf=None,
@@ -180,10 +175,16 @@ class AerotechMotionController(MotionController):
     def end_command_buffer(self):
         self.hold(False)
 
-    def execute_command_buffer(self):
-        self.trigger()
-        self.timer = self.timer_factory()
-        self.block()
+#     def execute_command_buffer(self):
+#         self.trigger()
+#         self.timer = self.timer_factory()
+#         self.block()
+#
+#     def execute_command_buffer(self, buf):
+#         if isinstance(buf, (list, tuple)):
+#             buf = '\n'.join(buf)
+#         self.ask(buf, handshake_only=True)
+
 
     def hold(self, onoff):
         cmd = 'HD{}'.format(int(onoff))

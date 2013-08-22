@@ -11,7 +11,7 @@ def upgrade(migrate_engine):
 
 def downgrade(migrate_engine):
     # Operations to reverse the above upgrade go here.
-	meta = MetaData(bind=migrate_engine)
-	t = Table('AnalysisTable', meta, autoload=True)
-	col = Column('irradiation_position_id', Integer)
-	col.create(t)
+    meta = MetaData(bind=migrate_engine)
+    t = Table('AnalysisTable', meta, autoload=True)
+    col = Column('irradiation_position_id', Integer)
+    col.create(t)

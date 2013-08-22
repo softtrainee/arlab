@@ -309,7 +309,7 @@ class StatsPane(TraitsDockPane):
         return v
 
 class ControlsPane(TraitsDockPane):
-    name = 'Controls'
+#     name = 'Controls'
     id = 'pychron.experiment.controls'
 
     movable = False

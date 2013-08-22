@@ -18,10 +18,9 @@ ETSConfig.toolkit = 'qt4'
 
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Float, Button, Any
-from traitsui.api import View, Item, TableEditor
+from traits.api import Instance, Float, Any
+
 #============= standard library imports ========================
-import time
 from threading import Timer
 from numpy import asarray
 #============= local library imports  ==========================

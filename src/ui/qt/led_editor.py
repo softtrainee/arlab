@@ -21,8 +21,7 @@ from traits.api import HasTraits, Property, Int, Callable, Any
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 #============= standard library imports ========================
-from PySide.QtGui import QImage, QLabel, QColor, QPixmap
-from src.ui.gui import invoke_in_main_thread
+from PySide.QtGui import QColor
 #============= local library imports  ==========================
 #============= views ===================================
 COLORS = ['red', 'yellow', 'green', 'black']
@@ -218,7 +217,7 @@ def change_intensity(color, fac):
 #
 #         self._set_image(color1, color2)
 
-from PySide.QtGui import QGraphicsView, QGraphicsScene, QBrush, QColor, \
+from PySide.QtGui import QGraphicsView, QGraphicsScene, QBrush, \
     QPen, QRadialGradient
 from PySide.QtCore import Qt
 

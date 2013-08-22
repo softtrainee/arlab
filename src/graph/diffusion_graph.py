@@ -298,7 +298,7 @@ class DiffusionGraph(Graph):
         '''
         self.set_x_title('t (Ma)', plotid=pid)
         self.set_y_title('Temp (C)', plotid=pid)
-        self.set_y_limits(min=100, plotid=pid)
+        self.set_y_limits(min_=100, plotid=pid)
 
         if colors:
             p1, p2 = colors
@@ -317,7 +317,7 @@ class DiffusionGraph(Graph):
     def build_unconstrained_thermal_history(self, datacontainer, pid=4, contour=True):
         self.set_x_title('t (Ma)', plotid=pid)
         self.set_y_title('Temp (C)', plotid=pid)
-        self.set_y_limits(min=100, plotid=pid)
+        self.set_y_limits(min_=100, plotid=pid)
 
         if contour:
             if not self.zdataname_generators:

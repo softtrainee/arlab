@@ -142,9 +142,9 @@ class ExperimentEditorTask(EditorTask):
 
         self.load_pane = LoadDockPane()
         self.load_table_pane = LoadTablePane(model=self.loading_manager)
-
+        self.experiment_factory_pane = ExperimentFactoryPane(model=self.manager.experiment_factory)
         panes = [
-                ExperimentFactoryPane(model=self.manager.experiment_factory),
+                self.experiment_factory_pane,
                 StatsPane(model=self.manager),
                 ControlsPane(model=self.manager.executor),
                 ConsolePane(model=self.manager.executor),
@@ -237,9 +237,13 @@ class ExperimentEditorTask(EditorTask):
 
         # reset the experimentors db session
         # since the executor session will have made changes
-        self.manager.update_info(reset_db=True)
-        self.manager.executor.end_at_run_completion = False
-        self.manager.stats.reset()
+        man = self.manager
+        ex = man.executor
+        man.update_info(reset_db=True)
+        man.stats.reset()
+
+        ex.end_at_run_completion = False
+        ex.set_extract_state('')
 
 #     def merge(self):
 #         eqs = [self.active_editor.queue]
@@ -438,6 +442,7 @@ class ExperimentEditorTask(EditorTask):
 
             qs = [ei.queue for ei in self.editor_area.editors
                     if ei != self.active_editor]
+
             if self.active_editor:
                 qs.insert(0, self.active_editor.queue)
 
@@ -445,6 +450,23 @@ class ExperimentEditorTask(EditorTask):
             # if successful open an auto figure task
             if self.manager.execute_queues(qs):
                 self._open_auto_figure()
+
+                # display some default controls
+                for p in (self.isotope_evolution_pane,):
+                    self._show_pane(p)
+
+    @on_trait_change('active_editor:queue:dclicked')
+    def _edit_event(self):
+        p = self.experiment_factory_pane
+        self._show_pane(p)
+
+    def _show_pane(self, p):
+        ctrl = p.control
+        if not p.visible:
+            ctrl.show()
+        ctrl.raise_()
+
+
 
 #         editor = self.active_editor
 #         if editor is None:

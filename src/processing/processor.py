@@ -336,13 +336,13 @@ class Processor(IsotopeDatabaseManager):
         mean_calculation_kind = 'weighted_mean'
         data_label_font = None
         metadata_label_font = None
- #        highlight_omitted = True
+#        highlight_omitted = True
         display_mean_indicator = True
         display_mean_text = True
 
         p = Ideogram(
- #                     db=self.db,
- #                     processing_manager=self,
+#                     db=self.db,
+#                     processing_manager=self,
                      probability_curve_kind=probability_curve_kind,
                      mean_calculation_kind=mean_calculation_kind
                      )

@@ -15,17 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Str, Int, CStr, CInt, List, Property, \
-     Event, Float, Instance, Bool, cached_property, Dict, HasTraits, \
-     String, Enum
+from traits.api import Any, Str, Int, List, Property, \
+     Event, Instance, Bool, Dict, HasTraits
 #============= standard library imports ========================
 import os
 import time
-import random
 import ast
 import yaml
 import struct
-from threading import Thread, Event as TEvent, currentThread
+from threading import Thread, Event as TEvent
 from uncertainties import ufloat
 from numpy import Inf
 #============= local library imports  ==========================
@@ -51,9 +49,8 @@ from src.processing.isotope import IsotopicMeasurement
 from src.experiment.export.export_spec import ExportSpec
 from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import consumable
-from src.codetools.memory_usage import mem_log, mem_dump, mem_log_func
-# import gc
-# from memory_profiler import profile
+from src.codetools.memory_usage import mem_log, mem_log_func
+
 
 class ScriptInfo(HasTraits):
     measurement_script_name = Str
@@ -1130,7 +1127,7 @@ anaylsis_type={}
         if (self._total_counts + dev) > ma:
             graph.set_x_limits(-starttime_offset, self._total_counts + (ma - mi) * 0.25)
         elif starttime_offset > mi:
-            graph.set_x_limits(min=-starttime_offset)
+            graph.set_x_limits(min_=-starttime_offset)
 
 #         spectrometer = self.spectrometer_manager.spectrometer
         get_data = lambda: self.spectrometer_manager.spectrometer.get_intensities(tagged=True)

@@ -113,9 +113,9 @@ class ContextFilter(Loggable):
             if te in ctx:
                 ctx[te].triggered = True
 
-    def get_response(self, handler, data, filter=False):
+    def get_response(self, handler, data, filter_=False):
 
-        if filter:
+        if filter_:
             kind, request = handler.parse(data)
 
             resp = True

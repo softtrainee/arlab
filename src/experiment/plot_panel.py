@@ -143,7 +143,7 @@ class PlotPanel(Loggable):
                        padding_right=10,
                        )
 
-        g.set_x_limits(min=0, max=400)
+        g.set_x_limits(min_=0, max_=400)
 #
 #        g.suppress_regression = False
         self.detectors = dets

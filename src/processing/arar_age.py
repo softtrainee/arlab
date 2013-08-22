@@ -16,22 +16,20 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Dict, Property, cached_property, \
-    Event, Bool, Str, Instance, Float
+    Event, Bool, Instance, Float
+from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 import datetime
 from uncertainties import ufloat
-# import copy
+
 #============= local library imports  ==========================
 from src.processing.argon_calculations import calculate_arar_age
-from src.constants import AGE_SCALARS
-from apptools.preferences.preference_binding import bind_preference
 from src.processing.arar_constants import ArArConstants
 from src.processing.isotope import Isotope
 
 def AgeProperty():
     return Property(depends_on='age_dirty')
-# class AgeProperty()(Property):
-#    depends_on = 'age_dirty'
+
 
 class ArArAge(HasTraits):
     include_j_error = Bool(True)

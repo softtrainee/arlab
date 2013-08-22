@@ -39,7 +39,7 @@ def downgrade(migrate_engine):
     # Operations to reverse the above upgrade go here.
     meta.bind = migrate_engine
     for t in tables:
-    	t.drop()
+        t.drop()
 
     t = Table('IrradiationPositionTable', MetaData(bind=migrate_engine), autoload=True)
     t.c.flux_id.drop()

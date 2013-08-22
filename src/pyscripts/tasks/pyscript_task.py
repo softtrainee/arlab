@@ -15,13 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, String, List, Instance, Property, Any, Enum, \
-    on_trait_change, Bool, Event, Int
-from traitsui.api import View, Item, EnumEditor, UItem, Label
+from traits.api import String, List, Instance, Any, \
+    on_trait_change, Bool, Int
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Tabbed, Splitter
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.envisage.tasks.base_task import BaseManagerTask
 from src.envisage.tasks.editor_task import EditorTask
 from src.pyscripts.tasks.pyscript_editor import ExtractionEditor, MeasurementEditor, \
     BakeoutEditor

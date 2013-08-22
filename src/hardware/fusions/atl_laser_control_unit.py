@@ -17,8 +17,7 @@
 
 
 #============= enthought library imports =======================
-from traits.api import Bool, Float, Str, Constant, Int, Str
-from pyface.timer.api import Timer
+from traits.api import  Float, Int, Str
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.hardware.core.core_device import CoreDevice

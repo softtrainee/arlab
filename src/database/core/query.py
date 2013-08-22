@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, Property, Str, List, Button, Any, \
     Bool, cached_property, Event
-from traitsui.api import View, Item, EnumEditor, HGroup, Spring, CheckListEditor, \
+from traitsui.api import View, Item, EnumEditor, HGroup, CheckListEditor, \
     VGroup
 from src.helpers.datetime_tools import get_date
 from datetime import datetime, timedelta

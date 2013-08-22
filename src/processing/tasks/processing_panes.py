@@ -15,20 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Any, Instance, on_trait_change, Event, Color, List
-from traitsui.api import View, HGroup, Item, UItem, \
-    InstanceEditor, EnumEditor, Group
+from traits.api import Any, Instance, Event, List
+from traitsui.api import View, HGroup, UItem, EnumEditor
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.split_editor_area_pane import SplitEditorAreaPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from chaco.plot import Plot
-from src.processing.tasks.plot_editor import PlotEditor
 from enable.base_tool import BaseTool
-from chaco.plot_containers import VPlotContainer
 from chaco.abstract_overlay import AbstractOverlay
 from enable.colors import ColorTrait
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.processing.tasks.plot_editor import PlotEditor
 
 
 class SelectorTool(BaseTool):

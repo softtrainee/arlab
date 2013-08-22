@@ -1,3 +1,4 @@
+# @PydevCodeAnalysisIgnore
 #!/usr/bin/python
 #===============================================================================
 # Copyright 2011 Jake Ross

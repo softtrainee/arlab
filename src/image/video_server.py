@@ -72,11 +72,8 @@ class VideoServer(Loggable):
 
     def _broadcast(self):
 #        new_frame = self._new_frame_ready
-
-
-
         self.info('video broadcast thread started')
-        import zmq
+
         context = zmq.Context()
 #         sock = context.socket(zmq.PUB)
         sock = context.socket(zmq.REP)

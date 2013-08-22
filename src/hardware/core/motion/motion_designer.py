@@ -122,7 +122,7 @@ class MotionDesigner(HasTraits):
 
         # plot beam radius'
         # include padding in the beam radius
-       # yl = [pi - self.beam_radius for pi in y]
+        # yl = [pi - self.beam_radius for pi in y]
         # yu = [pi + self.beam_radius for pi in y]
         # g.new_series(x, yl, color='blue')
         # g.new_series(x, yu, color='blue')
@@ -171,7 +171,7 @@ class MotionDesigner(HasTraits):
         x.append(totaltime)
         y.append(0)
         g.new_series(x, y, plotid=plotid, render_style='connectedpoints')
-        g.set_y_limits(plotid=plotid, max=self.velocity + 5)
+        g.set_y_limits(plotid=plotid, max_=self.velocity + 5)
 
         return atime, dtime, vtime
 

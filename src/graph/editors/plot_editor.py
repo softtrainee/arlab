@@ -330,19 +330,19 @@ class PlotEditor(HasTraits):
 
     def _set_xmin(self, v):
         self._xmin = v
-        self.graph.set_x_limits(min=v, plotid=self.id)
+        self.graph.set_x_limits(min_=v, plotid=self.id)
 
     def _set_xmax(self, v):
         self._xmax = v
-        self.graph.set_x_limits(max=v, plotid=self.id)
+        self.graph.set_x_limits(max_=v, plotid=self.id)
 
     def _set_ymin(self, v):
         self._ymin = v
-        self.graph.set_y_limits(min=v, plotid=self.id)
+        self.graph.set_y_limits(min_=v, plotid=self.id)
 
     def _set_ymax(self, v):
         self._ymax = v
-        self.graph.set_y_limits(max=v, plotid=self.id)
+        self.graph.set_y_limits(max_=v, plotid=self.id)
 
     def _get_xmin(self):
         return self._xmin

@@ -120,7 +120,7 @@ class PeakCenter(MagnetScan):
             start = center_dac - wnd * (i + 1)
             end = center_dac + wnd * (i + 1)
             self.info('Scan parameters center={} start={} end={} step width={}'.format(center_dac, start, end, self.step_width))
-            graph.set_x_limits(min=min([start, end]), max=max([start, end]))
+            graph.set_x_limits(min_=min([start, end]), max_=max([start, end]))
 
             width = self.step_width
             try:

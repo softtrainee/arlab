@@ -33,7 +33,7 @@ from cv_wrapper import swap_rb as cv_swap_rb
 #
 
 from src.globals import globalv
-from src.consumer_mixin import ConsumerMixin, consumable
+from src.consumer_mixin import consumable
 def convert_to_video(path, fps, name_filter='snapshot%03d.jpg',
                      ffmpeg=None,
                      output=None):

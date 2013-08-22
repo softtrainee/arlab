@@ -201,12 +201,12 @@ class Graph(Viewable, ContextMenuMixin):
     def save_png(self, path=None):
         '''
         '''
-        self._save_(type='pic', path=path)
+        self._save_(type_='pic', path=path)
 
     def save_pdf(self, path=None):
         '''
         '''
-        self._save_(type='pdf', path=path)
+        self._save_(type_='pdf', path=path)
 
     def save(self, path=None):
         '''
@@ -466,18 +466,18 @@ class Graph(Viewable, ContextMenuMixin):
         '''
         return self._get_limits('value', plotid=plotid)
 
-    def set_y_limits(self, min=None, max=None, pad=0, plotid=0, **kw):
+    def set_y_limits(self, min_=None, max_=None, pad=0, plotid=0, **kw):
         '''
         '''
         mmin, mmax = self.get_y_limits(plotid)
-        if min is None:
-            min = mmin
-        if max is None:
-            max = mmax
+        if min_ is None:
+            min_ = mmin
+        if max_ is None:
+            max_ = mmax
 
-        self._set_limits(min, max, 'value', plotid, pad, **kw)
+        self._set_limits(min_, max_, 'value', plotid, pad, **kw)
 
-    def set_x_limits(self, min=None, max=None, pad=0, plotid=0, **kw):
+    def set_x_limits(self, min_=None, max_=None, pad=0, plotid=0, **kw):
         '''
         '''
         self._set_limits(min, max, 'index', plotid, pad, **kw)
@@ -877,8 +877,8 @@ class Graph(Viewable, ContextMenuMixin):
 #                if ypadding / ma > 0.5:
 #                    ypadding = 0
 
-                self.set_y_limits(min=mi,
-                                  max=ma + ypad,
+                self.set_y_limits(min_=mi,
+                                  max_=ma + ypad,
                                   plotid=plotid)
 
         if do_after:
@@ -1226,7 +1226,7 @@ class Graph(Viewable, ContextMenuMixin):
 
         return plot, (xname, yname), kw
 
-    def _save_(self, type='pic', path=None):
+    def _save_(self, type_='pic', path=None):
         '''
         '''
         if path is None:
@@ -1236,12 +1236,12 @@ class Graph(Viewable, ContextMenuMixin):
                 self.status_text = 'Image Saved: %s' % path
 
         if path is not None:
-            if type == 'pdf':
+            if type_ == 'pdf':
                 self._render_to_pdf(filename=path)
             else:
                 # auto add an extension to the filename if not present
                 # extension is necessary for PIL compression
-                # set default save type DEFAULT_IMAGE_EXT='.png'
+                # set default save type_ DEFAULT_IMAGE_EXT='.png'
 
                 # see http://infohost.nmt.edu/tcc/help/pubs/pil/formats.html
                 saved = False

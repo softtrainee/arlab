@@ -208,8 +208,8 @@ class SelectionView(Viewable):
 #                s.overlays.append(RangeSelectionOverlay(component=s))
 #                s.index.on_trait_change(getattr(self, '_update_{}'.format(at)), 'metadata_changed')
 
-        g.set_x_limits(min=0, max=xma, pad='0.1')
-        g.set_y_limits(min=0, max=yma * 1.1)
+        g.set_x_limits(min_=0, max_=xma, pad='0.1')
+        g.set_y_limits(min_=0, max_=yma * 1.1)
 
 #    def _update(self, sc, nds):
 #        #rescale y limits

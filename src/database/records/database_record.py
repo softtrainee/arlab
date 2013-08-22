@@ -15,13 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Int, Any, Str, Property, cached_property, Bool, Event
+from traits.api import Int, Any, Str, Property, cached_property
 from traitsui.api import View
-from traitsui.menu import Action
 #============= standard library imports ========================
+import time
 #============= local library imports  ==========================
 from src.graph.graph import Graph
-import time
 from src.saveable import Saveable
 
 

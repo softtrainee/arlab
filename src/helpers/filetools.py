@@ -137,10 +137,10 @@ def parse_canvasfile(p, kw):
     # kw=['origin','valvexy','valvewh','opencolor','closecolor']
 
     if os.path.exists(p) and os.path.isfile(p):
-        with open(p, 'r') as file:
+        with open(p, 'r') as fp:
             indices = {}
             i = 0
-            f = filetoarray(file)
+            f = filetoarray(fp)
             count = 1
             for i in range(len(f)):
                 if f[i][:1] == '!':

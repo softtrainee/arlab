@@ -25,6 +25,8 @@ from data_manager import DataManager
 from table_descriptions import table_description_factory
 import os
 import weakref
+
+
 def get_table(name, group, frame):
     try:
         if isinstance(group, str):

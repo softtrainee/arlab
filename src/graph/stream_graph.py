@@ -90,7 +90,7 @@ class StreamGraph(Graph):
 
         args = super(StreamGraph, self).new_plot(**kw)
 
-        self.set_x_limits(min=0, max=dl * sd + 1, plotid=len(self.plots) - 1)
+        self.set_x_limits(min_=0, max_=dl * sd + 1, plotid=len(self.plots) - 1)
 
         return args
 
@@ -111,7 +111,7 @@ class StreamGraph(Graph):
         if not self.track_y_min[plotid]:
             mi = None
 
-        self.set_y_limits(min=mi, max=ma, plotid=plotid, pad=5, **kw)
+        self.set_y_limits(min_=mi, max_=ma, plotid=plotid, pad=5, **kw)
 
     def set_scan_delay(self, v, plotid=0):
         self.scan_delays[plotid] = v
@@ -226,8 +226,8 @@ class StreamGraph(Graph):
                     else:
                         mi = max(1, mi)
 
-                    self.set_x_limits(max=ma,
-                              min=mi,
+                    self.set_x_limits(max_=ma,
+                              min_=mi,
                               plotid=plotid,
 #                              force=False
 #                              pad=10 * self.scan_delays[plotid]

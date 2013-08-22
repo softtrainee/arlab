@@ -18,7 +18,7 @@
 
 #=============standard library imports ========================
 from sqlalchemy import Column, Integer, Float, String, \
-     ForeignKey, BLOB, DateTime, Time, Date
+     ForeignKey, Time, Date
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 

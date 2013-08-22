@@ -1,3 +1,4 @@
+# @PydevCodeAnalysisIgnore
 import numpy
 import scipy  # use numpy if scipy unavailable
 import scipy.linalg  # use numpy if scipy unavailable

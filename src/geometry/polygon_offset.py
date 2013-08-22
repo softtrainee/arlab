@@ -19,7 +19,7 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 import math
-from numpy import array, cross, dot, hstack, vstack, dot, sqrt, linalg
+from numpy import array, cross, vstack, dot, linalg
 #============= local library imports  ==========================
 from src.geometry.geometry import sort_clockwise
 from src.geometry.convex_hull import convex_hull
@@ -120,7 +120,7 @@ def polygon_offset(poly, offset):
     return polyinset
 
 if __name__ == '__main__':
-    from pylab import plot, show, array
+    from pylab import plot, show
     pts = [(2, 7), (4, 12), (8, 15), (16, 9), (11, 5), (8, 7), (5, 5)]
     pts = [(0, 0), (10, 0), (10, 10), (5, 20), (0, 10)]
     n = 100

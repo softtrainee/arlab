@@ -110,22 +110,22 @@ class VueDiodeControlModule(CoreDevice):
         '''
         '''
         cmd = 'pa?'
-        return self._parse_response(self.ask(cmd, **kw), type='float')
+        return self._parse_response(self.ask(cmd, **kw), type_='float')
 
 
 
-    def read_adc(self, id, **kw):
+    def read_adc(self, _id, **kw):
         '''
             
         '''
-        cmd = 'adi%i?' % id
-        return self._parse_response(self.ask(cmd, **kw), type='float')
+        cmd = 'adi%i?' % _id
+        return self._parse_response(self.ask(cmd, **kw), type_='float')
 
     def read_laser_current_adc(self, **kw):
         '''
         '''
         cmd = 'adi?'
-        return self._parse_response(self.ask(cmd, **kw), type='float')
+        return self._parse_response(self.ask(cmd, **kw), type_='float')
 
     def read_laser_temperature_adc(self, **kw):
         '''
@@ -133,29 +133,29 @@ class VueDiodeControlModule(CoreDevice):
         cmd = 'adlt?'
         # cmd = 't0?'
 
-        return self._parse_response(self.ask(cmd, **kw), type='float')
+        return self._parse_response(self.ask(cmd, **kw), type_='float')
 
 
     def read_laser_power_adc(self, **kw):
         '''
         '''
         cmd = 'adp?'
-        return self._parse_response(self.ask(cmd, **kw), type='float')
+        return self._parse_response(self.ask(cmd, **kw), type_='float')
 
     def read_laser_voltage_adc(self, **kw):
         '''
         '''
         cmd = 'adv?'
-        return self._parse_response(self.ask(cmd, **kw), type='float')
+        return self._parse_response(self.ask(cmd, **kw), type_='float')
     def read_laser_amps(self, **kw):
         '''
         '''
         cmd = 'i?'
-        return self._parse_response(self.ask(cmd, **kw), type='float')
+        return self._parse_response(self.ask(cmd, **kw), type_='float')
 
     def read_external_control_adc(self, **kw):
         cmd = 'adixc?'
-        return self._parse_response(self.ask(cmd, **kw), type='float')
+        return self._parse_response(self.ask(cmd, **kw), type_='float')
 
     def set_request_amps(self, a, **kw):
         '''
@@ -164,22 +164,22 @@ class VueDiodeControlModule(CoreDevice):
         cmd = 'i {:0.3d}'.format(a)
         self.ask(cmd, **kw)
 
-    def _parse_response(self, res, type='bool'):
+    def _parse_response(self, res, type_='bool'):
         '''
         '''
         r = None
         if res is not None:  # and res is not 'simulation':
             res = res.strip()
-            if type == 'bool':
+            if type_ == 'bool':
                 if res == 'OK':
                     return True
-            elif type == 'float':
+            elif type_ == 'float':
                 try:
                     r = float(res)
                 except ValueError, e:
                     self.warning(e)
         else:
-            if type == 'float':
+            if type_ == 'float':
                 r = self.get_random_value(0, 100)
 
         return r

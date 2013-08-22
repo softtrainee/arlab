@@ -15,7 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-from traits.api import HasTraits, Str, Bool, Any, Property, String
+from traits.api import HasTraits, Str, Bool, Property, String
 
 #=============standard library imports ========================
 

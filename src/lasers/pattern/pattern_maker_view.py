@@ -19,16 +19,14 @@ import os
 ETSConfig.toolkit = 'qt4'
 
 #============= enthought library imports =======================
-from traits.api import Property, Enum, Str, on_trait_change, Button, Any, Event, \
-    Bool
-from traitsui.api import View, Item, InstanceEditor, ButtonEditor, HGroup, Spring, spring
+from traits.api import Property, Enum, Str, on_trait_change
+from traitsui.api import View, Item, InstanceEditor
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.lasers.pattern.patternable import Patternable
 from src.saveable import Saveable, SaveableButtons
 from src.paths import paths
-
 
 
 class PatternMakerView(Saveable, Patternable):

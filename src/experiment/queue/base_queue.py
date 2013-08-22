@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Instance, DelegatesTo, Str, Int, \
-    Property, Event, on_trait_change, Bool, String
+from traits.api import Instance, DelegatesTo, Str, Int, \
+    Property, Event, Bool, String
 #============= standard library imports ========================
 import yaml
 import os

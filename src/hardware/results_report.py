@@ -57,7 +57,7 @@ class ResultsAdapter(TabularAdapter):
              ('Result', 'result')
              ]
 
-    def get_width(self, object, trait, column):
+    def get_width(self, obj, trait, column):
         w = -1
         if column == 0:
             w = 290

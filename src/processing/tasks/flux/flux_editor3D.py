@@ -15,14 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, on_trait_change, List
+from traits.api import HasTraits, Instance, List
 from traitsui.api import View, UItem
 # from src.envisage.tasks.base_editor import BaseTraitsEditor
 # from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
-from src.graph.graph import Graph
-from src.regression.least_squares_regressor import LeastSquaresRegressor
+# from src.graph.graph import Graph
+# from src.regression.least_squares_regressor import LeastSquaresRegressor
 #============= standard library imports ========================
-import math
+# import math
 from numpy import average, asarray, cos, linspace, pi, array, max, min, zeros, \
     mgrid
 # import struct
