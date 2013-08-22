@@ -17,19 +17,18 @@
 #============= enthought library imports =======================
 from PySide.QtGui import QKeySequence, QDrag, QAbstractItemView, QTableView
 from PySide.QtGui import QFont, QFontMetrics
-from PySide.QtCore import Qt
 
 from PySide import QtCore
-from traits.api import Bool, on_trait_change, Any, Str, Event, List, Callable
+from traits.api import Bool, Str, List
 from traitsui.editors.tabular_editor import TabularEditor
 from traitsui.qt4.tabular_editor import TabularEditor as qtTabularEditor, \
     _TableView
 from traitsui.mimedata import PyMimeData
-from src.helpers.ctx_managers import no_update
-import time
-from src.consumer_mixin import ConsumerMixin
 #============= standard library imports ========================
+import time
 #============= local library imports  ==========================
+from src.helpers.ctx_managers import no_update
+from src.consumer_mixin import ConsumerMixin
 
 class _myTableView(_TableView, ConsumerMixin):
     '''

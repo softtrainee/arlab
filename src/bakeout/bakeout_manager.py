@@ -483,7 +483,7 @@ class BakeoutManager(Manager):
         self.graph.set_data_limits(dl)
 
         mi, _ = self.graph.get_x_limits()
-        self.graph.set_x_limits(min=mi, max=mi + self.scan_window * 60)
+        self.graph.set_x_limits(min_=mi, max_=mi + self.scan_window * 60)
 
     def _update_interval_changed(self):
 #         for tr in self._get_controller_names():

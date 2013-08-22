@@ -15,10 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Any, Bool, Str, Property, \
-    cached_property, List, Event, Int
+from traits.api import on_trait_change, Any, List
 # from traitsui.api import View, Item
-from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
+from pyface.tasks.task_layout import PaneItem, TaskLayout
+from pyface.constant import CANCEL, NO
+from pyface.tasks.action.schema import SToolBar
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # from src.envisage.tasks.base_task import BaseManagerTask
@@ -28,20 +29,18 @@ from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 # from src.paths import paths
 # import hashlib
 # import os
-from pyface.constant import CANCEL, YES, NO
 # from src.helpers.filetools import add_extension
 # from src.ui.gui import invoke_in_main_thread
 # from apptools.preferences.preference_binding import bind_preference
-from src.envisage.tasks.base_task import BaseTask, BaseManagerTask
+from src.envisage.tasks.base_task import BaseManagerTask
 from src.experiment.loading.panes import LoadPane, LoadControlPane, LoadTablePane
 from src.canvas.canvas2D.loading_canvas import LoadingCanvas
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+# from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 
-from itertools import groupby
-from pyface.tasks.action.schema import SToolBar
+# from itertools import groupby
 from src.experiment.loading.actions import SaveLoadingAction
-from pyface.image_resource import ImageResource
-from src.paths import paths
+# from pyface.image_resource import ImageResource
+# from src.paths import paths
 from reportlab.platypus.tables import Table, TableStyle
 from reportlab.platypus.flowables import PageBreak, Flowable
 from reportlab.platypus.doctemplate import SimpleDocTemplate, BaseDocTemplate, \

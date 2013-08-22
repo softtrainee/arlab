@@ -15,18 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Property
-from traitsui.api import View, Item
-from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
-from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
-from src.processing.tasks.flux.panes import IrradiationPane
+from traits.api import on_trait_change, Property
 from traitsui.tabular_adapter import TabularAdapter
-from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
-from src.processing.tasks.analysis_edit.panes import HistoryTablePane, TablePane
-from src.processing.argon_calculations import calculate_flux
+from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
 #============= standard library imports ========================
 from numpy import asarray, average
 #============= local library imports  ==========================
+from src.processing.tasks.flux.panes import IrradiationPane
+from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
+from src.processing.tasks.analysis_edit.panes import HistoryTablePane, TablePane
+from src.processing.argon_calculations import calculate_flux
+
+
 class LevelAdatper(TabularAdapter):
     columns = [('Run ID', 'name')]
     name_text = Property

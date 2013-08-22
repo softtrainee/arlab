@@ -70,14 +70,14 @@ class TCPServer(ThreadingTCPServer, MessagingServer):
 #                return
             sock.listen(2)
             # running = True
-            input = [sock]
+            _input = [sock]
             while self._running:
-                inputready, _outputready, _exceptready = select.select(input, [], [], 0.25)
+                inputready, _outputready, _exceptready = select.select(_input, [], [], 0.25)
                 for s in inputready:
                     if s == sock:
                         # handle the sock socket
                         client, _address = sock.accept()
-                        input.append(client)
+                        _input.append(client)
                     else:
                         # handle all other sockets
                         data = None
@@ -105,7 +105,7 @@ class TCPServer(ThreadingTCPServer, MessagingServer):
                             self.increment_packets_sent()
                         else:
                             s.close()
-                            input.remove(s)
+                            _input.remove(s)
             sock.close()
 
         # start a listener thread

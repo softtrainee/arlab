@@ -15,14 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Float, Event, String
-from traitsui.api import View, Item, ButtonEditor
+from traits.api import Str
 from src.loggable import Loggable
-import math
 import apptools.sweet_pickle as pickle
 import os
 from src.paths import paths
-from src.ui.custom_label_editor import CustomLabel
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 SIMPLE_HELP = '''1. Locate center hole

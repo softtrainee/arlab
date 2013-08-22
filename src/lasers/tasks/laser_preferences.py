@@ -101,7 +101,6 @@ class FusionsLaserPreferences(LaserPreferences):
             value = value[:-1]
             value = map(float, value.split(','))
             value = ','.join(map(lambda x: str(int(x * 255)), value))
- #  #            PySide.QtGui.QColor.fromRgbF(1.000000, 0.128695, 0.235080, 1.000000)
         else:
             value = super(LaserPreferences, self)._get_value(name, value)
         return value

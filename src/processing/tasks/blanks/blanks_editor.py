@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Str, Bool, List, implements, on_trait_change, \
-    Any, Event, Property
+from traits.api import Str, on_trait_change
 from traitsui.api import View, Item, UItem, ListEditor, InstanceEditor, \
     EnumEditor, HGroup, VGroup, spring, Label, Spring
 from chaco.array_data_source import ArrayDataSource

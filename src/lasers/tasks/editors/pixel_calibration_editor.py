@@ -15,12 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
-from src.envisage.tasks.base_editor import BaseTraitsEditor
-from src.lasers.tasks.editors.laser_editor import LaserEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.lasers.tasks.editors.laser_editor import LaserEditor
 
 class PixelCalibrationEditor(LaserEditor):
     def _do_execute(self):

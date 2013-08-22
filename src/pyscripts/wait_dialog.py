@@ -26,30 +26,11 @@ from threading import Event
 # import time
 
 #============= standard library imports ========================
-
-#============= local library imports  ==========================
-# from src.viewable import ViewableHandler, Viewable
-# from src.helpers import logger_setup
-# from src.helpers.logger_setup import logging_setup
-from src.helpers.timer import Timer
-from src.ui.gui import invoke_in_main_thread
-from src.loggable import Loggable
 import time
+#============= local library imports  ==========================
+from src.helpers.timer import Timer
+from src.loggable import Loggable
 
-# class WDHandler(ViewableHandler):
-# #    def init(self, info):
-# #        info.object.ui = info.ui
-# #
-# #    def closed(self, info, is_ok):
-# #        info.object.closed(is_ok)
-# #        return True
-# #    def close(self, info, isok):
-# #        print 'close', isok
-# #
-# #        return True
-#
-#    def _continue(self, info):
-#        info.object._continue()
 
 class WaitDialog(Loggable):
 #    condition = None
@@ -166,36 +147,9 @@ class WaitDialog(Loggable):
                                                            low_name='low_name',
                                                            high_name='wtime',
                                                            )),
-#                        HGroup(
-#                               UItem('continue_button'),
-#                               spring,
-# #                               UItem('cancel_button'),
-#                               )
                         ),
                )
         return v
-#        kw = dict(buttons=['Cancel',
-#                           Action(name='Continue',
-#                                  action='_continue')
-#                           ],
-#                  handler=WDHandler,
-#                  width=self.window_width
-#                  )
-#        if self.title is not None:
-#            kw['title'] = self.title
-#
-#        return View(
-#                    Item('message', width=1.0, show_label=False, style='readonly'),
-#                    HGroup(Item('high', label='Set Max. Seconds'), spring),
-#                    Item('current_time', show_label=False, editor=RangeEditor(mode='slider',
-#                                                           low_name='low_name',
-#                                                           high_name='wtime',
-#                                                           )),
-#                    **kw
-# #                    title = self.title,
-# #                    buttons = ['Cancel'],
-# #                    handler = WDHandler
-#                    )
 
 # from traits.api import HasTraits, Button
 # class Demo(HasTraits):

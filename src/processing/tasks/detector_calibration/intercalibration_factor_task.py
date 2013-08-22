@@ -15,13 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
-from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
-from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
 
 class IntercalibrationFactorTask(InterpolationTask):
     id = 'pychron.analysis_edit.ic_factor'

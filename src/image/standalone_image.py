@@ -15,20 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Array, Str, Event
-from traitsui.api import View, Item, UItem
-from src.ui.image_editor import ImageEditor
-from numpy import asarray, array, ndarray
-from src.viewable import Viewable
-from scipy.ndimage.interpolation import zoom
-# from traitsui.editors.image_editor import ImageEditor
-# from pyface.ui.qt4.image_resource import ImageResource
-# from pyface.image_resource import ImageResource
+from traits.api import Array, Event
+from traitsui.api import View, UItem
 #============= standard library imports ========================
+from numpy import asarray, array, ndarray
+from scipy.ndimage.interpolation import zoom
 #============= local library imports  ==========================
+from src.viewable import Viewable
+from src.ui.image_editor import ImageEditor
+
+
 class StandAloneImage(Viewable):
-# class StandAloneImage(HasTraits):
-#     image = Any
+
     source_frame = Array
     refresh = Event
 

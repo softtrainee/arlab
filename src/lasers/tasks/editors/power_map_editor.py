@@ -15,21 +15,21 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, Unicode, List, \
-    Instance, Float, Int, Bool, Event, DelegatesTo, Any, Range
-from traitsui.api import View, Item, UItem, VGroup, ButtonEditor, \
+from traits.api import HasTraits, \
+    Instance, Float, Int, Bool, DelegatesTo, Range
+from traitsui.api import View, Item, UItem, VGroup, \
     HGroup, spring
-from src.envisage.tasks.base_editor import BaseTraitsEditor
-from src.loggable import Loggable
+# from src.envisage.tasks.base_editor import BaseTraitsEditor
+# from src.loggable import Loggable
 # from src.canvas.canvas2D.raster_canvas import RasterCanvas
 from enable.component_editor import ComponentEditor
 from src.lasers.power.power_mapper import PowerMapper
 from src.ui.thread import Thread
 from src.lasers.power.power_map_processor import PowerMapProcessor
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from src.graph.graph import Graph
-from src.graph.contour_graph import ContourGraph
-from chaco.plot_containers import HPlotContainer
+# from src.graph.graph import Graph
+# from src.graph.contour_graph import ContourGraph
+# from chaco.plot_containers import HPlotContainer
 from src.lasers.tasks.editors.laser_editor import LaserEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================

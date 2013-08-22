@@ -18,16 +18,15 @@
 from traits.api import HasTraits, Any, Instance, on_trait_change, \
     List, Bool, Int, Float
 from traitsui.api import View, Item, UItem
-#============= standard library imports ========================
-#============= local library imports  ==========================
 from enable.component_editor import ComponentEditor as EnableComponentEditor
-from src.envisage.tasks.base_editor import BaseTraitsEditor
+#============= standard library imports ========================
+from itertools import groupby
+#============= local library imports  ==========================
 from src.processing.plotter_options_manager import IdeogramOptionsManager, \
     SpectrumOptionsManager, InverseIsochronOptionsManager, SeriesOptionsManager
-import os
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
-from itertools import groupby
-from chaco.plot_containers import OverlayPlotContainer
+
+
 class FigureEditor(GraphEditor):
 #     path = File
     component = Any

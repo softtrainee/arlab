@@ -15,17 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, List, Interface, implements, DelegatesTo, \
+from traits.api import Any, List, \
      Enum, Button, Property, Int, Str, Tuple, Instance
 from pyface.api import FileDialog
-from traitsui.api import View, Item
-from src.loggable import Loggable
-import os
-from src.paths import paths
-from src.processing.analysis import NonDBAnalysis
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.loggable import Loggable
+from src.processing.analysis import NonDBAnalysis
 
 class FileSelector(Loggable):
     records = List

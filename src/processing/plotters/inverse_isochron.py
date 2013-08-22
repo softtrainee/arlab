@@ -85,8 +85,8 @@ class InverseIsochron(Plotter):
         txt = u'Trapped 40Ar= {:0.2f} +/-{:0.7f}'.format(trapped_4036, trapped_4036err)
 
         g.add_plot_label(txt, 0, 0)
-        g.set_x_limits(min=0)
-        g.set_y_limits(min=0, max=0.004)
+        g.set_x_limits(min_=0)
+        g.set_y_limits(min_=0, max_=0.004)
         g.refresh()
 
         return g

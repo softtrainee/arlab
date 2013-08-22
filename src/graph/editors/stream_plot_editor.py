@@ -99,23 +99,23 @@ class StreamPlotEditor(PlotEditor):
 
     def _track_x_min_changed(self):
         if not self.track_x_min:
-            self.graph.set_x_limits(min=self._xmin, plotid=self.id)
+            self.graph.set_x_limits(min_=self._xmin, plotid=self.id)
         else:
             self.graph.force_track_x_flag = True
 
     def _track_x_max_changed(self):
         if not self.track_x_max:
-            self.graph.set_x_limits(max=self._xmax, plotid=self.id)
+            self.graph.set_x_limits(max_=self._xmax, plotid=self.id)
         else:
             self.graph.force_track_x_flag = True
 
     def _track_y_min_changed(self):
         if not self.track_y_min:
-            self.graph.set_y_limits(min=self._ymin, plotid=self.id)
+            self.graph.set_y_limits(min_=self._ymin, plotid=self.id)
 
     def _track_y_max_changed(self):
         if not self.track_y_max:
-            self.graph.set_y_limits(max=self._ymax, plotid=self.id)
+            self.graph.set_y_limits(max_=self._ymax, plotid=self.id)
 
     def get_axes_group(self):
         editor = TextEditor(enter_set=True,

@@ -17,13 +17,13 @@
 #============= enthought library imports =======================
 from traits.api import Button, Event, Enum, Property, Bool, Float, Dict, \
     Instance, Str, String, List, Color, Int
-# from traitsui.api import View, Item, HGroup, Group, spring
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 from threading import Event as Flag
 from threading import Thread
 import time
 import os
+import weakref
 #============= local library imports  ==========================
 from src.ui.thread import Thread as uThread
 from src.globals import globalv
@@ -54,7 +54,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from src.consumer_mixin import ConsumerMixin, consumable
 from src.codetools.memory_usage import mem_log, mem_break, \
     mem_available, mem_log_func
-import weakref
+
 
 BLANK_MESSAGE = '''First "{}" not preceeded by a blank. 
 If "Yes" use last "blank_{}" 
@@ -531,9 +531,14 @@ class ExperimentExecutor(Experimentable):
         self._alive = True
 
         exp = self.experiment_queue
+#         do_later(exp.trait_set, executed=True)
+#         invoke_in_main_thread(exp.trait_set, executed=True)
+        exp.executed = True
+
         # check the first aliquot before delaying
         arv = exp.cleaned_automated_runs[0]
         self._check_run_aliquot(arv)
+
 
         # delay before starting
         delay = exp.delay_before_analyses
@@ -545,8 +550,10 @@ class ExperimentExecutor(Experimentable):
             if self.isAlive():
                 self.experiment_queue = exp
 
+                exp.executed = True
+
                 # scroll to the first run
-                self.experiment_queue.automated_runs_scroll_to_row = 0
+                exp.automated_runs_scroll_to_row = 0
 
                 t = self._execute_automated_runs(i + 1, exp)
                 if t:
@@ -1030,13 +1037,6 @@ class ExperimentExecutor(Experimentable):
 #===============================================================================
 # handlers
 #===============================================================================
-    def _selected_changed(self):
-        sel = self.selected
-        if sel:
-            if len(sel) == 1:
-                self.stats.calculate_at(sel[-1])
-                self.stats.calculate()
-
     def _resume_button_fired(self):
         self.resume_runs = True
 
@@ -1048,17 +1048,7 @@ class ExperimentExecutor(Experimentable):
             if crun:
                 t = Thread(target=self.cancel, kwargs={'style':'run'})
                 t.start()
-                self._cancel_thread = t
-#                self.cancel(style='run')
-
-#     def _refresh_button_fired(self):
-#         q = self.experiment_queue
-#         q.initialized = False
-#         q.automated_runs = q.executed_runs
-#         q.initialized = True
-#
-#         self.update_needed = True
-#         q.executed_runs = []
+#                 self._cancel_thread = t
 
     def _truncate_button_fired(self):
         if self.current_run:
@@ -1101,9 +1091,6 @@ class ExperimentExecutor(Experimentable):
         msdb = MassSpecDatabaseImporter()
         return msdb
 
-#    def _experiment_set_default(self):
-#        return ExperimentSet(db=self.db)
-#
     def _info_display_default(self):
 
         return DisplayController(
@@ -1111,15 +1098,6 @@ class ExperimentExecutor(Experimentable):
                                  default_color='limegreen',
                                  max_blocks=100
                                  )
-
-#    def _set_selector_default(self):
-#        s = SetSelector(
-#                        experiment_manager=self,
-#                        # experiment_sets=self.experiment_sets,
-#                        editable=False
-#                        )
-#
-#        return s
 
     def _monitor_default(self):
         mon = None
@@ -1183,22 +1161,4 @@ class ExperimentExecutor(Experimentable):
 
         return runner
 #============= EOF =============================================
-#        # bootstrap the extraction script and measurement script
-#        if not arun.extraction_script:
-#            self.err_message = 'Invalid runscript {}'.format(arun.script_info.extraction_script_name)
-# #            self.err_message = 'Invalid runscript {extraction_line_script}'.format(**arun.configuration)
-#            return
-# #        else:
-# #            arun.extraction_script.syntax_checked = True
-#
-#        if not arun.measurement_script:
-#            self.err_message = 'Invalid measurement_script {}'.format(arun.script_info.measurement_script_name)
-#            return
-#        else:
-#            arun.measurement_script.syntax_checked = True
 
-#        if not arun.post_measurement_script:
-#            self.err_message = 'Invalid post_measurement_script {post_measurement_script}'.format(**arun.configuration)
-#            return
-#        else:
-#            arun.post_measurement_script.syntax_checked = True

@@ -16,9 +16,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, File, Instance
-from traitsui.api import View, Item, Group, VGroup, HGroup, RangeEditor, EnumEditor, spring, ListEditor, InstanceEditor
 
+from traitsui.api import View, Item, Group, VGroup, HGroup, ListEditor, InstanceEditor
+from traits.api import Int, Button, Str, on_trait_change, Bool, Color, List
+from chaco.api import HPlotContainer, ArrayPlotData, Plot
+from chaco.tools.api import ZoomTool
+from chaco.default_colormaps import color_map_name_dict
+from enable.component import Component
 #============= standard library imports ========================
 import sys
 import os
@@ -27,11 +31,6 @@ from numpy import sum, zeros_like, where, array, percentile, hsplit
 # from src.image.processing.bandwidth_highlighter import BandwidthHighlighter
 #============= local library imports  ==========================
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Enum, File, Instance, Button, Float, Str, on_trait_change, Bool, Color, List
-from chaco.api import HPlotContainer, ArrayPlotData, Plot
-from chaco.tools.api import ZoomTool
-from chaco.default_colormaps import color_map_name_dict
-from enable.component import Component
 
 #============= standard library imports ========================
 from PIL import Image
@@ -41,6 +40,8 @@ from chaco.tools.image_inspector_tool import ImageInspectorTool, \
 from enable.component_editor import ComponentEditor
 
 from chaco.tools.pan_tool import PanTool
+
+
 class Band(HasTraits):
     center = Int(enter_set=True, auto_set=False)
     threshold = Int(enter_set=True, auto_set=False)

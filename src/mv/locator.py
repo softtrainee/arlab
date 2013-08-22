@@ -19,9 +19,8 @@ from pyface.timer.do_later import do_later
 
 # from src.geometry.centroid import centroid
 #============= standard library imports ========================
-import time
-from numpy import array, histogram, argmax, zeros, \
-    ones, asarray, delete, ones_like, invert, zeros_like, argmin, mgrid, where, \
+
+from numpy import array, histogram, argmax, zeros, asarray, ones_like, \
     nonzero, max
 from skimage.morphology.watershed import is_local_maximum
 from skimage.morphology import watershed
@@ -32,21 +31,16 @@ from skimage.exposure import rescale_intensity
 # from src.geometry.centroid.calculate_centroid import calculate_centroid
 from src.loggable import Loggable
 from src.mv.segment.region import RegionSegmenter
-from src.image.cv_wrapper import grayspace, draw_contour_list, contour, asMat, \
+from src.image.cv_wrapper import grayspace, draw_contour_list, contour, \
     colorspace, get_polygons, get_size, new_point, draw_circle, draw_rectangle, draw_lines, \
     draw_polygons
 from src.mv.target import Target
 # from src.image.image import StandAloneImage
-from src.geometry.geometry import sort_clockwise, approximate_polygon_center, \
+from src.geometry.geometry import approximate_polygon_center, \
     calc_length
-from src.geometry.convex_hull import convex_hull
-import math
+
 from skimage import feature
 # from scipy.interpolate.ndgriddata import griddata
-from src.ui.gui import invoke_in_main_thread
-from scipy.ndimage.measurements import center_of_mass
-from scipy.ndimage.filters import sobel
-from scipy.ndimage.interpolation import zoom
 
 
 # def debug_show(image, distance, wsrc, nimage=None):

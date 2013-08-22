@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Property, List, Any, cached_property, \
-    Event, Float, Dict, on_trait_change
+from traits.api import HasTraits, Instance, Property, cached_property, \
+    Event
 # from traitsui.api import View, UItem, Item, HGroup, ListStrEditor, HSplit, VSplit
 
 #============= standard library imports ========================
@@ -487,7 +487,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                              fit=isotope.fit if regress else False
                              )
 
-        graph.set_x_limits(min=mi)
+        graph.set_x_limits(min_=mi)
 
         graph.refresh()
 
@@ -522,7 +522,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
 #        graph.plots[0].value_range.tight_bounds = False
         if xs:
-            graph.set_x_limits(min=min(xs), max=max(xs))
+            graph.set_x_limits(min_=min(xs), max_=max(xs))
         return graph
 #===============================================================================
 # getters

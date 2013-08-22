@@ -15,11 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Any, Event, Str
-from traitsui.api import View, Item
-from src.ui.tabular_editor import myTabularEditor
-from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter, \
-    UVAutomatedRunSpecAdapter
+from src.experiment.automated_run.tabular_adapter import UVAutomatedRunSpecAdapter
 from src.experiment.automated_run.table import AutomatedRunsTable
 from src.experiment.automated_run.uv.spec import UVAutomatedRunSpec
 #============= standard library imports ========================

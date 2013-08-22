@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any , on_trait_change, Int, List
+from traits.api import Any , on_trait_change, Int, List, Bool
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 
@@ -39,6 +39,8 @@ class ExperimentQueue(BaseExperimentQueue):
     linked_copy_cache = List
     queue_actions = List
 
+    executed = Bool(False)
+
     def reset(self):
         ans = self.automated_runs
         ens = self.executed_runs
@@ -51,6 +53,7 @@ class ExperimentQueue(BaseExperimentQueue):
             ans.insert(0, ei)
 
         self.executed_runs = []
+        self.executed = False
         self._no_update = False
 #         self.update_needed = True
 #         self.refresh_table_needed = True

@@ -18,7 +18,7 @@
 from traits.api import  Float, Str, Bool, Property, Color, \
     Int, on_trait_change, Array
 from traitsui.api import View, Item, VGroup, HGroup, \
-     spring, Spring, CustomEditor
+     spring, Spring
 #============= standard library imports ========================
 import os
 from numpy import loadtxt, polyfit, polyval, hstack, poly1d

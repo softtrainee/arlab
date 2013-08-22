@@ -28,7 +28,6 @@ import pickle
 from src.helpers.filetools import parse_file
 from src.paths import paths
 from src.loggable import Loggable
-# from src.regex import TRANSECT_REGEX
 from src.geometry.affine import AffineTransform
 
 class SampleHole(HasTraits):
@@ -162,7 +161,7 @@ class StageMap(Loggable):
 
 
         spacing = search_distance * abs(self.sample_holes[0].x - self.sample_holes[1].x)
-        debug_hole = '18'
+#         debug_hole = '18'
         nxs = []
         nys = []
         iholes = []

@@ -119,8 +119,8 @@ class MapView(Viewable):
             self.scatter = s
             self.labnumbers = list(labns)
 
-            g.set_x_limits(min=min(xs), max=max(xs), pad='0.05')
-            g.set_y_limits(min=min(ys), max=max(ys), pad='0.05')
+            g.set_x_limits(min_=min(xs), max_=max(xs), pad='0.05')
+            g.set_y_limits(min_=min(ys), max_=max(ys), pad='0.05')
 
     def _update(self, new):
         if new:

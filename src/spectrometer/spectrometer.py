@@ -30,12 +30,7 @@ from src.spectrometer.detector import Detector
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.constants import NULL_STR
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
-# from src.graph.graph import Graph
-# from src.graph.regression_graph import RegressionGraph
-# from src.paths import paths
-# import os
-# from src.managers.data_managers.csv_data_manager import CSVDataManager
-# from src.helpers.filetools import unique_dir
+from src.paths import paths
 
 DETECTOR_ORDER = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 debug = False

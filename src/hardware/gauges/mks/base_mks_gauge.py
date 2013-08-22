@@ -45,24 +45,24 @@ class BaseMKSGauge(BaseGauge):
         '''
         build a query
         
-        @type addr: C{str}
+        @type addr: C{s}
         @param addr: RS-485 address
-        @type typetag: C{str}
+        @type typetag: C{s}
         @param typetag: query type
-        @rtype: C{str}
+        @rtype: C{s}
         @return: a valid HPS serial command
         '''
         if typetag == 'pressure':
-            str = 'PR1'
+            s = 'PR1'
         elif typetag == 'filament':
-            str = 'FS'
+            s = 'FS'
         elif typetag == 'setpoint_value':
-            str = 'SP%i' % setpointindex
+            s = 'SP%i' % setpointindex
         elif typetag == 'setpoint_state':
-            str = 'SS%i' % setpointindex
+            s = 'SS%i' % setpointindex
         elif typetag == 'setpoint_enable':
-            str = 'EN%i' % setpointindex
-        rs = '@%s%s?;FF' % (addr, str)
+            s = 'EN%i' % setpointindex
+        rs = '@%s%s?;FF' % (addr, s)
         return rs
 
 
@@ -123,13 +123,13 @@ class BaseMKSGauge(BaseGauge):
             tag = 'DG'
             s = '@%s%s!%s;FF' % (addr, tag, ('ON' if value else 'OFF'))
         return s
-    def _parse_response(self, type, raw):
+    def _parse_response(self, type_, raw):
         '''
         parse a serial response
         
-        @type type: C{str}
-        @param type: the response type
-        @type raw: C{str}
+        @type_ type_: C{str}
+        @param type_: the response type_
+        @type_ raw: C{str}
         @param raw: the raw response C{str}
         @rtype: C{str or boolean}
         @return: a float for pressure, boolean otherwise
@@ -152,7 +152,7 @@ class BaseMKSGauge(BaseGauge):
         else:
             si += 3
 
-        if type in ['pressure', 'setpoint_value']:
+        if type_ in ['pressure', 'setpoint_value']:
             v = value[si:]
             try:
 
@@ -161,7 +161,7 @@ class BaseMKSGauge(BaseGauge):
                 self.warning(e)
                 return
 
-        elif type in ['filament', 'setpoint_enable']:
+        elif type_ in ['filament', 'setpoint_enable']:
             return True if value[si:] == 'ON' else False
 
 #============= EOF ====================================

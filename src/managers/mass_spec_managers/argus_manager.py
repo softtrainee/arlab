@@ -212,7 +212,7 @@ class ArgusManager(Manager):
         t = TimeSeriesStreamGraph()
         t.new_plot(data_limit=300,
                    scan_delay=SCAN_INTERVAL / 1000.0)
-        t.set_y_limits(min=0, max=10)
+        t.set_y_limits(min_=0, max_=10)
         return t
 
 

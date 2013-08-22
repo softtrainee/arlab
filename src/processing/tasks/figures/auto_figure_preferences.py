@@ -15,15 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, Password, Enum, List, Button, Any, Int, \
-    on_trait_change, Bool
-from traitsui.api import View, Item, Group, VGroup, HGroup, ListStrEditor
-from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
-from traitsui.list_str_adapter import ListStrAdapter
+from traits.api import Str, Int
+from traitsui.api import View, Item, Group
+# from traitsui.list_str_adapter import ListStrAdapter
 from envisage.ui.tasks.preferences_pane import PreferencesPane
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
 
 
 class AutoFigurePreferences(BasePreferencesHelper):

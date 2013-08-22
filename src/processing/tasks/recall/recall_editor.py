@@ -15,13 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Property, Instance
-from traitsui.api import View, Item, UItem, InstanceEditor, Group, VFold
-from src.envisage.tasks.base_editor import BaseTraitsEditor
-from src.database.records.isotope_record import IsotopeRecord
-from src.processing.tasks.analysis_edit.fits import FitSelector
+from traits.api import Property, Instance
+from traitsui.api import View, UItem, InstanceEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.base_editor import BaseTraitsEditor
+from src.database.records.isotope_record import IsotopeRecord
+
 
 class RecallEditor(BaseTraitsEditor):
     model = Instance(IsotopeRecord)

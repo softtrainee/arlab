@@ -33,20 +33,20 @@ class LinkServer(object):
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.bind((host, port))
         server.listen(5)
-        input = [server, sys.stdin]
+        input_ = [server, sys.stdin]
         running = 1
         c = LinkEmulator()
         while running:
-            inputready, _outputready, _exceptready = select.select(input, [], [])
+            inputready, _outputready, _exceptready = select.select(input_, [], [])
             for s in inputready:
 
                 if s == server:
                     # handle the server socket
                     client, _address = server.accept()
-                    input.append(client)
+                    input_.append(client)
 
                 elif s == sys.stdin:
-                    # handle standard input
+                    # handle standard input_
                     _junk = sys.stdin.readline()
                     running = 0
 
@@ -62,7 +62,7 @@ class LinkServer(object):
                             pass
                     else:
                         s.close()
-                        input.remove(s)
+                        input_.remove(s)
         server.close()
 
 

@@ -17,10 +17,8 @@
 #============= enthought library imports =======================
 from traits.api import  Str, Button, Instance, List
 from traitsui.api import View, Item, EnumEditor, HGroup, spring
-from traitsui.menu import Action
 #============= standard library imports ========================
 import os
-from datetime import datetime
 #============= local library imports  ==========================
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.processing.entry.chronology_input import ChronologyInput

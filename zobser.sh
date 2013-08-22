@@ -1,4 +1,3 @@
-# @PydevCodeAnalysisIgnore
 #===============================================================================
 # Copyright 2011 Jake Ross
 #
@@ -14,31 +13,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+#http://stackoverflow.com/questions/3605180/tell-pydev-to-exclude-an-entire-package-from-analysis
 
-
-
-#============= enthought library imports =======================
-from traits.api import List
-from envisage.api import Plugin, ServiceOffer
-#============= standard library imports ========================
-
-#============= local library imports  ==========================
-class CorePlugin(Plugin):
-    '''
-        
-    '''
-    SERVICE_OFFERS = 'envisage.service_offers'
-    service_offers = List(contributes_to=SERVICE_OFFERS)
-    def service_offer_factory(self, **kw):
-        '''
-        
-        '''
-        return ServiceOffer(**kw)
-
-    def check(self):
-        '''
-        '''
-        return True
-
-
-#============= EOF ====================================
+for file in `find zobs -name '*.py'`; do
+    echo $file
+    mv $file $file.bak
+    echo '#@PydevCodeAnalysisIgnore' > $file
+    cat $file.bak >> $file
+    rm $file.bak
+done

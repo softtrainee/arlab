@@ -27,27 +27,14 @@ import math
 from numpy import array
 #============= local library imports  ==========================
 from src.geometry.convex_hull import convex_hull
-# from src.geometry.geometry import calc_point_along_line
-import weakref
-
 
 
 def calc_rotation(x1, y1, x2, y2):
     rise = y2 - y1
     run = x2 - x1
 
-#    r = math.pow((math.pow(run, 2) + math.pow(rise, 2)), 0.5)  # (x ** 2 + y ** 2) ** 0.5
-#    if r == 0:
-#        return 0
-#
-#    if run >= 0:
-#        angle = math.asin(rise / r)
-#    else:
-#        angle = -math.asin(rise / r) + math.pi
-#
-#    da = math.degrees(angle)
-#    return da if da >= 0 else 360 + da
     return math.degrees(math.atan2(rise, run))
+
 
 class Primitive(HasTraits):
     identifier = Str
@@ -692,8 +679,8 @@ class LoadIndicator(Circle):
             gc.fill_path()
 
         if self._text:
-            for ti, ox, oy in self._text:
-                w, h, a, b = gc.get_full_text_extent(ti)
+            for ti, _, oy in self._text:
+                w, _h, _a, _b = gc.get_full_text_extent(ti)
                 self._render_text(gc, ti, x - w / 2., y + oy)
 
 

@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Instance, Event, List, \
-    on_trait_change, Callable, Bool, Int, cached_property, Property
+from traits.api import HasTraits, List, \
+    on_trait_change, Callable, Bool, Int, Property
 from src.helpers.formatting import floatfmt
 from src.constants import PLUSMINUS
 

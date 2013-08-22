@@ -1,3 +1,4 @@
+# @PydevCodeAnalysisIgnore
 from core import CoreNode
 from experiment import ExperimentNode
 from ideogram import IdeogramNode

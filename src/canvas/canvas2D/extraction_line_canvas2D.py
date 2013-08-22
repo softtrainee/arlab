@@ -16,25 +16,20 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Str
-#============= standard library imports ========================`
-
-#============= local library imports  ==========================
-# from src.canvas.canvas2D.markup.markup_canvas import MarkupCanvas
-# from src.canvas.designer.valve import Valve
-from src.canvas.canvas2D.scene.primitives.primitives import Rectangle, Valve, Line, \
-    Label, RoughValve, BaseValve, RoundedRectangle, BorderLine
-
-from src.canvas.scene_viewer import SceneCanvas
-from src.canvas.canvas2D.scene.extraction_line_scene import ExtractionLineScene
 from pyface.action.menu_manager import MenuManager
 from traitsui.menu import Action
+#============= standard library imports ========================`
 import os
+#============= local library imports  ==========================
+from src.canvas.scene_viewer import SceneCanvas
+from src.canvas.canvas2D.scene.extraction_line_scene import ExtractionLineScene
+from src.canvas.canvas2D.scene.primitives.primitives import BaseValve, \
+    RoughValve
 
 W = 2
 H = 2
 
 
-# class ExtractionLineCanvas2D(MarkupCanvas):
 class ExtractionLineCanvas2D(SceneCanvas):
     '''
     '''

@@ -1,3 +1,4 @@
+# @PydevCodeAnalysisIgnore
 '''
 
 this module is used to add licensing. 

@@ -16,11 +16,10 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Int, List, String, Float, Bool, \
-    on_trait_change, Str, Enum, Any, Instance
+    on_trait_change, Str, Any, Instance
 from traitsui.api import View, Item, VGroup, Group, HGroup, Label, Spring, \
-    UItem, ListEditor, InstanceEditor, spring, EnumEditor, TableEditor
+    UItem, ListEditor, InstanceEditor, spring, EnumEditor
 from traitsui.table_column import ObjectColumn
-from traitsui.editors.table_editor import TableEditor
 from traitsui.extras.checkbox_column import CheckboxColumn
 #============= standard library imports ========================
 import re

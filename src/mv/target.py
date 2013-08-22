@@ -17,12 +17,12 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, cached_property, Property, Tuple, Any, Float
 #============= standard library imports ========================
-from numpy import array
+# from numpy import array
 #============= local library imports  ==========================
 # from src.geometry.convex_hull import convex_hull_area
-from src.geometry.centroid import calculate_centroid
-from src.codetools.simple_timeit import timethis
-from src.geometry.convex_hull import convex_hull_area
+# from src.geometry.centroid import calculate_centroid
+# from src.codetools.simple_timeit import timethis
+# from src.geometry.convex_hull import convex_hull_area
 # from src.geometry.centroid.calculate_centroid import calculate_centroid
 
 class Target(HasTraits):

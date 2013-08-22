@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Property
+from traits.api import Property
 # from traitsui.api import View, Item, TextEditor
 from src.envisage.tasks.base_task import BaseHardwareTask
 from src.lasers.tasks.laser_panes import FusionsDiodePane, \

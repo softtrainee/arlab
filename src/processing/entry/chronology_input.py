@@ -17,11 +17,12 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Date, Time, List, Button
 from traitsui.api import View, Item, HGroup, VGroup, spring, Label
-from src.database.adapters.isotope_adapter import IsotopeAdapter
-from src.helpers.traitsui_shortcuts import listeditor
-from datetime import datetime
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.database.adapters.isotope_adapter import IsotopeAdapter
+from src.helpers.traitsui_shortcuts import listeditor
+
+
 class Dosage(HasTraits):
     startdate = Date
     enddate = Date

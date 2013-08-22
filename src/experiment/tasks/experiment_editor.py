@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, Unicode, Property
-from traitsui.api import View, UItem, VGroup, VSplit, Label
+from traits.api import Instance, Unicode, Property, DelegatesTo
+from traitsui.api import View, UItem
 
 #============= standard library imports ========================
 import os
@@ -37,6 +37,8 @@ class ExperimentEditor(BaseTraitsEditor):
     name = Property(Unicode, depends_on='path')
     tooltip = Property(Unicode, depends_on='path')
 
+    executed = DelegatesTo('queue')
+
 #     merge_id = Int(0)
 #     group = Int(0)
 
@@ -44,6 +46,7 @@ class ExperimentEditor(BaseTraitsEditor):
 
 #    def create(self, parent):
 #        self.control = self._create_control(parent)
+
     def _dirty_changed(self):
         self.debug('dirty changed {}'.format(self.dirty))
 
@@ -53,50 +56,38 @@ class ExperimentEditor(BaseTraitsEditor):
                          editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
                                    operations=['delete',
                                                'move',
-#                                                        'edit'
                                                ],
                                    editable=True,
                                    dclicked='dclicked',
                                    selected='selected',
-#                                    rearranged='rearranged',
-#                                    pasted='pasted',
                                    paste_function='paste_function',
                                    refresh='refresh_table_needed',
                                    scroll_to_row='automated_runs_scroll_to_row',
                                    copy_cache='linked_copy_cache',
-#                                    scroll_to_row_hint='bottom',
-#                                    scroll_to_bottom=True,
-#                                             copy_cache='copy_cache',
-#                                             update='update_needed',
-#                                            drag_move=True,
-#                                    auto_update=True,
                                    multi_select=True,
-#                                    scroll_to_bottom=False
-                                   )
+                                   ),
+                         height=200
                         )
 
-        executed_grp = VGroup(Label('Completed Runs'),
-                              UItem('executed_runs',
-                                    editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
-                                                    editable=False,
-                                                    auto_update=True,
-                                                    selectable=True,
-                                                    copy_cache='linked_copy_cache',
-                                                    selected='executed_selected',
-                                                    multi_select=True,
-#                                                     paste_function='executed_paste_function',
-#                                                     paste_function='paste_function',
-                                                    scroll_to_row='executed_runs_scroll_to_row'
-                                                    ),
-                            ),
-#                             visible_when='executed_runs'
-                    )
+        executed_grp = UItem('executed_runs',
+                            editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
+                                            editable=False,
+                                            auto_update=True,
+                                            selectable=True,
+                                            copy_cache='linked_copy_cache',
+                                            selected='executed_selected',
+                                            multi_select=True,
+                                            scroll_to_row='executed_runs_scroll_to_row'
+                                            ),
+                            height=500,
+                            visible_when='executed'
+                            )
 
         v = View(
-                 VSplit(
-                        executed_grp,
-                        arun_grp,
-                        ),
+#                 VGroup(
+                executed_grp,
+                arun_grp,
+#                     ),
                  resizable=True
                 )
         return v

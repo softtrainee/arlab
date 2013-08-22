@@ -51,7 +51,6 @@ class AutomatedRunsTable(HasTraits):
 
                     ri = nri
                 nruns.append(ri)
- #               self.automated_runs.append(ri)
 
             self.automated_runs.extend(nruns)
 

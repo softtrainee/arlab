@@ -514,8 +514,8 @@ ABLE TO USE THE HARDWARE JOYSTICK
         cmd = []
         for k in kw:
             if k in self.axes:
-                id = self.axes[k].id
-                cmd.append(self._build_command('SH', xx=id, nn=kw[k]))
+                aid = self.axes[k].id
+                cmd.append(self._build_command('SH', xx=aid, nn=kw[k]))
 
         self.tell(';'.join(cmd))
 
@@ -523,13 +523,13 @@ ABLE TO USE THE HARDWARE JOYSTICK
         '''
         '''
         if axis is not None:
-            id = self.axes[axis].id
-            cmd = self._build_command('DH', xx=id, nn=0)
+            aid = self.axes[axis].id
+            cmd = self._build_command('DH', xx=aid, nn=0)
         else:
             cmd = []
             for k in ['x', 'y']:
-                id = self.axes[k].id
-                cmd.append(self._build_command('DH', xx=id, nn=0))
+                aid = self.axes[k].id
+                cmd.append(self._build_command('DH', xx=aid, nn=0))
             cmd = ';'.join(cmd)
 
         self.tell(cmd)

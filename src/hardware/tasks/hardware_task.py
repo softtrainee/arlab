@@ -15,8 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
-from traitsui.api import View, Item
 # from pyface.tasks.task import Task
 from src.hardware.tasks.hardware_pane import CurrentDevicePane, DevicesPane, InfoPane
 from pyface.tasks.task_layout import PaneItem, TaskLayout, VSplitter

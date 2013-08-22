@@ -15,49 +15,22 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Any, Int, Str, List, Range, Property, Bool, \
-    Enum, on_trait_change, Dict
-from traitsui.api import Item, HGroup, spring, Group
+from traits.api import Str, List, on_trait_change, Dict
 # from chaco.api import ArrayDataSource
-#============= standard library imports ========================
-from numpy import asarray, linspace, zeros, array, ones, pi, exp, hstack, max, min, Inf
 from chaco.data_label import DataLabel
-from chaco.ticks import DefaultTickGenerator
+#============= standard library imports ========================
+from numpy import asarray, linspace, zeros, ones, pi, exp, max, min, Inf
+# from chaco.ticks import DefaultTickGenerator
+import time
 #============= local library imports  ==========================
-
-# from src.graph.stacked_graph import StackedGraph
-# from src.graph.error_bar_overlay import ErrorBarOverlay
-from src.processing.plotters.results_tabular_adapter import IdeoResults, \
-    IdeoResultsAdapter
+from src.processing.plotters.results_tabular_adapter import IdeoResultsAdapter
 from src.processing.plotters.plotter import Plotter
-from src.stats.core import calculate_weighted_mean, calculate_mswd, \
-    validate_mswd
+from src.stats.core import calculate_weighted_mean
 from src.stats.peak_detection import find_peaks
-from src.constants import PLUSMINUS, SIGMA
-from src.helpers.formatting import floatfmt
-from numpy import log10
 from src.processing.plotters.point_move_tool import PointMoveTool
 from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
-import time
-from chaco.abstract_overlay import AbstractOverlay
-# from src.processing.figure import AgeResult
-
-# def weighted_mean(x, errs):
-#    x = asarray(x)
-#    errs = asarray(errs)
-#
-#    weights = asarray(map(lambda e: 1 / e ** 2, errs))
-#
-#    wtot = weights.sum()
-#    wmean = (weights * x).sum() / wtot
-#    werr = wtot ** -0.5
-#    return wmean, werr
-# class mStackedGraph(IsotopeContextMenuMixin, StackedGraph):
-#    pass
 
 N = 500
-
-
 
 
 class Ideogram(Plotter):
@@ -596,7 +569,7 @@ class Ideogram(Plotter):
         maxp = max([graph.maxprob, ymax])
 #        graph.maxprob = maxp
 
-        graph.set_y_limits(min=minp, max=maxp * 1.05, plotid=0)
+        graph.set_y_limits(min_=minp, max_=maxp * 1.05, plotid=0)
 #===============================================================================
 # handlers
 #==============================================================================

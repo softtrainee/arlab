@@ -15,10 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
 from traitsui.api import View, UItem, Group, InstanceEditor, HGroup, \
-    EnumEditor, Item, spring, Spring, ButtonEditor, VGroup, RangeEditor, \
-        VFold
+    EnumEditor, Item, spring, Spring, ButtonEditor, VGroup, RangeEditor
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================

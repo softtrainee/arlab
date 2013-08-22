@@ -84,12 +84,12 @@ class DataEditor(HasTraits):
             n, obj = self._table_factory(i)
             self.add_trait(n, obj)
 
-    def _table_factory(self, id):
+    def _table_factory(self, _id):
         '''
         '''
-        name = 'table%i' % id
+        name = 'table%i' % _id
 
-        plot = self.graph.plots[id].plots['plot0'][0]
+        plot = self.graph.plots[_id].plots['plot0'][0]
 
         x = plot.index.get_data()
         y = plot.value.get_data()
@@ -150,14 +150,14 @@ class RegressionDataEditor(DataEditor):
             else:
                 self.add_trait(name, List(data))
 
-    def _load_table(self, id):
+    def _load_table(self, id_):
         '''
         '''
-        x, y, res = self.graph.calc_residuals(plotid=id)
+        x, y, res = self.graph.calc_residuals(plotid=id_)
         data = vstack((x, y, res)).transpose()
         data = [RegressionDataItem(x=d[0], y=d[1], res=d[2]) for d in data]
 
-        s = self.graph.plots[id].plots['plot0'][0].index.metadata.get('selections')
+        s = self.graph.plots[id_].plots['plot0'][0].index.metadata.get('selections')
 
         for si in s:
             data[si].status = False

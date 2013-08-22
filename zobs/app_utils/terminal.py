@@ -1,3 +1,4 @@
+# @PydevCodeAnalysisIgnore
 # Copyright: 2008 Nadia Alramli
 # License: BSD
 

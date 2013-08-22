@@ -67,9 +67,6 @@ class SerialCommunicator(Communicator):
     read_terminator = None
     clear_output = False
 
-    def close(self):
-        if self.handle:
-            self.handle.close()
 
     def reset(self):
         handle = self.handle
@@ -348,7 +345,6 @@ class SerialCommunicator(Communicator):
                 wmsg = '\n'.join(valid)
 
             if not globalv.ignore_connection_warnings:
- #            self.warning_dialog('{}\n{}'.format(msg, wmsg))
                 if self.confirmation_dialog('{}\n{}\n\nQuit Pychron?'.format(msg, wmsg),
                                             title='Quit Pychron'):
                     os._exit(0)
@@ -503,7 +499,7 @@ class SerialCommunicator(Communicator):
 
             if r and r.strip():
                 for ti in terminator:
-  #                    print ' '.join(map(str,[ord(t) for t in ti])),' '.join(map(str,[ord(t) for t in r]))
+#                    print ' '.join(map(str,[ord(t) for t in ti])),' '.join(map(str,[ord(t) for t in r]))
                     if r.endswith(ti):
                         terminated = True
                         break

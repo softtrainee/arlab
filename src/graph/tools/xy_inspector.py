@@ -28,7 +28,7 @@ from traits.api import Any, Bool, Enum, Event, Tuple
 # Enthought library imports
 
 # Chaco imports
-from chaco.api import AbstractOverlay, ImagePlot, TextBoxOverlay
+from chaco.api import  TextBoxOverlay
 
 
 class XYInspector(BaseTool):

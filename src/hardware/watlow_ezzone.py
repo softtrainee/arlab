@@ -546,11 +546,11 @@ class WatlowEZZone(CoreDevice):
         value = 15 if units == 'C' else 30
         self.write(register, value)
 
-    def set_calibration_offset(self, input, value, **kw):
+    def set_calibration_offset(self, input_id, value, **kw):
         '''
         '''
         self.info('set calibration offset {}'.format(value))
-        register = 382 if input == 1 else 462
+        register = 382 if input_id == 1 else 462
         self.write(register, value, nregisters=2, **kw)
 
     def set_control_mode(self, mode, **kw):
@@ -719,22 +719,22 @@ class WatlowEZZone(CoreDevice):
         self.info('set output scale high {}'.format(value))
         self.write(738, value, nregisters=2, **kw)
 
-    def set_analog_input_sensor_type(self, input, value, **kw):
+    def set_analog_input_sensor_type(self, input_id, value, **kw):
         '''
         '''
         self.info('set input sensor type {}'.format(value))
-        register = 368 if input == 1 else 448
+        register = 368 if input_id == 1 else 448
         v = value if isinstance(value, int) else isensor_map[value]
         self.write(register, v, **kw)
         if v == 95:
             tc = self.read_thermocouple_type(1)
             self._thermocouple1_type = tc
 
-    def set_thermocouple_type(self, input, value, **kw):
+    def set_thermocouple_type(self, input_id, value, **kw):
         '''
         '''
         self.info('set input thermocouple type {}'.format(value))
-        register = 370 if input == 1 else 450
+        register = 370 if input_id == 1 else 450
         v = value if isinstance(value, int) else itc_map[value.upper()]
 
         self.write(register, v, **kw)
@@ -777,10 +777,10 @@ class WatlowEZZone(CoreDevice):
         '''
         return self.read(1896, nregisters=2, **kw)
 
-    def read_calibration_offset(self, input, **kw):
+    def read_calibration_offset(self, input_id, **kw):
         '''
         '''
-        register = 382 if input == 1 else 462
+        register = 382 if input_id == 1 else 462
 
         return self.read(register, nregisters=2, **kw)
 
@@ -796,44 +796,44 @@ class WatlowEZZone(CoreDevice):
         self.debug('read open loop setpoint')
         return self.read(2162, nregisters=2, **kw)
 
-    def read_analog_input_sensor_type(self, input, **kw):
+    def read_analog_input_sensor_type(self, input_id, **kw):
         '''
         '''
-        if input == 1:
+        if input_id == 1:
             register = 368
         else:
             register = 448
 
         return self.read(register, response_type='int', **kw)
 
-    def read_thermocouple_type(self, input, **kw):
+    def read_thermocouple_type(self, input_id, **kw):
         '''
 
         '''
-        if input == 1:
+        if input_id == 1:
             register = 370
         else:
             register = 450
         rid = self.read(register, response_type='int', **kw)
         return rid
 
-    def read_filtered_process_value(self, input, **kw):
+    def read_filtered_process_value(self, input_id, **kw):
         '''
         '''
         return self.read(402, nregisters=2, **kw)
 
-    def read_process_value(self, input, **kw):
+    def read_process_value(self, input_id, **kw):
         '''
             unfiltered process value
         '''
-        register = 360 if input == 1 else 440
+        register = 360 if input_id == 1 else 440
 
         return self.read(register, nregisters=2, **kw)
 
-    def read_error_status(self, input, **kw):
+    def read_error_status(self, input_id, **kw):
         '''
         '''
-        register = 362 if input == 1 else 442
+        register = 362 if input_id == 1 else 442
         return self.read(register, response_type='int', **kw)
 
     def read_temperature_units(self, comms):

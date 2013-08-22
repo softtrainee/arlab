@@ -15,12 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Button, Bool, Any, String, List
-from traitsui.api import View, Item, HGroup
-from src.geometry.reference_point import  ReferenceHole
-from src.lasers.stage_managers.calibration.free_calibrator import FreeCalibrator
+from traits.api import Any
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.geometry.reference_point import  ReferenceHole
+from src.lasers.stage_managers.calibration.free_calibrator import FreeCalibrator
 
 
 class HoleCalibrator(FreeCalibrator):

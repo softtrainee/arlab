@@ -186,7 +186,7 @@ class M1000(AnalogDigitalConverter):
 
         return res
 
-    def _parse_response_(self, r, form='$', type=None):
+    def _parse_response_(self, r, form='$', type_=None):
         '''
             typical response form 
             short *+00072.00
@@ -195,7 +195,7 @@ class M1000(AnalogDigitalConverter):
         func = lambda X: float(X[5:-2]) if form == self.long_form_prompt else float(X[2:])
 
         if r:
-            if type == 'block':
+            if type_ == 'block':
                 r = r.split(',')
                 return [func(ri) for ri in r if ri is not '']
             else:
@@ -218,5 +218,5 @@ class OmegaADC(M1000):
         r = self.ask(''.join((self.short_form_prompt, self.address, com)),
                           remove_eol=False, replace=[chr(13), ','])
 
-        return self._parse_response_(r, type='block')
+        return self._parse_response_(r, type_='block')
 #============= EOF =====================================

@@ -56,20 +56,22 @@ class ExtractionLineScene(Scene):
         self.add_item(rect, layer=1)
 
     def _new_connection(self, conn, key, start, end):
+        import traceback
+
         skey = start.text.strip()
         ekey = end.text.strip()
         try:
             orient = conn.get('orientation')
-        except Exception, e:
-#            print'a', e
+        except Exception:
+            traceback.print_exc()
             orient = None
 
         sanchor = self.get_item(skey)
         x, y = sanchor.x, sanchor.y
         try:
             ox, oy = map(float, start.get('offset').split(','))
-        except Exception, e:
-#            print 'b', e
+        except Exception:
+            traceback.print_exc()
             ox = 1
             oy = sanchor.height / 2.0
 
@@ -80,8 +82,8 @@ class ExtractionLineScene(Scene):
         x1, y1 = eanchor.x, eanchor.y
         try:
             ox, oy = map(float, end.get('offset').split(','))
-        except Exception, e:
-#            print 'c', e
+        except Exception:
+            traceback.print_exc()
             ox = 1
             oy = eanchor.height / 2.0
 
