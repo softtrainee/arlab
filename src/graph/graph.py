@@ -480,7 +480,7 @@ class Graph(Viewable, ContextMenuMixin):
     def set_x_limits(self, min_=None, max_=None, pad=0, plotid=0, **kw):
         '''
         '''
-        self._set_limits(min, max, 'index', plotid, pad, **kw)
+        self._set_limits(min_, max_, 'index', plotid, pad, **kw)
 
     def set_x_tracking(self, track, plotid=0):
         '''
