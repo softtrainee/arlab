@@ -48,12 +48,12 @@ from src.experiment.experimentable import Experimentable
 from src.pyscripts.wait_dialog import WaitDialog
 from src.experiment.automated_run.automated_run import AutomatedRun
 from pyface.constant import CANCEL, NO, YES
-from src.ui.qt.gui import invoke_in_main_thread
 # from src.helpers.ctx_managers import no_update
 from sqlalchemy.orm.exc import NoResultFound
 from src.consumer_mixin import ConsumerMixin, consumable
 from src.codetools.memory_usage import mem_log, mem_break, \
     mem_available, mem_log_func
+from src.ui.gui import invoke_in_main_thread
 
 
 BLANK_MESSAGE = '''First "{}" not preceeded by a blank. 
@@ -541,11 +541,10 @@ class ExperimentExecutor(Experimentable):
         arv = exp.cleaned_automated_runs[0]
         self._check_run_aliquot(arv)
 
-
         # delay before starting
         delay = exp.delay_before_analyses
         self._delay(delay, message='before')
-
+            
         rc = 0
         ec = 0
         for i, exp in enumerate(self.experiment_queues):
@@ -932,18 +931,17 @@ class ExperimentExecutor(Experimentable):
 
     def _extraction(self, ai):
         ret = True
-        self.extracting = True
+        invoke_in_main_thread(self.trait_set, extracting = True)
         if not ai.do_extraction():
             ret = self._failed_execution_step('Extraction Failed')
 
-        invoke_in_main_thread(self.trait_set, extraction_state_label='')
-
-        self.extracting = False
+        invoke_in_main_thread(self.trait_set, extraction_state_label='', extraction=False)
         return ret
 
     def _measurement(self, ai):
         ret = True
-        self.measuring = True
+
+        invoke_in_main_thread(self.trait_set, measuring = True)
         if not ai.do_measurement():
             ret = self._failed_execution_step('Measurement Failed')
         else:
@@ -951,7 +949,7 @@ class ExperimentExecutor(Experimentable):
             ai.post_measurement_save()
             mem_log('post save {}'.format(ai.runid))
 
-        self.measuring = False
+        invoke_in_main_thread(self.trait_set, measuring = False)
         return ret
 
     def _post_measurement(self, ai):
