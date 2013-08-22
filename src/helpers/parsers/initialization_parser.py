@@ -229,7 +229,7 @@ class InitializationParser(XMLParser):
 
         return [d if element else d.text.strip()
                 for d in subtree.findall(tag)
-                    if all or lower(d.get('enabled')) == 'true']
+                    if all_ or lower(d.get('enabled')) == 'true']
 
     def get_managers(self, elem, all_=False, element=False):
         lower = lambda x: x.lower() if x else None
