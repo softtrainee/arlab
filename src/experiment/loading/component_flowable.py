@@ -22,9 +22,11 @@ from reportlab.platypus.flowables import Flowable
 
 class ComponentFlowable(Flowable):
     component = None
-    def __init__(self, component=None):
+    def __init__(self, component=None, hAlign=None):
         self.component = component
         Flowable.__init__(self)
+        if hAlign:
+            self.hAlign = hAlign
 
     def _compute_scale(self, page_width, page_height,
                             width, height):
@@ -54,7 +56,10 @@ class ComponentFlowable(Flowable):
         if self.component:
             gc = PdfPlotGraphicsContext(pdf_canvas=self.canv)
 
+#             print self.component.x, self.component.y
             scale = self._scale
             gc.scale_ctm(scale, scale)
+            gc.translate_ctm(-self.component.x, -self.component.y)
             self.component.draw(gc)
+
 #============= EOF =============================================

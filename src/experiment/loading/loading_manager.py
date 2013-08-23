@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, cached_property, List, Str, \
-     Property, Int, Event, Any, Bool, Button, Float
+     Property, Int, Event, Any, Bool, Button, Float, on_trait_change
 from traitsui.api import View, Item, EnumEditor
 #============= standard library imports ========================
 
@@ -72,10 +72,10 @@ class LoadPosition(HasTraits):
     irrad_position = Int
 
     irradiation_str = Property
+
     position_str = Property(depends_on='positions[]')
 
     def _get_position_str(self):
-
         return make_position_str(self.positions)
 
     def _get_irradiation_str(self):
@@ -85,11 +85,18 @@ class LoadPosition(HasTraits):
 
 
 class LoadingManager(IsotopeDatabaseManager):
+    loader_name = Str('Foo')
 
     labnumber = Str
     labnumbers = Property(depends_on='level')
     weight = Float
     note = Str
+
+    '''
+        when a hole is selected npositions defines the number of 
+        total positions to apply the current information i.e labnumber
+    '''
+    npositions = Int(1)
 #     irradiation_hole = Str
 #     sample = Str
 
@@ -190,36 +197,54 @@ class LoadingManager(IsotopeDatabaseManager):
                 self.load_load(lt, set_tray=set_tray)
 
         return self.load_name
-
-    def add_position(self, canvas_hole):
-        if self.labnumber:
-            pos = next((pi for pi in  self.positions
+    def _get_pid_pos(self, canvas_hole):
+        pos = next((pi for pi in  self.positions
                        if pi.labnumber == self.labnumber), None)
+        pid = int(canvas_hole.name)
+        return pid, pos
 
-            pid = int(canvas_hole.identifier)
+    def _select_position(self, canvas_hole):
+        pid, pos = self._get_pid_pos(canvas_hole)
+        pos.positions.append(pid)
+        self._set_canvas_hole_selected(canvas_hole)
 
-            canvas_hole.add_text(self.labnumber, oy=-10)
-            if pos is not None:
-                if canvas_hole.fill:
-                    if pid in pos.positions:
-                        pos.positions.remove(pid)
-                        canvas_hole.fill = False
-                        canvas_hole.clear_text()
-                    else:
-                        npos = next((pi for pi in self.positions
-                                    if pid in pi.positions), None)
-                        if npos:
-                            npos.positions.remove(pid)
+    def _set_canvas_hole_selected(self, item):
+        item.fill = True
 
-                        pos.positions.append(pid)
+        item.add_labnumber_label(self.labnumber,
+                                 visible=self.show_labnumbers,
+                                 oy=-10)
 
-                    if not pos.positions:
-                        self.positions.remove(pos)
-                else:
-                    pos.positions.append(pid)
-                    canvas_hole.fill = True
-            else:
-                lp = LoadPosition(labnumber=self.labnumber,
+        oy = -10 if not self.show_labnumbers else -20
+        item.add_weight_label(str(self.weight),
+                                        visible=self.show_weights,
+                                        oy=oy
+                                        )
+        item.weight = self.weight
+        item.note = self.note
+
+    def _deselect_position(self, canvas_hole):
+        pid, pos = self._get_pid_pos(canvas_hole)
+        if pid in pos.positions:
+            pos.positions.remove(pid)
+            canvas_hole.fill = False
+            canvas_hole.clear_text()
+        else:
+            npos = next((pi for pi in self.positions
+                        if pid in pi.positions), None)
+            print 'fff', npos
+            if npos:
+                npos.positions.remove(pid)
+
+            pos.positions.append(pid)
+
+        if not pos.positions:
+            self.positions.remove(pos)
+
+    def _new_position_group(self, canvas_hole):
+        pid = int(canvas_hole.name)
+
+        lp = LoadPosition(labnumber=self.labnumber,
                                   irradiation=self.irradiation,
                                   level=self.level,
                                   irrad_position=int(self.irradiation_hole),
@@ -228,14 +253,20 @@ class LoadingManager(IsotopeDatabaseManager):
                                   weight=self.weight,
                                   note=self.note
                                   )
-                self.positions.append(lp)
-                canvas_hole.fill = True
+        self.positions.append(lp)
 
-                if not self.retain_weight:
-                    self.weight = 0
-                if not self.retain_note:
-                    self.note = ''
-            self.refresh_table = True
+        self._set_canvas_hole_selected(canvas_hole)
+
+
+
+    def _set_position(self, canvas_hole):
+
+        _, pos = self._get_pid_pos(canvas_hole)
+        if pos is not None:
+            self._select_position(canvas_hole)
+        else:
+            self._new_position_group(canvas_hole)
+
     def make_canvas(self, new, editable=True):
 
         db = self.db
@@ -297,7 +328,8 @@ class LoadingManager(IsotopeDatabaseManager):
                     item.add_weight_label(wt, oy=oy,
                                           visible=self.show_weights
                                           )
-
+                    item.weight = pi.weight
+                    item.note = pi.note
 #                     print item
 #                     item.add_text(ln, ox=-10, oy=-10,
 #                                   visible=self.show_labnumbers
@@ -364,12 +396,17 @@ class LoadingManager(IsotopeDatabaseManager):
         for pi in self.positions:
             ln = pi.labnumber
             self.info('updating positions for {} {}'.format(lt.name, ln))
-            self.debug('weight: {} note: {}'.format(pi.weight, pi.note))
+#             self.debug('weight: {} note: {}'.format(pi.weight, pi.note))
+            scene = self.canvas.scene
             for pp in pi.positions:
+
+                ip = scene.get_item(str(pp))
+                self.debug('weight: {} note: {}'.format(ip.weight, ip.note))
+
                 i = db.add_load_position(ln,
                                          position=pp,
-                                         weight=pi.weight,
-                                         note=pi.note
+                                         weight=ip.weight,
+                                         note=ip.note
                                          )
                 lt.loaded_positions.append(i)
 
@@ -399,7 +436,7 @@ class LoadingManager(IsotopeDatabaseManager):
 #                 if sample:
 #                     self.sample = sample.name
 
-    def _get_labnumber_record(self):
+    def _get_irradiation_position_record(self):
         level = self.db.get_irradiation_level(self.irradiation, self.level)
         if level:
             return next((pi for pi in level.positions
@@ -408,7 +445,7 @@ class LoadingManager(IsotopeDatabaseManager):
     @cached_property
     def _get_sample(self):
         sample = ''
-        pos = self._get_labnumber_record()
+        pos = self._get_irradiation_position_record()
         if pos is not None:
             dbsample = pos.labnumber.sample
             sample = dbsample.name if dbsample else ''
@@ -417,7 +454,7 @@ class LoadingManager(IsotopeDatabaseManager):
     @cached_property
     def _get_sample_info(self):
         return '{}{} {}'.format(self.level, self.irradiation_hole, self.sample)
-#         pos = self._get_labnumber_record()
+#         pos = self._get_irradiation_position_record()
 #         if pos is not None:
 #             dbsample = pos.labnumber.sample
 #             sample = dbsample.name if dbsample else ''
@@ -426,7 +463,7 @@ class LoadingManager(IsotopeDatabaseManager):
     @cached_property
     def _get_irradiation_hole(self):
         ir = ''
-        pos = self._get_labnumber_record()
+        pos = self._get_irradiation_position_record()
         if pos is not None:
             ir = pos.position
         return ir
@@ -447,6 +484,7 @@ class LoadingManager(IsotopeDatabaseManager):
         for lp in self.positions:
             for pid in lp.positions:
                 item = self.canvas.scene.get_item(str(pid))
+
                 item.labnumber_label.visible = new
                 item.weight_label.oy = -20 if new else -10
 
@@ -465,4 +503,31 @@ class LoadingManager(IsotopeDatabaseManager):
             item.name_visible = new
 
         self.canvas.request_redraw()
+
+    @on_trait_change('canvas:selected')
+    def _update_selected(self, new):
+        if not self.loader_name:
+            self.warning_dialog('Set a username')
+            return
+
+        if not new:
+            return
+
+        if new.fill:
+            self._deselect_position(new)
+        else:
+            for _ in range(self.npositions):
+                if not new:
+                    continue
+
+                self._set_position(new)
+                id_ = int(new.name) + 1
+                new = self.canvas.scene.get_item(str(id_))
+
+            if not self.retain_weight:
+                self.weight = 0
+            if not self.retain_note:
+                self.note = ''
+
+        self.refresh_table = True
 #============= EOF =============================================

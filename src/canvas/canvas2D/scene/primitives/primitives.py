@@ -659,6 +659,9 @@ class LoadIndicator(Circle):
 #     _text = List
     labnumber_label = None
     weight_label = None
+    weight = None
+    note = ''
+
     def clear_text(self):
         if self.labnumber_label:
             self.primitives.remove(self.labnumber_label)

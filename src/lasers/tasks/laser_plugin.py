@@ -175,9 +175,9 @@ class FusionsPlugin(BaseLaserPlugin):
 
     def _my_task_extensions_default(self):
         def efactory():
-            return SMenu(id='Extraction', name='Extraction')
+            return SMenu(id='Laser', name='Laser')
         return [TaskExtension(actions=[
-                   SchemaAddition(id='Extraction',
+                   SchemaAddition(id='Laser',
                                   factory=efactory,
                                   path='MenuBar',
                                   before='Tools',
@@ -245,11 +245,11 @@ class FusionsCO2Plugin(FusionsPlugin):
                                                                          PowerMapAction(),
                                                                          PowerCalibrationAction(),
                                                                          ),
-                                                   path='MenuBar/Extraction'
+                                                   path='MenuBar/Laser'
                                                    ),
                                       SchemaAddition(
                                                    factory=TestDegasAction,
-                                                   path='MenuBar/Extraction'
+                                                   path='MenuBar/Laser'
 #                                                    path='MenuBar/Extraction'
                                                    )
                                      ]
@@ -284,12 +284,12 @@ class FusionsDiodePlugin(FusionsPlugin):
 #                                                   ),
                                     SchemaAddition(id='open_scan',
                                                   factory=factory_scan,
-                                                path='MenuBar/Extraction'
+                                                path='MenuBar/Laser'
 #                                                 path='MenuBar/Extraction/FusionsDiodeGroup'
                                                 ),
                                     SchemaAddition(id='open_autotune',
                                                   factory=factory_tune,
-                                                path='MenuBar/Extraction'
+                                                path='MenuBar/Laser'
 #                                                 path='MenuBar/Extraction/FusionsDiodeGroup'
                                                 ),
                                     SchemaAddition(id='calibration',
@@ -297,11 +297,11 @@ class FusionsDiodePlugin(FusionsPlugin):
                                                                          PowerMapAction(),
                                                                          PowerCalibrationAction(),
                                                                          ),
-                                                   path='MenuBar/Extraction'
+                                                   path='MenuBar/Laser'
                                                    ),
                                     SchemaAddition(
                                                    factory=TestDegasAction,
-                                                   path='MenuBar/Extraction'
+                                                   path='MenuBar/Laser'
                                                    )
                                     ]
                               )

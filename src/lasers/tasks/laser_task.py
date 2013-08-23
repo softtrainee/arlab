@@ -24,6 +24,7 @@ from src.lasers.tasks.laser_panes import FusionsDiodePane, \
     FusionsDiodeSupplementalPane, FusionsDiodeClientPane, FusionsCO2ClientPane, \
     FusionsCO2AxesPane, AuxilaryGraphPane
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
+from src.lasers.pattern.pattern_maker_view import PatternMakerView
 # from pyface.tasks.action.schema import SMenu
 # from src.lasers.tasks.laser_actions import OpenScannerAction
 #============= standard library imports ========================
@@ -68,6 +69,15 @@ class FusionsTask(BaseLaserTask):
             pc = self.manager.power_calibration_manager
             if pc:
                 self.window.application.open_view(pc)
+
+    def new_pattern(self):
+        pm = PatternMakerView()
+        self.window.application.open_view(pm)
+
+    def open_pattern(self):
+        pm = PatternMakerView()
+        if pm.load_pattern():
+            self.window.application.open_view(pm)
 
 #     def open_pattern(self):
 #         if self.manager:

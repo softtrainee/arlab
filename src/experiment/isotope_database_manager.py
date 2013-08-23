@@ -117,28 +117,12 @@ class IsotopeDatabaseManager(Manager):
 
         return self.db.get_irradiation_level(irradiation, level)
 
-    def _record_factory(self, pi, **kw):
-        if isinstance(pi, (Analysis, NonDBAnalysis)):
-            return pi
+    def open_progress(self, n=2):
+        return self._open_progress(n)
 
-        if isinstance(pi, IsotopeRecordView):
-            rec = self.db.get_analysis(pi.uuid, key='uuid')
-            kw.update(dict(graph_id=pi.graph_id,
-                           group_id=pi.group_id))
-            pi = rec
-
-        rec = IsotopeRecord(_dbrecord=pi, **kw)
-        a = Analysis(isotope_record=rec)
-#        a.load_isotopes()
-        return a
-
-    def _db_default(self):
-        return self._db_factory()
-
-    def _db_factory(self):
-        db = IsotopeAdapter(application=self.application)
-        return db
-
+#===============================================================================
+# private
+#===============================================================================
     def _load_analyses(self, ans, func=None):
         if not ans:
             return
@@ -161,15 +145,30 @@ class IsotopeDatabaseManager(Manager):
                 func(ai)
                 progress.increment()
 
-    def open_progress(self, n=2):
-        return self._open_progress(n)
-
     def _open_progress(self, n):
 
         pd = myProgressDialog(max=n - 1, size=(550, 15))
         pd.open()
         return pd
 
+    def _record_factory(self, pi, **kw):
+        if isinstance(pi, (Analysis, NonDBAnalysis)):
+            return pi
+
+        if isinstance(pi, IsotopeRecordView):
+            rec = self.db.get_analysis(pi.uuid, key='uuid')
+            kw.update(dict(graph_id=pi.graph_id,
+                           group_id=pi.group_id))
+            pi = rec
+
+        rec = IsotopeRecord(_dbrecord=pi, **kw)
+        a = Analysis(isotope_record=rec)
+#        a.load_isotopes()
+        return a
+    def _db_factory(self):
+
+        db = IsotopeAdapter(application=self.application)
+        return db
 #===============================================================================
 # property get/set
 #===============================================================================
@@ -196,13 +195,23 @@ class IsotopeDatabaseManager(Manager):
         if self.db:
             irrad = self.db.get_irradiation(self.irradiation)
             if irrad:
-    #             r = [NULL_STR] + sorted([str(ri.name) for ri in irrad.levels])
                 r = sorted([str(ri.name) for ri in irrad.levels
                                             if ri.name])
-
                 if r and not self.level:
                     self.level = r[0]
-    #            if r and not self.level:
 
         return r
+
+#===============================================================================
+# handlers
+#===============================================================================
+    def _irradiation_changed(self):
+        self.level = ''
+
+#===============================================================================
+# defaults
+#===============================================================================
+    def _db_default(self):
+        return self._db_factory()
+
 #============= EOF =============================================
