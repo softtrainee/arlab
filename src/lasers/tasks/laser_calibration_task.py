@@ -28,6 +28,7 @@ from src.lasers.tasks.laser_calibration_panes import LaserCalibrationControlPane
     LaserCalibrationExecutePane
 import os
 import time
+from src.paths import paths
 
 class BaseLaserTask(EditorTask):
     def activated(self):
@@ -67,25 +68,35 @@ class LaserCalibrationTask(BaseLaserTask):
         self.control_pane = lp
         return [lp, ep]
 
-    def open_power_map(self):
-        p = self.open_file_dialog()
+    def get_power_maps(self):
+        ps = self.open_file_dialog(action='open files',
+                                      default_directory=paths.power_map_dir
+                                        )
+        return ps
+
+    def open_power_maps(self, ps):
+
+#         ps = self.open_file_dialog(action='open files',
+#                                       default_directory=paths.power_map_dir
+#                                       )
 #         p = '/Users/ross/Pychrondata_demo/data/scans/powermap-2013-07-17001.hdf5'
 #        p = '/Users/ross/Sandbox/powermap/powermap-2013-07-26005.hdf5'
 #         p = '/Users/ross/Sandbox/powermap/powermap-2013-07-27008.hdf5'
 #        p = '/Users/ross/Sandbox/powermap/Archive 2/powermap-2013-07-31001.hdf5'
 #         p = '/Users/ross/Sandbox/powermap/Archive 2/powermap-2013-07-31002.hdf5'
 #         p = '/Users/ross/Sandbox/powermap-2013-07-26005.hdf5'
-        if p:
-            try:
-#                p = '/Users/ross/Sandbox/powermap/Archive 2/powermap-2013-07-31{:03n}.hdf5'.format(i)
-                editor = PowerMapEditor(
-    #                                     name='Power Map {:03n}'.format(n + 1),
-                                        name='Power Map {}'.format(os.path.basename(p))
-                                        )
-                editor.load(p)
-                self._open_editor(editor)
-            except Exception:
-                self.debug('invalid power map file {}'.format(p))
+        if ps:
+            for p in ps:
+                try:
+    #                p = '/Users/ross/Sandbox/powermap/Archive 2/powermap-2013-07-31{:03n}.hdf5'.format(i)
+                    editor = PowerMapEditor(
+        #                                     name='Power Map {:03n}'.format(n + 1),
+                                            name='Power Map {}'.format(os.path.basename(p))
+                                            )
+                    editor.load(p)
+                    self._open_editor(editor)
+                except Exception:
+                    self.debug('invalid power map file {}'.format(p))
 
     def new_power_map(self):
 

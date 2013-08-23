@@ -30,6 +30,7 @@ from scipy.interpolate.ndgriddata import griddata
 from src.graph.contour_graph import ContourGraph
 from src.graph.graph import Graph
 from chaco.plot_containers import HPlotContainer
+from src.paths import paths
 # from src.ui.gui import invoke_in_main_thread
 
 
@@ -324,7 +325,7 @@ class PowerMapper(Loggable, ConsumerMixin):
 #                           os.path.join(data_dir, base_dir))
 #         dw.build_warehouse()
         dm.new_frame(base_frame_name='powermap-{}'.format(generate_datestamp()),
-#                      directory=dw.get_current_dir()
+                     directory=paths.power_map_dir
                      )
         t = dm.new_table('/', 'power_map', table_style='PowerMap')
         t._v_attrs['bounds'] = padding

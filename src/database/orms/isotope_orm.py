@@ -435,6 +435,8 @@ class loading_PositionsTable(Base, BaseMixin):
     load_identifier = Column(String(80), ForeignKey('loading_LoadTable.name'))
     lab_identifier = Column(String(80), ForeignKey('gen_LabTable.identifier'))
     position = Column(Integer)
+    weight = Column(Float)
+    note = Column(BLOB)
 
 class gen_LoadHolderTable(Base):
     @declared_attr

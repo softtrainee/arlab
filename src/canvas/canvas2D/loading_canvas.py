@@ -54,9 +54,9 @@ class LoadingCanvas(SceneCanvas):
 
 #     aspect_ratio = 1
     editable = True
-    def load_tray_map(self, t):
+    def load_tray_map(self, t, show_hole_numbers):
         scene = LoadingScene()
-        scene.load(t)
+        scene.load(t, show_hole_numbers=show_hole_numbers)
 
         self.view_x_range = scene.get_xrange()
         self.view_y_range = scene.get_yrange()

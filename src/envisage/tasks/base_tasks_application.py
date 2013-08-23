@@ -36,16 +36,17 @@ class BaseTasksApplication(TasksApplication, Loggable):
 #             win.open()
         return super(BaseTasksApplication, self).start()
 
-    def get_task(self, tid, activate=False):
+    def get_task(self, tid, activate=True):
         for win in self.windows:
             if win.active_task:
                 if win.active_task.id == tid:
-                    if tid:
+                    if activate:
                         win.activate()
                     break
         else:
             win = self.create_window(TaskWindowLayout(tid))
-            win.open()
+            if activate:
+                win.open()
 
         return win.active_task
 

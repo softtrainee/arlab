@@ -27,7 +27,7 @@ from src.canvas.canvas2D.scene.primitives.primitives import LoadIndicator
 class LoadingScene(Scene):
     _xrange = -1, 1
     _yrange = -1, 1
-    def load(self, t):
+    def load(self, t, show_hole_numbers=True):
         self.reset_layers()
 
         p = os.path.join(paths.map_dir, t)
@@ -43,7 +43,9 @@ class LoadingScene(Scene):
                        x=hi.x,
                        y=hi.y,
                        radius=sm.g_dimension / 2.0,
-                       identifier=hi.id,
+                       name_visible=show_hole_numbers,
+#                         identifier=hi.id,
+#                         identifier_visible=show_hole_numbers,
                        name=hi.id,
                        font='modern 10'
                        )
