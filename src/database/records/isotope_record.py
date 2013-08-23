@@ -308,8 +308,10 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #===============================================================================
 # database record
 #===============================================================================
-
-    def load_isotopes(self):
+    def load_result(self):
+        '''
+            load the saved result from the db
+        '''
         if self.dbrecord:
             for iso in self.dbrecord.isotopes:
                 if iso.kind == 'signal':
@@ -317,26 +319,40 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                     if iso.results:
                         result = iso.results[-1]
 
+
+    def load_isotopes(self, refit=True):
+        dbr = self.dbrecord
+        isotopes = self.isotopes
+        if dbr:
+            for iso in dbr.isotopes:
+                if iso.kind == 'signal':
+                    result = None
+                    if iso.results:
+                        result = iso.results[-1]
+
                     name = iso.molecular_weight.name
-                    if name not in self.isotopes:
+                    if name not in isotopes:
                         det = iso.detector.name
-                        r = Isotope(dbrecord=iso, dbresult=result, name=name, detector=det)
+                        r = Isotope(dbrecord=iso, dbresult=result, name=name,
+                                    detector=det,
+                                    refit=refit
+                                    )
                         fit = self._get_db_fit(name, 'signal')
                         if fit is None:
                             fit = Fit(fit='linear', filter_outliers=True,
                                       filter_outlier_iterations=1,
                                       filter_outlier_std_devs=2)
                         r.set_fit(fit)
-                        self.isotopes[name] = r
+                        isotopes[name] = r
             '''
             
                 load signals first then baseline and sniffs.
                 loading signals populates isotopes dict with new Isotope objects
             '''
-            for iso in self.dbrecord.isotopes:
+            for iso in dbr.isotopes:
                 name = iso.molecular_weight.name
                 det = iso.detector.name
-                i = self.isotopes[name]
+                i = isotopes[name]
 
                 kw = dict(
                           dbrecord=iso,
@@ -360,12 +376,21 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                     i.sniff = r
 
             blanks = self._get_blanks()
+
+            keys = isotopes.keys()
             if blanks:
                 for bi in blanks:
                     for ba in bi.blanks:
-                        r = Blank(dbrecord=ba, name=ba.isotope)
-                        if self.isotopes.has_key(ba.isotope):
-                            self.isotopes[ba.isotope].blank = r
+                        if isotopes.has_key(ba.isotope):
+                            r = Blank(dbrecord=ba, name=ba.isotope)
+                            isotopes[ba.isotope].blank = r
+
+                            keys.remove(ba.isotope)
+                            if not keys:
+                                break
+
+                    if not keys:
+                        break
 
             return True
 
@@ -657,9 +682,16 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_record_id(self):
         return make_runid(self.labnumber, self.aliquot, self.step)
 
+#     @cached_property
+#     def _get_labnumber_record(self):
+#         return self.dbrecord.labnumber
+
     @cached_property
-    def _get_labnumber_record(self):
-        return self.dbrecord.labnumber
+    def _get_irradiation_position(self):
+        try:
+            return self.dbrecord.labnumber.irradiation_position
+        except AttributeError, e:
+            print 'pos2', e
 
     @cached_property
     def _get_labnumber(self):
@@ -690,7 +722,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
     @cached_property
     def _get_isotope_keys(self):
-        self.load_isotopes()
+#         self.load_isotopes()
         keys = self.isotopes.keys()
         return sort_isotopes(keys)
 
@@ -884,6 +916,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
             getter = getattr(self, getter)
             return getter(attr, func, default)
+
     def _get_dbrecord_value(self, attr, func=None, default=None):
         v = None
         if self._dbrecord:
@@ -899,14 +932,14 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 # defaults
 #===============================================================================
     def _analysis_summary_default(self):
-        fs = FitSelector(analysis=self,
-                         name='Signal'
-                         )
+#         fs = FitSelector(analysis=self,
+#                          name='Signal'
+#                          )
 
         item = AnalysisSummary(record=self,
-                               fit_selector=fs
+#                                fit_selector=fs
                                )
-        fs.on_trait_change(item.refresh, 'fits:[fit,filterstr,filter_outliers]')
+#         fs.on_trait_change(item.refresh, 'fits:[fit,filterstr,filter_outliers]')
         return item
 
     def _peak_center_graph_default(self):

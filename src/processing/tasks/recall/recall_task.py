@@ -68,7 +68,8 @@ class RecallTask(AnalysisEditTask):
 
         def func(rec):
             rec.initialize()
-            reditor = RecallEditor(model=rec.isotope_record)
+            reditor = RecallEditor(analysis_summary=rec.isotope_record.analysis_summary,
+                                   )
 
 
             from src.processing.tasks.isotope_evolution.isotope_evolution_editor import IsotopeEvolutionEditor

@@ -860,8 +860,13 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_script(self, value):
         return self._retrieve_item(meas_ScriptTable, value, key='hash')
 
-    def get_sample(self, value):
-        return self._retrieve_item(gen_SampleTable, value)
+    def get_sample(self, value, project=None):
+        kw = dict()
+        if project:
+            kw['joins'] = [gen_ProjectTable]
+            kw['filters'] = [gen_ProjectTable.name == project]
+
+        return self._retrieve_item(gen_SampleTable, value, **kw)
 
     def get_flux_history(self, value):
         return self._retrieve_item(flux_HistoryTable, value)
@@ -896,7 +901,20 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_materials(self, **kw):
         return self._retrieve_items(gen_MaterialTable, **kw)
 
-    def get_samples(self, **kw):
+    def get_samples(self, project=None, **kw):
+        if project:
+            f = []
+            if 'filters' in kw:
+                f = kw['filters']
+            f.append(gen_ProjectTable.name == project)
+            kw['filters'] = f
+
+            j = []
+            if 'joins' in kw:
+                j = kw['joins']
+            j.append(gen_ProjectTable)
+            kw['joins'] = j
+
         return self._retrieve_items(gen_SampleTable, **kw)
 
     def get_users(self, **kw):

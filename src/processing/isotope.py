@@ -65,6 +65,7 @@ class IsotopicMeasurement(BaseMeasurement):
     filter_outliers = Bool
     filter_outlier_iterations = Int
     filter_outlier_std_devs = Int
+    refit = Bool(True)
 
     regressor = Property(depends_on='xs,ys,fit')
     def __init__(self, *args, **kw):
@@ -110,7 +111,7 @@ class IsotopicMeasurement(BaseMeasurement):
 
     @cached_property
     def _get_value(self):
-        if self.xs is not None and len(self.xs) > 1:  # and self.ys is not None:
+        if self.refit and self.xs is not None and len(self.xs) > 1:  # and self.ys is not None:
 #            if len(self.xs) > 2 and len(self.ys) > 2:
 #            print self.xs
 #            print self._get_regression_param('coefficients')
@@ -121,7 +122,7 @@ class IsotopicMeasurement(BaseMeasurement):
 
     @cached_property
     def _get_error(self):
-        if self.xs is not None and len(self.xs) > 1:
+        if self.refit and self.xs is not None and len(self.xs) > 1:
 #            if len(self.xs) > 2 and len(self.ys) > 2:
             return self.regressor.predict_error(0)
 #            return self._get_regression_param('coefficient_errors')
