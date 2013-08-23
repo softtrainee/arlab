@@ -38,6 +38,8 @@ def calc_rotation(x1, y1, x2, y2):
 
 class Primitive(HasTraits):
     identifier = Str
+    identifier_visible = True
+
     x = Float
     y = Float
     state = False
@@ -53,6 +55,8 @@ class Primitive(HasTraits):
     border_width = 2
 
     name = Str
+    name_visible = True
+
     klass_name = Property
 
     space = 'data'
@@ -157,7 +161,7 @@ class Primitive(HasTraits):
         self.selected = selected
 
     def _render_name(self, gc, x, y, w, h):
-        if self.name:
+        if self.name and self.name_visible:
             gc.set_fill_color((0, 0, 0))
 #             gc.set_font(str_to_font(self.font))
 
@@ -652,13 +656,39 @@ class LoadIndicator(Circle):
     degas_color = (1, 0.5, 0)
     measured_color = (1, 0, 0)
 
-    _text = List
-
+#     _text = List
+    labnumber_label = None
+    weight_label = None
     def clear_text(self):
-        self._text = []
+        if self.labnumber_label:
+            self.primitives.remove(self.labnumber_label)
+            self.labnumber_label = None
 
-    def add_text(self, t, ox=0, oy=0):
-        self._text.append((t, ox, oy))
+        if self.weight_label:
+            self.primitives.remove(self.weight_label)
+            self.weight_label = None
+
+    def add_labnumber_label(self, *args, **kw):
+        lb = self.add_text(*args, **kw)
+        self.labnumber_label = lb
+
+    def add_weight_label(self, *args, **kw):
+        lb = self.add_text(*args, **kw)
+        self.weight_label = lb
+
+    def add_text(self, t, ox=0, oy=0, **kw):
+#         x, y = self.get_xy()
+        lb = Label(0, 0,
+                 text=t,
+                 hjustify='center',
+                 oy=oy,
+                 font='modern 9',
+                 use_border=False,
+                 **kw)
+
+        self.primitives.append(lb)
+        return lb
+#         self._text.append((t, ox, oy))
 
     def _render_(self, gc):
         super(LoadIndicator, self)._render_(gc)
@@ -678,10 +708,13 @@ class LoadIndicator(Circle):
             gc.arc(x, y - 2 * nr, nr, 0, 360)
             gc.fill_path()
 
-        if self._text:
-            for ti, _, oy in self._text:
-                w, _h, _a, _b = gc.get_full_text_extent(ti)
-                self._render_text(gc, ti, x - w / 2., y + oy)
+        for pm in self.primitives:
+            pm.x, pm.y = self.x, self.y
+            pm.render(gc)
+#         if self._text:
+#             for ti, _, oy in self._text:
+#                 w, _h, _a, _b = gc.get_full_text_extent(ti)
+#                 self._render_text(gc, ti, x - w / 2., y + oy)
 
 
 
@@ -727,7 +760,9 @@ class Label(QPrimitive):
     text = String
     use_border = True
     bgcolor = Color('white')
-
+    ox = Float
+    oy = Float
+    hjustify = 'left'
     def _text_changed(self):
         self.request_redraw()
 
@@ -749,14 +784,18 @@ class Label(QPrimitive):
                 w, h, _, _ = gc.get_full_text_extent(li)
                 mw = max(mw, w + 2 * offset + loffset)
                 sh += h
-            gc.rect(ox - offset, oy - offset, mw, sh + loffset)
+            gc.rect(ox - offset + self.ox,
+                    oy - offset + self.oy, mw, sh + loffset)
             gc.draw_path()
 
         gc.set_fill_color((0, 0, 0))
         gc.set_font(str_to_font(self.font))
         for i, li in enumerate(lines[::-1]):
-            _, h, _, _ = gc.get_full_text_extent(li)
-            gc.set_text_position(x, y + i * h)
+            w, h, _, _ = gc.get_full_text_extent(li)
+            x += self.ox
+            if self.hjustify == 'center':
+                x -= w / 2.
+            gc.set_text_position(x, y + self.oy + i * h)
             gc.show_text(li)
 
     def _get_group(self):
@@ -820,6 +859,7 @@ class PointIndicator(Indicator):
         if self.identifier:
             self.label_item = Label(self.x, self.y,
                                text=self.identifier,
+                               visible=self.identifier_visible,
 #                               text=str(int(self.identifier[5:]) + 1),
                                 *args, **kw)
             self.primitives.append(self.label_item)

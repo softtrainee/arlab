@@ -15,43 +15,23 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import on_trait_change, Any, List
+from traits.api import on_trait_change, Any, List, Str
 # from traitsui.api import View, Item
 from pyface.tasks.task_layout import PaneItem, TaskLayout
 from pyface.constant import CANCEL, NO
 from pyface.tasks.action.schema import SToolBar
 #============= standard library imports ========================
 #============= local library imports  ==========================
-# from src.envisage.tasks.base_task import BaseManagerTask
-# from pyface.tasks.task_window_layout import TaskWindowLayout
-# from src.envisage.tasks.editor_task import EditorTask
-# from src.experiment.tasks.experiment_editor import ExperimentEditor
-# from src.paths import paths
-# import hashlib
-# import os
-# from src.helpers.filetools import add_extension
-# from src.ui.gui import invoke_in_main_thread
-# from apptools.preferences.preference_binding import bind_preference
+
 from src.envisage.tasks.base_task import BaseManagerTask
 from src.experiment.loading.panes import LoadPane, LoadControlPane, LoadTablePane
 from src.canvas.canvas2D.loading_canvas import LoadingCanvas
-# from src.experiment.isotope_database_manager import IsotopeDatabaseManager
-
-# from itertools import groupby
 from src.experiment.loading.actions import SaveLoadingAction
-# from pyface.image_resource import ImageResource
-# from src.paths import paths
-from reportlab.platypus.tables import Table, TableStyle
-from reportlab.platypus.flowables import PageBreak, Flowable
-from reportlab.platypus.doctemplate import SimpleDocTemplate, BaseDocTemplate, \
-    PageTemplate, FrameBreak
-from reportlab.lib.pagesizes import letter
-from reportlab.lib.units import mm, inch
-from reportlab.lib import colors
-from chaco.pdf_graphics_context import PdfPlotGraphicsContext
-from src.experiment.loading.loading_manager import LoadingManager, LoadPosition, \
-    ComponentFlowable
-from reportlab.platypus.frames import Frame
+from src.experiment.loading.loading_manager import LoadingManager, LoadPosition
+from src.experiment.loading.loading_pdf_writer import LoadingPDFWriter
+from apptools.preferences.preference_binding import bind_preference
+import os
+from src.paths import paths
 
 
 class LoadingTask(BaseManagerTask):
@@ -62,6 +42,9 @@ class LoadingTask(BaseManagerTask):
     control_pane = Any
     canvas = Any
     _positions = List
+
+    save_directory = Str
+
     tool_bars = [SToolBar(SaveLoadingAction(),
                           image_size=(32, 32)
                           )]
@@ -73,6 +56,8 @@ class LoadingTask(BaseManagerTask):
         self.manager.labnumber = '61311'
 
         self.manager.setup()
+
+        bind_preference(self, 'save_directory', 'pychron.loading.save_directory')
 
     def _manager_default(self):
         return LoadingManager()
@@ -105,152 +90,43 @@ class LoadingTask(BaseManagerTask):
         self.manager.save()
 
     def save_loading(self):
-        path = '/Users/ross/Sandbox/load_001.pdf'
-        if path:
-            doc = BaseDocTemplate(path,
-                                  leftMargin=0.25 * inch,
-                                  rightMargin=0.25 * inch,
-#                                   _pageBreakQuick=0,
-                                  showBoundary=1)
-#             doc = SimpleDocTemplate(path)
+        positions = self.manager.positions
+        p = LoadingPDFWriter()
+        root = self.save_directory
+        if not root or not os.path.isdir(root):
+            root = paths.loading_dir
 
-            man = self.manager
+        path = os.path.join(root, '{}.pdf'.format(self.manager.load_name))
+        p.build(path, positions, self.canvas)
 
-            n = len(man.positions)
-            idx = int(round(n / 2.))
-
-            p1 = man.positions[:idx]
-            p2 = man.positions[idx:]
-#
-            t1 = self._make_table(p1)
-            t2 = self._make_table(p2)
-            fl = [ComponentFlowable(component=self.canvas),
-                  FrameBreak(),
-                  t1,
-                  FrameBreak(),
-                  t2
-                  ]
-
-            # make 3 frames top, lower-left, lower-right
-            lm = doc.leftMargin
-            bm = doc.bottomMargin + doc.height * .333
-
-            fw = doc.width
-            fh = doc.height * 0.666
-            top = Frame(lm, bm, fw, fh)
-
-            fw = doc.width / 2.
-            fh = doc.height * 0.333
-            bm = doc.bottomMargin
-            lbottom = Frame(lm, bm, fw, fh, showBoundary=True)
-            rbottom = Frame(lm + doc.width / 2., bm, fw, fh)
-
-            template = PageTemplate(frames=[top, lbottom, rbottom])
-            doc.addPageTemplates(template)
-
-            doc.build(fl)
-
-    def _make_table(self, positions):
-        data = [('L#', 'Irradiation', 'Sample', 'Positions')]
-#         man = self.manager
-
-        ts = TableStyle()
-        ts.add('LINEBELOW', (0, 0), (-1, 0), 1, colors.black)
-
-        ts.add('FONTSIZE', (-3, 1), (-1, -1), 8)
-        ts.add('VALIGN', (-3, 1), (-1, -1), 'MIDDLE')
-#         positions = positions * 15
-
-        for idx, pi in enumerate(positions):
-            row = (pi.labnumber, pi.irradiation_str, pi.sample,
-                   pi.position_str)
-            data.append(row)
-            if idx % 2 == 0:
-                ts.add('BACKGROUND', (0, idx + 1), (-1, idx + 1),
-                        colors.lightgrey)
-
-        cw = map(lambda x: mm * x, [12, 20, 22, 40])
-
-        rh = [mm * 5 for i in range(len(data))]
-        t = Table(data,
-                  colWidths=cw,
-                  rowHeights=rh
-                  )
-
-        t.setStyle(ts)
-
-        return t
-
-    @on_trait_change('manager:db_load_name')
-    def _load_changed(self):
-        self.manager.load_load(self.manager.db_load_name)
+    @on_trait_change('manager:load_name')
+    def _load_changed(self, new):
+        if new:
+            self.manager.tray = ''
+            self.manager.load_load(new)
 
     @on_trait_change('manager:tray')
-    def _tray_changed(self):
+    def _tray_changed(self, new):
+        if new:
+            c = LoadingCanvas(
+                              view_x_range=(-2.2, 2.2),
+                              view_y_range=(-2.2, 2.2),
 
-        c = LoadingCanvas(
-                          view_x_range=(-2.2, 2.2),
-                          view_y_range=(-2.2, 2.2),
+                              )
+            c.load_tray_map(new, self.manager.show_hole_numbers)
 
-                          )
-        c.load_tray_map(self.manager.tray)
+            self.canvas = c
+            self.load_pane.component = c
 
-        self.canvas = c
-        self.load_pane.component = c
+            self.manager.canvas = c
 
-        self.manager.canvas = c
-
-        self.manager.positions = []
+            self.manager.positions = []
 
     @on_trait_change('canvas:selected')
     def _update_selected(self, new):
         if not new:
             return
-
-        man = self.manager
-        if man.labnumber:
-#             irrad_str = '{} {}{}'.format(man.irradiation,
-#                                        man.level,
-#                                        man.irradiation_hole
-#                                        )
-
-            pos = next((pi for pi in  man.positions
-                       if pi.labnumber == man.labnumber), None)
-
-            pid = int(new.identifier)
-
-            new.add_text(man.labnumber, oy=-10)
-            if pos is not None:
-                if new.fill:
-                    if pid in pos.positions:
-                        pos.positions.remove(pid)
-                        new.fill = False
-                        new.clear_text()
-                    else:
-                        npos = next((pi for pi in man.positions
-                                    if pid in pi.positions), None)
-                        if npos:
-                            npos.positions.remove(pid)
-
-                        pos.positions.append(pid)
-
-                    if not pos.positions:
-                        man.positions.remove(pos)
-                else:
-                    pos.positions.append(pid)
-                    new.fill = True
-            else:
-                lp = LoadPosition(labnumber=man.labnumber,
-                                  irradiation=man.irradiation,
-                                  level=man.level,
-                                  irrad_position=int(man.irradiation_hole),
-                                sample=man.sample,
-                                positions=[pid]
-                                )
-                man.positions.append(lp)
-                new.fill = True
-
-            man.refresh_table = True
+        self.manager.add_position(new)
 
     @on_trait_change('window:closing')
     def _prompt_on_close(self, event):

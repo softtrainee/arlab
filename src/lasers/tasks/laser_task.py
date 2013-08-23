@@ -81,10 +81,10 @@ class FusionsTask(BaseLaserTask):
 #         if self.manager:
 #             self.manager.execute_pattern()
 
-    def open_power_map(self):
-        if self.manager:
-            pm = self.manager.get_power_map_manager()
-            self.window.application.open_view(pm)
+#     def open_power_map(self):
+#         if self.manager:
+#             pm = self.manager.get_power_map_manager()
+#             self.window.application.open_view(pm)
 
     def test_degas(self):
         if self.manager:

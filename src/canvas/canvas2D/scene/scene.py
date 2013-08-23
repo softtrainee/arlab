@@ -71,10 +71,17 @@ class Scene(HasTraits):
                         ci.font = self.font
                     ci.render(gc)
 
-    def get_items(self, klass):
-        return [ci for li in self.layers
-                for ci in li.components
-                    if isinstance(ci, klass)]
+    def get_items(self, klass=None):
+#         return [ci for li in self.layers
+#                 for ci in li.components
+#                     if isinstance(ci, klass)]
+#
+        comps = (ci for li in self.layers
+                    for ci in li.components)
+        if klass:
+            return [ci for ci in comps if isinstance(ci, klass)]
+        else:
+            return list(comps)
 
     def get_item(self, name, layer=None, klass=None):
         def test(la):

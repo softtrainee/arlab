@@ -122,6 +122,8 @@ class Paths():
     processed_dir = None
     image_cache_dir = None
     default_cache = None
+    loading_dir = None
+    power_map_dir = None
     # initialization_dir = None
     # device_creator_dir = None
 
@@ -246,6 +248,8 @@ class Paths():
         # device_creator_dir = join(device_dir, 'device_creator')
         self.image_cache_dir = join(self.data_dir, 'image_cache')
         self.default_cache = join(self.data_dir, 'cache')
+        self.loading_dir = join(self.data_dir, 'loads')
+        self.power_map_dir = join(self.data_dir, 'power_maps')
         #==============================================================================
         # lovera exectuables
         #==============================================================================

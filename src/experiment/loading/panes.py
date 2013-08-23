@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Property, Str
+from traits.api import Any, Str
 from traitsui.api import View, UItem, Item, EnumEditor, \
     VGroup, TabularEditor, HGroup
 from pyface.tasks.traits_task_pane import TraitsTaskPane
@@ -32,6 +32,7 @@ class PositionsAdapter(TabularAdapter):
                ('Sample', 'sample'),
                ('Positions', 'position_str')
                ]
+    font = 'arial 10'
 
 class LoadTablePane(TraitsDockPane):
     name = 'Positions'
@@ -74,29 +75,43 @@ class LoadDockPane(TraitsDockPane):
                  )
         return v
 
+
 class LoadControlPane(TraitsDockPane):
     name = 'Load'
     id = 'pychron.loading.controls'
     def traits_view(self):
         v = View(
-               HGroup(Item('db_load_name',
-                    editor=EnumEditor(name='loads'),
-#                     style='readonly',
-                        label='Loads'),
-                      Item('load_name', label='New Load')
-                      ),
-               Item('tray', editor=EnumEditor(name='trays')),
-               Item('irradiation',
-                    editor=EnumEditor(name='irradiations')
-                    ),
-               Item('level', editor=EnumEditor(name='levels')
-                   ),
-               HGroup(
-                      Item('labnumber', editor=EnumEditor(name='labnumbers')
-                           ),
-                      Item('irradiation_hole', style='readonly', show_label=False)
-                      ),
-               Item('sample', style='readonly', show_label=False)
+                 VGroup(
+                        HGroup(Item('load_name',
+                              editor=EnumEditor(name='loads'),
+                              label='Loads'),
+                              Item('add_button', show_label=False),
+                              Item('delete_button', show_label=False),
+                              ),
+                        Item('irradiation',
+                            editor=EnumEditor(name='irradiations')),
+                        Item('level', editor=EnumEditor(name='levels')),
+                        Item('labnumber', editor=EnumEditor(name='labnumbers')),
+                        Item('sample_info', style='readonly'),
+                        HGroup(
+                               Item('weight', label='Weight (mg)'),
+                               Item('retain_weight', label='Lock')
+                               ),
+                        VGroup(
+                               Item('retain_note', label='Lock'),
+                               Item('note', style='custom', show_label=False),
+                               show_border=True,
+                               label='Note'
+                              ),
+
+                        VGroup(
+                               Item('show_hole_numbers'),
+                               Item('show_labnumbers'),
+                               Item('show_weights'),
+                               show_border=True,
+                               label='View'
+                               )
+                        )
                )
         return v
 

@@ -115,7 +115,7 @@ class LaserCalibrationAction(Action):
     def _get_task(self, event):
         app = event.task.window.application
         task_id = 'pychron.laser.calibration'
-        task = app.open_task(task_id)
+        task = app.get_task(task_id)
         return task
 
 class PowerMapAction(LaserCalibrationAction):
@@ -128,8 +128,18 @@ class OpenPowerMapAction(LaserCalibrationAction):
     name = 'Power Map'
     accelerator = 'Ctrl+3'
     def perform(self, event):
-        task = self._get_task(event)
-        task.open_power_map()
+        app = event.task.window.application
+        task_id = 'pychron.laser.calibration'
+        task = app.get_task(task_id, activate=False)
+        ps = task.get_power_maps()
+        if ps:
+            if task.window.control.isVisible():
+                task.window.control.raise_()
+            else:
+                task.window.open()
+
+            task.open_power_maps(ps)
+
 
 class PowerCalibrationAction(LaserCalibrationAction):
     name = 'Power Calibration...'

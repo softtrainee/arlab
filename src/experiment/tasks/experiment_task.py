@@ -364,8 +364,8 @@ class ExperimentEditorTask(EditorTask):
     @on_trait_change('manager.experiment_factory:queue_factory:load_name')
     def _update_load(self, new):
         lm = self.loading_manager
-        if lm.db_load_name != new:
-            lm.db_load_name = new
+        if lm.load_name != new:
+            lm.load_name = new
             canvas = lm.make_canvas(new, editable=False)
             self.load_pane.component = weakref.ref(canvas)()
 

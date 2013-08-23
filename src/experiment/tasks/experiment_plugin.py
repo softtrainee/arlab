@@ -35,6 +35,7 @@ from src.experiment.tasks.constants_preferences import ConstantsPreferencesPane
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.loading.load_task import LoadingTask
 from src.experiment.loading.actions import SaveLoadingAction
+from src.experiment.loading.loading_preferences import LoadingPreferencesPane
 
 class ExperimentPlugin(BaseTaskPlugin):
     id = 'pychron.experiment'
@@ -291,6 +292,7 @@ class ExperimentPlugin(BaseTaskPlugin):
 
     def _preferences_panes_default(self):
         return [ExperimentPreferencesPane,
-                ConstantsPreferencesPane
+                ConstantsPreferencesPane,
+                LoadingPreferencesPane
                 ]
 #============= EOF =============================================

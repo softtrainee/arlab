@@ -313,7 +313,7 @@ class BaseManagerTask(BaseTask):
     wildcard = None
     manager = Any
 
-    def open_file_dialog(self, **kw):
+    def open_file_dialog(self, action='open', **kw):
         if 'default_directory' not in kw:
             kw['default_directory'] = self.default_directory
 
@@ -321,9 +321,13 @@ class BaseManagerTask(BaseTask):
             if self.wildcard:
                 kw['wildcard'] = self.wildcard
         dialog = FileDialog(parent=self.window.control,
+                            action=action,
                             **kw)
         if dialog.open() == OK:
-            return dialog.path
+            r = dialog.path
+            if action == 'open files':
+                r = dialog.paths
+            return r
 
     def save_file_dialog(self, **kw):
         if 'default_directory' not in kw:
