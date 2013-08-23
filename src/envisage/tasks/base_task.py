@@ -350,10 +350,10 @@ class BaseExtractionLineTask(BaseManagerTask):
         if man:
             man.deactivate()
 
-    def activated(self):
-        man = self._get_el_manager()
-        if man:
-            man.activate()
+#     def activated(self):
+#         man = self._get_el_manager()
+#         if man:
+#             man.activate()
 
     def _add_canvas_pane(self, panes):
         app = self.window.application
@@ -363,6 +363,12 @@ class BaseExtractionLineTask(BaseManagerTask):
             panes.append(CanvasDockPane(canvas=man.new_canvas(name='alt_canvas')))
 
         return panes
+
+    @on_trait_change('window:opened')
+    def _window_opened(self):
+        man = self._get_el_manager()
+        if man:
+            man.activate()
 
 class BaseHardwareTask(BaseManagerTask):
     pass

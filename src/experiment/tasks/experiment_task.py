@@ -181,6 +181,20 @@ class ExperimentEditorTask(EditorTask):
 #===============================================================================
 # generic actions
 #===============================================================================
+    def _open_experiment(self, path, **kw):
+        with open(path, 'r') as fp:
+            txt = fp.read()
+
+            qtexts = self._split_text(txt)
+            for qi in qtexts:
+                editor = ExperimentEditor(path=path)
+                editor.new_queue(qi)
+                self._open_editor(editor)
+
+                # loading queue editor set dirty
+                # clear dirty flag
+                editor.dirty = False
+
     def open(self):
 
 #         self._test_auto_figure()
@@ -188,25 +202,15 @@ class ExperimentEditorTask(EditorTask):
 
 #        import os
 #        path = os.path.join(paths.experiment_dir, 'demo.txt')
-        path = self.open_file_dialog()
+        paths = self.open_file_dialog(action='open files')
 
-        if path:
+        if paths:
             manager = self.manager
             if manager.verify_database_connection(inform=True):
                 if manager.load():
-                    self.manager.info('Opening experiment {}'.format(path))
-                    with open(path, 'r') as fp:
-                        txt = fp.read()
-
-                        qtexts = self._split_text(txt)
-                        for qi in qtexts:
-                            editor = ExperimentEditor(path=path)
-                            editor.new_queue(qi)
-                            self._open_editor(editor)
-
-                            # loading queue editor set dirty
-                            # clear dirty flag
-                            editor.dirty = False
+                    for path in paths:
+                        self.manager.info('Opening experiment {}'.format(path))
+                        self._open_experiment(path)
 
                     manager.path = path
                     manager.executor.reset()
@@ -364,6 +368,8 @@ class ExperimentEditorTask(EditorTask):
     @on_trait_change('manager.experiment_factory:queue_factory:load_name')
     def _update_load(self, new):
         lm = self.loading_manager
+        lm.db.reset()
+
         if lm.load_name != new:
             lm.load_name = new
             canvas = lm.make_canvas(new, editable=False)
@@ -399,6 +405,8 @@ class ExperimentEditorTask(EditorTask):
 
     @on_trait_change('manager:executor:run_completed')
     def _update_run_completed(self, new):
+        self.manager.db.reset()
+
         if self.auto_figure_window:
             task = self.auto_figure_window.active_task
             invoke_in_main_thread(task.refresh_plots, new)

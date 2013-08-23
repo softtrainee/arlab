@@ -32,7 +32,7 @@ from src.experiment.loading.loading_pdf_writer import LoadingPDFWriter
 from apptools.preferences.preference_binding import bind_preference
 import os
 from src.paths import paths
-
+from datetime import datetime
 
 class LoadingTask(BaseManagerTask):
     name = 'Loading'
@@ -90,14 +90,23 @@ class LoadingTask(BaseManagerTask):
         self.manager.save()
 
     def save_loading(self):
-        positions = self.manager.positions
         p = LoadingPDFWriter()
         root = self.save_directory
         if not root or not os.path.isdir(root):
             root = paths.loading_dir
 
-        path = os.path.join(root, '{}.pdf'.format(self.manager.load_name))
-        p.build(path, positions, self.canvas)
+        positions = self.manager.positions
+        ln = self.manager.load_name
+        un = self.manager.loader_name
+
+        dt = datetime.now()
+        date_str = dt.strftime("%Y-%m-%d %H:%M:%S")
+        meta = dict(load_name=ln, username=un,
+                    load_date=date_str,
+                    projects='Ross, Test'
+                    )
+        path = os.path.join(root, '{}.pdf'.format(ln))
+        p.build(path, positions, self.canvas, meta)
 
     @on_trait_change('manager:load_name')
     def _load_changed(self, new):
@@ -122,11 +131,6 @@ class LoadingTask(BaseManagerTask):
 
             self.manager.positions = []
 
-    @on_trait_change('canvas:selected')
-    def _update_selected(self, new):
-        if not new:
-            return
-        self.manager.add_position(new)
 
     @on_trait_change('window:closing')
     def _prompt_on_close(self, event):

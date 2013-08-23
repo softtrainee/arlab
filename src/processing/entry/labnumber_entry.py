@@ -499,8 +499,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
             else:
                 self.warning_dialog('Level {} already exists for Irradiation {}'.format(self.irradiation))
 
-    def _irradiation_changed(self):
-        self.level = ''
+
 #         self.irradiated_positions = []
 
 

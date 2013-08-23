@@ -36,19 +36,20 @@ class ExperimentAction(Action):
 
     def _open_editor(self, event):
         application = event.task.window.application
-        for wi in application.windows:
-            if wi.active_task.id == self.task_id:
-                wi.activate()
-                break
-        else:
-            win = application.create_window(TaskWindowLayout(self.task_id))
-            win.open()
+        application.open_task(self.task_id)
+#         for wi in application.windows:
+#             if wi.active_task.id == self.task_id:
+#                 wi.activate()
+#                 break
+#         else:
+#             win = application.create_window(TaskWindowLayout(self.task_id))
+#             win.open()
 
-class ExperimentOnlyAction(TaskAction):
+class BasePatternAction(TaskAction):
     _enabled = None
     def _task_changed(self):
         if self.task:
-            if self.task.id == 'pychron.experiment':
+            if hasattr(self.task, 'open_pattern'):
                 enabled = True
                 if self.enabled_name:
                     if self.object:
@@ -74,12 +75,12 @@ class ExperimentOnlyAction(TaskAction):
         else:
             self.enabled = bool(self.object)
 
-class OpenPatternAction(ExperimentOnlyAction):
+class OpenPatternAction(BasePatternAction):
     name = 'Open Pattern...'
     method = 'open_pattern'
 
 
-class NewPatternAction(ExperimentOnlyAction):
+class NewPatternAction(BasePatternAction):
     name = 'New Pattern...'
     method = 'new_pattern'
 
@@ -138,22 +139,21 @@ class OpenExperimentQueueAction(QueueAction):
     def perform(self, event):
         '''
         '''
-        if event.task.id == 'pychron.experiment':
-            task = event.task
+        app = event.task.window.application
+        task = event.task
+        if task.id == 'pychron.experiment':
             task.open()
         else:
-            application = event.task.window.application
-            win = application.create_window(TaskWindowLayout('pychron.experiment'))
-            task = win.active_task
+            task = app.get_task('pychron.experiment', False)
             if task.open():
-                win.open()
+                task.window.open()
 
-#        manager = self._get_experimentor(event)
-#        if manager.verify_database_connection(inform=True):
-# #        if manager.verify_credentials():
-#            if manager.load():
-#                if manager.load_experiment_queue(saveable=True):
-#                    self._open_editor(event)
+#         else:
+#             application = event.task.window.application
+#             win = application.create_window(TaskWindowLayout('pychron.experiment'))
+#             task = win.active_task
+#             if task.open():
+#                 win.open()
 
 
 class SaveExperimentQueueAction(ExperimentAction):
@@ -195,12 +195,12 @@ class SaveAsExperimentQueueAction(ExperimentAction):
         manager = self._get_experimentor(event)
         manager.save_as_experiment_queues()
 
-class MergeQueuesAction(ExperimentAction):
-    name = 'Merge'
-    def perform(self, event):
-        if event.task.id == self.task_id:
-            event.task.merge()
-#            manager = self._get_experimentor(event)
+# class MergeQueuesAction(ExperimentAction):
+#     name = 'Merge'
+#     def perform(self, event):
+#         if event.task.id == self.task_id:
+#             event.task.merge()
+
 #===============================================================================
 # database actions
 #===============================================================================

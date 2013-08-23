@@ -80,37 +80,47 @@ class LoadControlPane(TraitsDockPane):
     name = 'Load'
     id = 'pychron.loading.controls'
     def traits_view(self):
+
+        notegrp = VGroup(
+                       Item('retain_note', label='Lock'),
+                       Item('note', style='custom', show_label=False),
+                       show_border=True,
+                       label='Note'
+                      )
+        viewgrp = VGroup(
+                       Item('show_hole_numbers'),
+                       Item('show_labnumbers'),
+                       Item('show_weights'),
+                       show_border=True,
+                       label='View'
+                       )
+        samplegrp = VGroup(
+                           Item('loader_name', label='User'),
+                           HGroup(Item('load_name',
+                                       editor=EnumEditor(name='loads'),
+                                       label='Loads'),
+                                  Item('add_button', show_label=False),
+                                  Item('delete_button', show_label=False),
+                                  ),
+                           Item('irradiation',
+                                editor=EnumEditor(name='irradiations')),
+                           Item('level', editor=EnumEditor(name='levels')),
+                           Item('labnumber', editor=EnumEditor(name='labnumbers')),
+                           Item('sample_info', style='readonly'),
+                           HGroup(
+                                   Item('weight', label='Weight (mg)'),
+                                   Item('retain_weight', label='Lock')
+                                   ),
+                           Item('npositions', label='NPositions'),
+                           show_border=True,
+                           label='Sample'
+                        )
+
         v = View(
                  VGroup(
-                        HGroup(Item('load_name',
-                              editor=EnumEditor(name='loads'),
-                              label='Loads'),
-                              Item('add_button', show_label=False),
-                              Item('delete_button', show_label=False),
-                              ),
-                        Item('irradiation',
-                            editor=EnumEditor(name='irradiations')),
-                        Item('level', editor=EnumEditor(name='levels')),
-                        Item('labnumber', editor=EnumEditor(name='labnumbers')),
-                        Item('sample_info', style='readonly'),
-                        HGroup(
-                               Item('weight', label='Weight (mg)'),
-                               Item('retain_weight', label='Lock')
-                               ),
-                        VGroup(
-                               Item('retain_note', label='Lock'),
-                               Item('note', style='custom', show_label=False),
-                               show_border=True,
-                               label='Note'
-                              ),
-
-                        VGroup(
-                               Item('show_hole_numbers'),
-                               Item('show_labnumbers'),
-                               Item('show_weights'),
-                               show_border=True,
-                               label='View'
-                               )
+                        samplegrp,
+                        notegrp,
+                        viewgrp,
                         )
                )
         return v
