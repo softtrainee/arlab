@@ -353,7 +353,8 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             print e
             return
 
-    def _retrieve_item(self, table, value, key='name', last=None):
+    def _retrieve_item(self, table, value, key='name', last=None,
+                       joins=None, filters=None):
         sess = self.get_session()
         if sess is None:
             return
@@ -367,6 +368,18 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
         def __retrieve():
             q = sess.query(table)
+            if joins:
+                try:
+                    for ji in joins:
+                        if ji != table:
+                            q = q.join(ji)
+                except InvalidRequestError:
+                    pass
+
+            if filters is not None:
+                for fi in filters:
+                    q = q.filter(fi)
+
             for k, v in zip(key, value):
                 q = q.filter(getattr(table, k) == v)
 

@@ -29,7 +29,7 @@ from pyface.constant import CANCEL, YES
 
 from pyface.tasks.advanced_editor_area_pane import AdvancedEditorAreaPane
 # class EditorTask(BaseManagerTask, Loggable):
-class EditorTask(BaseExtractionLineTask, Loggable):
+class BaseEditorTask(BaseManagerTask):
     active_editor = Property(Instance(IEditor),
                              depends_on='editor_area.active_editor'
                              )
@@ -129,4 +129,7 @@ class EditorTask(BaseExtractionLineTask, Loggable):
         """
         close = self._prompt_for_save()
         event.veto = not close
+
+class EditorTask(BaseExtractionLineTask, BaseEditorTask):
+    pass
 #============= EOF =============================================

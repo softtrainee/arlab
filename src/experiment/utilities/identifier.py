@@ -147,6 +147,26 @@ def make_runid(ln, a, s):
 
     return '{}-{}{}'.format(ln, a, s)
 
+def strip_runid(r):
+    l, x = r.split('-')
+
+    a = ''
+    s = ''
+    for i, xi in enumerate(x):
+        a += xi
+        try:
+            int(a)
+        except ValueError:
+            a = x[:i]
+            s = x[i:]
+            break
+    else:
+        s = ''
+
+    return l, int(a), s
+
+
+
 def make_identifier(ln, ed, ms):
     try:
         _ = int(ln)

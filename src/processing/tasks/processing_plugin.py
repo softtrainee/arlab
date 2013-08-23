@@ -37,6 +37,7 @@ from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
 from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
 from src.processing.tasks.figures.auto_figure_preferences import AutoFigurePreferencesPane
 from src.processing.tasks.smart_project.smart_project_task import SmartProjectTask
+from src.processing.tasks.browser.browser_task import BrowserTask
 
 
 class ProcessingPlugin(BaseTaskPlugin):
@@ -128,6 +129,7 @@ class ProcessingPlugin(BaseTaskPlugin):
                         ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher'),
                         ('pychron.processing.auto_figure', self._auto_figure_task_factory, 'AutoFigure'),
                         ('pychron.processing.smart_project', self._smart_project_task_factory, 'SmartProject'),
+                        ('pychron.processing.browser', self._browser_task_factory, 'Browser'),
                         )
                 ]
 
@@ -180,6 +182,9 @@ class ProcessingPlugin(BaseTaskPlugin):
 
     def _smart_project_task_factory(self):
         return SmartProjectTask(manager=self._processor_factory())
+
+    def _browser_task_factory(self):
+        return BrowserTask(manager=self._processor_factory())
 #    def _task_factory(self):
 # #        processor = self.application.get_service(Processor)
 #        return ProcessingTask(manager=self._processor_factory())
