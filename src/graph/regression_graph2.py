@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Any, Event, Instance, Dict, on_trait_change
-from traitsui.api import View, Item
+from traits.api import List, Any, Event
 from chaco.tools.broadcaster import BroadcasterTool
 #============= standard library imports ========================
 from numpy import linspace, random, \
@@ -586,10 +585,11 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter.filter = None
         scatter.filter_outliers_dict = filter_outliers_dict
 
+        r = None
         if x is not None and y is not None:
             args = self._regress(plot, scatter, None)
             if args:
-                fx, fy, ly, uy = args
+                r, fx, fy, ly, uy = args
 
         kw['color'] = 'black'
         kw['type'] = 'line'
@@ -597,8 +597,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         plot, names, rd = self._series_factory(fx, fy, plotid=plotid,
                                                **kw)
         line = plot.plot(names, **rd)[0]
-        if self.regressors:
-            line.regressor = self.regressors[-1]
+        if r is not None:
+            line.regressor = r
+#         if self.regressors:
+#             line.regressor = self.regressors[-1]
 
         line.index.sort_order = 'ascending'
         self.set_series_label('fit{}'.format(si), plotid=plotid)
