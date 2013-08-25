@@ -18,11 +18,28 @@
 # from traits.api import HasTraits
 import os
 import yaml
+from datetime import datetime
+from datetime import timedelta
+
+from sqlalchemy.sql.expression import and_
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.paths import paths, rec_make
 from src.processing.importer.import_manager import ImportManager
+
+from src.database.orms.isotope_orm import meas_AnalysisTable, \
+    meas_MeasurementTable, gen_AnalysisTypeTable, irrad_IrradiationTable, \
+    irrad_LevelTable, gen_LabTable, irrad_PositionTable
+import time
+from src.processing.tasks.blanks.blanks_editor import BlanksEditor
+from src.ui.gui import invoke_in_main_thread
+from src.helpers.filetools import unique_path
+from src.processing.tasks.smart_project.blanks_pdf_writer import BlanksPDFWrtier
+from src.processing.tasks.smart_project.smart_blanks import SmartBlanks
+from src.processing.tasks.smart_project.smart_isotope_fits import SmartIsotopeFits
+from src.processing.tasks.smart_project.smart_detector_intercalibration import SmartDetectorIntercalibration
+
 
 class SmartProjectTask(AnalysisEditTask):
     id = 'pychron.processing.smart_project'
@@ -62,6 +79,7 @@ class SmartProjectTask(AnalysisEditTask):
         self.debug('importing analyses')
 
         if not self._set_destination(meta):
+            self.warning('failed to set destination')
             return
 
         im = ImportManager(db=self.manager.db)
@@ -79,10 +97,15 @@ class SmartProjectTask(AnalysisEditTask):
                     for irrad in meta['irradiations']]
         return s
 
-    def _set_importer(self, meta, im):
-        imports = meta['imports']
+    def _make_fit_selection(self, meta):
+        s = [(irrad['name'], irrad['levels'].split(','))
+                    for irrad in meta['irradiations']]
+        return s
 
-        im.include_analyses = meta['atype'] == 'unknown'
+    def _set_importer(self, meta, im):
+        imports = meta['imports'][0]
+
+        im.include_analyses = imports['atype'] == 'unknown'
         im.include_blanks = imports['blanks']
         im.include_airs = imports['airs']
         im.include_cocktails = imports['cocktails']
@@ -90,9 +113,14 @@ class SmartProjectTask(AnalysisEditTask):
         im.import_kind = 'irradiation'
 
         im.selected = self._make_import_selection(meta)
+        im.dry_run = imports['dry_run']
 
     def _set_destination(self, meta):
-        dest = meta['destination']
+        try:
+            dest = meta['destination']
+        except KeyError:
+            return
+
         db = self.manager.db
         db.name = dest['database']
         db.username = dest['username']
@@ -141,35 +169,164 @@ class SmartProjectTask(AnalysisEditTask):
     def _make_table(self, tdict):
         pass
 
-    def _make_output_dir(self, path, project):
-        if path.startswith('.'):
-            # assume relative to processed dir
-            path = os.path.join(paths.processed_dir,
-                                project,
-                                path[1:])
-
-        rec_make(path)
 
 #===============================================================================
 # fitting
 #===============================================================================
     def _fit_isotopes(self, meta):
-        pass
+        fitting = meta['fitting']
+        dry_run = fitting['dry_run']
+        projects = fitting['projects']
+
+        sf = SmartIsotopeFits()
+        if meta.has_key('irradiations'):
+            irradiations = self._make_fit_selection(meta)
+
+            sf.fit_irradiations(irradiations, projects, dry_run)
+#             self._fit_irradiations(irradiations, projects, dry_run)
+
+        if meta.has_key('date_range'):
+
+            dr = meta['date_range']
+            posts = dr['start'], dr['end']
+            at = dr['atypes']
+            start, end = map(self._convert_date_str, posts)
+
+            sf.fit_date_range(start, end, at, dry_run)
+#             self._fit_date_range(start, end, at, dry_run)
 
     def _fit_blanks(self, meta, project):
-        # make graphs
-        if meta[0]['figure']:
-            path = meta[0]['output']
-            self._make_output_dir(path, project)
+        st = time.time()
+        fm = meta['fit_blanks']
+        root = None
+        if fm['save_figure']:
+            path = fm['output']
+            root = self._make_output_dir(path, project)
+
+        fitting = meta['fitting']
+        projects = fitting['projects']
+        dry_run = fitting['dry_run']
+        irradiations = self._make_fit_selection(meta)
+
+        f = meta['fit_blanks']
+        atypes = f['atypes']
+        n, ans = self._analysis_generator(irradiations, projects, atypes)
+        interp = f['interpolate']
+
+        sb = SmartBlanks(processor=self.manager)
+        if interp is True:
+
+            fits = f['fits']
+            save_figure = f['save_figure']
+            with_table = f['with_table']
+            be = BlanksEditor(name='Blanks',
+                          auto_find=False,
+                          show_current=False)
+
+            sb.editor = be
+            invoke_in_main_thread(self._open_editor, be)
+            time.sleep(1)
+
+            sb.interpolate_blanks(n, ans, fits, root, save_figure, with_table)
+#             self._interpolate_blanks(n, ans, fits, root,
+#                                      save_figure, with_table)
+        else:
+            sb.simple_fit_blanks(n, ans, interp, dry_run)
+#             self._simple_fit_blanks(n, ans, interp, dry_run)
+
+        self._finish_db_session(dry_run)
+        self.info('fit blanks finished elapsed time {}'.format(time.time() - st))
 
     def _fit_detector_intercalibrations(self, meta, project):
         # make graphs
-        if meta[0]['figure']:
-            path = meta[0]['output']
+        f = meta['fit_detector_intercalibration']
+
+        if f['save_figure']:
+            path = f['output']
             self._make_output_dir(path, project)
+
+        fitting = meta['fitting']
+        projects = fitting['projects']
+        dry_run = fitting['dry_run']
+
+        irradiations = self._make_fit_selection(meta)
+        reftype = f['reference_type']
+        unktypes = f['unknown_types']
+
+        n, ans = self._analysis_generator(irradiations, projects, unktypes)
+        sdf = SmartDetectorIntercalibration()
+        if f.has_key('value') and f['value']:
+            v, e = map(float, f['value'].split(','))
+            for ai in ans:
+                sdf.set_user_value(ai, v, e)
+        else:
+            sdf.fit_detector_intercalibration(n, ans)
+
 
 
     def _fit_flux(self, meta):
         pass
+
+#===============================================================================
+# utilities
+#===============================================================================
+    def _finish_db_session(self, dry_run):
+        if dry_run:
+            self.manager.db.rollback()
+        else:
+            self.manager.db.commit()
+
+#     def _gather_analyses_for_blank_fit(self, irradiations, projects):
+#         return self._labnumber_generator(irradiations, projects)
+
+    def _analysis_generator(self, irradiations, projects, atypes):
+        db = self.manager.db
+
+        irrads = [irrad for irrad, _ in irradiations]
+        levels = [level
+                    for _, levels in irradiations
+                        for level in levels
+                        ]
+        sess = db.sess
+        q = sess.query(meas_AnalysisTable)
+        q = q.join(gen_LabTable)
+        q = q.join(irrad_PositionTable)
+        q = q.join(irrad_LevelTable)
+        q = q.join(irrad_IrradiationTable)
+
+        q = q.join(meas_MeasurementTable)
+        q = q.join(gen_AnalysisTypeTable)
+
+        q = q.filter(meas_AnalysisTable.status == 0)
+        q = q.filter(gen_AnalysisTypeTable.name.in_(atypes))
+        q = q.filter(irrad_LevelTable.name.in_(levels))
+        q = q.filter(irrad_IrradiationTable.name.in_(irrads))
+
+        q = q.order_by(meas_AnalysisTable.analysis_timestamp.asc())
+        def gen():
+            for a in q:
+                yield a
+
+        return q.count(), gen()
+
+    def _convert_date_str(self, c):
+        c = c.replace('/', '-')
+        if c.count('-') == 2:
+                fmt = '%m-%d-%Y'
+        elif c.count('-') == 1:
+            fmt = '%m-%Y'
+        else:
+            fmt = '%Y'
+        return datetime.strptime(c, fmt)
+
+    def _make_output_dir(self, path, project):
+        if path.startswith('./'):
+            # assume relative to processed dir
+            path = os.path.join(paths.processed_dir,
+                                project,
+                                path[2:])
+#             print path, project, paths.processed_dir
+        rec_make(path)
+        return path
 
 #============= EOF =============================================

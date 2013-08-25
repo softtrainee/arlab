@@ -1420,7 +1420,7 @@ class Graph(Viewable, ContextMenuMixin):
                 # ie '0.1' => 0.1*(ma-mi)
                 if ma is not None and mi is not None:
                     pad = float(pad) * (ma - mi)
-                    if abs(pad - 0) < 1e-10:
+                    if abs(pad) < 1e-10:
                         pad = 1
 
             if isinstance(ma, (int, float)):

@@ -108,8 +108,11 @@ class IsotopeDatabaseManager(Manager):
         if ans:
             return [self._record_factory(ai, **kw) for ai in ans]
 
-    def load_analyses(self, ans, **kw):
-        self._load_analyses(ans, **kw)
+    def load_analyses(self, ans, show_progress=True, **kw):
+        progress = None
+        if show_progress:
+            progress = self._open_progress(len(ans))
+        self._load_analyses(ans, progress=progress, **kw)
 
     def get_level(self, level, irradiation=None):
         if irradiation is None:
@@ -123,7 +126,7 @@ class IsotopeDatabaseManager(Manager):
 #===============================================================================
 # private
 #===============================================================================
-    def _load_analyses(self, ans, func=None):
+    def _load_analyses(self, ans, func=None, progress=None):
         if not ans:
             return
 
@@ -136,14 +139,19 @@ class IsotopeDatabaseManager(Manager):
             func(ans[0])
 
         else:
-            progress = self._open_progress(len(ans))
+            if progress:
+                def f(ai, msg):
+                    progress.change_message(msg)
+                    func(ai)
+                    progress.increment()
+            else:
+                def f(ai, msg):
+                    func(ai)
+
             for ai in ans:
                 msg = 'loading {}'.format(ai.record_id)
-                progress.change_message(msg)
                 self.debug(msg)
-
-                func(ai)
-                progress.increment()
+                f(ai, msg)
 
     def _open_progress(self, n):
 

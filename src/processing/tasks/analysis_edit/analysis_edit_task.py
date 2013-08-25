@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, on_trait_change, List, Any
-from src.envisage.tasks.editor_task import EditorTask
+from traits.api import Instance, on_trait_change, Any
+from src.envisage.tasks.editor_task import BaseEditorTask
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane
 from src.processing.tasks.search_panes import QueryPane
 from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
@@ -28,7 +28,7 @@ from src.processing.analysis import Analysis
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class AnalysisEditTask(EditorTask):
+class AnalysisEditTask(BaseEditorTask):
     unknowns_pane = Any
     controls_pane = Instance(ControlsPane)
 #    results_pane = Instance(ResultsPane)

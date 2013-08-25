@@ -156,11 +156,11 @@ class ImportManager(IsotopeDatabaseManager):
     def do_import(self, new_thread=True):
 #        self.import_kind = 'irradiation'
         if self.import_kind != NULL_STR:
-            selected = None
-            if self.selected:
-                selected = [(si.name, tuple()) for si in self.selected]
-
+            selected = self.selected
+#             if selected:
             if selected:
+                if not isinstance(selected[0], tuple):
+                    selected = [(si.name, tuple()) for si in selected]
 #                if self._import_thread and self._import_thread.isRunning():
 #                    return
 

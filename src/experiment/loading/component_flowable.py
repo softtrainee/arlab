@@ -22,7 +22,7 @@ from reportlab.platypus.flowables import Flowable
 
 class ComponentFlowable(Flowable):
     component = None
-    def __init__(self, component=None, hAlign=None):
+    def __init__(self, component=None, hAlign='CENTER'):
         self.component = component
         Flowable.__init__(self)
         if hAlign:

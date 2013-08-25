@@ -15,27 +15,30 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, on_trait_change
-from traitsui.api import View, Item, UItem, ListEditor, InstanceEditor, \
-    EnumEditor, HGroup, VGroup, spring, Label, Spring
+from traits.api import Str, on_trait_change, Bool
 from chaco.array_data_source import ArrayDataSource
 
 #============= standard library imports ========================
 from numpy import asarray, Inf
 #============= local library imports  ==========================
-from src.constants import FIT_TYPES
-from src.processing.tasks.analysis_edit.ianalysis_edit_tool import IAnalysisEditTool
+# from src.constants import FIT_TYPES
+# from src.processing.tasks.analysis_edit.ianalysis_edit_tool import IAnalysisEditTool
 from src.graph.regression_graph import StackedRegressionGraph
 from src.regression.interpolation_regressor import InterpolationRegressor
-from src.regression.ols_regressor import OLSRegressor
-from src.regression.mean_regressor import MeanRegressor
+# from src.regression.ols_regressor import OLSRegressor
+# from src.regression.mean_regressor import MeanRegressor
 from src.helpers.datetime_tools import convert_timestamp
-from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
+# from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 from src.processing.tasks.analysis_edit.interpolation_editor import InterpolationEditor
 from src.helpers.isotope_utils import sort_isotopes
 
 class BlanksEditor(InterpolationEditor):
     name = Str
+    auto_find = Bool(True)
+    show_current = Bool(True)
+
+    def do_fit(self, ans):
+        pass
 
     def save(self):
 
@@ -62,12 +65,13 @@ class BlanksEditor(InterpolationEditor):
         '''
             load references based on unknowns
         '''
-        ans = set([ai for ui in self._unknowns
-                    for ai in self.processor.find_associated_analyses(ui)])
+        if self.auto_find:
+            ans = set([ai for ui in self._unknowns
+                        for ai in self.processor.find_associated_analyses(ui)])
 
-        ans = sorted(list(ans), key=lambda x: x.analysis_timestamp)
-        ans = self.processor.make_analyses(ans)
-        self.task.references_pane.items = ans
+            ans = sorted(list(ans), key=lambda x: x.analysis_timestamp)
+            ans = self.processor.make_analyses(ans)
+            self.task.references_pane.items = ans
 
 
     @on_trait_change('graph:regression_results')
@@ -123,13 +127,13 @@ class BlanksEditor(InterpolationEditor):
         set_x_flag = False
         i = 0
         gen = self._graph_generator()
-        for fit in gen:
+        for i, fit in enumerate(gen):
             iso = fit.name
             set_x_flag = True
             fit = fit.fit.lower()
             c_uys, c_ues = None, None
 
-            if self._unknowns:
+            if self._unknowns and self.show_current:
                 c_uys, c_ues = zip(*[get_isotope(ui, iso, 'blank')
                             for ui in self._unknowns
                             ])
@@ -143,8 +147,8 @@ class BlanksEditor(InterpolationEditor):
             p = graph.new_plot(
                                ytitle=iso,
                                xtitle='Time (hrs)',
-                               padding=[60, 10, 10, 60],
-                               show_legend='ur'
+                               padding=[80, 5, 5, 40],
+#                                show_legend='ur' if i == 0 else False
                                )
             p.value_range.tight_bounds = False
 
@@ -208,7 +212,7 @@ class BlanksEditor(InterpolationEditor):
             i += 1
 
         if set_x_flag:
-            m = (end - start) / 3600.
+            m = abs(end - start) / 3600.
             graph.set_x_limits(0, m, pad='0.1')
             graph.refresh()
 

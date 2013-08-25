@@ -246,6 +246,8 @@ class UpdateDatabaseAction(ExperimentAction):
                         progress=progress
                         )
 
+        man.populate_default_tables()
+
 class ResetQueuesAction(TaskAction):
     method = 'reset_queues'
     name = 'Reset Queues'

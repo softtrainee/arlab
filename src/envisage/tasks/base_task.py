@@ -33,6 +33,7 @@ from pyface.file_dialog import FileDialog
 from pyface.constant import OK, CANCEL
 from itertools import groupby
 from pyface.confirmation_dialog import ConfirmationDialog
+from src.loggable import Loggable
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -186,7 +187,7 @@ class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
 class TaskGroup(Group):
     items = List
 
-class BaseTask(Task):
+class BaseTask(Task, Loggable):
 
     def _menu_bar_factory(self, menus=None):
         if not menus:

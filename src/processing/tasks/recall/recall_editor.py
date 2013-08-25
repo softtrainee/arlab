@@ -26,7 +26,7 @@ from src.envisage.tasks.base_editor import BaseTraitsEditor
 class RecallEditor(BaseTraitsEditor):
 #     model = Instance(IsotopeRecord)
     analysis_summary = Any
-    name = Property(depends_on='record')
+    name = Property(depends_on='analysis_summary')
 #    def trait_context(self):
 #        """ Use the model object for the Traits UI context, if appropriate.
 #        """
@@ -74,8 +74,8 @@ class RecallEditor(BaseTraitsEditor):
         return ui.control
 
     def _get_name(self):
-        if self.model:
-            return self.model.record_id
+        if self.analysis_summary:
+            return self.analysis_summary.record.record_id
         else:
             return 'Untitled'
 

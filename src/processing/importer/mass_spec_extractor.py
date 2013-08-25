@@ -146,6 +146,8 @@ class MassSpecExtractor(Extractor):
                 self.debug(ln)
                 if not ln:
                     ln = dest.add_labnumber(ip.IrradPosition)
+                    dest.flush()
+
                     dbpos = dest.add_irradiation_position(ip.HoleNumber, ln, name, mli.Level)
 
                     fh = dest.add_flux_history(dbpos)
@@ -493,16 +495,20 @@ class MassSpecExtractor(Extractor):
             '''
             baseline = ''
             if iso.baseline:
-                baseline = iso.baseline.PeakTimeBlob
+                dbbaseline = iso.baseline.PeakTimeBlob
                 '''
                     mass spec stores blobs as y,x
                 
                     pychron stores as x,y
                 '''
-                ys, xs = zip(*[struct.unpack('{}ff'.format(endianness),
-                                       baseline[i:i + 8]) for i in xrange(0, len(baseline), 8)])
+                try:
+                    ys, xs = zip(*[struct.unpack('{}ff'.format(endianness),
+                                           dbbaseline[i:i + 8]) for i in xrange(0, len(dbbaseline), 8)])
 
-                baseline = ''.join([struct.pack('>ff', x, y) for x, y in zip(xs, ys)])
+                    baseline = ''.join([struct.pack('>ff', x, y) for x, y in zip(xs, ys)])
+                except Exception:
+                    self.debug('failed to read baseline {}'.format(dbbaseline))
+
 
             data = ''.join([struct.pack('>ff', x, y) for x, y in zip(sx, noncor_y)])
             # add baseline
