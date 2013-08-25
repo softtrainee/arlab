@@ -8,7 +8,8 @@ ETSConfig.toolkit = 'qt4'
 paths.build('_diode')
 logging_setup('unittests')
 
-from .magnet import MagnetTest
+from .analysis import AnalysisTest
+# from .magnet import MagnetTest
 # from .motor import MotionProfilerTest
 # from .pyscript import PyscriptDurationTest
 # from .pyscript import RampTest

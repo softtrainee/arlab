@@ -43,6 +43,7 @@ class BrowserPane(TraitsDockPane):
                                 )
                           )
         analysisgrp = VGroup(
+                           HGroup(Label('Filter'), UItem('analysis_filter')),
                            UItem('analyses',
                                  editor=ListStrEditor(editable=False,
                                           selected='selected_analysis'

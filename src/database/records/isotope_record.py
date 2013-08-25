@@ -53,6 +53,7 @@ from src.database.records.ui.fit_selector import FitSelector
 from src.helpers.isotope_utils import sort_isotopes
 from collections import namedtuple
 from src.codetools.simple_timeit import timethis
+from src.codetools.profile import profile2
 # from src.database.records.isotope import Isotope, Baseline, Blank, Background
 Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_outlier_std_devs')
 
@@ -80,6 +81,8 @@ Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_ou
 #                  )
 #
 #         return v
+
+
 
 class IsotopeRecordView(HasTraits):
     group_id = 0
@@ -319,78 +322,100 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                     if iso.results:
                         result = iso.results[-1]
 
+    def _load_signals(self, dbr, refit):
+        isotopes = self.isotopes
+        for iso in dbr.isotopes:
+            if iso.kind == 'signal':
+                mw = iso.molecular_weight
+                if not mw:
+                    continue
+
+                result = None
+                if iso.results:
+                    result = iso.results[-1]
+
+                name = mw.name
+                if name not in isotopes:
+                    det = iso.detector.name
+                    r = Isotope(dbrecord=iso, dbresult=result, name=name,
+                                detector=det,
+                                refit=refit
+                                )
+                    fit = None
+                    fit = self._get_db_fit(name, 'signal')
+                    if fit is None:
+                        fit = Fit(fit='linear', filter_outliers=True,
+                                  filter_outlier_iterations=1,
+                                  filter_outlier_std_devs=2)
+                    r.set_fit(fit)
+                    isotopes[name] = r
+
+
+    def _load_baselines_sniffs(self, dbr):
+        isotopes = self.isotopes
+        for dbiso in dbr.isotopes:
+            if not dbiso.molecular_weight:
+                continue
+
+            name = dbiso.molecular_weight.name
+            det = dbiso.detector.name
+
+            iso = isotopes[name]
+
+            kw = dict(
+                      dbrecord=dbiso,
+                      name=name, detector=det)
+            if dbiso.kind == 'baseline':
+                result = None
+                if dbiso.results:
+                    result = dbiso.results[-1]
+
+                r = Baseline(dbresult=result,
+                             **kw)
+                fit = self._get_db_fit(name, 'baseline')
+                if fit is None:
+                    fit = Fit(fit='average_sem', filter_outliers=True,
+                              filter_outlier_iterations=1,
+                              filter_outlier_std_devs=2)
+                r.set_fit(fit)
+                iso.baseline = r
+
+            elif dbiso.kind == 'sniff':
+                r = Sniff(**kw)
+                iso.sniff = r
+
+
+    def _load_blanks(self):
+        isotopes = self.isotopes
+        blanks = self._get_blanks()
+
+        keys = isotopes.keys()
+        if blanks:
+            for bi in blanks:
+                for ba in bi.blanks:
+                    if isotopes.has_key(ba.isotope):
+                        r = Blank(dbrecord=ba, name=ba.isotope)
+                        isotopes[ba.isotope].blank = r
+
+                        keys.remove(ba.isotope)
+                        if not keys:
+                            break
+
+                if not keys:
+                    break
+
 
     def load_isotopes(self, refit=True):
         dbr = self.dbrecord
-        isotopes = self.isotopes
         if dbr:
-            for iso in dbr.isotopes:
-                if iso.kind == 'signal':
-                    result = None
-                    if iso.results:
-                        result = iso.results[-1]
-
-                    name = iso.molecular_weight.name
-                    if name not in isotopes:
-                        det = iso.detector.name
-                        r = Isotope(dbrecord=iso, dbresult=result, name=name,
-                                    detector=det,
-                                    refit=refit
-                                    )
-                        fit = self._get_db_fit(name, 'signal')
-                        if fit is None:
-                            fit = Fit(fit='linear', filter_outliers=True,
-                                      filter_outlier_iterations=1,
-                                      filter_outlier_std_devs=2)
-                        r.set_fit(fit)
-                        isotopes[name] = r
+            self._load_signals(dbr, refit)
             '''
             
                 load signals first then baseline and sniffs.
                 loading signals populates isotopes dict with new Isotope objects
             '''
-            for iso in dbr.isotopes:
-                name = iso.molecular_weight.name
-                det = iso.detector.name
-                i = isotopes[name]
-
-                kw = dict(
-                          dbrecord=iso,
-                          name=name, detector=det)
-                if iso.kind == 'baseline':
-                    result = None
-                    if iso.results:
-                        result = iso.results[-1]
-                    r = Baseline(dbresult=result,
-                                 **kw)
-                    fit = self._get_db_fit(name, 'baseline')
-                    if fit is None:
-                        fit = Fit(fit='average_sem', filter_outliers=True,
-                                  filter_outlier_iterations=1,
-                                  filter_outlier_std_devs=2)
-                    r.set_fit(fit)
-                    i.baseline = r
-
-                if iso.kind == 'sniff':
-                    r = Sniff(**kw)
-                    i.sniff = r
-
-            blanks = self._get_blanks()
-
-            keys = isotopes.keys()
-            if blanks:
-                for bi in blanks:
-                    for ba in bi.blanks:
-                        if isotopes.has_key(ba.isotope):
-                            r = Blank(dbrecord=ba, name=ba.isotope)
-                            isotopes[ba.isotope].blank = r
-
-                            keys.remove(ba.isotope)
-                            if not keys:
-                                break
-
-                    if not keys:
-                        break
+            self._load_baselines_sniffs(dbr)
+            self._load_blanks()
 
             return True
 
@@ -597,14 +622,25 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
     def _get_db_fit(self, name, kind):
         record = self.dbrecord
-        selhist = record.selected_histories
-        if selhist:
+
+        try:
+            selhist = record.selected_histories
             selfithist = selhist.selected_fits
-            if selfithist:
-                fits = selfithist.fits
-                return next((fi for fi in fits
+            fits = selfithist.fits
+            return next((fi for fi in fits
                                 if fi.isotope.molecular_weight.name == name and
                                 fi.isotope.kind == kind), None)
+
+
+        except AttributeError:
+            pass
+#         if selhist:
+#             selfithist = selhist.selected_fits
+#             if selfithist:
+#                 fits = selfithist.fits
+#                 return next((fi for fi in fits
+#                                 if fi.isotope.molecular_weight.name == name and
+#                                 fi.isotope.kind == kind), None)
 #===============================================================================
 # property get/set
 #===============================================================================

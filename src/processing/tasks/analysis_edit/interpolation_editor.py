@@ -53,5 +53,5 @@ class InterpolationEditor(GraphEditor):
 
         start = min(mrxs, muxs)
         end = max(marxs, mauxs)
-        return start, (end - start) / 3600.
+        return start, end
 #============= EOF =============================================

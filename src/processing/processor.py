@@ -19,7 +19,7 @@
 #============= standard library imports ========================
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import and_, not_
-from datetime import datetime, timedelta
+import datetime
 #============= local library imports  ==========================
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.processing.plotter_options_manager import IdeogramOptionsManager, \
@@ -50,9 +50,9 @@ class Processor(IsotopeDatabaseManager):
             q = q.join(gen_ExtractionDeviceTable)
 #         q = q.join(gen_LabTable)
 
-        d = datetime.today()
-        today = datetime.today()  # .date()#.datetime()
-        d = d - timedelta(hours=hours, weeks=weeks, days=days)
+        d = datetime.datetime.today()
+        today = datetime.datetime.today()  # .date()#.datetime()
+        d = d - datetime.timedelta(hours=hours, weeks=weeks, days=days)
         attr = meas_AnalysisTable.analysis_timestamp
         q = q.filter(and_(attr <= today, attr >= d))
         q = q.filter(gen_AnalysisTypeTable.name == analysis_type)
@@ -97,34 +97,34 @@ class Processor(IsotopeDatabaseManager):
             ans = self.make_analyses(ans)
             return ans
 
-    def auto_blank_fit(self, irradiation, level, kind):
-        if kind == 'preceeding':
-            '''
-            1. supply a list of labnumbers/ supply level and extract labnumbers (with project minnabluff)
-            2. get all analyses for the labnumbers
-            3. sort analyses by run date
-            4. calculate blank
-                1. preceeding/bracketing
-                    get max 2 predictors
-                
-                2. fit
-                    a. group analyses by run date 
-                    b. get n predictors based on group date
-            5. save blank
-            '''
-            db = self.db
-            level = db.get_irradiation_level(irradiation, level)
-
-            labnumbers = [pi.labnumber for pi in level.positions
-                            if pi.labnumber.sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff')]
-            ans = [ai
-                    for ln in labnumbers
-                        for ai in ln.analyses
-                        ]
-            pd = self.open_progress(n=len(ans))
-            for ai in ans:
-                self.preceeding_blank_correct(ai, pd=pd)
-            db.commit()
+#     def auto_blank_fit(self, irradiation, level, kind):
+#         if kind == 'preceeding':
+#             '''
+#             1. supply a list of labnumbers/ supply level and extract labnumbers (with project minnabluff)
+#             2. get all analyses for the labnumbers
+#             3. sort analyses by run date
+#             4. calculate blank
+#                 1. preceeding/bracketing
+#                     get max 2 predictors
+#
+#                 2. fit
+#                     a. group analyses by run date
+#                     b. get n predictors based on group date
+#             5. save blank
+#             '''
+#             db = self.db
+#             level = db.get_irradiation_level(irradiation, level)
+#
+#             labnumbers = [pi.labnumber for pi in level.positions
+#                             if pi.labnumber.sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff')]
+#             ans = [ai
+#                     for ln in labnumbers
+#                         for ai in ln.analyses
+#                         ]
+#             pd = self.open_progress(n=len(ans))
+#             for ai in ans:
+#                 self.preceeding_blank_correct(ai, pd=pd)
+#             db.commit()
 
     def refit_isotopes(self, analysis, pd=None, fits=None, keys=None, verbose=False):
         if not isinstance(analysis, Analysis):
@@ -227,6 +227,7 @@ class Processor(IsotopeDatabaseManager):
         q = sess.query(meas_AnalysisTable)
         q = q.join(meas_MeasurementTable)
         q = q.join(gen_AnalysisTypeTable)
+        q = q.join(gen_MassSpectrometerTable)
 
         win = datetime.timedelta(hours=delta)
         if isinstance(post, float):
@@ -242,10 +243,13 @@ class Processor(IsotopeDatabaseManager):
                           gen_AnalysisTypeTable.name == at,
                           meas_AnalysisTable.analysis_timestamp >= a,
                           meas_AnalysisTable.analysis_timestamp <= b,
+                          gen_MassSpectrometerTable.name == ms
                           ))
 
         if filter_hook:
             q = filter_hook(q)
+
+        q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
         q = q.limit(lim)
 
         try:
@@ -253,16 +257,43 @@ class Processor(IsotopeDatabaseManager):
         except NoResultFound:
             pass
 
-    def find_associated_analyses(self, analysis):
+    def _get_preceeding_analysis(self, ms, post, atype):
+        if isinstance(post, float):
+            post = datetime.datetime.fromtimestamp(post)
+
+        sess = self.db.get_session()
+        q = sess.query(meas_AnalysisTable)
+        q = q.join(meas_MeasurementTable)
+        q = q.join(gen_AnalysisTypeTable)
+        q = q.join(gen_MassSpectrometerTable)
+
+        q = q.filter(and_(
+                          gen_AnalysisTypeTable.name == atype,
+                          gen_MassSpectrometerTable.name == ms,
+                          meas_AnalysisTable.analysis_timestamp < post,
+                          )
+                     )
+
+        q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+        try:
+            return q.first()
+        except NoResultFound:
+            pass
+
+    def find_associated_analyses(self, analysis, delta=2, **kw):
+        if not isinstance(analysis, Analysis):
+            analysis = self.make_analyses([analysis])[0]
+#             analysis.load_isotopes()
+
         ms = analysis.spectrometer
         post = analysis.timestamp
 
-        delta = -2
+#         delta = -2
         atype = 'blank_{}'.format(analysis.analysis_type)
-        br = self._find_analyses(ms, post, delta, atype)
+        br = self._find_analyses(ms, post, -delta, atype, **kw)
 
-        delta = 2
-        ar = self._find_analyses(ms, post, delta, atype)
+#         delta = 2
+        ar = self._find_analyses(ms, post, delta, atype, **kw)
 
         return br + ar
 
@@ -277,17 +308,22 @@ class Processor(IsotopeDatabaseManager):
             pd.change_message(msg)
             pd.increment()
 
-        self.info(msg)
-        ms = analysis.spectrometer
+#         self.info(msg)
+        ms = analysis.mass_spectrometer
+
         post = analysis.timestamp
 
-        delta = -2
+#         delta = -5
         atype = 'blank_{}'.format(analysis.analysis_type)
-        br = self._find_analyses(ms, post, delta, atype)
 
-        br = self.make_analyses(br[-1:])
-        br[0].load_isotopes()
-#        self.load_analyses(br)
+        ai = self._get_preceeding_analysis(ms, post, atype)
+
+        if not ai:
+            self.warning('no preceeding blank for {}'.format(analysis.record_id))
+            return
+
+        ai = self.make_analyses([ai])[0]
+        ai.load_isotopes()
 
         if keys is None:
             keys = analysis.isotope_keys
@@ -296,24 +332,29 @@ class Processor(IsotopeDatabaseManager):
         history = self.add_history(analysis, kind)
 
         fit = 'preceeding'
+
+        reg = InterpolationRegressor(kind=fit)
         for key in keys:
-            predictors = [ai for ai in br if key in ai.isotopes]
-            if predictors:
-                r_xs, r_y = zip(*[(ai.timestamp, ai.isotopes[key].baseline_corrected_value()
-                                          )
-                                        for ai in predictors])
+#             predictors = [ai for ai in br if key in ai.isotopes]
+            if key in ai.isotopes:
+
+                r_xs, r_y = (ai.timestamp,), (ai.isotopes[key].baseline_corrected_value(),)
+#             if predictors:
+#                 r_xs, r_y = zip(*[(ai.timestamp, ai.isotopes[key].baseline_corrected_value()
+#                                           )
+#                                         for ai in predictors])
                 r_ys, r_es = zip(*[(yi.nominal_value, yi.std_dev) for yi in r_y])
-                reg = InterpolationRegressor(xs=r_xs,
-                                         ys=r_ys,
-                                         yserr=r_es,
-                                         kind=fit)
+
+                reg.trait_set(xs=r_xs,
+                                 ys=r_ys,
+                                 yserr=r_es,
+                                 )
 
                 fit_obj = Fit(name=key, fit=fit)
                 v, e = reg.predict(post), reg.predict_error(post)
                 analysis.set_blank(key, v[0], e[0])
-                self.apply_correction(history, analysis, fit_obj, predictors, kind)
-            else:
-                self.warning('no preceeding blank for {}'.format(analysis.record_id))
+                self.apply_correction(history, analysis, fit_obj, [ai], kind)
+
 
     def recall(self):
         pass
@@ -418,6 +459,8 @@ class Processor(IsotopeDatabaseManager):
         # set analysis' selected history
         sh = db.add_selected_histories(dbrecord)
         setattr(sh, 'selected_{}'.format(kind), history)
+        db.flush()
+
 #        sh.selected_blanks = history
         return history
 

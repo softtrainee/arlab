@@ -876,8 +876,8 @@ class IsotopeAdapter(DatabaseAdapter):
 #===============================================================================
 # ##getters multiple
 #===============================================================================
-    def get_analyses(self, **kw):
-        return self._get_items(meas_AnalysisTable, globals(), **kw)
+#     def get_analyses(self, **kw):
+#         return self._get_items(meas_AnalysisTable, globals(), **kw)
 
     '''
         new style using _retrieve_items, _get_items is deprecated. 

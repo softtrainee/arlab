@@ -144,25 +144,25 @@ class IsotopeEvolutionTask(AnalysisEditTask):
         pd.max = len([ai for ai in ans if ai.status == 0]) - 1
         self._refit_analyses(ans, dry_run, pd)
 
-    def _refit_isotopes_levels(self, dry_run, pd):
-        imports = MINNA_BLUFF_IRRADIATIONS
-        imports = [('NM-205', ['E', 'F' ]),
-                   ('NM-256', ['F', ])]
-        ans = self._gather_analyses(imports)
-        pd.max = len(ans)
-
-        db = self.manager.db
-
-        for irrad, levels in imports:
-            for level in levels:
-                self.info('extracting positions from {} {}'.format(irrad, level))
-                level = db.get_irradiation_level(irrad, level)
-                for pi in level.positions:
-                    ln = pi.labnumber
-                    sample = ln.sample
-                    if sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff'):
-                        self.info('extracting analyses from {}'.format(ln.identifier))
-                        self._refit_analyses(ln.analyses, dry_run, pd)
+#     def _refit_isotopes_levels(self, dry_run, pd):
+#         imports = MINNA_BLUFF_IRRADIATIONS
+#         imports = [('NM-205', ['E', 'F' ]),
+#                    ('NM-256', ['F', ])]
+#         ans = self._gather_analyses(imports)
+#         pd.max = len(ans)
+#
+#         db = self.manager.db
+#
+#         for irrad, levels in imports:
+#             for level in levels:
+#                 self.info('extracting positions from {} {}'.format(irrad, level))
+#                 level = db.get_irradiation_level(irrad, level)
+#                 for pi in level.positions:
+#                     ln = pi.labnumber
+#                     sample = ln.sample
+#                     if sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff'):
+#                         self.info('extracting analyses from {}'.format(ln.identifier))
+#                         self._refit_analyses(ln.analyses, dry_run, pd)
 
 
 #===============================================================================

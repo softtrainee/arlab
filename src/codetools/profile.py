@@ -1,5 +1,19 @@
 import cProfile as profiler
-import gc, pstats, time
+import gc, pstats, time, io
+
+
+def profile2(fn):
+#     import cProfile, pstats, io
+    def wrapper(*args, **kw):
+        pr = profiler.Profile()
+        pr.enable()
+        fn(*args, **kw)
+        pr.disable()
+        pr.print_stats(sort='cumulative')
+#         s = io.StringIO()
+#         ps = pstats.Stats(pr, stream=s)
+#         ps.print_results()
+    return wrapper
 
 def profile(fn):
     def wrapper(*args, **kw):

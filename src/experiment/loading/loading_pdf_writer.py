@@ -18,39 +18,24 @@
 # from traits.api import HasTraits, List
 # from traitsui.api import View, Item
 #============= standard library imports ========================
-from reportlab.platypus.tables import Table, TableStyle
 # from reportlab.platypus.flowables import PageBreak, Flowable
-from reportlab.platypus.doctemplate import BaseDocTemplate, \
-    PageTemplate, FrameBreak
+from reportlab.platypus.doctemplate import PageTemplate, FrameBreak
 # from reportlab.lib.pagesizes import letter
-from reportlab.lib.units import mm, inch
+from reportlab.lib.units import mm
 from reportlab.lib import colors
 from reportlab.platypus.frames import Frame
 
 # from chaco.pdf_graphics_context import PdfPlotGraphicsContext
 #============= local library imports  ==========================
-from src.loggable import Loggable
 from src.experiment.loading.component_flowable import ComponentFlowable
 from src.canvas.canvas2D.scene.primitives.primitives import LoadIndicator
-from reportlab.platypus.paragraph import Paragraph
-from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus.flowables import Spacer
-
-STYLES = getSampleStyleSheet()
-class LoadingPDFWriter(Loggable):
-    def build(self, path, positions, component, meta):
-        self.info('saving load to {}'.format(path))
-        doc = BaseDocTemplate(path,
-                                  leftMargin=0.25 * inch,
-                                  rightMargin=0.25 * inch,
-                                  topMargin=0.25 * inch,
-                                  bottomMargin=0.25 * inch
-#                                   _pageBreakQuick=0,
-#                                   showBoundary=1
-                                  )
-#             doc = SimpleDocTemplate(path)
+from src.pdf.base_pdf_writer import BasePDFWriter
 
 
+class LoadingPDFWriter(BasePDFWriter):
+
+    def _build(self, doc, positions, component, meta):
 
         n = len(positions)
         idx = int(round(n / 2.))
@@ -62,15 +47,12 @@ class LoadingPDFWriter(Loggable):
         t1 = self._make_table(p1)
         t2 = self._make_table(p2)
 
-        t3 = self._make_footnotes_table(component)
-        t3.hAlign = 'LEFT'
+        t3 = self._make_notes_table(component)
 
-        fl = [
+        flowables = [
               m,
               Spacer(0, 5 * mm),
-              ComponentFlowable(component=component,
-                                hAlign='CENTER'
-                                ),
+              ComponentFlowable(component=component),
               FrameBreak(),
               Spacer(0, 5 * mm),
               t1,
@@ -95,38 +77,39 @@ class LoadingPDFWriter(Loggable):
         lbottom = Frame(lm, bm, fw, fh)
         rbottom = Frame(lm + doc.width / 2., bm, fw, fh)
 
-        template = PageTemplate(frames=[top, lbottom, rbottom])
-        doc.addPageTemplates(template)
+        frames = [top, lbottom, rbottom]
+        template = self._new_page_template(frames)
 
-        doc.build(fl)
+        return flowables, (template,)
+
 
     def _make_meta_table(self, meta):
 #         p = Paragraph()
+        ts = self._new_style()
         items = '<b>Load:</b> {load_name}|<b>Loader</b>: {username}|<b>Date</b>: {load_date}'.format(**meta).split('|')
-        row1 = [Paragraph(ti, STYLES['Normal']) for ti in items]
+        row1 = [self._new_paragraph(ti) for ti in items]
 
         items = '<b>Projects</b>: {projects} | | '.format(**meta).split('|')
-        row2 = [Paragraph(ti, STYLES['Normal']) for ti in items]
+        row2 = [self._new_paragraph(ti) for ti in items]
 
         data = [row1, row2]
-        table = Table(data, hAlign='LEFT')
+
+        table = self._new_table(ts, data)
+
         return table
 
-    def _make_footnotes_table(self, canvas):
+    def _make_notes_table(self, canvas):
         data = [('L#', 'Holes', 'Weight', 'Note')]
-#         man = self.manager
 
-        ts = TableStyle()
+        ts = self._new_style()
         ts.add('LINEBELOW', (0, 0), (-1, 0), 1, colors.black)
 
         ts.add('FONTSIZE', (-3, 1), (-1, -1), 8)
         ts.add('VALIGN', (-3, 1), (-1, -1), 'MIDDLE')
-#         positions = positions * 15
+
         idx = 0
         for pi in sorted(canvas.scene.get_items(LoadIndicator),
                          key=lambda x: x.name):
-
-#         for pi in positions:
             if pi.note or pi.weight is not None:
                 row = (pi.labnumber_label.text,
                        pi.name,
@@ -139,27 +122,21 @@ class LoadingPDFWriter(Loggable):
 
         cw = map(lambda x: mm * x, [12, 20, 22, 125])
 
-        rh = [mm * 5 for _ in range(len(data))]
-        t = Table(data,
+        rh = [mm * 5 for _ in xrange(len(data))]
+
+        t = self._new_table(ts, data,
                   colWidths=cw,
                   rowHeights=rh
                   )
-
-        t.setStyle(ts)
-
 
         return t
 
     def _make_table(self, positions):
         data = [('L#', 'Irradiation', 'Sample', 'Positions')]
-#         man = self.manager
-
-        ts = TableStyle()
-        ts.add('LINEBELOW', (0, 0), (-1, 0), 1, colors.black)
+        ts = self._new_style(header_line_idx=0)
 
         ts.add('FONTSIZE', (-3, 1), (-1, -1), 8)
         ts.add('VALIGN', (-3, 1), (-1, -1), 'MIDDLE')
-#         positions = positions * 15
 
         for idx, pi in enumerate(positions):
             row = (pi.labnumber, pi.irradiation_str, pi.sample,
@@ -171,13 +148,8 @@ class LoadingPDFWriter(Loggable):
 
         cw = map(lambda x: mm * x, [12, 20, 22, 50])
 
-        rh = [mm * 5 for i in range(len(data))]
-        t = Table(data,
-                  colWidths=cw,
-                  rowHeights=rh
-                  )
+        rh = [mm * 5 for _ in xrange(len(data))]
 
-        t.setStyle(ts)
-
+        t = self._new_table(ts, data, colWidths=cw, rowHeights=rh)
         return t
 #============= EOF =============================================
