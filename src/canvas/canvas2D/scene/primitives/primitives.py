@@ -660,6 +660,8 @@ class LoadIndicator(Circle):
     labnumber_label = None
     weight_label = None
     weight = None
+    sample = ''
+    irradiation = ''
     note = ''
 
     def clear_text(self):

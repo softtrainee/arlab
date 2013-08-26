@@ -99,7 +99,7 @@ class LoadingPDFWriter(BasePDFWriter):
         return table
 
     def _make_notes_table(self, canvas):
-        data = [('L#', 'Holes', 'Weight', 'Note')]
+        data = [('L#', 'Irradiation', 'Sample', 'Hole', 'Weight', 'Note')]
 
         ts = self._new_style()
         ts.add('LINEBELOW', (0, 0), (-1, 0), 1, colors.black)
@@ -108,19 +108,32 @@ class LoadingPDFWriter(BasePDFWriter):
         ts.add('VALIGN', (-3, 1), (-1, -1), 'MIDDLE')
 
         idx = 0
+        prev_irrad = None
         for pi in sorted(canvas.scene.get_items(LoadIndicator),
                          key=lambda x: x.name):
-            if pi.note or pi.weight is not None:
-                row = (pi.labnumber_label.text,
-                       pi.name,
-                       pi.weight, pi.note)
+            if pi.irradiation:
+                if pi.irradiation == prev_irrad:
+                    row = (pi.labnumber_label.text,
+                           '', '',
+                           pi.name,
+                           pi.weight or '',
+                           pi.note or ''
+                           )
+                else:
+                    row = (pi.labnumber_label.text,
+                           pi.irradiation,
+                           pi.sample,
+                           pi.name,
+                           pi.weight, pi.note)
+
+                prev_irrad = pi.irradiation
                 data.append(row)
                 if idx % 2 == 0:
                     ts.add('BACKGROUND', (0, idx + 1), (-1, idx + 1),
                             colors.lightgrey)
                 idx += 1
 
-        cw = map(lambda x: mm * x, [12, 20, 22, 125])
+        cw = map(lambda x: mm * x, [15, 20, 20, 20, 20, 100])
 
         rh = [mm * 5 for _ in xrange(len(data))]
 
@@ -146,7 +159,7 @@ class LoadingPDFWriter(BasePDFWriter):
                 ts.add('BACKGROUND', (0, idx + 1), (-1, idx + 1),
                         colors.lightgrey)
 
-        cw = map(lambda x: mm * x, [12, 20, 22, 50])
+        cw = map(lambda x: mm * x, [12, 20, 22, 40])
 
         rh = [mm * 5 for _ in xrange(len(data))]
 

@@ -222,6 +222,9 @@ class LoadingManager(IsotopeDatabaseManager):
                                         )
         item.weight = self.weight
         item.note = self.note
+        item.sample = self.sample
+        item.irradiation = '{} {}{}'.format(self.irradiation, self.level,
+                                            self.irradiation_hole)
 
     def _deselect_position(self, canvas_hole):
         pid, pos = self._get_pid_pos(canvas_hole)
@@ -312,6 +315,20 @@ class LoadingManager(IsotopeDatabaseManager):
 
         for ln, poss in groupby(loadtable.loaded_positions,
                                         key=lambda x:x.lab_identifier):
+
+            dbln = self.db.get_labnumber(ln)
+            sample = ''
+            if dbln and dbln.sample:
+                sample = dbln.sample.name
+            dbirradpos = dbln.irradiation_position
+            dblevel = dbirradpos.level
+
+            irrad = dblevel.irradiation.name
+            level = dblevel.name
+            irradpos = dbirradpos.position
+            irradiation = '{} {}{}'.format(irrad, level, irradpos)
+
+
             pos = []
             for pi in poss:
                 pid = str(pi.position)
@@ -330,6 +347,8 @@ class LoadingManager(IsotopeDatabaseManager):
                                           )
                     item.weight = pi.weight
                     item.note = pi.note
+                    item.sample = sample
+                    item.irradiation = irradiation
 #                     print item
 #                     item.add_text(ln, ox=-10, oy=-10,
 #                                   visible=self.show_labnumbers

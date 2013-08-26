@@ -25,12 +25,13 @@ from src.helpers.filetools import unique_path
 from src.processing.tasks.smart_project.detector_intercalibration_pdf_writer import DetectorIntercalibrationPDFWriter
 
 class SmartDetectorIntercalibration(BaseSmarter):
+
     def set_user_value(self, analysis, v, e):
         pass
 
     def fit_detector_intercalibration(self, n, ans, fit, reftype, root, save_figure,
                                       with_table):
-        func = self._do_detector_intercalibration()
+        func = self._do_detector_intercalibration
         args = (fit, reftype, root, save_figure, with_table)
         self._block_analyses(n, ans, func, args)
 
@@ -39,28 +40,30 @@ class SmartDetectorIntercalibration(BaseSmarter):
 
         start, end = gs[0].analysis_timestamp, gs[-1].analysis_timestamp
 
-        ds = timedelta(minutes=59)
+        ds = timedelta(hours=3)
 
-        blanks = self._get_analysis_date_range(start - ds, end + ds, (reftype,))
-        if blanks:
+        refs = self._get_analysis_date_range(start - ds, end + ds, (reftype,))
+        if refs:
             man = self.processor
-            blanks = man.make_analyses(blanks)
+            refs = man.make_analyses(refs)
             gs = man.make_analyses(gs)
             man.load_analyses(gs, show_progress=False)
-            man.load_analyses(blanks, show_progress=False)
+            man.load_analyses(refs, show_progress=False)
 
             refiso = gs[0]
 
             ae = self.editor
 #             ae.tool.load_fits(ks, fs)
+            ae.tool.load_fits(['Ar40/Ar36'], [fit])
 
+            ae.tool.fits[0].show = True
 #             fkeys = fits.keys()
 #             for fi in ae.tool.fits:
 #                 if fi.name in fkeys:
 #                     fi.trait_set(show=True, fit=fits[fi.name], trait_change_notify=False)
 
             ae._unknowns = gs
-            ae._references = blanks
+            ae._references = refs
             ae.rebuild_graph()
 
             if save_figure:
@@ -68,7 +71,7 @@ class SmartDetectorIntercalibration(BaseSmarter):
                                    extension='.pdf')
                 if with_table:
                     writer = DetectorIntercalibrationPDFWriter()
-                    writer.build(p, ae.component, gs, blanks)
+                    writer.build(p, ae.component, gs, refs)
                 else:
                     ae.graph.save_pdf(p)
 #============= EOF =============================================

@@ -15,19 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Str, Property, Any, cached_property
+from traits.api import HasTraits, List, Str, Bool, Any
 from traitsui.api import View, Item
-from src.envisage.tasks.editor_task import EditorTask, BaseEditorTask
-from src.processing.tasks.browser.panes import BrowserPane
 from pyface.tasks.task_layout import TaskLayout, PaneItem
-from src.processing.tasks.recall.recall_editor import RecallEditor
-from src.experiment.utilities.identifier import make_runid, strip_runid
 from pyface.tasks.action.schema import SToolBar
 from pyface.tasks.action.task_action import TaskAction
-from src.paths import paths
 from pyface.image_resource import ImageResource
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.editor_task import BaseEditorTask
+from src.processing.tasks.browser.panes import BrowserPane
+from src.processing.tasks.recall.recall_editor import RecallEditor
+from src.paths import paths
 '''
 add toolbar action to open another editor tab
 
@@ -59,6 +58,7 @@ class BrowserTask(BaseEditorTask):
     selected_sample = Any
     selected_analysis = Any
 
+    omit_bogus = Bool(False)
 
     tool_bars = [SToolBar(NewBrowserEditorAction(),
                           image_size=(16, 16)
@@ -81,9 +81,9 @@ class BrowserTask(BaseEditorTask):
 
     def _selected_analysis_changed(self):
         if self.selected_analysis:
-            s = self.selected_analysis
-            l, a, s = strip_runid(s)
-            an = self.manager.db.get_unique_analysis(l, a, s)
+            an = self.selected_analysis
+#             l, a, s = strip_runid(s)
+#             an = self.manager.db.get_unique_analysis(l, a, s)
             an = self.manager.make_analyses([an])[0]
             an.load_isotopes(refit=False)
             self.active_editor.analysis_summary = an.analysis_summary
@@ -130,11 +130,16 @@ class BrowserTask(BaseEditorTask):
             sample = self.manager.db.get_sample(self.selected_sample,
                                                 project=self.selected_project
                                                 )
-            ans = [make_runid(ln.identifier,
-                              a.aliquot, a.step) for ln in sample.labnumbers
-                            for a in ln.analyses]
-            self.analyses = ans
+            ans = [a for ln in sample.labnumbers
+                            for a in ln.analyses
+                                ]
+
             self.oanalyses = ans
+
+            if self.omit_bogus:
+                ans = filter(self._omit_bogus_filter, ans)
+
+            self.analyses = ans
             if ans:
                 self.selected_analysis = ans[0]
 
@@ -142,6 +147,9 @@ class BrowserTask(BaseEditorTask):
         def func(x):
             return x.lower().startswith(new.lower())
         return func
+
+    def _omit_bogus_filter(self, x):
+        return x.status == 0
 
     def _project_filter_changed(self, new):
         self.projects = filter(self._filter_func(new), self.oprojects)
@@ -152,4 +160,9 @@ class BrowserTask(BaseEditorTask):
     def _analysis_filter_changed(self, new):
         self.analyses = filter(self._filter_func(new), self.oanalyses)
 
+    def _omit_bogus_changed(self, new):
+        if new:
+            self.analyses = filter(self._omit_bogus_filter, self.oanalyses)
+        else:
+            self.analyses = self.oanalyses
 #============= EOF =============================================

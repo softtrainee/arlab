@@ -19,13 +19,20 @@
 # from traitsui.api import View, Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.pdf.base_pdf_writer import BasePDFWriter
+# from src.pdf.base_pdf_writer import BasePDFWriter
+# from src.experiment.loading.component_flowable import ComponentFlowable
+# from reportlab.platypus.flowables import PageBreak
+from src.processing.tasks.smart_project.interpolation_pdf_writer import InterpolationPDFWriter
 
 
-class DetectorIntercalibrationPDFWriter(BasePDFWriter):
-    def _build(self, doc):
-        flowables = []
-        templates = [self._new_page_template(frames=[self._default_frame(doc)])]
-
-        return flowables, templates
+class DetectorIntercalibrationPDFWriter(InterpolationPDFWriter):
+    pass
+#     def _build(self, doc, component, gs, refs):
+#         flowables = [ComponentFlowable(component),
+#                      PageBreak(),
+#                      ]
+#
+#         templates = [self._new_page_template(frames=[self._default_frame(doc)])]
+#
+#         return flowables, templates
 #============= EOF =============================================
