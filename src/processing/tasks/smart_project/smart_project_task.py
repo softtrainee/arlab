@@ -30,7 +30,8 @@ from src.processing.importer.import_manager import ImportManager
 
 from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_MeasurementTable, gen_AnalysisTypeTable, irrad_IrradiationTable, \
-    irrad_LevelTable, gen_LabTable, irrad_PositionTable
+    irrad_LevelTable, gen_LabTable, irrad_PositionTable, \
+    gen_MassSpectrometerTable
 import time
 from src.processing.tasks.blanks.blanks_editor import BlanksEditor
 from src.ui.gui import invoke_in_main_thread
@@ -39,6 +40,7 @@ from src.processing.tasks.smart_project.blanks_pdf_writer import BlanksPDFWrtier
 from src.processing.tasks.smart_project.smart_blanks import SmartBlanks
 from src.processing.tasks.smart_project.smart_isotope_fits import SmartIsotopeFits
 from src.processing.tasks.smart_project.smart_detector_intercalibration import SmartDetectorIntercalibration
+from src.processing.tasks.detector_calibration.intercalibration_factor_editor import IntercalibrationFactorEditor
 
 
 class SmartProjectTask(AnalysisEditTask):
@@ -239,11 +241,12 @@ class SmartProjectTask(AnalysisEditTask):
 
     def _fit_detector_intercalibrations(self, meta, project):
         # make graphs
-        f = meta['fit_detector_intercalibration']
+        f = meta['fit_detector_intercalibrations']
 
+        root = None
         if f['save_figure']:
             path = f['output']
-            self._make_output_dir(path, project)
+            root = self._make_output_dir(path, project)
 
         fitting = meta['fitting']
         projects = fitting['projects']
@@ -252,16 +255,34 @@ class SmartProjectTask(AnalysisEditTask):
         irradiations = self._make_fit_selection(meta)
         reftype = f['reference_type']
         unktypes = f['unknown_types']
+        ms = f['mass_spectrometers']
 
-        n, ans = self._analysis_generator(irradiations, projects, unktypes)
-        sdf = SmartDetectorIntercalibration()
+        n, ans = self._analysis_generator(irradiations, projects,
+                                          unktypes, mass_spectrometers=ms)
+        standard = f['standard']
+        sdf = SmartDetectorIntercalibration(processor=self.manager,
+
+                                            )
         if f.has_key('value') and f['value']:
             v, e = map(float, f['value'].split(','))
             for ai in ans:
                 sdf.set_user_value(ai, v, e)
         else:
-            sdf.fit_detector_intercalibration(n, ans)
+            fit = f['fit']
+            save_figure = f['save_figure']
+            with_table = f['with_table']
+            be = IntercalibrationFactorEditor(name='IC Factor',
+                                              auto_find=False,
+                                              show_current=False,
+                                              standard=standard
+                                              )
 
+            sdf.editor = be
+            invoke_in_main_thread(self._open_editor, be)
+            time.sleep(1)
+
+            sdf.fit_detector_intercalibration(n, ans, fit, reftype, root,
+                                              save_figure, with_table)
 
 
     def _fit_flux(self, meta):
@@ -279,7 +300,8 @@ class SmartProjectTask(AnalysisEditTask):
 #     def _gather_analyses_for_blank_fit(self, irradiations, projects):
 #         return self._labnumber_generator(irradiations, projects)
 
-    def _analysis_generator(self, irradiations, projects, atypes):
+    def _analysis_generator(self, irradiations, projects, atypes,
+                            mass_spectrometers=None):
         db = self.manager.db
 
         irrads = [irrad for irrad, _ in irradiations]
@@ -295,12 +317,17 @@ class SmartProjectTask(AnalysisEditTask):
         q = q.join(irrad_IrradiationTable)
 
         q = q.join(meas_MeasurementTable)
+        if mass_spectrometers:
+            q = q.join(gen_MassSpectrometerTable)
+
         q = q.join(gen_AnalysisTypeTable)
 
         q = q.filter(meas_AnalysisTable.status == 0)
         q = q.filter(gen_AnalysisTypeTable.name.in_(atypes))
         q = q.filter(irrad_LevelTable.name.in_(levels))
         q = q.filter(irrad_IrradiationTable.name.in_(irrads))
+        if mass_spectrometers:
+            q = q.filter(gen_MassSpectrometerTable.name.in_(mass_spectrometers))
 
         q = q.order_by(meas_AnalysisTable.analysis_timestamp.asc())
         def gen():

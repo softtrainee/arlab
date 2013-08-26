@@ -108,8 +108,11 @@ class ProcessingPlugin(BaseTaskPlugin):
                 ]
 
 
-    def _meta_task_factory(self, i, f, n, task_group=None):
-        return TaskFactory(id=i, factory=f, name=n, task_group=task_group)
+    def _meta_task_factory(self, i, f, n, task_group=None, accelerator=''):
+        return TaskFactory(id=i, factory=f, name=n,
+                           task_group=task_group,
+                           accelerator=accelerator
+                           )
 
 
     def _tasks_default(self):
@@ -129,7 +132,7 @@ class ProcessingPlugin(BaseTaskPlugin):
                         ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher'),
                         ('pychron.processing.auto_figure', self._auto_figure_task_factory, 'AutoFigure'),
                         ('pychron.processing.smart_project', self._smart_project_task_factory, 'SmartProject'),
-                        ('pychron.processing.browser', self._browser_task_factory, 'Browser'),
+                        ('pychron.processing.browser', self._browser_task_factory, 'Browser', '', 'Ctrl+B'),
                         )
                 ]
 

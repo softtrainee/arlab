@@ -24,6 +24,7 @@ from src.helpers.isotope_utils import sort_isotopes
 #============= local library imports  ==========================
 
 class IntercalibrationFactorEditor(InterpolationEditor):
+    standard = 1.0
 
     @on_trait_change('unknowns[]')
     def _update_unknowns(self):
@@ -41,39 +42,18 @@ class IntercalibrationFactorEditor(InterpolationEditor):
         if 'Ar40' in keys and 'Ar36' in keys:
             self.tool.load_fits(['Ar40/Ar36'])
 
-    def _rebuild_graph(self):
-        g = self.graph
-        gen = self._graph_generator()
+    def _set_interpolated_values(self, iso, reg, xs):
+        p_uys = reg.predict(xs)
+        p_ues = reg.predict_error(xs)
+        return p_uys, p_ues
 
-        rxs = [xi.timestamp for xi in self._references]
-        uxs = [xi.timestamp for xi in self._unknowns]
-        start, end = self._get_start_end(rxs, uxs)
-
-        rxs = self.normalize(rxs, start)
-        uxs = self.normalize(uxs, start)
-
-        set_x_flag = False
-        for fit in gen:
-            set_x_flag = True
-            n, d = fit.name.split('/')
-            p = g.new_plot(ytitle=fit.name)
-            p.value_range.tight_bounds = False
-            # plot ref
-            nys = array([ri.isotopes[n].uvalue for ri in self._references])
-            dys = array([ri.isotopes[d].uvalue for ri in self._references])
-            rys = nys / dys
-
-            rys = [ri.nominal_value for ri in rys]
-            g.new_series(rxs, rys, fit=fit.fit)
-
-            uys = array([ri.ic_factor.nominal_value for ri in self._unknowns])
-
-            # plot unknown
-            g.new_series(uxs, uys, fit=False, type='scatter')
-
-        if set_x_flag:
-            g.set_x_limits(0, end , pad='0.1')
-            g.refresh()
+    def _get_reference_values(self, iso, fit):
+        n, d = iso.split('/')
+        nys = array([ri.isotopes[n].uvalue for ri in self._references])
+        dys = array([ri.isotopes[d].uvalue for ri in self._references])
+        rys = nys / (dys * self.standard)
 
 
+        rys = [ri.nominal_value for ri in rys]
+        return rys, None
 #============= EOF =============================================

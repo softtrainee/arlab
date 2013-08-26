@@ -15,13 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, on_trait_change, Instance
+from traits.api import HasTraits, List, on_trait_change, Instance, Bool
 from traitsui.api import View, Item
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 
 #============= standard library imports ========================
-from numpy import Inf
+from numpy import Inf, asarray
 from src.processing.tasks.analysis_edit.fits import InterpolationFitSelector
+from src.regression.interpolation_regressor import InterpolationRegressor
+from chaco.array_data_source import ArrayDataSource
+from src.helpers.datetime_tools import convert_timestamp
 #============= local library imports  ==========================
 
 
@@ -30,6 +33,8 @@ class InterpolationEditor(GraphEditor):
     references = List
     _references = List
 
+    auto_find = Bool(True)
+    show_current = Bool(True)
 
     @on_trait_change('references[]')
     def _update_references(self):
@@ -54,4 +59,132 @@ class InterpolationEditor(GraphEditor):
         start = min(mrxs, muxs)
         end = max(marxs, mauxs)
         return start, end
+
+    def _update_unknowns_hook(self):
+        if self.auto_find:
+            self._find_references()
+
+    def _find_references(self):
+        ans = set([ai for ui in self._unknowns
+                for ai in self.processor.find_associated_analyses(ui)])
+#
+        ans = sorted(list(ans), key=lambda x: x.analysis_timestamp)
+        ans = self.processor.make_analyses(ans)
+        self.task.references_pane.items = ans
+
+    def _get_current_values(self, *args, **kw):
+        pass
+
+    def _get_reference_values(self, *args, **kw):
+        pass
+
+    def _set_interpolated_values(self, iso, reg, c_uxs):
+        pass
+
+    def _get_isotope(self, ui, k, kind=None):
+        if k in ui.isotopes:
+            v = ui.isotopes[k]
+            if kind is not None:
+                v = getattr(v, kind)
+            v = v.value, v.error
+        else:
+            v = 0, 0
+        return v
+
+    def _rebuild_graph(self):
+        graph = self.graph
+
+        uxs = [ui.timestamp for ui in self._unknowns]
+        rxs = [ui.timestamp for ui in self._references]
+
+        display_xs = asarray(map(convert_timestamp, rxs[:]))
+
+        start, end = self._get_start_end(rxs, uxs)
+
+        c_uxs = self.normalize(uxs, start)
+        r_xs = self.normalize(rxs, start)
+
+
+        '''
+            c_... current value
+            r... reference value
+            p_... predicted value
+        '''
+        set_x_flag = False
+        i = 0
+        gen = self._graph_generator()
+        for i, fit in enumerate(gen):
+            iso = fit.name
+            set_x_flag = True
+            fit = fit.fit.lower()
+            c_uys, c_ues = None, None
+
+            if self._unknowns and self.show_current:
+                c_uys, c_ues = self._get_current_values(iso)
+
+
+            r_ys, r_es = None, None
+            if self._references:
+                r_ys, r_es = self._get_reference_values(iso, fit)
+
+            p = graph.new_plot(
+                               ytitle=iso,
+                               xtitle='Time (hrs)',
+                               padding=[80, 5, 5, 40],
+#                                show_legend='ur' if i == 0 else False
+                               )
+            p.value_range.tight_bounds = False
+
+            if c_ues and c_uys:
+                # plot unknowns
+                graph.new_series(c_uxs, c_uys,
+                                 yerror=c_ues,
+                                 fit=False,
+                                 type='scatter',
+                                 plotid=i
+                                 )
+                graph.set_series_label('Unknowns-Current', plotid=i)
+
+            if r_ys:
+                reg = None
+                # plot references
+                if fit in ['preceeding', 'bracketing interpolate', 'bracketing average']:
+                    reg = InterpolationRegressor(xs=r_xs,
+                                                 ys=r_ys,
+                                                 yserr=r_es,
+                                                 kind=fit)
+                    scatter, _p = graph.new_series(r_xs, r_ys,
+                                 yerror=r_es,
+                                 type='scatter',
+                                 plotid=i,
+                                 fit=False
+                                 )
+
+                else:
+                    _p, scatter, l = graph.new_series(r_xs, r_ys,
+                                       display_index=ArrayDataSource(data=display_xs),
+                                       yerror=ArrayDataSource(data=r_es),
+                                       fit=fit,
+                                       plotid=i)
+                    if hasattr(l, 'regressor'):
+                        reg = l.regressor
+
+                if reg:
+                    p_uys, p_ues = self._set_interpolated_values(iso, reg, c_uxs)
+                    # display the predicted values
+                    ss, _ = graph.new_series(c_uxs,
+                                             p_uys,
+                                             isotope=iso,
+                                             yerror=ArrayDataSource(p_ues),
+                                             fit=False,
+                                             type='scatter',
+                                             plotid=i,
+                                             )
+                    graph.set_series_label('Unknowns-predicted', plotid=i)
+            i += 1
+
+        if set_x_flag:
+            m = abs(end - start) / 3600.
+            graph.set_x_limits(0, m, pad='0.1')
+            graph.refresh()
 #============= EOF =============================================

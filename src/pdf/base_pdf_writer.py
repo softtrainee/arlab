@@ -52,8 +52,8 @@ class BasePDFWriter(Loggable):
     def _build(self, *args, **kw):
         raise NotImplementedError
 
-    def _new_table(self, style, hAlign='LEFT', *args, **kw):
-        t = Table(hAlign=hAlign, *args, **kw)
+    def _new_table(self, style, data, hAlign='LEFT', *args, **kw):
+        t = Table(data, hAlign=hAlign, *args, **kw)
         t.setStyle(style)
         return t
 
