@@ -476,8 +476,11 @@ class StageMap(Loggable):
                 try:
                     hole, x, y = line.split(',')
                 except ValueError:
-                    x, y = line.split(',')
-                    hole = str(hi + 1)
+                    try:
+                        x, y = line.split(',')
+                        hole = str(hi + 1)
+                    except ValueError:
+                        break
 
                 self.sample_holes.append(SampleHole(id=hole,
                                                      x=float(x),

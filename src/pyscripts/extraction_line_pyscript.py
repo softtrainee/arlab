@@ -530,13 +530,19 @@ class ExtractionPyScript(ValvePyScript):
     @command_register
     def get_resource_value(self, name=None):
         r = self.runner.get_resource(name)
+        resp=None
         if r is not None:
             if hasattr(r, 'get'):
-                return r.get()
+                resp=r.get()
+#                return r.get()
             else:
-                return r.isSet()
+                resp=r.isSet()
+#                return r.isSet()
         else:
             self.info('Could not get {}'.format(name))
+            
+        self.debug('Get Resource Value {}={}'.format(name, resp))
+        return resp
 
 
     @verbose_skip

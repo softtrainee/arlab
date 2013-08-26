@@ -116,7 +116,7 @@ class MeasurementPyScript(ValvePyScript):
             self.cancel()
 
 #        self._regress_id = self._series_count
-        self._series_count += 4
+        self._series_count += 2
 
     @count_verbose_skip
     @command_register
