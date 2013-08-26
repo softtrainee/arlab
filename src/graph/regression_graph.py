@@ -37,7 +37,6 @@ from src.graph.tools.point_inspector import PointInspector, \
 from src.regression.wls_regressor import WeightedPolynomialRegressor
 from src.regression.least_squares_regressor import LeastSquaresRegressor
 from src.regression.base_regressor import BaseRegressor
-from Canvas import Line
 from src.graph.error_envelope_overlay import ErrorEnvelopeOverlay
 
 class StatsFilterParameters(object):
