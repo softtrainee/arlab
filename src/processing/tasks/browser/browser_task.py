@@ -77,7 +77,7 @@ class BrowserTask(BaseEditorTask):
         self._open_editor(editor)
 
     def _default_layout_default(self):
-        return TaskLayout(left=PaneItem('pychron.browswer'))
+        return TaskLayout(left=PaneItem('pychron.browser'))
 
     def _selected_analysis_changed(self):
         if self.selected_analysis:

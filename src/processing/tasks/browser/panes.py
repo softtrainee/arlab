@@ -16,7 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property
-from traitsui.api import View, Item, UItem, VGroup, HGroup, Label, spring
+from traitsui.api import View, Item, UItem, VGroup, HGroup, Label, spring, \
+    VSplit
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from traitsui.editors.list_str_editor import ListStrEditor
 from traitsui.tabular_adapter import TabularAdapter
@@ -108,8 +109,8 @@ class BrowserPane(TraitsDockPane):
 
         v = View(
                  HGroup(
-                        projectgrp,
-                        samplegrp,
+                        VSplit(projectgrp,
+                               samplegrp),
                         analysisgrp
                         )
                 )

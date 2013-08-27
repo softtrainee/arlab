@@ -90,7 +90,7 @@ class ProcessingPlugin(BaseTaskPlugin):
                    ('ic_factor', ICFactorAction, 'MenuBar/Edit'),
                    ('batch_edit', BatchEditAction, 'MenuBar/Edit'),
                    ('refit', RefitIsotopeEvolutionAction, 'MenuBar/Edit'),
-                   ('sclf_table', SCLFTableAction, 'MenuBar/Edit'),
+                   # ('sclf_table', SCLFTableAction, 'MenuBar/Edit'),
 
                    ('figure_group', figure_group, 'MenuBar/Edit'),
 
@@ -129,7 +129,8 @@ class ProcessingPlugin(BaseTaskPlugin):
                         ('pychron.analysis_edit.ic_factor', self._ic_factor_task_factory, 'IC Factor'),
                         ('pychron.analysis_edit.batch', self._batch_edit_task_factory, 'Batch Edit'),
                         ('pychron.processing.figures', self._figure_task_factory, 'Figures'),
-                        ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher'),
+                        # ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher'),
+                        ('pychron.processing.publisher', self._table_task_factory, 'Table', '', 'Ctrl+t'),
                         ('pychron.processing.auto_figure', self._auto_figure_task_factory, 'AutoFigure'),
                         ('pychron.processing.smart_project', self._smart_project_task_factory, 'SmartProject'),
                         ('pychron.processing.browser', self._browser_task_factory, 'Browser', '', 'Ctrl+B'),
@@ -179,9 +180,12 @@ class ProcessingPlugin(BaseTaskPlugin):
         from src.processing.tasks.figures.auto_figure_task import AutoFigureTask
         return AutoFigureTask(manager=self._processor_factory())
 
-    def _publisher_task_factory(self):
-        from src.processing.tasks.publisher.publisher_task import PublisherTask
-        return PublisherTask(manager=self._processor_factory())
+#     def _publisher_task_factory(self):
+#         from src.processing.tasks.publisher.publisher_task import PublisherTask
+#         return PublisherTask(manager=self._processor_factory())
+    def _table_task_factory(self):
+        from src.processing.tasks.tables.table_task import TableTask
+        return TableTask(manager=self._processor_factory())
 
     def _smart_project_task_factory(self):
         return SmartProjectTask(manager=self._processor_factory())

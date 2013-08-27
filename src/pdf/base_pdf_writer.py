@@ -26,15 +26,24 @@ from src.loggable import Loggable
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.flowables import Spacer
 from reportlab.lib import colors
+from src.pdf.items import Anchor
+from reportlab.lib.pagesizes import landscape, letter
 
 STYLES = getSampleStyleSheet()
 class BasePDFWriter(Loggable):
+    _footnotes = None
+    orientation = 'portrait'
     def _new_base_doc_template(self, path):
+        pagesize = letter
+        if self.orientation == 'landscape':
+            pagesize = landscape(letter)
+
         doc = BaseDocTemplate(path,
                               leftMargin=0.25 * inch,
                               rightMargin=0.25 * inch,
                               topMargin=0.25 * inch,
-                              bottomMargin=0.25 * inch
+                              bottomMargin=0.25 * inch,
+                              pagesize=pagesize
 #                                   _pageBreakQuick=0,
 #                                   showBoundary=1
                               )
@@ -90,5 +99,13 @@ class BasePDFWriter(Loggable):
     def _new_spacer(self, w, h):
         return Spacer(w * inch, h * inch)
 
+    def _make_footnote(self, tagname, tagName, tagText, linkname, link_extra=None):
+        if self._footnotes is None:
+            self._footnotes = []
 
+#         n = len(self._footnotes)
+#         link, tag = Anchor('{}_{}'.format(tagname, id(self)), n + 1)
+#         para = link(linkname, extra=link_extra)
+#         self._footnotes.append(tag(tagName, tagText))
+        return para
 #============= EOF =============================================

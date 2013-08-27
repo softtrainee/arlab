@@ -132,8 +132,9 @@ class IsotopeDatabaseManager(Manager):
 
         if func is None:
             def func(x):
-                if hasattr(x, 'load_isotopes'):
-                    x.load_isotopes()
+#                 if hasattr(x, 'load_isotopes'):
+                x.load_isotopes()
+                x.calculate_age()
 
         if len(ans) == 1:
             func(ans[0])
