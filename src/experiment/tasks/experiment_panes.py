@@ -161,6 +161,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                               ),
                               spring,
                          ),
+                   HGroup(RFItem('flux')),
                    HGroup(
                            RFItem('aliquot',
                                   width=50

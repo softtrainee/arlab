@@ -32,6 +32,7 @@ from src.paths import paths
 import os
 from src.helpers.isotope_utils import sort_isotopes
 # from src.ui.gui import invoke_in_main_thread
+from memory_profiler import profile
 
 class PeakCenterConfigHandler(Handler):
     def closed(self, info, isok):
@@ -97,6 +98,7 @@ class IonOpticsManager(Manager):
         molweights = spec.molecular_weights
         return molweights[isotope_key]
 
+    @profile
     def position(self, pos, detector, use_dac=False):
         if pos == NULL_STR:
             return

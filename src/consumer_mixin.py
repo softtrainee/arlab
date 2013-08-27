@@ -103,6 +103,9 @@ class consumable(object):
     def __exit__(self, *args, **kw):
         self._consumer.stop()
 
+        self._consumer._consumer_queue=None
+        self._consumer._consume_func=None
+        
         self._consumer = None
         self._func = None
 

@@ -65,11 +65,11 @@ class FileCTX(object):
 
     def __exit__(self, *args, **kw):
 #         self._file.flush()
+        self._parent.close_file()
         self._file.close()
-        self._parent._frame = None
 
-#         del self._file
-#         del self._parent
+        del self._file
+        del self._parent
 
 
 class H5DataManager(DataManager):

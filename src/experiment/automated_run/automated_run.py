@@ -19,6 +19,7 @@ from traits.api import Any, Str, Int, List, Property, \
      Event, Instance, Bool, Dict, HasTraits
 #============= standard library imports ========================
 import os
+import re
 import time
 import ast
 import yaml
@@ -50,7 +51,7 @@ from src.experiment.export.export_spec import ExportSpec
 from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import consumable
 from src.codetools.memory_usage import mem_log, mem_log_func
-
+from memory_profiler import profile
 
 class ScriptInfo(HasTraits):
     measurement_script_name = Str
@@ -175,6 +176,7 @@ class AutomatedRun(Loggable):
             return
         self._set_magnet_position(pos, detector, dac=dac)
 
+    @profile
     def py_activate_detectors(self, dets):
         if not self._alive:
             return
@@ -211,7 +213,7 @@ class AutomatedRun(Loggable):
 
             for iso, v in baselines.iteritems():
                 self.arar_age.set_baseline(iso, v)
-
+    @profile
     def py_set_regress_fits(self, fits, series=0):
         '''
             fits can be 
@@ -253,7 +255,7 @@ class AutomatedRun(Loggable):
         self.info('setting spectrometer parameter {} {}'.format(name, v))
         if self.spectrometer_manager:
             self.spectrometer_manager.spectrometer.set_parameter(name, v)
-
+    
     def py_data_collection(self, ncounts, starttime, starttime_offset, series=0):
         mem_log('pre data collection')
         if not self._alive:
@@ -269,7 +271,22 @@ class AutomatedRun(Loggable):
 
         self._build_tables(gn, fits)
         check_conditions = True
-
+        
+        t=self.spec.truncate_condition
+        if t:
+            try:
+                c,start=t.split(',')
+                pat='<=|>=|[<>=]'
+                attr,value=re.split(pat,c)
+                m=re.search(pat, c)
+                comp=m.group(0)
+                
+                freq=1
+                acr=1
+                self.py_add_truncation(attr, comp, value, int(start), freq, acr)
+            except Exception,e:
+                self.debug('truncate_condition parse failed {} {}'.format(e, t))
+            
         result = self._measure_iteration(gn,
                                 self._get_data_writer(gn),
                                 ncounts, starttime, starttime_offset,
@@ -279,7 +296,8 @@ class AutomatedRun(Loggable):
                                 )
         mem_log('post data collection')
         return result
-
+    
+    @profile
     def py_equilibration(self, eqtime=None, inlet=None, outlet=None,
                          do_post_equilibration=True,
                          delay=None
@@ -302,7 +320,6 @@ class AutomatedRun(Loggable):
 
         mem_log('post equilibration')
         return evt
-
 
     def py_sniff(self, ncounts, starttime, starttime_offset, series=0):
         mem_log('pre sniff')
@@ -451,7 +468,7 @@ class AutomatedRun(Loggable):
         self.truncation_conditions.append(TruncationCondition(attr, comp, value,
                                                                 start_count,
                                                                 frequency,
-                                                                abbreviated_count_ratio
+                                                                abbreviated_count_ratio=abbreviated_count_ratio
                                                                 ))
     def py_add_action(self, attr, comp, value, start_count, frequency, action, resume):
         '''
@@ -709,7 +726,7 @@ class AutomatedRun(Loggable):
             return
         if not self.measurement_script:
             return True
-
+ 
         self.measurement_script.manager = self.experiment_manager
 
         # use a measurement_script to explicitly define
@@ -1078,11 +1095,12 @@ anaylsis_type={}
 
         def _write(data):
             dets = self._active_detectors
-            i, x, keys, signals = data
+            i, x, intensities = data
             nfs = self._get_fit_block(i, fits)
             if grpname == 'signal':
                 self.plot_panel.fits = nfs
 
+            keys,signals=intensities
 #             self.signals = weakref.ref(dict(zip(keys, signals)))()
 
             for pi, (fi, dn) in enumerate(zip(nfs, dets)):
@@ -1107,6 +1125,7 @@ anaylsis_type={}
 
         return _write
 
+    @profile
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, starttime_offset,
                            series, fits, check_conditions, refresh):
@@ -1164,26 +1183,22 @@ anaylsis_type={}
                         return False
 
                     data = get_data()
-                    if data is not None:
-                        keys, signals = data
-                    else:
-
-                        keys, signals = ('H2', 'H1', 'AX', 'L1', 'L2', 'CDD'), (1, 2, 3, 4, 5, 6)
-
-                    # if user forgot to set the time zero in measurement script
-                    # do it here
-
+#                    if data is not None:
+#                        keys, signals = data
+#                    else:
+#
+#                        keys, signals = ('H2', 'H1', 'AX', 'L1', 'L2', 'CDD'), (1, 2, 3, 4, 5, 6)
 
                     x = time.time() - starttime  # if not self._debug else iter_cnt + starttime
-                    con.add_consumable((iter_cnt, x, keys, signals))
+                    con.add_consumable((iter_cnt, x, data))
 
                     if iter_cnt % 50 == 0:
                         self.info('collecting point {}'.format(iter_cnt))
                         mem_log('collecting point {}'.format(iter_cnt))
 
-                    self._wait(m)
+#                    self._wait(m)
                     iter_cnt += 1
-#                     time.sleep(m)
+                    time.sleep(m)
 
 
 #         consumer.stop()

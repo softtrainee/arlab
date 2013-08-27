@@ -65,7 +65,7 @@ class AutomatedRunCondition(HasTraits):
                 return True
 
 class TruncationCondition(AutomatedRunCondition):
-    abbreviated_count_ratio = 0
+    abbreviated_count_ratio = 1.0
 
 class TerminationCondition(AutomatedRunCondition):
     pass

@@ -21,7 +21,7 @@ from pyface.confirmation_dialog import confirm  # from pyface.wx.dialog import c
 import time
 import os
 import inspect
-from threading import Event
+from threading import Event, Thread
 #============= local library imports  ==========================
 from src.pyscripts.wait_dialog import WaitDialog
 
@@ -33,8 +33,9 @@ from Queue import Queue, Empty, LifoQueue
 # from src.ui.gui import invoke_in_main_thread
 import sys
 # import bdb
-from src.ui.thread import Thread
+#from src.ui.thread import Thread
 import weakref
+
 
 class DummyManager(Loggable):
     def open_valve(self, *args, **kw):
@@ -227,7 +228,7 @@ class PyScript(Loggable):
                 self.trace_line = lineno
 
         return self.traceit
-
+    
     def execute(self, new_thread=False, bootstrap=True,
                       trace=False,
                       finished_callback=None):
