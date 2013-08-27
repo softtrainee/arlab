@@ -30,7 +30,9 @@ def plot_file(p, normalize=False, stacked=False,
             msg, mem = map(str.strip, line.split(':'))
 #             if msg.startswith('exp start'):
 #                 continue
-
+            
+#            if msg.startswith('collect'):
+#                continue
             try:
                 yi = float(mem)
                 y.append(yi)
@@ -41,7 +43,7 @@ def plot_file(p, normalize=False, stacked=False,
                 ts.append(msg)
             except ValueError:
                 continue
-
+            
             if msg.endswith('teardown'):
                 n += 1
                 if not ticked and stacked:
@@ -124,11 +126,11 @@ if __name__ == '__main__':
         if paths[0] == 'last':
             i = 1
             while 1:
-                pa = os.path.join(d, 'mem{:03n}.txt'.format(i))
+                pa = os.path.join(d, 'mem-{:03n}.txt'.format(i))
                 if os.path.isfile(pa):
                     i += 1
                 else:
-                    pa = os.path.join(d, 'mem{:03n}.txt'.format(i - 1))
+                    pa = os.path.join(d, 'mem-{:03n}.txt'.format(i - 1))
                     if os.path.isfile(pa):
                         break
                     else:
@@ -143,9 +145,9 @@ if __name__ == '__main__':
             show()
         else:
             for ai in paths:
-                n = 'mem{:03n}.txt'.format(int(ai))
+                n = 'mem-{:03n}.txt'.format(int(ai))
                 p = os.path.join(d, n)
-                plot_file(p, normalize=normalize, stacked=stacked)
-                legend(loc='upper left')
+                plot_file(p, normalize=normalize, stacked=stacked,use_gradient=grad,)
+#                legend(loc='upper left')
                 tight_layout()
                 show()

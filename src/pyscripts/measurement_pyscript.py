@@ -302,7 +302,7 @@ class MeasurementPyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def add_truncation(self, attr, comp, value, start_count=0, frequency=10,
-                       abbreviated_count_ratio=0
+                       abbreviated_count_ratio=1.0
                        ):
         self._automated_run_call('py_add_truncation', attr, comp, value,
                                  start_count=start_count,
@@ -453,14 +453,14 @@ class MeasurementPyScript(ValvePyScript):
 #===============================================================================
 # handler
 #===============================================================================
-    @on_trait_change('automated_run:signals')
-    def update_signals(self, obj, name, old, new):
-        try:
-            det = self._detectors
-            for k, v in new.iteritems():
-                det[k].signal = v
-        except (AttributeError, KeyError):
-            pass
+#    @on_trait_change('automated_run:signals')
+#    def update_signals(self, obj, name, old, new):
+#        try:
+#            det = self._detectors
+#            for k, v in new.iteritems():
+#                det[k].signal = v
+#        except (AttributeError, KeyError):
+#            pass
 
 # if __name__ == '__main__':
 #    from src.helpers.logger_setup import logging_setup

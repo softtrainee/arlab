@@ -84,6 +84,7 @@ class AutomatedRunSpec(Loggable):
     ramp_rate = Float
     disable_between_positions = Bool(False)
     overlap = Bool(False)
+    truncate_condition=Str
     #===========================================================================
     # info
     #===========================================================================
@@ -237,6 +238,7 @@ class AutomatedRunSpec(Loggable):
                    'position', 'duration', 'cleanup',
                    'pattern',
                    'beam_diameter',
+                   'truncate_condition',
                    'mass_spectrometer', 'extract_device',
                    'analysis_type',
                    'sample', 'irradiation', 'username', 'comment', 'skip', 'end_after'

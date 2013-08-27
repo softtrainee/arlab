@@ -687,10 +687,7 @@ class ExperimentExecutor(Experimentable):
         with consumable(func=self._overlapped_run) as con:
             while self.isAlive():
                 mem_log('run start')
-
-                self.current_run = None
-                self.db.reset()
-
+                
                 if self._check_memory():
                     break
 
@@ -711,7 +708,14 @@ class ExperimentExecutor(Experimentable):
                     # delay between runs
                     self._delay(delay)
                     force_delay = False
-
+                
+                if self.current_run is not None:
+                    self.current_run.plot_panel.reset()
+                    self.current_run.plot_panel=None
+                    
+                self.current_run = None
+                self.db.reset()
+                
                 runargs = None
                 try:
                     runspec = rgen.next()
