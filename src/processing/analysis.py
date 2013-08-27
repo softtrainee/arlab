@@ -152,10 +152,10 @@ class Analysis(Loggable):
 
     def __getattr__(self, attr):
         if self.isotope_record:
-            if hasattr(self.isotope_record, attr):
-                return getattr(self.isotope_record, attr)
-#            else:
-#                raise AttributeError('Analysis has not attribute= {}'.format(attr))
+#             if hasattr(self.isotope_record, attr):
+            return getattr(self.isotope_record, attr)
+
+#                 raise AttributeError('Analysis has no attribute= {}'.format(attr))
 
 #    def _get_age_value(self):
 #        return self.age.nominal_value
@@ -284,6 +284,7 @@ class NonDBAnalysis(HasTraits):
             return self._age_error_wo_j
         else:
             return self._error
+
 class IntegratedAnalysis(NonDBAnalysis):
     rad40_percent = Property
 #    isotope_record = None

@@ -43,7 +43,7 @@ class myDataLabel(DataLabel):
     border_visible = False
 
 class RotatingContainer(OverlayPlotContainer):
-    rotation = Float(45)
+    rotation = Float(0)
 
     def _draw(self, gc, *args, **kw):
         w2 = self.width / 2
@@ -87,7 +87,7 @@ class GraphicModel(HasTraits):
                                             )
 
             else:
-                if not tail in ('.png', '.jpg'):
+                if not tail in ('.png', '.jpg', '.tiff'):
                     path = '{}.png'.format(path)
 
                 gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
@@ -95,8 +95,8 @@ class GraphicModel(HasTraits):
 
             for ci in c.components:
                 try:
-                    c.x_axis.visible = False
-                    c.y_axis.visible = False
+                    ci.x_axis.visible = False
+                    ci.y_axis.visible = False
                 except Exception:
                     pass
 
@@ -104,7 +104,7 @@ class GraphicModel(HasTraits):
             c.use_backbuffer = False
             gc.render_component(c)
 #            c.use_backbuffer = True
-            gc.save()
+            gc.save(path)
 
     def load(self, path):
         parser = ElementTree(file=open(path, 'r'))
@@ -249,6 +249,7 @@ def make_xml(path, offset=100, default_bounds=(50, 50),
     _header = reader.next()
 
     for k, row in enumerate(reader):
+        print k, row
         row = map(str.strip, row)
         if row:
             e = Element('point')
@@ -315,18 +316,18 @@ if __name__ == '__main__':
 #    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad.txt'
 
 #    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad_continuous.txt'
-#    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/2mmirrad_continuous.txt'
-    gcc, gm = open_txt(p, (2.54, 2.54), 0.05, convert_mm=True, make=False)
+    p = '/Users/ross/Pychrondata_dev/setupfiles/irradiation_tray_maps/newtrays/2mmirrad_continuous.txt'
+    gcc, gm = open_txt(p, (2.54, 2.54), 0.1, convert_mm=True, make=True)
 
 #     p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_6-Hole.txt'
 #     gcc, gm2 = open_txt(p2, (2.54, 2.54), .1, make=False)
 
-    p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_20-Hole.txt'
-    gcc, gm2 = open_txt(p2, (2.54, 2.54), .1, make=False)
+#     p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_20-Hole.txt'
+#     gcc, gm2 = open_txt(p2, (2.54, 2.54), .1, make=False)
 
 
 #     gm2.container.bgcolor = 'transparent'
-    gm2.container.add(gm.container)
+#     gm2.container.add(gm.container)
 
     gcc.configure_traits()
 

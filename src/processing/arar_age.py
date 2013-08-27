@@ -19,7 +19,7 @@ from traits.api import HasTraits, Dict, Property, cached_property, \
     Event, Bool, Instance, Float
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
-import datetime
+from datetime import datetime
 from uncertainties import ufloat
 
 #============= local library imports  ==========================
@@ -71,6 +71,8 @@ class ArArAge(HasTraits):
     isotopes = Dict
 
     age = Property(depends_on='include_decay_error, include_j_error, include_irradiation_error,age_dirty')
+    R = AgeProperty()
+
     age_error = AgeProperty()
     age_error_wo_j = AgeProperty()
     age_dirty = Event
@@ -95,7 +97,6 @@ class ArArAge(HasTraits):
     arar_constants = Instance(ArArConstants, ())
     def __init__(self, *args, **kw):
         super(ArArAge, self).__init__(*args, **kw)
-#        if self.application:
         try:
             bind_preference(self.arar_constants, 'lambda_b_v', 'pychron.experiment.constants.lambda_b')
             bind_preference(self.arar_constants, 'lambda_b_e', 'pychron.experiment.constants.lambda_b_error')
@@ -259,6 +260,7 @@ class ArArAge(HasTraits):
 #            j = j[0], 0
 
         irrad = self.irradiation_info
+
         if not include_irradiation_error:
             nirrad = []
             for ir in irrad[:-2]:
@@ -269,11 +271,11 @@ class ArArAge(HasTraits):
         ab = self.arar_constants.abundance_sensitivity
 
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
-                                    self.j, irrad, abundance_sensitivity=ab, ic=self.ic_factor,
+                                    self.j, irrad, abundance_sensitivity=ab,
+                                    ic=self.ic_factor,
                                     include_decay_error=include_decay_error,
                                     arar_constants=self.arar_constants
                                     )
-
 
         if result:
             self.arar_result = result
@@ -361,7 +363,7 @@ class ArArAge(HasTraits):
 
 #     @cached_property
     def _get_timestamp(self):
-        return datetime.datetime.now()
+        return datetime.now()
 
 #     @cached_property
     def _get_irradiation_level(self):
@@ -421,7 +423,7 @@ class ArArAge(HasTraits):
 
                     analts = self.timestamp
                     if isinstance(analts, float):
-                        analts = datetime.datetime.fromtimestamp(analts)
+                        analts = datetime.fromtimestamp(analts)
 
                     segments = []
                     for st, en in doses:
@@ -466,13 +468,29 @@ class ArArAge(HasTraits):
 
         return ufloat(s, e, 'j')
 
-#     @cached_property
+    @cached_property
     def _get_rad40(self):
-        return self.arar_result['rad40']
+#         a = self._get_arar_result_attr('rad40')
+        a = self.arar_result['rad40']
+        if a is not None:
+            return a
+        else:
+            return ufloat(0, 1e-20)
 
-#     @cached_property
+#         return self.arar_result['rad40']
+
+    @cached_property
     def _get_k39(self):
-        return self.arar_result['k39']
+        a = self.arar_result['k39']
+#         a = self._get_arar_result_attr('k39')
+        if a is not None:
+            return a
+        else:
+            return ufloat(0, 1e-20)
+#         return a or ufloat(0, 1e-20)
+#         return self.arar_result['k39']
+    def _get_R(self):
+        return self.rad40 / self.k39
 
 #     @cached_property
     def _get_rad40_percent(self):
