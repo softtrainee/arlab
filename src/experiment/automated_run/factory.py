@@ -70,8 +70,12 @@ class AutomatedRunFactory(Viewable):
     levels = Property(depends_on='selected_irradiation, db')
 
     flux = Property(Float, depends_on='labnumber')
+    flux_error = Property(Float, depends_on='labnumber')
 #    flux_error=Property(Float, depends_on='labnumber')
-#    _flux=Float
+    _flux = None
+    _flux_error = None
+    save_flux_button = Button
+
 #    _flux_error=Float
 
     skip = Bool(False)
@@ -897,18 +901,43 @@ post_equilibration_script:name
 
     @cached_property
     def _get_flux(self):
+        return self._get_flux_from_db()
+
+    @cached_property
+    def _get_flux_error(self):
+        return self._get_flux_from_db(attr='j_err')
+
+    def _get_flux_from_db(self, attr='j'):
+        j = 0
         if self.labnumber:
             dbln = self.db.get_labnumber(self.labnumber)
             if dbln:
                 if dbln.selected_flux_history:
                     f = dbln.selected_flux_history.flux
-                    return '{}, {}'.format(f.j, f.j_err)
-
-        return ''
+                    j = getattr(f, attr)
+        return j
 
     def _set_flux(self, a):
         if self.labnumber and a is not None:
-            v, e = a
+            self._flux = a
+
+    def _set_flux_error(self, a):
+        if self.labnumber and a is not None:
+            self._flux_error = a
+
+    def _save_flux(self):
+        if self._flux is None and self._flux_error is None:
+            return
+
+        if self._flux is None:
+            self._flux = self.flux
+        if self._flux_error is None:
+            self._flux_error = self.flux_error
+
+        if self._flux != self.flux or \
+            self._flux_error != self.flux_error:
+
+            v, e = self._flux, self._flux_error
             db = self.db
             dbln = db.get_labnumber(self.labnumber)
             if dbln:
@@ -918,12 +947,13 @@ post_equilibration_script:name
                 dbflux.history = dbhist
                 dbln.selected_flux_history = dbhist
                 self.db.commit()
+                self.information_dialog(u'Flux for {} {} \u00b1{} saved to database'.format(self.labnumber, v, e))
 
-    def _validate_flux(self, v):
-        try:
-            return map(float, v.split(','))
-        except ValueError:
-            return
+#     def _validate_flux(self, v):
+#         try:
+#             return map(float, v.split(','))
+#         except ValueError:
+#             return
 #===============================================================================
 #
 #===============================================================================
@@ -1011,11 +1041,13 @@ post_equilibration_script:name
 #===============================================================================
 #
 #===============================================================================
-    def _application_changed(self):
-        self.extraction_script.application = self.application
-        self.measurement_script.application = self.application
-        self.post_measurement_script.application = self.application
-        self.post_equilibration_script.application = self.application
+    def _save_flux_button_fired(self):
+        self._save_flux()
+#     def _application_changed(self):
+#         self.extraction_script.application = self.application
+#         self.measurement_script.application = self.application
+#         self.post_measurement_script.application = self.application
+#         self.post_equilibration_script.application = self.application
 
 
     @on_trait_change('mass_spectrometer, can_edit')
