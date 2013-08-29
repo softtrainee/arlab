@@ -128,6 +128,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                                 label='General'
                                 ),
                          self._get_script_group(),
+                         self._get_truncate_group(),
                          enabled_when=make_qf_name('ok_make')
                          )
 
@@ -226,6 +227,30 @@ class ExperimentFactoryPane(TraitsDockPane):
                        show_border=True,
                        label='Sample Info'
                        )
+        return grp
+
+    def _get_truncate_group(self):
+        # @todo: add truncate group to run factory. entire a single truncate action age>70
+        grp = VGroup(
+                     HGroup(
+                            RFItem('trunc_attr', show_label=False),
+                            RFItem('trunc_comp', show_label=False),
+                            RFItem('trunc_crit', show_label=False),
+                            spacer(-10),
+                            RFItem('trunc_start', label='Start Count'),
+                            show_border=True,
+                            label='Simple'
+                            ),
+                     HGroup(
+                            RFItem('truncation_path',
+                                   editor=EnumEditor(name=make_rf_name('truncations')),
+                                   label='Path'
+                                   ),
+                            show_border=True,
+                            label='File'
+                        ),
+                     label='Actions'
+                     )
         return grp
 
     def _get_script_group(self):

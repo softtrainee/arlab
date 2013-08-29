@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, String, Str, Property, Any, Either, Long, \
      Float, Instance, Int, List, cached_property, on_trait_change, Bool, Button, \
-     Event
+     Event, Enum
 # from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, Group, Spring, spring, \
 #    UItem, ButtonEditor, Label
 #============= standard library imports ========================
@@ -38,7 +38,7 @@ from src.ui.thread import Thread
 from src.loggable import Loggable
 import yaml
 from src.experiment.utilities.human_error_checker import HumanErrorChecker
-from src.helpers.filetools import list_directory
+from src.helpers.filetools import list_directory, add_extension
 from src.lasers.pattern.pattern_maker_view import PatternMakerView
 
 
@@ -123,6 +123,19 @@ class AutomatedRunFactory(Viewable):
 #     update_templates_needed = Event
     edit_template = Event
     edit_template_label = Property(depends_on='template')
+
+    #===========================================================================
+    # truncation
+    #===========================================================================
+    trunc_attr = Enum('age', 'kca', 'kcl')
+    trunc_comp = Enum('>', '<', '>=', '<=', '=')
+    trunc_crit = Float(enter_set=True, auto_set=False)
+    trunc_start = Int(enter_set=True, auto_set=False)
+
+    truncation_str = Property(depends_on='trunc_+')
+    truncation_path = Str
+    truncations = List
+
     #===========================================================================
     # frequency
     #===========================================================================
@@ -190,6 +203,9 @@ class AutomatedRunFactory(Viewable):
 
     def load_patterns(self, ps):
         self.patterns = self._get_patterns(ps)
+
+    def load_truncations(self):
+        self.truncations = self._get_truncations()
 
     def use_frequency(self):
         return self.labnumber in ANALYSIS_MAPPING and self.frequency
@@ -504,6 +520,25 @@ class AutomatedRunFactory(Viewable):
             eg = self._selected_runs[0].extract_group + 1
             self.extract_group = eg
 
+    @on_trait_change('trunc_+, truncation_path')
+    def _edit_truncation(self, obj, trait, name, new):
+
+        if self.edit_mode and\
+             self._selected_runs and \
+                not self.suppress_update:
+
+
+            if name == 'truncation_path':
+                t = self.truncation_str
+            else:
+                t = add_extension(new, '.yaml') if new else None
+
+            if t:
+                for s in self._selected_runs:
+                    s.truncate_condition = t
+
+            self.changed = True
+            self.refresh_table_needed = True
     @on_trait_change('''cleanup, duration, extract_value,ramp_duration,
 extract_units,
 pattern,
@@ -850,6 +885,12 @@ post_equilibration_script:name
 
         return ['Step Heat Template', LINE_STR] + temps
 
+    def _get_truncations(self):
+        p = paths.truncation_dir
+        extension = '.yaml'
+        temps = list_directory(p, extension)
+        return ['', ] + temps
+
     def _aliquot_changed(self):
         if self.edit_mode:
             for si in self._selected_runs:
@@ -898,6 +939,13 @@ post_equilibration_script:name
             t = Thread(target=func)
             self._update_thread = t
             t.start()
+
+    def _get_truncation_str(self):
+        if self.trunc_attr is not None and\
+            self.trunc_comp is not None and \
+                self.trunc_crit is not None:
+            return '{}{}{}, {}'.format(self.trunc_attr, self.trunc_comp,
+                                       self.trunc_crit, self.trunc_start)
 
     @cached_property
     def _get_flux(self):
@@ -949,11 +997,6 @@ post_equilibration_script:name
                 self.db.commit()
                 self.information_dialog(u'Flux for {} {} \u00b1{} saved to database'.format(self.labnumber, v, e))
 
-#     def _validate_flux(self, v):
-#         try:
-#             return map(float, v.split(','))
-#         except ValueError:
-#             return
 #===============================================================================
 #
 #===============================================================================

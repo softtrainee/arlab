@@ -279,20 +279,7 @@ class AutomatedRun(Loggable):
         self._build_tables(gn, fits)
         check_conditions = True
 
-        t = self.spec.truncate_condition
-        if t:
-            try:
-                c, start = t.split(',')
-                pat = '<=|>=|[<>=]'
-                attr, value = re.split(pat, c)
-                m = re.search(pat, c)
-                comp = m.group(0)
-
-                freq = 1
-                acr = 1
-                self.py_add_truncation(attr, comp, value, int(start), freq, acr)
-            except Exception, e:
-                self.debug('truncate_condition parse failed {} {}'.format(e, t))
+        self._add_truncate_condition()
 
         result = self._measure_iteration(gn,
                                 self._get_data_writer(gn),
@@ -858,6 +845,40 @@ anaylsis_type={}
 #             from src.ui.thread import Thread as mThread
 #             self._term_thread = mThread(target=self.cancel_run)
 #             self._term_thread.start()
+    def _add_truncate_condition(self):
+        t = self.spec.truncate_condition
+        if t:
+            if t.endswith('.yaml'):
+                p = os.path.join(paths.truncation_dir, t)
+                if os.path.isfile(p):
+                    with open(p, 'r') as fp:
+                        doc = yaml.load(fp)
+
+                    attr = doc['attr']
+                    comp = doc['comp']
+                    value = doc['value']
+                    start = doc['start']
+                    acr = doc.get(['abbreviate_count_ratio'], 1)
+                    freq = doc.get(['frequency'], 1)
+                else:
+                    self.warning('Not a valid truncation file {}'.format(p))
+                    return
+            else:
+                try:
+                    c, start = t.split(',')
+                    pat = '<=|>=|[<>=]'
+                    attr, value = re.split(pat, c)
+                    m = re.search(pat, c)
+                    comp = m.group(0)
+
+                    freq = 1
+                    acr = 1
+                except Exception, e:
+                    self.debug('truncate_condition parse failed {} {}'.format(e, t))
+                    return
+
+            self.py_add_truncation(attr, comp, value, int(start), freq, acr)
+
     def _wait(self, t):
         st = time.time()
         while 1:
