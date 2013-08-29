@@ -187,7 +187,16 @@ class ExperimentFactoryPane(TraitsDockPane):
                               ),
                               spring,
                          ),
-                   HGroup(RFItem('flux')),
+                   HGroup(RFItem('flux'),
+                          Label(u'\u00b1'),
+                          RFItem('flux_error', show_label=False),
+                          new_button_editor(make_rf_name('save_flux_button'),
+                                            'database_save',
+                                            tooltip='Save flux to database'
+                                            ),
+                          enabled_when=make_rf_name('labnumber')
+#                           spring,
+                          ),
                    HGroup(
                            RFItem('aliquot',
                                   width=50
