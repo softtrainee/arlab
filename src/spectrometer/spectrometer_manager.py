@@ -25,6 +25,7 @@ from src.paths import paths
 from src.spectrometer.jobs.relative_detector_positions import RelativeDetectorPositions
 from src.spectrometer.jobs.coincidence_scan import CoincidenceScan
 from src.spectrometer.jobs.cdd_operating_voltage_scan import CDDOperatingVoltageScan
+from src.hardware.argus_controller import ArgusController
 
 
 class SpectrometerManager(Manager):
@@ -117,6 +118,8 @@ class SpectrometerManager(Manager):
         ion = self.application.get_service('src.spectrometer.ion_optics_manager.IonOpticsManager')
         return klass(spectrometer=self.spectrometer, ion_optics_manager=ion)
 
+    def _spectrometer_microcontroller_default(self):
+        return ArgusController()
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup

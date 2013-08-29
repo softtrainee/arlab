@@ -37,7 +37,8 @@ class PyScriptRunner(Viewable):
 #        if not len(self.scripts):
 #            self.close_ui()
     def connect(self):
-        pass
+        return True
+
     def __resource_lock_default(self):
         return Lock()
 
@@ -120,7 +121,7 @@ class RemotePyScriptRunner(PyScriptRunner):
         return r
 
     def connect(self):
-        self.handle.open()
+        return self.handle.open()
 
 if __name__ == '__main__':
     logging_setup('py_runner')

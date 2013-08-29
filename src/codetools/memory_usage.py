@@ -19,7 +19,7 @@ import gc
 import sys
 import cPickle
 from src.helpers.filetools import unique_path
-
+from itertools import groupby
 USE_MEM_LOG = True
 root = os.path.join(os.path.expanduser('~'), 'Desktop', 'memtest')
 if not os.path.isdir(root):
@@ -203,7 +203,7 @@ def get_size(cls, show=False):
         print '{:<30s} {}'.format(cls, v)
     return v
 
-def count_instances(inst, group=None, referrers=True, referents=False):
+def count_instances(inst=None, group=None, referrers=False, referents=False):
     gc.collect()
 
     if group:
@@ -214,14 +214,36 @@ def count_instances(inst, group=None, referrers=True, referents=False):
 #                 pass
         t = lambda x: group in str(type(x))
         n = group
-    else:
+        objs = filter(t, gc.get_objects())
+        s = sum(sys.getsizeof(o) for o in objs) * 1024 ** -2
+        print '{:<50s}:{} {}'.format(n, len(objs), s)
+    elif inst:
         t = lambda x: isinstance(x, inst)
         n = str(inst)
+        objs = filter(t, gc.get_objects())
+        s = sum(sys.getsizeof(o) for o in objs) * 1024 ** -2
+        print '{:<50s}:{} {}'.format(n, len(objs), s)
 
-    objs = filter(t, gc.get_objects())
+    else:
+        objs = gc.get_objects()
+        key = lambda x: type(x)
+        objs = sorted(objs, key=key)
+#         for g, aa in groupby(objs, key=key):
+#             d = [sys.getsizeof(ai) for ai in aa]
+#             s = sum(d)
+#             print '{} {} {}'.format(g, len(d), s)
 
-    s = sum(sys.getsizeof(o) for o in objs) * 1024 ** -2
-    print '{:<50s}:{} {}'.format(n, len(objs), s)
+        xx = [(g, [ai for ai in aa])
+                for g, aa in groupby(objs, key=key)]
+
+        xx = [(g, sum([sys.getsizeof(ai) for ai in aa]), len(aa))
+              for g, aa in xx]
+
+        for g, s, n in sorted(xx, key=lambda x:x[1]):
+            if s > 1000:
+                print '{:<50s} {} {}'.format(g, s, n)
+
+
     if referrers:
         for obj in objs:
             show_referrers(obj)

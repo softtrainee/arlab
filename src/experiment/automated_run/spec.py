@@ -84,7 +84,7 @@ class AutomatedRunSpec(Loggable):
     ramp_rate = Float
     disable_between_positions = Bool(False)
     overlap = Bool(False)
-    truncate_condition=Str
+    truncate_condition = Str
     #===========================================================================
     # info
     #===========================================================================
@@ -137,7 +137,7 @@ class AutomatedRunSpec(Loggable):
                         warned.append(name)
 
                     script, ok = script_context[name]
-                    if si in ('measurement_script','extraction_script'):
+                    if si in ('measurement_script', 'extraction_script'):
                         d = script.get_estimated_duration()
                         s += d
                     script_oks.append(ok)
@@ -154,7 +154,7 @@ class AutomatedRunSpec(Loggable):
                         script_context[name] = script, ok
                         if ok:
                             arun.setup_context(script)
-                            if si in ('measurement_script','extraction_script'):
+                            if si in ('measurement_script', 'extraction_script'):
                                 d = script.calculate_estimated_duration()
                                 s += d
                     elif arun.invalid_script:
@@ -169,24 +169,25 @@ class AutomatedRunSpec(Loggable):
 
         return self._estimated_duration
 
-    def make_run(self, new_uuid=True):
-        arun = self.run_klass()
+    def make_run(self, new_uuid=True, run=None):
+        if run is None:
+            run = self.run_klass()
 
 #         attrs = self._get_run_attrs()
 #         for ai in attrs:
-#             setattr(arun, ai, getattr(self, ai))
+#             setattr(run, ai, getattr(self, ai))
 
         for si in SCRIPT_KEYS:
-            setattr(arun.script_info, '{}_script_name'.format(si),
+            setattr(run.script_info, '{}_script_name'.format(si),
                     getattr(self, '{}_script'.format(si)))
 
         if new_uuid:
-            arun.uuid = str(uuid.uuid4())
+            run.uuid = str(uuid.uuid4())
 
-#         arun.spec = self
-        arun.spec = weakref.ref(self)()
+#         run.spec = self
+        run.spec = weakref.ref(self)()
 
-        return arun
+        return run
 
     def load(self, script_info, params):
         for k, v in script_info.iteritems():

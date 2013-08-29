@@ -25,15 +25,14 @@ import os
 import csv
 import time
 from numpy import polyval, polyfit, array, min, nonzero
-from threading import current_thread
 #============= local library imports  ==========================
 from src.paths import paths
 # import math
 # from src.graph.graph import Graph
 from src.spectrometer.spectrometer_device import SpectrometerDevice
+from src.codetools.memory_usage import mem_log
 # from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 # from src.regression.ols_regressor import PolynomialRegressor
-from memory_profiler import profile
 
 class CalibrationPoint(HasTraits):
     x = Float
@@ -189,8 +188,7 @@ class Magnet(SpectrometerDevice):
 
         self._dac = v
         if micro:
-            micro.ask('SetMagnetDAC {}'.format(v), verbose=verbose)
-            self.debug(current_thread())
+            self.microcontroller.ask('SetMagnetDAC {}'.format(v), verbose=verbose)
             time.sleep(self.settling_time)
             if unblank:
                 micro.ask('BlankBeam False', verbose=verbose)

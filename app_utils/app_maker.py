@@ -125,6 +125,11 @@ class Template(object):
                            ):
                 sname = '{}_{}.png'.format(ni, self.name)
                 ins.copy_resource(os.path.join(root, 'resources', nd, sname))
+
+        for pn in ('start', 'stop'):
+            ins.copy_resource(os.path.join(root,
+                                           'resources', 'icons',
+                                           '{}.png'.format(pn)))
         # copy helper mod
         helper = os.path.join(self.root,
                               'launchers', 'helpers.py')

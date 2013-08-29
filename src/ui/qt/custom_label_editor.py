@@ -24,7 +24,7 @@ from traitsui.basic_editor_factory import BasicEditorFactory
 # import wx
 #============= standard library imports ========================
 import random
-from PySide.QtGui import QLabel, QVBoxLayout, QHBoxLayout
+from PySide.QtGui import QLabel, QVBoxLayout, QHBoxLayout, QFont
 from PySide.QtCore import Qt
 #============= local library imports  ==========================
 
@@ -51,10 +51,12 @@ class _CustomLabelEditor(Editor):
 
     def _create_control(self, parent):
         control = QLabel()
-        css = '''QLabel {{ color:{}; font-size:{}px;}}
-'''.format(self.item.color.name(), self.item.size)
 
+        css = '''QLabel {{ color:{}; font-size:{}px; font-weight:{};}}
+# '''.format(self.item.color.name(), self.item.size, self.item.weight)
         control.setStyleSheet(css)
+
+
 #        control.setAlignment(Qt.AlignCenter)
 #        control.setGeometry(0, 0, self.item.width, self.item.height)
 #        vbox = QVBoxLayout()
@@ -137,6 +139,7 @@ class CustomLabel(UItem):
 
     color = Color('green')
     color_name = Str
+    weight = Str('normal')
 
     top_padding = Int(5)
     bottom_padding = Int(5)

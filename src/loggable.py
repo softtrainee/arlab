@@ -90,6 +90,8 @@ class Loggable(HasTraits):
 #             evt = loop_sound(sound)
 #             dialog.close = lambda: self._close_warning(evt)
 
+#         from threading import current_thread
+#         print current_thread()
         dialog.open()
 
     def confirmation_dialog(self, msg, return_retval=False, cancel=False, title=''):

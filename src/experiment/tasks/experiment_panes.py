@@ -28,12 +28,17 @@ from src.constants import MEASUREMENT_COLOR, EXTRACTION_COLOR, \
     NOT_EXECUTABLE_COLOR, SKIP_COLOR, SUCCESS_COLOR, CANCELED_COLOR, \
     TRUNCATED_COLOR, FAILED_COLOR, END_AFTER_COLOR
 from src.ui.custom_label_editor import CustomLabel
+from src.paths import paths
+from pyface.image_resource import ImageResource
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 #===============================================================================
 # editing
 #===============================================================================
+def spacer(w):
+    return Spring(width=w, springy=False)
+
 def make_qf_name(name):
             return 'object.queue_factory.{}'.format(name)
 
@@ -52,43 +57,62 @@ def make_rt_name(name):
 def RTItem(name, **kw):
     return Item(make_rt_name(name), **kw)
 
+
+def new_button_editor(trait, name, **kw):
+    ps = [paths.icons,
+          paths.app_resources]
+    name = '{}.png'.format(name)
+    return UItem(trait, style='custom',
+                 editor=ButtonEditor(image=ImageResource(name=name,
+                                                  search_path=ps
+                                                  )),
+                 **kw
+                 )
 class ExperimentFactoryPane(TraitsDockPane):
     id = 'pychron.experiment.factory'
     name = 'Experiment Editor'
     def traits_view(self):
-        v = View(
-                 VGroup(
-                     VGroup(
-                            QFItem('username'),
-                            HGroup(
-                                   QFItem('mass_spectrometer',
+        add_button = new_button_editor('add_button', 'add',
+                                        enabled_when='ok_add',
+                                        tooltip='Add run'
+                                        )
+
+        save_button = new_button_editor('save_button', 'disk',
+                                        tooltip='Save queue to file'
+                                        )
+        edit_button = new_button_editor('edit_mode_button', 'table_edit',
+                                        enabled_when='edit_enabled',
+                                        tooltip='Toggle edit mode'
+                                        )
+        clear_button = new_button_editor('clear_button',
+                                         'table_row_delete',
+                                         tooltip='Clear all runs added using "frequency"')
+
+        queue_grp = VGroup(
+                           QFItem('username'),
+                           HGroup(
+                                  QFItem('mass_spectrometer',
                                           show_label=False,
                                           editor=EnumEditor(name=make_qf_name('mass_spectrometers')),
                                           ),
-                                   QFItem('extract_device',
+                                  QFItem('extract_device',
                                           show_label=False,
                                           editor=EnumEditor(name=make_qf_name('extract_devices')),
                                           )
                                    ),
-                            QFItem('load_name',
+                           QFItem('load_name',
                                    show_label=False,
                                    editor=EnumEditor(name=make_qf_name('load_names'))
                                    ),
+                           QFItem('delay_before_analyses'),
+                           QFItem('delay_between_analyses')
+                           )
 
-                            QFItem('delay_before_analyses'),
-                            QFItem('delay_between_analyses')
-                            ),
-
-                     HGroup(
-                            UItem('save_button',),
-                            UItem('add_button', enabled_when='ok_add'),
-                            UItem('clear_button',
-                                     tooltip='Clear all runs added using "frequency"'
-                                     ),
-                            UItem('edit_mode_button',
-                                   enabled_when='edit_enabled',
-#                                   show_label=False
-                                   ),
+        button_bar = HGroup(
+                            save_button,
+                            add_button,
+                            clear_button,
+                            edit_button,
                             CustomLabel(make_rf_name('edit_mode_label'),
                                         color='red',
                                         width=40
@@ -96,29 +120,31 @@ class ExperimentFactoryPane(TraitsDockPane):
                             spring,
                             RFItem('end_after', width=30),
                             RFItem('skip')
-                            ),
-                    CustomLabel(make_rf_name('info_label'),
-                                ),
-    #                  UCustom('run_factory', enabled_when='ok_run'),
-                    VFold(
-                          VGroup(
+                            )
+        edit_grp = VFold(
+                         VGroup(
                                 self._get_info_group(),
                                 self._get_extract_group(),
                                 label='General'
                                 ),
-#                     self._get_position_group(),
-                     self._get_script_group(),
-                     enabled_when=make_qf_name('ok_make')
-                     ),
-                     HGroup(
-                            UItem('add_button', enabled_when='ok_add'),
-                            UItem('clear_button',
-                                     tooltip='Clear all runs added using "frequency"'
-                                  ),
+                         self._get_script_group(),
+                         enabled_when=make_qf_name('ok_make')
+                         )
+
+        lower_button_bar = HGroup(
+                            add_button,
+                            clear_button,
                             Label('Auto Increment'),
                             Item('auto_increment_id', label='L#'),
                             Item('auto_increment_position', label='Position'),
                             )
+        v = View(
+                 VGroup(
+                        queue_grp,
+                        button_bar,
+                        CustomLabel(make_rf_name('info_label')),
+                        edit_grp,
+                        lower_button_bar
                         ),
                  width=225
                  )
@@ -317,42 +343,61 @@ class ControlsPane(TraitsDockPane):
     closable = False
     floatable = False
 
+
     def traits_view(self):
+
+        cancel_tt = '''Cancel current run and continue to next run'''
+        stop_tt = '''Cancel current run and stop queue'''
+        start_tt = '''Start current experiment queue. 
+Will continue to next opened queue when completed'''
+        truncate_tt = '''Stop the current measurement process and continue to 
+the next step in the measurement script'''
+        truncate_style_tt = '''Normal= measure_iteration stopped at current step
+    script continues
+Quick=   measure_iteration stopped at current step
+    script continues using abbreviated_count_ratio*counts'''
+        end_tt = '''Stop the queue and the end of the current run'''
+
+
         v = View(
                  HGroup(
-                        UItem('resume_button', enabled_when='delaying_between_runs'),
-                        Spring(springy=False, width=-10),
-                        Item('delay_between_runs_readback',
-                              label='Delay Countdown',
-                              style='readonly', format_str='%i',
-                              width=-50),
+                        spacer(-20),
+                        new_button_editor('start_button',
+                                                'start',
+                                                enabled_when='can_start',
+                                                tooltip=start_tt,
+                                                ),
+                        new_button_editor('stop_button', 'stop',
+                                                enabled_when='not can_start',
+                                                tooltip=stop_tt
+                                                ),
 
+                        spacer(-20),
+                        Item('end_at_run_completion',
+                             label='Stop at Completion',
+                             tooltip=end_tt
+                             ),
+                        spacer(-20),
+                        new_button_editor('cancel_run_button', 'cancel',
+                                                enabled_when='can_cancel',
+                                                tooltip=cancel_tt
+                                                ),
+                        spacer(-20),
+                        new_button_editor('truncate_button',
+                                                'lightning',
+                                                enabled_when='measuring',
+                                                tooltip=truncate_tt
+                                                ),
+                        UItem('truncate_style',
+                              enabled_when='measuring',
+                              tooltip=truncate_style_tt,
+                              ),
+                        spacer(-75),
                         CustomLabel('extraction_state_label',
                                     color_name='extraction_state_color',
-                                    size=24
+                                    size=24,
+                                    weight='bold'
                                     ),
-                        spring,
-#                        Item('show_sample_map', show_label=False,
-#                             enabled_when='experiment_queue.sample_map'
-#                             ),
-#                        spring,
-
-                        # temporary disable refresh/reset queue button
-
-#                         UItem('refresh_button',
-#                               enabled_when='not object._alive',
-#                               editor=ButtonEditor(label_value='refresh_label')
-#                               ),
-
-                        Spring(width=-20, springy=False),
-                        Item('end_at_run_completion'),
-                        Spring(width=-20, springy=False),
-                        UItem('cancel_run_button', enabled_when='can_cancel'),
-                        UItem('truncate_button', enabled_when='measuring'),
-                        UItem('truncate_style', enabled_when='measuring'),
-                        UItem('execute_button',
-                              enabled_when='executable',
-                              editor=ButtonEditor(label_value='execute_label')),
                         ),
                  )
         return v

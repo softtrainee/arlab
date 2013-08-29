@@ -217,7 +217,6 @@ class LaserTablePDFWriter(BasePDFWriter):
             ta._argW[start + 2 * i] = scale(getattr(spec, '{}_width'.format(n)))
             ta._argW[start + 2 * i + 1] = scale(getattr(spec, '{}_error_width'.format(n)))
 
-        print ta._argW
 #===============================================================================
 #
 #===============================================================================

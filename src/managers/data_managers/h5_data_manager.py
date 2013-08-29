@@ -130,6 +130,7 @@ class H5DataManager(DataManager):
         p = self._new_frame_path(*args, **kw)
         return self.open_file(p, 'w')
 
+
     def new_frame(self, *args, **kw):
         '''
 
@@ -137,12 +138,12 @@ class H5DataManager(DataManager):
         p = self._new_frame_path(*args, **kw)
         try:
             self._frame = openFile(p, mode='w', filters=Filters(complevel=self.compression_level))
+            return self._frame
         except ValueError:
             pass
 
 #        self.lock_path(p)
 
-        return self._frame
 
     def new_group(self, group_name, parent=None, description=''):
         '''
@@ -231,7 +232,7 @@ class H5DataManager(DataManager):
 
     def open_file(self, path, mode='a'):
         return FileCTX(
-#                        self,
+#                         self,
                        weakref.ref(self)(),
                        path, mode, self.compression_level)
 

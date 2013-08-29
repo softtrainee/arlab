@@ -19,32 +19,31 @@
 # ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
 from traits.api import Float, Property, Bool, Str, Button
-from traitsui.api import View, Item, RangeEditor, spring, HGroup, VGroup, UItem
-# from pyface.timer.timer import Timer
-# from traitsui.menu import Action
-from threading import Event
-# import time
+from traitsui.api import View, Item, RangeEditor, spring, HGroup, VGroup, \
+    UItem, Spring
 
 #============= standard library imports ========================
+from threading import Event
 import time
 #============= local library imports  ==========================
 from src.helpers.timer import Timer
 from src.loggable import Loggable
+from src.ui.custom_label_editor import CustomLabel
 
 
 class WaitDialog(Loggable):
-#    condition = None
+
     end_evt = None
-    wtime = Float
+    wtime = Float(10)
     low_name = Float(1)
 
-    high = Float(enter_set=True, auto_set=False)
+    high = Float(10, enter_set=True, auto_set=False)
 
     current_time = Property(depends_on='_current_time')
     _current_time = Float
     auto_start = Bool(False)
     timer = None
-    title = 'Wait'
+
     message = Str
 
     _continued = False
@@ -63,8 +62,8 @@ class WaitDialog(Loggable):
             self.start(evt=self.end_evt)
 
     def reset(self):
-        self.current_time = self.wtime
         self.high = self.wtime
+        self.current_time = self.wtime
 
     def was_canceled(self):
         return self._canceled
@@ -86,7 +85,7 @@ class WaitDialog(Loggable):
 
         if block:
             while not evt.is_set():
-                time.sleep(0.1)
+                time.sleep(0.05)
 
     def stop(self):
         self._end()
@@ -116,6 +115,8 @@ class WaitDialog(Loggable):
         self._current_time -= 1
 
     def _end(self, dispose=True):
+        self.message = ''
+
         if self.timer is not None:
             self.timer.Stop()
         if self.end_evt is not None:
@@ -124,6 +125,7 @@ class WaitDialog(Loggable):
         if self.dispose_at_end and dispose:
             self.debug('disposing {}'.format(self))
             self.disposed = True
+
 
 #    def close(self, isok):
 #        super(WaitDialog, self).close(isok)
@@ -141,12 +143,22 @@ class WaitDialog(Loggable):
 
     def traits_view(self):
         v = View(VGroup(
-                        Item('message', width=1.0, show_label=False, style='readonly'),
-                        HGroup(Item('high', label='Set Max. Seconds'), spring, UItem('continue_button')),
-                        Item('current_time', show_label=False, editor=RangeEditor(mode='slider',
+                        CustomLabel('message',
+                                    size=14,
+                                    weight='bold'
+                                    ),
+                        HGroup(
+                               Spring(width=-5, springy=False),
+                               Item('high', label='Set Max. Seconds'),
+                               spring, UItem('continue_button')
+                               ),
+                        HGroup(
+                               Spring(width=-5, springy=False),
+                               Item('current_time', show_label=False, editor=RangeEditor(mode='slider',
                                                            low_name='low_name',
                                                            high_name='wtime',
-                                                           )),
+                                                           ))
+                               ),
                         ),
                )
         return v

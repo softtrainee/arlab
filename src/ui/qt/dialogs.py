@@ -36,7 +36,7 @@ class myMessageMixin(object):
         evt = Event()
         invoke_in_main_thread(self._open, evt)
         while not evt.is_set():
-            time.sleep(0.1)
+            time.sleep(0.05)
 
         return self.return_code
 
