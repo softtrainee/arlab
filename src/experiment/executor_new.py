@@ -49,7 +49,6 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 from apptools.preferences.preference_binding import bind_preference
 import os
 from src.experiment.automated_run.automated_run import AutomatedRun
-import threading
 
 
 class ExperimentExecutor(IsotopeDatabaseManager):
@@ -313,7 +312,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         self.db.reset()
 
         run = self._make_run(spec)
-        self.info('%%%%%%%%%%%%%%%%%%%% starting run {} {}'.format(run.runid, threading.activeCount()))
+        self.info('%%%%%%%%%%%%%%%%%%%% starting run {}'.format(run.runid))
 #
         t = Thread(target=self._do_run,
                     name=run.runid,
@@ -737,8 +736,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     self.cancel(confirm=False)
 
     def _pre_execute_check(self, inform=True):
-        self.debug('********************** NOT DOING PRE EXECUTE CHECK ')
-        return True
+#        self.debug('********************** NOT DOING PRE EXECUTE CHECK ')
+#        return True
 
         if not self.pyscript_runner.connect():
             return
