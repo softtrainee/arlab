@@ -34,7 +34,7 @@ ESTIMATED_DURATION_FF = 1.045
 command_register = makeRegistry()
 
 class MeasurementPyScript(ValvePyScript):
-    automated_run = Any
+    automated_run = None
     ncounts = 0
     info_color = MEASUREMENT_COLOR
     _time_zero = None
@@ -47,7 +47,7 @@ class MeasurementPyScript(ValvePyScript):
     abbreviated_count_ratio = None
 
     def reset(self, arun):
-        self.automated_run = weakref.ref(arun)()
+        self.automated_run = arun
 
         self._series_count = 0
         self._time_zero = None
@@ -258,6 +258,10 @@ class MeasurementPyScript(ValvePyScript):
 #
 #===============================================================================
     def _automated_run_call(self, func, *args, **kw):
+#         return True
+#         if func not in ('py_activate_detectors',):
+#             return True
+
         if self.automated_run is None:
             return
 

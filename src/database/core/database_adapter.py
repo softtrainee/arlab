@@ -87,9 +87,8 @@ class DatabaseAdapter(Loggable):
         if self.sess:
             self.info('clearing current session. uncommitted changes will be deleted')
 
-            self.sess.expunge_all()
+            self.sess.flush()
             self.sess.close()
-
             self.sess = None
 
 #             import gc
@@ -101,6 +100,9 @@ class DatabaseAdapter(Loggable):
         '''
         if force:
             self.debug('forcing database connection')
+            self.reset()
+            self.session_factory = None
+
         if self.connection_parameters_changed:
             force = True
 
@@ -178,7 +180,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
     def close(self):
         if self.sess is not None:
             self.sess.close()
-            self.sess = None
+#             self.sess = None
 
     def get_migrate_version(self):
         sess = self.get_session()
@@ -262,8 +264,8 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
         finally:
             if self.sess is not None:
-                self.info('closing test session')
                 self.sess.close()
+                self.info('closing test session')
 
         return connected
 

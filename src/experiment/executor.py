@@ -52,8 +52,11 @@ from pyface.constant import CANCEL, NO, YES
 from sqlalchemy.orm.exc import NoResultFound
 from src.consumer_mixin import ConsumerMixin, consumable
 from src.codetools.memory_usage import mem_log, mem_break, \
-    mem_available, mem_log_func
+    mem_available, mem_log_func, count_instances
 from src.ui.gui import invoke_in_main_thread
+from pyface.timer.do_later import do_later
+from memory_profiler import profile
+import gc
 
 
 BLANK_MESSAGE = '''First "{}" not preceeded by a blank. 
@@ -339,10 +342,11 @@ class ExperimentExecutor(Experimentable):
             self._abort_overlap_signal = Flag()
             self.extraction_state_label = ''
 
+            self.debug('execution started')
+
             t = Thread(target=self._execute)
             t.start()
 
-            self.debug('execution started')
             return True
 
 #===============================================================================
@@ -370,8 +374,8 @@ class ExperimentExecutor(Experimentable):
 # pre execute checking
 #===============================================================================
     def _pre_execute_check(self, inform=True):
-#         self.debug('********************** NOT DOING PRE EXECUTE CHECK ')
-#         return True
+        self.debug('********************** NOT DOING PRE EXECUTE CHECK ')
+        return True
 
         if self._check_memory():
             return
@@ -544,7 +548,7 @@ class ExperimentExecutor(Experimentable):
         # delay before starting
         delay = exp.delay_before_analyses
         self._delay(delay, message='before')
-            
+
         rc = 0
         ec = 0
         for i, exp in enumerate(self.experiment_queues):
@@ -675,8 +679,8 @@ class ExperimentExecutor(Experimentable):
         totalcnt = 0
 
         # setup consumer for overlapping runs
-        consumer = ConsumerMixin()
-        consumer.setup_consumer(func=self._overlapped_run)
+#         consumer = ConsumerMixin()
+#         consumer.setup_consumer(func=self._overlapped_run)
 
         delay = exp.delay_between_analyses
         force_delay = False
@@ -687,7 +691,7 @@ class ExperimentExecutor(Experimentable):
         with consumable(func=self._overlapped_run) as con:
             while self.isAlive():
                 mem_log('run start')
-                
+
                 if self._check_memory():
                     break
 
@@ -708,20 +712,21 @@ class ExperimentExecutor(Experimentable):
                     # delay between runs
                     self._delay(delay)
                     force_delay = False
-                
-                if self.current_run is not None:
-                    self.current_run.plot_panel.reset()
-                    self.current_run.plot_panel=None
-                    
+
+#                 if self.current_run is not None:
+#                     self.current_run.plot_panel.reset()
+#                     self.current_run.plot_panel = None
+
                 self.current_run = None
                 self.db.reset()
-                
+                mem_log('post reset')
+
                 runargs = None
                 try:
                     runspec = rgen.next()
                     # wait until only one previous run if overlapping
                     while not con.is_empty() and con.queue_size() > 1:
-                        time.sleep(0.5)
+                        time.sleep(0.05)
 
                     if not runspec.skip:
                         runargs = self._launch_run(runspec, cnt)
@@ -765,6 +770,12 @@ class ExperimentExecutor(Experimentable):
                 if self.end_at_run_completion:
                     break
 
+#                 from PySide import QtCore
+#                 gc.collect()
+#                 count_instances()
+#                 roots = objgraph.get_leaking_objects()
+#                 objgraph.show_most_common_types(objects=roots)
+#                 objgraph.show_refs()
             if self.err_message:
                 self.warning('automated runs did not complete successfully')
                 self.warning('error: {}'.format(self.err_message))
@@ -810,6 +821,7 @@ class ExperimentExecutor(Experimentable):
         self.info('========== {} =========='.format(arun.runid))
 
         ta = Thread(name=arun.runid,
+#                     target=lambda x: x,
                    target=self._do_automated_run,
                    args=(arun,)
                    )
@@ -842,6 +854,9 @@ class ExperimentExecutor(Experimentable):
         '''
             convert the an AutomatedRunSpec an AutomatedRun
         '''
+        exp = self.experiment_queue
+        self.debug('setup run {} of {}'.format(i, exp.name))
+
         # the first run was checked before delay before runs
         if i > 1:
             # test manager connections
@@ -853,59 +868,56 @@ class ExperimentExecutor(Experimentable):
         if arv.end_after:
             self.end_at_run_completion = True
 
-        arun = arv.make_run()
-
-        exp = self.experiment_queue
-
-        self.current_run = arun
-        self.debug('setup run {} of {}'.format(i, exp.name))
-
+        arun = arv.make_run(run=self.current_run)
         '''
             save this runs uuid to a hidden file
             used for analysis recovery
         '''
         self.add_backup(arun.uuid)
-
-        arun.experiment_manager = weakref.ref(self)()
         arun.experiment_identifier = exp.database_identifier
         arun.load_name = exp.load_name
-
-        arun.spectrometer_manager = self.spectrometer_manager
-        arun.extraction_line_manager = self.extraction_line_manager
-        arun.ion_optics_manager = self.ion_optics_manager
-        arun.data_manager = self.data_manager
-        arun.db = self.db
-        arun.massspec_importer = self.massspec_importer
-        arun.runner = self.pyscript_runner
-
         arun.integration_time = 1.04
+
+        if self.current_run is None:
+            arun.experiment_manager = weakref.ref(self)()
+
+            arun.spectrometer_manager = self.spectrometer_manager
+            arun.extraction_line_manager = self.extraction_line_manager
+            arun.ion_optics_manager = self.ion_optics_manager
+            arun.data_manager = self.data_manager
+            arun.db = self.db
+            arun.massspec_importer = self.massspec_importer
+            arun.runner = self.pyscript_runner
 
         mon = self.monitor
         if mon is not None:
             mon.automated_run = weakref.ref(arun)()
             arun.monitor = mon
 
+        self.current_run = arun
         return arun
 
     def _do_automated_run(self, arun):
-        mem_break()
+
         mem_log('{} started'.format(arun.runid))
         st = time.time()
         for step in (
-                     self._start_run,
-                     self._extraction,
-                     self._measurement,
-                     self._post_measurement
+                     '_start_run',
+                    '_extraction',
+                    '_measurement',
+                    '_post_measurement'
                      ):
+
             if not self.check_alive():
                 break
 
-            if not mem_log_func(step, arun):
+            f = getattr(self, step)
+            if not f(arun):
                 break
-#             if not step(arun):
-#                 break
         else:
-            if arun.state not in ('truncated', 'canceled', 'failed'):
+
+            self.debug('$$$$$$$$$$$$$$$$$$$$ state at run end {}'.format(arun.state))
+            if not arun.state in ('truncated', 'canceled', 'failed'):
                 arun.state = 'success'
 
         self._increment_nruns_finished()
@@ -924,6 +936,7 @@ class ExperimentExecutor(Experimentable):
 
     def _start_run(self, ai):
         ret = True
+
         if not ai.start():
             self.err_message = 'Monitor failed to start'
             self._alive = False
@@ -935,25 +948,30 @@ class ExperimentExecutor(Experimentable):
 
     def _extraction(self, ai):
         ret = True
-        invoke_in_main_thread(self.trait_set, extracting = True)
+#         invoke_in_main_thread(self.trait_set, extracting=True)
+        self.extracting = True
         if not ai.do_extraction():
             ret = self._failed_execution_step('Extraction Failed')
 
-        invoke_in_main_thread(self.trait_set, extraction_state_label='', extraction=False)
+#         invoke_in_main_thread(self.trait_set, extraction_state_label='', extraction=False)
+        self.trait_set(extraction_state_label='', extraction=False)
         return ret
 
     def _measurement(self, ai):
         ret = True
 
-        invoke_in_main_thread(self.trait_set, measuring = True)
+        self.measuring = True
+
+#         invoke_in_main_thread(self.trait_set, measuring=True)
         if not ai.do_measurement():
             ret = self._failed_execution_step('Measurement Failed')
-        else:
-            mem_log('{} post measurement'.format(ai.runid))
-            ai.post_measurement_save()
-            mem_log('post save {}'.format(ai.runid))
+#         else:
+#             mem_log('{} post measurement'.format(ai.runid))
+#             ai.post_measurement_save()
+#             mem_log('post save {}'.format(ai.runid))
 
-        invoke_in_main_thread(self.trait_set, measuring = False)
+        self.measuring = False
+#         invoke_in_main_thread(self.trait_set, measuring=False)
         return ret
 
     def _post_measurement(self, ai):

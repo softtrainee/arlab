@@ -19,18 +19,19 @@ def plot_file(p, normalize=False, stacked=False,
     with open(p, 'r') as fp:
         xi = 0
         ticked = False
-        for line in fp:
-            msg, mem = map(str.strip, line.split(':'))
-            if msg.startswith('exp start'):
-                break
+#         for line in fp:
+#             msg, mem = map(str.strip, line.split(':'))
+#             if msg.startswith('exp start'):
+#                 break
 
         for line in fp:
 
             # print line
             msg, mem = map(str.strip, line.split(':'))
+#             print msg, mem
 #             if msg.startswith('exp start'):
 #                 continue
-            
+
 #            if msg.startswith('collect'):
 #                continue
             try:
@@ -41,10 +42,11 @@ def plot_file(p, normalize=False, stacked=False,
                 ma = max(ma, yi)
                 xi += 1
                 ts.append(msg)
+
             except ValueError:
                 continue
-            
-            if msg.endswith('teardown'):
+
+            if msg.startswith('>'):
                 n += 1
                 if not ticked and stacked:
                     xticks(x, ts, rotation=-90)
@@ -147,7 +149,7 @@ if __name__ == '__main__':
             for ai in paths:
                 n = 'mem-{:03n}.txt'.format(int(ai))
                 p = os.path.join(d, n)
-                plot_file(p, normalize=normalize, stacked=stacked,use_gradient=grad,)
+                plot_file(p, normalize=normalize, stacked=stacked, use_gradient=grad,)
 #                legend(loc='upper left')
                 tight_layout()
                 show()

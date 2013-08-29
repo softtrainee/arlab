@@ -129,7 +129,7 @@ class PlotPanel(Loggable):
         '''
             dets: list of Detector instances
         '''
-
+        self.reset()
         g = self.graph
 #        g.suppress_regression = True
 #        # construct plot panels graph

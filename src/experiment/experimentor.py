@@ -27,7 +27,8 @@ from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.experiment.factory import ExperimentFactory
 from src.constants import ALPHAS, NULL_STR
 from src.experiment.stats import StatsGroup
-from src.experiment.executor import ExperimentExecutor
+from src.experiment.executor_new import ExperimentExecutor
+# from src.experiment.executor import ExperimentExecutor
 from src.experiment.utilities.file_listener import FileListener
 from src.experiment.utilities.identifier import convert_identifier, \
     ANALYSIS_MAPPING
@@ -35,19 +36,18 @@ from src.deprecate import deprecated
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 LAlphas = list(ALPHAS)
 
-from itertools import tee
-
-def partition(seq, predicate):
-    '''
-        http://stackoverflow.com/questions/949098/python-split-a-list-based-on-a-condition
-        partition seqeunce based on evaluation of predicate(i)
-        
-        returns 2 generators
-        True_eval, False_eval
-    '''
-
-    l1, l2 = tee((predicate(item), item) for item in seq)
-    return (i for p, i in l1 if p), (i for p, i in l2 if not p)
+# from itertools import tee
+# def partition(seq, predicate):
+#     '''
+#         http://stackoverflow.com/questions/949098/python-split-a-list-based-on-a-condition
+#         partition seqeunce based on evaluation of predicate(i)
+#
+#         returns 2 generators
+#         True_eval, False_eval
+#     '''
+#
+#     l1, l2 = tee((predicate(item), item) for item in seq)
+#     return (i for p, i in l1 if p), (i for p, i in l2 if not p)
 
 # class Experimentor(Experimentable):
 class Experimentor(IsotopeDatabaseManager):
@@ -323,13 +323,9 @@ class Experimentor(IsotopeDatabaseManager):
     def _activate_editor(self, eq):
         self.activate_editor_event = id(eq)
 
-    @on_trait_change('executor:execute_button')
-    def _execute(self):
-        '''
-            trigger the experiment task to assemble current queues.
-            the queues are then passed back to execute_queues()
-        '''
-        self.debug('%%%%%%%%%%%%%%%%%% Execute fired')
+    @on_trait_change('executor:stop_button')
+    def _stop(self):
+        self.debug('%%%%%%%%%%%%%%%%%% Stop fired')
         if self.executor.isAlive():
             self.info('stop execution')
             '''
@@ -337,7 +333,15 @@ class Experimentor(IsotopeDatabaseManager):
                 otherwise cancel
             '''
             self.executor.stop()
-        else:
+
+    @on_trait_change('executor:start_button')
+    def _execute(self):
+        '''
+            trigger the experiment task to assemble current queues.
+            the queues are then passed back to execute_queues()
+        '''
+        self.debug('%%%%%%%%%%%%%%%%%% Start fired')
+        if not self.executor.isAlive():
 #             self.update_info()
 
             self.debug('%%%%%%%%%%%%%%%%%% Execute event true')
@@ -368,11 +372,11 @@ class Experimentor(IsotopeDatabaseManager):
         self.experiment_factory.run_factory.edit_mode = True
         self._set_factory_runs(self.experiment_queue.selected)
 
-    @on_trait_change('executor:update_needed')
-    def _refresh1(self):
-        self.debug('update needed fired')
-        self.executor.clear_run_states()
-        self.update_info()
+#     @on_trait_change('executor:update_needed')
+#     def _refresh1(self):
+#         self.debug('update needed fired')
+#         self.executor.clear_run_states()
+#         self.update_info()
 
     @on_trait_change('executor:non_clear_update_needed')
     def _refresh2(self):
@@ -383,7 +387,7 @@ class Experimentor(IsotopeDatabaseManager):
     def _refresh3(self):
         self.debug('update info needed fired')
         self.update_info()
-        self.executor.clear_run_states()
+#         self.executor.clear_run_states()
 
     @on_trait_change('executor:queue_modified')
     def _refresh5(self, new):
@@ -424,8 +428,7 @@ class Experimentor(IsotopeDatabaseManager):
         rf.edit_mode = False
         if new:
 
-            if len(new) > 1:
-                self._set_factory_runs(new)
+            self._set_factory_runs(new)
 
             a = new[-1]
             if not a.skip:
@@ -438,7 +441,7 @@ class Experimentor(IsotopeDatabaseManager):
         rf.special_labnumber = 'Special Labnumber'
         rf._labnumber = NULL_STR
         rf.labnumber = ''
-        rf.edit_mode = True
+#         rf.edit_mode = True
 
         rf.suppress_update = True
         rf.set_selected_runs(new)

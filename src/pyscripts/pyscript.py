@@ -33,7 +33,7 @@ from Queue import Queue, Empty, LifoQueue
 # from src.ui.gui import invoke_in_main_thread
 import sys
 # import bdb
-#from src.ui.thread import Thread
+# from src.ui.thread import Thread
 import weakref
 
 
@@ -228,7 +228,7 @@ class PyScript(Loggable):
                 self.trace_line = lineno
 
         return self.traceit
-    
+
     def execute(self, new_thread=False, bootstrap=True,
                       trace=False,
                       finished_callback=None):
@@ -705,8 +705,6 @@ class PyScript(Loggable):
 #==============================================================================
     def _sleep(self, v, message=None):
         v = float(v)
-#        if self.testing_syntax or self._cancel:
-#            return
 
         if v > 1:
             if v >= 5:
@@ -723,18 +721,22 @@ class PyScript(Loggable):
             if message is None:
                 message = ''
 
-#            evt = Event()
-            wd = self._wait_dialog
+            if self.manager:
+                wd = self.manager.wait_dialog
+            else:
+                wd = self._wait_dialog
+
             if wd is None:
                 wd = WaitDialog()
 
-            wd.trait_set(wtime=timeout,
-                         parent=weakref.ref(self)(),
-                         message='Waiting for {:0.1f}  {}'.format(timeout, message),
-                         )
             self._wait_dialog = wd
             if self.manager:
                 self.manager.wait_dialog = wd
+
+            wd.trait_set(wtime=timeout,
+                         # parent=weakref.ref(self)(),
+                         message='Waiting for {:0.1f}  {}'.format(timeout, message),
+                         )
 
             wd.reset()
             wd.start(block=True)
@@ -748,7 +750,7 @@ class PyScript(Loggable):
             while time.time() - st < timeout:
                 if self._cancel:
                     break
-                time.sleep(1)
+                time.sleep(0.05)
 
 #===============================================================================
 # properties

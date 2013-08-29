@@ -98,7 +98,6 @@ class IonOpticsManager(Manager):
         molweights = spec.molecular_weights
         return molweights[isotope_key]
 
-    @profile
     def position(self, pos, detector, use_dac=False):
         if pos == NULL_STR:
             return
@@ -122,7 +121,7 @@ class IonOpticsManager(Manager):
             dac = mag.map_mass_to_dac(pos)
 
         det = spec.get_detector(detector)
-
+        self.debug('detector {}'.format(det))
         if det:
             dac = spec.correct_dac(det, dac)
 

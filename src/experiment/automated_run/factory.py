@@ -69,11 +69,11 @@ class AutomatedRunFactory(Viewable):
     selected_level = Str('Level')
     levels = Property(depends_on='selected_irradiation, db')
 
-    flux=Property(Float, depends_on='labnumber')
+    flux = Property(Float, depends_on='labnumber')
 #    flux_error=Property(Float, depends_on='labnumber')
 #    _flux=Float
 #    _flux_error=Float
-    
+
     skip = Bool(False)
     end_after = Bool(False)
     weight = Float
@@ -210,6 +210,8 @@ class AutomatedRunFactory(Viewable):
 
         self._selected_runs = runs
         self.suppress_update = False
+
+        self.debug('len selected runs {}'.format(len(runs)))
         if not runs:
             self.edit_mode = False
             self.edit_enabled = False
@@ -888,7 +890,7 @@ post_equilibration_script:name
 
             if self._update_thread:
                 self._update_thread.join()
-            
+
             t = Thread(target=func)
             self._update_thread = t
             t.start()
@@ -896,18 +898,18 @@ post_equilibration_script:name
     @cached_property
     def _get_flux(self):
         if self.labnumber:
-            dbln=self.db.get_labnumber(self.labnumber)
+            dbln = self.db.get_labnumber(self.labnumber)
             if dbln:
                 if dbln.selected_flux_history:
-                    f=dbln.selected_flux_history.flux
+                    f = dbln.selected_flux_history.flux
                     return '{}, {}'.format(f.j, f.j_err)
-        
+
         return ''
-         
+
     def _set_flux(self, a):
         if self.labnumber and a is not None:
-            v,e=a
-            db=self.db
+            v, e = a
+            db = self.db
             dbln = db.get_labnumber(self.labnumber)
             if dbln:
                 dbpos = dbln.irradiation_position
@@ -916,9 +918,8 @@ post_equilibration_script:name
                 dbflux.history = dbhist
                 dbln.selected_flux_history = dbhist
                 self.db.commit()
-                self.db.reset()
-        
-    def _validate_flux(self,v):
+
+    def _validate_flux(self, v):
         try:
             return map(float, v.split(','))
         except ValueError:
