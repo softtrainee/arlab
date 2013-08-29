@@ -42,7 +42,7 @@ from src.paths import paths
 from src.managers.data_managers.data_manager import DataManager
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.constants import NULL_STR, MEASUREMENT_COLOR, \
-    EXTRACTION_COLOR
+    EXTRACTION_COLOR, SCRIPT_NAMES, SCRIPT_KEYS
 from src.experiment.automated_run.condition import TruncationCondition, \
     ActionCondition, TerminationCondition
 from src.processing.arar_age import ArArAge
@@ -653,7 +653,9 @@ class AutomatedRun(Loggable):
         self.info('Start automated run {}'.format(self.runid))
         self._alive = True
         self._total_counts = 0
-
+        
+        self.refresh_scripts()
+        
         # setup the scripts
         if self.measurement_script:
             self.measurement_script.reset(weakref.ref(self)())
@@ -2066,9 +2068,13 @@ anaylsis_type={}
 #     @cached_property
 #     def _get_extraction_script(self):
 #         return self._load_script('extraction')
-
+    def refresh_scripts(self):
+        for name in SCRIPT_KEYS:
+            setattr(self, '{}_script'.format(name), self._load_script(name))
+        
     def _measurement_script_default(self):
         return self._load_script('measurement')
+    
     def _post_measurement_script_default(self):
         return self._load_script('post_measurement')
     def _post_equilibration_script_default(self):

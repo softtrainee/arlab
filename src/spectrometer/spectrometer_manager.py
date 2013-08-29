@@ -118,8 +118,8 @@ class SpectrometerManager(Manager):
         ion = self.application.get_service('src.spectrometer.ion_optics_manager.IonOpticsManager')
         return klass(spectrometer=self.spectrometer, ion_optics_manager=ion)
 
-    def _spectrometer_microcontroller_default(self):
-        return ArgusController()
+#    def _spectrometer_microcontroller_default(self):
+#        return ArgusController()
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup

@@ -201,9 +201,8 @@ class ExperimentEditorTask(EditorTask):
 #         return
 
 #        import os
-        ps = (os.path.join(paths.experiment_dir, 'demo.txt'),)
-#         paths = self.open_file_dialog(action='open files')
-
+#        ps = (os.path.join(paths.experiment_dir, 'demo.txt'),)
+        ps = self.open_file_dialog(action='open files')
         if ps:
             manager = self.manager
             if manager.verify_database_connection(inform=True):
