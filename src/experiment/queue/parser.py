@@ -77,14 +77,14 @@ class RunParser(Loggable):
             params['user_defined_aliquot'] = True
 
         params['labnumber'] = ln
-        
+
         attr, rattr = self._get_attr('truncate_condition')
         idx = self._get_idx(header, attr)
         if idx is not None:
-            tc=args[idx]
+            tc = args[idx]
             if self._validate_truncate_condition(tc):
-                params['truncate_condition']=tc
-        
+                params['truncate_condition'] = tc
+
         # load strings
         for attr in [
                      'pattern',
@@ -166,16 +166,21 @@ class RunParser(Loggable):
         return script_info, params
 
     def _validate_truncate_condition(self, t):
+        if t.endswith('.yaml'):
+            return True
+
         try:
-            c,start=t.split(',')
-            pat='<=|>=|[<>=]'
-            attr,value=re.split(pat,c)
-            m=re.search(pat, c)
-            comp=m.group(0)
-            self.py_add_truncation(attr, comp, value, int(start))
-            return True    
-        except Exception,e:
+            c, start = t.split(',')
+            pat = '<=|>=|[<>=]'
+            attr, value = re.split(pat, c)
+            m = re.search(pat, c)
+            comp = m.group(0)
+#             self.py_add_truncation(attr, comp, value, int(start))
+            return True
+        except Exception, e:
             self.debug('truncate_condition parse failed {} {}'.format(e, t))
+
+
 class UVRunParser(RunParser):
     def parse(self, header, line, meta, delim='\t'):
         params = super(UVRunParser, self).parse(header, line, meta, delim)

@@ -85,6 +85,7 @@ class Paths():
     post_measurement_dir = None
     extraction_dir = None
     post_equilibration_dir = None
+    truncation_dir = None
     #==============================================================================
     # setup
     #==============================================================================
@@ -198,7 +199,7 @@ class Paths():
         self.post_measurement_dir = join(scripts_dir, 'post_measurement')
         self.extraction_dir = join(scripts_dir, 'extraction')
         self.post_equilibration_dir = join(scripts_dir, 'post_equilibration')
-
+        self.truncation_dir = join(scripts_dir, 'truncation')
 
         self.experiment_dir = join(root, 'experiments')
         self.generic_experiment_dir = join(self.experiment_dir, 'generic')
