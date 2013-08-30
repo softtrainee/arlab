@@ -35,8 +35,8 @@ from src.constants import NULL_STR, ALPHAS
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.processing.entry.irradiated_position import IrradiatedPosition
 # import math
-from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
-from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
+# from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
+# from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
 from src.database.orms.isotope_orm import gen_ProjectTable, gen_SampleTable
 # from src.ui.thread import Thread
 # from pyface.timer.do_later import do_later
@@ -94,6 +94,9 @@ class LabnumberEntry(IsotopeDatabaseManager):
         self.populate_default_tables()
 
     def make_table(self):
+        from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
+        from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
+
         out = '/Users/ross/Sandbox/irradiation.pdf'
         w = SimplePDFWriter(filename=out)
 
@@ -367,7 +370,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
                 if pos is None:
                     pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
                 else:
-                    
+
                     lev = pos.level
                     irrad = lev.irradiation
                     if self.irradiation != irrad.name:
