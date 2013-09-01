@@ -30,22 +30,24 @@ def DefaultInt(value=40):
 
 
 
-class LaserTablePDFWriter(BasePDFWriter):
-    def _build(self, doc, ans, means, title):
+class SummaryTablePDFWriter(BasePDFWriter):
+    def _build(self, doc, samples, title):
 
         title_para = self._new_paragraph(title)
         flowables = [title_para, self._vspacer(0.1)]
 
-        t, t2 = self._make_table(ans, means)
+        t, t2 = self._make_table(samples)
         flowables.append(t)
         flowables.append(self._vspacer(0.1))
         flowables.append(t2)
 
         return flowables, None
 
-    def _make_table(self, analyses, means):
-        style = self._new_style()
-        style.add('GRID', (0, 0), (-1, -1), 0.25, colors.red)
+    def _make_table(self, samples):
+        style = self._new_style(
+#                                 debug_grid=True,
+                                header_line_idx=1
+                                )
 
         style.add('ALIGN', (0, 0), (-1, -1), 'LEFT')
         style.add('LEFTPADDING', (0, 0), (-1, -1), 1)
@@ -54,249 +56,148 @@ class LaserTablePDFWriter(BasePDFWriter):
         data = []
 
         # make meta
-        meta = self._make_meta(analyses, style)
-        data.extend(meta)
-
+#         meta = self._make_meta(analyses, style)
+#         data.extend(meta)
+#
         # make header
         header = self._make_header(style)
         data.extend(header)
 
         cnt = len(data)
-        for i, ai in enumerate(analyses):
-            r, b = self._make_analysis_row(ai)
+        for i, sam in enumerate(samples):
+
+            r = self._make_sample_row(sam)
             data.append(r)
-            data.append(b)
 
             idx = cnt + i * 2
             style.add('BACKGROUND', (0, idx), (-1, idx),
                       colors.lightgrey,
                       )
-#         data.extend([self._make_analysis_row(ai)
-#                      for ai in analyses])
-
-#         data.extend(header)
-#         data.extend([self._make_blank_row(ai) for ai in analyses])
 
         idx = len(data) - 1
         self._new_line(style, idx)
-        s = self._make_summary_rows(means, idx + 1, style)
-        data.extend(s)
+#         s = self._make_summary_rows(means, idx + 1, style)
+#         data.extend(s)
 
         t = self._new_table(style, data, repeatRows=3)
 
-        fdata = []
+        r = Row()
+        r.add_blank_item(10)
+        fdata = [r]
         style = self._new_style()
         style.add('BACKGROUND', (0, 0), (-1, -1), colors.lightgrey)
         self._make_footnote_rows(fdata, style)
         self._make_footer_rows(fdata, style)
         ft = self._new_table(style, fdata, extend_last=True)
-#         spec = TableSpec()
-#         self._set_column_widths(t, spec)
+
         return t, ft
 
-    def _make_meta(self, analyses, style):
-        ref = analyses[0]
-        j = ref.j
 
-        ic = ref.ic_factor
-        sample = ref.sample
-        labnumber = ref.labnumber
-        material = ref.material
-
-        igsn = ''
-
-        if not isinstance(j, tuple):
-            j = j.nominal_value, j.std_dev
-
-        if not isinstance(ic, tuple):
-            ic = ic.nominal_value, ic.std_dev
-
-        line1 = Row(fontsize=8)
-        line1.add_item(value=NamedParameter('Sample', sample), span=5)
-        line1.add_item(value=NamedParameter('Lab #', labnumber), span=2)
-
-        js = u'{:0.2E} \u00b1{:0.2E}'.format(j[0], j[1])
-        line1.add_item(value=NamedParameter('J', js), span=3)
-        ics = u'{:0.3f} \u00b1{:0.4f}'.format(ic[0], ic[1])
-
-        foot = self._make_footnote('IC',
-                                   'IC Factor',
-                                   'H1/CDD intercalibration',
-                                   '<b>IC</b>',
-                                   link_extra=': {}'.format(ics))
-
-        line1.add_item(value=foot, span=3)
-
-        line2 = Row(fontsize=8)
-        line2.add_item(value=NamedParameter('Material', material), span=5)
-        line2.add_item(value=NamedParameter('IGSN', igsn), span=2)
-
-#         self._sample_summary_row1 = line1
-#         self._sample_summary_row2 = line2
-        title = False
-        title_row = 0
-        sample_row = 0
-        if title:
-            sample_row += 1
-
-        style.add('LINEBELOW', (0, sample_row), (-1, sample_row), 1.5, colors.black)
-
-        return [line1, line2]
 
     def _make_header(self, style):
-        sigma = u'\u00b1 1\u03c3'
-#         sigma = self._plusminus_sigma()
-        super_ar = lambda x: '{}Ar'.format(Superscript(x))
+        PMS = u'\u00b1 1\u03c3'
 
-        _102fa = '(10{} fA)'.format(Superscript(2))
-        _103fa = '(10{} fA)'.format(Superscript(3))
-        minus_102fa = '(10{} fA)'.format(Superscript(-2))
 
-#         blank = self._make_footnote('BLANK',
-#                                    'Blank Type', 'LR= Linear Regression, AVE= Average',
-#                                    'Blank')
-#         blank = 'Blank Type'
-        line = [
-                ('', ''),
-                ('N', ''),
-                ('Power', '(%)'),
-                (super_ar(40), ''),
-                (super_ar(40), _103fa), (sigma, ''),
-                (super_ar(39), _103fa), (sigma, ''),
-                (super_ar(38), ''), (sigma, ''),
-                (super_ar(37), ''), (sigma, ''),
-                (super_ar(36), ''), (sigma, minus_102fa),
-                ('%{}*'.format(super_ar(40)), ''),
-                ('{}*/{}{}'.format(super_ar(40),
-                                   super_ar(39),
-                                   Subscript('K')), ''),
-                ('Age', '(Ma)'), (sigma, ''),
-                ('K/Ca', ''),
-                (sigma, ''),
-#                 (blank, 'type'),
-#                 (super_ar(40), ''), (sigma, ''),
-#                 (super_ar(39), ''), (sigma, ''),
+        pr = Row()
+        pr.add_blank_item(6)
+        pr.add_item(value='Preferred Age', span=-1)
+#         style.add('ALIGN', (0, 3), (0, -1), 'CENTER')
+        self._new_line(style, 0, weight=0.75, start=4, end=-1)
+
+        r = Row()
+
+        r.add_item(value='Sample')
+        r.add_item(value='L#')
+        r.add_item(value='Irrad')
+        r.add_item(value='Material')
+
+        r.add_item(value='N')
+        r.add_item(value='MSWD')
+        r.add_item(value='K/Ca')
+        r.add_item(value=PMS)
+        r.add_item(value='Age')
+        r.add_item(value=PMS)
+
+        return (pr, r,)
+#         sigma = u'\u00b1 1\u03c3'
+# #         sigma = self._plusminus_sigma()
+#         super_ar = lambda x: '{}Ar'.format(Superscript(x))
+#
+#         _102fa = '(10{} fA)'.format(Superscript(2))
+#         _103fa = '(10{} fA)'.format(Superscript(3))
+#         minus_102fa = '(10{} fA)'.format(Superscript(-2))
+#
+# #         blank = self._make_footnote('BLANK',
+# #                                    'Blank Type', 'LR= Linear Regression, AVE= Average',
+# #                                    'Blank')
+# #         blank = 'Blank Type'
+#         line = [
+#                 ('', ''),
+#                 ('N', ''),
+#                 ('Power', '(%)'),
+#                 (super_ar(40), ''),
+#                 (super_ar(40), _103fa), (sigma, ''),
+#                 (super_ar(39), _103fa), (sigma, ''),
 #                 (super_ar(38), ''), (sigma, ''),
 #                 (super_ar(37), ''), (sigma, ''),
-#                 (super_ar(36), ''), (sigma, ''),
-              ]
-
-        name_row, unit_row = zip(*line)
-
-        default_fontsize = 8
-        nrow = Row(fontsize=default_fontsize)
-        for i, ni in enumerate(name_row):
-            nrow.add_item(value=ni)
-
-        default_fontsize = 7
-        urow = Row(fontsize=default_fontsize)
-        for ni in unit_row:
-            urow.add_item(value=ni)
-
-        name_row_idx = 2
-        unit_row_idx = 3
-        # set style for name header
-        style.add('LINEABOVE', (0, name_row_idx),
-                  (-1, name_row_idx), 1.5, colors.black)
-
-        # set style for unit header
-        style.add('LINEBELOW', (0, unit_row_idx),
-                  (-1, unit_row_idx), 1.5, colors.black)
-
-        return [
-                nrow,
-                urow
-                ]
-
-    def _make_analysis_row(self, analysis):
-        value = self._value
-        error = self._error
-        attrs = (
-                 ('temp_status', lambda x: '' if x == 0 else 'X'),
-                 ('aliquot_step_str', '{}',),
-                 ('extract_value', '{}'),
-                 ('moles_Ar40', value()),
-
-                 #==============================================================
-                 # signals
-                 #==============================================================
-                 ('Ar40', value(scale=1e3)),
-                 ('Ar40', error()),
-                 ('Ar39', value(scale=1e3)),
-                 ('Ar39', error()),
-                 ('Ar38', value()),
-                 ('Ar38', error()),
-                 ('Ar37', value()),
-                 ('Ar37', error()),
-                 ('Ar36', value()),
-                 ('Ar36', error(scale=1e-2)),
-
-                 #==============================================================
-                 # computed
-                 #==============================================================
-                 ('rad40_percent', value(n=1)),
-                 ('R', value(n=5)),
-                 ('age', value(n=2)),
-                 ('age', error(n=4)),
-                 ('kca', value(n=2)),
-                 ('kca', error(n=2)),
-
-                 )
-        default_fontsize = 6
-
-        row = self._new_row(analysis, attrs, default_fontsize)
-
-        battrs = (
-                    #==============================================================
-                    # blanks
-                    #==============================================================
-#                     ('', '{}'),
-#                     ('', '{}'),
-                    ('', '{}'),
-                    ('', '{}'),
-#                     ('blank_fit', '{}'),
-                    ('Ar40', value(scale=1e3)),
-                    ('Ar39', value(scale=1e3)),
-                    ('Ar38',),
-                    ('Ar37',),
-                    ('Ar36', value(scale=1e-2)),
+#                 (super_ar(36), ''), (sigma, minus_102fa),
+#                 ('%{}*'.format(super_ar(40)), ''),
+#                 ('{}*/{}{}'.format(super_ar(40),
+#                                    super_ar(39),
+#                                    Subscript('K')), ''),
+#                 ('Age', '(Ma)'), (sigma, ''),
+#                 ('K/Ca', ''),
+#                 (sigma, ''),
+# #                 (blank, 'type'),
+# #                 (super_ar(40), ''), (sigma, ''),
+# #                 (super_ar(39), ''), (sigma, ''),
+# #                 (super_ar(38), ''), (sigma, ''),
+# #                 (super_ar(37), ''), (sigma, ''),
+# #                 (super_ar(36), ''), (sigma, ''),
+#               ]
 #
-                )
+#         name_row, unit_row = zip(*line)
+#
+#         default_fontsize = 8
+#         nrow = Row(fontsize=default_fontsize)
+#         for i, ni in enumerate(name_row):
+#             nrow.add_item(value=ni)
+#
+#         default_fontsize = 7
+#         urow = Row(fontsize=default_fontsize)
+#         for ni in unit_row:
+#             urow.add_item(value=ni)
+#
+#         name_row_idx = 2
+#         unit_row_idx = 3
+#         # set style for name header
+#         style.add('LINEABOVE', (0, name_row_idx),
+#                   (-1, name_row_idx), 1.5, colors.black)
+#
+#         # set style for unit header
+#         style.add('LINEBELOW', (0, unit_row_idx),
+#                   (-1, unit_row_idx), 1.5, colors.black)
+#
+#         return [
+#                 nrow,
+#                 urow
+#                 ]
 
-        blankrow = Row(fontsize=default_fontsize)
-        for args in battrs:
-            efmt = self._error()
-            vfmt = self._value()
+    def _make_sample_row(self, sample):
+        row = Row()
+        row.add_item(value=sample.sample)
+        row.add_item(value=sample.identifier)
+        row.add_item(value=sample.material)
+        row.add_item(value=sample.irradiation)
+        row.add_item(value=sample.nanalyses)
+        row.add_item(value=floatfmt(sample.mswd))
+        row.add_item(value=self._value()(sample.weighted_kca))
+        row.add_item(value=self._error()(sample.weighted_kca))
+        row.add_item(value=self._value()(sample.weighted_age))
+        row.add_item(value=self._error()(sample.weighted_age))
 
-            if len(args) == 2:
-                attr, vfmt = args
-            elif len(args) == 3:
-                attr, vfmt, efmt = args
-            else:
-                attr = args[0]
+        return row
 
-            s, e = '', ''
-            if attr:
-                iso = analysis.isotopes.get(attr)
-                if iso:
-                    v = iso.blank.uvalue
-
-                    s = vfmt(v)
-
-                    s = self._new_paragraph('<i>{}</i>'.format(s),
-                                            )
-
-
-                    e = efmt(v)
-                    e = self._new_paragraph('<i>{}</i>'.format(e))
-
-            blankrow.add_item(value=s,
-                              )
-            blankrow.add_item(value=e,
-                              )
-
-
-        return row, blankrow
 
     def _set_row_heights(self, table, data):
         a_idxs = self._get_idxs(data, (FooterRow, FootNoteRow))
@@ -308,24 +209,20 @@ class LaserTablePDFWriter(BasePDFWriter):
             if v.height:
                 table._argH[i] = v.height * inch
 
-
 #===============================================================================
 # summary
 #===============================================================================
-    def _make_summary_rows(self, means, idx, style):
-        mean = means[0]
-        platrow = Row(fontsize=7, height=0.25)
-        platrow.add_item(value='Weighted Mean Age', span=5)
-
-        platrow.add_blank_item(n=10)
-        wa = mean.weighted_age
-        platrow.add_item(value=self._value()(wa))
-        platrow.add_item(value=u' \u00b1{}'.format(self._error()(wa)))
-
-#         for s, e in platrow.spans:
-#             style.add('SPAN', (s, idx), (e, idx))
-#         platrow.add_item(value='Weighted Mean Age')
-        return [platrow]
+#     def _make_summary_rows(self, means, idx, style):
+#         mean = means[0]
+#         platrow = Row(fontsize=7, height=0.25)
+#         platrow.add_item(value='Weighted Mean Age', span=5)
+#
+#         platrow.add_blank_item(n=10)
+#         wa = mean.weighted_age
+#         platrow.add_item(value=self._value()(wa))
+#         platrow.add_item(value=u' \u00b1{}'.format(self._error()(wa)))
+#
+#         return [platrow]
 #===============================================================================
 # blanks
 #===============================================================================
@@ -334,6 +231,8 @@ class LaserTablePDFWriter(BasePDFWriter):
 # footnotes
 #===============================================================================
     def _make_footnote_rows(self, data, style):
+        return
+
         data.append(Row(height=0.1))
         def factory(f):
             r = FootNoteRow(fontsize=6)
@@ -352,6 +251,8 @@ class LaserTablePDFWriter(BasePDFWriter):
 #            style.add('VALIGN', (1, idx), (-1, idx), 'MIDDLE')
 
     def _make_footer_rows(self, data, style):
+        return
+
         rows = []
         df = 6
         for v in ('<b>Constants used</b>', '<b>Atmospheric argon ratios</b>'):

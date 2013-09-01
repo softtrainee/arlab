@@ -46,7 +46,7 @@ class LeastSquaresRegressor(BaseRegressor):
 #
     def _initial_guess_changed(self):
         self._degree = len(self.initial_guess) - 1
-        self.calculate()
+#         self.calculate()
 #
 #    def _errfunc_changed(self):
 #        self.calculate()

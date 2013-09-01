@@ -158,8 +158,6 @@ class BaseExperimentQueue(Loggable):
                 s = '#{}'.format(s)
             writeline(s)
 
-#        tab = lambda l, comment = False: writeline('\t'.join(map(str, l)))
-
         # write metadata
         self._meta_dumper(stream)
         writeline('#' + '=' * 80)
@@ -176,7 +174,7 @@ class BaseExperimentQueue(Loggable):
             else:
                 return False
 
-        for arun in self.runs_table.automated_runs:
+        for arun in self.automated_runs:
             vs = arun.to_string_attrs(attrs)
             vals = [v if isNotNull(v) else '' for v in vs]
             tab(vals, comment=arun.skip)
@@ -309,7 +307,7 @@ class BaseExperimentQueue(Loggable):
                   'beam_diameter',
                   'pattern',
                   'e_group',
-                  'extraction', 'measurement', 
+                  'extraction', 'measurement',
                   'truncate',
                   'post_eq', 'post_meas',
                   'dis_btw_pos',

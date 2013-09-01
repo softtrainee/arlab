@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Property, cached_property, \
-    Event
+    Event, Any
 # from traitsui.api import View, UItem, Item, HGroup, ListStrEditor, HSplit, VSplit
 
 #============= standard library imports ========================
@@ -47,13 +47,15 @@ import time
 from src.processing.arar_age import ArArAge
 from src.processing.isotope import Isotope, Blank, Background, Baseline, Sniff
 # from src.database.isotope_analysis.error_component_summary import ErrorComponentSummary
-from pyface.timer.do_later import do_later
+# from pyface.timer.do_later import do_later
 from src.database.records.ui.analysis_summary import AnalysisSummary
-from src.database.records.ui.fit_selector import FitSelector
+# from src.database.records.ui.fit_selector import FitSelector
 from src.helpers.isotope_utils import sort_isotopes
 from collections import namedtuple
-from src.codetools.simple_timeit import timethis
-from src.codetools.profile import profile2
+from src.codetools.simple_timeit import simple_timer
+from sqlalchemy.orm.session import object_session
+# from src.codetools.simple_timeit import timethis, timer
+# from src.codetools.profile import profile2
 # from src.database.records.isotope import Isotope, Baseline, Blank, Background
 Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_outlier_std_devs')
 
@@ -131,7 +133,11 @@ class IsotopeRecordView(HasTraits):
 def DBProperty():
     return Property(depends_on='_dbrecord')
 
-class IsotopeRecord(DatabaseRecord, ArArAge):
+
+# class IsotopeRecord(DatabaseRecord, ArArAge):
+class IsotopeRecord(ArArAge):
+    dbrecord = Property(depends_on='_dbrecord')
+    _dbrecord = Any
 #    title_str = 'Analysis'
 #    window_height = 500
 #    window_width = 875
@@ -139,11 +145,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     isotope_keys = Property
     isotope_fits = Property
 
+    record_id = Property
 
-#     signal_graph = Instance(EditableGraph)
-#     baseline_graph = Instance(EditableGraph)
-#     signal_graph = Instance(StackedRegressionGraph)
-#     baseline_graph = Instance(StackedRegressionGraph)
     peak_center_graph = Instance(Graph)
 
     analysis_summary = Instance(AnalysisSummary)
@@ -175,8 +178,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     status = DBProperty()
     peak_center_dac = DBProperty()
 
-#    aliquot = DBProperty()
-#    step = DBProperty()
+    aliquot = DBProperty()
+    step = DBProperty()
+
 #    comment = DBProperty()
 #    extract_value = DBProperty()
 #    extract_duration = DBProperty()
@@ -188,6 +192,8 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
     changed = Event
     item_width = 760
+
+    loaded = False
 
     def initialize(self):
 #        self.load()
@@ -255,38 +261,39 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #
 #        return float(iso.value), float(iso.error)
 
-    def set_isotope(self, k, v, e):
-        if self.isotopes.has_key(k):
-            self.isotopes[k].trait_set(value=v, error=e)
-        else:
-            self.isotopes[k] = Isotope(value=v, error=e)
+#     def set_isotope(self, k, v, e):
+#         if self.isotopes.has_key(k):
+#             self.isotopes[k].trait_set(value=v, error=e)
+#         else:
+#             self.isotopes[k] = Isotope(value=v, error=e)
 
     def set_temporary_blank(self, k, v, e):
         if self.isotopes.has_key(k):
             iso = self.isotopes[k]
             iso.temporary_blank = Blank(value=v, error=e)
 
-    def set_blank(self, k, v, e):
-        blank = None
-        if self.isotopes.has_key(k):
-            blank = self.isotopes[k].blank
-
-        if blank is None:
-            self.isotopes[k].blank = Blank(value=v, error=e)
-        else:
-            blank.trait_set(value=v, error=e)
-
-    def set_background(self, k, v, e):
-        background = None
-        if self.isotopes.has_key(k):
-            background = self.isotopes[k].background
-
-        if background is None:
-            self.isotopes[k].background = Background(value=v, error=e)
-        else:
-            background.trait_set(value=v, error=e)
+#     def set_blank(self, k, v, e):
+#         blank = None
+#         if self.isotopes.has_key(k):
+#             blank = self.isotopes[k].blank
+#
+#         if blank is None:
+#             self.isotopes[k].blank = Blank(value=v, error=e)
+#         else:
+#             blank.trait_set(value=v, error=e)
+#
+#     def set_background(self, k, v, e):
+#         background = None
+#         if self.isotopes.has_key(k):
+#             background = self.isotopes[k].background
+#
+#         if background is None:
+#             self.isotopes[k].background = Background(value=v, error=e)
+#         else:
+#             background.trait_set(value=v, error=e)
 
     def get_baseline(self, k):
+        print 'get baseline'
         if self.isotopes.has_key(k):
             bs = self.isotopes[k].baseline
             if bs:
@@ -322,37 +329,43 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
                     if iso.results:
                         result = iso.results[-1]
 
+
     def _load_signals(self, dbr, refit):
-        isotopes = self.isotopes
+        isotopes = dict()
+
         for iso in dbr.isotopes:
-            if iso.kind == 'signal':
-                mw = iso.molecular_weight
-                if not mw:
-                    continue
+            if not iso.kind == 'signal' or not iso.molecular_weight:
+                continue
 
-                result = None
-                if iso.results:
-                    result = iso.results[-1]
+            result = None
+            if iso.results:
+                result = iso.results[-1]
 
-                name = mw.name
-                if name not in isotopes:
-                    det = iso.detector.name
-                    r = Isotope(dbrecord=iso, dbresult=result, name=name,
-                                detector=det,
-                                refit=refit
-                                )
-                    fit = None
-                    fit = self._get_db_fit(name, 'signal')
-                    if fit is None:
-                        fit = Fit(fit='linear', filter_outliers=True,
-                                  filter_outlier_iterations=1,
-                                  filter_outlier_std_devs=2)
-                    r.set_fit(fit)
-                    isotopes[name] = r
+            name = iso.molecular_weight.name
+            if name not in isotopes:
+                det = iso.detector.name
+                r = Isotope(dbrecord=iso,
+                            dbresult=result,
+                            name=name,
+                            detector=det,
+                            refit=refit
+                            )
 
+                fit = None
+                fit = self._get_db_fit(name, 'signal')
+                if fit is None:
+                    fit = Fit(fit='linear', filter_outliers=True,
+                              filter_outlier_iterations=1,
+                              filter_outlier_std_devs=2)
+                r.set_fit(fit)
+                isotopes[name] = r
+
+        self.isotopes = isotopes
 
     def _load_baselines_sniffs(self, dbr):
+
         isotopes = self.isotopes
+
         for dbiso in dbr.isotopes:
             if not dbiso.molecular_weight:
                 continue
@@ -393,21 +406,21 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         if blanks:
             for bi in blanks:
                 for ba in bi.blanks:
-                    if isotopes.has_key(ba.isotope):
-                        r = Blank(dbrecord=ba, name=ba.isotope)
-                        isotopes[ba.isotope].blank = r
-
-                        keys.remove(ba.isotope)
+                    isok = ba.isotope
+                    if isok in keys and isotopes.has_key(isok):
+                        r = Blank(dbrecord=ba, name=isok)
+                        isotopes[isok].blank = r
+                        keys.remove(isok)
                         if not keys:
                             break
 
                 if not keys:
                     break
 
-
+#     @profile
     def load_isotopes(self, refit=True):
         dbr = self.dbrecord
-        if dbr:
+        if dbr and not self.loaded:
             self._load_signals(dbr, refit)
             '''
             
@@ -416,6 +429,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             '''
             self._load_baselines_sniffs(dbr)
             self._load_blanks()
+            self.loaded = True
 
             return True
 
@@ -496,6 +510,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         gkw = dict(padding=[50, 50, 5, 50],
                    fill_padding=True
                    )
+
 
         isos = reversed(self.isotope_keys)
 #        i = 0
@@ -628,8 +643,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
             selfithist = selhist.selected_fits
             fits = selfithist.fits
             return next((fi for fi in fits
-                                if fi.isotope.molecular_weight.name == name and
-                                fi.isotope.kind == kind), None)
+                                if fi.isotope.kind == kind and \
+                                    fi.isotope.molecular_weight.name == name
+                                    ), None)
 
 
         except AttributeError:
@@ -758,10 +774,12 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
     @cached_property
     def _get_isotope_keys(self):
+
 #         self.load_isotopes()
         keys = self.isotopes.keys()
         return sort_isotopes(keys)
 
+    @cached_property
     def _get_isotope_fits(self):
         keys = self.isotope_keys
         fs = [self.isotopes[ki].fit
@@ -775,6 +793,19 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #===============================================================================
 # dbrecord values
 #===============================================================================
+    def _get_j(self):
+        s = 1.0
+        e = 1e-3
+
+        try:
+            f = self.dbrecord.labnumber.selected_flux_history.flux
+            s = f.j
+            e = f.j_err
+        except AttributeError:
+            pass
+
+        return ufloat(s, e, 'j')
+
     @cached_property
     def _get_timestamp(self):
         analysis = self.dbrecord
@@ -797,19 +828,22 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 
     @cached_property
     def _get_sample(self):
+        r = ''
         dbr = self.dbrecord
-        if hasattr(dbr, 'sample'):
-            return dbr.sample.name
-        else:
-            return NULL_STR
+        ln = dbr.labnumber
+        if ln.sample:
+            r = ln.sample.name
+
+        return r
 
     @cached_property
     def _get_material(self):
+        m = ''
         dbr = self.dbrecord
-        if hasattr(dbr, 'sample'):
-            return dbr.sample.material.name
-        else:
-            return NULL_STR
+        ln = dbr.labnumber
+        if ln.sample and ln.sample.material:
+            m = ln.sample.material.name
+        return m
 
     @cached_property
     def _get_project(self):
@@ -834,6 +868,15 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
         return self._get_dbrecord_value('sensitivity_multiplier', func=func, default=1)
 
 
+    def _get_aliquot(self):
+        return self._get_dbrecord_value('aliquot', default=0)
+
+    def _get_step(self):
+        return self._get_dbrecord_value('step', default='')
+
+    @property
+    def aliquot_step_str(self):
+        return '{:02n}{}'.format(self.aliquot, self.step)
 #===============================================================================
 # extraction
 #===============================================================================
@@ -905,6 +948,9 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
     def _get_status(self):
         return self._get_dbrecord_value('status')
 
+    def _get_dbrecord(self):
+        return self._dbrecord
+
 #    def _get_extract_value(self):
 #        return self._get_extraction_value('extract_value')
 #    def _get_extract_duration(self):
@@ -971,7 +1017,7 @@ class IsotopeRecord(DatabaseRecord, ArArAge):
 #         fs = FitSelector(analysis=self,
 #                          name='Signal'
 #                          )
-
+        print 'asdfsdfsafasdfsadfasdfsad'
         item = AnalysisSummary(record=self,
 #                                fit_selector=fs
                                )

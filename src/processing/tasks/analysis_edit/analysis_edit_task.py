@@ -78,10 +78,11 @@ class AnalysisEditTask(BaseEditorTask):
         up.load()
         return up
 
-    def _open_ideogram_editor(self, ans, name):
+    def _open_ideogram_editor(self, ans, name, task=None):
         _id = 'pychron.processing.figures'
         task = self._open_external_task(_id)
         task.new_ideogram(ans=ans, name=name)
+        return task
 
     def _open_external_task(self, tid):
         app = self.window.application

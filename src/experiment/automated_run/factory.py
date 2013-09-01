@@ -46,7 +46,7 @@ def EKlass(klass):
     return klass(enter_set=True, auto_set=False)
 
 # class AutomatedRunFactory(Viewable, ScriptMixin):
-class AutomatedRunFactory(Viewable):
+class AutomatedRunFactory(Loggable):
     db = Any
 
     labnumber = String(enter_set=True, auto_set=False)
@@ -130,7 +130,7 @@ class AutomatedRunFactory(Viewable):
     trunc_attr = Enum('age', 'kca', 'kcl')
     trunc_comp = Enum('>', '<', '>=', '<=', '=')
     trunc_crit = Float(enter_set=True, auto_set=False)
-    trunc_start = Int(enter_set=True, auto_set=False)
+    trunc_start = Int(100, enter_set=True, auto_set=False)
 
     truncation_str = Property(depends_on='trunc_+')
     truncation_path = Str
@@ -527,11 +527,10 @@ class AutomatedRunFactory(Viewable):
              self._selected_runs and \
                 not self.suppress_update:
 
-
             if name == 'truncation_path':
-                t = self.truncation_str
-            else:
                 t = add_extension(new, '.yaml') if new else None
+            else:
+                t = self.truncation_str
 
             if t:
                 for s in self._selected_runs:

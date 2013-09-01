@@ -17,13 +17,28 @@
 #============= enthought library imports =======================
 # from pyface.api import ProgressDialog
 #============= standard library imports ========================
-from PySide.QtCore import QRect, QPoint, QSize
+from PySide.QtCore import QRect, QPoint, QSize, Qt
+from PySide.QtGui import QLabel
 from pyface.ui.qt4.progress_dialog import ProgressDialog
 #============= local library imports  ==========================
 
 class myProgressDialog(ProgressDialog):
     show_percent = True
     show_time = True
+#     def _message_default(self):
+#         return 'Progress'
+#
+    def change_message(self, message):
+#         print message
+        self.message = message
+        self.message_control.setText(message)
+
+    def _create_message(self, dialog, layout):
+        label = QLabel(self.message, dialog)
+        label.setAlignment(Qt.AlignTop | Qt.AlignLeft)
+        layout.addWidget(label)
+        self.message_control = label
+
     def get_value(self):
         if self.progress_bar:
             return self.progress_bar.value()

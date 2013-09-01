@@ -41,6 +41,7 @@ from src.processing.tasks.smart_project.smart_blanks import SmartBlanks
 from src.processing.tasks.smart_project.smart_isotope_fits import SmartIsotopeFits
 from src.processing.tasks.smart_project.smart_detector_intercalibration import SmartDetectorIntercalibration
 from src.processing.tasks.detector_calibration.intercalibration_factor_editor import IntercalibrationFactorEditor
+from src.processing.tasks.smart_project.smart_flux import SmartFlux
 
 
 class SmartProjectTask(AnalysisEditTask):
@@ -66,7 +67,7 @@ class SmartProjectTask(AnalysisEditTask):
             if setup['fit_detector_intercalibrations']:
                 self._fit_detector_intercalibrations(meta, project)
             if setup['fit_flux']:
-                self._fit_flux(meta)
+                self._fit_flux(meta, project)
 
             meta = md.next()
             if setup['make_figures']:
@@ -285,9 +286,32 @@ class SmartProjectTask(AnalysisEditTask):
                                               save_figure, with_table)
 
 
-    def _fit_flux(self, meta):
-        pass
+    def _fit_flux(self, meta, project):
+        ff = meta['fit_flux']
+        save_fig = ff['save_figure']
+        if save_fig:
+            path = ff['output']
+            root = self._make_output_dir(path, project)
 
+        sf = SmartFlux(processor=self.manager,
+                       monitor_age=ff['age']
+                       )
+
+        irrad, level = 'NM-251', 'H'
+        ans = sf.fit_level(irrad, level)
+
+        name = '{}{}'.format(irrad, level)
+        task = self._open_ideogram_editor(ans, name)
+
+        if save_fig:
+#             task.save(os.path.join(root, '{}.pdf'.format(name)))
+            p = os.path.join(root, '{}.pdf'.format(name))
+            if ff['with_table']:
+                comp = task.active_editor.component
+                sf.save(p, ans, comp)
+                self.view_pdf(p)
+            else:
+                task.save(p)
 #===============================================================================
 # utilities
 #===============================================================================

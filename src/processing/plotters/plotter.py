@@ -201,7 +201,7 @@ class Plotter(Viewable):
         ytick_font = self._get_plot_option(plotter_options, 'ytick_font', 'modern 10')
         ytitle_font = self._get_plot_option(plotter_options, 'ytitle_font', 'modern 10')
 
-        age_unit = analyses[0].age_units
+        age_unit = analyses[0].arar_constants.age_units
         for i in range(r):
             for j in range(c):
                 k = i * c + j

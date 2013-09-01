@@ -18,7 +18,7 @@
 from traits.api import Password, Bool, Str, on_trait_change, Any, Property, cached_property
 #=============standard library imports ========================
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
+from sqlalchemy.orm import sessionmaker, scoped_session, subqueryload
 from sqlalchemy.exc import SQLAlchemyError, InvalidRequestError, StatementError
 import os
 #=============local library imports  ==========================
@@ -28,6 +28,7 @@ from src.database.core.base_orm import MigrateVersionTable
 from src.deprecate import deprecated
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 import weakref
+from sqlalchemy.sql.expression import subquery
 ATTR_KEYS = ['kind', 'username', 'host', 'name', 'password']
 
 
@@ -356,7 +357,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             return
 
     def _retrieve_item(self, table, value, key='name', last=None,
-                       joins=None, filters=None):
+                       joins=None, filters=None, options=None):
         sess = self.get_session()
         if sess is None:
             return
@@ -370,6 +371,10 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
         def __retrieve():
             q = sess.query(table)
+
+#             if options:
+#                 q = q.options(subqueryload(options))
+
             if joins:
                 try:
                     for ji in joins:

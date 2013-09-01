@@ -28,12 +28,17 @@ from src.envisage.tasks.base_task import BaseManagerTask, BaseExtractionLineTask
 from pyface.constant import CANCEL, YES
 
 from pyface.tasks.advanced_editor_area_pane import AdvancedEditorAreaPane
+import subprocess
 # class EditorTask(BaseManagerTask, Loggable):
 class BaseEditorTask(BaseManagerTask):
     active_editor = Property(Instance(IEditor),
                              depends_on='editor_area.active_editor'
                              )
     editor_area = Instance(IEditorAreaPane)
+    def view_pdf(self, p):
+        preview_path = '/Applications/Preview.app'
+#         acrobatPath = r'C:\Program Files\Adobe\Reader 9.0\Reader\AcroRd32.exe'
+        subprocess.call(['open', '-a', preview_path, p])
 
     def open(self, path=None, **kw):
         ''' Shows a dialog to open a file.
@@ -44,7 +49,7 @@ class BaseEditorTask(BaseManagerTask):
             self._open_file(path, **kw)
             return True
 
-    def save(self):
+    def save(self, path=None):
         '''
             if the active_editor doesnt have a path e.g not yet saved 
             do a save as
@@ -52,7 +57,9 @@ class BaseEditorTask(BaseManagerTask):
         if self.active_editor:
             if self.active_editor.path:
                 path = self.active_editor.path
-            else:
+
+
+            if not path:
                 path = self.save_file_dialog()
 
             if path:
@@ -75,7 +82,6 @@ class BaseEditorTask(BaseManagerTask):
 
     def _open_file(self, path, **kw):
         pass
-
 
     def create_central_pane(self):
         self.editor_area = AdvancedEditorAreaPane()

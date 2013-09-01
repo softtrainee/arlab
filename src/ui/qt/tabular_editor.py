@@ -246,16 +246,25 @@ class _TabularEditor(qtTabularEditor):
 
     widget_factory = _myTableView
     copy_cache = List
+    col_widths = List
 
     def init(self, parent):
         super(_TabularEditor, self).init(parent)
 
 #        self.sync_value(self.factory.rearranged, 'rearranged', 'to')
+        self.sync_value(self.factory.col_widths, 'col_widths', 'to')
 #        self.sync_value(self.factory.pasted, 'pasted', 'to')
         self.sync_value(self.factory.copy_cache, 'copy_cache', 'both')
 
         if hasattr(self.object, self.factory.paste_function):
             self.control.paste_func = getattr(self.object, self.factory.paste_function)
+
+        control = self.control
+        signal = QtCore.SIGNAL('sectionResized(int,int,int)')
+
+        QtCore.QObject.connect(control.horizontalHeader(), signal,
+                               self._on_column_resize)
+
 
     def _copy_cache_changed(self):
         if self.control:
@@ -269,6 +278,12 @@ class _TabularEditor(qtTabularEditor):
         if self.control:
             super(_TabularEditor, self).refresh_editor()
 
+    def _on_column_resize(self, idx, old, new):
+        control = self.control
+        header = control.horizontalHeader()
+        cs = [header.sectionSize(i) for i in range(header.count())]
+        self.col_widths = cs
+
 
 class myTabularEditor(TabularEditor):
 #     scroll_to_bottom = Bool(True)
@@ -279,6 +294,9 @@ class myTabularEditor(TabularEditor):
     pasted = Str
     copy_cache = Str
     paste_function = Str
+
+    col_widths = Str
+
     drag_external = Bool(False)
     def _get_klass(self):
         return _TabularEditor

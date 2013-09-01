@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, List, on_trait_change, Dict
+from traits.api import Str, List, on_trait_change, Dict, Bool
 # from chaco.api import ArrayDataSource
 from chaco.data_label import DataLabel
 #============= standard library imports ========================
@@ -55,6 +55,7 @@ class Ideogram(Plotter):
 
     probability_curve_kind = Str
     mean_calculation_kind = Str
+    color_map_analysis_number = Bool(False)
 
     _prev_selection = Dict
 #    graph_panel_info = Instance(GraphPanelInfo, ())
@@ -253,16 +254,16 @@ class Ideogram(Plotter):
 #        ts = array(ts)
 #        ts-=min(ts)
 #        ts/=((max(ts)-min(ts))*.75)
+        if self.color_map_analysis_number:
+            kw.update(dict(plot_type='cmap_scatter',
+                           colors=ts,
+                           color_map_name='gray',
+                           marker_size=4,))
 
         self._add_aux_plot(g, aages, age_ys, xerrs, None, group_id,
                                value_format=lambda x: '{:d}'.format(int(x)),
                                additional_info=lambda x: x.age_string,
                                plotid=plotid,
-                                plot_type='cmap_scatter',
-                                colors=ts,
-#                                color_map_name='RdBu',
-                                color_map_name='gray',
-                                marker_size=4,
                                 **kw
                                )
 
@@ -502,9 +503,9 @@ class Ideogram(Plotter):
         self._last_bounds_update = time.time()
 
     def _update_graph(self, graph, scatter, group_id, bounds_only=False):
-        import inspect
-        stack = inspect.stack()
-        self.debug('update graph called by {}'.format(stack[1][3]))
+#         import inspect
+#         stack = inspect.stack()
+#         self.debug('update graph called by {}'.format(stack[1][3]))
 
         xmi, xma = graph.get_x_limits()
         ideo = graph.plots[0]

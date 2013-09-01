@@ -34,9 +34,29 @@ from src.processing.plotters.ideogram import Ideogram
 from src.processing.plotters.inverse_isochron import InverseIsochron
 from src.processing.plotters.series import Series
 from src.database.core.query import compile_query
+from src.helpers.iterfuncs import partition
 
 
 class Processor(IsotopeDatabaseManager):
+    def group_level(self, level, irradiation=None, monitor_filter=None):
+        if monitor_filter is None:
+            def monitor_filter(pos):
+                if pos.labnumber.sample:
+                    if pos.labnumber.sample.name == 'FC-2':
+                        return True
+
+        if isinstance(level, str):
+            level = self.db.get_level(level, irradiation)
+
+        refs = []
+        unks = []
+        if level:
+            positions = level.positions
+            if positions:
+                refs, unks = partition(positions, monitor_filter)
+
+        return refs, unks
+
     def load_series(self, analysis_type, ms, ed, weeks=0, days=0, hours=0):
         self.debug('{} {} {}'.format(analysis_type, ms, ed))
         db = self.db

@@ -17,12 +17,13 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property
 from traitsui.api import View, Item, UItem, VGroup, HGroup, Label, spring, \
-    VSplit
+    VSplit, TableEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from traitsui.editors.list_str_editor import ListStrEditor
 from traitsui.tabular_adapter import TabularAdapter
 from traitsui.editors.tabular_editor import TabularEditor
 from src.experiment.utilities.identifier import make_runid
+from traitsui.table_column import ObjectColumn
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -38,6 +39,8 @@ class BrowserAdapter(TabularAdapter):
     flux_fit_status_text = Property
     iso_fit_status_text = Property
     ic_fit_status_text = Property
+
+    odd_bg_color = 'lightgray'
 
     def _get_record_id_text(self):
         a = self.item
@@ -62,6 +65,17 @@ class BrowserAdapter(TabularAdapter):
         return 'X' if getattr(sh, key) else ''
 
 
+class SampleAdapter(TabularAdapter):
+    columns = [('Sample', 'name'), ('Material', 'material')]
+    material_text = Property
+    odd_bg_color = 'lightgray'
+
+    def _get_material_text(self):
+        n = ''
+        if self.item.material:
+            n = self.item.material.name
+        return n
+
 class BrowserPane(TraitsDockPane):
     name = 'Browser'
     id = 'pychron.browser'
@@ -75,7 +89,7 @@ class BrowserPane(TraitsDockPane):
                                 editor=ListStrEditor(editable=False,
                                           selected='selected_project'
                                           ),
-                                width=100
+                                width=75
                                 )
                           )
         samplegrp = VGroup(
@@ -83,10 +97,14 @@ class BrowserPane(TraitsDockPane):
                                   UItem('sample_filter',
                                         width=75)),
                            UItem('samples',
-                                editor=ListStrEditor(editable=False,
-                                          selected='selected_sample'
-                                          ),
-                                 width=100
+                                editor=TabularEditor(
+                                                     adapter=SampleAdapter(),
+                                                     editable=False,
+                                                     selected='selected_sample',
+                                                     multi_select=True,
+                                                     dclicked='dclicked_sample',
+                                                     ),
+                                 width=75
                                 )
                           )
         analysisgrp = VGroup(
@@ -108,12 +126,47 @@ class BrowserPane(TraitsDockPane):
                            )
 
         v = View(
-                 HGroup(
-                        VSplit(projectgrp,
-                               samplegrp),
+                VSplit(
+                        projectgrp,
+                        samplegrp,
                         analysisgrp
+#                         ),
                         )
                 )
 
+        return v
+
+
+class TableEditorPane(TraitsDockPane):
+    name = 'Table Editor'
+    def traits_view(self):
+        cols = [
+              ObjectColumn(name='name', label='', editable=False),
+              ObjectColumn(name='value', width=75),
+              ObjectColumn(name='error', label=u'\u00b1 1\u03c3', width=75),
+              ]
+
+        constants_grp = VGroup(
+                             UItem('decays',
+                                   editor=TableEditor(columns=cols,
+                                                      sortable=False
+                                                      )
+                                   ),
+                             UItem('atm_ratios',
+                                   editor=TableEditor(columns=cols,
+                                                      sortable=False
+                                                      )
+                                   ),
+                             )
+        v = View(
+                 VGroup(
+                        Item('use_auto_title'),
+                        Item('title'),
+                        Item('table_num'),
+                        Item('subtitle_font_size')
+#                         constants_grp,
+                        )
+
+                 )
         return v
 #============= EOF =============================================

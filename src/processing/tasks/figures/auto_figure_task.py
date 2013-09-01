@@ -248,7 +248,9 @@ class AutoFigureTask(FigureTask):
             unks = self.manager.load_sample_analyses(ln, sample)
             self.manager.load_analyses(unks)
 #             self.new_ideogram(unks, klass, name='Ideo. {}'.format(labnumber))
-            self.new_ideogram(unks, klass, name='Ideo. {}'.format(sample))
+            self.new_ideogram(unks, klass, name='Ideo. {}'.format(sample),
+                              plotter_kw=dict(color_map_analysis_number=False)
+                              )
             self.active_editor.sample = sample
 
         if self.use_single_ideogram:

@@ -25,6 +25,7 @@ from src.managers.manager import Manager
 from src.ui.progress_dialog import myProgressDialog
 from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
 from src.processing.analysis import Analysis, NonDBAnalysis
+from src.codetools.simple_timeit import simple_timer
 # from src.constants import NULL_STR
 # from src.ui.gui import invoke_in_main_thread
 
@@ -110,8 +111,12 @@ class IsotopeDatabaseManager(Manager):
 
     def load_analyses(self, ans, show_progress=True, **kw):
         progress = None
-        if show_progress:
-            progress = self._open_progress(len(ans))
+
+        ans = [ai for ai in ans if not ai.loaded]
+
+        n = len(ans)
+        if show_progress and n > 1:
+            progress = self._open_progress(n)
         self._load_analyses(ans, progress=progress, **kw)
 
     def get_level(self, level, irradiation=None):
@@ -127,12 +132,13 @@ class IsotopeDatabaseManager(Manager):
 # private
 #===============================================================================
     def _load_analyses(self, ans, func=None, progress=None):
+
         if not ans:
             return
 
         if func is None:
+#             @simple_timer('load')
             def func(x):
-#                 if hasattr(x, 'load_isotopes'):
                 x.load_isotopes()
                 x.calculate_age()
 
@@ -151,12 +157,13 @@ class IsotopeDatabaseManager(Manager):
 
             for ai in ans:
                 msg = 'loading {}'.format(ai.record_id)
-                self.debug(msg)
+#                 self.debug(msg)
                 f(ai, msg)
 
     def _open_progress(self, n):
 
-        pd = myProgressDialog(max=n - 1, size=(550, 15))
+        pd = myProgressDialog(max=n - 1,
+                              size=(550, 15))
         pd.open()
         return pd
 
