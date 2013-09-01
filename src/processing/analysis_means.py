@@ -21,6 +21,7 @@ from numpy import array, average, ones
 #============= local library imports  ==========================
 from uncertainties import ufloat
 from src.processing.analysis import Marker
+from src.stats.core import calculate_mswd
 
 class Mean(HasTraits):
     analyses = List
@@ -29,6 +30,9 @@ class Mean(HasTraits):
 
     arith_age = Property(depends_on='analyses:[status,temp_status]')
     weighted_age = Property(depends_on='analyses:[status,temp_status]')
+    weighted_kca = Property(depends_on='analyses:[status,temp_status]')
+
+    mswd = Property(depends_on='analyses:[status,temp_status]')
 
     identifier = Property
 
@@ -36,6 +40,15 @@ class Mean(HasTraits):
 #        vs = array([getattr(ai, attr) for ai in self.analyses
 #                    if ai.status == 0 and ai.temp_status == 0])
 #        return vs.mean()
+    @cached_property
+    def _get_mswd(self):
+        m = ''
+        args = self._get_values('age')
+        if args:
+            vs, es = args
+            m = calculate_mswd(vs, es)
+
+        return m
 
     @cached_property
     def _get_identifier(self):
@@ -46,6 +59,10 @@ class Mean(HasTraits):
         return self._calculate_weighted_mean('age')
 
     @cached_property
+    def _get_weighted_kca(self):
+        return self._calculate_weighted_mean('kca')
+
+    @cached_property
     def _get_arith_age(self):
         return self._calculate_arithmetic_mean('age')
 
@@ -53,10 +70,9 @@ class Mean(HasTraits):
     def _get_nanalyses(self):
 
         return len([ai for ai in self.analyses
-                    if ai.status == 0 and ai.temp_status == 0])
+                        if ai.status == 0 and ai.temp_status == 0])
 
-
-    def _calculate_mean(self, attr, use_weights=True):
+    def _get_values(self, attr):
         vs = (getattr(ai, attr) for ai in self.analyses
                                 if not isinstance(ai, Marker) and\
                                     ai.status == 0 and \
@@ -66,6 +82,12 @@ class Mean(HasTraits):
         if vs:
             vs, es = zip(*[(v.nominal_value, v.std_dev) for v in vs])
             vs, es = array(vs), array(es)
+            return vs, es
+
+    def _calculate_mean(self, attr, use_weights=True):
+        args = self._get_values(attr)
+        if args:
+            vs, es = args
             if use_weights:
                 weights = 1 / es ** 2
             else:

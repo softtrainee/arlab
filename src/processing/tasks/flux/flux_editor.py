@@ -80,8 +80,8 @@ class FluxEditor(InterpolationEditor):
             uxs = self._get_xs(self._unknowns)
             ys = reg2D.predict(uxs)
             es = reg2D.predict_error(uxs, ys)
-
             scatter, _ = g.new_series(uxs, ys, yerror=es, **skw)
+
             ebo = ErrorBarOverlay(component=scatter, orientation='y')
             scatter.overlays.append(ebo)
             self._add_inspector(scatter)
@@ -106,9 +106,9 @@ class FluxEditor(InterpolationEditor):
 #                      for ri in self._references])
         y, e = self._get_flux(self._references)
         reg2D = LeastSquaresRegressor(
-                                    initial_guess=[1, 1, 1, 1, 1],
                                     fitfunc=fitfunc,
-                                    xs=x, ys=y, yserr=e
+                                    xs=x, ys=y, yserr=e,
+                                    initial_guess=[1, 1, 1, 1, 1],
                                     )
         reg2D.calculate()
         return reg2D

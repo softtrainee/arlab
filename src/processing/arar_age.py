@@ -26,6 +26,8 @@ from uncertainties import ufloat
 from src.processing.argon_calculations import calculate_arar_age
 from src.processing.arar_constants import ArArConstants
 from src.processing.isotope import Isotope
+from src.codetools.simple_timeit import simple_timer
+from src.codetools.inspection import caller
 
 def AgeProperty():
     return Property(depends_on='age_dirty')
@@ -204,9 +206,11 @@ class ArArAge(HasTraits):
 
 
     def calculate_age(self, **kw):
-        return self._calculate_age(**kw)
+        self.age_dirty = True
+        return self.age
 
     def _calculate_age(self, include_j_error=None, include_decay_error=None, include_irradiation_error=None):
+
         if include_decay_error is None:
             include_decay_error = self.include_decay_error
         else:
@@ -222,42 +226,10 @@ class ArArAge(HasTraits):
         else:
             self.include_irradiation_error = include_irradiation_error
 
-#        signals = self.signals
-
-#        nsignals = dict()
-#        keys = ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
-#        for iso in keys:
-#            for k in ['', 'bs', 'bl', 'bg']:
-#                isok = iso + k
-#                if not signals.has_key(isok):
-#                    nsignals[isok] = (0, 0)
-#                else:
-#                    nsignals[isok] = signals[isok]
-#
-#        def sigs(name):
-#            ss = []
-#            for iso in map('{{}}{}'.format(name).format, keys):
-#                sig = nsignals[iso]
-#                if isinstance(sig, Signal):
-#                    sig = sig.value, sig.error
-#                ss.append(sig)
-#            return ss
-
-#        fsignals = sigs('')
-# #        print fsignals[0]
-#        bssignals = sigs('bs')
-#        blsignals = sigs('bl')
-#        bksignals = sigs('bg')
-
         fsignals = self._make_signals()
         bssignals = self._make_signals(kind='baseline')
         blsignals = self._make_signals(kind='blank')
         bksignals = self._make_signals(kind='background')
-
-#        j = copy.copy(self.j)
-#        if not include_j_error:
-#            j.set_std_dev(0)
-#            j = j[0], 0
 
         irrad = self.irradiation_info
 
@@ -270,12 +242,13 @@ class ArArAge(HasTraits):
 
         ab = self.arar_constants.abundance_sensitivity
 
+
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
-                                    self.j, irrad, abundance_sensitivity=ab,
-                                    ic=self.ic_factor,
-                                    include_decay_error=include_decay_error,
-                                    arar_constants=self.arar_constants
-                                    )
+                                self.j, irrad, abundance_sensitivity=ab,
+                                ic=self.ic_factor,
+                                include_decay_error=include_decay_error,
+                                arar_constants=self.arar_constants
+                                )
 
         if result:
             self.arar_result = result
@@ -289,22 +262,21 @@ class ArArAge(HasTraits):
         isos = self.isotopes
 #        print isos
         def func(k):
-            if kind is None:
-                tag = k
-            else:
-                tag = '{}_{}'.format(k, kind)
-
+            tag = k if kind is None else '{}_{}'.format(k, kind)
+#             if kind is None:
+#                 tag = k
+#             else:
+#                 tag = '{}_{}'.format(k, kind)
             if k in isos:
-                iso = self.isotopes[k]
+                iso = isos[k]
                 if kind:
                     iso = getattr(iso, kind)
-
                 return iso.value, iso.error, tag
             else:
                 return 0, 1e-20, tag
 
-        return [func(ki)
-                    for ki in ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']]
+        return (func(ki)
+                for ki in ('Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'))
 
 #===============================================================================
 # property get/set

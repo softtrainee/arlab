@@ -883,6 +883,18 @@ class IsotopeAdapter(DatabaseAdapter):
         new style using _retrieve_items, _get_items is deprecated. 
         rewrite functionality if required
     '''
+    def get_analyses(self, **kw):
+        '''
+            kw: meas_Analysis attributes
+        '''
+        q = self.sess.query(meas_AnalysisTable)
+        for k, v in kw.iteritems():
+            q = q.filter(getattr(meas_AnalysisTable, k) == v)
+
+        q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+
+        return q.all()
+
     def get_figures(self, project=None):
         if project:
             project = self.get_project(project)

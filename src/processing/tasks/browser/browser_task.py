@@ -57,6 +57,7 @@ class BrowserTask(BaseEditorTask):
     selected_project = Any
     selected_sample = Any
     selected_analysis = Any
+    dclicked_sample = Any
 
     omit_bogus = Bool(False)
 
@@ -67,7 +68,9 @@ class BrowserTask(BaseEditorTask):
     def activated(self):
         editor = RecallEditor()
         self._open_editor(editor)
+        self.load_projects()
 
+    def load_projects(self):
         ps = self.manager.db.get_projects()
         self.projects = [p.name for p in ps]
         self.oprojects = [p.name for p in ps]
@@ -80,8 +83,8 @@ class BrowserTask(BaseEditorTask):
         return TaskLayout(left=PaneItem('pychron.browser'))
 
     def _selected_analysis_changed(self):
-        if self.selected_analysis:
-            an = self.selected_analysis
+        an = self.selected_analysis
+        if an and isinstance(self.active_editor, RecallEditor):
 #             l, a, s = strip_runid(s)
 #             an = self.manager.db.get_unique_analysis(l, a, s)
             an = self.manager.make_analyses([an])[0]
@@ -116,24 +119,25 @@ class BrowserTask(BaseEditorTask):
 #===============================================================================
     def _selected_project_changed(self, new):
         if new:
-            samples = self.manager.db.get_samples(project=new)
-            ss = [s.name for s in samples]
+            ss = self.manager.db.get_samples(project=new)
+#             ss = [s for s in samples]
             self.samples = ss
             self.osamples = ss
 #             self.analyses = []
 #             self.onalyses = []
             if ss:
-                self.selected_sample = ss[0]
+                self.selected_sample = ss[:1]
+    def _get_sample_analyses(self, name):
+        sample = self.manager.db.get_sample(name,
+                                            project=self.selected_project
+                                            )
+        return [a for ln in sample.labnumbers
+                        for a in ln.analyses
+                            ]
 
     def _selected_sample_changed(self, new):
         if new:
-            sample = self.manager.db.get_sample(self.selected_sample,
-                                                project=self.selected_project
-                                                )
-            ans = [a for ln in sample.labnumbers
-                            for a in ln.analyses
-                                ]
-
+            ans = self._get_sample_analyses(new[0])
             self.oanalyses = ans
 
             if self.omit_bogus:

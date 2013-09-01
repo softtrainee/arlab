@@ -36,20 +36,6 @@ from src.deprecate import deprecated
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 LAlphas = list(ALPHAS)
 
-# from itertools import tee
-# def partition(seq, predicate):
-#     '''
-#         http://stackoverflow.com/questions/949098/python-split-a-list-based-on-a-condition
-#         partition seqeunce based on evaluation of predicate(i)
-#
-#         returns 2 generators
-#         True_eval, False_eval
-#     '''
-#
-#     l1, l2 = tee((predicate(item), item) for item in seq)
-#     return (i for p, i in l1 if p), (i for p, i in l2 if not p)
-
-# class Experimentor(Experimentable):
 class Experimentor(IsotopeDatabaseManager):
     experiment_factory = Instance(ExperimentFactory)
     experiment_queue = Instance(ExperimentQueue)

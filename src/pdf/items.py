@@ -28,6 +28,7 @@ class Row(HasTraits):
     fontsize = Int
     fontname = Str
     spans = List
+    height = None
     def render(self):
         return [it.render() for it in self.items]
 
@@ -57,8 +58,10 @@ class BaseItem(HasTraits):
     fmt = Either(Str, Callable)
     fontsize = Int(8)
     fontname = 'Helvetica'
+    italic = False
     def render(self):
         v = self.value
+
         if not isinstance(v, Paragraph):
             fmt = self.fmt
             if fmt is None:
@@ -75,7 +78,6 @@ class BaseItem(HasTraits):
     def _set_font(self, v, size, name):
         if isinstance(v, Paragraph):
             for frag in v.frags:
-                frag.fontName = name
                 if frag.super or frag.sub:
                     frag.fontSize = size - 2
                 else:
@@ -99,6 +101,9 @@ def Superscript(v):
 def Subscript(v):
     return '<sub>{}</sub>'.format(v)
 
+def NamedParameter(name, value):
+    return '<b>{}</b>: {}'.format(name, value)
+
 def Anchor(tagname, num, s='Normal'):
     snum = Superscript(num)
     link = '{{}}<a href="#{}" color="green">{}</a>'.format(tagname, snum)
@@ -112,8 +117,16 @@ def Anchor(tagname, num, s='Normal'):
             f = u'{}{}'.format(f, extra)
         return Paragraph(f, style)
 
+    def p2(n, v):
+        return Paragraph(tag.format(n, v), style)
 #    p1 = lambda x: Paragraph(link.format(x), style)
-    p2 = lambda n, v: Paragraph(tag.format(n, v), style)
+#     p2 = lambda n, v: Paragraph(tag.format(n, v), style)
 
     return flink, p2
+
+
+class FootNoteRow(Row):
+    pass
+class FooterRow(Row):
+    pass
 #============= EOF =============================================

@@ -282,7 +282,9 @@ class meas_AnalysisTable(Base, BaseMixin):
     comment = Column(BLOB)
 
     # meas relationships
-    isotopes = relationship('meas_IsotopeTable', backref='analysis')
+    isotopes = relationship('meas_IsotopeTable', backref='analysis',
+#                             lazy='subquery'
+                            )
     peak_center = relationship('meas_PeakCenterTable', backref='analysis', uselist=False)
 
     # proc relationships
@@ -300,7 +302,8 @@ class meas_AnalysisTable(Base, BaseMixin):
     detector_param_histories = relationship('proc_DetectorParamHistoryTable',
                                                    backref='analysis')
 
-    fit_histories = relationship('proc_FitHistoryTable', backref='analysis')
+    fit_histories = relationship('proc_FitHistoryTable',
+                                  backref='analysis')
 
     selected_histories = relationship('proc_SelectedHistoriesTable',
                                       backref='analysis', uselist=False)
@@ -366,9 +369,15 @@ class meas_IsotopeTable(Base, BaseMixin):
     detector_id = foreignkey('gen_DetectorTable')
     kind = stringcolumn()
 
-    signals = relationship('meas_SignalTable', backref='isotope')
-    fits = relationship('proc_FitTable', backref='isotope')
-    results = relationship('proc_IsotopeResultsTable', backref='isotope')
+    signals = relationship('meas_SignalTable',
+#                            lazy='subquery',
+                           backref='isotope')
+    fits = relationship('proc_FitTable',
+#                         lazy='subquery',
+                        backref='isotope')
+    results = relationship('proc_IsotopeResultsTable',
+#                            lazy='subquery',
+                           backref='isotope')
 
 class meas_MeasurementTable(Base, BaseMixin):
     mass_spectrometer_id = foreignkey('gen_MassSpectrometerTable')
@@ -562,7 +571,9 @@ class gen_LabTable(Base, BaseMixin):
     identifier = stringcolumn()
 #    aliquot = Column(Integer)
     sample_id = foreignkey('gen_SampleTable')
-    analyses = relationship('meas_AnalysisTable', backref='labnumber')
+    analyses = relationship('meas_AnalysisTable',
+#                             lazy='subquery',
+                            backref='labnumber')
     irradiation_id = foreignkey('irrad_PositionTable')
     selected_flux_id = foreignkey('flux_HistoryTable')
     note = stringcolumn(140)

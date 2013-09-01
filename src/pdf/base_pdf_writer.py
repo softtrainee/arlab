@@ -26,23 +26,30 @@ from src.loggable import Loggable
 from reportlab.platypus.frames import Frame
 from reportlab.platypus.flowables import Spacer
 from reportlab.lib import colors
-from src.pdf.items import Anchor
+from src.pdf.items import Anchor, Row
 from reportlab.lib.pagesizes import landscape, letter
+from src.helpers.formatting import floatfmt
 
 STYLES = getSampleStyleSheet()
 class BasePDFWriter(Loggable):
     _footnotes = None
     orientation = 'portrait'
+    col_widths = None
+    left_margin = 1
+    right_margin = 0.25
+    top_margin = 1
+    bottom_margin = 0.25
+
     def _new_base_doc_template(self, path):
         pagesize = letter
         if self.orientation == 'landscape':
             pagesize = landscape(letter)
 
         doc = BaseDocTemplate(path,
-                              leftMargin=0.25 * inch,
-                              rightMargin=0.25 * inch,
-                              topMargin=0.25 * inch,
-                              bottomMargin=0.25 * inch,
+                              leftMargin=self.left_margin * inch,
+                              rightMargin=self.right_margin * inch,
+                              topMargin=self.top_margin * inch,
+                              bottomMargin=self.bottom_margin * inch,
                               pagesize=pagesize
 #                                   _pageBreakQuick=0,
 #                                   showBoundary=1
@@ -52,7 +59,13 @@ class BasePDFWriter(Loggable):
     def build(self, path, *args, **kw):
         self.info('saving pdf to {}'.format(path))
         doc = self._new_base_doc_template(path)
+        self._doc = doc
         flowables, templates = self._build(doc, *args, **kw)
+
+        if templates is None:
+            frames = self._default_frame(doc)
+            templates = [self._new_page_template(frames)]
+
         for ti in templates:
             doc.addPageTemplates(ti)
 
@@ -61,15 +74,62 @@ class BasePDFWriter(Loggable):
     def _build(self, *args, **kw):
         raise NotImplementedError
 
-    def _new_table(self, style, data, hAlign='LEFT', *args, **kw):
-        t = Table(data, hAlign=hAlign, *args, **kw)
-        t.setStyle(style)
+    def _set_row_heights(self, t, data):
+        pass
+
+    def _set_col_widths(self, t, rows, col_widths):
+        cs = col_widths
+        if cs is None:
+            cs = self.col_widths
+
+        if cs:
+            cn = len(cs)
+            dn = max([len(di) for di in rows])
+#             dn = len(data[0])
+            if cn < dn:
+                cs.extend([40 for _ in range(dn - cn)])
+
+            t._argW = cs
+
+#         if extend_last:
+#             print t._argW
+#             tw = sum(t._argW)
+#             d = self._doc
+#             aw = d.width - self._doc.leftMargin - self._doc.rightMargin
+#             print tw, aw
+#             t._argW[-1] = aw - tw
+
+
+
+    def _new_table(self, style, data, hAlign='LEFT',
+                   col_widths=None, extend_last=False, *args, **kw):
+
+        # set spans
+        for idx, ri in enumerate(data):
+            for s, e in ri.spans:
+                style.add('SPAN', (s, idx), (e, idx))
+
+        # render rows
+        rows = [di.render() if hasattr(di, 'render') else di
+                    for di in data]
+
+        t = Table(rows, hAlign=hAlign,
+                  style=style,
+                  *args, **kw)
+
+        self._set_col_widths(t, rows, col_widths)
+        self._set_row_heights(t, data)
+
         return t
 
     def _new_style(self, header_line_idx=None, header_line_width=1,
-                   header_line_color='black'):
+                   header_line_color='black',
+                   debug_grid=False):
 
         ts = TableStyle()
+        if debug_grid:
+            ts.add('GRID', (0, 0), (-1, -1), 1.5, colors.red)
+
         if isinstance(header_line_color, str):
             try:
                 header_line_color = getattr(colors, header_line_color)
@@ -99,13 +159,71 @@ class BasePDFWriter(Loggable):
     def _new_spacer(self, w, h):
         return Spacer(w * inch, h * inch)
 
+    def _vspacer(self, h):
+        return self._new_spacer(0, h)
+
     def _make_footnote(self, tagname, tagName, tagText, linkname, link_extra=None):
         if self._footnotes is None:
             self._footnotes = []
 
-#         n = len(self._footnotes)
-#         link, tag = Anchor('{}_{}'.format(tagname, id(self)), n + 1)
-#         para = link(linkname, extra=link_extra)
-#         self._footnotes.append(tag(tagName, tagText))
+        n = len(self._footnotes)
+        link, tag = Anchor('{}_{}'.format(tagname, id(self)), n + 1)
+        para = link(linkname, extra=link_extra)
+
+        self._footnotes.append(tag(tagName, tagText))
         return para
+
+    def _new_line(self, style, idx, weight=1.5,
+                  start=0, end=-1,
+                  color='black',
+                  cmd='LINEBELOW'
+                  ):
+
+        style.add(cmd, (start, idx), (end, idx),
+                  weight, getattr(colors, color))
+
+    def _new_row(self, obj, attrs, default_fontsize=6):
+        row = Row()
+        for args in attrs:
+            if len(args) == 3:
+                attr, fmt, fontsize = args
+            else:
+                attr, fmt = args
+                fontsize = default_fontsize
+
+            v = getattr(obj, attr)
+            row.add_item(value=v, fmt=fmt, fontsize=fontsize)
+
+        return row
+
+    def _get_idxs(self, rows, klass):
+            return [(i, v) for i, v in enumerate(rows)
+                      if isinstance(v, klass)]
+
+    def _fmt_attr(self, v, key='nominal_value', n=5, scale=1, **kw):
+        if v is None:
+            return ''
+
+        if isinstance(v, tuple):
+            if key == 'std_dev':
+                v = v[1]
+            else:
+                v = v[0]
+        elif isinstance(v, (float, int)):
+            pass
+        else:
+            if hasattr(v, key):
+                v = getattr(v, key)
+
+        if isinstance(v, (float, int)):
+            v = v / float(scale)
+
+        return floatfmt(v, n=n, max_width=8, **kw)
+
+    def _error(self, **kw):
+        return lambda x: self._fmt_attr(x, key='std_dev', **kw)
+
+    def _value(self, **kw):
+        return lambda x: self._fmt_attr(x, key='nominal_value', **kw)
+
 #============= EOF =============================================

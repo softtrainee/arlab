@@ -15,24 +15,19 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List
-from traitsui.api import View, Item, UItem, TabularEditor
-from src.envisage.tasks.base_editor import BaseTraitsEditor
-from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class LaserTableAdapter(TabularAdapter):
-    columns = [('RunID', 'record_id')]
+from itertools import tee
+def partition(seq, predicate):
+    '''
+        http://stackoverflow.com/questions/949098/python-split-a-list-based-on-a-condition
+        partition seqeunce based on evaluation of predicate(i)
 
-class LaserTableEditor(BaseTraitsEditor):
-    analyses = List
-    def traits_view(self):
-        v = View(UItem('analyses',
-                       editor=TabularEditor(adapter=LaserTableAdapter(),
-                                            editable=False
-                                            )
+        returns 2 generators
+        True_eval, False_eval
+    '''
 
-                       ))
-        return v
+    l1, l2 = tee((predicate(item), item) for item in seq)
+    return (i for p, i in l1 if p), (i for p, i in l2 if not p)
 #============= EOF =============================================

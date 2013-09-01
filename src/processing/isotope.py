@@ -32,9 +32,11 @@ class BaseMeasurement(HasTraits):
     name = Str
     mass = Float
     detector = Str
-    def __init__(self, dbrecord=None, *args, **kw):
+    def __init__(self, dbrecord=None, unpack=True, *args, **kw):
         super(BaseMeasurement, self).__init__(*args, **kw)
-        if dbrecord:
+
+#         print type(self), self.name, unpack
+        if dbrecord and unpack:
             try:
                 xs, ys = self._unpack_blob(dbrecord.signals[-1].data)
             except (ValueError, TypeError):
@@ -68,12 +70,14 @@ class IsotopicMeasurement(BaseMeasurement):
     refit = Bool(True)
 
     regressor = Property(depends_on='xs,ys,fit')
-    def __init__(self, *args, **kw):
-        super(IsotopicMeasurement, self).__init__(*args, **kw)
-
-        if self.dbresult:
+    def __init__(self, dbresult=None, *args, **kw):
+        if dbresult:
+            self.dbresult = dbresult
             self._value = self.dbresult.signal_
             self._error = self.dbresult.signal_err
+            kw['unpack'] = False
+
+        super(IsotopicMeasurement, self).__init__(*args, **kw)
 
     def set_fit(self, fit):
         if fit is not None:
@@ -101,7 +105,6 @@ class IsotopicMeasurement(BaseMeasurement):
     def _mean_regressor_factory(self):
         reg = MeanRegressor(xs=self.xs, ys=self.ys)
         return reg
-
 
     def _set_error(self, v):
         self._error = v
@@ -208,9 +211,9 @@ class Sniff(BaseMeasurement):
 class Isotope(IsotopicMeasurement):
     _kind = 'signal'
 
-    baseline = Instance(Baseline, ())
-    blank = Instance(Blank, ())
-    background = Instance(Background, ())
+    baseline = Instance(Baseline)
+    blank = Instance(Blank)
+    background = Instance(Background)
     sniff = Instance(Sniff)
 
     def baseline_corrected_value(self):
@@ -218,4 +221,11 @@ class Isotope(IsotopicMeasurement):
 
     def get_corrected_value(self):
         return self.uvalue - self.baseline.uvalue - self.blank.uvalue - self.background.uvalue
+
+    def _baseline_default(self):
+        return Baseline()
+    def _blank_default(self):
+        return Blank()
+    def _background_default(self):
+        return Background()
 #============= EOF =============================================

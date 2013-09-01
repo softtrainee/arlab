@@ -44,20 +44,28 @@ class WindowGroup(Group):
         manager = self
         while isinstance(manager, Group):
             manager = manager.parent
+
+
+
+#         application = self.manager.controller.task.window.application
+
+#         t = 'active_window, window_opened, window_closed, windows, uis[]'
+#         application.on_trait_change(self._rebuild, t)
         return manager
 
     def _items_default(self):
-
         application = self.manager.controller.task.window.application
-        application.on_trait_change(self._rebuild, 'active_window, windows, uis[]')
 
+        t = 'active_window, window_opened, window_closed, windows, uis[]'
+        application.on_trait_change(self._rebuild, t)
+#         application = self.manager.controller.task.window.application
+#         application.on_trait_change(self._rebuild, 'window_opened, window_closed, uis[]')
         return []
 
     def _make_actions(self, vs):
         items = []
         if self.manager.controller.task.window is not None:
             application = self.manager.controller.task.window.application
-
             added = []
             for vi in application.windows + vs:
                 if hasattr(vi, 'active_task'):
@@ -78,10 +86,17 @@ class WindowGroup(Group):
 
         return items
 
-    def _rebuild(self, vs):
+    def _rebuild(self, obj, name, old, vs):
         self.destroy()
+
+        if name == 'window_opened':
+            vs = vs.window
+        else:
+            vs = []
+
         if not isinstance(vs, list):
             vs = [vs]
+
         self.items = self._make_actions(vs)
         self.manager.changed = True
 

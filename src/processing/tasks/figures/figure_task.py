@@ -21,6 +21,10 @@ from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTa
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed
 from src.processing.tasks.figures.plotter_options_pane import PlotterOptionsPane
 from itertools import groupby
+from src.ui.gui import invoke_in_main_thread
+from pyface.timer.do_later import do_later
+from src.processing.plotters.ideogram import Ideogram
+from src.processing.plotter_options_manager import IdeogramOptionsManager
 # from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -92,7 +96,8 @@ class FigureTask(AnalysisEditTask):
                 idx = range(len(self.unknowns_pane.items))
 
             self.active_editor.set_group(idx, 0)
-            self.unknowns_pane.update_needed = True
+#             self.unknowns_pane.update_needed = True
+            self.unknowns_pane.refresh_needed = True
 
     def _group_by(self, key):
         if self.active_editor:
@@ -103,35 +108,38 @@ class FigureTask(AnalysisEditTask):
                 self.active_editor.set_group(idxs, i, refresh=False)
 
 #             self.unknowns_pane.update_needed = True
+            self.unknowns_pane.refresh_needed = True
             self.active_editor.rebuild(refresh_data=False)
 
-    def new_ideogram(self, ans=None, klass=None, name='Ideo'):
-        func = self.manager.new_ideogram
+    def new_ideogram(self, ans=None, klass=None, name='Ideo', plotter_kw=None):
+        func = self._ideogram_factory
+#         func = self.manager.new_ideogram
         if klass is None:
             from src.processing.tasks.figures.figure_editor import IdeogramEditor as klass
 
-        self._new_figure(ans, name, func, klass)
+        self._new_figure(ans, name, func, klass, plotter_kw)
 
-    def new_spectrum(self, ans=None, klass=None, name='Spec'):
+    def new_spectrum(self, ans=None, klass=None, name='Spec', plotter_kw=None):
         if klass is None:
             from src.processing.tasks.figures.figure_editor import SpectrumEditor as klass
 
         func = self.manager.new_spectrum
-        self._new_figure(ans, name, func, klass)
+        self._new_figure(ans, name, func, klass, plotter_kw)
 
-    def new_inverse_isochron(self, ans=None, name='Inv. Iso.'):
+    def new_inverse_isochron(self, ans=None, name='Inv. Iso.', plotter_kw=None):
         func = self.manager.new_inverse_isochron
         from src.processing.tasks.figures.figure_editor import InverseIsochronEditor
         klass = InverseIsochronEditor
-        self._new_figure(ans, name, func, klass)
+        self._new_figure(ans, name, func, klass, plotter_kw)
 
     def new_series(self, ans, klass=None, name='Series',
+                   plotter_kw=None
                   ):
         if klass is None:
             from src.processing.tasks.figures.figure_editor import SeriesEditor as klass
         func = self.manager.new_series
 
-        self._new_figure(ans, name, func, klass)
+        self._new_figure(ans, name, func, klass, plotter_kw)
 
         editor = self.active_editor
         refiso = ans[0]
@@ -144,10 +152,12 @@ class FigureTask(AnalysisEditTask):
                               refiso.isotope_fits
                               )
 
-    def _new_figure(self, ans, name, func, klass):
+    def _new_figure(self, ans, name, func, klass, plotter_kw):
         comp, plotter = None, None
         if ans:
-            comp, plotter = func(ans)
+            if plotter_kw is None:
+                plotter_kw = {}
+            comp, plotter = func(ans, **plotter_kw)
 
             editor = klass(
                            component=comp,
@@ -180,10 +190,48 @@ class FigureTask(AnalysisEditTask):
         if name == 'initialized':
             return
 
-        self.active_editor.rebuild()
+        do_later(self.active_editor.rebuild)
+#         self.active_editor.rebuild()
         self.active_editor.dirty = True
 
     def _get_unique_group_id(self):
         gids = {i.group_id for i in self.unknowns_pane.items}
         return max(gids) + 1
+
+
+    def _ideogram_factory(self, ans, plotter_options=None):
+        probability_curve_kind = 'cumulative'
+        mean_calculation_kind = 'weighted_mean'
+        data_label_font = None
+        metadata_label_font = None
+#        highlight_omitted = True
+        display_mean_indicator = True
+        display_mean_text = True
+
+        p = Ideogram(
+#                     db=self.db,
+#                     processing_manager=self,
+                     probability_curve_kind=probability_curve_kind,
+                     mean_calculation_kind=mean_calculation_kind
+                     )
+        options = dict(
+                       title='',
+                       data_label_font=data_label_font,
+                       metadata_label_font=metadata_label_font,
+                       display_mean_text=display_mean_text,
+                       display_mean_indicator=display_mean_indicator,
+                       )
+
+        if plotter_options is None:
+            pom = IdeogramOptionsManager()
+            plotter_options = pom.plotter_options
+
+        if ans:
+#             self.analyses = ans
+            gideo = p.build(ans, options=options,
+                            plotter_options=plotter_options)
+            if gideo:
+                gideo, _plots = gideo
+
+            return gideo, p
 #============= EOF =============================================

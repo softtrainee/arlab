@@ -36,6 +36,7 @@ class TablePane(TraitsDockPane):
     items = List
     _no_update = False
     update_needed = Event
+    refresh_needed = Event
     selected = Any
     dclicked = Any
     def load(self):
@@ -50,7 +51,8 @@ class TablePane(TraitsDockPane):
                                                             drag_external=True,
                                                             selected='selected',
                                                             dclicked='dclicked',
-                                                            update='update_needed'
+                                                            update='update_needed',
+                                                            refresh='refresh_needed'
 #                                                            auto_resize_rows=True
                                                             ),
                             )
@@ -147,6 +149,7 @@ class HistoryTablePane(TablePane):
                                                             selected='selected',
                                                             dclicked='dclicked',
                                                             multi_select=True,
+                                                            refresh='refresh_needed',
                                                             update='update_needed'
 #                                                            auto_resize_rows=True
                                                             )

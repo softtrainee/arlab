@@ -25,6 +25,7 @@ from src.displays.gdisplays import gTraceDisplay
 from src.globals import globalv
 from src.helpers.logger_setup import new_logger
 from src.logger.tasks.logger_plugin import LoggerPlugin
+import sys
 
 logger = new_logger('launcher')
 
@@ -211,8 +212,10 @@ def launch(klass):
         logger.info('Quitting {}'.format(app.name), extra={'threadName_':'Launcher'})
         app.exit()
 
+#         sys.exit()
         # force a clean exit
         os._exit(0)
+
     except Exception, err:
         logger.exception('Launching error')
 

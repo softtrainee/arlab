@@ -23,25 +23,16 @@ from pyface.tasks.task_window_layout import TaskWindowLayout
 #============= local library imports  ==========================
 class AnalysisEditAction(TaskAction):
     task_id = 'pychron.analysis_edit'
-    def _create_window(self, app):
-#         win = None
-        # search other windows
-        task = app.open_task(self.task_id)
-        return task.window
-
+#     def _create_window(self, app):
+# #         win = None
+#         # search other windows
+#         task = app.open_task(self.task_id)
+#         return task.window
+#
     def perform(self, event):
         app = event.task.window.application
-        task = self.task
         _id = self.task_id
-        if not task.id == _id:
-            win = self._create_window(app)
-            win.open()
-            task = win.active_task
-        else:
-            win = self._create_window(app)
-            win.open()
-            task = win.active_task
-
+        task = app.open_task(self.task_id)
         self.task = task
 
         super(AnalysisEditAction, self).perform(event)

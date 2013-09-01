@@ -20,10 +20,34 @@ from src.paths import paths
 #============= enthought library imports =======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class MakeLaserTableAction(TaskAction):
-    method = 'make_laser_table'
+class MakeTableAction(TaskAction):
+    method = 'make_table'
     image = ImageResource(name='file_pdf.png',
-                         search_path=[paths.resources,
+                         search_path=[paths.icons,
+                                      paths.app_resources
+                                      ]
+                         )
+
+class ToggleStatusAction(TaskAction):
+    method = 'toggle_status'
+    image = ImageResource(name='arrow_switch.png',
+                         search_path=[paths.icons,
+                                      paths.app_resources
+                                      ]
+                         )
+
+class SummaryTableAction(TaskAction):
+    method = 'open_summary_table'
+    image = ImageResource(name='report.png',
+                         search_path=[paths.icons,
+                                      paths.app_resources
+                                      ]
+                         )
+
+class AppendSummaryTableAction(TaskAction):
+    method = 'append_summary_table'
+    image = ImageResource(name='report_add.png',
+                         search_path=[paths.icons,
                                       paths.app_resources
                                       ]
                          )

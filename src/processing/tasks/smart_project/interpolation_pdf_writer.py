@@ -65,10 +65,10 @@ class InterpolationPDFWriter(BasePDFWriter):
                 flowables.append(t)
                 flowables.append(self._new_spacer(0, 0.5))
 
-        frames = [self._default_frame(doc)]
-        template = self._new_page_template(frames)
+#         frames = [self._default_frame(doc)]
+#         template = self._new_page_template(frames)
 
-        return flowables, (template,)
+        return flowables, None
 
     def _make_table(self, ans, style, title):
         rows = [(ai.record_id, datetime.fromtimestamp(ai.timestamp))

@@ -41,4 +41,36 @@ def timethis(func, msg=None, log=None, args=None, kwargs=None, decorate='$'):
         print s
 
     return r
+
+# def timer(msg=None):
+#     def _timer(func):
+#         def dec(*args, **kw):
+#             with TimerCTX(msg, func.func_name):
+#                 func(*args, **kw)
+#         return dec
+#     return _timer
+def simple_timer(msg=None):
+    def _timer(func):
+        def dec(*args, **kw):
+            with TimerCTX(msg, func.func_name):
+                func(*args, **kw)
+        return dec
+    return _timer
+
+class TimerCTX(object):
+    def __init__(self, msg, funcname):
+        self._funcname = funcname
+        self._msg = msg
+
+    def __enter__(self):
+        self._st = time.time()
+
+    def __exit__(self, *args, **kw):
+        dur = time.time() - self._st
+        msg = self._msg
+        s = '{} {}'.format(self._funcname, dur)
+        if msg:
+            s = '{} - {}'.format(s, msg)
+        print s
+
 #============= EOF =============================================

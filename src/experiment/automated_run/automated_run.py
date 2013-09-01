@@ -645,17 +645,18 @@ class AutomatedRun(Loggable):
             ln = self.db.get_labnumber(ln)
             self.arar_age.labnumber_record = ln
 
+        self.info('Start automated run {}'.format(self.runid))
+
         self.measuring = False
 #             self.update = True
         self.truncated = False
 
         self.overlap_evt = TEvent()
-        self.info('Start automated run {}'.format(self.runid))
         self._alive = True
         self._total_counts = 0
-        
+        self._equilibration_done = False
         self.refresh_scripts()
-        
+
         # setup the scripts
         if self.measurement_script:
             self.measurement_script.reset(weakref.ref(self)())
@@ -680,7 +681,8 @@ class AutomatedRun(Loggable):
         self._pre_extraction_save()
 
         self.info_color = EXTRACTION_COLOR
-        self.info('======== Extraction Started ========')
+        msg = 'Extraction Started {}'.format(self.extraction_script.name)
+        self.info('======= {} ======='.format(msg))
         self.state = 'extraction'
 
         self.extraction_script.manager = self.experiment_manager
@@ -716,7 +718,8 @@ class AutomatedRun(Loggable):
         # use a measurement_script to explicitly define
         # measurement sequence
         self.info_color = MEASUREMENT_COLOR
-        self.info('======== Measurement Started ========')
+        msg = 'Measurement Started {}'.format(self.measurement_script.name)
+        self.info('======== {} ========'.format(msg))
         self.state = 'measurement'
 
         self._pre_measurement_save()
@@ -751,8 +754,8 @@ class AutomatedRun(Loggable):
 
         if not self._alive:
             return
-
-        self.info('======== Post Measurement Started ========')
+        msg = 'Post Measurement Started {}'.format(self.post_measurement_script.name)
+        self.info('======== {} ========'.format(msg))
         self.state = 'extraction'
         self.post_measurement_script.manager = self.experiment_manager
 
@@ -774,10 +777,10 @@ class AutomatedRun(Loggable):
 
         if self.post_equilibration_script is None:
             return
-
-        self.info('======== Post Equilibration Started ========')
+        msg = 'Post Equilibration Started {}'.format(self.post_equilibration_script.name)
+        self.info('======== {} ========'.format(msg))
         self.post_equilibration_script.manager = self.experiment_manager
-        self.post_equilibration_script.syntax_checked = True
+#         self.post_equilibration_script.syntax_checked = True
         if self.post_equilibration_script.execute():
             self.info('======== Post Equilibration Finished ========')
         else:
@@ -2071,10 +2074,10 @@ anaylsis_type={}
     def refresh_scripts(self):
         for name in SCRIPT_KEYS:
             setattr(self, '{}_script'.format(name), self._load_script(name))
-        
+
     def _measurement_script_default(self):
         return self._load_script('measurement')
-    
+
     def _post_measurement_script_default(self):
         return self._load_script('post_measurement')
     def _post_equilibration_script_default(self):

@@ -21,6 +21,7 @@ from envisage.ui.tasks.tasks_application import TasksApplication
 from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.globals import globalv
 from src.hardware.core.i_core_device import ICoreDevice
+from traits.has_traits import on_trait_change
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -36,12 +37,20 @@ class BaseTasksApplication(TasksApplication, Loggable):
 #             win.open()
         return super(BaseTasksApplication, self).start()
 
+#     @on_trait_change('window_closed')
+#     def _update_window_closed(self, event):
+#         print event.window
+
     def get_task(self, tid, activate=True):
+
         for win in self.windows:
             if win.active_task:
                 if win.active_task.id == tid:
                     if activate:
-                        win.activate()
+                        if win.control:
+                            win.activate()
+#                         else:
+#                             win.open()
                     break
         else:
             win = self.create_window(TaskWindowLayout(tid))

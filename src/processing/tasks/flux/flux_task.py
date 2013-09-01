@@ -25,6 +25,9 @@ from src.processing.tasks.flux.panes import IrradiationPane
 from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
 from src.processing.tasks.analysis_edit.panes import HistoryTablePane, TablePane
 from src.processing.argon_calculations import calculate_flux
+from pyface.tasks.task import Task
+from src.envisage.tasks.editor_task import BaseEditorTask
+from pyface.tasks.advanced_editor_area_pane import AdvancedEditorAreaPane
 
 
 class LevelAdatper(TabularAdapter):
@@ -48,6 +51,7 @@ class ReferencesPane(TablePane):
     id = 'pychron.analysis_edit.references'
 
 class FluxTask(InterpolationTask):
+    name = 'Flux'
     id = 'pychron.analysis_edit.flux'
     flux_editor_count = 1
     unknowns_adapter = UnknownsAdapter
@@ -74,8 +78,8 @@ class FluxTask(InterpolationTask):
     def create_dock_panes(self):
         panes = super(FluxTask, self).create_dock_panes()
         return panes + [
-                      IrradiationPane(model=self.manager)
-                      ]
+                        IrradiationPane(model=self.manager)
+                        ]
 
     def new_flux(self):
         from src.processing.tasks.flux.flux_editor import FluxEditor
@@ -84,16 +88,10 @@ class FluxTask(InterpolationTask):
                               )
 
         self._open_editor(editor)
-#        from src.processing.tasks.flux.flux_editor3D import FluxEditor3D
-#        editor = FluxEditor3D(name='Flux3D {:03n}'.format(self.flux_editor_count),
-#                              processor=self.manager
-#                              )
-#
-#        self._open_editor(editor)
-#        self.flux_editor_count += 1
+        self.flux_editor_count += 1
 
         self.manager.irradiation = 'NM-251'
-        self.manager.level = 'H'
+#         self.manager.level = 'H'
 
     @on_trait_change('manager:level')
     def _level_changed(self, new):
@@ -102,24 +100,10 @@ class FluxTask(InterpolationTask):
             if self.active_editor:
                 self.active_editor.level = level
 
-            def monitor_filter(pos):
-                if pos.labnumber.sample:
-                    if pos.labnumber.sample.name == 'FC-2':
-                        return True
-
             if level:
-                positions = level.positions
-                refs = []
-                unks = []
-                if positions:
-                    for pi in positions:
-                        if monitor_filter(pi):
-                            refs.append(pi)
-                        else:
-                            unks.append(pi)
-
-                self.unknowns_pane.items = unks
-                self.references_pane.items = refs
+                refs, unks = self.manager.group_level(level)
+                self.unknowns_pane.items = list(unks)
+                self.references_pane.items = list(refs)
 
     @on_trait_change('active_editor:tool:calculate_button')
     def _calculate_flux(self):
