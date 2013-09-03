@@ -34,6 +34,7 @@ from src.ui.tabular_editor import myTabularEditor
 from src.ui.custom_label_editor import CustomLabel
 from traitsui.tabular_adapter import TabularAdapter
 from src.ui.gui import invoke_in_main_thread
+from pyface.timer.do_later import do_later
 
 class BaseTabularAdapter(TabularAdapter):
     columns = [('ID', 'record_id'),
@@ -155,6 +156,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #        self._sort_columns(self.records)
         if self.scroll_to_bottom:
             self.scroll_to_row = len(self.records) - 1
+#         self.debug('scb= {}, scroll to row={}'.format(self.scroll_to_bottom, self.scroll_to_row))
 
     def query_factory(self, **kw):
         return self._query_factory(**kw)

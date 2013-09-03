@@ -71,22 +71,14 @@ class SignalAdapter(MultiTextTableAdapter):
 # class PlotPanelHandler(ViewableHandler):
 #    pass
 
-# class PlotPanel(Viewable):
 class PlotPanel(Loggable):
-#    automated_run = Any
     arar_age = Instance(ArArAge)
-    sample = Str
-    irradiation = Str
     graph = Instance(Graph)
-#    window_x = 0
-#    window_y = 0
-#    window_title = ''
     plot_title = Str
 
     ncounts = Property(Int(enter_set=True, auto_set=False), depends_on='_ncounts')
     _ncounts = CInt
 
-#    detector = None
     detectors = List
     fits = List
     isotopes = Property(depends_on='detectors')

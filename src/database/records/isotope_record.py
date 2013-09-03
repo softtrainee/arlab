@@ -91,15 +91,16 @@ class IsotopeRecordView(HasTraits):
     graph_id = 0
     mass_spectrometer = ''
     analysis_type = ''
-
+    uuid = ''
     def create(self, dbrecord):
         try:
-            if not dbrecord.labnumber:
+            if dbrecord is None or not dbrecord.labnumber:
                 return
 
             self.labnumber = str(dbrecord.labnumber.identifier)
             self.aliquot = dbrecord.aliquot
             self.step = dbrecord.step
+            self.uuid = dbrecord.uuid
     #        self.aliquot = '{}{}'.format(dbrecord.aliquot, dbrecord.step)
             self.timestamp = dbrecord.analysis_timestamp
 
@@ -195,9 +196,13 @@ class IsotopeRecord(ArArAge):
 
     loaded = False
 
-    def initialize(self):
+#     def initialize(self):
+#         self.age_dirty = True
+#         self.load_isotopes()
+#         self.calculate_age()
 #        self.load()
-        return True
+#         self.load_age()
+#         return True
 
     def load_age(self):
         self.age_dirty = True
@@ -330,7 +335,7 @@ class IsotopeRecord(ArArAge):
                         result = iso.results[-1]
 
 
-    def _load_signals(self, dbr, refit):
+    def _load_signals(self, dbr, unpack):
         isotopes = dict()
 
         for iso in dbr.isotopes:
@@ -348,7 +353,8 @@ class IsotopeRecord(ArArAge):
                             dbresult=result,
                             name=name,
                             detector=det,
-                            refit=refit
+#                             refit=refit
+                            unpack=unpack
                             )
 
                 fit = None
@@ -418,10 +424,10 @@ class IsotopeRecord(ArArAge):
                     break
 
 #     @profile
-    def load_isotopes(self, refit=True):
+    def load_isotopes(self, unpack=True):
         dbr = self.dbrecord
         if dbr and not self.loaded:
-            self._load_signals(dbr, refit)
+            self._load_signals(dbr, unpack)
             '''
             
                 load signals first then baseline and sniffs.
@@ -1017,7 +1023,6 @@ class IsotopeRecord(ArArAge):
 #         fs = FitSelector(analysis=self,
 #                          name='Signal'
 #                          )
-        print 'asdfsdfsafasdfsadfasdfsad'
         item = AnalysisSummary(record=self,
 #                                fit_selector=fs
                                )

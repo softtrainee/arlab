@@ -131,7 +131,7 @@ class IsotopeDatabaseManager(Manager):
 #===============================================================================
 # private
 #===============================================================================
-    def _load_analyses(self, ans, func=None, progress=None):
+    def _load_analyses(self, ans, func=None, progress=None, unpack=True):
 
         if not ans:
             return
@@ -139,7 +139,7 @@ class IsotopeDatabaseManager(Manager):
         if func is None:
 #             @simple_timer('load')
             def func(x):
-                x.load_isotopes()
+                x.load_isotopes(unpack=unpack)
                 x.calculate_age()
 
         if len(ans) == 1:

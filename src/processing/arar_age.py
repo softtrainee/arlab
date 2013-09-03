@@ -26,14 +26,14 @@ from uncertainties import ufloat
 from src.processing.argon_calculations import calculate_arar_age
 from src.processing.arar_constants import ArArConstants
 from src.processing.isotope import Isotope
-from src.codetools.simple_timeit import simple_timer
-from src.codetools.inspection import caller
+
+from src.loggable import Loggable
 
 def AgeProperty():
     return Property(depends_on='age_dirty')
 
 
-class ArArAge(HasTraits):
+class ArArAge(Loggable):
     include_j_error = Bool(True)
     include_irradiation_error = Bool(True)
     include_decay_error = Bool(False)

@@ -75,7 +75,7 @@ class IsotopicMeasurement(BaseMeasurement):
             self.dbresult = dbresult
             self._value = self.dbresult.signal_
             self._error = self.dbresult.signal_err
-            kw['unpack'] = False
+#             kw['unpack'] = False
 
         super(IsotopicMeasurement, self).__init__(*args, **kw)
 

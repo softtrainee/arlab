@@ -20,7 +20,7 @@ from src.envisage.tasks.editor_task import BaseEditorTask
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane
 from src.processing.tasks.search_panes import QueryPane
 from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
-from pyface.tasks.task_window_layout import TaskWindowLayout
+# from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.database.records.isotope_record import IsotopeRecordView
 from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
 from src.processing.analysis import Analysis
@@ -58,12 +58,15 @@ class AnalysisEditTask(BaseEditorTask):
                 self.plot_editor_pane,
 #                self.results_pane,
                 ]
-        cp = self._create_query_pane()
-        if cp:
-            panes.append(cp)
+
+        ps = self._create_db_panes()
+        if ps:
+            panes.extend(ps)
+
+
         return panes
 
-    def _create_query_pane(self):
+    def _create_db_panes(self):
         if self.manager.db:
             selector = self.manager.db.selector
             selector._search_fired()
@@ -71,7 +74,7 @@ class AnalysisEditTask(BaseEditorTask):
             from src.processing.selection.data_selector import DataSelector
             ds = DataSelector(database_selector=selector)
 
-            return QueryPane(model=ds)
+            return (QueryPane(model=ds),)  # ResultsPane(model=ds)
 
     def _create_unknowns_pane(self):
         self.unknowns_pane = up = self.unknowns_pane_klass(adapter_klass=self.unknowns_adapter)
@@ -98,21 +101,21 @@ class AnalysisEditTask(BaseEditorTask):
             if hasattr(self.active_editor, 'save'):
                 self.active_editor.save()
 
+    def _record_view_factory(self, pi, **kw):
+        db = self.manager.db
+        iso = IsotopeRecordView(**kw)
+        dbrecord = db.get_analysis(pi.uuid, key='uuid')
+        if iso.create(dbrecord):
+            return iso
+
     def _set_previous_selection(self, pane, new):
         if new:
-            db = self.manager.db
-            def func(pi):
-                iso = IsotopeRecordView(
-                              graph_id=pi.graph_id,
-                              group_id=pi.group_id
-                              )
-                dbrecord = db.get_analysis(pi.uuid, key='uuid')
-                if iso.create(dbrecord):
-                    return iso
-#
-            ps = [func(si) for si in new.analysis_ids]
+            func = self._record_view_factory
+            ps = [func(si, graph_id=si.graph_id,
+                            group_id=si.group_id) for si in new.analysis_ids]
             ps = [pi for pi in ps if pi]
             pane.items = ps
+
 #===============================================================================
 # handlers
 #===============================================================================
@@ -122,8 +125,10 @@ class AnalysisEditTask(BaseEditorTask):
                 tool = None
                 if hasattr(self.active_editor, 'tool'):
                     tool = self.active_editor.tool
+
                 self.controls_pane.tool = tool
-                if hasattr(self.active_editor, 'unknowns'):
+                if self.unknowns_pane and \
+                    hasattr(self.active_editor, 'unknowns'):
                     self.unknowns_pane.items = self.active_editor.unknowns
 
     @on_trait_change('active_editor:component_changed')
@@ -133,11 +138,9 @@ class AnalysisEditTask(BaseEditorTask):
 
     @on_trait_change('unknowns_pane:[items, update_needed]')
     def _update_unknowns_runs(self, obj, name, old, new):
-#         print self.active_editor, obj, name, old, new
-#         if not obj._no_update:
-        if self.active_editor:
-
-            self.active_editor.unknowns = self.unknowns_pane.items
+        if not obj._no_update:
+            if self.active_editor:
+                self.active_editor.unknowns = self.unknowns_pane.items
 
     @on_trait_change('''unknowns_pane:dclicked, 
 references_pane:dclicked,

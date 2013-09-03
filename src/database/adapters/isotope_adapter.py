@@ -29,7 +29,7 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
     meas_SignalTable, meas_PeakCenterTable, meas_PositionTable, \
     meas_ScriptTable, meas_MonitorTable, loading_LoadTable, gen_LoadHolderTable, \
-    loading_PositionsTable
+    loading_PositionsTable, proc_FigurePrefTable
 
 
 # med_
@@ -293,21 +293,41 @@ class IsotopeAdapter(DatabaseAdapter):
                                )
         project = self.get_project(project)
         if project:
-            project.figures.append(fig)
+            fig.project_id = project.id
+
         self._add_item(fig)
 
         return fig
+    def add_figure_preference(self, figure, **kw):
+        fa = proc_FigurePrefTable(**kw)
+        figure = self.get_figure(figure)
+        if figure:
+            self.info('adding preference to figure {}'.format(figure.name))
+            fa.figure_id = figure.id
+        self._add_item(fa)
+        return fa
 
     def add_figure_analysis(self, figure, analysis, **kw):
         fa = proc_FigureAnalysisTable(**kw)
         figure = self.get_figure(figure)
         if figure:
-            figure.analyses.append(fa)
-            if analysis:
-                analysis.figure_analyses.append(fa)
-#                self._add_item(fa)
+            fa.figure_id = figure.id
 
+        analysis = self.get_analysis(analysis)
+        if analysis:
+            fa.analysis_id = analysis.id
+
+        self._add_item(fa)
         return fa
+
+
+#         if figure:
+#             figure.analyses.append(fa)
+#             if analysis:
+#                 analysis.figure_analyses.append(fa)
+# #                self._add_item(fa)
+#
+#         return fa
 
     def add_fit_history(self, analysis, **kw):
         kw['user'] = self.save_username
@@ -723,10 +743,10 @@ class IsotopeAdapter(DatabaseAdapter):
         except NoResultFound:
             return
 
-#     def get_analysis_uuid(self, value):
+    def get_analysis_uuid(self, value):
 #         return self.get_analysis(value, key)
 # #        return meas_AnalysisTable, 'uuid'
-#         return self._retrieve_item(meas_AnalysisTable, uuid, key='uuid')
+        return self._retrieve_item(meas_AnalysisTable, value, key='uuid')
 
     def get_analysis_record(self, value):
         return self._retrieve_item(meas_AnalysisTable, value, key='id')

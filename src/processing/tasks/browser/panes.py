@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property
 from traitsui.api import View, Item, UItem, VGroup, HGroup, Label, spring, \
-    VSplit, TableEditor
+    VSplit, TableEditor, EnumEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from traitsui.editors.list_str_editor import ListStrEditor
 from traitsui.tabular_adapter import TabularAdapter
@@ -137,36 +137,5 @@ class BrowserPane(TraitsDockPane):
         return v
 
 
-class TableEditorPane(TraitsDockPane):
-    name = 'Table Editor'
-    def traits_view(self):
-        cols = [
-              ObjectColumn(name='name', label='', editable=False),
-              ObjectColumn(name='value', width=75),
-              ObjectColumn(name='error', label=u'\u00b1 1\u03c3', width=75),
-              ]
 
-        constants_grp = VGroup(
-                             UItem('decays',
-                                   editor=TableEditor(columns=cols,
-                                                      sortable=False
-                                                      )
-                                   ),
-                             UItem('atm_ratios',
-                                   editor=TableEditor(columns=cols,
-                                                      sortable=False
-                                                      )
-                                   ),
-                             )
-        v = View(
-                 VGroup(
-                        Item('use_auto_title'),
-                        Item('title'),
-                        Item('table_num'),
-                        Item('subtitle_font_size')
-#                         constants_grp,
-                        )
-
-                 )
-        return v
 #============= EOF =============================================

@@ -67,10 +67,11 @@ class LaserTablePDFWriter(BasePDFWriter):
             data.append(r)
             data.append(b)
 
-            idx = cnt + i * 2
-            style.add('BACKGROUND', (0, idx), (-1, idx),
-                      colors.lightgrey,
-                      )
+            if self.use_alternating_background:
+                idx = cnt + i * 2
+                style.add('BACKGROUND', (0, idx), (-1, idx),
+                          colors.lightgrey,
+                          )
 #         data.extend([self._make_analysis_row(ai)
 #                      for ai in analyses])
 

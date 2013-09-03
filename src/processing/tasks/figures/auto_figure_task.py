@@ -18,7 +18,7 @@
 from traits.api import HasTraits, on_trait_change, Instance, List, Dict, Bool, Str, Int
 from traitsui.api import View, Item
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed
-from src.processing.tasks.figures.plotter_options_pane import PlotterOptionsPane
+from src.processing.tasks.figures.panes import PlotterOptionsPane
 from src.processing.tasks.figures.figure_task import FigureTask
 from src.processing.tasks.figures.figure_editor import IdeogramEditor, \
     SpectrumEditor, AutoIdeogramEditor, AutoSpectrumEditor, AutoSeriesEditor

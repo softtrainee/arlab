@@ -22,11 +22,29 @@ from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTa
 from pyface.tasks.task_layout import Splitter, TaskLayout, PaneItem
 from src.processing.tasks.analysis_edit.panes import ControlsPane
 from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
+from src.experiment.loading.actions import SaveLoadingAction
+from pyface.tasks.action.schema import SToolBar
+from pyface.tasks.action.task_action import TaskAction
+from pyface.image_resource import ImageResource
+from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
+class AddIsoEvoAction(TaskAction):
+    method = 'add_iso_evo'
+    image = ImageResource(name='chart_curve_add.png',
+                        search_path=[paths.icons, paths.app_resources]
+                        )
+
 class RecallTask(AnalysisEditTask):
     name = 'Recall'
+
+    tool_bars = [
+                 SToolBar(AddIsoEvoAction(),
+                          image_size=(32, 32)
+                          )
+                 ]
+
     def _default_layout_default(self):
         return TaskLayout(
                           id='pychron.recall',
@@ -54,37 +72,53 @@ class RecallTask(AnalysisEditTask):
     def create_dock_panes(self):
         self.controls_pane = ControlsPane()
         self.plot_editor_pane = PlotEditorPane()
-        return [
+        panes = [
 #                self._create_unknowns_pane(),
-                self._create_query_pane(),
                 self.controls_pane,
                 self.plot_editor_pane
 
                 ]
+        ps = self._create_db_panes()
+        if ps:
+            panes.extend(ps)
+        return panes
 
     def recall(self, records):
 
         ans = self.manager.make_analyses(records)
 
         def func(rec):
-            rec.initialize()
-            reditor = RecallEditor(analysis_summary=rec.isotope_record.analysis_summary,
+            rec.load_isotopes()
+            rec.calculate_age()
+            reditor = RecallEditor(
+                                    model=rec,
+#                                     analysis_summary=rec.isotope_record.analysis_summary,
                                    )
-
-
-            from src.processing.tasks.isotope_evolution.isotope_evolution_editor import IsotopeEvolutionEditor
-            ieditor = IsotopeEvolutionEditor(
-                                            name='IsoEvo {}'.format(reditor.name),
-                                            processor=self.manager,
-                                            )
-            ieditor.unknowns = [rec]
             self.editor_area.add_editor(reditor)
-            self.editor_area.add_editor(ieditor)
+#             self.add_iso_evo(reditor.name, rec)
 
         if ans:
             self.manager._load_analyses(ans, func=func)
 
-            ed = self.editor_area.editors[-2]
+            ed = self.editor_area.editors[-1]
             self.editor_area.activate_editor(ed)
+
+    def add_iso_evo(self, name=None, rec=None):
+        if rec is None:
+            if self.active_editor is not None:
+                rec = self.active_editor.model
+                name = self.active_editor.name
+
+        if rec is None:
+            return
+
+        from src.processing.tasks.isotope_evolution.isotope_evolution_editor import IsotopeEvolutionEditor
+        ieditor = IsotopeEvolutionEditor(
+                                        name='IsoEvo {}'.format(name),
+                                        processor=self.manager,
+                                        )
+
+        ieditor.unknowns = [rec]
+        self.editor_area.add_editor(ieditor)
 
 #============= EOF =============================================

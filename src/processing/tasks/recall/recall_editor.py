@@ -15,18 +15,21 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, Instance, Any
+from traits.api import Property, Instance, Any, DelegatesTo
 from traitsui.api import View, UItem, InstanceEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.envisage.tasks.base_editor import BaseTraitsEditor
+from src.database.records.isotope_record import IsotopeRecord
 # from src.database.records.isotope_record import IsotopeRecord
 
 
 class RecallEditor(BaseTraitsEditor):
-#     model = Instance(IsotopeRecord)
-    analysis_summary = Any
-    name = Property(depends_on='analysis_summary')
+
+    model = Any
+#     analysis_summary = Any  # DelegatesTo('model')
+    analysis_summary = DelegatesTo('model')
+    name = Property(depends_on='model')
 #    def trait_context(self):
 #        """ Use the model object for the Traits UI context, if appropriate.
 #        """
@@ -74,8 +77,10 @@ class RecallEditor(BaseTraitsEditor):
         return ui.control
 
     def _get_name(self):
-        if self.analysis_summary:
-            return self.analysis_summary.record.record_id
+#         if self.analysis_summary:
+#             return self.analysis_summary.record.record_id
+        if self.model:
+            return self.model.record_id
         else:
             return 'Untitled'
 

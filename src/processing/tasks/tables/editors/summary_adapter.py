@@ -27,6 +27,7 @@ class SummaryTabularAdapter(TabularAdapter):
                ('L#', 'identifier'),
                ('Irradiation', 'irradiation'),
                ('Material', 'material'),
+               ('type', 'age_type'),
                ('N', 'nanalyses'),
                ('MSWD', 'mswd'),
                ('K/Ca', 'kca'),
@@ -39,15 +40,18 @@ class SummaryTabularAdapter(TabularAdapter):
 
     blank_text = Str('')
     sample_width = Int(100)
-    identifier_width = Int(75)
-    irradiation_width = Int(100)
+    identifier_width = Int(60)
+    irradiation_width = Int(90)
     material_width = Int(100)
+    age_type_width = Int(115)
+    nanalyses_width = Int(25)
 
     mswd_width = Int(75)
     kca_width = Int(75)
     kca_error_width = Int(75)
     age_width = Int(75)
     age_error_width = Int(75)
+    blank_width = Int(25)
 
     mswd_text = Property
     kca_text = Property
@@ -55,7 +59,7 @@ class SummaryTabularAdapter(TabularAdapter):
     age_text = Property
     age_error_text = Property
 
-
+    font = 'arial 10'
     def _get_mswd_text(self):
         return floatfmt(self.item.mswd)
 
@@ -70,5 +74,12 @@ class SummaryTabularAdapter(TabularAdapter):
 
     def _get_age_error_text(self):
         return floatfmt(self.item.weighted_age.std_dev)
+
+    def set_widths(self, ws):
+        for (_, ai), wi in zip(self.columns, ws):
+            attr = '{}_width'.format(ai)
+            if hasattr(self, attr):
+                setattr(self, attr, wi)
+
 
 #============= EOF =============================================

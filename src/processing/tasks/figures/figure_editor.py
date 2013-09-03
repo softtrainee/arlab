@@ -46,8 +46,8 @@ class FigureEditor(GraphEditor):
         return v
 
     @on_trait_change('unknowns[]')
-    def _update_unknowns(self):
-        if not self._suppress_rebuild:
+    def _update_unknowns(self, new):
+        if not self._suppress_rebuild and new:
             self.rebuild()
 
     def set_group(self, idxs, gid, refresh=True):

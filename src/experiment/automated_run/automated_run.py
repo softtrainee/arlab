@@ -922,25 +922,24 @@ anaylsis_type={}
 
     def _new_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
 
+        title = self.runid
+        sample, irradiation = self.spec.sample, self.spec.irradiation
+        if sample:
+            title = '{} {}'.format(title, sample)
+        if irradiation:
+            title = '{} {}'.format(title, irradiation)
+
         if plot_panel is None:
-            title = self.runid
-            sample, irradiation = self.spec.sample, self.spec.irradiation
-            if sample:
-                title = '{} {}'.format(title, sample)
-            if irradiation:
-                title = '{} {}'.format(title, irradiation)
 
             plot_panel = PlotPanel(
-                             plot_title=title,
                              stack_order=stack_order,
                              info_func=self.info,
                              arar_age=self.arar_age,
-                             sample=sample,
-                             irradiation=irradiation,
                              )
 
-            plot_panel.reset()
-
+        plot_panel.trait_set(
+                             plot_title=title,
+                             )
         return plot_panel
 
     def _equilibrate(self, evt, eqtime=15, inlet=None, outlet=None,

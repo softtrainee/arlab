@@ -214,7 +214,7 @@ def launch(klass):
 
 #         sys.exit()
         # force a clean exit
-        os._exit(0)
+#         os._exit(0)
 
     except Exception, err:
         logger.exception('Launching error')
