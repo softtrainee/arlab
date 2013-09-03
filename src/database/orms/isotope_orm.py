@@ -180,6 +180,11 @@ class proc_DetectorParamTable(Base, BaseMixin):
 #                             backref='selected_detector_param',
 #                             uselist=False
 #                             )
+class proc_FigurePrefTable(Base, BaseMixin):
+    figure_id = foreignkey('proc_FigureTable')
+    xbounds = Column(String(80))
+    ybounds = Column(String(80))
+    options_pickle = Column(BLOB)
 
 class proc_FigureTable(Base, NameMixin):
     create_date = Column(DateTime, default=func.now())
@@ -187,6 +192,8 @@ class proc_FigureTable(Base, NameMixin):
     project_id = foreignkey('gen_ProjectTable')
 
     analyses = relationship('proc_FigureAnalysisTable', backref='figure')
+    preference = relationship('proc_FigurePrefTable', backref='figure',
+                               uselist=False)
 
 class proc_FigureAnalysisTable(Base, BaseMixin):
     figure_id = foreignkey('proc_FigureTable')
@@ -194,6 +201,8 @@ class proc_FigureAnalysisTable(Base, BaseMixin):
     status = Column(Integer)
     graph = Column(Integer)
     group = Column(Integer)
+
+    analysis = relationship('meas_AnalysisTable', uselist=False)
 
 class proc_FitHistoryTable(Base, HistoryMixin):
     fits = relationship('proc_FitTable', backref='history',
@@ -308,7 +317,7 @@ class meas_AnalysisTable(Base, BaseMixin):
     selected_histories = relationship('proc_SelectedHistoriesTable',
                                       backref='analysis', uselist=False)
     arar_histories = relationship('proc_ArArHistoryTable', backref='analysis')
-    figure_analyses = relationship('proc_FigureAnalysisTable', backref='analysis')
+#     figure_analyses = relationship('proc_FigureAnalysisTable', backref='analysis')
     notes = relationship('proc_NotesTable', backref='analysis')
     monitors = relationship('meas_MonitorTable', backref='analysis')
 

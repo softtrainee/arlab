@@ -191,9 +191,10 @@ class Experimentor(IsotopeDatabaseManager):
                 if sample:
                     sample = sample.name
 
-                irradiationpos = dbln.irradiation_position
-                if irradiationpos:
-                    level = irradiationpos.level
+
+                dbpos = dbln.irradiation_position
+                if dbpos:
+                    level = dbpos.level
                     irradiationpos = '{}{}'.format(level.irradiation.name,
                                                    level.name)
 #            self.debug('{} {} {}'.format(li, analysis, sample))
@@ -234,10 +235,6 @@ class Experimentor(IsotopeDatabaseManager):
                                            aliquot_start,
                                            egroup,
                                            sample, irradiationpos)
-#
-
-
-
 
     def _set_aliquot_step(self, ais, special, cln,
                           aliquot,
@@ -247,8 +244,8 @@ class Experimentor(IsotopeDatabaseManager):
         db = self.db
 
 #         step_start = 0
+        an = db.get_last_analysis(cln, aliquot=aliquot)
         if aliquot_start is None:
-            an = db.get_last_analysis(cln, aliquot=aliquot)
             aliquot_start = 0
             if an:
                 aliquot_start = an.aliquot
@@ -277,7 +274,7 @@ class Experimentor(IsotopeDatabaseManager):
 
             if not special and egroup:
                 step_start = 0
-                an = db.get_last_analysis(cln, aliquot=aliquot)
+#                 an = db.get_last_analysis(cln, aliquot=aliquot)
                 if an and an.step and an.aliquot == arun.aliquot:
                     step_start = LAlphas.index(an.step) + 1
 

@@ -15,22 +15,27 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Any, Event
-from traitsui.api import View, Item
-from src.envisage.tasks.base_editor import BaseTraitsEditor
-from src.processing.tasks.tables.editors.adapters import TableBlank
+from traitsui.api import View, Item, UItem, VGroup, EnumEditor
+from pyface.tasks.traits_dock_pane import TraitsDockPane
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BaseTableEditor(BaseTraitsEditor):
-    items = List
-    oitems = List
-    col_widths = List
-    selected = Any
-    refresh_needed = Event
-    def clean_rows(self):
-        return self._clean_items()
+class TableEditorPane(TraitsDockPane):
+    name = 'Table Editor'
+    def traits_view(self):
+        v = View(
+                 VGroup(
+                        Item('use_auto_title'),
+                        Item('title'),
+                        Item('table_num'),
+                        Item('subtitle_font_size'),
+                        Item('use_alternating_background'),
+                        Item('notes_template', editor=EnumEditor(name='notes_templates')),
+                        Item('age_type', editor=EnumEditor(name='age_types')),
+#                         constants_grp,
+                        )
 
-    def _clean_items(self):
-        return filter(lambda x: not isinstance(x, TableBlank), self.oitems)
+                 )
+        return v
 #============= EOF =============================================

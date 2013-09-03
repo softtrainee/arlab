@@ -31,6 +31,7 @@ class FitSelector(HasTraits):
     _plot_cache = None
     kind = 'signal'
 
+
     def _analysis_changed(self):
         if self.analysis:
             if self.analysis.isotope_keys:
@@ -142,6 +143,7 @@ class FitSelector(HasTraits):
                     if reg:
                         fi._intercept = v = reg.predict(0)
                         fi._error = e = reg.predict_error(0)
+                        fi.trait_set(fit=reg.fit, trait_change_notify=False)
 
                         iso = self.analysis.isotopes[fi.name]
                         iso._value = v

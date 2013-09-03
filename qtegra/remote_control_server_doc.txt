@@ -20,7 +20,7 @@ was developed by Jake Ross at New Mexico Geochronology Research Laboratory to
 enable independent client applications, such as Mass Spec and Pychron to control
 Thermo mass spectrometers running the Qtegra software suite. The script uses the
 TCP or UDP protocols to listen for incoming ASCII messages from a client
-application. When a message is received and parsed, the approriate action is
+application. When a message is received and parsed, the appropriate action is
 executed by Qtegra, then the result or a descriptive error is returned to the
 client.
 

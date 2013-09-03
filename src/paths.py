@@ -77,6 +77,7 @@ class Paths():
     plotter_options_dir = None
     test_dir = None
     custom_queries_dir = None
+    template_dir = None
     #===========================================================================
     # scripts
     #===========================================================================
@@ -208,6 +209,8 @@ class Paths():
         self.plotter_options_dir = join(self.hidden_dir, 'plotter_options')
         self.test_dir = join(root, 'testing')
         self.custom_queries_dir = join(root, 'custom_queries')
+        self.template_dir = join(root, 'templates')
+
         #==============================================================================
         # setup
         #==============================================================================

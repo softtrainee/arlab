@@ -30,15 +30,17 @@ from src.pdf.items import Anchor, Row
 from reportlab.lib.pagesizes import landscape, letter
 from src.helpers.formatting import floatfmt
 
-STYLES = getSampleStyleSheet()
+# STYLES = getSampleStyleSheet()
 class BasePDFWriter(Loggable):
     _footnotes = None
     orientation = 'portrait'
     col_widths = None
     left_margin = 1
-    right_margin = 0.25
+    right_margin = 0.5
     top_margin = 1
     bottom_margin = 0.25
+
+    use_alternating_background = True
 
     def _new_base_doc_template(self, path):
         pagesize = letter
@@ -143,8 +145,11 @@ class BasePDFWriter(Loggable):
 
         return ts
 
-    def _new_paragraph(self, t, s='Normal'):
-        style = STYLES[s]
+    def _new_paragraph(self, t, s='Normal', **skw):
+        style = getSampleStyleSheet()[s]
+        for k, v in skw.iteritems():
+            setattr(style, k, v)
+
         p = Paragraph(t, style)
         return p
 

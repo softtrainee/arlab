@@ -15,11 +15,19 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
+from traits.api import HasTraits, Any, Str, List
 from traitsui.api import View, Item, HGroup, EnumEditor, UItem, InstanceEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
+class FigureSelectorPane(TraitsDockPane):
+    name = 'Saved Figures'
+    figure = Str
+    figures = List
+    def traits_view(self):
+        v = View(Item('figure',
+                      editor=EnumEditor(name='figures')))
+        return v
 
 class PlotterOptionsPane(TraitsDockPane):
     '''

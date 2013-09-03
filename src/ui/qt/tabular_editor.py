@@ -283,7 +283,11 @@ class _TabularEditor(qtTabularEditor):
         header = control.horizontalHeader()
         cs = [header.sectionSize(i) for i in range(header.count())]
         self.col_widths = cs
-
+    def _scroll_to_row_changed(self, row):
+        qtTabularEditor._scroll_to_row_changed(self, row)
+        qtTabularEditor._scroll_to_row_changed(self, 0)
+        qtTabularEditor._scroll_to_row_changed(self, row)
+        print row
 
 class myTabularEditor(TabularEditor):
 #     scroll_to_bottom = Bool(True)

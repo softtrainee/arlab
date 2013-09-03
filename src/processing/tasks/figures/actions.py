@@ -15,22 +15,21 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Any, Event
+from traits.api import HasTraits
 from traitsui.api import View, Item
-from src.envisage.tasks.base_editor import BaseTraitsEditor
-from src.processing.tasks.tables.editors.adapters import TableBlank
+from pyface.tasks.action.task_action import TaskAction
+from pyface.image_resource import ImageResource
+from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
-class BaseTableEditor(BaseTraitsEditor):
-    items = List
-    oitems = List
-    col_widths = List
-    selected = Any
-    refresh_needed = Event
-    def clean_rows(self):
-        return self._clean_items()
-
-    def _clean_items(self):
-        return filter(lambda x: not isinstance(x, TableBlank), self.oitems)
+class SaveFigureAction(TaskAction):
+    method = 'save_figure'
+    image = ImageResource(name='database_save.png',
+                        search_path=[paths.icons, paths.app_resources]
+                        )
+class OpenFigureAction(TaskAction):
+    method = 'open_figure'
+    image = ImageResource(name='page_white_database.png',
+                        search_path=[paths.icons, paths.app_resources]
+                        )
 #============= EOF =============================================

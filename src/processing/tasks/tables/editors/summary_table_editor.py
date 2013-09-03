@@ -15,27 +15,39 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Bool, Str
 from traitsui.api import View, UItem
 from src.processing.tasks.tables.editors.base_table_editor import BaseTableEditor
 from src.ui.tabular_editor import myTabularEditor
 from src.processing.tasks.tables.editors.summary_adapter import SummaryTabularAdapter
 from src.processing.tasks.tables.summary_table_pdf_writer import SummaryTablePDFWriter
+import os
+from src.paths import paths
+import cPickle as pickle
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 
 class SummaryTableEditor(BaseTableEditor):
-
+    use_alternating_background = Bool(False)
+    notes_template = Str
     def make_table(self, title):
         samples = self.items
-        t = SummaryTablePDFWriter()
+        uab = self.use_alternating_background
+        t = SummaryTablePDFWriter(
+                                  use_alternating_background=uab,
+                                  notes_template=self.notes_template
+                                  )
 
         t.col_widths = self._get_column_widths()
 
         p = '/Users/ross/Sandbox/aaasumtable.pdf'
 
         t.build(p, samples, title=title)
+
+        # dump our col widths
+        self._dump_widths()
+
         return p
 
     def _get_column_widths(self):
@@ -45,12 +57,35 @@ class SummaryTableEditor(BaseTableEditor):
 
         return cs
 
+    def _load_widths(self):
+        p = os.path.join(paths.hidden_dir, 'summary_col_widths')
+        if os.path.isfile(p):
+            with open(p, 'r') as fp:
+                try:
+                    return pickle.load(fp)
+                except Exception, e :
+                    print 'load_widths', e
+
+    def _dump_widths(self):
+        p = os.path.join(paths.hidden_dir, 'summary_col_widths')
+        with open(p, 'w') as fp:
+            pickle.dump(self.col_widths, fp)
+
     def traits_view(self):
+
+        adapter = SummaryTabularAdapter()
+        widths = self._load_widths()
+        if widths:
+            adapter.set_widths(widths)
+
         v = View(UItem('items', editor=myTabularEditor(
-                                                      adapter=SummaryTabularAdapter(),
+                                                      adapter=adapter,
                                                       editable=True,
                                                       operations=['delete', 'move'],
-                                                      col_widths='col_widths'
+                                                      col_widths='col_widths',
+                                                      selected='selected',
+                                                      multi_select=True,
+                                                      refresh='refresh_needed'
                                                       )))
         return v
 

@@ -15,8 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, List, Float, Int, Bool
+from traits.api import HasTraits, Str, List, Float, Int, Bool, Enum
 from traitsui.api import View, Item
+from src.helpers.filetools import list_directory
+from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -31,6 +33,17 @@ class TableTaskEditor(HasTraits):
     table_num = Int(1)
     use_auto_title = Bool(False)
     subtitle_font_size = Int(8)
+
+    use_alternating_background = Bool(False)
+    notes_template = Str
+    notes_templates = List
+
+    age_type = Str
+    age_types = List
+#     age_type = Enum('Weighted Mean', 'Plateau', 'Isochron', 'Integrated')
+    def _notes_templates_default(self):
+        return [''] + list_directory(paths.template_dir)
+
     def make_title(self):
         return '''<b>Table {}.</b><br/>
                   <font size={}>Ar/Ar data and constants used in age calculations.</font>
