@@ -1191,7 +1191,7 @@ anaylsis_type={}
         if starttime is None:
             starttime = time.time()
 
-        with dm.open_file(self._current_data_frame, 'a'):
+        with dm.open_file(self._current_data_frame):
             time.sleep(0.1)
             with consumable(func) as con:
                 while 1:
@@ -2022,7 +2022,7 @@ anaylsis_type={}
 #             isogrp = dm.new_group(iso, parent='/{}'.format(gn))
 #             dm.new_table(isogrp, name)
 
-        with dm.open_file(self._current_data_frame, 'a'):
+        with dm.open_file(self._current_data_frame):
             dm.new_group(gn)
             for i, d in enumerate(self._active_detectors):
                 iso = d.isotope
