@@ -230,7 +230,7 @@ class H5DataManager(DataManager):
         except Exception, e:
             print 'exception closing file', e
 
-    def open_file(self, path, mode='a'):
+    def open_file(self, path, mode='r+'):
         return FileCTX(
 #                         self,
                        weakref.ref(self)(),
