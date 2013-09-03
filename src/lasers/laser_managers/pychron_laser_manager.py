@@ -202,7 +202,7 @@ class PychronLaserManager(BaseLaserManager):
 
         ps = []
         # get contents of remote pattern_dir
-        pn = self._ask('GetPatternNames')
+        pn = self._ask('GetJogProcedures')
         if pn:
             ps.extend(pn.split(','))
 
