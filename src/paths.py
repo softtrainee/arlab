@@ -71,6 +71,7 @@ class Paths():
     scripts_dir = scripts_dir = None
     experiment_dir = None
     generic_experiment_dir = None
+    backup_experiment_dir=None
     plugins_dir = None
     hidden_dir = None
     preferences_dir = None
@@ -204,6 +205,7 @@ class Paths():
 
         self.experiment_dir = join(root, 'experiments')
         self.generic_experiment_dir = join(self.experiment_dir, 'generic')
+        self.backup_experiment_dir=join(self.experiment_dir,'backup')
         self.hidden_dir = join(root, '.hidden')
         self.preferences_dir = join(root, 'preferences')
         self.plotter_options_dir = join(self.hidden_dir, 'plotter_options')

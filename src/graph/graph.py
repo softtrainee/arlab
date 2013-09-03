@@ -1383,7 +1383,7 @@ class Graph(Viewable, ContextMenuMixin):
             print 'get_limits', e
 
 #    def _set_limits(self, mi, ma, axis, plotid, auto, track, pad):
-    def _set_limits(self, mi, ma, axis, plotid, pad, force=True):
+    def _set_limits(self, mi, ma, axis, plotid, pad, force=False):
         '''
         '''
         plot = self.plots[plotid]

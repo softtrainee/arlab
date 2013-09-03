@@ -41,7 +41,6 @@ from src.database.orms.isotope_orm import gen_ProjectTable, gen_SampleTable
 # from src.ui.thread import Thread
 # from pyface.timer.do_later import do_later
 
-from src.managers.data_managers.xls_data_manager import XLSDataManager
 
 
 
@@ -246,6 +245,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
             load positions from database into table for viewing
             
         '''
+        from src.managers.data_managers.xls_data_manager import XLSDataManager
 
         db = self.db
         irradiation = self.irradiation

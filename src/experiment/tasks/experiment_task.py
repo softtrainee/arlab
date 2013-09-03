@@ -440,7 +440,11 @@ class ExperimentEditorTask(EditorTask):
 
         if os.path.isfile(p):
             # make a backup copy of the original experiment file
-            shutil.copyfile(p, '{}.orig'.format(p))
+            bp=os.path.basename(p)
+            pp=os.path.join(paths.backup_experiment_dir, 
+                            '{}.orig'.format(bp))
+            self.info('{} - saving a backup copy to {}'.format(bp,pp))
+            shutil.copyfile(p, pp)
 
     @on_trait_change('manager:execute_event')
     def _execute(self):
