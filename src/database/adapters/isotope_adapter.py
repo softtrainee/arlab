@@ -341,9 +341,13 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_fit(self, history, isotope, **kw):
         f = proc_FitTable(**kw)
         if history:
-            history.fits.append(f)
+#             history.fits.append(f)
+            f.history_id = history.id
+
         if isotope:
-            isotope.fits.append(f)
+            f.isotope_id = isotope.id
+#             isotope.fits.append(f)
+
         self._add_item(f)
         return f
 
@@ -443,8 +447,8 @@ class IsotopeAdapter(DatabaseAdapter):
         iso = meas_IsotopeTable(**kw)
         analysis = self.get_analysis(analysis)
         if analysis:
-#            iso.analysis_id = analysis.id
-            analysis.isotopes.append(iso)
+            iso.analysis_id = analysis.id
+#             analysis.isotopes.append(iso)
 
         det = self.get_detector(det)
         if det is not None:
@@ -462,9 +466,11 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_isotope_result(self, isotope, history, **kw):
         r = proc_IsotopeResultsTable(**kw)
         if isotope:
-            isotope.results.append(r)
+            r.isotope_id = isotope.id
+#             isotope.results.append(r)
             if history:
-                history.results.append(r)
+                r.history_id = history.id
+#                 history.results.append(r)
 
         return r
 
@@ -604,8 +610,9 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_signal(self, isotope, data):
         s = meas_SignalTable(data=data)
         if isotope:
-            isotope.signals.append(s)
-
+            s.isotope_id = isotope.id
+#             isotope.signals.append(s)
+        self._add_item(s)
         return s
 
     def add_spectrometer_parameters(self, meas, params):

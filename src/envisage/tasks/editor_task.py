@@ -88,9 +88,9 @@ class BaseEditorTask(BaseManagerTask):
         return self.editor_area
 
     def _open_editor(self, editor, **kw):
-
-        self.editor_area.add_editor(editor)
-        self.editor_area.activate_editor(editor)
+        if self.editor_area:
+            self.editor_area.add_editor(editor)
+            self.editor_area.activate_editor(editor)
 
 #===============================================================================
 # property get/set

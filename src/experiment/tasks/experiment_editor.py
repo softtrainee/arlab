@@ -67,6 +67,7 @@ class ExperimentEditor(BaseTraitsEditor):
                                    multi_select=True,
                                    ),
                          height=200
+
                         )
 
         executed_grp = UItem('executed_runs',

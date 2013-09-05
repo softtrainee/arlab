@@ -64,8 +64,8 @@ class ArArAge(Loggable):
 
     timestamp = Property
     irradiation_info = Property
-    irradiation_level = Property
-    irradiation_position = Property
+#     irradiation_level = Property
+#     irradiation_position = Property
     production_ratios = Property
 
 #    signals = AgeProperty()
@@ -337,20 +337,22 @@ class ArArAge(Loggable):
     def _get_timestamp(self):
         return datetime.now()
 
-#     @cached_property
+# #     @cached_property
     def _get_irradiation_level(self):
-        try:
-            if self.irradiation_position:
-                return self.irradiation_position.level
-        except AttributeError, e:
-            print 'level', e
-
-#     @cached_property
-    def _get_irradiation_position(self):
-        try:
-            return self.labnumber_record.irradiation_position
-        except AttributeError, e:
-            print 'pos', e
+        l = self.labnumber_record.irradiation_position.level
+        return l
+#         try:
+#             if self.irradiation_position:
+#                 return self.irradiation_position.level
+#         except AttributeError, e:
+#             print 'level', e
+#
+# #     @cached_property
+#     def _get_irradiation_position(self):
+#         try:
+#             return self.labnumber_record.irradiation_position
+#         except AttributeError, e:
+#             print 'pos', e
 
 #     @cached_property
     def _get_irradiation_info(self):
@@ -360,8 +362,10 @@ class ArArAge(Loggable):
         prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), [], 1
 #        analysis = self.dbrecord
 
-        irradiation_level = self.irradiation_level
-
+        self.labnumber_record
+#         self._get_irradiation_level()
+#         irradiation_level = self.irradiation_level
+        irradiation_level = self._get_irradiation_level()
         if irradiation_level:
             irradiation = irradiation_level.irradiation
             if irradiation:

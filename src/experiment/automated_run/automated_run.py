@@ -1181,8 +1181,12 @@ anaylsis_type={}
                              fit=fi,
                              plotid=pi
                              )
+        debug = globalv.experiment_debug
 
-        m = self.integration_time
+        if debug:
+            m = 0.1
+        else:
+            m = self.integration_time
 
         func = self._make_write_iteration(grpname, data_write_hook,
                                                     series, fits, refresh,
@@ -1209,6 +1213,8 @@ anaylsis_type={}
 #                        keys, signals = ('H2', 'H1', 'AX', 'L1', 'L2', 'CDD'), (1, 2, 3, 4, 5, 6)
 
                     x = time.time() - starttime  # if not self._debug else iter_cnt + starttime
+                    if debug:
+                        x *= m ** -1
                     con.add_consumable((iter_cnt, x, data))
 
                     if iter_cnt % 50 == 0:
@@ -1228,6 +1234,7 @@ anaylsis_type={}
         et = iter_cnt * self.integration_time
         self.debug('%%%%%%%%%%%%%%%%%%%%%%%% counts: {} {} {}'.format(iter_cnt, et, t))
 
+        # ?? superfluous ??
         del graph
         del func
         del get_data
@@ -1347,6 +1354,20 @@ anaylsis_type={}
         if self._measured:
             self._post_measurement_save()
 
+    def _local_db_save(self):
+        ldb = self._local_lab_db_factory()
+        ln = self.spec.labnumber
+        aliquot = self.spec.aliquot
+        cp = self._current_data_frame
+
+        ldb.add_analysis(labnumber=ln,
+                         aliquot=aliquot,
+                         collection_path=cp,
+                         )
+        ldb.commit()
+        ldb.close()
+        del ldb
+
     def _post_measurement_save(self):
         self.info('post measurement save')
 
@@ -1371,14 +1392,7 @@ anaylsis_type={}
 
         # save to local sqlite database for backup and reference
 
-        ldb = self._local_lab_db_factory()
-
-        ldb.add_analysis(labnumber=ln,
-                         aliquot=aliquot,
-                         collection_path=cp,
-                         )
-        ldb.commit()
-        ldb.close()
+#         self._local_db_save()
 
         # save to a database
         db = self.db
@@ -1684,16 +1698,16 @@ anaylsis_type={}
                 det = db.get_detector(detname)
                 if det is None:
                     det = db.add_detector(detname)
-                    db.flush()
+#                     db.flush()
 
                 # add isotope
                 dbiso = db.add_isotope(analysis, iso, det, kind=kind)
 
-
                 s = signals['{}{}'.format(iso, kind)]
 
                 # add signal data
-                data = ''.join([struct.pack('>ff', x, y) for x, y in zip(s.xs, s.ys)])
+                data = ''.join([struct.pack('>ff', x, y)
+                                for x, y in zip(s.xs, s.ys)])
                 db.add_signal(dbiso, data)
 
                 if s.fit:
@@ -1803,12 +1817,12 @@ anaylsis_type={}
 {}
 #=========================================
 '''.format(tb))
+            self.experiment_manager.cancel(cancel_run=True,
+                                           msg='Could not save {} to Mass Spec database'.format(rid))
 
-            if not globalv.experiment_debug:
-                self.experiment_manager.cancel(cancel_run=True,
-                                               msg='Could not save {} to Mass Spec database'.format(rid))
-            else:
-                self.debug('skipping cancel')
+#             if not globalv.experiment_debug:
+#             else:
+#                 self.debug('skipping cancel')
 
     def _assemble_extraction_blob(self):
         _names, txt = self._assemble_script_blob(kinds=('extraction', 'post_equilibration', 'post_measurement'))

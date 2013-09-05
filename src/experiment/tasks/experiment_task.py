@@ -195,14 +195,18 @@ class ExperimentEditorTask(EditorTask):
                 # clear dirty flag
                 editor.dirty = False
 
-    def open(self):
+    def open(self, path=None):
 
 #         self._test_auto_figure()
 #         return
 
 #        import os
 #        ps = (os.path.join(paths.experiment_dir, 'demo.txt'),)
-        ps = self.open_file_dialog(action='open files')
+        if path is None:
+            ps = self.open_file_dialog(action='open files')
+        else:
+            ps = (path,)
+
         if ps:
             manager = self.manager
             if manager.verify_database_connection(inform=True):
@@ -440,10 +444,10 @@ class ExperimentEditorTask(EditorTask):
 
         if os.path.isfile(p):
             # make a backup copy of the original experiment file
-            bp=os.path.basename(p)
-            pp=os.path.join(paths.backup_experiment_dir, 
+            bp = os.path.basename(p)
+            pp = os.path.join(paths.backup_experiment_dir,
                             '{}.orig'.format(bp))
-            self.info('{} - saving a backup copy to {}'.format(bp,pp))
+            self.info('{} - saving a backup copy to {}'.format(bp, pp))
             shutil.copyfile(p, pp)
 
     @on_trait_change('manager:execute_event')
@@ -462,6 +466,8 @@ class ExperimentEditorTask(EditorTask):
             # if successful open an auto figure task
             if self.manager.execute_queues(qs):
                 self._open_auto_figure()
+            else:
+                self.warning('experiment queue did not start properly')
 
     @on_trait_change('manager:executor:[measuring,extracting]')
     def _update_measuring(self, name, new):
@@ -550,7 +556,12 @@ class ExperimentEditorTask(EditorTask):
         ip = InitializationParser()
         plugin = ip.get_plugin('Experiment', category='general')
         mode = ip.get_parameter(plugin, 'mode')
-        exp = Experimentor(application=self.window.application,
+
+        app = None
+        if self.window:
+            app = self.window.application
+
+        exp = Experimentor(application=app,
                            mode=mode,
                            connect=False)
 
