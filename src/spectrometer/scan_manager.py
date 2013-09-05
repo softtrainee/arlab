@@ -399,7 +399,8 @@ class ScanManager(Manager):
                    xtitle='Time',
                    ytitle='Signal',
                    scale=self.graph_scale,
-                   bgcolor='whitesmoke'
+                   bgcolor='whitesmoke',
+                   zoom=True
                    )
 
         plot.x_grid.visible = False
