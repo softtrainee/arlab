@@ -114,6 +114,11 @@ class PlotPanel(Loggable):
 
     def reset(self):
         self.clear_displays()
+        if self.graph:
+            self.graph.on_trait_change(self._update_display,
+                                       'regression_results', remove=True)
+
+        del self.graph
         self.graph = self._graph_factory()
         self.graph.on_trait_change(self._update_display, 'regression_results')
 

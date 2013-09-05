@@ -69,10 +69,12 @@ class ExperimentQueue(BaseExperimentQueue):
             self.automated_runs.remove(run)
             self.executed_runs.append(run)
             idx = len(self.executed_runs) - 1
+#             self.trait_set(executed_runs_scroll_to_row=idx)
 #             do_later(self.trait_set, executed_runs_scroll_to_row=idx)
 #             invoke_in_main_thread(do_later, lambda:self.trait_set(executed_runs_scroll_to_row=idx))
-            invoke_in_main_thread(self.trait_set, executed_runs_scroll_to_row=idx)
-
+            invoke_in_main_thread(do_later, lambda:self.trait_set(executed_runs_scroll_to_row=idx))
+#             invoke_in_main_thread(self.trait_set, executed_runs_scroll_to_row=idx)
+            self.debug('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ set ex scroll to {}'.format(idx))
         else:
             self.debug('Problem removing {}'.format(aid))
 

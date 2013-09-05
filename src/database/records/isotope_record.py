@@ -743,6 +743,8 @@ class IsotopeRecord(ArArAge):
 #     @cached_property
 #     def _get_labnumber_record(self):
 #         return self.dbrecord.labnumber
+    def _get_irradiation_level(self):
+        return self.dbrecord.labnumber.irradiation_position.level
 
     @cached_property
     def _get_irradiation_position(self):

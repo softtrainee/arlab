@@ -1,6 +1,34 @@
 from pylab import *
 
 import os
+def plot_mem(p, use_histogram=True):
+    with open(p, 'r') as fp:
+        ms = []
+        started = False
+        for line in fp:
+
+            # print line
+            msg, mem = map(str.strip, line.split(':'))
+#             print msg, mem
+            if not started and msg.startswith('<'):
+                started = True
+                s = float(mem)
+            elif started and msg.startswith('>'):
+                started = False
+                ms.append(float(mem) - s)
+
+        if use_histogram:
+            hist(ms, 30)
+        else:
+            plot(range(len(ms)), ms)
+#             try:
+#                 yi = float(mem)
+#                 continue
+#             except ValueError:
+#                 continue
+
+
+
 def plot_file(p, normalize=False, stacked=False,
               use_gradient=False, memory=False):
 
@@ -51,8 +79,10 @@ def plot_file(p, normalize=False, stacked=False,
                 if not ticked and stacked:
                     xticks(x, ts, rotation=-90)
                     ticked = True
+                    start_mem = y[0]
 
                 y = array(y)
+                end_mem = y[-1]
 
                 mxs.append(cnt)
                 mys.append((max(y) - min(y)))
@@ -73,6 +103,7 @@ def plot_file(p, normalize=False, stacked=False,
                 cnt += 1
 
         if len(x) > 1:
+            end_mem = y[-1]
             n += 1
             y = array(y)
             if normalize:
@@ -93,6 +124,7 @@ def plot_file(p, normalize=False, stacked=False,
             plot(mxs, mys)
 
         print 'Min: {}  Max: {} avg: {} n: {}'.format(mi, ma, (ma - mi) / float(n), n)
+        print 'start: {} end: {}'.format(start_mem, end_mem)
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
@@ -112,6 +144,10 @@ if __name__ == '__main__':
                         action='store_const',
                         const=bool,
                         default=False)
+    parser.add_argument('-u,', dest='usize',
+                        action='store_const',
+                        const=bool,
+                        default=False)
 
     parser.add_argument('paths', metavar='p', nargs='+')
     args = parser.parse_args()
@@ -125,6 +161,8 @@ if __name__ == '__main__':
         stacked = args.stacked
         grad = args.gradient
         mem = args.memory
+        usize = args.usize
+
         if paths[0] == 'last':
             i = 1
             while 1:
@@ -138,13 +176,17 @@ if __name__ == '__main__':
                     else:
                         i += 1
 
-            plot_file(pa, normalize=normalize,
+            if usize:
+                plot_mem(pa, use_histogram=False)
+            else:
+                plot_file(pa, normalize=normalize,
                       stacked=stacked,
                       use_gradient=grad,
                       memory=mem
                       )
             tight_layout()
             show()
+
         else:
             for ai in paths:
                 n = 'mem-{:03n}.txt'.format(int(ai))

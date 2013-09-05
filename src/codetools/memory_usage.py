@@ -20,6 +20,10 @@ import sys
 import cPickle
 from src.helpers.filetools import unique_path
 from itertools import groupby
+import objgraph
+import random
+import inspect
+import subprocess
 USE_MEM_LOG = True
 root = os.path.join(os.path.expanduser('~'), 'Desktop', 'memtest')
 if not os.path.isdir(root):
@@ -110,6 +114,47 @@ def _get_current_mem():
     return mem.rss / 1024.**2
 
 
+class MemCTX(object):
+    def __init__(self, cls):
+        self._cls = cls
+    def __enter__(self):
+        print 'enter'
+#         self._before = [id(o) for o in gc.get_objects() if isinstance(o, self._cls)]
+        self._before = [id(o) for o in gc.get_objects() if self._cls in str(type(o))]
+        print len(self._before)
+
+    def __exit__(self, *args, **kw):
+        print 'exit'
+        gc.collect()
+        bf = self._before
+        cls = self._cls
+        objs = [o for o in gc.get_objects()
+                    if self._cls in str(type(o))
+#                     if isinstance(o, cls)
+                    ]
+
+        print len(objs), len(bf)
+        objs = [o for o in objs if not id(o) in bf]
+        print 'new objs {}'.format(len(objs))
+        if len(objs) < 100:
+            for oi in objs:
+                print oi, [type(oo) for oo in gc.get_referrers(oi)]
+
+        return
+        path = os.environ['PATH']
+        os.environ['PATH'] = '{}:/usr/local/bin'.format(path)
+        fn = '/Users/ross/Desktop/chain.png'
+        objgraph.show_chain(
+                    objgraph.find_backref_chain(
+
+                                                random.choice(objs),
+                                                inspect.ismodule),
+                    filename=fn)
+#
+        subprocess.call(['open', fn])
+
+
+
 from collections import defaultdict
 
 
@@ -127,8 +172,8 @@ def measure_type(cls=None, group=None):
 
     return d
 
-gp, _ = unique_path(root, 'growth')
-def calc_growth(before, cls=None, group=None, count=None, write=True):
+# gp, _ = unique_path(root, 'growth')
+def calc_growth(before, cls=None, group=None, count=None, write=False):
     gc.collect()
 
     after = measure_type(cls, group)
@@ -138,28 +183,28 @@ def calc_growth(before, cls=None, group=None, count=None, write=True):
                       key=lambda x:x[1],
                       reverse=True
                       ):
-        if cls and v > 1 :
-            obj = get_type(k).next()
-            print 'referrers'
-            for ri in gc.get_referrers(obj):
-                print ri
-
-            print 'referrents'
-            for ri in gc.get_referents(obj):
-                print ri
+#         if cls and v > 1 :
+#             obj = get_type(k).next()
+#             print 'referrers'
+#             for ri in gc.get_referrers(obj):
+#                 print ri
+#
+#             print 'referrents'
+#             for ri in gc.get_referents(obj):
+#                 print ri
 
         s = get_size(k)
         if group:
             ts += s
         msg = '{:<70s}: {} size: {}'.format(k, v, s)
         print msg
-        if write:
-            with open(gp, 'a') as fp:
-                fp.write('{}\n'.format(msg))
+#         if write:
+#             with open(gp, 'a') as fp:
+#                 fp.write('{}\n'.format(msg))
 
     if ts:
         print 'total size: {}'.format(ts)
-    gc.collect()
+#     gc.collect()
 #         if cls == dict and count and count > 1:
 #             ds = get_type(cls)
 #             def test(ki):
@@ -203,7 +248,7 @@ def get_size(cls, show=False):
         print '{:<30s} {}'.format(cls, v)
     return v
 
-def count_instances(inst=None, group=None, referrers=False, referents=False):
+def count_instances(inst=None, group=None, referrers=False, referents=False, prev=0):
     gc.collect()
 
     if group:
@@ -215,8 +260,12 @@ def count_instances(inst=None, group=None, referrers=False, referents=False):
         t = lambda x: group in str(type(x))
         n = group
         objs = filter(t, gc.get_objects())
+
         s = sum(sys.getsizeof(o) for o in objs) * 1024 ** -2
-        print '{:<50s}:{} {}'.format(n, len(objs), s)
+        nn = len(objs)
+        print '{:<50s}:{} {} {} {}'.format(n, nn, s, prev, nn - prev)
+        return nn
+
     elif inst:
         t = lambda x: isinstance(x, inst)
         n = str(inst)
@@ -260,6 +309,9 @@ def show_referents(obj):
     print '============ {} referents =========='.format(obj)
     for ri in gc.get_referents(obj):
         print ri
+
+
+
 if __name__ == '__main__':
     mem_sort()
 

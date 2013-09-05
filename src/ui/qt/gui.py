@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -39,11 +38,13 @@ class InvokeEvent(QtCore.QEvent):
 class Invoker(QtCore.QObject):
     def event(self, event):
         event.fn(*event.args, **event.kwargs)
+        del event
         return True
 
 _invoker = Invoker()
-def invoke_in_main_thread(fn, *args, **kwargs):
 
+def invoke_in_main_thread(fn, *args, **kwargs):
+#     invoker = Invoker()
     QtCore.QCoreApplication.postEvent(_invoker,
                                       InvokeEvent(fn, *args, **kwargs))
 

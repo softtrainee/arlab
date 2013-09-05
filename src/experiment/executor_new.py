@@ -41,7 +41,8 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     meas_MeasurementTable, meas_ExtractionTable
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
-from src.codetools.memory_usage import mem_available, mem_log
+from src.codetools.memory_usage import mem_available, mem_log, measure_type, \
+    calc_growth, MemCTX
 from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import consumable
 from src.paths import paths
@@ -49,6 +50,13 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 from apptools.preferences.preference_binding import bind_preference
 import os
 from src.experiment.automated_run.automated_run import AutomatedRun
+import objgraph
+import random
+import inspect
+import subprocess
+from src.helpers.filetools import add_extension
+import gc
+from src.globals import globalv
 
 
 class ExperimentExecutor(IsotopeDatabaseManager):
@@ -170,9 +178,9 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         if self._pre_execute_check():
 
             self.info('Starting Execution')
-
-            self.stats.reset()
-            self.stats.start_timer()
+            if self.stats:
+                self.stats.reset()
+                self.stats.start_timer()
 
             self._canceled = False
             self.extraction_state_label = ''
@@ -185,6 +193,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             self.experiment_queue.executed = True
             t = Thread(target=self._execute)
             t.start()
+            return t
         else:
             self._alive = False
 
@@ -192,14 +201,18 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         if self.delaying_between_runs:
             self._alive = False
             self.stats.stop_timer()
+            self.wait_dialog.stop()
+
         else:
             self.cancel()
 
     def experiment_blob(self):
         path = self.experiment_queue.path
-        with open(path, 'r') as fp:
-            return '{}\n{}'.format(path,
-                                   fp.read())
+        path = add_extension(path)
+        if os.path.isfile(path):
+            with open(path, 'r') as fp:
+                return '{}\n{}'.format(path,
+                                       fp.read())
 #===============================================================================
 # private
 #===============================================================================
@@ -321,7 +334,17 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         t.start()
         return t, run
 
+    _prev = 0
     def _do_run(self, run):
+#         with MemCTX('sqlalchemy.orm.session.SessionMaker'):
+#             self._do_runA(run)
+        self._do_runA(run)
+        gc.collect()
+#         from src.codetools.memory_usage import count_instances
+#         self._prev = count_instances(group='sqlalchemy', prev=self._prev)
+
+    def _do_runA(self, run):
+
         mem_log('< start')
         run.state = 'not run'
         self.current_run = run
@@ -346,7 +369,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             if not run.state in ('truncated', 'canceled', 'failed'):
                 run.state = 'success'
 
-        self.stats.nruns_finished += 1
+        if self.stats:
+            self.stats.nruns_finished += 1
 
         if run.state in ('success', 'truncated'):
             self.run_completed = run
@@ -360,6 +384,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
         run.finish()
         run.teardown()
+
         mem_log('> end')
 
     def _join_run(self, spec, t, run):
@@ -416,7 +441,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     self._alive = False
                     self.stats.stop_timer()
                 self.set_extract_state(False)
-
+                self.wait_dialog.stop()
                 self._canceled = True
                 if arun:
                     if style == 'queue':
@@ -433,14 +458,26 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
     def _end_runs(self):
 #         self._last_ran = None
-        self.stats.stop_timer()
+        if self.stats:
+            self.stats.stop_timer()
 
         self.db.reset()
 
         def _set_extraction_state():
             self.extraction_state = False
-            self.extraction_state_color = 'green'
-            self.extraction_state_label = '{} Finished'.format(self.experiment_queue.name)
+            if self._canceled:
+                c = 'red'
+                msg = 'Canceled'
+            else:
+                c = 'green'
+                msg = 'Finished'
+
+            n = self.experiment_queue.name
+            self.trait_set(extraction_state_color=c,
+                           extraction_state_label='{} {}'.format(n, msg))
+#             self.extraction_state_color = 'green'
+#             self.extraction_state_label = '{} Finished'.format(self.experiment_queue.name)
+
         invoke_in_main_thread(_set_extraction_state)
 
 #===============================================================================
@@ -736,10 +773,12 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     self.cancel(confirm=False)
 
     def _pre_execute_check(self, inform=True):
-#        self.debug('********************** NOT DOING PRE EXECUTE CHECK ')
-#        return True
+        if globalv.experiment_debug:
+            self.debug('********************** NOT DOING PRE EXECUTE CHECK ')
+            return True
 
         if not self.pyscript_runner.connect():
+            self.info('Failed connecting to pyscript_runner')
             return
 
         if self._check_memory():

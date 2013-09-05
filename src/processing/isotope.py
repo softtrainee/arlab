@@ -112,7 +112,7 @@ class IsotopicMeasurement(BaseMeasurement):
     def _set_value(self, v):
         self._value = v
 
-    @cached_property
+    # @cached_property
     def _get_value(self):
         if self.refit and self.xs is not None and len(self.xs) > 1:  # and self.ys is not None:
 #            if len(self.xs) > 2 and len(self.ys) > 2:
@@ -123,7 +123,7 @@ class IsotopicMeasurement(BaseMeasurement):
         else:
             return self._value
 
-    @cached_property
+    # @cached_property
     def _get_error(self):
         if self.refit and self.xs is not None and len(self.xs) > 1:
 #            if len(self.xs) > 2 and len(self.ys) > 2:
@@ -132,7 +132,7 @@ class IsotopicMeasurement(BaseMeasurement):
         else:
             return self._error
 
-    @cached_property
+    # @cached_property
     def _get_regressor(self):
         try:
             if 'average' in self.fit.lower():
@@ -156,9 +156,10 @@ class IsotopicMeasurement(BaseMeasurement):
 
         return reg
 
-    @cached_property
+    # @cached_property
     def _get_uvalue(self):
         return ufloat(self.value, self.error)
+
 #===============================================================================
 # arthmetic
 #===============================================================================
