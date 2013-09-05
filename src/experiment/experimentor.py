@@ -94,7 +94,7 @@ class Experimentor(IsotopeDatabaseManager):
 
         return True
 
-    @deprecated
+    #@deprecated
     def start_file_listener(self, path):
         fl = FileListener(
                           path,
@@ -103,7 +103,7 @@ class Experimentor(IsotopeDatabaseManager):
                           )
         self.filelistener = fl
 
-    @deprecated
+    #@deprecated
     def stop_file_listener(self):
         if self.filelistener:
             self.filelistener.stop()

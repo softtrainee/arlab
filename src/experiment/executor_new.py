@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Event, Button, Float, String, \
-    Bool, Enum, Property, Instance, Int, List, Any
+    Bool, Enum, Property, Instance, Int, List, Any, Color
 from traitsui.api import View, Item
 #============= standard library imports ========================
 from threading import Thread, Event as Flag
@@ -50,6 +50,8 @@ from src.managers.data_managers.h5_data_manager import H5DataManager
 from apptools.preferences.preference_binding import bind_preference
 import os
 from src.experiment.automated_run.automated_run import AutomatedRun
+from src.helpers.filetools import add_extension
+
 import objgraph
 import random
 import inspect
@@ -76,7 +78,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 #     delaying_between_runs = Bool
 
     extraction_state_label = String
-
+    extraction_state_color = Color
+    
     end_at_run_completion = Bool(False)
     cancel_run_button = Button('Cancel Run')
 #     execute_label = Property(depends_on='_alive')
@@ -175,8 +178,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
     def execute(self):
         self._alive = True
+        
         if self._pre_execute_check():
-
             self.info('Starting Execution')
             if self.stats:
                 self.stats.reset()
@@ -202,17 +205,28 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             self._alive = False
             self.stats.stop_timer()
             self.wait_dialog.stop()
-
+            
+            msg='{} Stopped'.format(self.experiment_queue.name)
+            self._set_message(msg, color='orange')
         else:
             self.cancel()
-
+            
+    def _set_message(self, msg, color='black'):
+        def func():
+            self.trait_set(extraction_state_label=msg,
+                           extraction_state_color=color)
+        invoke_in_main_thread(func)
+        
     def experiment_blob(self):
         path = self.experiment_queue.path
-        path = add_extension(path)
+        path=add_extension(path, '.txt')
         if os.path.isfile(path):
             with open(path, 'r') as fp:
                 return '{}\n{}'.format(path,
                                        fp.read())
+        else:
+            self.warning('{} is not a valid file'.format(path))
+        
 #===============================================================================
 # private
 #===============================================================================
@@ -336,6 +350,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
     _prev = 0
     def _do_run(self, run):
+        #hp=hpy()
+        ##hp.setrelheap()
 #         with MemCTX('sqlalchemy.orm.session.SessionMaker'):
 #             self._do_runA(run)
         self._do_runA(run)
@@ -384,7 +400,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
         run.finish()
         run.teardown()
-
+        
         mem_log('> end')
 
     def _join_run(self, spec, t, run):
@@ -461,10 +477,13 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         if self.stats:
             self.stats.stop_timer()
 
-        self.db.reset()
-
-        def _set_extraction_state():
-            self.extraction_state = False
+        self.db.close()
+        self.extraction_state=False
+#        def _set_extraction_state():
+        if self.end_at_run_completion:
+            c='orange'
+            msg='Stopped'
+        else:
             if self._canceled:
                 c = 'red'
                 msg = 'Canceled'
@@ -472,13 +491,9 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                 c = 'green'
                 msg = 'Finished'
 
-            n = self.experiment_queue.name
-            self.trait_set(extraction_state_color=c,
-                           extraction_state_label='{} {}'.format(n, msg))
-#             self.extraction_state_color = 'green'
-#             self.extraction_state_label = '{} Finished'.format(self.experiment_queue.name)
-
-        invoke_in_main_thread(_set_extraction_state)
+        n = self.experiment_queue.name
+        msg='{} {}'.format(n, msg)
+        self._set_message(msg, c)
 
 #===============================================================================
 # execution steps
@@ -717,7 +732,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         # @todo: add preferences for timeout and whether to autosave or stop
         self._wait_for_save()
 
-    def _check_memory(self, threshold=200):
+    def _check_memory(self, threshold=50):
         '''
             if avaliable memory is less than threshold  (MB)
             stop the experiment

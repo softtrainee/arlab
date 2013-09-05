@@ -21,18 +21,18 @@ import time
 #============= local library imports  ==========================
 
 
-def limit_frequency(func):
-    def decorator(self, obj, *args, **kw):
-        fn = func.func_code
-        key = '{}._prev_time'.format(fn)
-        prev_time = self.__dict__.get(key, None)
-        if prev_time and time.time() - prev_time < 0.1:
-            return
-
-        self.__dict__[key] = time.time()
-        return func(self, obj, *args, **kw)
-
-    return decorator
+#def limit_frequency(func):
+#    def decorator(self, obj, *args, **kw):
+#        fn = func.func_code
+#        key = '{}._prev_time'.format(fn)
+#        prev_time = self.__dict__.get(key, None)
+#        if prev_time and time.time() - prev_time < 0.1:
+#            return
+#
+#        self.__dict__[key] = time.time()
+#        return func(self, obj, *args, **kw)
+#
+#    return decorator
 
 
 

@@ -35,7 +35,7 @@ from src.experiment.utilities.identifier import convert_shortname, convert_labnu
     make_runid
 # from src.database.isotope_analysis.detector_intercalibration_summary import DetectorIntercalibrationSummary
 # from src.database.isotope_analysis.irradiation_summary import IrradiationSummary
-from src.deprecate import deprecated
+#from src.deprecate import deprecated
 from src.constants import NULL_STR
 # from src.database.isotope_analysis.supplemental_summary import SupplementalSummary
 

@@ -245,7 +245,7 @@ class ExperimentExecutor(Experimentable):
                     self._alive = False
                     self.stats.stop_timer()
                 self.set_extract_state(False)
-
+                self.wait_dialog.stop()
                 self._canceled = True
                 if arun:
                     if style == 'queue':
@@ -571,7 +571,7 @@ class ExperimentExecutor(Experimentable):
         self.info('Executed {:n} queues. total runs={:n}'.format(ec, rc))
         self._alive = False
 
-    def _check_memory(self, threshold=200):
+    def _check_memory(self, threshold=50):
         '''
             if avaliable memory is less than threshold  (MB)
             stop the experiment

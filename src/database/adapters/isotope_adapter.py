@@ -333,7 +333,9 @@ class IsotopeAdapter(DatabaseAdapter):
         kw['user'] = self.save_username
         hist = proc_FitHistoryTable(**kw)
         if analysis:
-            analysis.fit_histories.append(hist)
+            hist.analysis_id=analysis.id
+        
+#            analysis.fit_histories.append(hist)
             analysis.selected_histories.selected_fits = hist
 
         return hist
@@ -448,7 +450,7 @@ class IsotopeAdapter(DatabaseAdapter):
         analysis = self.get_analysis(analysis)
         if analysis:
             iso.analysis_id = analysis.id
-#             analysis.isotopes.append(iso)
+#            analysis.isotopes.append(iso)
 
         det = self.get_detector(det)
         if det is not None:
@@ -610,8 +612,8 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_signal(self, isotope, data):
         s = meas_SignalTable(data=data)
         if isotope:
-            s.isotope_id = isotope.id
-#             isotope.signals.append(s)
+            s.isotope_id=isotope.id
+#            isotope.signals.append(s)
         self._add_item(s)
         return s
 
