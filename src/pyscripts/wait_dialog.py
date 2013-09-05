@@ -18,7 +18,7 @@
 # from traits.etsconfig.etsconfig import ETSConfig
 # ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
-from traits.api import Float, Property, Bool, Str, Button
+from traits.api import Float, Property, Bool, Str, Button, Color
 from traitsui.api import View, Item, RangeEditor, spring, HGroup, VGroup, \
     UItem, Spring
 
@@ -45,6 +45,7 @@ class WaitDialog(Loggable):
     timer = None
 
     message = Str
+    message_color = Color('black')
 
     _continued = False
     _canceled = False
@@ -89,7 +90,9 @@ class WaitDialog(Loggable):
 
     def stop(self):
         self._end()
-
+        self.debug('wait dialog stopped')
+        self.message='Stopped'
+        self.message_color='red'
     def _continue_button_fired(self):
         self._continue()
 
@@ -111,7 +114,7 @@ class WaitDialog(Loggable):
             self._end()
             self._canceled = False
 
-    def _update_time(self):
+    def _update_time(self):        
         self._current_time -= 1
 
     def _end(self, dispose=True):
@@ -145,7 +148,8 @@ class WaitDialog(Loggable):
         v = View(VGroup(
                         CustomLabel('message',
                                     size=14,
-                                    weight='bold'
+                                    weight='bold',
+                                    color_name='message_color'
                                     ),
                         HGroup(
                                Spring(width=-5, springy=False),

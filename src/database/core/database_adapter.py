@@ -271,7 +271,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
         return connected
 
-    @deprecated
+    #@deprecated
     def _get_query(self, klass, join_table=None, filter_str=None, *args, **clause):
         sess = self.get_session()
         q = sess.query(klass)
@@ -419,7 +419,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
         # no longer true: __retrieve is recursively called if a StatementError is raised
         return __retrieve()
 
-    @deprecated
+    #@deprecated
     def _get_items(self, table, gtables,
                    join_table=None, filter_str=None,
                    limit=None,

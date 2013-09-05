@@ -201,7 +201,7 @@ class ExperimentEditorTask(EditorTask):
 #         return
 
 #        import os
-#        ps = (os.path.join(paths.experiment_dir, 'demo.txt'),)
+#        ps = (os.path.join(paths.experiment_dir, 'demo.txt'),)  
         if path is None:
             ps = self.open_file_dialog(action='open files')
         else:
@@ -468,7 +468,7 @@ class ExperimentEditorTask(EditorTask):
                 self._open_auto_figure()
             else:
                 self.warning('experiment queue did not start properly')
-
+        
     @on_trait_change('manager:executor:[measuring,extracting]')
     def _update_measuring(self, name, new):
         if new:

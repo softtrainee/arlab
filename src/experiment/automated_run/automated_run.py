@@ -262,7 +262,6 @@ class AutomatedRun(Loggable):
         if self.spectrometer_manager:
             self.spectrometer_manager.spectrometer.set_parameter(name, v)
 
-#     @profile
     def py_data_collection(self, ncounts, starttime, starttime_offset, series=0):
         mem_log('pre data collection')
         if not self._alive:
@@ -552,7 +551,7 @@ class AutomatedRun(Loggable):
 #
 #         if self.measurement_script:
 #             self.measurement_script.automated_run = None
-
+        self._processed_signals_dict=None
         if self.arar_age:
             self.arar_age.labnumber_record = None
 
@@ -1144,7 +1143,7 @@ anaylsis_type={}
                 graph.refresh()
 
         return _write
-
+    
     def _measure_iteration(self, grpname, data_write_hook,
                            ncounts, starttime, starttime_offset,
                            series, fits, check_conditions, refresh):
@@ -1354,6 +1353,7 @@ anaylsis_type={}
         if self._measured:
             self._post_measurement_save()
 
+    
     def _local_db_save(self):
         ldb = self._local_lab_db_factory()
         ln = self.spec.labnumber
