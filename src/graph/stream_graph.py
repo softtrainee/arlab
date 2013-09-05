@@ -154,7 +154,7 @@ class StreamGraph(Graph):
             dl = self.data_limits[plotid]
             mi = max(1, x - dl * self.scan_delays[plotid])
             self.set_x_limits(# max=x,
-                              min=mi,
+                              min_=mi,
                               plotid=plotid,
     #                          pad=1
                               )
