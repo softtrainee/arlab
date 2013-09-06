@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Dict, Property, cached_property, \
-    Event, Bool, Instance, Float
+    Event, Bool, Instance, Float, Any
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 from datetime import datetime
@@ -54,16 +54,17 @@ class ArArAge(Loggable):
     Ar37_39 = AgeProperty()
     Ar36_39 = AgeProperty()
 
-    j = AgeProperty()
+    j = Any
 
     sensitivity = Property
     sensitivity_multiplier = Property
     _sensitivity_multiplier = Float
 
-    labnumber_record = None
+#     labnumber_record = Any
 
     timestamp = Property
-    irradiation_info = Property
+
+#     irradiation_info = Property
 #     irradiation_level = Property
 #     irradiation_position = Property
     production_ratios = Property
@@ -231,6 +232,7 @@ class ArArAge(Loggable):
         blsignals = self._make_signals(kind='blank')
         bksignals = self._make_signals(kind='background')
 
+#         print self.labnumber_record
         irrad = self.irradiation_info
 
         if not include_irradiation_error:
@@ -337,11 +339,11 @@ class ArArAge(Loggable):
     def _get_timestamp(self):
         return datetime.now()
 
-# #     @cached_property
-    def _get_irradiation_level(self):
-        if self.labnumber_record:
-            if self.labnumber_record.irradiation_position:
-                l = self.labnumber_record.irradiation_position.level
+#     @cached_property
+    def _get_irradiation_level(self, ln):
+        if ln:
+            if ln.irradiation_position:
+                l = ln.irradiation_position.level
                 return l
 #         try:
 #             if self.irradiation_position:
@@ -357,17 +359,17 @@ class ArArAge(Loggable):
 #             print 'pos', e
 
 #     @cached_property
-    def _get_irradiation_info(self):
+    def _get_irradiation_info(self, ln):
         '''
             return k4039, k3839,k3739, ca3937, ca3837, ca3637, cl3638, chronsegments, decay_time
         '''
         prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), [], 1
 #        analysis = self.dbrecord
 
-        self.labnumber_record
+#         self.labnumber_record
 #         self._get_irradiation_level()
 #         irradiation_level = self.irradiation_level
-        irradiation_level = self._get_irradiation_level()
+        irradiation_level = self._get_irradiation_level(ln)
         if irradiation_level:
             irradiation = irradiation_level.irradiation
             if irradiation:
@@ -605,8 +607,12 @@ class ArArAge(Loggable):
             if self.isotopes.has_key(iso_attr):
                 return self.isotopes[iso_attr].get_corrected_value()
 
-
-
+#===============================================================================
+#
+#===============================================================================
+    def load_irradiation(self, ln):
+        self.irradiation_info = self._get_irradiation_info(ln)
+        self.j = self._get_j()
 
 
 #============= EOF =============================================

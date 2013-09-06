@@ -27,7 +27,6 @@ from src.canvas.canvas2D.loading_canvas import LoadingCanvas
 
 from src.database.orms.isotope_orm import loading_LoadTable
 from src.canvas.canvas2D.scene.primitives.primitives import LoadIndicator
-from src.database.core.database_adapter import session
 
 
 def make_bound(st):
@@ -191,13 +190,17 @@ class LoadingManager(IsotopeDatabaseManager):
             return ts
 
     def _get_last_load(self, set_tray=True):
-        lt = self.db.get_loadtable()
-        if lt:
-            self.load_name = lt.name
-            if set_tray and lt.holder_:
-                self.load_load(lt, set_tray=set_tray)
+
+#         with self.db.session_():
+        with self.db.session_ctx():
+            lt = self.db.get_loadtable()
+            if lt:
+                self.load_name = lt.name
+                if set_tray and lt.holder_:
+                    self.load_load(lt, set_tray=set_tray)
 
         return self.load_name
+
     def _get_pid_pos(self, canvas_hole):
         pos = next((pi for pi in  self.positions
                        if pi.labnumber == self.labnumber), None)
@@ -274,8 +277,9 @@ class LoadingManager(IsotopeDatabaseManager):
     def make_canvas(self, new, editable=True):
 
         db = self.db
-        with session(None) as s:
-            lt = db.get_loadtable(new, sess=s)
+        with db.session_ctx():
+#         with session(None) as s:
+            lt = db.get_loadtable(new)
 
             c = self.canvas
             if not c:
@@ -308,9 +312,10 @@ class LoadingManager(IsotopeDatabaseManager):
         return c
 
     def load_load(self, loadtable, group_labnumbers=True, set_tray=True):
-        with session(None) as s:
+        with self.db.session_ctx():
+#         with session(None) as s:
             if isinstance(loadtable, str):
-                loadtable = self.db.get_loadtable(loadtable, sess=s)
+                loadtable = self.db.get_loadtable(loadtable)
 
             self.positions = []
             if set_tray and loadtable.holder_:
@@ -319,7 +324,7 @@ class LoadingManager(IsotopeDatabaseManager):
             for ln, poss in groupby(loadtable.loaded_positions,
                                             key=lambda x:x.lab_identifier):
 
-                dbln = self.db.get_labnumber(ln, sess=s)
+                dbln = self.db.get_labnumber(ln)
                 sample = ''
                 if dbln and dbln.sample:
                     sample = dbln.sample.name
@@ -330,7 +335,6 @@ class LoadingManager(IsotopeDatabaseManager):
                 level = dblevel.name
                 irradpos = dbirradpos.position
                 irradiation = '{} {}{}'.format(irrad, level, irradpos)
-
 
                 pos = []
                 for pi in poss:
@@ -360,15 +364,15 @@ class LoadingManager(IsotopeDatabaseManager):
                     pos.append(pid)
 
                 if group_labnumbers:
-                    self._add_position(ln, pos, s)
+                    self._add_position(ln, pos)
                 else:
                     for pi in pos:
-                        self._add_position(ln, [pi], s)
+                        self._add_position(ln, [pi])
 
 
-    def _add_position(self, ln, pos, sess):
+    def _add_position(self, ln, pos):
         pos = map(int, pos)
-        ln = self.db.get_labnumber(ln, sess=sess)
+        ln = self.db.get_labnumber(ln)
         ip = ln.irradiation_position
         level = ip.level
         irrad = level.irradiation
@@ -386,8 +390,9 @@ class LoadingManager(IsotopeDatabaseManager):
         self.positions.append(lp)
 
     def save(self):
-        self._save_load()
-        self._save_positions(self.load_name)
+        with self.db.session() as sess:
+            self._save_load()
+            self._save_positions(self.load_name)
 
     def _save_load(self):
         db = self.db
@@ -399,7 +404,9 @@ class LoadingManager(IsotopeDatabaseManager):
             else:
                 self.info('adding load {} {} to database'.format(nln, self.tray))
                 db.add_load(nln, holder=self.tray)
-                db.commit()
+                db.sess.commit()
+#                 sess.commit()
+#                     db.commit()
 
                 ls = self._get_loads()
                 self.loads = ls
@@ -408,41 +415,47 @@ class LoadingManager(IsotopeDatabaseManager):
 
     def _save_positions(self, name):
         db = self.db
-        lt = db.get_loadtable(name=name)
+        with db.session_ctx() as sess:
+            lt = db.get_loadtable(name=name)
 
-        sess = db.get_session()
-        for li in lt.loaded_positions:
-            sess.delete(li)
+    #         sess = db.get_session()
+            for li in lt.loaded_positions:
+                sess.delete(li)
 
-        db.flush()
-        for pi in self.positions:
-            ln = pi.labnumber
-            self.info('updating positions for {} {}'.format(lt.name, ln))
-#             self.debug('weight: {} note: {}'.format(pi.weight, pi.note))
-            scene = self.canvas.scene
-            for pp in pi.positions:
+    #         db.flush()
+            for pi in self.positions:
+                ln = pi.labnumber
+                self.info('updating positions for {} {}'.format(lt.name, ln))
+    #             self.debug('weight: {} note: {}'.format(pi.weight, pi.note))
+                scene = self.canvas.scene
+                for pp in pi.positions:
 
-                ip = scene.get_item(str(pp))
-                self.debug('weight: {} note: {}'.format(ip.weight, ip.note))
+                    ip = scene.get_item(str(pp))
+                    self.debug('weight: {} note: {}'.format(ip.weight, ip.note))
 
-                i = db.add_load_position(ln,
-                                         position=pp,
-                                         weight=ip.weight,
-                                         note=ip.note
-                                         )
-                lt.loaded_positions.append(i)
+                    i = db.add_load_position(ln,
+                                             position=pp,
+                                             weight=ip.weight,
+                                             note=ip.note,
+                                             sess=sess
+                                             )
+                    lt.loaded_positions.append(i)
 
-        db.commit()
+            sess.commit()
 
     @cached_property
     def _get_labnumbers(self):
-        level = self.db.get_irradiation_level(self.irradiation, self.level)
-        if level:
-#             self._positions = [str(li.position) for li in level.positions]
-            return sorted([li.labnumber.identifier
-                           for li in level.positions if li.labnumber])
-        else:
-            return []
+        with self.db.session_ctx() as sess:
+            level = self.db.get_irradiation_level(self.irradiation,
+                                                  self.level,
+    #                                               sess=sess
+                                                  )
+            if level:
+    #             self._positions = [str(li.position) for li in level.positions]
+                return sorted([li.labnumber.identifier
+                               for li in level.positions if li.labnumber])
+            else:
+                return []
 
 #     def _labnumber_changed(self):
 #         print self.labnumber
@@ -459,18 +472,21 @@ class LoadingManager(IsotopeDatabaseManager):
 #                     self.sample = sample.name
 
     def _get_irradiation_position_record(self):
-        level = self.db.get_irradiation_level(self.irradiation, self.level)
-        if level:
-            return next((pi for pi in level.positions
-                  if pi.labnumber.identifier == self.labnumber), None)
+        with self.db.session_ctx():
+            level = self.db.get_irradiation_level(self.irradiation,
+                                                  self.level)
+            if level:
+                return next((pi for pi in level.positions
+                      if pi.labnumber.identifier == self.labnumber), None)
 
     @cached_property
     def _get_sample(self):
         sample = ''
-        pos = self._get_irradiation_position_record()
-        if pos is not None:
-            dbsample = pos.labnumber.sample
-            sample = dbsample.name if dbsample else ''
+        with self.db.session_ctx():
+            pos = self._get_irradiation_position_record()
+            if pos is not None:
+                dbsample = pos.labnumber.sample
+                sample = dbsample.name if dbsample else ''
         return sample
 
     @cached_property
@@ -485,9 +501,10 @@ class LoadingManager(IsotopeDatabaseManager):
     @cached_property
     def _get_irradiation_hole(self):
         ir = ''
-        pos = self._get_irradiation_position_record()
-        if pos is not None:
-            ir = pos.position
+        with self.db.session_ctx():
+            pos = self._get_irradiation_position_record()
+            if pos is not None:
+                ir = pos.position
         return ir
 
     def _new_load_view(self):

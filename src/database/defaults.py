@@ -31,27 +31,27 @@ def iterdir(d):
 #
 
 def load_isotopedb_defaults(db):
-    from src.database.core.database_adapter import session
-    with session(None) as s:
+#     from src.database.core.database_adapter import session
+    with db.session_ctx():
         for name, mass in MOLECULAR_WEIGHTS.iteritems():
-                        db.add_molecular_weight(name, mass, sess=s)
+            db.add_molecular_weight(name, mass)
 
         for at in ['blank_air',
                    'blank_cocktail',
                    'blank_unknown',
                    'background', 'air', 'cocktail', 'unknown']:
     #                           blank', 'air', 'cocktail', 'background', 'unknown']:
-            db.add_analysis_type(at, sess=s)
+            db.add_analysis_type(at)
 
         for mi in ['obama', 'jan', 'nmgrl map']:
-            db.add_mass_spectrometer(mi, sess=s)
+            db.add_mass_spectrometer(mi)
 
         for i, di in enumerate(['blank_air',
                    'blank_cocktail',
                    'blank_unknown',
                    'background', 'air', 'cocktail']):
-            samp = db.add_sample(di, sess=s)
-            db.add_labnumber(i + 1, sample=samp, sess=s)
+            samp = db.add_sample(di)
+            db.add_labnumber(i + 1, sample=samp)
 
         for hi, kind, make in [('Fusions CO2', '10.6um co2', 'photon machines'),
                               ('Fusions Diode', '810nm diode', 'photon machines'),
@@ -60,9 +60,7 @@ def load_isotopedb_defaults(db):
             db.add_extraction_device(name=hi,
                                      kind=kind,
                                      make=make,
-                                     sess=s
                                      )
-
 
         mdir = os.path.join(paths.setup_dir, 'irradiation_tray_maps')
         if not os.path.isdir(mdir):
@@ -70,7 +68,7 @@ def load_isotopedb_defaults(db):
 
         else:
             for p, name in iterdir(mdir):
-                _load_irradiation_map(db, p, name, s)
+                _load_irradiation_map(db, p, name)
 
         mdir = paths.map_dir
         if not os.path.isdir(mdir):
@@ -78,19 +76,19 @@ def load_isotopedb_defaults(db):
 
         else:
             for p, name in iterdir(mdir):
-                _load_tray_map(db, p, name, s)
+                _load_tray_map(db, p, name)
 
 
-def _load_tray_map(db, p, name, sess):
+def _load_tray_map(db, p, name):
     from src.lasers.stage_managers.stage_map import StageMap
     sm = StageMap(file_path=p)
 
     r = sm.g_dimension
     blob = ''.join([struct.pack('>fff', si.x, si.y, r)
                     for si in sm.sample_holes])
-    db.add_load_holder(name, geometry=blob, sess=sess)
+    db.add_load_holder(name, geometry=blob)
 
-def _load_irradiation_map(db, p, name, sess):
+def _load_irradiation_map(db, p, name):
     with open(p, 'r') as f:
         h = f.readline()
         nholes, _diam = h.split(',')
@@ -104,4 +102,4 @@ def _load_irradiation_map(db, p, name, sess):
                 break
 
         blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
-        db.add_irradiation_holder(name, geometry=blob, sess=sess)
+        db.add_irradiation_holder(name, geometry=blob)

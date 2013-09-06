@@ -531,30 +531,31 @@ class LabnumberEntry(IsotopeDatabaseManager):
         if name is None:
             name = self.level
 
-        irrad = self.db.get_irradiation(self.irradiation)
+        with self.db.session_ctx():
+            irrad = self.db.get_irradiation(self.irradiation)
 
-        if not irrad:
-            self.debug('no irradiation for {}'.format(self.irradiation))
-            return
+            if not irrad:
+                self.debug('no irradiation for {}'.format(self.irradiation))
+                return
 
-        level = next((li for li in irrad.levels if li.name == name), None)
-        self.debug('dblevel {} for self.level {}'.format(level, name))
-        if level:
-            self.debug('holder {}'.format(level.holder))
-            if level.holder:
-                self._load_holder_positions(level.holder)
+            level = next((li for li in irrad.levels if li.name == name), None)
+            self.debug('dblevel {} for self.level {}'.format(level, name))
+            if level:
+                self.debug('holder {}'.format(level.holder))
+                if level.holder:
+                    self._load_holder_positions(level.holder)
 
-            positions = level.positions
-            n = len(self.irradiated_positions)
-            self.debug('positions {} irrad position {}'.format(n, len(self.irradiated_positions)))
-            if positions:
-                for pi in positions:
-                    hi = pi.position - 1
-                    if hi < n:
-                        ir = self._position_factory(pi)
-                        self.irradiated_positions[hi] = ir
-                    else:
-                        self.debug('extra irradiation position for this tray {}'.format(hi))
+                positions = level.positions
+                n = len(self.irradiated_positions)
+                self.debug('positions {} irrad position {}'.format(n, len(self.irradiated_positions)))
+                if positions:
+                    for pi in positions:
+                        hi = pi.position - 1
+                        if hi < n:
+                            ir = self._position_factory(pi)
+                            self.irradiated_positions[hi] = ir
+                        else:
+                            self.debug('extra irradiation position for this tray {}'.format(hi))
 
     @on_trait_change('project, sample')
     def _edit_handler(self, name, new):
@@ -632,17 +633,19 @@ class LabnumberEntry(IsotopeDatabaseManager):
 
     def _get_irradiation_tray_image(self):
         p = self._get_map_path()
-        level = self.db.get_irradiation_level(self.irradiation, self.level)
-        holder = None
-        if level:
-            holder = level.holder
-            holder = holder.name if holder else None
-        holder = holder if holder is not None else NULL_STR
-        self.tray_name = holder
-        im = ImageResource('{}.png'.format(holder),
-                             search_path=[p]
-                             )
-        return im
+        with self.db.session_ctx():
+            level = self.db.get_irradiation_level(self.irradiation,
+                                                  self.level)
+            holder = None
+            if level:
+                holder = level.holder
+                holder = holder.name if holder else None
+            holder = holder if holder is not None else NULL_STR
+            self.tray_name = holder
+            im = ImageResource('{}.png'.format(holder),
+                                 search_path=[p]
+                                 )
+            return im
 
     @cached_property
     def _get_trays(self):

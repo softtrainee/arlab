@@ -179,13 +179,13 @@ class Experimentor(IsotopeDatabaseManager):
                 special = ln.split('-')[0] in ANALYSIS_MAPPING
             return ln, special
 
-        def get_analysis_info(li, sess):
+        def get_analysis_info(li):
             sample, irradiationpos = '', ''
 
 #            analysis = db.get_last_analysis(li)
 #            if analysis:
 #                dbln = analysis.labnumber
-            dbln = db.get_labnumber(li, sess=sess)
+            dbln = db.get_labnumber(li)
             if dbln:
                 sample = dbln.sample
                 if sample:
@@ -201,13 +201,13 @@ class Experimentor(IsotopeDatabaseManager):
             return sample, irradiationpos
 
         db = self.db
-        with db.session() as sess:
+        with db.session_ctx():
             groups = self._group_analyses(ans, exclude=exclude)
             for ln, analyses in groups:
                 ln, special = get_is_special(ln)
                 cln = convert_identifier(ln)
 
-                sample, irradiationpos = get_analysis_info(cln, sess)
+                sample, irradiationpos = get_analysis_info(cln)
 
                 aliquot_key = lambda x: x._aliquot
                 egroup_key = lambda x: x.extract_group
@@ -223,9 +223,7 @@ class Experimentor(IsotopeDatabaseManager):
                                                         aliquot_start,
                                                         egroup,
                                                         sample,
-                                                        irradiationpos,
-                                                        sess
-                                                    )
+                                                        irradiationpos)
                             aliquot_start = ast + 1
 
                 else:
@@ -236,17 +234,17 @@ class Experimentor(IsotopeDatabaseManager):
                         self._set_aliquot_step(ais, special, cln, aliquot,
                                                aliquot_start,
                                                egroup,
-                                               sample, irradiationpos, sess)
+                                               sample, irradiationpos)
 
     def _set_aliquot_step(self, ais, special, cln,
                           aliquot,
                           aliquot_start,
                           egroup,
-                          sample, irradiationpos, sess):
+                          sample, irradiationpos):
         db = self.db
 
 #         step_start = 0
-        an = db.get_last_analysis(cln, aliquot=aliquot, sess=sess)
+        an = db.get_last_analysis(cln, aliquot=aliquot)
         if aliquot_start is None:
             aliquot_start = 0
             if an:
