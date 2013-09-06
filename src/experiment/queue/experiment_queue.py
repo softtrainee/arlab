@@ -102,11 +102,6 @@ class ExperimentQueue(BaseExperimentQueue):
     @on_trait_change('automated_runs[]')
     def _refresh_info(self, new):
 
-        self.debug('automated runs len changed {}'.format(len(new)))
-        if new:
-            idx = self.automated_runs.index(new[-1])
-            self.debug('SSSSSSSSSSSSSS set AR scroll to {}'.format(idx))
-            invoke_in_main_thread(do_later, lambda:self.trait_set(automated_runs_scroll_to_row=idx))
 #             do_later(self.trait_set, automated_runs_scroll_to_row=idx)
 
 #         if new > 1:
@@ -115,6 +110,12 @@ class ExperimentQueue(BaseExperimentQueue):
 #                 self._test = False
 
         if not self._no_update:
+            self.debug('automated runs len changed {}'.format(len(new)))
+            if new:
+                idx = self.automated_runs.index(new[-1])
+                self.debug('SSSSSSSSSSSSSS set AR scroll to {}'.format(idx))
+                invoke_in_main_thread(do_later, lambda:self.trait_set(automated_runs_scroll_to_row=idx))
+
             if self.automated_runs:
                 self.update_needed = True
 #                self.refresh_button = True

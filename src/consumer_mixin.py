@@ -31,6 +31,7 @@ class ConsumerMixin(object):
         self._consumer = Thread(target=self._consume)
         self._should_consume = True
         if auto_start:
+            self._consumer.setDaemon(1)
             self._consumer.start()
 
     def queue_size(self):

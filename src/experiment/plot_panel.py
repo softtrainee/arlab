@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, Int, Property, List, on_trait_change, Dict, Bool, \
-    Str, CInt
+    Str, CInt, Int
 from traitsui.api import View, Item, Group, VSplit, UItem, VGroup
 from src.graph.graph import Graph
 
@@ -70,10 +70,35 @@ class SignalAdapter(MultiTextTableAdapter):
 
 # class PlotPanelHandler(ViewableHandler):
 #    pass
+from traits.api import HasTraits, Any
+from traitsui.api import ListEditor
+
+class GraphContainer(HasTraits):
+    graphs = List
+    selected_tab = Any
+#     def _selected_tab_changed(self):
+#         print 'sel', self.selected_tab
+
+    def traits_view(self):
+        v = View(
+               UItem(
+                     'graphs', editor=ListEditor(use_notebook=True,
+                                                 selected='selected_tab',
+                                                 page_name='.page_name'
+                                                 ),
+                     style='custom'
+                     )
+
+               )
+        return v
+
 
 class PlotPanel(Loggable):
+    graph_container = Instance(GraphContainer)
     arar_age = Instance(ArArAge)
-    graph = Instance(Graph)
+    graph = Instance(Graph, ())
+    peak_center_graph = Instance(Graph, ())
+
     plot_title = Str
 
     ncounts = Property(Int(enter_set=True, auto_set=False), depends_on='_ncounts')
@@ -106,6 +131,19 @@ class PlotPanel(Loggable):
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
     info_func = None
 
+#     def show_isotopes(self):
+
+#         self.graph_container.selected_tab = self.graph
+
+    def set_peak_center_graph(self, graph):
+        self.peak_center_graph = graph
+        self.graph_container.selected_tab = self.peak_center_graph
+
+#     def show_peak_center(self):
+# #         self.graph_container.selected_tab = self.peak_center_graph
+#         print 'sss', self.graph_container.selected_tab
+#         self.graph_container.selected_tab = self.peak_center_graph
+
     def info(self, *args, **kw):
         if self.info_func:
             self.info_func(*args, **kw)
@@ -129,7 +167,10 @@ class PlotPanel(Loggable):
             dets: list of Detector instances
         '''
         self.reset()
+
         g = self.graph
+        self.graph_container.selected_tab = g
+
 #        g.suppress_regression = True
 #        # construct plot panels graph
 
@@ -381,17 +422,30 @@ class PlotPanel(Loggable):
         return display_grp
 
     def _get_graph_group(self):
-        graph_grp = Item('graph', show_label=False,
-                         style='custom')
+        graph_grp = Group(
+                        Group(Item('graph', show_label=False,
+                                   height=0.65,
+                                   style='custom'),
+                              label='Isotopes'
+                              ),
+                        Group(Item('peak_center_graph', show_label=False,
+                                   height=0.65,
+                                   style='custom'),
+                              label='Peak Center'
+                              ),
+                          layout='tabbed'
+                          )
+
         return graph_grp
 
     def traits_view(self):
-        gg = self._get_graph_group()
-        gg.height = 0.65
+#         gg = self._get_graph_group()
+#         gg.height = 0.65
 
         v = View(
                  VSplit(
-                        gg,
+                        UItem('graph_container', style='custom'),
+#                         gg,
                         VGroup(
                               Item('ncounts'),
                                self._get_display_group()
@@ -409,6 +463,17 @@ class PlotPanel(Loggable):
 
     def _get_isotopes(self):
         return [d.isotope for d in self.detectors]
+
+    def _graph_container_default(self):
+        return GraphContainer(graphs=[self.graph, self.peak_center_graph])
+
+    @on_trait_change('graph, peak_center_graph')
+    def _update_graphs(self):
+        if self.graph and self.peak_center_graph:
+            g, p = self.graph, self.peak_center_graph
+            g.page_name = 'Isotopes'
+            p.page_name = 'Peak Center'
+            self.graph_container.graphs = [g, p]
 #============= EOF =============================================
 
 #    def _display_factory(self):

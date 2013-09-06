@@ -56,6 +56,7 @@ from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import consumable
 from src.codetools.memory_usage import mem_log
 from src.codetools.file_log import file_log
+import traceback
 class ScriptInfo(HasTraits):
     measurement_script_name = Str
     extraction_script_name = Str
@@ -182,6 +183,7 @@ class AutomatedRun(Loggable):
         self._set_magnet_position(pos, detector, dac=dac)
 
     def py_activate_detectors(self, dets):
+
         mem_log('pre activate detectors')
         if not self._alive:
             return
@@ -191,6 +193,7 @@ class AutomatedRun(Loggable):
             return
 
         p = self._new_plot_panel(self.plot_panel, stack_order='top_to_bottom')
+
         self.plot_panel = p
 
         spec = self.spectrometer_manager.spectrometer
@@ -404,7 +407,7 @@ class AutomatedRun(Loggable):
                               starttime, series)
 
 
-    def py_peak_center(self, **kw):
+    def py_peak_center(self, detector=None, **kw):
         mem_log('pre peak center')
         if not self._alive:
             return
@@ -412,7 +415,16 @@ class AutomatedRun(Loggable):
 
         if ion is not None:
             self.debug('peak center started')
-            ion.do_peak_center(new_thread=False, **kw)
+#             if self.plot_panel:
+#                 self.plot_panel.show_peak_center()
+            ad = [di.name for di in self._active_detectors
+                    if di.name != detector]
+
+            ion.do_peak_center(
+                               detector=[detector] + ad,
+                               new_thread=False,
+                               plot_panel=self.plot_panel,
+                               **kw)
 
             pc = ion.peak_center
             self.peak_center = pc
@@ -581,8 +593,8 @@ class AutomatedRun(Loggable):
 
     def finish(self):
 
-        if self.peak_center:
-            self.peak_center.graph.close_ui()
+#         if self.peak_center:
+#             self.peak_center.graph.close_ui()
 
         if self.coincidence_scan:
             self.coincidence_scan.graph.close_ui()
@@ -1195,7 +1207,7 @@ anaylsis_type={}
         debug = globalv.experiment_debug
 
         if debug:
-            m = 0.05
+            m = 0.1
         else:
             m = self.integration_time
 

@@ -15,10 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Float, DelegatesTo, Int
+from traits.api import Any, Float, DelegatesTo, Int, List
 from traitsui.api import View, Item, EnumEditor, Group
 #============= standard library imports ========================
-from numpy import linspace, exp
+from numpy import linspace, exp, hstack
 import random
 import time
 #============= local library imports  ==========================
@@ -39,6 +39,7 @@ class MagnetScan(SpectrometerTask):
 #    graph = Any
     detectors = DelegatesTo('spectrometer')
     reference_detector = Any
+    additional_detectors = List
 #    execute = Event
 #    execute_label = Property(depends_on='_alive')
 #    _alive = Bool
@@ -113,9 +114,9 @@ class MagnetScan(SpectrometerTask):
         mag.settling_time = 0.25
 
         period = self.period
-#        if globalv.experiment_debug:
-#            period = 1
-#            mag.settling_time = 0.5
+        if globalv.experiment_debug:
+            period = 50
+#             mag.settling_time = 0.5
 
         peak_generator = psuedo_peak(values[len(values) / 2] + 0.001, values[0], values[-1], len(values))
 
@@ -143,29 +144,99 @@ class MagnetScan(SpectrometerTask):
 
             rintensities.append(intensities)
 
-
         return rintensities
 
     def _graph_hook(self, di, intensity, **kw):
         graph = self.graph
         if graph:
-            graph.add_datum(
-                            (di, intensity),
-#                            update_y_limits=True,
-#                            do_after=1,
-                            **kw
-                            )
+
+            normalize = True
+#             normalize = False
+#             s = 0
+            plot = self.graph.plots[0]
+#             ys = plot.data.get_data('y0')
+#             R = 1
+#             if ys.shape[0]:
+#                 R = max(1, max(ys) - min(ys))
+
+#                 m = max(ys)
+#                 s = ys[-1] / m
+#             rv = intensity[0]
+            R = 1
+            r = 1
+            for i, v in enumerate(intensity):
+
+
+
+#                 s = 1
+#                 if normalize:
+#                     ys = plot.data.get_data('y{}'.format(i))
+#                     if ys.shape[0]:
+#                         s = v / max(ys)
+                s = 1
+#                 try:
+#                 except Exception, e:
+#                     s = 1
+
+                oys = plot.data.get_data('oy{}'.format(i))
+                if oys is None:
+                    plot.data.set_data('oy{}'.format(i), [v])
+                else:
+                    if oys.shape[0]:
+                        if i == 0:
+                            R = max(oys) - min(oys)
+                        else:
+                            r = max(oys) - min(oys)
+                            if r:
+                                s = R / r
+
+                    plot.data.set_data('oy{}'.format(i), hstack((oys, v)))
+
+                ys = plot.data.get_data('y{}'.format(i))
+                plot.data.set_data('y{}'.format(i), hstack((ys, v * s)))
+
+#                 s = 1
+
+#                 print i, s, R, r
+#                 ys = hstack((ys, v * s))
+#                 ys *= s
+#                 plot.data.set_data('y{}'.format(i), ys)
+
+                xs = plot.data.get_data('x{}'.format(i))
+                xs = hstack((xs, di))
+                plot.data.set_data('x{}'.format(i), xs)
+
+#                 graph.add_datum(
+#                             (di, v * s),
+#                             series=i,
+# #                            update_y_limits=True,
+# #                            do_after=1,
+#                             **kw
+#                             )
 
     def _magnet_step_hook(self, detector=None, peak_generator=None):
         spec = self.spectrometer
+
+        ds = [self.reference_detector] + self.additional_detectors
 #        spec.magnet.set_dac(di, verbose=False)
 #        if delay:
 #            time.sleep(delay)
-        intensity = spec.get_intensity(detector)
+        intensity = spec.get_intensity(ds)
 
 #            debug
         if globalv.experiment_debug:
-            intensity = peak_generator.next()
+            from numpy import array, random, ones
+            v = peak_generator.next()
+            v = array([v])
+
+            r = ones(len(ds))
+#             r = random.random(len(ds))
+            r = r * v
+            r[1] *= 0.5
+            r[2] *= 0.1
+
+            intensity = r
+#             intensity = (intensity,) * len(ds)
 
         return intensity
 

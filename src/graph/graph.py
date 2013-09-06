@@ -324,6 +324,15 @@ class Graph(Viewable, ContextMenuMixin):
         p.index.set_data(x)
         p.value.set_data(y)
 
+    def clear_data(self, plotid=None, **kw):
+        if plotid is None:
+            for i, p in enumerate(self.plots):
+                for s in self.series[i]:
+                    for k in s:
+                        p.data.set_data(k, [])
+        else:
+            self.set_data([], **kw)
+
     def set_data(self, d, plotid=0, series=0, axis=0):
         '''
         '''

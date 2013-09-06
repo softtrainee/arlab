@@ -62,17 +62,14 @@ class SessionCTX(object):
             if self._sess is None:
                 self._sess = self._parent.session_factory()
 
-            if not self._parent._sess_stack:
-                self._parent._sess_stack = []
-
-            self._parent._sess_stack.append(0)
+            self._parent._sess_stack += 1
             self._parent.sess = self._sess
 
         return self._sess
 
     def __exit__(self, *args, **kw):
         if self._parent:
-            self._parent._sess_stack.pop()
+            self._parent._sess_stack -= 1
             if not self._parent._sess_stack:
                 self._parent.sess = None
 
@@ -91,7 +88,7 @@ class DatabaseAdapter(Loggable):
     '''
     sess = None
 
-    _sess_stack = None
+    _sess_stack = 0
 
     connected = Bool(False)
     kind = Str  # ('mysql')

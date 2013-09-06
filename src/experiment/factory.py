@@ -70,6 +70,9 @@ class ExperimentFactory(Loggable, ConsumerMixin):
         super(ExperimentFactory, self).__init__(*args, **kw)
         self.setup_consumer(self._add_run)
 
+    def destroy(self):
+        self._should_consume = False
+
     def set_selected_runs(self, runs):
         self.run_factory.set_selected_runs(runs)
 

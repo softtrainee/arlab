@@ -19,13 +19,11 @@ from envisage.core_plugin import CorePlugin
 from envisage.api import Plugin
 from envisage.ui.tasks.tasks_plugin import TasksPlugin
 #============= standard library imports ========================
-import os
 #============= local library imports  ==========================
 from src.displays.gdisplays import gTraceDisplay
-from src.globals import globalv
 from src.helpers.logger_setup import new_logger
 from src.logger.tasks.logger_plugin import LoggerPlugin
-import sys
+
 
 logger = new_logger('launcher')
 
@@ -210,21 +208,15 @@ def launch(klass):
     try:
         app.run()
         logger.info('Quitting {}'.format(app.name), extra={'threadName_':'Launcher'})
-        app.exit()
-
-#         sys.exit()
-        # force a clean exit
-#         os._exit(0)
-
-    except Exception, err:
+    except Exception:
         logger.exception('Launching error')
-
         import traceback
 
         tb = traceback.format_exc()
         gTraceDisplay.add_text(tb)
         gTraceDisplay.edit_traits(kind='livemodal')
 
+    finally:
         app.exit()
 
     return

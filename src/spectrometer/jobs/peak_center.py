@@ -100,7 +100,7 @@ class PeakCenter(MagnetScan):
 #    data = None
     result = None
     directions = None
-
+    _markup_idx = 1
     def get_peak_center(self, ntries=2):
         self._alive = True
         graph = self.graph
@@ -150,11 +150,11 @@ class PeakCenter(MagnetScan):
                         xs, ys, mx, my = result
 
                         center = xs[1]
-                        graph.set_data(xs, series=1)
-                        graph.set_data(ys, series=1, axis=1)
+                        graph.set_data(xs, series=self._markup_idx)
+                        graph.set_data(ys, series=self._markup_idx, axis=1)
 
-                        graph.set_data([mx], series=2)
-                        graph.set_data([my], series=2, axis=1)
+                        graph.set_data([mx], series=self._markup_idx + 1)
+                        graph.set_data([my], series=self._markup_idx + 1, axis=1)
 
                         graph.add_vertical_rule(center)
                         graph.redraw()
@@ -263,9 +263,21 @@ class PeakCenter(MagnetScan):
                        ytitle='Intensity (fA)',
                        )
 
-        graph.new_series(type='scatter', marker='circle',
-                         marker_size=1.25
+        graph.new_series(
+#                          type='scatter',
+#                          marker='circle',
+#                          marker_size=1.25
                          )
+
+        self._markup_idx = 1
+        for di in self.additional_detectors:
+            graph.new_series(
+#                              type='scatter',
+#                              marker='circle',
+#                          marker_size=1.25
+                         )
+            self._markup_idx += 1
+
         graph.new_series(type='scatter', marker='circle',
                          marker_size=4
                          )

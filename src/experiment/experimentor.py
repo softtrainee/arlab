@@ -108,9 +108,10 @@ class Experimentor(IsotopeDatabaseManager):
         if self.filelistener:
             self.filelistener.stop()
 
-    def update_info(self, reset_db=False):
-        if reset_db:
-            self.db.reset()
+#     def update_info(self, reset_db=False):
+    def update_info(self):
+#         if reset_db:
+#             self.db.reset()
 
         self._update()
 #===============================================================================
