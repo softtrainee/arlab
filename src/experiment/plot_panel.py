@@ -118,7 +118,9 @@ class PlotPanel(Loggable):
             self.graph.on_trait_change(self._update_display,
                                        'regression_results', remove=True)
 
-        del self.graph
+            del self.graph.plotcontainer
+            del self.graph.plots
+
         self.graph = self._graph_factory()
         self.graph.on_trait_change(self._update_display, 'regression_results')
 

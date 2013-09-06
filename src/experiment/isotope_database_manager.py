@@ -74,9 +74,9 @@ class IsotopeDatabaseManager(Manager):
     def verify_database_connection(self, inform=True):
         if self.db is not None:
             if self.db.connect(force=True):
-                self.db.flush()
-                self.db.reset()
                 return True
+#                 self.db.flush()
+#                 self.db.reset()
         elif inform:
             self.warning_dialog('Not Database available')
 

@@ -5,22 +5,30 @@ def plot_mem(p, use_histogram=True):
     with open(p, 'r') as fp:
         ms = []
         started = False
+        mx, mn = -Inf, Inf
         for line in fp:
 
             # print line
             msg, mem = map(str.strip, line.split(':'))
+            x = float(mem)
+            mn = min(mn, x)
+            mx = max(mx, x)
 #             print msg, mem
             if not started and msg.startswith('<'):
                 started = True
-                s = float(mem)
+                s = x
             elif started and msg.startswith('>'):
                 started = False
-                ms.append(float(mem) - s)
+                ms.append(x - s)
 
         if use_histogram:
             hist(ms, 30)
         else:
             plot(range(len(ms)), ms)
+
+
+        print mn, mx, len(ms), (mx - mn) / float(len(ms))
+
 #             try:
 #                 yi = float(mem)
 #                 continue
@@ -124,7 +132,7 @@ def plot_file(p, normalize=False, stacked=False,
             plot(mxs, mys)
 
         print 'Min: {}  Max: {} avg: {} n: {}'.format(mi, ma, (ma - mi) / float(n), n)
-        print 'start: {} end: {}'.format(start_mem, end_mem)
+#         print 'start: {} end: {}'.format(start_mem, end_mem)
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
@@ -149,6 +157,11 @@ if __name__ == '__main__':
                         const=bool,
                         default=False)
 
+    parser.add_argument('-U,', dest='uhist',
+                        action='store_const',
+                        const=bool,
+                        default=False)
+
     parser.add_argument('paths', metavar='p', nargs='+')
     args = parser.parse_args()
     print args
@@ -162,6 +175,7 @@ if __name__ == '__main__':
         grad = args.gradient
         mem = args.memory
         usize = args.usize
+        uhist = args.uhist
 
         if paths[0] == 'last':
             i = 1
@@ -178,6 +192,8 @@ if __name__ == '__main__':
 
             if usize:
                 plot_mem(pa, use_histogram=False)
+            elif uhist:
+                plot_mem(pa, use_histogram=True)
             else:
                 plot_file(pa, normalize=normalize,
                       stacked=stacked,

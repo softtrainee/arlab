@@ -52,11 +52,6 @@ import os
 from src.experiment.automated_run.automated_run import AutomatedRun
 from src.helpers.filetools import add_extension
 
-import objgraph
-import random
-import inspect
-import subprocess
-from src.helpers.filetools import add_extension
 import gc
 from src.globals import globalv
 
@@ -79,7 +74,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
     extraction_state_label = String
     extraction_state_color = Color
-    
+
     end_at_run_completion = Bool(False)
     cancel_run_button = Button('Cancel Run')
 #     execute_label = Property(depends_on='_alive')
@@ -178,7 +173,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
     def execute(self):
         self._alive = True
-        
+
         if self._pre_execute_check():
             self.info('Starting Execution')
             if self.stats:
@@ -205,28 +200,28 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             self._alive = False
             self.stats.stop_timer()
             self.wait_dialog.stop()
-            
-            msg='{} Stopped'.format(self.experiment_queue.name)
+
+            msg = '{} Stopped'.format(self.experiment_queue.name)
             self._set_message(msg, color='orange')
         else:
             self.cancel()
-            
+
     def _set_message(self, msg, color='black'):
         def func():
             self.trait_set(extraction_state_label=msg,
                            extraction_state_color=color)
         invoke_in_main_thread(func)
-        
+
     def experiment_blob(self):
         path = self.experiment_queue.path
-        path=add_extension(path, '.txt')
+        path = add_extension(path, '.txt')
         if os.path.isfile(path):
             with open(path, 'r') as fp:
                 return '{}\n{}'.format(path,
                                        fp.read())
         else:
             self.warning('{} is not a valid file'.format(path))
-        
+
 #===============================================================================
 # private
 #===============================================================================
@@ -257,10 +252,10 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         # save experiment to database
         self.info('saving experiment "{}" to database'.format(exp.name))
 
-        dbexp = self.db.add_experiment(exp.path)
-        self.db.commit()
-
-        exp.database_identifier = int(dbexp.id)
+        with self.db.session() as sess:
+            dbexp = self.db.add_experiment(exp.path, sess=sess)
+            sess.flush()
+            exp.database_identifier = int(dbexp.id)
 
         exp.executed = True
         # scroll to the first run
@@ -336,7 +331,6 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         self.info('experiment queue {} finished'.format(exp.name))
 
     def _execute_run(self, spec):
-        self.db.reset()
 
         run = self._make_run(spec)
         self.info('%%%%%%%%%%%%%%%%%%%% starting run {}'.format(run.runid))
@@ -350,8 +344,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
     _prev = 0
     def _do_run(self, run):
-        #hp=hpy()
-        ##hp.setrelheap()
+        # hp=hpy()
+        # #hp.setrelheap()
 #         with MemCTX('sqlalchemy.orm.session.SessionMaker'):
 #             self._do_runA(run)
         self._do_runA(run)
@@ -360,7 +354,6 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 #         self._prev = count_instances(group='sqlalchemy', prev=self._prev)
 
     def _do_runA(self, run):
-
         mem_log('< start')
         run.state = 'not run'
         self.current_run = run
@@ -400,7 +393,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
         run.finish()
         run.teardown()
-        
+
         mem_log('> end')
 
     def _join_run(self, spec, t, run):
@@ -477,12 +470,12 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         if self.stats:
             self.stats.stop_timer()
 
-        self.db.close()
-        self.extraction_state=False
+#         self.db.close()
+        self.extraction_state = False
 #        def _set_extraction_state():
         if self.end_at_run_completion:
-            c='orange'
-            msg='Stopped'
+            c = 'orange'
+            msg = 'Stopped'
         else:
             if self._canceled:
                 c = 'red'
@@ -492,7 +485,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                 msg = 'Finished'
 
         n = self.experiment_queue.name
-        msg='{} {}'.format(n, msg)
+        msg = '{} {}'.format(n, msg)
         self._set_message(msg, c)
 
 #===============================================================================

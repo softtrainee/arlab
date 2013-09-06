@@ -25,6 +25,7 @@ from data_manager import DataManager
 from table_descriptions import table_description_factory
 import os
 import weakref
+from tables.table import Table
 
 
 def get_table(name, group, frame):
@@ -137,7 +138,11 @@ class H5DataManager(DataManager):
         '''
         p = self._new_frame_path(*args, **kw)
         try:
-            self._frame = openFile(p, mode='w', filters=Filters(complevel=self.compression_level))
+            self._frame = openFile(p, mode='w',
+#                                    filters=Filters(complevel=self.compression_level)
+                                   )
+#             self._frame = openFile(p, mode='w',
+#                                    filters=Filters(complevel=self.compression_level))
             return self._frame
         except ValueError:
             pass
@@ -167,6 +172,8 @@ class H5DataManager(DataManager):
         if tab is None:
             tab = self._frame.createTable(group, table_name,
                                         table_description_factory(table_style))
+
+        tab.flush()
         return tab
 
     def new_array(self, group, name, data):
@@ -223,9 +230,14 @@ class H5DataManager(DataManager):
     def close_file(self):
         try:
             self.debug('flush and close file {}'.format(self._frame.filename))
+
+            for node in self._frame.walkNodes('/', 'Table'):
+                node.flush()
+
             self._frame.flush()
             self._frame.close()
-            del self._frame
+            self._frame = None
+#             del self._frame
 
         except Exception, e:
             print 'exception closing file', e
