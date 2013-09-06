@@ -60,21 +60,21 @@ class MassSpecDatabaseImporter(Loggable):
         if self.sample_loading_id is None:
             db = self.db
             sl = db.add_sample_loading(ms, tray)
-            db.flush()
+#             db.flush()
             self.sample_loading_id = sl.SampleLoadingID
 
     def add_login_session(self, ms):
         self.info('adding new session for {}'.format(ms))
         db = self.db
         ls = db.add_login_session(ms)
-        db.flush()
+#         db.flush()
         self.login_session_id = ls.LoginSessionID
 
     def add_data_reduction_session(self):
         if self.data_reduction_session_id is None:
             db = self.db
             dr = db.add_data_reduction_session()
-            db.flush()
+#             db.flush()
             self.data_reduction_session_id = dr.DataReductionSessionID
 
     def create_import_session(self, spectrometer, tray):
@@ -95,53 +95,55 @@ class MassSpecDatabaseImporter(Loggable):
         self._current_spec = None
 
     def add_analysis(self, spec, commit=True):
-        irradpos = spec.irradpos
-        rid = spec.rid
-        trid = rid.lower()
+        with self.db.session_ctx(commit=commit) as sess:
+            irradpos = spec.irradpos
+            rid = spec.rid
+            trid = rid.lower()
 
-        if trid.startswith('b'):
-            runtype = 'Blank'
-            irradpos = -1
-        elif trid.startswith('a'):
-            runtype = 'Air'
-            irradpos = -2
-        elif trid.startswith('c'):
-            runtype = 'Unknown'
-            if spec.spectrometer.lower() in ('obama', 'pychron obama'):
-                rid = '4358'
-                irradpos = '4358'
+            if trid.startswith('b'):
+                runtype = 'Blank'
+                irradpos = -1
+            elif trid.startswith('a'):
+                runtype = 'Air'
+                irradpos = -2
+            elif trid.startswith('c'):
+                runtype = 'Unknown'
+                if spec.spectrometer.lower() in ('obama', 'pychron obama'):
+                    rid = '4358'
+                    irradpos = '4358'
+                else:
+                    rid = '4359'
+                    irradpos = '4359'
+
+                paliquot = self.db.get_lastest_analysis_aliquot(rid)
+                self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%% paliqout{} {}'.format(paliquot, rid))
+                if paliquot is None:
+                    paliquot = 0
+
+                aliquot = paliquot + 1
+                rid = '{}-{:02n}'.format(rid, aliquot)
+                spec.aliquot = '{:02n}'.format(aliquot)
             else:
-                rid = '4359'
-                irradpos = '4359'
+                runtype = 'Unknown'
 
-            paliquot = self.db.get_lastest_analysis_aliquot(rid)
-            self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%% paliqout{} {}'.format(paliquot, rid))
-            if paliquot is None:
-                paliquot = 0
-
-            aliquot = paliquot + 1
-            rid = '{}-{:02n}'.format(rid, aliquot)
-            spec.aliquot = '{:02n}'.format(aliquot)
-        else:
-            runtype = 'Unknown'
-
-        self._analysis = None
-        try:
-            self._add_analysis(spec, irradpos, rid, runtype, commit)
-        except Exception, e:
-#            import traceback
-#            tb = traceback.format_exc()
-            self.message('Could not save to Mass Spec database.\n {}'.format(e))
-            if commit:
-                self.db.rollback()
-#                 pid = spec.rid
-#                 spec.aliquot = '*{:02n}'.format(spec.aliquot)
-#                 spec.rid = '{}-{}'.format(spec.labnumber, spec.aliquot)
-#                 self.message('Saving {} as {}'.format(pid, spec.rid))
-#                 self._add_analysis(spec, irradpos, spec.rid, runtype, commit)
+            self._analysis = None
+            try:
+                self._add_analysis(spec, irradpos, rid, runtype)
+            except Exception, e:
+    #            import traceback
+    #            tb = traceback.format_exc()
+                self.message('Could not save to Mass Spec database.\n {}'.format(e))
+                if commit:
+                    sess.rollback()
+    #                 self.db.rollback()
+    #                 pid = spec.rid
+    #                 spec.aliquot = '*{:02n}'.format(spec.aliquot)
+    #                 spec.rid = '{}-{}'.format(spec.labnumber, spec.aliquot)
+    #                 self.message('Saving {} as {}'.format(pid, spec.rid))
+    #                 self._add_analysis(spec, irradpos, spec.rid, runtype, commit)
 
 
-    def _add_analysis(self, spec, irradpos, rid, runtype, commit=True):
+    def _add_analysis(self, spec, irradpos, rid, runtype):
         gst = time.time()
 
         db = self.db
@@ -168,14 +170,18 @@ class MassSpecDatabaseImporter(Loggable):
                 self.warning('no irradiation position found for {}. not importing analysis {}'.format(irradpos, spec.record_id))
                 return
         # add runscript
-        rs = db.add_runscript(spec.runscript_name, spec.runscript_text)
-        db.flush()
+        rs = db.add_runscript(spec.runscript_name,
+                              spec.runscript_text)
+#         db.flush()
 #        print irradpos, runtype
-        self.create_import_session(spectrometer, tray)
+        self.create_import_session(spectrometer, tray,
+                                   )
 
         # added the reference detector
-        refdbdet = db.add_detector('H1', Label='H1')
-        db.flush()
+        refdbdet = db.add_detector('H1', Label='H1',
+                                   
+                                   )
+#         db.flush()
 
         # remember new rid in case duplicate entry error and new to augment rid
         spec.rid = rid
@@ -194,6 +200,7 @@ class MassSpecDatabaseImporter(Loggable):
                                    FirstStageDly=spec.first_stage_delay,
                                    SecondStageDly=spec.second_stage_delay,
                                    PipettedIsotopes=pipetted_isotopes,
+                                   
                                    )
 
         analysis.RefDetID = refdbdet.DetectorID
@@ -204,15 +211,16 @@ class MassSpecDatabaseImporter(Loggable):
 
         db.add_analysis_positions(analysis, spec.position)
 
-        db.flush()
+#         db.flush()
         #=======================================================================
         # add changeable items
         #=======================================================================
-        item = db.add_changeable_items(analysis, self.data_reduction_session_id)
+        item = db.add_changeable_items(analysis, self.data_reduction_session_id,
+                                       )
 
         self.debug('%%%%%%%%%%%%%%%%%%%% Comment: {} %%%%%%%%%%%%%%%%%%%'.format(spec.comment))
         item.Comment = spec.comment
-        db.flush()
+#         db.flush()
 
         analysis.ChangeableItemsID = item.ChangeableItemsID
 
@@ -234,7 +242,7 @@ class MassSpecDatabaseImporter(Loggable):
                 if det == 'CDD':
                     dbdet.ICFactor = spec.ic_factor_v
                     dbdet.ICFactorEr = spec.ic_factor_e
-                db.flush()
+#                 db.flush()
 
             db_iso = db.add_isotope(analysis, dbdet, isok)
 
@@ -252,10 +260,11 @@ class MassSpecDatabaseImporter(Loggable):
             db_changeable = db.add_baseline_changeable_item(self.data_reduction_session_id,
                                                             bfit,
 #                                                            baseline_fits[isok],
-                                                            infoblob)
+                                                            infoblob,
+                                                            )
 
             # baseline and baseline changeable items need matching BslnID
-            db.flush()
+#             db.flush()
             db_changeable.BslnID = db_baseline.BslnID
             #===================================================================
             # peak time
@@ -287,11 +296,12 @@ class MassSpecDatabaseImporter(Loggable):
                                   ublank,
                                   sfit,
                                   dbdet,
+                                  
                                   )
 
-        if commit:
-            self.debug('commit')
-            db.commit()
+#         if commit:
+#             self.debug('commit')
+#             db.commit()
 
         t = time.time() - gst
         self.debug('{} added analysis time {}s'.format(spec.record_id, t))

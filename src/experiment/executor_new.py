@@ -226,6 +226,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 # private
 #===============================================================================
     def _execute(self):
+        self.massspec_importer.connect()
 #         self._alive = True
 #
 #         # check the first aliquot before delaying
@@ -252,8 +253,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         # save experiment to database
         self.info('saving experiment "{}" to database'.format(exp.name))
 
-        with self.db.session() as sess:
-            dbexp = self.db.add_experiment(exp.path, sess=sess)
+        with self.db.session_ctx() as sess:
+            dbexp = self.db.add_experiment(exp.path)
             sess.flush()
             exp.database_identifier = int(dbexp.id)
 
@@ -865,39 +866,38 @@ If "No" select from database
     def _get_blank(self, kind, ms, ed, last=False):
         db = self.db
         sel = db.selector_factory(style='single')
+        with db.session_ctx() as sess:
+            q = sess.query(meas_AnalysisTable)
+            q = q.join(meas_MeasurementTable)
+            q = q.join(meas_ExtractionTable)
+            q = q.join(gen_AnalysisTypeTable)
+            q = q.join(gen_MassSpectrometerTable)
+            q = q.join(gen_ExtractionDeviceTable)
 
-        sess = db.get_session()
-        q = sess.query(meas_AnalysisTable)
-        q = q.join(meas_MeasurementTable)
-        q = q.join(meas_ExtractionTable)
-        q = q.join(gen_AnalysisTypeTable)
-        q = q.join(gen_MassSpectrometerTable)
-        q = q.join(gen_ExtractionDeviceTable)
+            q = q.filter(gen_AnalysisTypeTable.name == 'blank_{}'.format(kind))
+            q = q.filter(gen_MassSpectrometerTable.name == ms)
+            q = q.filter(gen_ExtractionDeviceTable.name == ed)
 
-        q = q.filter(gen_AnalysisTypeTable.name == 'blank_{}'.format(kind))
-        q = q.filter(gen_MassSpectrometerTable.name == ms)
-        q = q.filter(gen_ExtractionDeviceTable.name == ed)
+            dbr = None
+            if last:
+                q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+                q = q.limit(1)
+                try:
+                    dbr = q.one()
+                except NoResultFound:
+                    pass
 
-        dbr = None
-        if last:
-            q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
-            q = q.limit(1)
-            try:
-                dbr = q.one()
-            except NoResultFound:
-                pass
+            else:
+                dbs = q.all()
+                sel.load_records(dbs, load=False)
+                sel.selected = sel.records[-1]
+                info = sel.edit_traits(kind='livemodal')
+                if info.result:
+                    dbr = sel.selected
 
-        else:
-            dbs = q.all()
-            sel.load_records(dbs, load=False)
-            sel.selected = sel.records[-1]
-            info = sel.edit_traits(kind='livemodal')
-            if info.result:
-                dbr = sel.selected
-
-        if dbr:
-            dbr = sel._record_factory(dbr)
-            return dbr
+            if dbr:
+                dbr = sel._record_factory(dbr)
+                return dbr
 
     def _check_run_aliquot(self, arv):
         '''

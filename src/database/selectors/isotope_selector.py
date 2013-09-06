@@ -126,17 +126,18 @@ class IsotopeAnalysisSelector(DatabaseSelector):
         return self.record_klass(_dbrecord=dbr)
 
     def _get_selector_records(self, queries=None, limit=None, use_filters=True, **kw):
-        sess = self.db.get_session()
-        q = sess.query(meas_AnalysisTable)
-        q = q.filter(meas_AnalysisTable.status != -1)
-        if queries and use_filters:
-            qs = self._build_filters()
-            if qs:
+        with self.db.session() as sess:
+#             sess = self.db.get_session()
+            q = sess.query(meas_AnalysisTable)
+            q = q.filter(meas_AnalysisTable.status != -1)
+            if queries and use_filters:
+                qs = self._build_filters()
+                if qs:
 
-                queries = queries + qs
-#                queries.extend(qs)
+                    queries = queries + qs
+    #                queries.extend(qs)
 
-        return self._get_records(q, queries, limit, timestamp='analysis_timestamp')
+            return self._get_records(q, queries, limit, timestamp='analysis_timestamp')
 
     def _get_mass_spectrometers(self):
         db = self.db

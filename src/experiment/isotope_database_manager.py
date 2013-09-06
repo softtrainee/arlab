@@ -69,6 +69,7 @@ class IsotopeDatabaseManager(Manager):
             if db.connect(force=False):
                 from src.database.defaults import load_isotopedb_defaults
                 load_isotopedb_defaults(db)
+                self.debug('defaults finished')
                 return True
 
     def verify_database_connection(self, inform=True):
@@ -195,6 +196,7 @@ class IsotopeDatabaseManager(Manager):
 #         r = [NULL_STR] +
         r = []
         if self.db:
+#             with self.db.session_() as sess:
             r = [str(ri.name) for ri in self.db.get_irradiations()
                             if ri.name]
 
@@ -209,12 +211,14 @@ class IsotopeDatabaseManager(Manager):
 #         self.level = NULL_STR
         r = []
         if self.db:
-            irrad = self.db.get_irradiation(self.irradiation)
-            if irrad:
-                r = sorted([str(ri.name) for ri in irrad.levels
-                                            if ri.name])
-                if r and not self.level:
-                    self.level = r[0]
+
+            with self.db.session_ctx():
+                irrad = self.db.get_irradiation(self.irradiation)
+                if irrad:
+                    r = sorted([str(ri.name) for ri in irrad.levels
+                                                if ri.name])
+                    if r and not self.level:
+                        self.level = r[0]
 
         return r
 
