@@ -265,6 +265,9 @@ class _TabularEditor(qtTabularEditor):
         QtCore.QObject.connect(control.horizontalHeader(), signal,
                                self._on_column_resize)
 
+    def dispose(self):
+        self.control._should_consume = False
+        super(_TabularEditor, self).dispose()
 
     def _copy_cache_changed(self):
         if self.control:

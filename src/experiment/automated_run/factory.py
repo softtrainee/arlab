@@ -637,45 +637,46 @@ post_equilibration_script:name
 
         self._aliquot = 0
         if labnumber:
-            # convert labnumber (a, bg, or 10034 etc)
-            ln = db.get_labnumber(labnumber)
-            if ln:
-                # set sample and irrad info
-                try:
-                    self.sample = ln.sample.name
-                except AttributeError:
-                    pass
+            with db.session_ctx():
+                # convert labnumber (a, bg, or 10034 etc)
+                ln = db.get_labnumber(labnumber)
+                if ln:
+                    # set sample and irrad info
+                    try:
+                        self.sample = ln.sample.name
+                    except AttributeError:
+                        pass
 
-                try:
-                    a = int(ln.analyses[-1].aliquot + 1)
-                except IndexError, e:
-                    a = 1
+                    try:
+                        a = int(ln.analyses[-1].aliquot + 1)
+                    except IndexError, e:
+                        a = 1
 
-                self._aliquot = a
+                    self._aliquot = a
 
-                self.irradiation = self._make_irrad_level(ln)
-                self._load_scripts(old, new)
-
-            elif special:
-                ln = labnumber[:2]
-                if ln == 'dg':
-                    self._load_extraction_defaults(ln)
-
-                if not (ln in ('pa', 'dg')):
-                    '''
-                        don't add pause or degas to database
-                    '''
-                    if self.confirmation_dialog('Lab Identifer {} does not exist. Would you like to add it?'.format(labnumber)):
-                        db.add_labnumber(labnumber)
-                        db.commit()
-                        self._aliquot = 1
-                        self._load_scripts(old, new)
-                    else:
-                        self.labnumber = ''
-                else:
+                    self.irradiation = self._make_irrad_level(ln)
                     self._load_scripts(old, new)
-            else:
-                self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
+
+                elif special:
+                    ln = labnumber[:2]
+                    if ln == 'dg':
+                        self._load_extraction_defaults(ln)
+
+                    if not (ln in ('pa', 'dg')):
+                        '''
+                            don't add pause or degas to database
+                        '''
+                        if self.confirmation_dialog('Lab Identifer {} does not exist. Would you like to add it?'.format(labnumber)):
+                            db.add_labnumber(labnumber)
+                            db.commit()
+                            self._aliquot = 1
+                            self._load_scripts(old, new)
+                        else:
+                            self.labnumber = ''
+                    else:
+                        self._load_scripts(old, new)
+                else:
+                    self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 
     def _template_closed(self):
         self.load_templates()
@@ -739,10 +740,11 @@ post_equilibration_script:name
     def _get_levels(self):
         levels = []
         if self.db:
-            if not self.selected_irradiation in ('IRRADIATION', LINE_STR):
-                irrad = self.db.get_irradiation(self.selected_irradiation)
-                if irrad:
-                    levels = sorted([li.name for li in irrad.levels])
+            with self.db.session_ctx():
+                if not self.selected_irradiation in ('IRRADIATION', LINE_STR):
+                    irrad = self.db.get_irradiation(self.selected_irradiation)
+                    if irrad:
+                        levels = sorted([li.name for li in irrad.levels])
         if levels:
             self.selected_level = levels[0] if levels else 'LEVEL'
 
@@ -779,12 +781,13 @@ post_equilibration_script:name
         lns = []
         db = self.db
         if db:
-            if self.selected_level and not self.selected_level in ('Level', LINE_STR):
-                level = db.get_irradiation_level(self.selected_irradiation,
-                                                 self.selected_level)
-                if level:
-                    lns = [str(pi.labnumber.identifier)
-                        for pi in level.positions]
+            with db.session_ctx():
+                if self.selected_level and not self.selected_level in ('Level', LINE_STR):
+                    level = db.get_irradiation_level(self.selected_irradiation,
+                                                     self.selected_level)
+                    if level:
+                        lns = [str(pi.labnumber.identifier)
+                            for pi in level.positions]
 
 
         return sorted(lns)
@@ -957,11 +960,12 @@ post_equilibration_script:name
     def _get_flux_from_db(self, attr='j'):
         j = 0
         if self.labnumber:
-            dbln = self.db.get_labnumber(self.labnumber)
-            if dbln:
-                if dbln.selected_flux_history:
-                    f = dbln.selected_flux_history.flux
-                    j = getattr(f, attr)
+            with self.db.session_ctx():
+                dbln = self.db.get_labnumber(self.labnumber)
+                if dbln:
+                    if dbln.selected_flux_history:
+                        f = dbln.selected_flux_history.flux
+                        j = getattr(f, attr)
         return j
 
     def _set_flux(self, a):
@@ -986,15 +990,15 @@ post_equilibration_script:name
 
             v, e = self._flux, self._flux_error
             db = self.db
-            dbln = db.get_labnumber(self.labnumber)
-            if dbln:
-                dbpos = dbln.irradiation_position
-                dbhist = db.add_flux_history(dbpos)
-                dbflux = db.add_flux(float(v), float(e))
-                dbflux.history = dbhist
-                dbln.selected_flux_history = dbhist
-                self.db.commit()
-                self.information_dialog(u'Flux for {} {} \u00b1{} saved to database'.format(self.labnumber, v, e))
+            with db.session_ctx():
+                dbln = db.get_labnumber(self.labnumber)
+                if dbln:
+                    dbpos = dbln.irradiation_position
+                    dbhist = db.add_flux_history(dbpos)
+                    dbflux = db.add_flux(float(v), float(e))
+                    dbflux.history = dbhist
+                    dbln.selected_flux_history = dbhist
+                    self.information_dialog(u'Flux for {} {} \u00b1{} saved to database'.format(self.labnumber, v, e))
 
 #===============================================================================
 #

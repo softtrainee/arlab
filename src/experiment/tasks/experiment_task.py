@@ -118,6 +118,9 @@ class ExperimentEditorTask(EditorTask):
             self.notifier.close()
             self.notifier = None
 
+        self.manager.experiment_factory.destroy()
+        super(ExperimentEditorTask, self).prepare_destroy()
+
     def activated(self):
 
         bind_preference(self, 'use_auto_figure',
@@ -247,7 +250,7 @@ class ExperimentEditorTask(EditorTask):
         # since the executor session will have made changes
         man = self.manager
         ex = man.executor
-        man.update_info(reset_db=True)
+        man.update_info()
         man.stats.reset()
 
         ex.end_at_run_completion = False
