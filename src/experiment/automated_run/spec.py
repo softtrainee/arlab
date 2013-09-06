@@ -166,7 +166,8 @@ class AutomatedRunSpec(Loggable):
 
             db_save_time = 1
             self._estimated_duration = s + db_save_time
-
+        
+        self._changed=False
         return self._estimated_duration
 
     def make_run(self, new_uuid=True, run=None):
@@ -260,7 +261,7 @@ class AutomatedRunSpec(Loggable):
     measurment_script, post_measurment_script,
     post_equilibration_script, extraction_script,extract_+, position, duration, cleanup
     ''')
-    def _spec_changed(self):
+    def _script_changed(self):
         self._changed = True
 #===============================================================================
 # property get/set

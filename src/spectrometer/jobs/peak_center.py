@@ -261,25 +261,32 @@ class PeakCenter(MagnetScan):
 #                       title='{}'.format(self.title),
                        xtitle='DAC (V)',
                        ytitle='Intensity (fA)',
+                       show_legend='ul',
+                       legend_kw=dict(
+                                      font='modern 8', 
+                                      line_spacing=1
+                                      )
+                       
                        )
 
         graph.new_series(
+                         line_width=2
+                         
 #                          type='scatter',
 #                          marker='circle',
 #                          marker_size=1.25
                          )
 
+        graph.set_series_label(self.reference_detector)
         self._markup_idx = 1
         for di in self.additional_detectors:
-            graph.new_series(
-#                              type='scatter',
-#                              marker='circle',
-#                          marker_size=1.25
-                         )
+            graph.new_series()
+            graph.set_series_label(di)
             self._markup_idx += 1
 
         graph.new_series(type='scatter', marker='circle',
-                         marker_size=4
+                         marker_size=4,
+                         color='green'
                          )
         graph.new_series(type='scatter', marker='circle',
                          marker_size=4,

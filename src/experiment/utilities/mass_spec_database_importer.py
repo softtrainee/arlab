@@ -59,23 +59,29 @@ class MassSpecDatabaseImporter(Loggable):
     def add_sample_loading(self, ms, tray):
         if self.sample_loading_id is None:
             db = self.db
-            sl = db.add_sample_loading(ms, tray)
+            with db.session_ctx() as sess:
+                sl = db.add_sample_loading(ms, tray)
+                sess.flush()
 #             db.flush()
-            self.sample_loading_id = sl.SampleLoadingID
+                self.sample_loading_id = sl.SampleLoadingID
 
     def add_login_session(self, ms):
         self.info('adding new session for {}'.format(ms))
         db = self.db
-        ls = db.add_login_session(ms)
+        with db.session_ctx() as sess:
+            ls = db.add_login_session(ms)
+            sess.flush()
 #         db.flush()
-        self.login_session_id = ls.LoginSessionID
+            self.login_session_id = ls.LoginSessionID
 
     def add_data_reduction_session(self):
         if self.data_reduction_session_id is None:
             db = self.db
-            dr = db.add_data_reduction_session()
-#             db.flush()
-            self.data_reduction_session_id = dr.DataReductionSessionID
+            with db.session_ctx() as sess:
+                dr = db.add_data_reduction_session()
+                sess.flush()
+    #             db.flush()
+                self.data_reduction_session_id = dr.DataReductionSessionID
 
     def create_import_session(self, spectrometer, tray):
         # add login, sample, dr ids
@@ -143,11 +149,16 @@ class MassSpecDatabaseImporter(Loggable):
     #                 self._add_analysis(spec, irradpos, spec.rid, runtype, commit)
 
 
-    def _add_analysis(self, spec, irradpos, rid, runtype):
+    def _add_analysis(self, *args):
+        db=self.db
+        with db.session_ctx() as sess:
+            self._add_analysis_db(sess,*args)
+            
+    def _add_analysis_db(self, sess, spec, irradpos, rid, runtype):
         gst = time.time()
 
         db = self.db
-
+        
         spectrometer = spec.spectrometer
         tray = spec.tray
 
@@ -172,6 +183,7 @@ class MassSpecDatabaseImporter(Loggable):
         # add runscript
         rs = db.add_runscript(spec.runscript_name,
                               spec.runscript_text)
+        sess.flush()
 #         db.flush()
 #        print irradpos, runtype
         self.create_import_session(spectrometer, tray,
@@ -182,6 +194,7 @@ class MassSpecDatabaseImporter(Loggable):
 
                                    )
 #         db.flush()
+        sess.flush()
 
         # remember new rid in case duplicate entry error and new to augment rid
         spec.rid = rid
@@ -210,6 +223,7 @@ class MassSpecDatabaseImporter(Loggable):
         analysis.RunScriptID = rs.RunScriptID
 
         db.add_analysis_positions(analysis, spec.position)
+        sess.flush()
 
 #         db.flush()
         #=======================================================================
@@ -220,6 +234,7 @@ class MassSpecDatabaseImporter(Loggable):
 
         self.debug('%%%%%%%%%%%%%%%%%%%% Comment: {} %%%%%%%%%%%%%%%%%%%'.format(spec.comment))
         item.Comment = spec.comment
+        sess.flush()
 #         db.flush()
 
         analysis.ChangeableItemsID = item.ChangeableItemsID
@@ -242,6 +257,7 @@ class MassSpecDatabaseImporter(Loggable):
                 if det == 'CDD':
                     dbdet.ICFactor = spec.ic_factor_v
                     dbdet.ICFactorEr = spec.ic_factor_e
+                    sess.flush()
 #                 db.flush()
 
             db_iso = db.add_isotope(analysis, dbdet, isok)
@@ -264,6 +280,7 @@ class MassSpecDatabaseImporter(Loggable):
                                                             )
 
             # baseline and baseline changeable items need matching BslnID
+            sess.flush()
 #             db.flush()
             db_changeable.BslnID = db_baseline.BslnID
             #===================================================================

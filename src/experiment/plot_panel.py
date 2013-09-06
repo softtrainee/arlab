@@ -151,7 +151,6 @@ class PlotPanel(Loggable):
             super(PlotPanel, self).info(*args, **kw)
 
     def reset(self):
-        self.clear_displays()
         if self.graph:
             self.graph.on_trait_change(self._update_display,
                                        'regression_results', remove=True)
@@ -159,6 +158,12 @@ class PlotPanel(Loggable):
             del self.graph.plotcontainer
             del self.graph.plots
 
+        #this values could be retrieved from the arar_age instance
+        self.signals=dict()
+        self.baselines=dict()
+        self.blanks=dict()
+        
+        self.clear_displays()
         self.graph = self._graph_factory()
         self.graph.on_trait_change(self._update_display, 'regression_results')
 
@@ -179,7 +184,7 @@ class PlotPanel(Loggable):
                        title=self.plot_title if i == 0 else '',
                        ytitle='{} {} (fA)'.format(det.name, det.isotope),
                        xtitle='time (s)',
-                       padding_left=60,
+                       padding_left=70,
                        padding_right=10,
                        )
 
@@ -190,7 +195,7 @@ class PlotPanel(Loggable):
 
     def clear_displays(self):
         self._print_results()
-
+    
 #     @on_trait_change('graph:regression_results')
     def _update_display(self, new):
         if new:
