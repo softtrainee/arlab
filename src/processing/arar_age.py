@@ -366,7 +366,7 @@ class ArArAge(Loggable):
         prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), [], 1
 #        analysis = self.dbrecord
 
-#         self.labnumber_record
+#        self.labnumber_record
 #         self._get_irradiation_level()
 #         irradiation_level = self.irradiation_level
         irradiation_level = self._get_irradiation_level(ln)

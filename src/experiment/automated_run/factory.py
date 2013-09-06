@@ -1014,6 +1014,9 @@ post_equilibration_script:name
                         setattr(self, attr, v)
 
     def _load_scripts(self, old, new):
+        if not self.edit_mode:
+            return
+        
         '''
             load default scripts if 
                 1. labnumber is special
@@ -1034,6 +1037,7 @@ post_equilibration_script:name
             self._load_default_scripts(new)
 
     def _load_default_scripts(self, labnumber):
+        
         self.debug('load default scripts for {}'.format(labnumber))
         # if labnumber is int use key='U'
         try:
@@ -1087,6 +1091,10 @@ post_equilibration_script:name
 #===============================================================================
 #
 #===============================================================================
+    def _edit_mode_changed(self):
+        if self.edit_mode:
+            self._load_default_scripts(self.labnumber)
+            
     def _save_flux_button_fired(self):
         self._save_flux()
 #     def _application_changed(self):

@@ -393,22 +393,23 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         self.info('Automated run {} {} duration: {:0.3f} s'.format(run.runid, run.state, t))
 
         run.finish()
-        run.teardown()
-
-        mem_log('> end')
-
+        
+        mem_log('end run')
+        
     def _join_run(self, spec, t, run):
         t.join()
 
         self.debug('{} finished'.format(run.runid))
         if self.isAlive():
+            
             if spec.analysis_type.startswith('blank'):
                 pb = run.get_baseline_corrected_signals()
                 if pb is not None:
                     self._prev_blanks = pb
 
         self._report_execution_state(run)
-
+        run.teardown()
+        mem_log('> end join')
 
     def _overlapped_run(self, v):
         t, run = v
@@ -792,15 +793,15 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
         if self._check_memory():
             return
-
-        dbr = self._get_preceeding_blank_or_background(inform=inform)
-        if not dbr is True:
-            if dbr is None:
-                return
-            else:
-                self.info('using {} as the previous blank'.format(dbr.record_id))
-                dbr.load_isotopes()
-                self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
+        with self.db.session_ctx():
+            dbr = self._get_preceeding_blank_or_background(inform=inform)
+            if not dbr is True:
+                if dbr is None:
+                    return
+                else:
+                    self.info('using {} as the previous blank'.format(dbr.record_id))
+                    dbr.load_isotopes()
+                    self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
 
         if not self.massspec_importer.connect():
             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):

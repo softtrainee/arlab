@@ -1077,7 +1077,7 @@ class Graph(Viewable, ContextMenuMixin):
         self._add_line_inspector(plot, axis='x', color=color)
         self._add_line_inspector(plot, axis='y', color=color)
 
-    def _plot_factory(self, **kw):
+    def _plot_factory(self, legend_kw=None, **kw):
         '''
         '''
         p = Plot(data=ArrayPlotData(),
@@ -1086,7 +1086,7 @@ class Graph(Viewable, ContextMenuMixin):
                )
 
         vis = kw['show_legend'] if 'show_legend' in kw else False
-
+        
         if not isinstance(vis, bool):
             align = vis
             vis = True
@@ -1095,7 +1095,9 @@ class Graph(Viewable, ContextMenuMixin):
 
         p.legend.visible = vis
         p.legend.align = align
-
+        if legend_kw:
+            p.legend.trait_set(**legend_kw)
+        
 
         return p
 

@@ -39,7 +39,7 @@ class BaseMeasurement(HasTraits):
         if dbrecord and unpack:
             try:
                 xs, ys = self._unpack_blob(dbrecord.signals[-1].data)
-            except (ValueError, TypeError):
+            except (ValueError, TypeError, IndexError):
                 xs, ys = [], []
 
             self.xs = array(xs)

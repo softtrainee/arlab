@@ -63,6 +63,7 @@ class ScriptInfo(HasTraits):
     post_measurement_script_name = Str
     post_equilibration_script_name = Str
 
+scripts={}
 
 def assemble_script_blob(scripts, kinds=None):
     '''
@@ -207,11 +208,12 @@ class AutomatedRun(Loggable):
 #         p.blanks = blanks = self.experiment_manager._prev_blanks
         p.baselines = baselines = self.experiment_manager.get_prev_baselines()
         p.blanks = blanks = self.experiment_manager.get_prev_blanks()
-
-
+        
         p.correct_for_blank = True if (not self.spec.analysis_type.startswith('blank') \
                                         and not self.spec.analysis_type.startswith('background')) else False
-
+                                        
+        p.clear_displays()
+                          
         # sync the arar_age object's signals
         if self._use_arar_age():
             if not blanks:
@@ -569,9 +571,8 @@ class AutomatedRun(Loggable):
 #
 #         if self.measurement_script:
 #             self.measurement_script.automated_run = None
-        self._processed_signals_dict = None
-        if self.arar_age:
-            self.arar_age.labnumber_record = None
+#        if self.arar_age:
+#            self.arar_age.labnumber_record = None
 
 #         self.db.close()
 #             self.arar_age = None
@@ -583,6 +584,7 @@ class AutomatedRun(Loggable):
 #
         self.py_clear_conditions()
         self._save_isotopes = []
+        self._processed_signals_dict = None
 # #         self._db_extraction_id = None
 #         if self.arar_age:
 #             self.arar_age.labnumber_record = None
@@ -647,7 +649,6 @@ class AutomatedRun(Loggable):
 #         self.db.reset()
 
         if self._use_arar_age():
-            self.debug('{} {}'.format(self.arar_age, self))
             if self.arar_age is None:
 #             # load arar_age object for age calculation
                 self.arar_age = ArArAge()
@@ -1939,8 +1940,9 @@ anaylsis_type={}
 
         if sname and sname != NULL_STR:
             sname = self._make_script_name(sname)
-            if sname in self.scripts:
-                script = self.scripts[sname]
+#            print sname, self.scripts
+            if sname in scripts:
+                script = scripts[sname]
                 if script.check_for_modifications():
                     self.debug('script {} modified reloading'.format(sname))
                     script = self._bootstrap_script(sname, name)
@@ -1950,7 +1952,7 @@ anaylsis_type={}
         return script
 
     def _bootstrap_script(self, fname, name):
-
+        global scripts
         if not self.warned_scripts:
             self.warned_scripts = []
         warned_scripts = self.warned_scripts
@@ -1986,6 +1988,8 @@ anaylsis_type={}
             warn(fname, e)
 
         self.valid_scripts[name] = valid
+        if valid:
+            scripts[fname]=s
         return s
 
     def _measurement_script_factory(self):

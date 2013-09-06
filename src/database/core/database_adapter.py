@@ -77,7 +77,9 @@ class SessionCTX(object):
             try:
                 if self._commit:
                     self._sess.commit()
-            except Exception:
+            except Exception,e:
+                if self._parent:
+                    self._parent.debug('$%$%$%$%$%$%$%$ commiting changes error:\n{}'.format(e))
                 self._sess.rollback()
             finally:
                 self._sess.close()
