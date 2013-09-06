@@ -94,7 +94,7 @@ class Experimentor(IsotopeDatabaseManager):
 
         return True
 
-    #@deprecated
+    # @deprecated
     def start_file_listener(self, path):
         fl = FileListener(
                           path,
@@ -103,7 +103,7 @@ class Experimentor(IsotopeDatabaseManager):
                           )
         self.filelistener = fl
 
-    #@deprecated
+    # @deprecated
     def stop_file_listener(self):
         if self.filelistener:
             self.filelistener.stop()
@@ -179,13 +179,13 @@ class Experimentor(IsotopeDatabaseManager):
                 special = ln.split('-')[0] in ANALYSIS_MAPPING
             return ln, special
 
-        def get_analysis_info(li):
+        def get_analysis_info(li, sess):
             sample, irradiationpos = '', ''
 
 #            analysis = db.get_last_analysis(li)
 #            if analysis:
 #                dbln = analysis.labnumber
-            dbln = db.get_labnumber(li)
+            dbln = db.get_labnumber(li, sess=sess)
             if dbln:
                 sample = dbln.sample
                 if sample:
@@ -201,50 +201,52 @@ class Experimentor(IsotopeDatabaseManager):
             return sample, irradiationpos
 
         db = self.db
-        groups = self._group_analyses(ans, exclude=exclude)
-        for ln, analyses in groups:
-            ln, special = get_is_special(ln)
-            cln = convert_identifier(ln)
+        with db.session() as sess:
+            groups = self._group_analyses(ans, exclude=exclude)
+            for ln, analyses in groups:
+                ln, special = get_is_special(ln)
+                cln = convert_identifier(ln)
 
-            sample, irradiationpos = get_analysis_info(cln)
+                sample, irradiationpos = get_analysis_info(cln, sess)
 
-            aliquot_key = lambda x: x._aliquot
-            egroup_key = lambda x: x.extract_group
-            if not special:
-                a = sorted(analyses, key=aliquot_key)
-                for aliquot, aa in groupby(a, key=aliquot_key):
-                    aa = sorted(aa, key=egroup_key)
+                aliquot_key = lambda x: x._aliquot
+                egroup_key = lambda x: x.extract_group
+                if not special:
+                    a = sorted(analyses, key=aliquot_key)
+                    for aliquot, aa in groupby(a, key=aliquot_key):
+                        aa = sorted(aa, key=egroup_key)
+                        aliquot_start = None
+
+                        for egroup, ais in groupby(aa, key=egroup_key):
+                            ast = self._set_aliquot_step(ais, special, cln,
+                                                        aliquot,
+                                                        aliquot_start,
+                                                        egroup,
+                                                        sample,
+                                                        irradiationpos,
+                                                        sess
+                                                    )
+                            aliquot_start = ast + 1
+
+                else:
                     aliquot_start = None
-
-                    for egroup, ais in groupby(aa, key=egroup_key):
-                        ast = self._set_aliquot_step(ais, special, cln,
-                                                    aliquot,
-                                                    aliquot_start,
-                                                    egroup,
-                                                    sample,
-                                                    irradiationpos
-                                                )
-                        aliquot_start = ast + 1
-
-            else:
-                aliquot_start = None
-                egroup = 0
-                ans = sorted(analyses, key=aliquot_key)
-                for aliquot, ais in groupby(ans, key=aliquot_key):
-                    self._set_aliquot_step(ais, special, cln, aliquot,
-                                           aliquot_start,
-                                           egroup,
-                                           sample, irradiationpos)
+                    egroup = 0
+                    ans = sorted(analyses, key=aliquot_key)
+                    for aliquot, ais in groupby(ans, key=aliquot_key):
+                        self._set_aliquot_step(ais, special, cln, aliquot,
+                                               aliquot_start,
+                                               egroup,
+                                               sample, irradiationpos, sess)
 
     def _set_aliquot_step(self, ais, special, cln,
                           aliquot,
                           aliquot_start,
                           egroup,
-                          sample, irradiationpos):
+                          sample, irradiationpos, sess):
         db = self.db
 
 #         step_start = 0
-        an = db.get_last_analysis(cln, aliquot=aliquot)
+        an = db.get_last_analysis(cln, aliquot=aliquot, sess=sess)
         if aliquot_start is None:
             aliquot_start = 0
             if an:

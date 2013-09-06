@@ -76,7 +76,7 @@ class ConsumerMixin(object):
 
         cfunc = self._consume_func
 
-        while 1:
+        while self._should_consume:
             v = get_func()
             if v:
                 if cfunc:
@@ -85,8 +85,8 @@ class ConsumerMixin(object):
                     func, a = v
                     func(a)
 
-            if not self._should_consume:
-                break
+#             if not self._should_consume:
+#                 break
 
 
 class consumable(object):
@@ -103,9 +103,9 @@ class consumable(object):
     def __exit__(self, *args, **kw):
         self._consumer.stop()
 
-        self._consumer._consumer_queue=None
-        self._consumer._consume_func=None
-        
+        self._consumer._consumer_queue = None
+        self._consumer._consume_func = None
+
         self._consumer = None
         self._func = None
 

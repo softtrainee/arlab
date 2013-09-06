@@ -339,8 +339,10 @@ class ArArAge(Loggable):
 
 # #     @cached_property
     def _get_irradiation_level(self):
-        l = self.labnumber_record.irradiation_position.level
-        return l
+        if self.labnumber_record:
+            if self.labnumber_record.irradiation_position:
+                l = self.labnumber_record.irradiation_position.level
+                return l
 #         try:
 #             if self.irradiation_position:
 #                 return self.irradiation_position.level

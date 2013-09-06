@@ -27,6 +27,7 @@ from src.canvas.canvas2D.loading_canvas import LoadingCanvas
 
 from src.database.orms.isotope_orm import loading_LoadTable
 from src.canvas.canvas2D.scene.primitives.primitives import LoadIndicator
+from src.database.core.database_adapter import session
 
 
 def make_bound(st):
@@ -273,99 +274,101 @@ class LoadingManager(IsotopeDatabaseManager):
     def make_canvas(self, new, editable=True):
 
         db = self.db
-        lt = db.get_loadtable(new)
+        with session(None) as s:
+            lt = db.get_loadtable(new, sess=s)
 
-        c = self.canvas
-        if not c:
-            c = LoadingCanvas(
-                              view_x_range=(-2, 2),
-                              view_y_range=(-2, 2),
-                              editable=editable
-                              )
-            self.canvas = c
+            c = self.canvas
+            if not c:
+                c = LoadingCanvas(
+                                  view_x_range=(-2, 2),
+                                  view_y_range=(-2, 2),
+                                  editable=editable
+                                  )
+                self.canvas = c
 
-        if lt and lt.holder_:
-            h = lt.holder_.name
-            c.load_tray_map(h, self.show_hole_numbers)
+            if lt and lt.holder_:
+                h = lt.holder_.name
+                c.load_tray_map(h, self.show_hole_numbers)
 
-            for pi in lt.loaded_positions:
-                item = c.scene.get_item(str(pi.position))
-                if item:
-                    item.fill = True
-                    item.identifier = pi.lab_identifier
-#                     item.label_item.visible = self.show_labnumbers
-#                     print item.label_item.visible
+                for pi in lt.loaded_positions:
+                    item = c.scene.get_item(str(pi.position))
+                    if item:
+                        item.fill = True
+                        item.identifier = pi.lab_identifier
+    #                     item.label_item.visible = self.show_labnumbers
+    #                     print item.label_item.visible
 
-            for pi in lt.measured_positions:
-                item = c.scene.get_item(str(pi.position))
-                if item:
-                    if pi.is_degas:
-                        item.degas_indicator = True
-                    else:
-                        item.measured_indicator = True
+                for pi in lt.measured_positions:
+                    item = c.scene.get_item(str(pi.position))
+                    if item:
+                        if pi.is_degas:
+                            item.degas_indicator = True
+                        else:
+                            item.measured_indicator = True
         return c
 
     def load_load(self, loadtable, group_labnumbers=True, set_tray=True):
-        if isinstance(loadtable, str):
-            loadtable = self.db.get_loadtable(loadtable)
+        with session(None) as s:
+            if isinstance(loadtable, str):
+                loadtable = self.db.get_loadtable(loadtable, sess=s)
 
-        self.positions = []
-        if set_tray and loadtable.holder_:
-            self.tray = loadtable.holder_.name
+            self.positions = []
+            if set_tray and loadtable.holder_:
+                self.tray = loadtable.holder_.name
 
-        for ln, poss in groupby(loadtable.loaded_positions,
-                                        key=lambda x:x.lab_identifier):
+            for ln, poss in groupby(loadtable.loaded_positions,
+                                            key=lambda x:x.lab_identifier):
 
-            dbln = self.db.get_labnumber(ln)
-            sample = ''
-            if dbln and dbln.sample:
-                sample = dbln.sample.name
-            dbirradpos = dbln.irradiation_position
-            dblevel = dbirradpos.level
+                dbln = self.db.get_labnumber(ln, sess=s)
+                sample = ''
+                if dbln and dbln.sample:
+                    sample = dbln.sample.name
+                dbirradpos = dbln.irradiation_position
+                dblevel = dbirradpos.level
 
-            irrad = dblevel.irradiation.name
-            level = dblevel.name
-            irradpos = dbirradpos.position
-            irradiation = '{} {}{}'.format(irrad, level, irradpos)
-
-
-            pos = []
-            for pi in poss:
-                pid = str(pi.position)
-                item = self.canvas.scene.get_item(pid)
-                if item:
-                    item.fill = True
-                    item.add_labnumber_label(
-                                             ln, ox=-10, oy=-10,
-                                             visible=self.show_labnumbers
-                                             )
-
-                    oy = -10 if not self.show_labnumbers else -20
-                    wt = '' if pi.weight is None else str(pi.weight)
-                    item.add_weight_label(wt, oy=oy,
-                                          visible=self.show_weights
-                                          )
-                    item.weight = pi.weight
-                    item.note = pi.note
-                    item.sample = sample
-                    item.irradiation = irradiation
-#                     print item
-#                     item.add_text(ln, ox=-10, oy=-10,
-#                                   visible=self.show_labnumbers
-#                                   )
-
-                pos.append(pid)
-
-            if group_labnumbers:
-                self._add_position(ln, pos)
-            else:
-                for pi in pos:
-                    self._add_position(ln, [pi])
+                irrad = dblevel.irradiation.name
+                level = dblevel.name
+                irradpos = dbirradpos.position
+                irradiation = '{} {}{}'.format(irrad, level, irradpos)
 
 
-    def _add_position(self, ln, pos):
+                pos = []
+                for pi in poss:
+                    pid = str(pi.position)
+                    item = self.canvas.scene.get_item(pid)
+                    if item:
+                        item.fill = True
+                        item.add_labnumber_label(
+                                                 ln, ox=-10, oy=-10,
+                                                 visible=self.show_labnumbers
+                                                 )
+
+                        oy = -10 if not self.show_labnumbers else -20
+                        wt = '' if pi.weight is None else str(pi.weight)
+                        item.add_weight_label(wt, oy=oy,
+                                              visible=self.show_weights
+                                              )
+                        item.weight = pi.weight
+                        item.note = pi.note
+                        item.sample = sample
+                        item.irradiation = irradiation
+    #                     print item
+    #                     item.add_text(ln, ox=-10, oy=-10,
+    #                                   visible=self.show_labnumbers
+    #                                   )
+
+                    pos.append(pid)
+
+                if group_labnumbers:
+                    self._add_position(ln, pos, s)
+                else:
+                    for pi in pos:
+                        self._add_position(ln, [pi], s)
+
+
+    def _add_position(self, ln, pos, sess):
         pos = map(int, pos)
-        ln = self.db.get_labnumber(ln)
+        ln = self.db.get_labnumber(ln, sess=sess)
         ip = ln.irradiation_position
         level = ip.level
         irrad = level.irradiation

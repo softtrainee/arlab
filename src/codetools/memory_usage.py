@@ -20,7 +20,7 @@ import sys
 import cPickle
 from src.helpers.filetools import unique_path
 from itertools import groupby
-import objgraph
+# import objgraph
 import random
 import inspect
 import subprocess
@@ -141,17 +141,17 @@ class MemCTX(object):
                 print oi, [type(oo) for oo in gc.get_referrers(oi)]
 
         return
-        path = os.environ['PATH']
-        os.environ['PATH'] = '{}:/usr/local/bin'.format(path)
-        fn = '/Users/ross/Desktop/chain.png'
-        objgraph.show_chain(
-                    objgraph.find_backref_chain(
-
-                                                random.choice(objs),
-                                                inspect.ismodule),
-                    filename=fn)
+#         path = os.environ['PATH']
+#         os.environ['PATH'] = '{}:/usr/local/bin'.format(path)
+#         fn = '/Users/ross/Desktop/chain.png'
+#         objgraph.show_chain(
+#                     objgraph.find_backref_chain(
 #
-        subprocess.call(['open', fn])
+#                                                 random.choice(objs),
+#                                                 inspect.ismodule),
+#                     filename=fn)
+# #
+#         subprocess.call(['open', fn])
 
 
 

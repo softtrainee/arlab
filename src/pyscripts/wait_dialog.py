@@ -91,8 +91,10 @@ class WaitDialog(Loggable):
     def stop(self):
         self._end()
         self.debug('wait dialog stopped')
-        self.message='Stopped'
-        self.message_color='red'
+        if self.current_time > 1:
+            self.message = 'Stopped'
+            self.message_color = 'red'
+
     def _continue_button_fired(self):
         self._continue()
 
@@ -114,7 +116,7 @@ class WaitDialog(Loggable):
             self._end()
             self._canceled = False
 
-    def _update_time(self):        
+    def _update_time(self):
         self._current_time -= 1
 
     def _end(self, dispose=True):
