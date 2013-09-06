@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Float, DelegatesTo, Int, List
+from traits.api import Any, Float, DelegatesTo, Int, List, Bool
 from traitsui.api import View, Item, EnumEditor, Group
 #============= standard library imports ========================
 from numpy import linspace, exp, hstack
@@ -48,6 +48,7 @@ class MagnetScan(SpectrometerTask):
     stop_mass = Float(40)
     step_mass = Float(1)
     period = Int(900)
+    normalize = Bool(True)
 #    title = 'Magnet Scan'
 #    def _scan_dac(self, values, det, delay=850):
 #
@@ -149,70 +150,44 @@ class MagnetScan(SpectrometerTask):
     def _graph_hook(self, di, intensity, **kw):
         graph = self.graph
         if graph:
+            def set_data(plot, k, v):
+                plot.data.set_data(k, v)
 
-            normalize = True
-#             normalize = False
-#             s = 0
-            plot = self.graph.plots[0]
-#             ys = plot.data.get_data('y0')
-#             R = 1
-#             if ys.shape[0]:
-#                 R = max(1, max(ys) - min(ys))
+            def get_data(plot, k):
+                return plot.data.get_data(k)
 
-#                 m = max(ys)
-#                 s = ys[-1] / m
-#             rv = intensity[0]
-            R = 1
-            r = 1
+            def set_plot_data(plot, k, v):
+                ys = get_data(plot, k)
+                ys = hstack((ys, v))
+                set_data(plot, k, ys)
+
+            plot = graph.plots[0]
+            R = None
+            r = None
+
             for i, v in enumerate(intensity):
 
+                k = 'oy{}'.format(i)
+                oys = get_data(plot, k)
+                oys = [v] if oys is None else hstack((oys, v))
+                set_data(plot, k, oys)
 
-
-#                 s = 1
-#                 if normalize:
-#                     ys = plot.data.get_data('y{}'.format(i))
-#                     if ys.shape[0]:
-#                         s = v / max(ys)
-                s = 1
-#                 try:
-#                 except Exception, e:
-#                     s = 1
-
-                oys = plot.data.get_data('oy{}'.format(i))
-                if oys is None:
-                    plot.data.set_data('oy{}'.format(i), [v])
+                if i == 0:
+                    # calculate ref range
+                    miR = min(oys)
+                    maR = max(oys)
+                    R = maR - miR
                 else:
-                    if oys.shape[0]:
-                        if i == 0:
-                            R = max(oys) #- min(oys)
-                        else:
-                            r = max(oys) #- min(oys)
-                            if r:
-                                s = R / r
+                    mir = min(oys)
+                    mar = max(oys)
+                    r = mar - mir
 
-                    plot.data.set_data('oy{}'.format(i), hstack((oys, v)))
+                if r and R and self.normalize:
+                    v = (v - mir) * R / r + miR
 
-                ys = plot.data.get_data('y{}'.format(i))
-                plot.data.set_data('y{}'.format(i), hstack((ys, v * s)))
+                set_plot_data(plot, 'y{}'.format(i), v)
+                set_plot_data(plot, 'x{}'.format(i), di)
 
-#                 s = 1
-
-#                 print i, s, R, r
-#                 ys = hstack((ys, v * s))
-#                 ys *= s
-#                 plot.data.set_data('y{}'.format(i), ys)
-
-                xs = plot.data.get_data('x{}'.format(i))
-                xs = hstack((xs, di))
-                plot.data.set_data('x{}'.format(i), xs)
-
-#                 graph.add_datum(
-#                             (di, v * s),
-#                             series=i,
-# #                            update_y_limits=True,
-# #                            do_after=1,
-#                             **kw
-#                             )
 
     def _magnet_step_hook(self, detector=None, peak_generator=None):
         spec = self.spectrometer
