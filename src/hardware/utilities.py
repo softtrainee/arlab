@@ -21,7 +21,7 @@ import time
 #============= local library imports  ==========================
 
 
-#def limit_frequency(func):
+# def limit_frequency(func):
 #    def decorator(self, obj, *args, **kw):
 #        fn = func.func_code
 #        key = '{}._prev_time'.format(fn)

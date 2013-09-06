@@ -167,7 +167,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
                  ('Pattern', 'pattern'),
                  ('Extraction', 'extraction_script'),
                  ('Measurement', 'measurement_script'),
-                 ('Truncate','truncate_condition'),
+                 ('Truncate', 'truncate_condition'),
                  ('Post Eq.', 'post_equilibration_script'),
                  ('Post Meas.', 'post_measurement_script'),
                  ('Comment', 'comment')

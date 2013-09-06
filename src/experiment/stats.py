@@ -50,7 +50,7 @@ class ExperimentStats(Loggable):
         dur = self._calculate_duration(runs)
         # add an empirical fudge factor
 #         ff = polyval(FUDGE_COEFFS, len(runs))
-        
+
         self._total_time = dur  # + ff
         return self._total_time
 

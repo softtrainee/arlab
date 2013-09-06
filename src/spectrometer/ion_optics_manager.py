@@ -86,13 +86,6 @@ class IonOpticsManager(Manager):
 
     peak_center_result = None
 
-#     detectors = DelegatesTo('spectrometer')
-#     detector = Instance(Detector)
-#     isotope = Str('Ar40')
-#     dac = Float
-#
-#     directions = Enum('Increase', 'Decrease', 'Oscillate')
-
     def get_mass(self, isotope_key):
         spec = self.spectrometer
         molweights = spec.molecular_weights
@@ -139,28 +132,6 @@ class IonOpticsManager(Manager):
         # correct for deflection
         return spec.correct_dac(det, dac)
 
-#    def _correct_dac(self, det, dac):
-#        #        dac is in axial units
-#
-# #        convert to detector
-#        dac *= det.relative_position
-#
-#        '''
-#        convert to axial detector
-#        dac_a=  dac_d / relpos
-#
-#        relpos==dac_detA/dac_axial
-#
-#        '''
-#        #correct for deflection
-#        dev = det.get_deflection_correction()
-#
-#        dac += dev
-#
-# #        #correct for hv
-#        dac *= self.spectrometer.get_hv_correction(current=True)
-#        return dac
-
     def do_peak_center(self, detector=None, isotope=None,
                        period=900,
                        center_dac=None,
@@ -185,8 +156,6 @@ class IonOpticsManager(Manager):
                 dac = pcc.dac
                 directions = pcc.directions
 
-#                 detector = self.detector.name
-#                 isotope = self.isotope
                 if dac > 0:
                     center_dac = dac
 
@@ -203,32 +172,29 @@ class IonOpticsManager(Manager):
         self.canceled = False
         self.alive = True
 
+        self._setup_peak_center(detectors, isotope, period,
+                                      center_dac, directions, plot_panel)
+
+        args = (save, confirm_save, warn)
         if new_thread:
             t = Thread(name='ion_optics.peak_center', target=self._peak_center,
-                       args=(detectors, isotope, period, center_dac,
-                             directions,
-                             save, confirm_save, warn, plot_panel))
+                       args=args)
             t.start()
             self._thread = t
             return t
         else:
-            self._peak_center(detectors, isotope, period, center_dac,
-                             directions,
-                             save, confirm_save, warn, plot_panel)
+            self._peak_center(*args)
 
-    def _peak_center(self, detectors, isotope, period, center_dac,
-                     directions,
-                     save, confirm_save, warn, plot_panel):
-
+    def _setup_peak_center(self, detectors, isotope, period,
+                           center_dac, directions, plot_panel):
         self.debug('doing pc')
 
         spec = self.spectrometer
-#         if plot_panel:
-#             graph = plot_panel.peak_center_graph
-#             if graph:
-#                 graph.clear_data()
 
         ref = detectors[0]
+        self.reference_detector = ref
+        self.reference_isotope = isotope
+
         if len(detectors) > 1:
             ad = detectors[1:]
         else:
@@ -256,6 +222,13 @@ class IonOpticsManager(Manager):
             graph.window_width = 300
             graph.window_height = 250
             self.open_view(graph)
+
+    def _peak_center(self, save, confirm_save, warn):
+
+        pc = self.peak_center
+        spec = self.spectrometer
+        ref = self.reference_detector
+        isotope = self.reference_isotope
 
         dac_d = pc.get_peak_center()
         self.peak_center_result = dac_d
@@ -311,18 +284,6 @@ class IonOpticsManager(Manager):
 #===============================================================================
 # handler
 #===============================================================================
-#    def _graph_factory(self):
-#        g = Graph(
-#                  container_dict=dict(padding=5, bgcolor='gray'))
-#        g.new_plot()
-#        return g
-#
-#    def _graph_default(self):
-#        return self._graph_factory()
-
-#     def _detector_default(self):
-#         return self.detectors[0]
-
     def _peak_center_config_default(self):
         config = None
         p = os.path.join(paths.hidden_dir, 'peak_center_config')
@@ -347,6 +308,22 @@ class IonOpticsManager(Manager):
 
         return config
 
+if __name__ == '__main__':
+    io = IonOpticsManager()
+    io.configure_traits()
+
+#============= EOF =============================================
+#    def _graph_factory(self):
+#        g = Graph(
+#                  container_dict=dict(padding=5, bgcolor='gray'))
+#        g.new_plot()
+#        return g
+#
+#    def _graph_default(self):
+#        return self._graph_factory()
+
+#     def _detector_default(self):
+#         return self.detectors[0]
 #     def peak_center_config_view(self):
 #         v = View(Item('detector', editor=EnumEditor(name='detectors')),
 #                Item('isotope'),
@@ -384,10 +361,24 @@ class IonOpticsManager(Manager):
 #
 #                  resizable=True)
 #        return v
-
-
-if __name__ == '__main__':
-    io = IonOpticsManager()
-    io.configure_traits()
-
-#============= EOF =============================================
+#    def _correct_dac(self, det, dac):
+#        #        dac is in axial units
+#
+# #        convert to detector
+#        dac *= det.relative_position
+#
+#        '''
+#        convert to axial detector
+#        dac_a=  dac_d / relpos
+#
+#        relpos==dac_detA/dac_axial
+#
+#        '''
+#        #correct for deflection
+#        dev = det.get_deflection_correction()
+#
+#        dac += dev
+#
+# #        #correct for hv
+#        dac *= self.spectrometer.get_hv_correction(current=True)
+#        return dac

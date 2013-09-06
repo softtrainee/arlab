@@ -233,7 +233,7 @@ def make_rid(ln, a, step=''):
 SPECIAL_IDS = {1:'Blank Air', 2:'Blank Cocktail', 3:'Blank Unknown',
                4:'Background', 5:'Air', 6:'Cocktail'
                }
-#@deprecated
+# @deprecated
 def convert_labnumber(ln):
     '''
         ln is a str  but only special labnumbers cannot be converted to int
@@ -251,7 +251,7 @@ def convert_labnumber(ln):
 
     return ln
 
-#@deprecated
+# @deprecated
 def convert_shortname(ln):
     '''
         convert number to shortname (a for air, bg for background...)

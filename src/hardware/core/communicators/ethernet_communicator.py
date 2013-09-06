@@ -75,7 +75,7 @@ class UDPHandler(Handler):
             except socket.error, e:
                 pass
         else:
-            self.warning('get packet for {} error: {}'.format(cmd,e))
+            self.warning('get packet for {} error: {}'.format(cmd, e))
 
         return r
 
@@ -118,7 +118,7 @@ class EthernetCommunicator(Communicator):
 
         handler = self.get_handler()
         # send a test command so see if wer have connection
-        cmd='***'
+        cmd = '***'
         if handler.send_packet(cmd):
             r = handler.get_packet(cmd)
             if r is None:

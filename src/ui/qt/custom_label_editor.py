@@ -37,10 +37,10 @@ class _CustomLabelEditor(Editor):
         self.sync_value(self.factory.color, 'color', mode='from')
 
     def _color_changed(self):
-        color=self.color.name()
-        control=self.control
+        color = self.color.name()
+        control = self.control
         self._set_color(color, control)
-        
+
     def _set_color(self, color, control):
         if color and control:
             css = '''QLabel {{ color:{}; font-size:{}px; font-weight:{};}}
@@ -56,10 +56,10 @@ class _CustomLabelEditor(Editor):
 
     def _create_control(self, parent):
         control = QLabel()
-        color=self.item.color.name()
+        color = self.item.color.name()
         self._set_color(color, control)
 #        css = '''QLabel {{ color:{}; font-size:{}px; font-weight:{};}}
-## '''.format(self.item.color.name(), self.item.size, self.item.weight)
+# # '''.format(self.item.color.name(), self.item.size, self.item.weight)
 #        control.setStyleSheet(css)
 
 
@@ -138,7 +138,7 @@ class _CustomLabelEditor(Editor):
 class CustomLabelEditor(BasicEditorFactory):
     klass = _CustomLabelEditor
     color = Str
-    
+
 class CustomLabel(UItem):
     editor = Instance(CustomLabelEditor, ())
     size = Int(12)
@@ -154,7 +154,7 @@ class CustomLabel(UItem):
 
     def _color_name_changed(self):
         self.editor.color = self.color_name
-        
+
 #===============================================================================
 # demo
 #===============================================================================
