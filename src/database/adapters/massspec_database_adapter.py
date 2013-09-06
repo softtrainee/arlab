@@ -111,7 +111,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         '''
             return the analysis with the greatest aliquot with this labnumber
         '''
-        with self.db.session_ctx() as sess:
+        with self.session_ctx() as sess:
     #         sess = self.get_session()
             q = sess.query(AnalysesTable.Aliquot)
             q = q.filter(AnalysesTable.IrradPosition == labnumber)
