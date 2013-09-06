@@ -89,11 +89,11 @@ class DisplayController(ApplicationController):
 #         self.model.message=('%%clear%%',)
 #         self.model.messages = []
 
-    #@deprecated
+    # @deprecated
     def freeze(self):
         pass
 
-    #@deprecated
+    # @deprecated
     def thaw(self):
         pass
 

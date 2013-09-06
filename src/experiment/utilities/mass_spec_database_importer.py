@@ -179,7 +179,7 @@ class MassSpecDatabaseImporter(Loggable):
 
         # added the reference detector
         refdbdet = db.add_detector('H1', Label='H1',
-                                   
+
                                    )
 #         db.flush()
 
@@ -200,7 +200,7 @@ class MassSpecDatabaseImporter(Loggable):
                                    FirstStageDly=spec.first_stage_delay,
                                    SecondStageDly=spec.second_stage_delay,
                                    PipettedIsotopes=pipetted_isotopes,
-                                   
+
                                    )
 
         analysis.RefDetID = refdbdet.DetectorID
@@ -296,7 +296,7 @@ class MassSpecDatabaseImporter(Loggable):
                                   ublank,
                                   sfit,
                                   dbdet,
-                                  
+
                                   )
 
 #         if commit:

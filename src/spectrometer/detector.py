@@ -83,7 +83,7 @@ class Detector(SpectrometerDevice):
         # load deflection correction table
         p = os.path.join(paths.spectrometer_dir,
                          'deflections', self.name)
-        
+
         x, y = loadtxt(p, delimiter=',', unpack=True)
 
 #        x, y = data.transpose()
