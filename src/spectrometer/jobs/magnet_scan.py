@@ -184,9 +184,9 @@ class MagnetScan(SpectrometerTask):
                 else:
                     if oys.shape[0]:
                         if i == 0:
-                            R = max(oys) - min(oys)
+                            R = max(oys) #- min(oys)
                         else:
-                            r = max(oys) - min(oys)
+                            r = max(oys) #- min(oys)
                             if r:
                                 s = R / r
 

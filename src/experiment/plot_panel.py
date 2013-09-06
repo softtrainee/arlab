@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Instance, Int, Property, List, on_trait_change, Dict, Bool, \
     Str, CInt, Int
-from traitsui.api import View, Item, Group, VSplit, UItem, VGroup
+from traitsui.api import View, Item, Group, VSplit, UItem, VGroup, HGroup, spring
 from src.graph.graph import Graph
 
 from src.graph.regression_graph import StackedRegressionGraph
@@ -32,6 +32,7 @@ from src.ui.qt.text_table_editor import FastTextTableEditor
 # from src.database.records.ui.analysis_summary import SignalAdapter
 from src.experiment.display_signal import DisplaySignal, DisplayRatio, DisplayValue
 from src.loggable import Loggable
+from src.ui.custom_label_editor import CustomLabel
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -76,19 +77,27 @@ from traitsui.api import ListEditor
 class GraphContainer(HasTraits):
     graphs = List
     selected_tab = Any
+    label=Str
 #     def _selected_tab_changed(self):
 #         print 'sel', self.selected_tab
 
     def traits_view(self):
         v = View(
-               UItem(
-                     'graphs', editor=ListEditor(use_notebook=True,
-                                                 selected='selected_tab',
-                                                 page_name='.page_name'
-                                                 ),
-                     style='custom'
-                     )
-
+                 VGroup(
+                        HGroup(spring,
+                               CustomLabel('label',
+                                           weight='bold',
+                                           size=14),
+                               spring
+                               ),
+                        UItem(
+                             'graphs', editor=ListEditor(use_notebook=True,
+                                                         selected='selected_tab',
+                                                         page_name='.page_name'
+                                                         ),
+                             style='custom'
+                             )
+                        )
                )
         return v
 
@@ -181,7 +190,7 @@ class PlotPanel(Loggable):
 
         for i, det in enumerate(dets):
             g.new_plot(
-                       title=self.plot_title if i == 0 else '',
+#                       title=self.plot_title if i == 0 else '',
                        ytitle='{} {} (fA)'.format(det.name, det.isotope),
                        xtitle='time (s)',
                        padding_left=70,
@@ -449,7 +458,9 @@ class PlotPanel(Loggable):
 
         v = View(
                  VSplit(
-                        UItem('graph_container', style='custom'),
+                        UItem('graph_container', 
+                              style='custom',
+                              height=600),
 #                         gg,
                         VGroup(
                               Item('ncounts'),
@@ -479,6 +490,9 @@ class PlotPanel(Loggable):
             g.page_name = 'Isotopes'
             p.page_name = 'Peak Center'
             self.graph_container.graphs = [g, p]
+            
+    def _plot_title_changed(self, new):
+        self.graph_container.label=new
 #============= EOF =============================================
 
 #    def _display_factory(self):

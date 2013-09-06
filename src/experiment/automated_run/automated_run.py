@@ -1456,7 +1456,7 @@ anaylsis_type={}
                                     step=self.spec.step,
                                     comment=self.spec.comment,
                                     )
-
+                sess.flush()
                 experiment = db.get_experiment(self.experiment_identifier, key='id')
                 if experiment is not None:
                     # added analysis to experiment
@@ -1467,7 +1467,7 @@ anaylsis_type={}
                 # save extraction
                 ext = self._db_extraction_id
                 dbext = db.get_extraction(ext, key='id')
-
+                
                 a.extraction_id = dbext.id
 
                 # save measurement
