@@ -54,16 +54,18 @@ from src.processing.isotope import IsotopicMeasurement
 from src.experiment.export.export_spec import ExportSpec
 from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import consumable
-from src.codetools.memory_usage import mem_log
+from src.codetools.memory_usage import mem_log, measure_type, calc_growth
 from src.codetools.file_log import file_log
 import traceback
+from memory_profiler import profile
+
 class ScriptInfo(HasTraits):
     measurement_script_name = Str
     extraction_script_name = Str
     post_measurement_script_name = Str
     post_equilibration_script_name = Str
 
-scripts={}
+scripts = {}
 
 def assemble_script_blob(scripts, kinds=None):
     '''
@@ -178,14 +180,11 @@ class AutomatedRun(Loggable):
 # pyscript interface
 #===============================================================================
     def py_position_magnet(self, pos, detector, dac=False):
-        mem_log('pre mag position')
         if not self._alive:
             return
         self._set_magnet_position(pos, detector, dac=dac)
 
     def py_activate_detectors(self, dets):
-
-        mem_log('pre activate detectors')
         if not self._alive:
             return
 
@@ -193,40 +192,74 @@ class AutomatedRun(Loggable):
             self.warning('no spectrometer manager')
             return
 
-        p = self._new_plot_panel(self.plot_panel, stack_order='top_to_bottom')
+        '''
+            !!! this is a potential problem !!!
+            need more sophisticated way to setting up plot panel
+            e.g PP has detectors H1, AX but AX, CDD are active.
+            
+            need to remove H1 and add CDD. 
+            
+            or
+            
+            if memory leak not a problem simply always "create" new plots
+            instead of only clearing data. 
+            
+            or use both techniques
+            
+            if plot panel detectors != active detectors  "create" 
+            
+            
+        '''
+        create = False
+        if self.plot_panel is None:
+            create = True
+        else:
+            cd = set([d.name for d in self.plot_panel.detectors])
+            ad = set(dets)
+            create = cd - ad or ad - cd
 
+        p = self._new_plot_panel(self.plot_panel, stack_order='top_to_bottom')
         self.plot_panel = p
 
         spec = self.spectrometer_manager.spectrometer
 
         self._active_detectors = [spec.get_detector(n) for n in dets]
-        p.create(self._active_detectors)
+        if create:
+            p.create(self._active_detectors)
+        else:
+#             p.clear_displays()
+            p.graph.clear_plots()
 
+        p.show_isotope_graph()
         # set plot_panels, baselines, backgrounds
 
 #         p.baselines = baselines = self.experiment_manager._prev_baselines
 #         p.blanks = blanks = self.experiment_manager._prev_blanks
-        p.baselines = baselines = self.experiment_manager.get_prev_baselines()
-        p.blanks = blanks = self.experiment_manager.get_prev_blanks()
-        
-        p.correct_for_blank = True if (not self.spec.analysis_type.startswith('blank') \
-                                        and not self.spec.analysis_type.startswith('background')) else False
-                                        
-        p.clear_displays()
-                          
+#         p.baselines = baselines = self.experiment_manager.get_prev_baselines()
+#         p.blanks = blanks = self.experiment_manager.get_prev_blanks()
+        baselines = self.experiment_manager.get_prev_baselines()
+        blanks = self.experiment_manager.get_prev_blanks()
+
         # sync the arar_age object's signals
-        if self._use_arar_age():
-            if not blanks:
-                blanks = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
+#         if self._use_arar_age():
+        if not blanks:
+            blanks = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
 
-            for iso, v in blanks.iteritems():
-                self.arar_age.set_blank(iso, v)
+        for iso, v in blanks.iteritems():
+            self.arar_age.set_blank(iso, v)
 
-            if not baselines:
-                baselines = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
+        if not baselines:
+            baselines = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
 
-            for iso, v in baselines.iteritems():
-                self.arar_age.set_baseline(iso, v)
+        for iso, v in baselines.iteritems():
+            self.arar_age.set_baseline(iso, v)
+
+        for iso in self.arar_age.isotopes:
+            self.arar_age.set_isotope(iso, (0, 0))
+
+        p.correct_for_blank = False
+        p.correct_for_baseline = False
+        p.clear_displays()
 
     def py_set_regress_fits(self, fits, series=0):
         '''
@@ -236,7 +269,6 @@ class AutomatedRun(Loggable):
             3. ('linear', 'linear')
             4. ((0,100,'linear'),(100,None, 'parabolic')] 
         '''
-        mem_log('pre set regress')
         def make_fits(fi):
             if isinstance(fi, str):
                 fi = [fi, ] * n
@@ -290,7 +322,7 @@ class AutomatedRun(Loggable):
 
         self._add_truncate_condition()
 
-        result = self._measure_iteration(gn,
+        result = self._measure(gn,
                                 self._get_data_writer(gn),
                                 ncounts, starttime, starttime_offset,
                                 series, fits,
@@ -340,7 +372,7 @@ class AutomatedRun(Loggable):
 
         check_conditions = False
         writer = self._get_data_writer(gn)
-        result = self._measure_iteration(gn,
+        result = self._measure(gn,
                                 writer,
                                 ncounts, starttime, starttime_offset,
                                 series, fits,
@@ -348,6 +380,12 @@ class AutomatedRun(Loggable):
                                 False  # dont refresh after each iteration
                                 )
         mem_log('post sniff')
+
+        if self.plot_panel:
+            self.plot_panel.correct_for_blank = True if (not self.spec.analysis_type.startswith('blank') \
+                                        and not self.spec.analysis_type.startswith('background')) else False
+            self.plot_panel.correct_for_baseline = True
+
         return result
 
     def py_baselines(self, ncounts, starttime, starttime_offset, mass, detector,
@@ -384,7 +422,7 @@ class AutomatedRun(Loggable):
         self._build_tables(gn)
 
         check_conditions = True
-        result = self._measure_iteration(gn,
+        result = self._measure(gn,
                             self._get_data_writer(gn),
                             ncounts, starttime,
                             starttime_offset,
@@ -394,7 +432,9 @@ class AutomatedRun(Loggable):
                             )
 
         if self.plot_panel:
-            self.experiment_manager._prev_baselines = self.plot_panel.baselines
+            bs = dict([(iso.name, iso.baseline.uvalue) for iso in
+                            self.arar_age.isotopes.values()])
+            self.experiment_manager._prev_baselines = bs
 
         return result
 
@@ -561,10 +601,10 @@ class AutomatedRun(Loggable):
 #         gc.collect()
 #         return
 
-        if self.plot_panel:
-            self.plot_panel.automated_run = None
-            self.plot_panel.arar_age = None
-            self.plot_panel.info_func = None
+#         if self.plot_panel:
+#             self.plot_panel.automated_run = None
+#             self.plot_panel.arar_age = None
+#             self.plot_panel.info_func = None
 
 #         if self.monitor:
 #             self.monitor.automated_run = None
@@ -598,14 +638,16 @@ class AutomatedRun(Loggable):
 #         if self.peak_center:
 #             self.peak_center.graph.close_ui()
 
-        if self.coincidence_scan:
-            self.coincidence_scan.graph.close_ui()
+#         if self.coincidence_scan:
+#             self.coincidence_scan.graph.close_ui()
 
         if self.monitor:
             self.monitor.stop()
 
         if self.state not in ('not run', 'canceled', 'success', 'truncated'):
             self.state = 'failed'
+
+        self._alive = False
 
 
     def info(self, msg, color=None, *args, **kw):
@@ -618,6 +660,9 @@ class AutomatedRun(Loggable):
                 color = 'light green'
 
             self.experiment_manager.info(msg, color=color, log=False)
+
+    def isAlive(self):
+        return self._alive
 
     def start(self):
 
@@ -709,9 +754,7 @@ class AutomatedRun(Loggable):
         self.extraction_script.manager = self.experiment_manager
         self.extraction_script.run_identifier = self.runid
 
-        mem_log('pre extract execute')
         if self.extraction_script.execute():
-            mem_log('post extract execute')
             self._post_extraction_save()
 
             self.info('======== Extraction Finished ========')
@@ -727,7 +770,6 @@ class AutomatedRun(Loggable):
             return False
 
     def do_measurement(self):
-        mem_log('pre do measurement')
         if not self._alive:
             return
 
@@ -742,9 +784,8 @@ class AutomatedRun(Loggable):
         msg = 'Measurement Started {}'.format(self.measurement_script.name)
         self.info('======== {} ========'.format(msg))
         self.state = 'measurement'
-        mem_log('pre pre measurement save')
+
         self._pre_measurement_save()
-        mem_log('post pre measurement save')
 
         self.measuring = True
         self._save_enabled = True
@@ -1135,7 +1176,6 @@ anaylsis_type={}
 
     def _make_write_iteration(self, grpname, data_write_hook,
                          series, fits, refresh, graph):
-
         def _write(data):
             dets = self._active_detectors
             i, x, intensities = data
@@ -1168,10 +1208,22 @@ anaylsis_type={}
 
         return _write
 
-    def _measure_iteration(self, grpname, data_write_hook,
-                           ncounts, starttime, starttime_offset,
-                           series, fits, check_conditions, refresh):
+    def _get_data_generator(self):
+        def gen():
+            spec = self.spectrometer_manager.spectrometer
+            while 1:
+                v = spec.get_intensities(tagged=True)
+                yield v
 
+        return gen()
+
+#     @profile
+    def _measure(self, grpname, data_write_hook,
+                           ncounts, starttime, starttime_offset,
+                            series, fits, check_conditions, refresh):
+#         print '------------------------{}----------------------------'.format(grpname)
+#         before = measure_type()
+        mem_log('pre measure {}'.format(grpname))
         st = time.time()
 
         if not self.spectrometer_manager:
@@ -1184,7 +1236,8 @@ anaylsis_type={}
         self._total_counts += ncounts
 
 #         spectrometer = self.spectrometer_manager.spectrometer
-        get_data = lambda: self.spectrometer_manager.spectrometer.get_intensities(tagged=True)
+#         get_data = lambda: self.spectrometer_manager.spectrometer.get_intensities(tagged=True)
+#         get_data = self._get_data_generator()
 
         ncounts = int(ncounts)
         iter_cnt = 1
@@ -1205,50 +1258,14 @@ anaylsis_type={}
                                  fit=fi,
                                  plotid=pi
                                  )
-        debug = globalv.experiment_debug
-
-        if debug:
-            m = 0.1
-        else:
-            m = self.integration_time
 
         func = self._make_write_iteration(grpname, data_write_hook,
                                                     series, fits, refresh,
                                                     graph)
         dm = self.data_manager
-        if starttime is None:
-            starttime = time.time()
-
         with dm.open_file(self._current_data_frame):
-            time.sleep(0.1)
             with consumable(func) as con:
-                while 1:
-                    ck = self._check_iteration(iter_cnt, ncounts, check_conditions)
-                    if ck == 'break':
-                        break
-                    elif ck == 'cancel':
-                        return False
-
-                    data = get_data()
-#                    if data is not None:
-#                        keys, signals = data
-#                    else:
-#
-#                        keys, signals = ('H2', 'H1', 'AX', 'L1', 'L2', 'CDD'), (1, 2, 3, 4, 5, 6)
-
-                    x = time.time() - starttime  # if not self._debug else iter_cnt + starttime
-                    if debug:
-                        x *= m ** -1
-                    con.add_consumable((iter_cnt, x, data))
-
-                    if iter_cnt % 50 == 0:
-                        self.info('collecting point {}'.format(iter_cnt))
-                        mem_log('collecting point {}'.format(iter_cnt))
-
-#                    self._wait(m)
-                    iter_cnt += 1
-                    time.sleep(m)
-
+                self._iteration(con, ncounts, check_conditions, starttime)
 
 #         consumer.stop()
         if graph:
@@ -1258,14 +1275,54 @@ anaylsis_type={}
         iter_cnt -= 1
         et = iter_cnt * self.integration_time
         self.debug('%%%%%%%%%%%%%%%%%%%%%%%% counts: {} {} {}'.format(iter_cnt, et, t))
-
-        # ?? superfluous ??
-        del graph
-        del func
-        del get_data
-        del data_write_hook
+        mem_log('post measure {}'.format(grpname))
+#         calc_growth(before)
 
         return True
+
+    def _iteration(self, con, ncounts, check_conditions, starttime):
+        if starttime is None:
+            starttime = time.time()
+
+        iter_cnt = 1
+        iter_step = self._iter_step
+        get_data = self._get_data_generator()
+
+        debug = globalv.experiment_debug
+        if debug:
+            m = 0.2
+        else:
+            m = self.integration_time
+
+        check = lambda x: self._check_iteration(x, ncounts, check_conditions)
+        while 1:
+#             if iter_cnt > ncounts:
+#                 break
+            ck = check(iter_cnt)
+            if ck == 'break':
+                break
+            elif ck == 'cancel':
+                return False
+
+            data = get_data.next()
+            iter_step(iter_cnt, con, data, starttime, m, debug)
+            iter_cnt += 1
+
+
+#     @profile
+    def _iter_step(self, iter_cnt, con, data, starttime, period, debug=False):
+
+        x = time.time() - starttime  # if not self._debug else iter_cnt + starttime
+        if debug:
+            x *= period ** -1
+        con.add_consumable((iter_cnt, x, data))
+
+        if iter_cnt % 50 == 0:
+            self.info('collecting point {}'.format(iter_cnt))
+#             mem_log('collecting point {}'.format(iter_cnt))
+
+        iter_cnt += 1
+        time.sleep(period)
 
     def _check_conditions(self, conditions, cnt):
         for ti in conditions:
@@ -1357,7 +1414,6 @@ anaylsis_type={}
 
             sess.flush()
             self._db_extraction_id = int(ext.id)
-            mem_log('post save extraction')
 
     def _pre_measurement_save(self):
         self.info('pre measurement save')
@@ -1467,7 +1523,7 @@ anaylsis_type={}
                 # save extraction
                 ext = self._db_extraction_id
                 dbext = db.get_extraction(ext, key='id')
-                
+
                 a.extraction_id = dbext.id
 
                 # save measurement
@@ -1989,7 +2045,7 @@ anaylsis_type={}
 
         self.valid_scripts[name] = valid
         if valid:
-            scripts[fname]=s
+            scripts[fname] = s
         return s
 
     def _measurement_script_factory(self):

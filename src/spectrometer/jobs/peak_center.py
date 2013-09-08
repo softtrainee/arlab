@@ -101,11 +101,18 @@ class PeakCenter(MagnetScan):
     result = None
     directions = None
     _markup_idx = 1
+
+
     def get_peak_center(self, ntries=2):
         self._alive = True
         graph = self.graph
         center_dac = self.center_dac
         self.info('starting peak center. center dac= {}'.format(center_dac))
+
+
+
+        graph.clear()
+        self._graph_factory(graph=graph)
 
         for i in range(ntries):
             if not self.isAlive():
@@ -263,24 +270,27 @@ class PeakCenter(MagnetScan):
                        ytitle='Intensity (fA)',
                        show_legend='ul',
                        legend_kw=dict(
-                                      font='modern 8', 
+                                      font='modern 8',
                                       line_spacing=1
                                       )
-                       
+
                        )
 
         graph.new_series(
                          line_width=2
-                         
+
 #                          type='scatter',
 #                          marker='circle',
 #                          marker_size=1.25
                          )
 
-        graph.set_series_label(self.reference_detector)
+        graph.set_series_label('*{}'.format(self.reference_detector))
         self._markup_idx = 1
+        spec = self.spectrometer
         for di in self.additional_detectors:
-            graph.new_series()
+            det = spec.get_detector(di)
+            c = det.color
+            graph.new_series(line_color=c)
             graph.set_series_label(di)
             self._markup_idx += 1
 

@@ -67,7 +67,7 @@ class ArArAge(Loggable):
 #     irradiation_info = Property
 #     irradiation_level = Property
 #     irradiation_position = Property
-    production_ratios = Property
+#     production_ratios = Property
 
 #    signals = AgeProperty()
 #    _signals = Dict
@@ -613,6 +613,8 @@ class ArArAge(Loggable):
     def load_irradiation(self, ln):
         self.irradiation_info = self._get_irradiation_info(ln)
         self.j = self._get_j()
+
+        self.production_ratios = self._get_production_ratios()
 
 
 #============= EOF =============================================

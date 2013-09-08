@@ -24,6 +24,7 @@ import time
 #============= local library imports  ==========================
 from spectrometer_task import SpectrometerTask
 from src.globals import globalv
+from memory_profiler import profile
 
 def psuedo_peak(center, start, stop, step, magnitude=500, peak_width=0.008):
     x = linspace(start, stop, step)
@@ -166,11 +167,17 @@ class MagnetScan(SpectrometerTask):
             r = None
 
             for i, v in enumerate(intensity):
+                oys = None
+                k = 'odata{}'.format(i)
+                if hasattr(plot, k):
+                    oys = getattr(plot, k)
 
-                k = 'oy{}'.format(i)
-                oys = get_data(plot, k)
                 oys = [v] if oys is None else hstack((oys, v))
-                set_data(plot, k, oys)
+                setattr(plot, k, oys)
+#                 plot.odata = oys
+#                 oys = get_data(plot, k)
+#                 oys = [v] if oys is None else hstack((oys, v))
+#                 set_data(plot, k, oys)
 
                 if i == 0:
                     # calculate ref range
@@ -185,8 +192,8 @@ class MagnetScan(SpectrometerTask):
                 if r and R and self.normalize:
                     v = (v - mir) * R / r + miR
 
-                set_plot_data(plot, 'y{}'.format(i), v)
                 set_plot_data(plot, 'x{}'.format(i), di)
+                set_plot_data(plot, 'y{}'.format(i), v)
 
 
     def _magnet_step_hook(self, detector=None, peak_generator=None):

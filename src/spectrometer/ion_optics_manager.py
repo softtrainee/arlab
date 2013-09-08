@@ -200,14 +200,19 @@ class IonOpticsManager(Manager):
         else:
             ad = []
 
-        self.peak_center = pc = PeakCenter(center_dac=center_dac,
-                                           period=period,
-                                           directions=directions,
-                                           reference_detector=ref,
-                                           additional_detectors=ad,
-                                           reference_isotope=isotope,
-                                           spectrometer=spec,
-                                           )
+        pc = self.peak_center
+        if not pc:
+            pc = PeakCenter()
+
+        pc.trait_set(center_dac=center_dac,
+                   period=period,
+                   directions=directions,
+                   reference_detector=ref,
+                   additional_detectors=ad,
+                   reference_isotope=isotope,
+                   spectrometer=spec)
+
+        self.peak_center = pc
         if plot_panel:
             graph = pc.graph
 #             plot_panel.peak_center_graph = graph

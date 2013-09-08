@@ -41,6 +41,7 @@ def mem_break():
 
 def mem_log(msg):
     if USE_MEM_LOG:
+        gc.collect()
         mem = _get_current_mem()
         write_mem(msg, mem)
 
@@ -158,32 +159,101 @@ class MemCTX(object):
 from collections import defaultdict
 
 
-def measure_type(cls=None, group=None):
+def measure_type(cls=None, group=None, before=None):
+#     gc.collect()
+
+#     d = defaultdict(list)
     d = defaultdict(int)
+
+    if before is None:
+        before = tuple()
+
     if cls:
-        d[cls] = sum((1 for o in gc.get_objects() if type(o) == cls))
+#         else:
+#             before = before[cls]
+#
+#         print 'before', len(before)
+        d[cls] = set([id(o) for o in gc.get_objects()
+                      if type(o) == cls])
+#         print 'xs', len(xs)
+#         d[cls] = filter(lambda x: not x in before, xs)
     else:
         objs = gc.get_objects()
         if group:
             objs = filter(lambda x: group in str(type(x)), objs)
 
-        for i in objs:
-            d[type(i)] += 1
+        for o in objs:
+            d[type(o)] += 1
+#             i = id(o)
+#             if before and not i in before:
+#                 d[type(o)].append(i)
 
     return d
 
 # gp, _ = unique_path(root, 'growth')
-def calc_growth(before, cls=None, group=None, count=None, write=False):
+def calc_growth(before, cls=None, group=None, count=None, write=False, print_objs=False):
     gc.collect()
 
     after = measure_type(cls, group)
+    print 'after calcued'
+#     print len(after.keys())
+#     print len(before.keys())
 #     after = end_growth()
     ts = 0
-    for k, v in sorted([(ki, after[ki] - before[ki]) for ki in after if after[ki] - before[ki] > 1],
+#     for k, v in sorted([(ki, len(after[ki]) - len(before[ki]))
+#                         for ki in after if len(after[ki]) - len(before[ki]) > 1],
+#                       key=lambda x:x[1],
+#                       reverse=True
+#                       ):
+
+    for k, v in sorted([(ki, after[ki] - before[ki])
+                        for ki in after if after[ki] - before[ki] > 1],
                       key=lambda x:x[1],
                       reverse=True
                       ):
-#         if cls and v > 1 :
+
+        ids = before[k]
+#         a = len(after[k])
+#         b = len(ids)
+#         print 'a-b', a - b
+        if cls and v > 1 and print_objs:
+#             n = a - len(ids)
+            cnt = 0
+#             for i in after[k]
+            sb = set(ids)
+            sa = set(after[k])
+            ss = sa - sb
+            print 'sa-sb', len(sa) - len(sb), len(ss)
+#             print len(sa) - a, len(sb) - len(ids), len(ss)
+            for i in ss:
+#                 if not i in ids:
+                obj = get_id(i)
+                if obj:
+                    ks = obj.keys()
+                    if ks[0] not in ('name', 'trait', 'owner',
+                                     'handler', 'object',
+                                     '_dispatch', '_remove', 'call_method'
+                                     ):
+
+                        print 'keys      :{}'.format(ks)
+                        print 'referrers :{}'.format(gc.get_referrers(obj))
+
+#                 print i,
+#                 cnt += 1
+#                 if cnt == n:
+#                     break
+
+#             for i in set(after[ki]) - set(ids):
+#                 if i not in ids:
+#                 o = get_id(i)
+#                 print gc.get_referrers(o)
+
+#             for o in get_type(k):
+#                 if id(o) not in ids:
+#                     print o.keys()
+            print '----------- {}'.format(cnt)
+
+
 #             obj = get_type(k).next()
 #             print 'referrers'
 #             for ri in gc.get_referrers(obj):
@@ -238,8 +308,12 @@ def show_refs(cls):
                 keys = ','.join(ri.keys())
 
             print '{:<30s} {} {}'.format(str(id(ri)), type(ri), ri, keys)
+
 def get_type(cls):
     return (o for o in gc.get_objects() if type(o) == cls)
+
+def get_id(i):
+    return next((o for o in gc.get_objects() if id(o) == i), None)
 
 def get_size(cls, show=False):
     vs = (sys.getsizeof(o) for o in get_type(cls))

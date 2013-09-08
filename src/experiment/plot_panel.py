@@ -77,7 +77,7 @@ from traitsui.api import ListEditor
 class GraphContainer(HasTraits):
     graphs = List
     selected_tab = Any
-    label=Str
+    label = Str
 #     def _selected_tab_changed(self):
 #         print 'sel', self.selected_tab
 
@@ -130,9 +130,9 @@ class PlotPanel(Loggable):
     display_summary = List
 #    refresh = Event
 
-    signals = Dict
-    baselines = Dict
-    blanks = Dict
+#     signals = Dict
+#     baselines = Dict
+#     blanks = Dict
     correct_for_baseline = Bool(True)
     correct_for_blank = Bool(True)
     isbaseline = Bool(False)
@@ -148,6 +148,8 @@ class PlotPanel(Loggable):
         self.peak_center_graph = graph
         self.graph_container.selected_tab = self.peak_center_graph
 
+    def show_isotope_graph(self):
+        self.graph_container.selected_tab = self.graph
 #     def show_peak_center(self):
 # #         self.graph_container.selected_tab = self.peak_center_graph
 #         print 'sss', self.graph_container.selected_tab
@@ -160,21 +162,26 @@ class PlotPanel(Loggable):
             super(PlotPanel, self).info(*args, **kw)
 
     def reset(self):
-        if self.graph:
-            self.graph.on_trait_change(self._update_display,
-                                       'regression_results', remove=True)
+#         if self.graph:
+#             self.graph.on_trait_change(self._update_display,
+#                                        'regression_results', remove=True)
+#             self.graph.clear()
+#             del self.graph.plotcontainer
 
-            del self.graph.plotcontainer
-            del self.graph.plots
 
-        #this values could be retrieved from the arar_age instance
-        self.signals=dict()
-        self.baselines=dict()
-        self.blanks=dict()
-        
+        # this values could be retrieved from the arar_age instance
+#         self.signals = dict()
+#         self.baselines = dict()
+#         self.blanks = dict()
+
         self.clear_displays()
-        self.graph = self._graph_factory()
-        self.graph.on_trait_change(self._update_display, 'regression_results')
+
+#         self.graph = self._graph_factory()
+#         self.graph.on_trait_change(self._update_display, 'regression_results')
+
+        self.graph.clear()
+        self.peak_center_graph.clear()
+
 
     def create(self, dets):
         '''
@@ -187,15 +194,52 @@ class PlotPanel(Loggable):
 
 #        g.suppress_regression = True
 #        # construct plot panels graph
-
-        for i, det in enumerate(dets):
-            g.new_plot(
+#         if hasattr(g, 'detectors'):
+#             cd = g.detectors
+#         else:
+#             cd = set(tuple())
+#
+#         d = set(dets)
+#         toadd = d - cd
+#         toremove = cd - d
+#
+#         print toremove
+#         for det in toremove:
+#             p = next((p for p in g.plots if p.ytitle.startswith(det)), None)
+#             print p
+#             if p:
+#                 del p.plots
+#                 g.plots.remove(p)
+#
+#         print toadd
+        for det in dets:
+            p = g.new_plot(
 #                       title=self.plot_title if i == 0 else '',
                        ytitle='{} {} (fA)'.format(det.name, det.isotope),
                        xtitle='time (s)',
                        padding_left=70,
                        padding_right=10,
                        )
+#             p.value_mapper.tight_bounds = False
+
+#         g.detectors = toadd
+        # sort plots based on ytitle
+#         splots = sorted(g.plots, key=lambda x: x.ytitle.split(' ')[1], reverse=True)
+#         g.plots = splots
+#         splots = sorted(g.plots, key=key)
+
+#         for i, det in enumerate(dets):
+#             if not det in cd:
+#                 g.new_plot(
+#     #                       title=self.plot_title if i == 0 else '',
+#                            ytitle='{} {} (fA)'.format(det.name, det.isotope),
+#                            xtitle='time (s)',
+#                            padding_left=70,
+#                            padding_right=10,
+#                            )
+#
+#         for ci in cd:
+#
 
         g.set_x_limits(min_=0, max_=400)
 #
@@ -204,8 +248,8 @@ class PlotPanel(Loggable):
 
     def clear_displays(self):
         self._print_results()
-    
-#     @on_trait_change('graph:regression_results')
+
+    @on_trait_change('graph:regression_results')
     def _update_display(self, new):
         if new:
             arar_age = self.arar_age
@@ -215,13 +259,13 @@ class PlotPanel(Loggable):
                     ee = reg.predict_error(0)
                     u = ufloat(vv, ee)
                     if self.isbaseline:
-                        self.baselines[iso] = u
-                        if arar_age:
-                            arar_age.set_baseline(iso, (vv, ee))
+#                         self.baselines[iso] = u
+#                         if arar_age:
+                        arar_age.set_baseline(iso, (vv, ee))
                     else:
-                        self.signals[iso] = u
-                        if arar_age:
-                            arar_age.set_isotope(iso, (vv, ee))
+#                         self.signals[iso] = u
+#                         if arar_age:
+                        arar_age.set_isotope(iso, (vv, ee))
 
                 except TypeError, e:
                     print 'type error', e
@@ -230,8 +274,9 @@ class PlotPanel(Loggable):
                     print 'assertion error', e
                     continue
             else:
-                if arar_age:
-                    arar_age.age_dirty = True
+#                 pass
+#                 if arar_age:
+#                 arar_age.age_dirty = True
                 self._print_results()
 
     @on_trait_change('correct_for_baseline, correct_for_blank')
@@ -271,17 +316,28 @@ class PlotPanel(Loggable):
 
         return summary
 
+    def _get_signal_dicts(self):
+        sig, base, blank = {}, {}, {}
+        if self.arar_age:
+            isos = [iso for iso in self.arar_age.isotopes.values()]
+
+            sig = dict([(v.name, v.uvalue) for v in isos])
+            base = dict([(v.name, v.baseline.uvalue) for v in isos])
+            blank = dict([(v.name, v.blank.uvalue) for v in isos])
+        return sig, base, blank
+
     def _make_display_ratios(self):
         cfb = self.correct_for_baseline
         cfbl = self.correct_for_blank
-        base = self.baselines
-        blank = self.blanks
+#         base = self.baselines
+#         blank = self.blanks
+        sig, base, blank = self._get_signal_dicts()
 
         def factory(n, d, scalar=1):
             r = DisplayRatio(name='{}/{}'.format(n, d))
             try:
-                sn = self.signals[n]
-                sd = self.signals[d]
+                sn = sig[n]
+                sd = sig[d]
             except KeyError:
                 return r
 
@@ -306,9 +362,12 @@ class PlotPanel(Loggable):
         return [factory(*args) for args in ratios]
 
     def _make_display_signals(self):
-        sig = self.signals
-        base = self.baselines
-        blank = self.blanks
+#         sig = self.signals
+#         base = self.baselines
+#         blank = self.blanks
+#         sig=dict([(k,v) ])
+        sig, base, blank = self._get_signal_dicts()
+
         cfb = self.correct_for_baseline
         cfbl = self.correct_for_blank
         def factory(det, fi):
@@ -366,7 +425,7 @@ class PlotPanel(Loggable):
                                              ),
                                              bind_index=False,
                                              use_data_tool=False,
-                                             use_inspector_tool=True,
+                                             use_inspector_tool=False,
                                              padding_bottom=35
                                       )
 
@@ -458,7 +517,7 @@ class PlotPanel(Loggable):
 
         v = View(
                  VSplit(
-                        UItem('graph_container', 
+                        UItem('graph_container',
                               style='custom',
                               height=600),
 #                         gg,
@@ -481,18 +540,22 @@ class PlotPanel(Loggable):
         return [d.isotope for d in self.detectors]
 
     def _graph_container_default(self):
+        self.graph.page_name = 'Isotopes'
+        self.peak_center_graph.page_name = 'Peak Center'
         return GraphContainer(graphs=[self.graph, self.peak_center_graph])
 
     @on_trait_change('graph, peak_center_graph')
     def _update_graphs(self):
         if self.graph and self.peak_center_graph:
             g, p = self.graph, self.peak_center_graph
+
             g.page_name = 'Isotopes'
             p.page_name = 'Peak Center'
+
             self.graph_container.graphs = [g, p]
-            
+
     def _plot_title_changed(self, new):
-        self.graph_container.label=new
+        self.graph_container.label = new
 #============= EOF =============================================
 
 #    def _display_factory(self):
