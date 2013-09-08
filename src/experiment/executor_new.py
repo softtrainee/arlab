@@ -29,7 +29,6 @@ from src.helpers.parsers.initialization_parser import InitializationParser
 from src.pyscripts.pyscript_runner import RemotePyScriptRunner, PyScriptRunner
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
-from src.pyscripts.wait_dialog import WaitDialog
 from src.experiment.stats import StatsGroup
 import time
 from src.constants import NULL_STR
@@ -54,6 +53,7 @@ from src.helpers.filetools import add_extension
 
 import gc
 from src.globals import globalv
+from src.wait.wait_group import WaitGroup
 
 
 class ExperimentExecutor(IsotopeDatabaseManager):
@@ -94,7 +94,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
     #
     #===========================================================================
     info_display = Instance(DisplayController)
-    wait_dialog = Instance(WaitDialog, ())
+    wait_group = Instance(WaitGroup, ())
     stats = Instance(StatsGroup)
 
     spectrometer_manager = Any
@@ -199,7 +199,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         if self.delaying_between_runs:
             self._alive = False
             self.stats.stop_timer()
-            self.wait_dialog.stop()
+            self.active_wait_control.stop()
+#             self.wait_dialog.stop()
 
             msg = '{} Stopped'.format(self.experiment_queue.name)
             self._set_message(msg, color='orange')
@@ -272,7 +273,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         total_cnt = 0
         with consumable(func=self._overlapped_run) as con:
             while 1:
-
+#                 before = measure_type()
                 if not self.isAlive():
                     break
 
@@ -287,11 +288,16 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     self.queue_modified = False
                     force_delay = True
 
-                if force_delay or \
-                    (self.isAlive() and cnt < nruns and not cnt == 0):
-                    # delay between runs
-                    self._delay(delay)
-                    force_delay = False
+                overlapping = self.current_run and self.current_run.isAlive()
+                if overlapping:
+                    self.wait_group.active_control.page_name = self.current_run.runid
+
+                else:
+                    if force_delay or \
+                        (self.isAlive() and cnt < nruns and not cnt == 0):
+                        # delay between runs
+                        self._delay(delay)
+                        force_delay = False
 
                 try:
                     spec = rgen.next()
@@ -301,11 +307,15 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     break
 
                 runargs = self._execute_run(spec)
+
                 if not runargs:
                     pass
 #                     break
                 else:
                     t, run = runargs
+                    if overlapping:
+                        self.wait_group.add_control(page_name=run.runid)
+
                     if spec.analysis_type == 'unknown' and spec.overlap:
                         self.info('overlaping')
                         run.wait_for_overlap()
@@ -315,6 +325,9 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     else:
                         last_runid = run.runid
                         self._join_run(spec, t, run)
+
+                        print '{} =========================================='.format(cnt)
+#                         calc_growth(before)
 
                 cnt += 1
                 total_cnt += 1
@@ -393,15 +406,17 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         self.info('Automated run {} {} duration: {:0.3f} s'.format(run.runid, run.state, t))
 
         run.finish()
-        
+
+        self.wait_group.pop()
+
         mem_log('end run')
-        
+
     def _join_run(self, spec, t, run):
         t.join()
 
         self.debug('{} finished'.format(run.runid))
         if self.isAlive():
-            
+
             if spec.analysis_type.startswith('blank'):
                 pb = run.get_baseline_corrected_signals()
                 if pb is not None:
@@ -412,6 +427,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         mem_log('> end join')
 
     def _overlapped_run(self, v):
+        self._overlapping = True
         t, run = v
 #         while t.is_alive():
 #             time.sleep(1)
@@ -452,7 +468,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     self._alive = False
                     self.stats.stop_timer()
                 self.set_extract_state(False)
-                self.wait_dialog.stop()
+                self.wait_group.stop()
                 self._canceled = True
                 if arun:
                     if style == 'queue':
@@ -583,10 +599,12 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         msg = 'Delay {} runs {} sec'.format(message, delay)
         self.info(msg)
 
-        self.wait_dialog.trait_set(wtime=delay,
-                                   message=msg)
-        self.wait_dialog.reset()
-        self.wait_dialog.start()
+        wg = self.wait_group
+        wc = wg.active_control
+        wc.trait_set(wtime=delay,
+                     message=msg)
+        wc.reset()
+        wc.start()
         self.delaying_between_runs = False
 
 #         time.sleep(1)

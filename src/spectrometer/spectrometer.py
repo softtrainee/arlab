@@ -31,6 +31,7 @@ from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.constants import NULL_STR
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.paths import paths
+from memory_profiler import profile
 
 DETECTOR_ORDER = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 debug = False

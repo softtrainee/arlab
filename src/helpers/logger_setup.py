@@ -82,8 +82,8 @@ def logging_setup(name, **kw):
     for hi in (shandler, rhandler):
 #        for hi in (rhandler,):
         hi.setLevel(gLEVEL)
-        hi.setFormatter(logging.Formatter(gFORMAT))
-        root.addHandler(hi)
+#         hi.setFormatter(logging.Formatter(gFORMAT))
+#         root.addHandler(hi)
 
 #     new_logger('main')
     # archive logs older than 1 month

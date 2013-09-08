@@ -23,7 +23,6 @@ import os
 import inspect
 from threading import Event, Thread
 #============= local library imports  ==========================
-from src.pyscripts.wait_dialog import WaitDialog
 
 from src.loggable import Loggable
 
@@ -36,42 +35,11 @@ import sys
 # from src.ui.thread import Thread
 import weakref
 from src.globals import globalv
+from src.wait.wait_control import WaitControl
+from src.pyscripts.error import PyscriptError, IntervalError, GosubError, \
+    KlassError
 
 
-class DummyManager(Loggable):
-    def open_valve(self, *args, **kw):
-        self.info('open valve')
-
-    def close_valve(self, *args, **kw):
-        self.info('close valve')
-
-
-class GosubError(Exception):
-    def __init__(self, path):
-        self.path = path
-
-    def __str__(self):
-        return 'GosubError: {} does not exist'.format(self.path)
-
-def KlassError(Exceotion):
-    def __init__(self, klass):
-        self.klass = klass
-
-    def __str__(self):
-        return 'KlassError: {} does not exist'.format(self.klass)
-
-
-class PyscriptError(Exception):
-    def __init__(self, name, err):
-        self.name = name
-        self.err = err
-    def __str__(self):
-        return 'Pyscript error in {}: {}'.format(self.name, self.err)
-
-
-class IntervalError(Exception):
-    def __str__(self):
-        return 'Poorly matched BeginInterval-CompleteInterval'
 
 
 class IntervalContext(object):
@@ -85,9 +53,6 @@ class IntervalContext(object):
     def __exit__(self, *args):
         self.obj.complete_interval()
 
-class MainError(Exception):
-    def __str__(self):
-        return 'No "main" function defined'
 
 def verbose_skip(func):
     def decorator(obj, *args, **kw):
@@ -724,16 +689,17 @@ class PyScript(Loggable):
                 message = ''
 
             if self.manager:
-                wd = self.manager.wait_dialog
+                wd = self.manager.wait_group.active_control
             else:
                 wd = self._wait_dialog
 
             if wd is None:
-                wd = WaitDialog()
+                wd = WaitControl()
 
             self._wait_dialog = wd
             if self.manager:
-                self.manager.wait_dialog = wd
+                self.manager.wait_group.active_control = wd
+#                 self.manager.wait_dialog = wd
 
             wd.trait_set(wtime=timeout,
                          # parent=weakref.ref(self)(),
@@ -790,6 +756,12 @@ class PyScript(Loggable):
         return self.name
 
 if __name__ == '__main__':
+    class DummyManager(Loggable):
+        def open_valve(self, *args, **kw):
+            self.info('open valve')
+
+        def close_valve(self, *args, **kw):
+            self.info('close valve')
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('pscript')

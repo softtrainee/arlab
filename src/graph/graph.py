@@ -29,7 +29,8 @@ from chaco.axis import PlotAxis
 from pyface.api import FileDialog, OK
 from pyface.timer.api import do_after as do_after_timer
 #=============standard library imports ========================
-import numpy as np
+# import numpy as np
+from numpy import array, hstack, Inf
 import csv
 import math
 #=============local library imports  ==========================
@@ -213,13 +214,13 @@ class Graph(Viewable, ContextMenuMixin):
         '''
         self._save_(path=path)
 
-    def export_raw_data(self, path=None, header=None, plotid=0):
-        '''
-        '''
-        if path is None:
-            path = self._path_factory()
-        if path is not None:
-            self._export_raw_data(path, header, plotid)
+#     def export_raw_data(self, path=None, header=None, plotid=0):
+#         '''
+#         '''
+#         if path is None:
+#             path = self._path_factory()
+#         if path is not None:
+#             self._export_raw_data(path, header, plotid)
 
     def export_data(self, path=None, plotid=None):
         '''
@@ -265,10 +266,40 @@ class Graph(Viewable, ContextMenuMixin):
 #        if self.ui is not None:
 #            do_after_timer(1, self.ui.dispose)
 #        self.ui = None
+    def clear_plots(self):
+        x = range(len(self.plots))
+
+        self.xdataname_generators = [self._name_generator_factory('x') for _ in x]
+        self.ydataname_generators = [self._name_generator_factory('y') for _ in x]
+        self.yerdataname_generators = [self._name_generator_factory('yer') for _ in x]
+
+        self.color_generators = [color_generator() for _ in x]
+#         for po in x:
+
+        self.series = [[] for _ in x]
+        self.data_len = [[] for _ in x]
+        self.data_limits = [[] for _ in x]
+
+#         print '====== {}'.format(self)
+#         print 'len plots {}'.format(len(self.plots))
+        for pi in self.plots:
+#             print 'len pi.renderers {}'.format(len(pi.plots.keys()))
+            for k, pp in pi.plots.items():
+                for renderer in pp:
+                    try:
+                        pi.remove(renderer)
+                    except RuntimeError:
+                        print 'failed removing {}'.format(renderer)
+
+                pi.plots.pop(k)
+#             print 'len psss.renderers {}'.format(len(pi.plots.keys()))
+
+        self.clear_data()
 
     def clear(self):
         '''
         '''
+
         self.plots = []
 
         self.xdataname_generators = [self._name_generator_factory('x')]
@@ -280,12 +311,15 @@ class Graph(Viewable, ContextMenuMixin):
         self.series = []
         self.data_len = []
 
-        self.raw_x = []
-        self.raw_y = []
-        self.raw_yer = []
+#         self.raw_x = []
+#         self.raw_y = []
+#         self.raw_yer = []
 
         self.data_limits = []
         self.plotcontainer = self.container_factory()
+
+        self.selected_plot = None
+
 
     def set_axis_label_color(self, *args, **kw):
         '''
@@ -638,9 +672,9 @@ class Graph(Viewable, ContextMenuMixin):
         self.yerdataname_generators.append(name_generator('yer'))
 
         self.series.append([])
-        self.raw_x.append([])
-        self.raw_y.append([])
-        self.raw_yer.append([])
+#         self.raw_x.append([])
+#         self.raw_y.append([])
+#         self.raw_yer.append([])
 
         pc = self.plotcontainer
         if add:
@@ -756,7 +790,7 @@ class Graph(Viewable, ContextMenuMixin):
 
 #                    self.series[plotid][1] += (c,)
                 c = self.series[plotid][-1][0].replace('x', 'c')
-                self.plots[plotid].data.set_data(c, np.array(colors))
+                self.plots[plotid].data.set_data(c, array(colors))
                 names += (c,)
 
         renderer = plotobj.plot(names, **rd)
@@ -830,8 +864,8 @@ class Graph(Viewable, ContextMenuMixin):
             oi = si.index.get_data()
             ov = si.value.get_data()
 
-            si.index.set_data(np.hstack((oi, [datum[0]])))
-            si.value.set_data(np.hstack((ov, [datum[1]])))
+            si.index.set_data(hstack((oi, [datum[0]])))
+            si.value.set_data(hstack((ov, [datum[1]])))
 
         if do_after:
             do_after_timer(do_after, add)
@@ -849,51 +883,49 @@ class Graph(Viewable, ContextMenuMixin):
                            plotid=pi,
                            ** kw)
 
-    def add_datum(self, datum, plotid=0, series=0, update_y_limits=False,
+    def add_datum(self, datum, plotid=0, series=0,
+                   update_y_limits=False,
                    ypadding=10,
-                   ymin_anchor=None, do_after=None, **kw):
+                   ymin_anchor=None,
+#                    do_after=None,
+                   **kw):
         '''
         '''
-        def add(datum):
-            names = self.series[plotid][series]
-            plot = self.plots[plotid]
+#         def add(datum):
+        names = self.series[plotid][series]
+        plot = self.plots[plotid]
 
-            if not hasattr(datum, '__iter__'):
-                datum = (datum,)
+        if not hasattr(datum, '__iter__'):
+            datum = (datum,)
 
-            for i, (name, di) in enumerate(zip(names, datum)):
+        data = plot.data
+        for i, (name, di) in enumerate(zip(names, datum)):
+            d = data.get_data(name)
+            nd = hstack((d, di))
+            data.set_data(name, nd)
 
-                d = plot.data.get_data(name)
-                nd = np.hstack((d, di))
-                plot.data.set_data(name, nd)
+            if i == 1:
+                # y values
+                mi = min(nd)
+                ma = max(nd)
 
-                if i == 1:
-                    # y values
-                    mi = min(nd)
-                    ma = max(nd)
+        if update_y_limits:
+            if isinstance(ypadding, str):
+                ypad = max(0.1, abs(mi - ma)) * float(ypadding)
+            else:
+                ypad = ypadding
+            mi -= ypad
+            if ymin_anchor is not None:
+                mi = max(ymin_anchor, mi)
 
-            if update_y_limits:
-                if isinstance(ypadding, str):
+            self.set_y_limits(min_=mi,
+                              max_=ma + ypad,
+                              plotid=plotid)
 
-                    ypad = max(0.1, abs(mi - ma)) * float(ypadding)
-                else:
-                    ypad = ypadding
-                mi -= ypad
-                if ymin_anchor is not None:
-                    mi = max(ymin_anchor, mi)
-
-
-#                if ypadding / ma > 0.5:
-#                    ypadding = 0
-
-                self.set_y_limits(min_=mi,
-                                  max_=ma + ypad,
-                                  plotid=plotid)
-
-        if do_after:
-            do_after_timer(do_after, add, datum)
-        else:
-            add(datum)
+#         if do_after:
+#             do_after_timer(do_after, add, datum)
+#         else:
+#             add(datum)
 
     def show_crosshairs(self, color='black'):
         '''
@@ -1086,7 +1118,7 @@ class Graph(Viewable, ContextMenuMixin):
                )
 
         vis = kw['show_legend'] if 'show_legend' in kw else False
-        
+
         if not isinstance(vis, bool):
             align = vis
             vis = True
@@ -1097,40 +1129,40 @@ class Graph(Viewable, ContextMenuMixin):
         p.legend.align = align
         if legend_kw:
             p.legend.trait_set(**legend_kw)
-        
+
 
         return p
 
-    def _export_raw_data(self, path, header, plotid):
-        def name_generator(base):
-            i = 0
-            while 1:
-                yield '%s%s%8s' % (base, i, '')
-                i += 1
-
-        xname_gen = name_generator('x')
-        yname_gen = name_generator('y')
-
-        writer = csv.writer(open(path, 'w'))
-        if plotid is None:
-            plotid = self.selected_plotid
-
-        xs = self.raw_x[plotid]
-        ys = self.raw_y[plotid]
-
-        cols = []
-        nnames = []
-        for xd, yd in zip(xs, ys):
-            cols.append(fmt(xd))
-            cols.append(fmt(yd))
-            nnames.append(xname_gen.next())
-            nnames.append(yname_gen.next())
-
-        if header is None:
-            header = nnames
-        writer.writerow(header)
-        rows = zip(*cols)
-        writer.writerows(rows)
+#     def _export_raw_data(self, path, header, plotid):
+#         def name_generator(base):
+#             i = 0
+#             while 1:
+#                 yield '%s%s%8s' % (base, i, '')
+#                 i += 1
+#
+#         xname_gen = name_generator('x')
+#         yname_gen = name_generator('y')
+#
+#         writer = csv.writer(open(path, 'w'))
+#         if plotid is None:
+#             plotid = self.selected_plotid
+#
+# #         xs = self.raw_x[plotid]
+# #         ys = self.raw_y[plotid]
+#
+#         cols = []
+#         nnames = []
+#         for xd, yd in zip(xs, ys):
+#             cols.append(fmt(xd))
+#             cols.append(fmt(yd))
+#             nnames.append(xname_gen.next())
+#             nnames.append(yname_gen.next())
+#
+#         if header is None:
+#             header = nnames
+#         writer.writerow(header)
+#         rows = zip(*cols)
+#         writer.writerows(rows)
 
     def _export_data(self, path, plotid):
         writer = csv.writer(open(path, 'w'))
@@ -1168,9 +1200,9 @@ class Graph(Viewable, ContextMenuMixin):
         '''
         '''
         if x is None:
-            x = np.array([])
+            x = array([])
         if y is None:
-            y = np.array([])
+            y = array([])
 
         if 'yerror' in kw:
             if not isinstance(kw['yerror'], ArrayDataSource):
@@ -1189,8 +1221,8 @@ class Graph(Viewable, ContextMenuMixin):
                 yname = self.ydataname_generators[plotid].next()
 
             names = (xname, yname)
-            self.raw_x[plotid].append(x)
-            self.raw_y[plotid].append(y)
+#             self.raw_x[plotid].append(x)
+#             self.raw_y[plotid].append(y)
             if yer is not None:
                 self.raw_yer[plotid].append(yer)
                 yername = self.yerdataname_generators[plotid].next()
@@ -1405,11 +1437,13 @@ class Graph(Viewable, ContextMenuMixin):
             try:
                 if mi <= 0:
 
-                    mi = np.Inf
+                    mi = Inf
+                    data = plot.data.list_data()
                     for di in plot.data.list_data():
                         if 'y' in di:
-                            ya = np.copy(plot.data.get_data(di))
-                            ya.sort()
+                            ya = sorted(data.get_data[di])
+#                             ya = np.copy(plot.data.get_data(di))
+#                             ya.sort()
                             i = 0
                             try:
                                 while ya[i] <= 0:

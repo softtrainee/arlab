@@ -21,12 +21,13 @@ from traitsui.api import View, Item, Handler, HGroup, ButtonEditor, spring, Labe
     VGroup
 # import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
-import os
-from threading import Thread, Event as TEvent
+# import os
+from threading import Thread
 #============= local library imports  ==========================
-from src.paths import paths
-from src.pyscripts.wait_dialog import WaitDialog
-import time
+# from src.paths import paths
+# from src.pyscripts.wait_dialog import WaitDialog
+# import time
+from src.wait.wait_control import WaitControl
 
 
 
@@ -38,7 +39,7 @@ class PulseHandler(Handler):
 
 class Pulse(HasTraits):
     duration = Float(1)
-    wait_control = Instance(WaitDialog, transient=True)
+    wait_control = Instance(WaitControl, transient=True)
     manager = Any(transient=True)
     power = Float(1.1, auto_set=False, enter_set=True)
     units = Property
@@ -68,7 +69,7 @@ class Pulse(HasTraits):
         self.wait_control._current_time = self.duration
 
     def _wait_control_default(self):
-        return WaitDialog(low_name=0,
+        return WaitControl(low_name=0,
                           auto_start=False,
                           wtime=self.duration,
                           title='',
@@ -77,7 +78,7 @@ class Pulse(HasTraits):
     def start(self):
         self._duration_changed()
 
-        evt = TEvent()
+#         evt = TEvent()
         man = self.manager
         if man is not None:
             # man.enable_laser()

@@ -38,6 +38,7 @@ from src.regression.wls_regressor import WeightedPolynomialRegressor
 from src.regression.least_squares_regressor import LeastSquaresRegressor
 from src.regression.base_regressor import BaseRegressor
 from src.graph.error_envelope_overlay import ErrorEnvelopeOverlay
+import weakref
 
 class StatsFilterParameters(object):
     '''
@@ -47,6 +48,7 @@ class StatsFilterParameters(object):
     blocksize = 20
 
 class RegressionGraph(Graph, RegressionContextMenuMixin):
+    indices = List
     filters = List
     selected_component = Any
     regressors = List
@@ -138,8 +140,26 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             pass
 
     def clear(self):
-        super(RegressionGraph, self).clear()
         self.regressors = []
+
+        x = self.indices[:]
+        for idx in x:
+            idx.on_trait_change(self.update_metadata,
+                                'metadata_changed', remove=True)
+            self.indices.remove(idx)
+        del x
+        self.selected_component = None
+
+        for p in self.plots:
+            for pp in p.plots.values():
+                if hasattr(pp, 'error_envelope'):
+                    pp.error_envelope.component = None
+                    del pp.error_envelope
+
+                if hasattr(pp, 'regressor'):
+                    del pp.regressor
+
+        super(RegressionGraph, self).clear()
 
     def refresh(self, **kw):
         self._update_graph()
@@ -177,7 +197,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
     def _plot_regression(self, plot, scatter, line):
         try:
-#            print id(plot), plot.visible
             if not plot.visible:
                 self.regressors.append(None)
                 return
@@ -188,15 +207,11 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 r, fx, fy, ly, uy = args
                 line.index.set_data(fx)
                 line.value.set_data(fy)
+                if hasattr(line, 'error_envelope'):
+                    line.error_envelope.lower = ly
+                    line.error_envelope.upper = uy
+                    line.error_envelope.invalidate()
 
-                line.error_envelope.lower = ly
-                line.error_envelope.upper = uy
-                line.error_envelope.invalidate()
-#                 lline.index.set_data(fx)
-#                 lline.value.set_data(ly)
-
-#                 uline.index.set_data(fx)
-#                 uline.value.set_data(uy)
                 self.regressors.append(r)
 
         except KeyError:
@@ -530,6 +545,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter = plot.plot(names, **rd)[0]
         self.set_series_label('data{}'.format(si), plotid=plotid)
 
+#         scatter.value_mapper.tight_bounds = True
 #        scatter.index.on_trait_change(self._update_graph, 'metadata_changed')
 #        u = lambda obj, name, old, new: self._update_metadata(scatter, obj, name, old, new)
 #        scatter.index.on_trait_change(u, 'metadata_changed')
@@ -556,43 +572,35 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         self._add_error_envelope_overlay(line)
         if r is not None:
             line.regressor = r
-            line.error_envelope.lower = ly
-            line.error_envelope.upper = uy
-#             line.lower_envelope = ly
-#             line.upper_envelope = uy
-#         if self.regressors:
-#             line.regressor = self.regressors[-1]
+            if hasattr(line, 'error_envelope'):
+                line.error_envelope.lower = ly
+                line.error_envelope.upper = uy
+
 
         line.index.sort_order = 'ascending'
         self.set_series_label('fit{}'.format(si), plotid=plotid)
-
-        kw['color'] = 'red'
-
-
-#         plot, names, rd = self._series_factory(fx, uy, line_style='dash', plotid=plotid, **kw)
-#         plot.plot(names, **rd)[0]
-#         self.set_series_label('upper CI{}'.format(si), plotid=plotid)
-#
-#         plot, names, rd = self._series_factory(fx, ly, line_style='dash', plotid=plotid, **kw)
-#         plot.plot(names, **rd)[0]
-#         self.set_series_label('lower CI{}'.format(si), plotid=plotid)
 
         try:
             self._set_bottom_axis(plot, plot, plotid)
         except:
             pass
 
-        self._bind_index(scatter, **kw)
+        self._bind_index(scatter, plotid, **kw)
         if add_tools and (self.use_inspector_tool or self.use_point_inspector):
             self.add_tools(plot, scatter, line, convert_index)
+
         return plot, scatter, line
 
     def _bind_index(self, scatter, **kw):
         index = scatter.index
         index.on_trait_change(self.update_metadata, 'metadata_changed')
 
+        self.indices.append(index)
+
+
     def _add_error_envelope_overlay(self, line):
-        o = ErrorEnvelopeOverlay(component=line)
+
+        o = ErrorEnvelopeOverlay(component=weakref.ref(line)())
         line.overlays.append(o)
         line.error_envelope = o
 

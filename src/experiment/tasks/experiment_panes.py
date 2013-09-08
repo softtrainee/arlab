@@ -355,7 +355,8 @@ class WaitPane(TraitsDockPane):
     name = 'Wait'
     def traits_view(self):
         v = View(
-                 UItem('wait_dialog',
+#                  UItem('wait_dialog',
+                 UItem('wait_group',
                         style='custom'),
                  )
         return v
