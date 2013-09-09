@@ -30,20 +30,24 @@ if not os.path.isdir(root):
     os.mkdir(root)
 
 p, _ = unique_path(root, 'mem')
-def write_mem(msg, m):
+def write_mem(msg, m, verbose):
     with open(os.path.join(root, p), 'a') as fp:
-        fp.write('{:<50s}:{}\n'.format(msg, m))
+        msg = '{:<50s}:{}\n'.format(msg, m)
+        fp.write(msg)
+        if verbose:
+            print msg.strip()
 
 
 PID = None
 def mem_break():
     write_mem('#' + '=' * 49, '')
 
-def mem_log(msg):
+def mem_log(msg, verbose=True):
     if USE_MEM_LOG:
         gc.collect()
         mem = _get_current_mem()
-        write_mem(msg, mem)
+        write_mem(msg, mem, verbose)
+
 
 def mem_log_func(func, *args, **kw):
     n = func.func_name

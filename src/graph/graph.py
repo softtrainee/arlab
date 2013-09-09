@@ -1022,6 +1022,9 @@ class Graph(Viewable, ContextMenuMixin):
         m = MinorTicksOverlay(component=p, orientation='h', **kw)
         p.underlays.append(m)
 
+    def refresh(self):
+        pass
+
     def redraw(self, force=True):
         '''
         '''
@@ -1463,6 +1466,16 @@ class Graph(Viewable, ContextMenuMixin):
             if isinstance(pad, str):
                 # interpet pad as a percentage of the range
                 # ie '0.1' => 0.1*(ma-mi)
+                if ma is None:
+                    ma = ra.high
+                if mi is None:
+                    mi = ra.low
+
+                if mi == -Inf:
+                    mi = 0
+                if ma == Inf:
+                    ma = 100
+
                 if ma is not None and mi is not None:
                     pad = float(pad) * (ma - mi)
                     if abs(pad) < 1e-10:

@@ -585,7 +585,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         except:
             pass
 
-        self._bind_index(scatter, plotid, **kw)
+        self._bind_index(scatter, **kw)
         if add_tools and (self.use_inspector_tool or self.use_point_inspector):
             self.add_tools(plot, scatter, line, convert_index)
 
