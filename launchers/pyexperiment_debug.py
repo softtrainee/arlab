@@ -18,6 +18,7 @@
 from traits.etsconfig.api import ETSConfig
 ETSConfig.toolkit = "qt4"
 
+from pyface.timer.do_later import do_later
 # import gc
 # print gc.get_threshold()
 # gc.set_debug(gc.DEBUG_LEAK| gc.DEBUG_STATS)
@@ -25,8 +26,7 @@ ETSConfig.toolkit = "qt4"
 import os
 #============= local library imports  ==========================
 
-# version_id = '_experiment-2.1.1'
-version_id = '_dev'
+version_id = '_experiment-2.1.1'
 from helpers import build_version
 '''
     obsolete:
@@ -38,18 +38,17 @@ from helpers import build_version
 '''
 DEBUG = True
 build_version(version_id, debug=DEBUG)
-
-def main():
+def setup():
     '''
         entry point
     '''
-    from src.envisage.pychron_run import launch
+    
     from src.helpers.logger_setup import logging_setup
     from src.paths import build_directories, paths
 
     # import application
-    from src.applications.pyexperiment import PyExperiment as app
 #    from src.applications.pydiode import PyDiode as app
+    from src.applications.pyexperiment import PyExperiment as app
 
 
     # build directories
@@ -73,7 +72,41 @@ def main():
     from src.globals import globalv
     globalv._test = False
     globalv.debug = DEBUG
+    return app
 
+
+    
+def mem():
+    from src.envisage.pychron_run import app_factory
+    import time
+    app=setup()
+    
+    app=app_factory(app)
+    
+    def do_mem():
+        print 'do memoasdfasdf'
+        task=app.open_task('pychron.experiment')
+        
+        from src.paths import paths
+        p=os.path.join(paths.experiment_dir, 'test.txt')
+        task.open(p)
+        
+        from guppy import hpy
+        hp=hpy()
+        hp.setrelheap()
+        t=task._execute()
+        t.join()
+        print 'finished'
+    
+    
+#    app.on_trait_change(lambda *args, **kw:do_mem(app), 'started')
+    app.on_trait_change(do_mem, 'started')
+    app.run()
+    
+    
+def main():
+    from src.envisage.pychron_run import launch
+    app=setup()
     launch(app)
 #     os._exit(0)
 
@@ -96,5 +129,6 @@ def main():
 #    os._exit(0)
 # #    sys.exit()
 if __name__ == '__main__':
+    
     main()
 #============= EOF =============================================

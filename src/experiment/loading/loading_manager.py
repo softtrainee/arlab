@@ -437,7 +437,7 @@ class LoadingManager(IsotopeDatabaseManager):
                                              position=pp,
                                              weight=ip.weight,
                                              note=ip.note,
-                                             sess=sess
+                                             
                                              )
                     lt.loaded_positions.append(i)
 
@@ -445,8 +445,9 @@ class LoadingManager(IsotopeDatabaseManager):
 
     @cached_property
     def _get_labnumbers(self):
-        with self.db.session_ctx() as sess:
-            level = self.db.get_irradiation_level(self.irradiation,
+        db=self.db
+        with db.session_ctx():
+            level = db.get_irradiation_level(self.irradiation,
                                                   self.level,
     #                                               sess=sess
                                                   )

@@ -31,7 +31,8 @@ from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.constants import NULL_STR
 from collections import namedtuple
 import time
-from threading import Thread
+from src.ui.qt.thread import Thread
+#from threading import Thread
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -92,8 +93,6 @@ class ImportManager(IsotopeDatabaseManager):
             else:
                 pd.change_message('Import {} {} failed'.format(si, inc))
                 pd.increment()
-
-            self.db.flush()
 
         if self.imported_names:
             self.update_irradiations_needed = True
@@ -167,7 +166,7 @@ class ImportManager(IsotopeDatabaseManager):
                 if self.db.connect():
                     # clear imported
                     self.imported_names = []
-                    self.db.reset()
+#                    self.db.reset()
 
                     self.db.save_username = 'jake({})'.format(self.db.username)
                     self.info('====== Import Started  ======')

@@ -82,6 +82,7 @@ class SessionCTX(object):
                     self._parent.debug('$%$%$%$%$%$%$%$ commiting changes error:\n{}'.format(e))
                 self._sess.rollback()
             finally:
+                self._sess.flush()
                 self._sess.close()
 
 

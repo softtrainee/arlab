@@ -771,7 +771,7 @@ class AutomatedRun(Loggable):
     def do_measurement(self):
         if not self._alive:
             return
-
+        print self.measurement_script
         if not self.measurement_script:
             return True
 
@@ -981,6 +981,8 @@ anaylsis_type={}
         return self._get_yaml_parameter(self.extraction_script, key, default)
 
     def _use_arar_age(self):
+        return True
+    
         ln = self.spec.labnumber
         if '-' in ln:
             ln = ln.split('-')[0]

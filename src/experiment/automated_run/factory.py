@@ -569,6 +569,7 @@ post_equilibration_script:name
     def __labnumber_changed(self):
         if self._labnumber != NULL_STR:
             self.labnumber = self._labnumber
+            self.edit_mode=True
 
     def _project_changed(self):
         self._clear_labnumber()
