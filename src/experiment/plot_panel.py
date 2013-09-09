@@ -55,17 +55,17 @@ class SignalAdapter(MultiTextTableAdapter):
                    (u'{}1s'.format(PLUSMINUS), 'raw_error', None, ERROR_WIDTH),
                    (u'{}%'.format(PLUSMINUS), 'raw_error_percent', str, ERROR_WIDTH - 1),
                 ],
-               [
-                   ('Iso.', 'isotope', str, 6),
-                   ('Det.', 'detector', str, 5),
-                   ('Fit', 'baseline_fit', str, 4),
-                   ('Baseline', 'baseline_value', None, VALUE_WIDTH),
-                   (u'{}1s'.format(PLUSMINUS), 'baseline_error', None, ERROR_WIDTH),
-                   (u'{}%'.format(PLUSMINUS), 'baseline_error_percent', str, ERROR_WIDTH - 1),
-                   ('Blank', 'blank_value', None, VALUE_WIDTH),
-                   (u'{}1s'.format(PLUSMINUS), 'blank_error', None, ERROR_WIDTH),
-                   (u'{}%'.format(PLUSMINUS), 'blank_error_percent', str, ERROR_WIDTH - 1),
-                ]
+                [
+                    ('Iso.', 'isotope', str, 6),
+                    ('Det.', 'detector', str, 5),
+                    ('Fit', 'baseline_fit', str, 4),
+                    ('Baseline', 'baseline_value', None, VALUE_WIDTH),
+                    (u'{}1s'.format(PLUSMINUS), 'baseline_error', None, ERROR_WIDTH),
+                    (u'{}%'.format(PLUSMINUS), 'baseline_error_percent', str, ERROR_WIDTH - 1),
+                    ('Blank', 'blank_value', None, VALUE_WIDTH),
+                    (u'{}1s'.format(PLUSMINUS), 'blank_error', None, ERROR_WIDTH),
+                    (u'{}%'.format(PLUSMINUS), 'blank_error_percent', str, ERROR_WIDTH - 1),
+                 ]
              ]
 
 

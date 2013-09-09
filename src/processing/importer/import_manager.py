@@ -32,7 +32,7 @@ from src.constants import NULL_STR
 from collections import namedtuple
 import time
 from src.ui.qt.thread import Thread
-#from threading import Thread
+# from threading import Thread
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -71,35 +71,37 @@ class ImportManager(IsotopeDatabaseManager):
     def _do_import(self, selected, pd):
         func = getattr(self.importer, 'import_{}'.format(self.import_kind))
         st = time.time()
-        for si, inc in selected:
-            pd.change_message('Importing {} {}'.format(si, inc))
-            pd.increment()
-#            for i in range(10):
-#                time.sleep(0.1)
-#            r = False
-            r = func(self.db,
-                     si,
-                     include_analyses=self.include_analyses,
-                     include_blanks=self.include_blanks,
-                     include_airs=self.include_airs,
-                     include_cocktails=self.include_cocktails,
-                     dry_run=self.dry_run,
-                     include_list=inc
-                     )
-            if r:
-                self.imported_names.append(r)
-                pd.change_message('Imported {} {} successfully'.format(si, inc))
+        db = self.db
+        with db.session_ctx(commit=not self.dry_run):
+            for si, inc in selected:
+                pd.change_message('Importing {} {}'.format(si, inc))
                 pd.increment()
-            else:
-                pd.change_message('Import {} {} failed'.format(si, inc))
-                pd.increment()
+    #            for i in range(10):
+    #                time.sleep(0.1)
+    #            r = False
+                r = func(db,
+                         si,
+                         include_analyses=self.include_analyses,
+                         include_blanks=self.include_blanks,
+                         include_airs=self.include_airs,
+                         include_cocktails=self.include_cocktails,
+                         dry_run=self.dry_run,
+                         include_list=inc
+                         )
+                if r:
+                    self.imported_names.append(r)
+                    pd.change_message('Imported {} {} successfully'.format(si, inc))
+                    pd.increment()
+                else:
+                    pd.change_message('Import {} {} failed'.format(si, inc))
+                    pd.increment()
 
-        if self.imported_names:
-            self.update_irradiations_needed = True
+            if self.imported_names:
+                self.update_irradiations_needed = True
 
-        self.info('====== Import Finished elapsed_time= {}s======'.format(int(time.time() - st)))
-#         pd.close()
-#        self.db.close()
+            self.info('====== Import Finished elapsed_time= {}s======'.format(int(time.time() - st)))
+    #         pd.close()
+    #        self.db.close()
 
     @cached_property
     def _get_readable_names(self):

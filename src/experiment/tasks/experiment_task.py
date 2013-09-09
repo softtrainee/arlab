@@ -206,7 +206,9 @@ class ExperimentEditorTask(EditorTask):
 #        import os
 #        ps = (os.path.join(paths.experiment_dir, 'demo.txt'),)
         if path is None:
-            ps = self.open_file_dialog(action='open files')
+            ps = self.open_file_dialog(action='open files',
+#                                        default_directroy=
+                                       )
         else:
             ps = (path,)
 

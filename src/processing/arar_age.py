@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Dict, Property, cached_property, \
-    Event, Bool, Instance, Float, Any
+    Event, Bool, Instance, Float, Any, Str, Tuple
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 from datetime import datetime
@@ -28,12 +28,20 @@ from src.processing.arar_constants import ArArConstants
 from src.processing.isotope import Isotope
 
 from src.loggable import Loggable
+from src.helpers.isotope_utils import sort_isotopes
 
 def AgeProperty():
     return Property(depends_on='age_dirty')
 
 
 class ArArAge(Loggable):
+    j = Any
+    irradiation = Str
+    irradiation_level = Str
+    irradiation_info = Tuple
+    production_ratios = Dict
+    discrimination = Any
+
     include_j_error = Bool(True)
     include_irradiation_error = Bool(True)
     include_decay_error = Bool(False)
@@ -54,7 +62,7 @@ class ArArAge(Loggable):
     Ar37_39 = AgeProperty()
     Ar36_39 = AgeProperty()
 
-    j = Any
+
 
     sensitivity = Property
     sensitivity_multiplier = Property
@@ -72,6 +80,7 @@ class ArArAge(Loggable):
 #    signals = AgeProperty()
 #    _signals = Dict
     isotopes = Dict
+    isotope_keys = Property(depends='isotopes')
 
     age = Property(depends_on='include_decay_error, include_j_error, include_irradiation_error,age_dirty')
     R = AgeProperty()
@@ -96,6 +105,7 @@ class ArArAge(Loggable):
 
 
     ic_factor = Property(depends_on='arar_constants:[ic_factor_v, ic_factor_e]')
+
 
     arar_constants = Instance(ArArConstants, ())
     def __init__(self, *args, **kw):
@@ -178,8 +188,9 @@ class ArArAge(Loggable):
             k_ca_pr = 1
             if prs:
 #                k_ca_pr = 1
-                cak = prs.Ca_K
-                cak = cak if cak else 1
+#                 cak = prs['Ca_K']
+#                 cak = cak if cak else 1
+                cak = prs.get('Ca_K', 1)
                 k_ca_pr = 1 / cak
 
             try:
@@ -196,8 +207,10 @@ class ArArAge(Loggable):
             prs = self.production_ratios
             k_cl_pr = 1
             if prs:
-                clk = prs.Cl_K
-                clk = clk if clk else 1
+
+#                 if 'Cl_K' in prs:
+                clk = prs.get('Cl_K', 1)
+#                 clk = clk if clk else 1
                 k_cl_pr = 1 / clk
 
             try:
@@ -340,11 +353,11 @@ class ArArAge(Loggable):
         return datetime.now()
 
 #     @cached_property
-    def _get_irradiation_level(self, ln):
-        if ln:
-            if ln.irradiation_position:
-                l = ln.irradiation_position.level
-                return l
+#     def _get_irradiation_level(self, ln):
+#         if ln:
+#             if ln.irradiation_position:
+#                 l = ln.irradiation_position.level
+#                 return l
 #         try:
 #             if self.irradiation_position:
 #                 return self.irradiation_position.level
@@ -360,68 +373,69 @@ class ArArAge(Loggable):
 
 #     @cached_property
     def _get_irradiation_info(self, ln):
-        '''
-            return k4039, k3839,k3739, ca3937, ca3837, ca3637, cl3638, chronsegments, decay_time
-        '''
+#         '''
+#             return k4039, k3839,k3739, ca3937, ca3837, ca3637, cl3638, chronsegments, decay_time
+#         '''
         prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), [], 1
-#        analysis = self.dbrecord
-
-#        self.labnumber_record
-#         self._get_irradiation_level()
-#         irradiation_level = self.irradiation_level
-        irradiation_level = self._get_irradiation_level(ln)
-        if irradiation_level:
-            irradiation = irradiation_level.irradiation
-            if irradiation:
-                pr = irradiation.production
-                if pr:
-                    prs = []
-                    for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']:
-                        v, e = getattr(pr, pi), getattr(pr, '{}_err'.format(pi))
-                        prs.append((v if v is not None else 1, e if e is not None else 0))
-
-#                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
-#                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
-
-                chron = irradiation.chronology
-#                def convert_datetime(x):
-#                    try:
-#                        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-#                    except ValueError:
-#                        pass
-#                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-
-                convert_days = lambda x: x.total_seconds() / (60. * 60 * 24)
-                if chron:
-                    doses = chron.get_doses()
-#                    chronblob = chron.chronology
-#
-#                    doses = chronblob.split('$')
-#                    doses = [di.strip().split('%') for di in doses]
-#
-#                    doses = [map(convert_datetime, d) for d in doses if d]
-
-                    analts = self.timestamp
-                    if isinstance(analts, float):
-                        analts = datetime.fromtimestamp(analts)
-
-                    segments = []
-                    for st, en in doses:
-                        if st is not None and en is not None:
-                            dur = en - st
-                            dt = analts - st
-                            segments.append((1, convert_days(dur), convert_days(dt)))
-
-                    decay_time = 0
-                    d_o = doses[0][0]
-                    if d_o is not None:
-                        decay_time = convert_days(analts - doses[0][0])
-
-#                    segments = [(1, convert_days(ti)) for ti in durs]
-                    prs.append(segments)
-                    prs.append(decay_time)
-
         return prs
+# #        analysis = self.dbrecord
+#
+# #        self.labnumber_record
+# #         self._get_irradiation_level()
+# #         irradiation_level = self.irradiation_level
+#         irradiation_level = self._get_irradiation_level(ln)
+#         if irradiation_level:
+#             irradiation = irradiation_level.irradiation
+#             if irradiation:
+#                 pr = irradiation.production
+#                 if pr:
+#                     prs = []
+#                     for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']:
+#                         v, e = getattr(pr, pi), getattr(pr, '{}_err'.format(pi))
+#                         prs.append((v if v is not None else 1, e if e is not None else 0))
+#
+# #                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
+# #                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
+#
+#                 chron = irradiation.chronology
+# #                def convert_datetime(x):
+# #                    try:
+# #                        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+# #                    except ValueError:
+# #                        pass
+# #                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+#
+#                 convert_days = lambda x: x.total_seconds() / (60. * 60 * 24)
+#                 if chron:
+#                     doses = chron.get_doses()
+# #                    chronblob = chron.chronology
+# #
+# #                    doses = chronblob.split('$')
+# #                    doses = [di.strip().split('%') for di in doses]
+# #
+# #                    doses = [map(convert_datetime, d) for d in doses if d]
+#
+#                     analts = self.timestamp
+#                     if isinstance(analts, float):
+#                         analts = datetime.fromtimestamp(analts)
+#
+#                     segments = []
+#                     for st, en in doses:
+#                         if st is not None and en is not None:
+#                             dur = en - st
+#                             dt = analts - st
+#                             segments.append((1, convert_days(dur), convert_days(dt)))
+#
+#                     decay_time = 0
+#                     d_o = doses[0][0]
+#                     if d_o is not None:
+#                         decay_time = convert_days(analts - doses[0][0])
+#
+# #                    segments = [(1, convert_days(ti)) for ti in durs]
+#                     prs.append(segments)
+#                     prs.append(decay_time)
+#
+#         return prs
 
 #    @cached_property
 #    def _get_abundance_sensitivity(self):
@@ -438,13 +452,6 @@ class ArArAge(Loggable):
     def _get_j(self):
         s = 1.0
         e = 1e-3
-
-        try:
-            f = self.labnumber_record.selected_flux_history.flux
-            s = f.j
-            e = f.j_err
-        except AttributeError:
-            pass
 
         return ufloat(s, e, 'j')
 
@@ -607,14 +614,18 @@ class ArArAge(Loggable):
             if self.isotopes.has_key(iso_attr):
                 return self.isotopes[iso_attr].get_corrected_value()
 
+    @cached_property
+    def _get_isotope_keys(self):
+        keys = self.isotopes.keys()
+        return sort_isotopes(keys)
 #===============================================================================
 #
 #===============================================================================
-    def load_irradiation(self, ln):
-        self.irradiation_info = self._get_irradiation_info(ln)
-        self.j = self._get_j()
-
-        self.production_ratios = self._get_production_ratios()
+#     def load_irradiation(self, ln):
+#         self.irradiation_info = self._get_irradiation_info(ln)
+#         self.j = self._get_j()
+#
+#         self.production_ratios = self._get_production_ratios()
 
 
 #============= EOF =============================================

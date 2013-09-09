@@ -23,9 +23,11 @@ from apptools.preferences.preference_binding import bind_preference
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.managers.manager import Manager
 from src.ui.progress_dialog import myProgressDialog
-from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
-from src.processing.analysis import Analysis, NonDBAnalysis
+# from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
+from src.database.records.isotope_record import IsotopeRecordView
+# from src.processing.analysis import Analysis, NonDBAnalysis
 from src.codetools.simple_timeit import simple_timer
+from src.processing.analyses.analysis import DBAnalysis, Analysis
 # from src.constants import NULL_STR
 # from src.ui.gui import invoke_in_main_thread
 
@@ -107,8 +109,9 @@ class IsotopeDatabaseManager(Manager):
             pass
 
     def make_analyses(self, ans, **kw):
-        if ans:
-            return [self._record_factory(ai, **kw) for ai in ans]
+        with self.db.session_ctx():
+            if ans:
+                return [self._record_factory(ai, **kw) for ai in ans]
 
     def load_analyses(self, ans, show_progress=True, **kw):
         progress = None
@@ -169,17 +172,21 @@ class IsotopeDatabaseManager(Manager):
         return pd
 
     def _record_factory(self, pi, **kw):
-        if isinstance(pi, (Analysis, NonDBAnalysis)):
+        if isinstance(pi, (Analysis, DBAnalysis)):
             return pi
+        else:
+            pi = self.db.get_analysis_uuid(pi.uuid)
 
-        if isinstance(pi, IsotopeRecordView):
-            rec = self.db.get_analysis(pi.uuid, key='uuid')
-            kw.update(dict(graph_id=pi.graph_id,
-                           group_id=pi.group_id))
-            pi = rec
+#         if isinstance(pi, IsotopeRecordView):
+#             rec = self.db.get_analysis(pi.uuid, key='uuid')
+#             kw.update(dict(graph_id=pi.graph_id,
+#                            group_id=pi.group_id))
+#             pi = rec
 
-        rec = IsotopeRecord(_dbrecord=pi, **kw)
-        a = Analysis(isotope_record=rec)
+#         rec = IsotopeRecord(_dbrecord=pi, **kw)
+        a = DBAnalysis()
+        a.sync(pi)
+
 #        a.load_isotopes()
         return a
     def _db_factory(self):

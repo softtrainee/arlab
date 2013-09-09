@@ -37,6 +37,11 @@ class BaseIrradiatedPosition(HasTraits):
 
     use = Bool
     save = Bool
+    def __init__(self, pos=None, *args, **kw):
+        super(BaseIrradiatedPosition, self).__init__(*args, **kw)
+        if pos is not None:
+            self.x, self.y = pos
+
     def _get_residual(self):
         pe = 0
         if self.pred_j:
@@ -59,13 +64,13 @@ class IrradiatedPosition(BaseIrradiatedPosition):
 #    j = Float
 #    j_err = Float
 
-    auto_assigned = Bool(False)
-#
-    @on_trait_change('labnumber,sample, project, material')
-    def _update_auto_assigned(self, obj, name, old, new):
-#        print 'ol', name, old, new
-        if old:
-            self.auto_assigned = False
+#     auto_assigned = Bool(False)
+# #
+#     @on_trait_change('labnumber,sample, project, material')
+#     def _update_auto_assigned(self, obj, name, old, new):
+# #        print 'ol', name, old, new
+#         if old:
+#             self.auto_assigned = False
 
 class BaseIrradiatedPositionAdapter(TabularAdapter):
     columns = [
@@ -112,8 +117,8 @@ class IrradiatedPositionAdapter(TabularAdapter):
 #    def _get_hole_width(self):
 #        return 35
 
-    def get_bg_color(self, obj, trait, row, column):
-        item = getattr(obj, trait)[row]
-        if item.auto_assigned:
-            return '#B0C4DE'
+#     def get_bg_color(self, obj, trait, row, column):
+#         item = getattr(obj, trait)[row]
+#         if item.auto_assigned:
+#             return '#B0C4DE'
 #============= EOF =============================================

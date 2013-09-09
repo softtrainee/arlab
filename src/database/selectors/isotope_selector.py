@@ -32,7 +32,8 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, gen_LabTable, \
     gen_MassSpectrometerTable, gen_AnalysisTypeTable
 
 from src.database.core.base_results_adapter import BaseResultsAdapter
-from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
+# from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
+from src.database.records.isotope_record import IsotopeRecordView
 from src.database.core.query import  IsotopeQuery
 from src.constants import NULL_STR, LINE_STR
 
@@ -80,7 +81,7 @@ class IsotopeAnalysisSelector(DatabaseSelector):
 
     query_table = meas_AnalysisTable
     record_view_klass = IsotopeRecordView
-    record_klass = IsotopeRecord
+#     record_klass = IsotopeRecord
 #    record_klass = DummyIsotopeRecord
     query_klass = IsotopeQuery
     tabular_adapter = IsotopeResultsAdapter
@@ -126,7 +127,7 @@ class IsotopeAnalysisSelector(DatabaseSelector):
         return self.record_klass(_dbrecord=dbr)
 
     def _get_selector_records(self, queries=None, limit=None, use_filters=True, **kw):
-        with self.session_ctx() as sess:
+        with self.db.session_ctx() as sess:
 #             sess = self.db.get_session()
             q = sess.query(meas_AnalysisTable)
             q = q.filter(meas_AnalysisTable.status != -1)

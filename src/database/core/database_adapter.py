@@ -73,16 +73,16 @@ class SessionCTX(object):
             if not self._parent._sess_stack:
                 self._parent.sess = None
 
+        self._sess.flush()
         if self._close_at_exit:
             try:
                 if self._commit:
                     self._sess.commit()
-            except Exception,e:
+            except Exception, e:
                 if self._parent:
                     self._parent.debug('$%$%$%$%$%$%$%$ commiting changes error:\n{}'.format(e))
                 self._sess.rollback()
             finally:
-                self._sess.flush()
                 self._sess.close()
 
 
@@ -170,7 +170,7 @@ class DatabaseAdapter(Loggable):
 #                     Session.configure(bind=engine)
 
                     self.session_factory = sessionmaker(bind=engine,
-                                                        autoflush=False
+#                                                         autoflush=False
                                                         )
                     if test:
                         self.connected = self._test_db_connection()

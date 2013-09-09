@@ -75,47 +75,47 @@ class MassSpecExtractor(Extractor):
         p, c = unique_path(paths.data_dir, 'import')
         self.import_err_file = open(p, 'w')
 
-        with dest.session_ctx(commit=not dry_run) as sess:
-            self.dbimport = dest.add_import(
-                                            source=self.db.name,
-                                            source_host=self.db.host,
+#         with dest.session_ctx(commit=not dry_run) as sess:
+        self.dbimport = dest.add_import(
+                                        source=self.db.name,
+                                        source_host=self.db.host,
 
-                                            )
+                                        )
 
-            # is irrad already in dest
-            dbirrad = dest.get_irradiation(name)
-            added_to_db = False
-            if dbirrad is None:
-                # add chronology
-                dbchron = self._add_chronology(dest, name)
-                # add production
-                dbpr = self._add_production_ratios(dest, name)
-                # add irradiation
-                dbirrad = dest.add_irradiation(name, production=dbpr,
-                                               chronology=dbchron,
-                                               )
-                added_to_db = True
+        # is irrad already in dest
+        dbirrad = dest.get_irradiation(name)
+        added_to_db = False
+        if dbirrad is None:
+            # add chronology
+            dbchron = self._add_chronology(dest, name)
+            # add production
+            dbpr = self._add_production_ratios(dest, name)
+            # add irradiation
+            dbirrad = dest.add_irradiation(name, production=dbpr,
+                                           chronology=dbchron,
+                                           )
+            added_to_db = True
 
-#             dest.flush()
+        dest.sess.flush()
 
-            if dbirrad:
-                # add all the levels and positions for this irradiation
-                added_to_db = self._add_levels(dest, dbirrad, name,
-                                 include_analyses,
-                                 include_blanks,
-                                 include_airs,
-                                 include_cocktails,
-                                 include_list,
-                                 )
-            else:
-                self.warning('no irradiation found or created for {}. not adding levels'.format(name))
-            self.debug('irradiation import dry_run={}'.format(dry_run))
+        if dbirrad:
+            # add all the levels and positions for this irradiation
+            added_to_db = self._add_levels(dest, dbirrad, name,
+                             include_analyses,
+                             include_blanks,
+                             include_airs,
+                             include_cocktails,
+                             include_list,
+                             )
+        else:
+            self.warning('no irradiation found or created for {}. not adding levels'.format(name))
+        self.debug('irradiation import dry_run={}'.format(dry_run))
 
-#             if not dry_run:
-#                 dest.commit()
+        if not dry_run:
+            dest.sess.commit()
 
-            self.import_err_file.close()
-            return ImportName(name=name, skipped=not added_to_db)
+        self.import_err_file.close()
+        return ImportName(name=name, skipped=not added_to_db)
 
     def _add_levels(self, dest, dbirrad, name,
                     include_analyses=False,
@@ -130,56 +130,57 @@ class MassSpecExtractor(Extractor):
             if include_analyses is True add all analyses
         '''
         added_to_db = False
-        db=self.db
-        with db.session_ctx():
+        db = self.db
+        with db.session_ctx() as sess:
             levels = db.get_levels_by_irradname(name)
             if not include_list:
                 include_list = [li.Level for li in levels]
-    
+
             for mli in levels:
                 if mli.Level not in include_list:
-                    print ' continue'
                     continue
-    
+
                 # is level already in dest
                 dbl = dest.get_irradiation_level(name, mli.Level)
                 if dbl is None:
                     dest.add_irradiation_level(mli.Level, dbirrad, mli.SampleHolder,
                                                )
                     added_to_db = True
-    
+
                 # add all irradiation positions for this level
                 positions = self.db.get_irradiation_positions(name,
                                                               mli.Level,
                                                               )
-                print positions, name, mli.Level
                 for ip in positions:
                     # is labnumber already in dest
                     ln = dest.get_labnumber(ip.IrradPosition)
-                    self.debug(ln)
                     if not ln:
+                        self.debug('{} not in dest'.format(ip.IrradPosition))
                         ln = dest.add_labnumber(ip.IrradPosition)
-    #                     dest.flush()
-    
+                        dest.sess.flush()
+
                         dbpos = dest.add_irradiation_position(ip.HoleNumber, ln, name, mli.Level,
                                                               )
-    
+
                         fh = dest.add_flux_history(dbpos)
                         ln.selected_flux_history = fh
                         fl = dest.add_flux(ip.J, ip.JEr)
                         fh.flux = fl
                         added_to_db = True
-    
+
                     sample = self._add_sample_project(dest, ip)
+
+                    dest.sess.flush()
+
                     ln.sample = sample
                     ln.note = ip.Note
-    
+
                     if include_analyses:
                         self.info('============ Adding Analyses ============')
                         for ai in ip.analyses:
                             if self._add_analysis(dest, ln, ai):
                                 added_to_db = True
-    
+
                             if include_blanks:
                                 if self._add_associated_unknown_blanks(dest, ai):
                                     added_to_db = True
@@ -189,8 +190,9 @@ class MassSpecExtractor(Extractor):
                             if include_cocktails:
                                 if self._add_associated_cocktails(dest, ai):
                                     added_to_db = True
-    
-#                    sess.flush()
+
+                    dest.sess.flush()
+#                     sess.flush()
 
         return added_to_db
 
@@ -277,7 +279,7 @@ class MassSpecExtractor(Extractor):
             return ln
 
         return self._add_associated(dest, dba, make_labnumber, atype=5,
-                             analysis_type='blank_coctail',
+                             analysis_type='blank_cocktail',
                              )
 
     def _add_associated_unknown_blanks(self, dest, dba):
@@ -326,7 +328,7 @@ class MassSpecExtractor(Extractor):
             if ln not in _cache:
                 _cache.append(ln)
                 ln = dest.add_labnumber(ln)
-                dest.flush()
+                dest.sess.flush()
 
             if self._add_analysis(dest, ln, bi,
                                   analysis_type=analysis_type,
@@ -423,10 +425,9 @@ class MassSpecExtractor(Extractor):
             else:
                 al = id(aliquot)
 
-        ans = dest.get_unique_analysis(dest_labnumber, al, step=step,
-                                       )
+        ans = dest.get_unique_analysis(dest_labnumber, al, step=step)
         if ans:
-#            self.debug('{}-{}{} already exists'.format(dest_labnumber, aliquot, step))
+#             self.debug('{}-{}{} already exists'.format(dest_labnumber, aliquot, step))
             return
 
         dest_an = dest.add_analysis(dest_labnumber,
@@ -439,7 +440,7 @@ class MassSpecExtractor(Extractor):
         if dest_an is None:
             return
 
-        dest.flush()
+        dest.sess.flush()
 
         if isinstance(dest_labnumber, (str, int, long)):
             iden = str(dest_labnumber)
@@ -471,15 +472,20 @@ class MassSpecExtractor(Extractor):
         if ed not in _ed_cache:
             dest.add_extraction_device(ed)
             _ed_cache.append(ed)
+            dest.sess.flush()
 
-        ext = dest.add_extraction(dest_an, cleanup_duration=dbanalysis.FirstStageDly + dbanalysis.SecondStageDly,
-                            extract_duration=dbanalysis.TotDurHeating,
-                            extract_value=dbanalysis.FinalSetPwr,
-                            )
+        ext = dest.add_extraction(dest_an,
+                                  cleanup_duration=dbanalysis.FirstStageDly + dbanalysis.SecondStageDly,
+                                  extract_duration=dbanalysis.TotDurHeating,
+                                  extract_value=dbanalysis.FinalSetPwr,
+                                  extract_device=ed
+                                  )
 
+        dest.sess.flush()
         pos = sorted(dbanalysis.positions, key=lambda x:x.PositionOrder)
+
         for pi in pos:
-            dest.add_analysis_position(ext, pi)
+            dest.add_analysis_position(ext, pi.Hole, x=pi.X, y=pi.Y)
 
         #=======================================================================
         # add isotopes
@@ -509,7 +515,7 @@ class MassSpecExtractor(Extractor):
                 det = dest.get_detector(detname)
                 if det is None:
                     det = dest.add_detector(detname)
-#                     dest.flush()
+                    dest.sess.flush()
             except AttributeError, e:
                 self.debug('mass spec extractor {}', e)
 
@@ -542,6 +548,8 @@ class MassSpecExtractor(Extractor):
                               ):
 
                 dbiso = dest.add_isotope(dest_an, iso.Label, det, kind=k)
+                dest.sess.flush()
+
                 dest.add_signal(dbiso, data)
 
             # add to fit history
@@ -572,38 +580,42 @@ class MassSpecExtractor(Extractor):
                         )
 
     def _add_chronology(self, dest, name):
-        chrons = self.db.get_chronology_by_irradname(name)
-        chronblob = '$'.join(['{}%{}'.format(ci.StartTime, ci.EndTime) for ci in chrons])
+        db = self.db
+        with db.session_ctx():
+            chrons = db.get_chronology_by_irradname(name)
+            chronblob = '$'.join(['{}%{}'.format(ci.StartTime, ci.EndTime) for ci in chrons])
 
-        self.info('adding irradiation and chronology for {}'.format(name))
-        return dest.add_irradiation_chronology(chronblob)
+            self.info('adding irradiation and chronology for {}'.format(name))
+            return dest.add_irradiation_chronology(chronblob)
 
     def _add_production_ratios(self, dest, name):
-        production = self.db.get_production_ratio_by_irradname(name)
-        if production is not None:
-            prname = production.Label
-            dbpr = dest.get_irradiation_production(prname)
-            if not dbpr:
-                kw = dict(name=prname)
-                prs = ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637',
-                       ('P36Cl38Cl', 'Cl3638'),
-                       ('CaOverKMultiplier', 'Ca_K'),
-                       ('ClOverKMultiplier', 'Cl_K')
-                       ]
-                for k in prs:
-                    if not isinstance(k, tuple):
-                        ko = k
-                    else:
-                        k, ko = k
+        db = self.db
+        with db.session_ctx():
+            production = db.get_production_ratio_by_irradname(name)
+            if production is not None:
+                prname = production.Label
+                dbpr = dest.get_irradiation_production(prname)
+                if not dbpr:
+                    kw = dict(name=prname)
+                    prs = ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637',
+                           ('P36Cl38Cl', 'Cl3638'),
+                           ('CaOverKMultiplier', 'Ca_K'),
+                           ('ClOverKMultiplier', 'Cl_K')
+                           ]
+                    for k in prs:
+                        if not isinstance(k, tuple):
+                            ko = k
+                        else:
+                            k, ko = k
 
-                    ke = '{}Er'.format(k)
-                    v = getattr(production, k)
-                    e = getattr(production, ke)
-                    kw[ko] = v
-                    kw['{}_err'.format(ko)] = e
-                self.info('adding production ratio {}'.format(prname))
-                dbpr = dest.add_irradiation_production(**kw)
-            return dbpr
+                        ke = '{}Er'.format(k)
+                        v = getattr(production, k)
+                        e = getattr(production, ke)
+                        kw[ko] = v
+                        kw['{}_err'.format(ko)] = e
+                    self.info('adding production ratio {}'.format(prname))
+                    dbpr = dest.add_irradiation_production(**kw)
+                return dbpr
 
 #     def get_labnumbers(self, filter_str=None=None):
 #         self.connect()
