@@ -50,7 +50,7 @@ class Loggable(HasTraits):
     '''
     '''
     application = Any
-    logger = Any(transient=True)
+    logger = Any  # (transient=True)
     name = String
     logger_name = String
     use_logger_display = True
@@ -61,7 +61,12 @@ class Loggable(HasTraits):
         super(Loggable, self).__init__(*args, **kw)
         self._add_logger()
 
-    @on_trait_change('name, logger_name')
+    def _name_changed(self):
+        self._add_logger()
+
+    def _logger_name_changed(self):
+        self._add_logger()
+
     def _add_logger(self):
         '''
 

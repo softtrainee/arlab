@@ -194,7 +194,7 @@ class AutomatedRun(Loggable):
 
         '''
             !!! this is a potential problem !!!
-            need more sophisticated way to setting up plot panel
+            need more sophisticated way to set up plot panel
             e.g PP has detectors H1, AX but AX, CDD are active.
             
             need to remove H1 and add CDD. 
@@ -545,7 +545,6 @@ class AutomatedRun(Loggable):
     def py_clear_actions(self):
         self.action_conditions = []
 
-
 #===============================================================================
 # run termination
 #===============================================================================
@@ -609,8 +608,8 @@ class AutomatedRun(Loggable):
 #         if self.monitor:
 #             self.monitor.automated_run = None
 #
-#         if self.measurement_script:
-#             self.measurement_script.automated_run = None
+        if self.measurement_script:
+            self.measurement_script.automated_run = None
 #        if self.arar_age:
 #            self.arar_age.labnumber_record = None
 
@@ -725,7 +724,7 @@ class AutomatedRun(Loggable):
 
         # setup the scripts
         if self.measurement_script:
-            self.measurement_script.reset(weakref.ref(self)())
+            self.measurement_script.reset(self)
 
         for si in ('extraction', 'post_measurement', 'post_equilibration'):
             script = getattr(self, '{}_script'.format(si))
@@ -790,6 +789,10 @@ class AutomatedRun(Loggable):
         self.measuring = True
         self._save_enabled = True
 #         self._save_enabled = False
+#         from guppy import hpy
+#         hp = hpy()
+#         hp = self.experiment_manager.application.hp
+#         hp.setrelheap()
 
         if self.measurement_script.execute():
             mem_log('post measurement execute')
@@ -1223,6 +1226,8 @@ anaylsis_type={}
                             series, fits, check_conditions, refresh):
 #         print '------------------------{}----------------------------'.format(grpname)
 #         before = measure_type()
+
+
         mem_log('pre measure {}'.format(grpname))
         st = time.time()
 

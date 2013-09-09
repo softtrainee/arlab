@@ -75,7 +75,7 @@ def main():
     globalv.debug = DEBUG
 
     launch(app)
-    os._exit(0)
+#     os._exit(0)
 
 
 # def profile_code():
