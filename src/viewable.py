@@ -123,20 +123,20 @@ class Viewable(Loggable):
         func(*args, **kw)
 
 
-    def add_window(self, ui):
-
-        try:
-            if self.application is not None:
-                self.application.uis.append(ui)
-        except AttributeError:
-            pass
-
-    def open_view(self, obj, **kw):
-        def _open_():
-            ui = obj.edit_traits(**kw)
-            self.add_window(ui)
-
-        invoke_in_main_thread(_open_)
+#     def add_window(self, ui):
+#
+#         try:
+#             if self.application is not None:
+#                 self.application.uis.append(ui)
+#         except AttributeError:
+#             pass
+#
+#     def open_view(self, obj, **kw):
+#         def _open_():
+#             ui = obj.edit_traits(**kw)
+#             self.add_window(ui)
+#
+#         invoke_in_main_thread(_open_)
 #        _open_()
 #        do_after(1, _open_)
 

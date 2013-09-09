@@ -569,7 +569,7 @@ post_equilibration_script:name
     def __labnumber_changed(self):
         if self._labnumber != NULL_STR:
             self.labnumber = self._labnumber
-            self.edit_mode=True
+            self.edit_mode = True
 
     def _project_changed(self):
         self._clear_labnumber()
@@ -594,15 +594,15 @@ post_equilibration_script:name
                     db = self.db
                     if not db:
                         return
-
-                    ms = db.get_mass_spectrometer(self.mass_spectrometer)
-                    ed = db.get_extraction_device(self.extract_device)
-                    if ln in ('a', 'ba', 'c', 'bc'):
-                        ln = make_standard_identifier(ln, '##', ms.name[0].capitalize())
-                    else:
-                        msname = ms.name[0].capitalize()
-                        edname = ''.join(map(lambda x:x[0].capitalize(), ed.name.split(' ')))
-                        ln = make_special_identifier(ln, edname, msname)
+                    with db.session_ctx():
+                        ms = db.get_mass_spectrometer(self.mass_spectrometer)
+                        ed = db.get_extraction_device(self.extract_device)
+                        if ln in ('a', 'ba', 'c', 'bc'):
+                            ln = make_standard_identifier(ln, '##', ms.name[0].capitalize())
+                        else:
+                            msname = ms.name[0].capitalize()
+                            edname = ''.join(map(lambda x:x[0].capitalize(), ed.name.split(' ')))
+                            ln = make_special_identifier(ln, edname, msname)
 
                 self.labnumber = ln
                 self._load_extraction_info()
@@ -669,7 +669,6 @@ post_equilibration_script:name
                         '''
                         if self.confirmation_dialog('Lab Identifer {} does not exist. Would you like to add it?'.format(labnumber)):
                             db.add_labnumber(labnumber)
-                            db.commit()
                             self._aliquot = 1
                             self._load_scripts(old, new)
                         else:
@@ -681,12 +680,14 @@ post_equilibration_script:name
 
     def _template_closed(self):
         self.load_templates()
-        self.template = os.path.splitext(self._template.name)[0]
+        self.template = self._template.name
+#         self.template = os.path.splitext(self._template.name)[0]
         del self._template
 
     def _pattern_closed(self):
         self.load_patterns()
-        self.pattern = os.path.splitext(self._pattern.name)[0]
+        self.pattern = self._pattern.name
+#         self.pattern = os.path.splitext(self._pattern.name)[0]
         del self._pattern
 
 
@@ -1017,7 +1018,7 @@ post_equilibration_script:name
     def _load_scripts(self, old, new):
         if not self.edit_mode:
             return
-        
+
         '''
             load default scripts if 
                 1. labnumber is special
@@ -1038,7 +1039,7 @@ post_equilibration_script:name
             self._load_default_scripts(new)
 
     def _load_default_scripts(self, labnumber):
-        
+
         self.debug('load default scripts for {}'.format(labnumber))
         # if labnumber is int use key='U'
         try:
@@ -1095,7 +1096,7 @@ post_equilibration_script:name
     def _edit_mode_changed(self):
         if self.edit_mode:
             self._load_default_scripts(self.labnumber)
-            
+
     def _save_flux_button_fired(self):
         self._save_flux()
 #     def _application_changed(self):

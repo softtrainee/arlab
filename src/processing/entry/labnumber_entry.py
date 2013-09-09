@@ -38,8 +38,10 @@ from src.processing.entry.irradiated_position import IrradiatedPosition
 # from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
 # from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
 from src.database.orms.isotope_orm import gen_ProjectTable, gen_SampleTable
+from src.codetools.simple_timeit import timethis, simple_timer
 # from src.ui.thread import Thread
 # from pyface.timer.do_later import do_later
+import struct
 
 
 
@@ -298,36 +300,16 @@ class LabnumberEntry(IsotopeDatabaseManager):
         self.level = level
 #         self._update_level()
 
+    # @simple_timer()
     def _load_holder_positions(self, holder):
         self.irradiated_positions = []
-        import struct
         geom = holder.geometry
         if geom:
-            geom = [struct.unpack('>ff', geom[i:i + 8]) for i in xrange(0, len(geom), 8)]
-#             offset = 0
-            i = 1
-            c = 1
-#             pr = 1
-            for x, y in geom:
-#                 '''
-#                     assume points listed in clockwise order
-#
-#                     increment hole_offset when passed 12 oclock
-#
-#                 '''
-#                 r = math.atan2(x, y)
-#                 if pr < 0 and r >= 0:
-#                     offset = 100 * i
-#                     i += 1
-#                     c = 0
-#                 pr = r
+            self.irradiated_positions = [IrradiatedPosition(hole=c + 1,
+                                                            pos=struct.unpack('>ff',
+                                                                              geom[i:i + 8]))
+                                        for c, i in enumerate(xrange(0, len(geom), 8))]
 
-                self.irradiated_positions.append(IrradiatedPosition(
-                                                                    hole=c,
-#                                                                     alt_hole=c + offset,
-                                                                    x=x, y=y
-                                                                    ))
-                c += 1
 
         elif holder.name:
             self._load_holder_positons_from_file(holder.name)
@@ -337,9 +319,13 @@ class LabnumberEntry(IsotopeDatabaseManager):
             self.irradiated_positions = []
             with open(p, 'r') as f:
                 line = f.readline()
-                nholes, diam = line.split(',')
-                for ni in range(int(nholes)):
-                    self.irradiated_positions.append(IrradiatedPosition(hole=ni + 1))
+                nholes, _diam = line.split(',')
+                self.irradiated_positions = [IrradiatedPosition(hole=ni + 1)
+                                             for ni in range(int(nholes))
+                                             ]
+
+#                 for ni in range(int(nholes)):
+#                     self.irradiated_positions.append(IrradiatedPosition(hole=ni + 1))
 
     def _save_to_db(self):
         db = self.db
@@ -526,36 +512,41 @@ class LabnumberEntry(IsotopeDatabaseManager):
 #         self._level_thread = t
 #         t.join()
 
+    # @simple_timer()
     def _update_level(self, name=None):
 
         if name is None:
             name = self.level
 
-        with self.db.session_ctx():
-            irrad = self.db.get_irradiation(self.irradiation)
+        db = self.db
+        with db.session_ctx():
+            level = db.get_irradiation_level(self.irradiation, name)
 
-            if not irrad:
-                self.debug('no irradiation for {}'.format(self.irradiation))
+            if not level:
+                self.debug('no level for {}'.format(name))
                 return
 
-            level = next((li for li in irrad.levels if li.name == name), None)
-            self.debug('dblevel {} for self.level {}'.format(level, name))
-            if level:
-                self.debug('holder {}'.format(level.holder))
-                if level.holder:
-                    self._load_holder_positions(level.holder)
+            self.debug('holder {}'.format(level.holder))
+            if level.holder:
+                self._load_holder_positions(level.holder)
 
-                positions = level.positions
-                n = len(self.irradiated_positions)
-                self.debug('positions {} irrad position {}'.format(n, len(self.irradiated_positions)))
-                if positions:
-                    for pi in positions:
-                        hi = pi.position - 1
-                        if hi < n:
-                            ir = self._position_factory(pi)
-                            self.irradiated_positions[hi] = ir
-                        else:
-                            self.debug('extra irradiation position for this tray {}'.format(hi))
+            positions = level.positions
+            n = len(self.irradiated_positions)
+            self.debug('positions in level {}.  \
+                        available holder positions{}'.format(n, len(self.irradiated_positions)))
+            if positions:
+                self._make_positions(n, positions)
+
+    # @simple_timer()
+    def _make_positions(self, n, positions):
+        for pi in positions:
+            hi = pi.position - 1
+            if hi < n:
+                ir = self.irradiated_positions[hi]
+                self._position_factory(pi, ir)
+            else:
+                self.debug('extra irradiation position for this tray {}'.format(hi))
+
 
     @on_trait_change('project, sample')
     def _edit_handler(self, name, new):
@@ -578,12 +569,13 @@ class LabnumberEntry(IsotopeDatabaseManager):
 #===============================================================================
 # factorys
 #===============================================================================
-    def _position_factory(self, dbpos):
+    def _position_factory(self, dbpos, ir):
         ln = dbpos.labnumber
         position = int(dbpos.position)
 
         labnumber = ln.identifier if ln else None
-        ir = IrradiatedPosition(labnumber=str(labnumber), hole=position)
+        ir.trait_set(labnumber=str(labnumber), hole=position)
+#         ir = IrradiatedPosition(labnumber=str(labnumber), hole=position)
 #         if labnumber:
         selhist = ln.selected_flux_history
         if selhist:
@@ -617,25 +609,26 @@ class LabnumberEntry(IsotopeDatabaseManager):
     @cached_property
     def _get_projects(self):
         order = gen_ProjectTable.name.asc()
-        projects = [pi.name for pi in self.db.get_projects(order=order)]
+        projects = [''] + [pi.name for pi in self.db.get_projects(order=order)]
         return projects
 
     @cached_property
     def _get_samples(self):
         order = gen_SampleTable.name.asc()
-        samples = [si.name for si in self.db.get_samples(order=order)]
+        samples = [''] + [si.name for si in self.db.get_samples(order=order)]
         return samples
 
     @cached_property
     def _get_materials(self):
-        materials = [mi.name for mi in self.db.get_materials()]
+        materials = [''] + [mi.name for mi in self.db.get_materials()]
         return materials
 
     def _get_irradiation_tray_image(self):
         p = self._get_map_path()
-        with self.db.session_ctx():
-            level = self.db.get_irradiation_level(self.irradiation,
-                                                  self.level)
+        db = self.db
+        with db.session_ctx():
+            level = db.get_irradiation_level(self.irradiation,
+                                             self.level)
             holder = None
             if level:
                 holder = level.holder

@@ -318,6 +318,9 @@ class LoadingManager(IsotopeDatabaseManager):
                 loadtable = self.db.get_loadtable(loadtable)
 
             self.positions = []
+            if not loadtable:
+                return
+
             if set_tray and loadtable.holder_:
                 self.tray = loadtable.holder_.name
 
@@ -437,7 +440,7 @@ class LoadingManager(IsotopeDatabaseManager):
                                              position=pp,
                                              weight=ip.weight,
                                              note=ip.note,
-                                             
+
                                              )
                     lt.loaded_positions.append(i)
 
@@ -445,7 +448,7 @@ class LoadingManager(IsotopeDatabaseManager):
 
     @cached_property
     def _get_labnumbers(self):
-        db=self.db
+        db = self.db
         with db.session_ctx():
             level = db.get_irradiation_level(self.irradiation,
                                                   self.level,

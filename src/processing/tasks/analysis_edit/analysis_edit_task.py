@@ -43,8 +43,8 @@ class AnalysisEditTask(BaseEditorTask):
         if self.unknowns_pane:
             self.unknowns_pane.dump()
 
-        if self.manager:
-            self.manager.db.close()
+#         if self.manager:
+#             self.manager.db.close()
 
     def create_dock_panes(self):
 

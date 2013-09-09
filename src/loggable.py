@@ -83,7 +83,20 @@ class Loggable(HasTraits):
         if c in [ 'gray', 'silver', 'greenyellow']:
             c = color_name_gen.next()
         self.logcolor = c
+    def add_window(self, ui):
 
+        try:
+            if self.application is not None:
+                self.application.uis.append(ui)
+        except AttributeError:
+            pass
+
+    def open_view(self, obj, **kw):
+        def _open_():
+            ui = obj.edit_traits(**kw)
+            self.add_window(ui)
+
+        invoke_in_main_thread(_open_)
     def warning_dialog(self, msg, sound=None, title='Warning'):
         dialog = myMessageDialog(
                                parent=None, message=msg,

@@ -20,7 +20,7 @@ from traitsui.api import View, UItem, InstanceEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.envisage.tasks.base_editor import BaseTraitsEditor
-from src.database.records.isotope_record import IsotopeRecord
+# from src.database.records.isotope_record import IsotopeRecord
 # from src.database.records.isotope_record import IsotopeRecord
 
 

@@ -181,17 +181,20 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         self.queries.remove(q)
 
     def load_recent(self):
-        dbs = self._get_recent()
-        self.load_records(dbs, load=False)
+        with self.db.session_ctx():
+            dbs = self._get_recent()
+            self.load_records(dbs, load=False)
 
     def load_last(self, n=200):
-        dbs, _stmt = self._get_selector_records(limit=n)
-        self.load_records(dbs, load=False)
+        with self.db.session_ctx():
+            dbs, _stmt = self._get_selector_records(limit=n)
+            self.load_records(dbs, load=False)
 
 #    def execute_query(self, filter_str=None):
     def execute_query(self, queries=None, load=True, use_filters=True):
-        dbs = self._execute_query(queries, use_filters=use_filters)
-        self.load_records(dbs, load=load)
+        with self.db.session_ctx():
+            dbs = self._execute_query(queries, use_filters=use_filters)
+            self.load_records(dbs, load=load)
 
     def get_recent(self):
         return self._get_recent()

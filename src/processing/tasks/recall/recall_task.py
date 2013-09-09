@@ -88,7 +88,7 @@ class RecallTask(AnalysisEditTask):
         ans = self.manager.make_analyses(records)
 
         def func(rec):
-            rec.load_isotopes()
+#             rec.load_isotopes()
             rec.calculate_age()
             reditor = RecallEditor(
                                     model=rec,

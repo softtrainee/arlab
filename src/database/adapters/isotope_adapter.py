@@ -194,14 +194,15 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_analysis_position(self, extraction, pos, **kw):
         try:
             pos = int(pos)
-        except (ValueError, TypeError):
+        except (ValueError, TypeError), e:
+            print e
             pos = 0
 
         dbpos = meas_PositionTable(position=pos, **kw)
         if extraction:
             dbpos.extraction_id = extraction.id
 #             extraction.positions.append(dbpos)
-
+        self._add_item(dbpos)
         return dbpos
 
     def add_note(self, analysis, note, **kw):
@@ -833,10 +834,10 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_irradiation(self, value):
         return self._retrieve_item(irrad_IrradiationTable, value,)
-    
-    def get_irradiation_level_byid(self,lid):
+
+    def get_irradiation_level_byid(self, lid):
         return self._retrieve_item(irrad_LevelTable, lid, key='id')
-        
+
     def get_irradiation_level(self, irrad, level):
         with self.session_ctx() as s:
 #         with session(sess) as s:

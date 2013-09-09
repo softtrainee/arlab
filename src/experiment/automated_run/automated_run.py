@@ -982,7 +982,7 @@ anaylsis_type={}
 
     def _use_arar_age(self):
         return True
-    
+
         ln = self.spec.labnumber
         if '-' in ln:
             ln = ln.split('-')[0]
@@ -1231,7 +1231,7 @@ anaylsis_type={}
 
 
         mem_log('pre measure {}'.format(grpname))
-        st = time.time()
+#         st = time.time()
 
         if not self.spectrometer_manager:
             self.warning('no spectrometer manager')
@@ -1247,7 +1247,7 @@ anaylsis_type={}
 #         get_data = self._get_data_generator()
 
         ncounts = int(ncounts)
-        iter_cnt = 1
+#         iter_cnt = 1
         graph = None
         if self.plot_panel:
             graph = self.plot_panel.graph
@@ -1274,20 +1274,15 @@ anaylsis_type={}
             with consumable(func) as con:
                 self._iteration(con, ncounts, check_conditions, starttime)
 
-#         consumer.stop()
         if graph:
             graph.refresh()
 
-        t = time.time() - st
-        iter_cnt -= 1
-        et = iter_cnt * self.integration_time
-        self.debug('%%%%%%%%%%%%%%%%%%%%%%%% counts: {} {} {}'.format(iter_cnt, et, t))
         mem_log('post measure {}'.format(grpname))
-#         calc_growth(before)
 
         return True
 
     def _iteration(self, con, ncounts, check_conditions, starttime):
+        st = time.time()
         if starttime is None:
             starttime = time.time()
 
@@ -1315,6 +1310,10 @@ anaylsis_type={}
             iter_step(iter_cnt, con, data, starttime, m, debug)
             iter_cnt += 1
 
+        t = time.time() - st
+        iter_cnt -= 1
+        et = iter_cnt * self.integration_time
+        self.debug('%%%%%%%%%%%%%%%%%%%%%%%% counts: {} {} {}'.format(iter_cnt, et, t))
 
 #     @profile
     def _iter_step(self, iter_cnt, con, data, starttime, period, debug=False):

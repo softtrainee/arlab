@@ -35,11 +35,11 @@ class BaseMeasurement(HasTraits):
     def __init__(self, dbrecord=None, unpack=True, *args, **kw):
         super(BaseMeasurement, self).__init__(*args, **kw)
 
-#         print type(self), self.name, unpack
         if dbrecord and unpack:
             try:
                 xs, ys = self._unpack_blob(dbrecord.signals[-1].data)
-            except (ValueError, TypeError, IndexError):
+            except (ValueError, TypeError, IndexError), e:
+                print 'base measurment {} {}'.format(self, e)
                 xs, ys = [], []
 
             self.xs = array(xs)
@@ -53,8 +53,8 @@ class BaseMeasurement(HasTraits):
 
 
 class IsotopicMeasurement(BaseMeasurement):
-    dbrecord = Any
-    dbresult = Any
+#     dbrecord = Any
+#     dbresult = Any
 
 
     uvalue = Property(depends='value, error, _value, _error')
@@ -72,9 +72,9 @@ class IsotopicMeasurement(BaseMeasurement):
     regressor = Property(depends_on='xs,ys,fit')
     def __init__(self, dbresult=None, *args, **kw):
         if dbresult:
-            self.dbresult = dbresult
-            self._value = self.dbresult.signal_
-            self._error = self.dbresult.signal_err
+#             self.dbresult = dbresult
+            self._value = dbresult.signal_
+            self._error = dbresult.signal_err
 #             kw['unpack'] = False
 
         super(IsotopicMeasurement, self).__init__(*args, **kw)
