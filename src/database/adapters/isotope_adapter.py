@@ -833,7 +833,10 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_irradiation(self, value):
         return self._retrieve_item(irrad_IrradiationTable, value,)
-
+    
+    def get_irradiation_level_byid(self,lid):
+        return self._retrieve_item(irrad_LevelTable, lid, key='id')
+        
     def get_irradiation_level(self, irrad, level):
         with self.session_ctx() as s:
 #         with session(sess) as s:

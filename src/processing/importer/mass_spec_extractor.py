@@ -75,11 +75,11 @@ class MassSpecExtractor(Extractor):
         p, c = unique_path(paths.data_dir, 'import')
         self.import_err_file = open(p, 'w')
 
-        with dest.session(commit=not dry_run) as sess:
+        with dest.session_ctx(commit=not dry_run) as sess:
             self.dbimport = dest.add_import(
                                             source=self.db.name,
                                             source_host=self.db.host,
-                                            sess=sess
+
                                             )
 
             # is irrad already in dest
@@ -93,7 +93,6 @@ class MassSpecExtractor(Extractor):
                 # add irradiation
                 dbirrad = dest.add_irradiation(name, production=dbpr,
                                                chronology=dbchron,
-                                               sess=sess
                                                )
                 added_to_db = True
 
@@ -107,7 +106,6 @@ class MassSpecExtractor(Extractor):
                                  include_airs,
                                  include_cocktails,
                                  include_list,
-                                 sess=sess
                                  )
             else:
                 self.warning('no irradiation found or created for {}. not adding levels'.format(name))
@@ -132,65 +130,67 @@ class MassSpecExtractor(Extractor):
             if include_analyses is True add all analyses
         '''
         added_to_db = False
-        levels = self.db.get_levels_by_irradname(name)
-        if not include_list:
-            include_list = [li.Level for li in levels]
-
-        for mli in levels:
-            if mli.Level not in include_list:
-                print ' continue'
-                continue
-
-            # is level already in dest
-            dbl = dest.get_irradiation_level(name, mli.Level)
-            if dbl is None:
-                dest.add_irradiation_level(mli.Level, dbirrad, mli.SampleHolder,
-                                           )
-                added_to_db = True
-
-            # add all irradiation positions for this level
-            positions = self.db.get_irradiation_positions(name,
-                                                          mli.Level,
-                                                          )
-            print positions, name, mli.Level
-            for ip in positions:
-                # is labnumber already in dest
-                ln = dest.get_labnumber(ip.IrradPosition)
-                self.debug(ln)
-                if not ln:
-                    ln = dest.add_labnumber(ip.IrradPosition)
-#                     dest.flush()
-
-                    dbpos = dest.add_irradiation_position(ip.HoleNumber, ln, name, mli.Level,
-                                                          )
-
-                    fh = dest.add_flux_history(dbpos)
-                    ln.selected_flux_history = fh
-                    fl = dest.add_flux(ip.J, ip.JEr)
-                    fh.flux = fl
+        db=self.db
+        with db.session_ctx():
+            levels = db.get_levels_by_irradname(name)
+            if not include_list:
+                include_list = [li.Level for li in levels]
+    
+            for mli in levels:
+                if mli.Level not in include_list:
+                    print ' continue'
+                    continue
+    
+                # is level already in dest
+                dbl = dest.get_irradiation_level(name, mli.Level)
+                if dbl is None:
+                    dest.add_irradiation_level(mli.Level, dbirrad, mli.SampleHolder,
+                                               )
                     added_to_db = True
-
-                sample = self._add_sample_project(dest, ip)
-                ln.sample = sample
-                ln.note = ip.Note
-
-                if include_analyses:
-                    self.info('============ Adding Analyses ============')
-                    for ai in ip.analyses:
-                        if self._add_analysis(dest, ln, ai):
-                            added_to_db = True
-
-                        if include_blanks:
-                            if self._add_associated_unknown_blanks(dest, ai):
+    
+                # add all irradiation positions for this level
+                positions = self.db.get_irradiation_positions(name,
+                                                              mli.Level,
+                                                              )
+                print positions, name, mli.Level
+                for ip in positions:
+                    # is labnumber already in dest
+                    ln = dest.get_labnumber(ip.IrradPosition)
+                    self.debug(ln)
+                    if not ln:
+                        ln = dest.add_labnumber(ip.IrradPosition)
+    #                     dest.flush()
+    
+                        dbpos = dest.add_irradiation_position(ip.HoleNumber, ln, name, mli.Level,
+                                                              )
+    
+                        fh = dest.add_flux_history(dbpos)
+                        ln.selected_flux_history = fh
+                        fl = dest.add_flux(ip.J, ip.JEr)
+                        fh.flux = fl
+                        added_to_db = True
+    
+                    sample = self._add_sample_project(dest, ip)
+                    ln.sample = sample
+                    ln.note = ip.Note
+    
+                    if include_analyses:
+                        self.info('============ Adding Analyses ============')
+                        for ai in ip.analyses:
+                            if self._add_analysis(dest, ln, ai):
                                 added_to_db = True
-                        if include_airs:
-                            if self._add_associated_airs(dest, ai):
-                                added_to_db = True
-                        if include_cocktails:
-                            if self._add_associated_cocktails(dest, ai):
-                                added_to_db = True
-
-                dest.flush()
+    
+                            if include_blanks:
+                                if self._add_associated_unknown_blanks(dest, ai):
+                                    added_to_db = True
+                            if include_airs:
+                                if self._add_associated_airs(dest, ai):
+                                    added_to_db = True
+                            if include_cocktails:
+                                if self._add_associated_cocktails(dest, ai):
+                                    added_to_db = True
+    
+#                    sess.flush()
 
         return added_to_db
 

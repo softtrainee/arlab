@@ -42,7 +42,7 @@ PID = None
 def mem_break():
     write_mem('#' + '=' * 49, '')
 
-def mem_log(msg, verbose=True):
+def mem_log(msg, verbose=False):
     if USE_MEM_LOG:
         gc.collect()
         mem = _get_current_mem()

@@ -96,7 +96,8 @@ class WaitControl(Loggable):
             self.end_evt.set()
 
     def _update_time(self):
-        self.current_time -= 1
+        if self.timer and self.timer.isActive():
+            self.current_time -= 1
 
     def _current_time_changed(self):
         if self.current_time <= 0:

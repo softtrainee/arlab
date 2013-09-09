@@ -199,7 +199,9 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         if self.delaying_between_runs:
             self._alive = False
             self.stats.stop_timer()
-            self.active_wait_control.stop()
+            self.wait_group.stop()
+#            self.wait_group.active_control.stop
+#            self.active_wait_control.stop()
 #             self.wait_dialog.stop()
 
             msg = '{} Stopped'.format(self.experiment_queue.name)
