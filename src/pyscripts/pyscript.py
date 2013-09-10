@@ -674,10 +674,11 @@ class PyScript(Loggable):
         v = float(v)
 
         if v > 1:
-            if v >= 5:
-                self._block(v, message=message, dialog=True)
-            else:
-                self._block(v, dialog=False)
+            self._block(v, message=message, dialog=True)
+            
+#            if v >= :
+#            else:
+#                self._block(v, dialog=False)
 
         else:
             time.sleep(v)
