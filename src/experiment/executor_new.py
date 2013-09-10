@@ -739,7 +739,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         if self._check_memory():
             return True
 
-        if not self._check_managers():
+        if not self._check_managers(n=3):
             return True
 
         # if the experiment queue has been modified wait until saved or
@@ -941,12 +941,16 @@ If "No" select from database
                 except ValueError:
                     pass
 
-    def _check_managers(self, inform=True):
+    def _check_managers(self, inform=True, n=1):
         self.debug('checking for managers')
         exp = self.experiment_queue
-        nonfound = self._check_for_managers(exp)
-        if nonfound:
-            self.info('experiment canceled because could not find managers {}'.format(nonfound))
+        for i in range(n):
+            nonfound = self._check_for_managers(exp)
+            if not nonfound:
+                break
+        else:
+#        if nonfound:
+            self.info('experiment canceled because could not find managers {} ntries={}'.format(nonfound, n))
             if inform:
                 invoke_in_main_thread(self.warning_dialog, 'Canceled! Could not find managers {}'.format(','.join(nonfound)))
             return

@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, Int, Property, List, on_trait_change, Dict, Bool, \
-    Str, CInt, Int
+    Str, CInt, Int, Tuple
 from traitsui.api import View, Item, Group, VSplit, UItem, VGroup, HGroup, spring
 from src.graph.graph import Graph
 
@@ -73,25 +73,90 @@ class SignalAdapter(MultiTextTableAdapter):
 #    pass
 from traits.api import HasTraits, Any
 from traitsui.api import ListEditor
+class TraitsContainer(HasTraits):
+    model=Any
+    def trait_context(self):
+        """ Use the model object for the Traits UI context, if appropriate.
+        """
+        if self.model:
+            return { 'object': self.model }
+        return super(TraitsContainer, self).trait_context()
+    
+class DisplayContainer(TraitsContainer):
+    model=Any
+    def _get_display_group(self):
+        results_grp = Group(
+#                             HGroup(
+#                                   Item('correct_for_baseline'),
+#                                   Item('correct_for_blank'),
+#                                   spring),
+                            UItem('display_signals',
+                                  editor=FastTextTableEditor(adapter=SignalAdapter(),
+                                                         bg_color='lightyellow',
+                                                         header_color='lightgray',
+                                                         font_size=10,
+                                                         ),
+#                                          width=0.8
+                                         ),
+                                label='Results'
+                            )
 
-class GraphContainer(HasTraits):
-    graphs = List
-    selected_tab = Any
-    label = Str
+        ratios_grp = Group(UItem('display_ratios',
+                                         editor=FastTextTableEditor(adapter=RatiosAdapter(),
+                                                         bg_color='lightyellow',
+                                                         header_color='lightgray'
+                                                         ),
+                                        ),
+                           label='Ratios'
+                           )
+        summary_grp = Group(
+                           UItem('display_summary',
+                                 editor=FastTextTableEditor(adapter=ValueErrorAdapter(),
+                                                        bg_color='lightyellow',
+                                                        header_color='lightgray'
+                                                        )
+                                 ),
+                            label='Summary'
+                          )
+        display_grp = Group(
+                            results_grp,
+                            ratios_grp,
+                            summary_grp,
+                            layout='tabbed'
+                            )
+
+        return display_grp
+
+    def traits_view(self):
+        v=View(
+               VGroup(
+                      Item('ncounts'),
+                      self._get_display_group()
+                     ),
+               )
+        return v
+        
+class GraphContainer(TraitsContainer):
+    
+#    graphs = List
+#    selected_tab = Any
+#    label = Str
 #     def _selected_tab_changed(self):
 #         print 'sel', self.selected_tab
-
+    
+    
     def traits_view(self):
         v = View(
                  VGroup(
                         HGroup(spring,
-                               CustomLabel('label',
+                               CustomLabel('plot_title',
                                            weight='bold',
                                            size=14),
                                spring
                                ),
                         UItem(
-                             'graphs', editor=ListEditor(use_notebook=True,
+                             'graphs', 
+                             editor=ListEditor(use_notebook=True,
                                                          selected='selected_tab',
                                                          page_name='.page_name'
                                                          ),
@@ -104,10 +169,13 @@ class GraphContainer(HasTraits):
 
 class PlotPanel(Loggable):
     graph_container = Instance(GraphContainer)
+    display_container = Instance(DisplayContainer)
     arar_age = Instance(ArArAge)
     graph = Instance(Graph, ())
     peak_center_graph = Instance(Graph, ())
 
+    graphs=Tuple
+    
     plot_title = Str
 
     ncounts = Property(Int(enter_set=True, auto_set=False), depends_on='_ncounts')
@@ -146,10 +214,10 @@ class PlotPanel(Loggable):
 
     def set_peak_center_graph(self, graph):
         self.peak_center_graph = graph
-        self.graph_container.selected_tab = self.peak_center_graph
+        self.selected_graph = self.peak_center_graph
 
     def show_isotope_graph(self):
-        self.graph_container.selected_tab = self.graph
+        self.selected_graph = self.graph
 #     def show_peak_center(self):
 # #         self.graph_container.selected_tab = self.peak_center_graph
 #         print 'sss', self.graph_container.selected_tab
@@ -190,7 +258,7 @@ class PlotPanel(Loggable):
         self.reset()
 
         g = self.graph
-        self.graph_container.selected_tab = g
+        self.selected_graph = g
 
 #        g.suppress_regression = True
 #        # construct plot panels graph
@@ -249,41 +317,9 @@ class PlotPanel(Loggable):
     def clear_displays(self):
         self._print_results()
 
-    @on_trait_change('graph:regression_results')
-    def _update_display(self, new):
-        if new:
-            arar_age = self.arar_age
-            for iso, reg in zip(self.isotopes, new):
-                try:
-                    vv = reg.predict(0)
-                    ee = reg.predict_error(0)
-                    u = ufloat(vv, ee)
-                    if self.isbaseline:
-#                         self.baselines[iso] = u
-#                         if arar_age:
-                        arar_age.set_baseline(iso, (vv, ee))
-                    else:
-#                         self.signals[iso] = u
-#                         if arar_age:
-                        arar_age.set_isotope(iso, (vv, ee))
+   
 
-                except TypeError, e:
-                    print 'type error', e
-                    break
-                except AssertionError, e:
-                    print 'assertion error', e
-                    continue
-            else:
-#                 pass
-#                 if arar_age:
-#                 arar_age.age_dirty = True
-                self._print_results()
-
-    @on_trait_change('correct_for_baseline, correct_for_blank')
-    def _print_results(self):
-        self.display_signals = self._make_display_signals()
-        self.display_ratios = self._make_display_ratios()
-        self.display_summary = self._make_display_summary()
+    
 
     def _make_display_summary(self):
         def factory(n, v):
@@ -416,9 +452,6 @@ class PlotPanel(Loggable):
         self.info('{} set to terminate after {} counts'.format(self.plot_title, v))
         self._ncounts = v
 
-    def _graph_default(self):
-        return self._graph_factory()
-
     def _graph_factory(self):
         return StackedRegressionGraph(container_dict=dict(padding=5, bgcolor='gray',
                                                 stack_order=self.stack_order
@@ -451,49 +484,7 @@ class PlotPanel(Loggable):
         v = View(g)
         return v
 
-    def _get_display_group(self):
-        results_grp = Group(
-#                             HGroup(
-#                                   Item('correct_for_baseline'),
-#                                   Item('correct_for_blank'),
-#                                   spring),
-                            UItem('display_signals',
-                                  editor=FastTextTableEditor(adapter=SignalAdapter(),
-                                                         bg_color='lightyellow',
-                                                         header_color='lightgray',
-                                                         font_size=10,
-                                                         ),
-#                                          width=0.8
-                                         ),
-                                label='Results'
-                            )
-
-        ratios_grp = Group(UItem('display_ratios',
-                                         editor=FastTextTableEditor(adapter=RatiosAdapter(),
-                                                         bg_color='lightyellow',
-                                                         header_color='lightgray'
-                                                         ),
-                                        ),
-                           label='Ratios'
-                           )
-        summary_grp = Group(
-                           UItem('display_summary',
-                                 editor=FastTextTableEditor(adapter=ValueErrorAdapter(),
-                                                        bg_color='lightyellow',
-                                                        header_color='lightgray'
-                                                        )
-                                 ),
-                            label='Summary'
-                          )
-        display_grp = Group(
-                            results_grp,
-                            ratios_grp,
-                            summary_grp,
-                            layout='tabbed'
-                            )
-
-        return display_grp
-
+    
     def _get_graph_group(self):
         graph_grp = Group(
                         Group(Item('graph', show_label=False,
@@ -519,12 +510,15 @@ class PlotPanel(Loggable):
                  VSplit(
                         UItem('graph_container',
                               style='custom',
-                              height=600),
+                              height=0.75),
+                        UItem('display_container',
+                              style='custom',
+                              height=0.25)
 #                         gg,
-                        VGroup(
-                              Item('ncounts'),
-                               self._get_display_group()
-                             ),
+#                        VGroup(
+#                              Item('ncounts'),
+#                              self._get_display_group()
+#                             ),
 
                         ),
                 width=500,
@@ -538,12 +532,9 @@ class PlotPanel(Loggable):
 
     def _get_isotopes(self):
         return [d.isotope for d in self.detectors]
-
-    def _graph_container_default(self):
-        self.graph.page_name = 'Isotopes'
-        self.peak_center_graph.page_name = 'Peak Center'
-        return GraphContainer(graphs=[self.graph, self.peak_center_graph])
-
+#===============================================================================
+# handlers
+#===============================================================================
     @on_trait_change('graph, peak_center_graph')
     def _update_graphs(self):
         if self.graph and self.peak_center_graph:
@@ -552,10 +543,65 @@ class PlotPanel(Loggable):
             g.page_name = 'Isotopes'
             p.page_name = 'Peak Center'
 
-            self.graph_container.graphs = [g, p]
+#            self.graph_container.graphs = [g, p]
 
     def _plot_title_changed(self, new):
         self.graph_container.label = new
+        
+    @on_trait_change('correct_for_baseline, correct_for_blank')
+    def _print_results(self):
+        self.display_signals = self._make_display_signals()
+        self.display_ratios = self._make_display_ratios()
+        self.display_summary = self._make_display_summary()
+    
+    @on_trait_change('graph:regression_results')
+    def _update_display(self, new):
+        if new:
+            arar_age = self.arar_age
+            for iso, reg in zip(self.isotopes, new):
+                try:
+                    vv = reg.predict(0)
+                    ee = reg.predict_error(0)
+#                    u = ufloat(vv, ee)
+                    if self.isbaseline:
+#                         self.baselines[iso] = u
+#                         if arar_age:
+                        arar_age.set_baseline(iso, (vv, ee))
+                    else:
+#                         self.signals[iso] = u
+#                         if arar_age:
+                        arar_age.set_isotope(iso, (vv, ee))
+
+                except TypeError, e:
+                    print 'type error', e
+                    break
+                except AssertionError, e:
+                    print 'assertion error', e
+                    continue
+            else:
+#                 pass
+#                 if arar_age:
+#                 arar_age.age_dirty = True
+                self._print_results()
+#===============================================================================
+# defaults
+#===============================================================================
+    def _display_container_default(self):
+        d=DisplayContainer(model=self)
+        return d
+    
+    def _graph_default(self):
+        return self._graph_factory()
+    
+    def _graph_container_default(self):
+        self.graph.page_name = 'Isotopes'
+        self.peak_center_graph.page_name = 'Peak Center'
+        
+#        return GraphContainer(graphs=[self.graph, self.peak_center_graph])
+        return GraphContainer(model=self)
+    
+    def _graphs_default(self):
+        return [self.graph, self.peak_center_graph]
 #============= EOF =============================================
 
 #    def _display_factory(self):

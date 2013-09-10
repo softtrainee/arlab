@@ -294,24 +294,34 @@ class ExperimentFactoryPane(TraitsDockPane):
                                     RFItem('extract_units',
                                             show_label=False,
                                             editor=EnumEditor(name=make_rf_name('extract_units_names'))),
-                                    spring,
+                                    RFItem('ramp_duration', label='Ramp Dur. (s)'),
+#                                    spring,
 #                                     Label('Step Heat Template'),
                                     ),
                              HGroup(
-                                RFItem('template',
+                                    RFItem('template',
                                         label='Step Heat Template',
                                         editor=EnumEditor(name=make_rf_name('templates')),
                                         show_label=False,
                                         ),
-                                RFItem('edit_template',
+                                    RFItem('edit_template',
                                        show_label=False,
                                        editor=ButtonEditor(label_value=make_rf_name('edit_template_label'))
-                                     )
-                                    ),
-                             HGroup(RFItem('extract_group_button', show_label=False,
+                                     ),
+                                    RFItem('extract_group_button', show_label=False,
                                            tooltip='Group selected runs as a step heating experiment'
                                            ),
-                                    RFItem('extract_group', label='Group ID')),
+                                    RFItem('extract_group', label='Group ID'),
+                                    
+                                    ),
+#                             HGroup(
+#                                    RFItem('extract_group_button', show_label=False,
+#                                           tooltip='Group selected runs as a step heating experiment'
+#                                           ),
+#                                    RFItem('extract_group', label='Group ID'),
+#                                    
+                                    
+#                                    ),
                              RFItem('duration', label='Duration (s)',
                                   tooltip='Set the number of seconds to run the extraction device.'
 
@@ -320,7 +330,7 @@ class ExperimentFactoryPane(TraitsDockPane):
                                   tooltip='Set the number of seconds to getter the sample gas'
                                   ),
                              RFItem('beam_diameter'),
-                             RFItem('ramp_duration', label='Ramp Dur. (s)'),
+                             
                              # Item('ramp_rate', label='Ramp Rate (C/s)'),
                              HGroup(
                                     RFItem('pattern',
@@ -357,7 +367,9 @@ class WaitPane(TraitsDockPane):
         v = View(
 #                  UItem('wait_dialog',
                  UItem('wait_group',
-                        style='custom'),
+                        style='custom',
+                        ),
+#                 height=-100
                  )
         return v
 

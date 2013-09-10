@@ -2266,11 +2266,11 @@ anaylsis_type={}
         if self.spec:
             self.spec.state = self.state
 
-    def _runner_changed(self):
+    def _runner_changed(self, new):
         for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:
             sc = getattr(self, '{}_script'.format(s))
             if sc is not None:
-                setattr(sc, 'runner', self.runner)
+                setattr(sc, 'runner', new)
 #============= EOF =============================================
 #    def _get_peakhop_data_writer(self, grpname):
 #        def write_data(x, det, iso, signal):
