@@ -329,64 +329,62 @@ class LabnumberEntry(IsotopeDatabaseManager):
 
     def _save_to_db(self):
         db = self.db
-
-        for irs in self.irradiated_positions:
-            ln = irs.labnumber
-            if not ln:
-                continue
-
-            sam = irs.sample
-            proj = irs.project
-            mat = irs.material
-            if proj:
-                proj = db.add_project(proj)
-
-            if mat:
-                mat = db.add_material(mat)
-
-            if sam:
-                sam = db.add_sample(sam,
-                                    project=proj,
-                                    material=mat,
-                                    )
-
-            dbln = db.get_labnumber(ln)
-            if dbln:
-                pos = dbln.irradiation_position
-                if pos is None:
-                    pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
+        with db.session_ctx():
+            for irs in self.irradiated_positions:
+                ln = irs.labnumber
+                if not ln:
+                    continue
+    
+                sam = irs.sample
+                proj = irs.project
+                mat = irs.material
+                if proj:
+                    proj = db.add_project(proj)
+    
+                if mat:
+                    mat = db.add_material(mat)
+    
+                if sam:
+                    sam = db.add_sample(sam,
+                                        project=proj,
+                                        material=mat,
+                                        )
+    
+                dbln = db.get_labnumber(ln)
+                if dbln:
+                    pos = dbln.irradiation_position
+                    if pos is None:
+                        pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
+                    else:
+    
+                        lev = pos.level
+                        irrad = lev.irradiation
+                        if self.irradiation != irrad.name:
+                            self.warning_dialog('Labnumber {} already exists in Irradiation {}'.format(ln, irrad.name))
+                            return
+    
+                    dbln.sample = db.get_sample(sam)
+                    dbln.note = irs.note
+    
                 else:
-
-                    lev = pos.level
-                    irrad = lev.irradiation
-                    if self.irradiation != irrad.name:
-                        self.warning_dialog('Labnumber {} already exists in Irradiation {}'.format(ln, irrad.name))
-                        return
-
-                dbln.sample = db.get_sample(sam)
-                dbln.note = irs.note
-
-            else:
-                dbln = db.add_labnumber(ln, sample=sam,)
-                pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
-
-            def add_flux():
-                hist = db.add_flux_history(pos)
-                dbln.selected_flux_history = hist
-                f = db.add_flux(irs.j, irs.j_err)
-                f.history = hist
-
-            if dbln.selected_flux_history:
-                tol = 1e-10
-                flux = dbln.selected_flux_history.flux
-                if abs(flux.j - irs.j) > tol or abs(flux.j_err - irs.j_err) > tol:
+                    dbln = db.add_labnumber(ln, sample=sam,)
+                    pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
+    
+                def add_flux():
+                    hist = db.add_flux_history(pos)
+                    dbln.selected_flux_history = hist
+                    f = db.add_flux(irs.j, irs.j_err)
+                    f.history = hist
+    
+                if dbln.selected_flux_history:
+                    tol = 1e-10
+                    flux = dbln.selected_flux_history.flux
+                    if abs(flux.j - irs.j) > tol or abs(flux.j_err - irs.j_err) > tol:
+                        add_flux()
+                else:
                     add_flux()
-            else:
-                add_flux()
-
-            db.commit()
-
-            self.info('changes saved to database')
+    
+                self.info('changes saved to database')
 
 #===============================================================================
 # handlers

@@ -27,7 +27,7 @@ from src.ui.custom_label_editor import CustomLabel
 from src.helpers.timer import Timer
 
 class WaitControl(Loggable):
-    page_name = Str
+    page_name = Str('Wait')
     message = Str
     message_color = Color('black')
 

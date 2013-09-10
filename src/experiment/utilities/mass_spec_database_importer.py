@@ -134,7 +134,7 @@ class MassSpecDatabaseImporter(Loggable):
 
             self._analysis = None
             try:
-                self._add_analysis(spec, irradpos, rid, runtype)
+                self._add_analysis(sess, spec, irradpos, rid, runtype)
             except Exception, e:
     #            import traceback
     #            tb = traceback.format_exc()
@@ -149,12 +149,13 @@ class MassSpecDatabaseImporter(Loggable):
     #                 self._add_analysis(spec, irradpos, spec.rid, runtype, commit)
 
 
-    def _add_analysis(self, *args):
-        db=self.db
-        with db.session_ctx() as sess:
-            self._add_analysis_db(sess,*args)
+#    def _add_analysis(self, *args):
+#        db=self.db
+#        with db.session_ctx() as sess:
+#            self._add_analysis_db(sess,*args)
             
-    def _add_analysis_db(self, sess, spec, irradpos, rid, runtype):
+    def _add_analysis(self, sess, spec, irradpos, rid, runtype):
+#    def _add_analysis_db(self, sess, spec, irradpos, rid, runtype):
         gst = time.time()
 
         db = self.db
@@ -183,7 +184,7 @@ class MassSpecDatabaseImporter(Loggable):
         # add runscript
         rs = db.add_runscript(spec.runscript_name,
                               spec.runscript_text)
-        sess.flush()
+#        sess.flush()
 #         db.flush()
 #        print irradpos, runtype
         self.create_import_session(spectrometer, tray,
@@ -194,7 +195,7 @@ class MassSpecDatabaseImporter(Loggable):
 
                                    )
 #         db.flush()
-        sess.flush()
+#        sess.flush()
 
         # remember new rid in case duplicate entry error and new to augment rid
         spec.rid = rid
@@ -213,17 +214,21 @@ class MassSpecDatabaseImporter(Loggable):
                                    FirstStageDly=spec.first_stage_delay,
                                    SecondStageDly=spec.second_stage_delay,
                                    PipettedIsotopes=pipetted_isotopes,
-
+                                   RefDetID = refdbdet.DetectorID,
+                                   ReferenceDetectorLabel = refdbdet.Label,
+                                   SampleLoadingID = self.sample_loading_id,
+                                   LoginSessionID = self.login_session_id,
+                                   RunScriptID = rs.RunScriptID,
                                    )
 
-        analysis.RefDetID = refdbdet.DetectorID
-        analysis.ReferenceDetectorLabel = refdbdet.Label
-        analysis.SampleLoadingID = self.sample_loading_id
-        analysis.LoginSessionID = self.login_session_id
-        analysis.RunScriptID = rs.RunScriptID
+#        analysis.RefDetID = refdbdet.DetectorID
+#        analysis.ReferenceDetectorLabel = refdbdet.Label
+#        analysis.SampleLoadingID = self.sample_loading_id
+#        analysis.LoginSessionID = self.login_session_id
+#        analysis.RunScriptID = rs.RunScriptID
 
         db.add_analysis_positions(analysis, spec.position)
-        sess.flush()
+#        sess.flush()
 
 #         db.flush()
         #=======================================================================

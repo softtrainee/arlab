@@ -157,7 +157,7 @@ class GraphContainer(TraitsContainer):
                         UItem(
                              'graphs', 
                              editor=ListEditor(use_notebook=True,
-                                                         selected='selected_tab',
+                                                         selected='selected_graph',
                                                          page_name='.page_name'
                                                          ),
                              style='custom'
@@ -171,8 +171,10 @@ class PlotPanel(Loggable):
     graph_container = Instance(GraphContainer)
     display_container = Instance(DisplayContainer)
     arar_age = Instance(ArArAge)
-    graph = Instance(Graph, ())
+    
+    isotope_graph = Instance(Graph, ())
     peak_center_graph = Instance(Graph, ())
+    selected_graph=Any
 
     graphs=Tuple
     
@@ -217,7 +219,7 @@ class PlotPanel(Loggable):
         self.selected_graph = self.peak_center_graph
 
     def show_isotope_graph(self):
-        self.selected_graph = self.graph
+        self.selected_graph = self.isotope_graph
 #     def show_peak_center(self):
 # #         self.graph_container.selected_tab = self.peak_center_graph
 #         print 'sss', self.graph_container.selected_tab
@@ -247,7 +249,7 @@ class PlotPanel(Loggable):
 #         self.graph = self._graph_factory()
 #         self.graph.on_trait_change(self._update_display, 'regression_results')
 
-        self.graph.clear()
+        self.isotope_graph.clear()
         self.peak_center_graph.clear()
 
 
@@ -257,7 +259,7 @@ class PlotPanel(Loggable):
         '''
         self.reset()
 
-        g = self.graph
+        g = self.isotope_graph
         self.selected_graph = g
 
 #        g.suppress_regression = True
@@ -535,13 +537,14 @@ class PlotPanel(Loggable):
 #===============================================================================
 # handlers
 #===============================================================================
-    @on_trait_change('graph, peak_center_graph')
+    @on_trait_change('isotope_graph, peak_center_graph')
     def _update_graphs(self):
-        if self.graph and self.peak_center_graph:
-            g, p = self.graph, self.peak_center_graph
+        if self.isotope_graph and self.peak_center_graph:
+            g, p = self.isotope_graph, self.peak_center_graph
 
             g.page_name = 'Isotopes'
             p.page_name = 'Peak Center'
+            self.graphs=[g,p]
 
 #            self.graph_container.graphs = [g, p]
 
@@ -554,7 +557,7 @@ class PlotPanel(Loggable):
         self.display_ratios = self._make_display_ratios()
         self.display_summary = self._make_display_summary()
     
-    @on_trait_change('graph:regression_results')
+    @on_trait_change('isotope_graph:regression_results')
     def _update_display(self, new):
         if new:
             arar_age = self.arar_age
@@ -590,18 +593,18 @@ class PlotPanel(Loggable):
         d=DisplayContainer(model=self)
         return d
     
-    def _graph_default(self):
+    def _isotope_graph_default(self):
         return self._graph_factory()
     
     def _graph_container_default(self):
-        self.graph.page_name = 'Isotopes'
+        self.isotope_graph.page_name = 'Isotopes'
         self.peak_center_graph.page_name = 'Peak Center'
         
 #        return GraphContainer(graphs=[self.graph, self.peak_center_graph])
         return GraphContainer(model=self)
     
     def _graphs_default(self):
-        return [self.graph, self.peak_center_graph]
+        return [self.isotope_graph, self.peak_center_graph]
 #============= EOF =============================================
 
 #    def _display_factory(self):

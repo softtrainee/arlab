@@ -75,6 +75,17 @@ class DBAnalysis(Analysis):
     extract_duration = Float
 
     ic_factors = Dict
+    def get_baseline_corrected_signal_dict(self):
+        d = dict()
+        for ki in ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']:
+            if self.isotopes.has_key(ki):
+                v = self.isotopes[ki].baseline_corrected_value()
+            else:
+                v = ufloat(0, 0)
+        
+            d[ki] = v
+        
+        return d
 
     def get_ic_factor(self, det):
         if det in self.ic_factors:
@@ -361,9 +372,12 @@ class DBAnalysis(Analysis):
         return m
 
     def _get_project(self, meas_analysis):
+        p=''
         ln = meas_analysis.labnumber
         sample = ln.sample
-        return sample.project.name
+        if sample and sample.project:
+            p=sample.project.name
+        return p
 
     def _get_rundate(self, meas_analysis):
         if meas_analysis.analysis_timestamp:
@@ -382,18 +396,24 @@ class DBAnalysis(Analysis):
 
 
     def _get_j(self, ln):
-        f = ln.selected_flux_history.flux
-        s = f.j
-        e = f.j_err
+        s,e=1,0
+        if ln.selected_flux_history:
+            f = ln.selected_flux_history.flux
+            s = f.j
+            e = f.j_err
         return ufloat(s, e)
 
     def _get_production_ratios(self, ln):
         lev = self._get_irradiation_level(ln)
+        cak=1
+        clk=1
         if lev:
             ir = lev.irradiation
             pr = ir.production
-
-            return dict(Ca_K=pr.Ca_K, Cl_K=pr.Cl_K)
+            cak, clk=pr.Ca_K, pr.Cl_K
+            
+        return dict(Ca_K=cak, Cl_K=clk)
+#        return dict(Ca_K=pr.Ca_K, Cl_K=pr.Cl_K)
 
     def _get_irradiation_level(self, ln):
         if ln:

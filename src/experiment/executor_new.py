@@ -70,7 +70,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 #     execute_button = Event
 #     resume_button = Button('Resume')
 #     delay_between_runs_readback = Float
-#     delaying_between_runs = Bool
+    delaying_between_runs = Bool
 
     extraction_state_label = String
     extraction_state_color = Color
@@ -291,10 +291,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     force_delay = True
 
                 overlapping = self.current_run and self.current_run.isAlive()
-                if overlapping:
-                    self.wait_group.active_control.page_name = self.current_run.runid
-
-                else:
+                if not overlapping:
                     if force_delay or \
                         (self.isAlive() and cnt < nruns and not cnt == 0):
                         # delay between runs
@@ -315,9 +312,9 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 #                     break
                 else:
                     t, run = runargs
-                    if overlapping:
-                        self.wait_group.add_control(page_name=run.runid)
-
+                    self.wait_group.active_control.page_name=run.runid
+#                    self.wait_group.add_control(page_name=run.runid)
+                    
                     if spec.analysis_type == 'unknown' and spec.overlap:
                         self.info('overlaping')
                         run.wait_for_overlap()
@@ -328,7 +325,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                         last_runid = run.runid
                         self._join_run(spec, t, run)
 
-                        print '{} =========================================='.format(cnt)
+#                        print '{} =========================================='.format(cnt)
 #                         calc_growth(before)
 
                 cnt += 1
@@ -820,7 +817,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     return
                 else:
                     self.info('using {} as the previous blank'.format(dbr.record_id))
-                    dbr.load_isotopes()
+#                    dbr.load_isotopes()
                     self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
 
         if not self.massspec_importer.connect():
@@ -917,7 +914,8 @@ If "No" select from database
                     dbr = sel.selected
 
             if dbr:
-                dbr = sel._record_factory(dbr)
+                dbr=self.make_analyses([dbr])[0]
+#                dbr = sel._record_factory(dbr)
                 return dbr
 
     def _check_run_aliquot(self, arv):

@@ -59,12 +59,17 @@ class WaitGroup(HasTraits):
     def pop(self):
         if len(self.controls) > 1:
             self.controls.pop(0)
+            self.active_control=self.controls[0]
 
     def stop(self):
         for ci in self.controls:
             ci.stop()
 
     def add_control(self, **kw):
+        if 'page_name' not in kw:
+            kw['page_name']='Wait {:02n}'.format(len(self.controls))
         w = WaitControl(**kw)
-        self.controls.append(w)
+        self.controls.insert(0,w)
+        self.active_control=w
+        return w
 #============= EOF =============================================

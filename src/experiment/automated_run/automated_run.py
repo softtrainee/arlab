@@ -19,6 +19,7 @@ from traits.api import Any, Str, Int, List, Property, \
      Event, Instance, Bool, Dict, HasTraits
 #============= standard library imports ========================
 import os
+import traceback
 import re
 import time
 import ast
@@ -56,8 +57,7 @@ from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import consumable
 from src.codetools.memory_usage import mem_log, measure_type, calc_growth
 from src.codetools.file_log import file_log
-import traceback
-from memory_profiler import profile
+
 
 class ScriptInfo(HasTraits):
     measurement_script_name = Str
@@ -228,7 +228,7 @@ class AutomatedRun(Loggable):
             p.create(self._active_detectors)
         else:
 #             p.clear_displays()
-            p.graph.clear_plots()
+            p.isotope_graph.clear_plots()
 
         p.show_isotope_graph()
         # set plot_panels, baselines, backgrounds
@@ -462,14 +462,13 @@ class AutomatedRun(Loggable):
             ad = [di.name for di in self._active_detectors
                     if di.name != detector]
 
-            ion.do_peak_center(
-                               detector=[detector] + ad,
-                               new_thread=False,
-                               plot_panel=self.plot_panel,
-                               **kw)
+#            self.peak_center = pc
+            pc=ion.setup_peak_center(detector=[detector] + ad,
+                                     plot_panel=self.plot_panel,
+                                     **kw)
+            self.peak_center=pc
 
-            pc = ion.peak_center
-            self.peak_center = pc
+            ion.do_peak_center(new_thread=False)
             if pc.result:
                 dm = self.data_manager
 
@@ -563,6 +562,10 @@ class AutomatedRun(Loggable):
             script = getattr(self, '{}_script'.format(s))
             if script is not None:
                 script.cancel()
+        
+        self.debug('peak center {}'.format(self.peak_center))
+        if self.peak_center:
+            self.peak_center.cancel()
 
         self.do_post_termination()
 
@@ -771,7 +774,6 @@ class AutomatedRun(Loggable):
     def do_measurement(self):
         if not self._alive:
             return
-        print self.measurement_script
         if not self.measurement_script:
             return True
 
@@ -994,9 +996,9 @@ anaylsis_type={}
         title = self.runid
         sample, irradiation = self.spec.sample, self.spec.irradiation
         if sample:
-            title = '{} {}'.format(title, sample)
+            title = '{}   {}'.format(title, sample)
         if irradiation:
-            title = '{} {}'.format(title, irradiation)
+            title = '{}   {}'.format(title, irradiation)
 
         if plot_panel is None:
 
@@ -1051,7 +1053,8 @@ anaylsis_type={}
             if update_labels:
                 try:
                     # update the plot_panel labels
-                    for det, pi in zip(self._active_detectors, self.plot_panel.graph.plots):
+                    for det, pi in zip(self._active_detectors, 
+                                       self.plot_panel.isotope_graph.plots):
                         pi.y_axis.title = '{} {} (fA)'.format(det.name, det.isotope)
                 except Exception, e:
                     print 'set_position exception', e
@@ -1075,7 +1078,7 @@ anaylsis_type={}
 
         spec = self.spectrometer_manager.spectrometer
 
-        graph = self.plot_panel.graph
+        graph = self.plot_panel.isotope_graph
 
         integration_time = 1 / 2.
         settle_time = 2 / 10.
@@ -1250,7 +1253,7 @@ anaylsis_type={}
 #         iter_cnt = 1
         graph = None
         if self.plot_panel:
-            graph = self.plot_panel.graph
+            graph = self.plot_panel.isotope_graph
             mi, ma = graph.get_x_limits()
             dev = (ma - mi) * 0.05
             if (self._total_counts + dev) > ma:
@@ -1814,7 +1817,7 @@ anaylsis_type={}
             # add fit history
             dbhist = db.add_fit_history(analysis,
                                         user=self.spec.username)
-
+            
             key = lambda x: x[2]
             si = sorted(self._save_isotopes, key=key)
 
@@ -1822,12 +1825,14 @@ anaylsis_type={}
                 det = db.get_detector(detname)
                 if det is None:
                     det = db.add_detector(detname)
-
+                    db.sess.flush()
+                    
                 for iso, detname, kind in isos:
                     # add isotope
                     dbiso = db.add_isotope(analysis, iso, det,
                                            kind=kind)
-
+                    db.sess.flush()
+                    
                     s = signals['{}{}'.format(iso, kind)]
 
                     # add signal data
@@ -1962,7 +1967,6 @@ anaylsis_type={}
             self.massspec_importer.add_analysis(exp)
             self.info('analysis added to mass spec database')
         except Exception:
-            import traceback
             tb = traceback.format_exc()
             self.message('''Could not save to Mass Spec database.\n 
 #====Error================================
@@ -2127,9 +2131,9 @@ anaylsis_type={}
 
         m = ast.parse(script._text)
         docstr = ast.get_docstring(m)
-        if docstr is not None:
-            params = yaml.load(docstr)
+        if docstr:
             try:
+                params = yaml.load(docstr)
                 return params[key]
             except KeyError:
                 pass

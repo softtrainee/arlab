@@ -691,6 +691,8 @@ class PyScript(Loggable):
 
             if self.manager:
                 wd = self.manager.wait_group.active_control
+                if wd.current_time>1:
+                    wd=self.manager.wait_group.add_control()
             else:
                 wd = self._wait_dialog
 
@@ -709,7 +711,9 @@ class PyScript(Loggable):
 
             wd.reset()
             wd.start(block=True)
-
+            if self.manager:
+                self.manager.wait_group.pop()
+                
             if wd._canceled:
                 self.cancel()
             elif wd._continued:
