@@ -298,13 +298,14 @@ class ArArAge(Loggable):
 #===============================================================================
 #     @cached_property
     def _get_production_ratios(self):
-        try:
-            lev = self.irradiation_level
-            ir = lev.irradiation
-            pr = ir.production
-            return pr
-        except AttributeError:
-            pass
+        return dict(Ca_K=1, Cl_K=1)
+#        try:
+#            lev = self.irradiation_level
+#            ir = lev.irradiation
+#            pr = ir.production
+#            return pr
+#        except AttributeError:
+#            pass
 
     @cached_property
     def _get_kca(self):
@@ -621,11 +622,11 @@ class ArArAge(Loggable):
 #===============================================================================
 #
 #===============================================================================
-#     def load_irradiation(self, ln):
-#         self.irradiation_info = self._get_irradiation_info(ln)
-#         self.j = self._get_j()
-#
-#         self.production_ratios = self._get_production_ratios()
+    def load_irradiation(self, ln):
+        self.irradiation_info = self._get_irradiation_info(ln)
+        self.j = self._get_j()
+    
+        self.production_ratios = self._get_production_ratios()
 
 
 #============= EOF =============================================
