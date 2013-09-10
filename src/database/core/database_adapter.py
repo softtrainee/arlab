@@ -355,6 +355,8 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
         sess = self.get_session()
         if sess:
             sess.add(obj)
+            sess.flush()
+            
 
 #     def _add_item(self, obj, sess=None):
 

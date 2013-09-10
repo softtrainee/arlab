@@ -37,7 +37,8 @@ class RelativeDetectorPositions(SpectrometerTask):
         det.deflection = 0
         # peak center on the axial detector
         isotope = 'Ar40'
-        t = ion.do_peak_center(detector='AX', isotope=isotope, save=False)
+        ion.setup_peak_center(detector='AX', isotope=isotope)
+        t = ion.do_peak_center(save=False)
         if t is not None:
             t.join()
         else:
@@ -64,8 +65,8 @@ class RelativeDetectorPositions(SpectrometerTask):
 
                 # set deflection to 0
                 d.deflection = 0
-
-                t = ion.do_peak_center(detector=d.name, isotope=isotope, save=False)
+                ion.setup_peak_center(detector=d.name, isotope=isotope)
+                t = ion.do_peak_center(save=False)
                 t.join()
                 if ion.peak_center_result is None:
                     self.info('canceling relative detector position calculation')

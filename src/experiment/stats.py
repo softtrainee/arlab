@@ -118,11 +118,12 @@ class ExperimentStats(Loggable):
         self._timer.start()
 
     def stop_timer(self):
-        tt = self._total_time
-        et = self._elapsed
-        dt = tt - et
-        self.info('Estimated total time= {:0.1f}, elapsed time= {:0.1f}, deviation= {:0.1f}'.format(tt, et, dt))
-        self._timer.stop()
+        if self._timer:
+            tt = self._total_time
+            et = self._elapsed
+            dt = tt - et
+            self.info('Estimated total time= {:0.1f}, elapsed time= {:0.1f}, deviation= {:0.1f}'.format(tt, et, dt))
+            self._timer.stop()
 
     def reset(self):
         self._start_time = None

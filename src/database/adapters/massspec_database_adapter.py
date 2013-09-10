@@ -480,10 +480,11 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             uses a crc-32 of text as the RunScriptID
         '''
         crc = binascii.crc32(text)
-        rs = self.get_runscript(crc,)
+        rs = self.get_runscript(crc)
         if rs is None:
             rs = RunScriptTable(RunScriptID=crc, Label=label, TheText=text)
-            self._add_item(rs,)
+            self._add_item(rs)
+        
         return rs
 
 #===============================================================================
