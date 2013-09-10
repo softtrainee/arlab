@@ -609,6 +609,7 @@ post_equilibration_script:name
 
                 self._labnumber = NULL_STR
             self._frequency_enabled = True
+            self.edit_mode = True
 #            self.clear_selection = True
         else:
             self._frequency_enabled = False
@@ -1016,8 +1017,8 @@ post_equilibration_script:name
                         setattr(self, attr, v)
 
     def _load_scripts(self, old, new):
-        if not self.edit_mode:
-            return
+#        if not self.edit_mode:
+#            return
 
         '''
             load default scripts if 
