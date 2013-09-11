@@ -25,7 +25,7 @@ from src.lasers.laser_managers.ilaser_manager import ILaserManager
 # from src.lasers.laser_managers.extraction_device import ILaserManager
 from src.pyscripts.valve_pyscript import ValvePyScript
 from src.constants import EXTRACTION_COLOR
-from keyring.backend import kwallet
+
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
 
 
@@ -309,64 +309,41 @@ class ExtractionPyScript(ValvePyScript):
                                       )
         return result
 
-    @verbose_skip
-    @command_register
-    def moving_extract(self, value='', name=''):
-        '''
-            p=Point
-            l=Trace path in continuous mode
-            s=Trace path in step mode
-            d=Drill point
-            r=raster polygon
-        '''
+#     @verbose_skip
+#     @command_register
+#     def moving_extract(self, value='', name=''):
+#         '''
+#             p=Point
+#             l=Trace path in continuous mode
+#             s=Trace path in step mode
+#             d=Drill point
+#             r=raster polygon
+#         '''
+#
+#         if name == '':
+#             name = self.position
+#         if value == '':
+#             value = self.extract_value
+#
+#         if isinstance(name, (list, tuple)):
+#             self.warning('invalid position {}'.format(name))
+#             self.cancel()
+#             return
+#
+#         name = name.lower()
+#         self.move_to_position(name)
+#
+# #         if name.startswith('p'):
+# #             self.extract(value)
+#         if name.startswith('l'):
+#             self.trace_path(value, name)
+#         elif name.startswith('s'):
+#             self.trace_path(value, name, kind='step')
+#         elif name.startswith('d'):
+#             self.drill_point(value, name)
+#         else:
+#             self.extract(value)
 
-        if name == '':
-            name = self.position
-        if value == '':
-            value = self.extract_value
-
-        if isinstance(name, (list, tuple)):
-            self.warning('invalid position {}'.format(name))
-            self.cancel()
-            return
-
-        name = name.lower()
-        self.move_to_position(name)
-
-        if name.startswith('p'):
-            self.extract(value)
-        elif name.startswith('l'):
-            self.trace_path(value, name)
-        elif name.startswith('s'):
-            self.trace_path(value, name, kind='step')
-        elif name.startswith('d'):
-            self.drill_point(value, name)
-
-    @verbose_skip
-    @command_register
-    def drill_point(self, value='', name=''):
-        if name == '':
-            name = self.position
-
-        if value == '':
-            value = self.extract_value
-
-        self._manager_action([('drill_point', (value, name,), {})],
-                             protocol=ILaserManager,
-                             name=self.extract_device)
-
-    @verbose_skip
-    @command_register
-    def trace_path(self, name='', value='', kind='continuous'):
-        if name == '':
-            name = self.position
-
-        if value == '':
-            value = self.extract_value
-
-        self._manager_action([('trace_path', (value, name, kind), {})],
-                             protocol=ILaserManager,
-                             name=self.extract_device)
 
     @verbose_skip
     @command_register

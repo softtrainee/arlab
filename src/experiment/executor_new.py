@@ -183,8 +183,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             self._canceled = False
             self.extraction_state_label = ''
 
-            self._prev_baselines = dict()
-            self._prev_blanks = dict()
+#             self._prev_baselines = dict()
+#             self._prev_blanks = dict()
 
             self.pyscript_runner.connect()
 
@@ -312,9 +312,9 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 #                     break
                 else:
                     t, run = runargs
-                    self.wait_group.active_control.page_name=run.runid
+                    self.wait_group.active_control.page_name = run.runid
 #                    self.wait_group.add_control(page_name=run.runid)
-                    
+
                     if spec.analysis_type == 'unknown' and spec.overlap:
                         self.info('overlaping')
                         run.wait_for_overlap()
@@ -585,6 +585,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             arun.db = self.db
             arun.massspec_importer = self.massspec_importer
             arun.runner = self.pyscript_runner
+            arun.extract_device = exp.extract_device
 
         mon = self.monitor
         if mon is not None:
@@ -800,6 +801,16 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     self.cancel(confirm=False)
 
     def _pre_execute_check(self, inform=True):
+        with self.db.session_ctx():
+            dbr = self._get_preceeding_blank_or_background(inform=inform)
+            if not dbr is True:
+                if dbr is None:
+                    return
+                else:
+                    self.info('using {} as the previous blank'.format(dbr.record_id))
+                    self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
+                    self._prev_baselines = dbr.get_baseline_dict()
+
         if globalv.experiment_debug:
             self.debug('********************** NOT DOING PRE EXECUTE CHECK ')
             return True
@@ -810,15 +821,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
         if self._check_memory():
             return
-        with self.db.session_ctx():
-            dbr = self._get_preceeding_blank_or_background(inform=inform)
-            if not dbr is True:
-                if dbr is None:
-                    return
-                else:
-                    self.info('using {} as the previous blank'.format(dbr.record_id))
-#                    dbr.load_isotopes()
-                    self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
+
 
         if not self.massspec_importer.connect():
             if not self.confirmation_dialog('Not connected to a Mass Spec database. Do you want to continue with pychron only?'):
@@ -893,8 +896,9 @@ If "No" select from database
             q = q.join(gen_ExtractionDeviceTable)
 
             q = q.filter(gen_AnalysisTypeTable.name == 'blank_{}'.format(kind))
-            q = q.filter(gen_MassSpectrometerTable.name == ms)
-            q = q.filter(gen_ExtractionDeviceTable.name == ed)
+
+#             q = q.filter(gen_MassSpectrometerTable.name == ms)
+#             q = q.filter(gen_ExtractionDeviceTable.name == ed)
 
             dbr = None
             if last:
@@ -914,7 +918,7 @@ If "No" select from database
                     dbr = sel.selected
 
             if dbr:
-                dbr=self.make_analyses([dbr])[0]
+                dbr = self.make_analyses([dbr])[0]
 #                dbr = sel._record_factory(dbr)
                 return dbr
 

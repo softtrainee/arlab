@@ -337,7 +337,6 @@ class BaseManagerTask(BaseTask):
             if self.wildcard:
                 kw['wildcard'] = self.wildcard
 
-        print kw
         dialog = FileDialog(parent=self.window.control,
                             action=action,
                             **kw)

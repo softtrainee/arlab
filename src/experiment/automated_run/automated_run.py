@@ -57,6 +57,7 @@ from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import consumable
 from src.codetools.memory_usage import mem_log, measure_type, calc_growth
 from src.codetools.file_log import file_log
+from src.pyscripts.uv_extraction_line_pyscript import UVExtractionPyScript
 
 
 class ScriptInfo(HasTraits):
@@ -113,21 +114,11 @@ class AutomatedRun(Loggable):
     user_defined_aliquot = False
 
     state = Str('not run')
-#     state = Enum('not run', 'extraction',
-#                  'measurement', 'success',
-#                  'failed', 'truncated', 'canceled',
-#                  'invalid'
-#                  )
+    extract_device = Str
 
     ic_factor = Any
 
     scripts = Dict
-#     signals = Dict
-
-#     measurement_script = Property
-#     post_measurement_script = Property
-#     post_equilibration_script = Property
-#     extraction_script = Property
 
     measurement_script = Instance(MeasurementPyScript)
     post_measurement_script = Instance(ExtractionPyScript)
@@ -231,31 +222,33 @@ class AutomatedRun(Loggable):
             p.isotope_graph.clear_plots()
 
         p.show_isotope_graph()
+
+        for iso in self.arar_age.isotopes:
+            self.arar_age.set_isotope(iso, (0, 0))
+
         # set plot_panels, baselines, backgrounds
 
 #         p.baselines = baselines = self.experiment_manager._prev_baselines
 #         p.blanks = blanks = self.experiment_manager._prev_blanks
 #         p.baselines = baselines = self.experiment_manager.get_prev_baselines()
 #         p.blanks = blanks = self.experiment_manager.get_prev_blanks()
-        baselines = self.experiment_manager.get_prev_baselines()
-        blanks = self.experiment_manager.get_prev_blanks()
-
         # sync the arar_age object's signals
 #         if self._use_arar_age():
+
+        blanks = self.experiment_manager.get_prev_blanks()
         if not blanks:
             blanks = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
 
         for iso, v in blanks.iteritems():
             self.arar_age.set_blank(iso, v)
 
+        baselines = self.experiment_manager.get_prev_baselines()
         if not baselines:
             baselines = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
 
         for iso, v in baselines.iteritems():
             self.arar_age.set_baseline(iso, v)
 
-        for iso in self.arar_age.isotopes:
-            self.arar_age.set_isotope(iso, (0, 0))
 
         p.correct_for_blank = False
         p.correct_for_baseline = False
@@ -463,10 +456,10 @@ class AutomatedRun(Loggable):
                     if di.name != detector]
 
 #            self.peak_center = pc
-            pc=ion.setup_peak_center(detector=[detector] + ad,
+            pc = ion.setup_peak_center(detector=[detector] + ad,
                                      plot_panel=self.plot_panel,
                                      **kw)
-            self.peak_center=pc
+            self.peak_center = pc
 
             ion.do_peak_center(new_thread=False)
             if pc.result:
@@ -562,7 +555,7 @@ class AutomatedRun(Loggable):
             script = getattr(self, '{}_script'.format(s))
             if script is not None:
                 script.cancel()
-        
+
         self.debug('peak center {}'.format(self.peak_center))
         if self.peak_center:
             self.peak_center.cancel()
@@ -1053,7 +1046,7 @@ anaylsis_type={}
             if update_labels:
                 try:
                     # update the plot_panel labels
-                    for det, pi in zip(self._active_detectors, 
+                    for det, pi in zip(self._active_detectors,
                                        self.plot_panel.isotope_graph.plots):
                         pi.y_axis.title = '{} {} (fA)'.format(det.name, det.isotope)
                 except Exception, e:
@@ -1817,7 +1810,7 @@ anaylsis_type={}
             # add fit history
             dbhist = db.add_fit_history(analysis,
                                         user=self.spec.username)
-            
+
             key = lambda x: x[2]
             si = sorted(self._save_isotopes, key=key)
 
@@ -1826,13 +1819,13 @@ anaylsis_type={}
                 if det is None:
                     det = db.add_detector(detname)
                     db.sess.flush()
-                    
+
                 for iso, detname, kind in isos:
                     # add isotope
                     dbiso = db.add_isotope(analysis, iso, det,
                                            kind=kind)
                     db.sess.flush()
-                    
+
                     s = signals['{}{}'.format(iso, kind)]
 
                     # add signal data
@@ -2072,7 +2065,15 @@ anaylsis_type={}
 
     def _extraction_script_factory(self):
         root = paths.extraction_dir
-        return self._ext_factory(root, self.script_info.extraction_script_name)
+        klass = None
+        if self.extract_device == 'Fusions UV':
+            klass = UVExtractionPyScript
+            self.debug('{}'.format(self.extract_device))
+
+
+        return self._ext_factory(root, self.script_info.extraction_script_name,
+                                 klass=klass
+                                 )
 
     def _post_measurement_script_factory(self):
         root = paths.post_measurement_dir
@@ -2082,10 +2083,13 @@ anaylsis_type={}
         root = paths.post_equilibration_dir
         return self._ext_factory(root, self.script_info.post_equilibration_script_name)
 
-    def _ext_factory(self, root, file_name):
+    def _ext_factory(self, root, file_name, klass=None):
         file_name = self._make_script_name(file_name)
+
         if os.path.isfile(os.path.join(root, file_name)):
-            klass = ExtractionPyScript
+            if klass is None:
+                klass = ExtractionPyScript
+
             obj = klass(
                     root=root,
                     name=file_name,

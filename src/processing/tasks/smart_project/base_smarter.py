@@ -40,6 +40,7 @@ class BaseSmarter(Loggable):
                           meas_AnalysisTable.analysis_timestamp >= start,
                           meas_AnalysisTable.status == 0))
 
+#         print atypes
         q = q.filter(gen_AnalysisTypeTable.name.in_(atypes))
 
         return q.all()

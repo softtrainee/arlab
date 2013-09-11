@@ -31,6 +31,7 @@ from src.processing.analyses.db_summary import DBAnalysisSummary
 from src.experiment.utilities.identifier import make_runid
 # from src.constants import NULL_STR
 from src.processing.isotope import Isotope, Blank, Baseline, Sniff
+from src.constants import ARGON_KEYS
 
 Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_outlier_std_devs')
 
@@ -61,6 +62,7 @@ class DBAnalysis(Analysis):
     analysis_summary_klass = DBAnalysisSummary
     status = Int
     record_id = Str
+    uuid = Str
 
     sample = Str
     material = Str
@@ -73,19 +75,29 @@ class DBAnalysis(Analysis):
     extract_units = Str
     cleanup_duration = Float
     extract_duration = Float
+    analysis_type = Str
 
     ic_factors = Dict
+
     def get_baseline_corrected_signal_dict(self):
+        get = lambda iso: iso.baseline_corrected_value()
+        return self._get_isotope_dict(get)
+
+    def get_baseline_dict(self):
+        get = lambda iso: iso.baseline.uvalue
+        return self._get_isotope_dict(get)
+
+    def _get_isotope_dict(self, get):
         d = dict()
-        for ki in ['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']:
+        for ki in ARGON_KEYS:
             if self.isotopes.has_key(ki):
-                v = self.isotopes[ki].baseline_corrected_value()
+                v = get(self.isotopes[ki])
             else:
                 v = ufloat(0, 0)
-        
             d[ki] = v
-        
+
         return d
+
 
     def get_ic_factor(self, det):
         if det in self.ic_factors:
@@ -176,6 +188,7 @@ class DBAnalysis(Analysis):
                  ('step', 'step', str),
                  ('status', 'status', int),
                  ('comment', 'comment', str),
+                 ('uuid', 'uuid', str),
                  ('_timestamp', 'analysis_timestamp',
                     lambda x: time.mktime(x.timetuple())
                  ),
@@ -204,7 +217,7 @@ class DBAnalysis(Analysis):
         self.rundate = self._get_rundate(meas_analysis)
         self.runtime = self._get_runtime(meas_analysis)
         self.mass_spectrometer = self._get_mass_spectrometer(meas_analysis)
-
+        self.analysis_type = self._get_analysis_type(meas_analysis)
 
     def _sync_detector_info(self, meas_analysis):
         self.discrimination = self._get_discrimination(meas_analysis)
@@ -351,6 +364,12 @@ class DBAnalysis(Analysis):
 #===============================================================================
 #
 #===============================================================================
+    def _get_analysis_type(self, meas_analysis):
+        r = ''
+        if meas_analysis:
+            r = meas_analysis.measurement.analysis_type.name
+        return r
+
     def _get_mass_spectrometer(self, meas_analysis):
         return meas_analysis.measurement.mass_spectrometer.name.lower()
 
@@ -372,12 +391,12 @@ class DBAnalysis(Analysis):
         return m
 
     def _get_project(self, meas_analysis):
-        p=''
         ln = meas_analysis.labnumber
         sample = ln.sample
+        r = ''
         if sample and sample.project:
-            p=sample.project.name
-        return p
+            r = sample.project.name
+        return r
 
     def _get_rundate(self, meas_analysis):
         if meas_analysis.analysis_timestamp:
@@ -396,7 +415,7 @@ class DBAnalysis(Analysis):
 
 
     def _get_j(self, ln):
-        s,e=1,0
+        s, e = 1, 0
         if ln.selected_flux_history:
             f = ln.selected_flux_history.flux
             s = f.j
@@ -405,15 +424,14 @@ class DBAnalysis(Analysis):
 
     def _get_production_ratios(self, ln):
         lev = self._get_irradiation_level(ln)
-        cak=1
-        clk=1
+        cak = 1
+        clk = 1
         if lev:
             ir = lev.irradiation
             pr = ir.production
-            cak, clk=pr.Ca_K, pr.Cl_K
-            
+            cak, clk = pr.Ca_K, pr.Cl_K
+
         return dict(Ca_K=cak, Cl_K=clk)
-#        return dict(Ca_K=pr.Ca_K, Cl_K=pr.Cl_K)
 
     def _get_irradiation_level(self, ln):
         if ln:

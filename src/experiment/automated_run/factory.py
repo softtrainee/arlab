@@ -28,7 +28,8 @@ from src.experiment.utilities.identifier import SPECIAL_NAMES, SPECIAL_MAPPING, 
     convert_identifier, convert_special_name, ANALYSIS_MAPPING, NON_EXTRACTABLE, \
     make_special_identifier, make_standard_identifier
 from src.experiment.automated_run.spec import AutomatedRunSpec
-from src.regex import TRANSECT_REGEX, POSITION_REGEX
+from src.regex import TRANSECT_REGEX, POSITION_REGEX, SLICE_REGEX, PSLICE_REGEX, \
+    SSLICE_REGEX
 # from src.experiment.utilities.script_mixin import ScriptMixin
 from src.paths import paths
 from src.experiment.script.script import Script
@@ -50,7 +51,7 @@ class AutomatedRunFactory(Loggable):
     db = Any
 
     labnumber = String(enter_set=True, auto_set=False)
-
+    update_labnumber = Event
 #    aliquot = Property(Int(enter_set=True, auto_set=False), depends_on='_aliquot')
 #    _aliquot = Int
 #    o_aliquot = Int
@@ -85,7 +86,7 @@ class AutomatedRunFactory(Loggable):
 
     position = Property(depends_on='_position')
     _position = Str
-    endposition = Int
+#     endposition = Int
 
     #===========================================================================
     # extract
@@ -241,15 +242,6 @@ class AutomatedRunFactory(Loggable):
             self.edit_enabled = False
             self.edit_mode = True
 
-    def _make_short_labnumber(self, labnumber=None):
-        if labnumber is None:
-            labnumber = self.labnumber
-        if '-' in labnumber:
-            labnumber = labnumber.split('-')[0]
-
-        special = labnumber in ANALYSIS_MAPPING
-        return labnumber, special
-
     def new_runs(self, positions=None, auto_increment_position=False,
                     auto_increment_id=False,
                     extract_group_cnt=0):
@@ -271,22 +263,35 @@ class AutomatedRunFactory(Loggable):
             self.labnumber = self._increment(self.labnumber)
 
         if auto_increment_position:
-            if self.position:
+            pos = self.position
+            if pos:
                 increment = 1
-                if ',' in self.position:
-                    spos = map(int, self.position.split(','))
+#                 s, e = 0, 0
+                if ',' in pos:
+                    spos = map(int, pos.split(','))
                     increment = spos[-1] - spos[0] + 1
-                    s = spos[-1]
+                    self.position = self._increment(pos, increment)
                 else:
-                    s = int(self.position)
+                    s = None
+                    if SLICE_REGEX.match(pos):
+                        s, e = map(int, pos.split('-'))
+                    elif SSLICE_REGEX.match(pos) or PSLICE_REGEX.match(pos):
+                        s, e = map(int, pos.split(':'))[:2]
 
-                e = int(self.endposition)
-                if e:
-                    self.position = str(e + 1)
-                else:
-                    self.position = self._increment(self.position, increment=increment)
-                if self.endposition:
-                    self.endposition = 2 * e + 1 - s
+                    if s is not None:
+                        d = e - s
+                        ns = e + 1
+                        ne = ns + d
+                        self.position = '{}-{}'.format(ns, ne)
+
+#                 e = int(self.endposition)
+#                 if e:
+#                     self.position = str(e + 1)
+#                 else:
+#                     self.position = self._increment(self.position, increment=increment)
+#
+#                 if self.endposition:
+#                     self.endposition = 2 * e + 1 - s
 
 
         return arvs, freq
@@ -308,6 +313,15 @@ class AutomatedRunFactory(Loggable):
 #===============================================================================
 # private
 #===============================================================================
+    def _make_short_labnumber(self, labnumber=None):
+        if labnumber is None:
+            labnumber = self.labnumber
+        if '-' in labnumber:
+            labnumber = labnumber.split('-')[0]
+
+        special = labnumber in ANALYSIS_MAPPING
+        return labnumber, special
+
     def _new_pattern(self):
         pm = PatternMakerView()
 
@@ -344,46 +358,98 @@ class AutomatedRunFactory(Loggable):
 #        self._extract_group_cnt += 1
         return arvs
 
+    def _new_runs_by_position(self):
+        pos = self.position
+
+        arvs = []
+        s = None
+        inc = 1
+        if SLICE_REGEX.match(pos):
+            s, e = map(int, pos.split('-'))
+        elif SSLICE_REGEX.match(pos):
+            s, e, inc = map(int, pos.split(':'))
+        elif PSLICE_REGEX.match(pos):
+            s, e = map(int, pos.split(':'))[:2]
+
+        if s is not None:
+            if e < s:
+                self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
+                return
+
+            for i in range(0, e - s + 1, inc):
+                arvs.append(self._new_run(position=str(s + i), excludes=['position']))
+                '''
+                    clear user_defined_aliquot flag
+                    if adding multiple runs this allows
+                    the subsequent runs to have there aliquots defined by db
+                '''
+                self.user_defined_aliquot = False
+
+        return arvs
+
     def _new_runs(self, positions):
-        s = 0
-        e = 0
+#         s = 0
+#         e = 0
         _ln, special = self._make_short_labnumber()
-        if special:
-            arvs = [self._new_run()]
-        else:
+        arvs = None
+        if not special:
             if positions:
                 arvs = [self._new_run(position=pi, excludes=['position'])
                                         for pi in positions]
             elif self.position:
+                arvs = self._new_runs_by_position()
 
-                # is position a int or list of ints
-                if ',' in self.position:
-                    s = int(self.position.split(',')[0])
-                else:
-                    s = int(self.position)
-                    e = int(self.endposition)
+        if arvs is None:
+            arvs = [self._new_run]
 
-                if e:
-                    if e < s:
-                        self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
-                        return
-                    arvs = []
-                    for i in range(e - s + 1):
-    #                    ar.position = str(s + i)
-                        position = str(s + i)
-                        arvs.append(self._new_run(position=position, excludes=['position']))
-                        '''
-                            clear user_defined_aliquot flag
-                            if adding multiple runs this allows 
-                            the subsequent runs to have there aliquots defined by db
-                        '''
-                        self.user_defined_aliquot = False
-
-                else:
-                    arvs = [self._new_run()]
-            else:
-                arvs = [self._new_run()]
         return arvs
+
+
+
+
+#         arvs = [self._new_run()]
+#         if special:
+#             arvs = [self._new_run()]
+#         else:
+#             if positions:
+#                 arvs = [self._new_run(position=pi, excludes=['position'])
+#                                         for pi in positions]
+#             elif self.position:
+#                 pos = self.position
+#                 if self._is_named_position(pos):
+#                     arvs = [self._new_run()]
+#
+#
+# #                 pos = self.position
+# #                 if not self._is_named_position(pos):
+# #                     # is position a int or list of ints
+# #                     if ',' in pos:
+# #                         s = int(pos.split(',')[0])
+# #                     else:
+# #                         s = int(pos)
+# #                         e = int(self.endposition)
+# #                 s, e = self._get_position_start_end()
+#
+# #                 if e:
+# #                     if e < s:
+# #                         self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
+# #                         return
+# #                     arvs = []
+# #                     for i in range(e - s + 1):
+# #                         arvs.append(self._new_run(position=str(s + i), excludes=['position']))
+# #                         '''
+# #                             clear user_defined_aliquot flag
+# #                             if adding multiple runs this allows
+# #                             the subsequent runs to have there aliquots defined by db
+# #                         '''
+# #                         self.user_defined_aliquot = False
+#
+# #                 else:
+# #                     arvs = [self._new_run()]
+# #             else:
+# #                 arvs = [self._new_run()]
+#
+#         return arvs
 
     def _increment(self, m, increment=1):
 
@@ -508,176 +574,9 @@ class AutomatedRunFactory(Loggable):
 
                 self.labnumber = self.labnumber.replace('##', str(mod))
 
-
-#===============================================================================
-# handlers
-#===============================================================================
-    def _extract_group_button_fired(self):
-        if self.edit_mode and \
-            self._selected_runs and \
-                not self.suppress_update:
-
-            eg = self._selected_runs[0].extract_group + 1
-            self.extract_group = eg
-
-    @on_trait_change('trunc_+, truncation_path')
-    def _edit_truncation(self, obj, trait, name, new):
-
-        if self.edit_mode and\
-             self._selected_runs and \
-                not self.suppress_update:
-
-            if name == 'truncation_path':
-                t = add_extension(new, '.yaml') if new else None
-            else:
-                t = self.truncation_str
-
-            if t:
-                for s in self._selected_runs:
-                    s.truncate_condition = t
-
-            self.changed = True
-            self.refresh_table_needed = True
-    @on_trait_change('''cleanup, duration, extract_value,ramp_duration,
-extract_units,
-pattern,
-position,
-weight, comment, skip, end_after, extract_group''')
-    def _edit_handler(self, name, new):
-        self._update_run_values(name, new)
-
-    @on_trait_change('''measurement_script:name, 
-extraction_script:name, 
-post_measurement_script:name,
-post_equilibration_script:name
-    ''')
-    def _edit_script_handler(self, obj, name, new):
-        if self.edit_mode and not self.suppress_update:
-            if obj.label == 'Extraction':
-                self._load_extraction_info(obj)
-
-            if self._selected_runs:
-                for si in self._selected_runs:
-                    name = '{}_script'.format(obj.label)
-                    setattr(si, name, new)
-            self.changed = True
-            self.refresh_table_needed = True
-
-    def _skip_changed(self):
-        self.update_info_needed = True
-
-    def __labnumber_changed(self):
-        if self._labnumber != NULL_STR:
-            self.labnumber = self._labnumber
-            self.edit_mode = True
-
-    def _project_changed(self):
-        self._clear_labnumber()
-
-    def _selected_irradiation_changed(self):
-        self._clear_labnumber()
-
-    def _selected_level_changed(self):
-        self._clear_labnumber()
-
     def _clear_labnumber(self):
         self.labnumber = ''
         self._labnumber = NULL_STR
-
-    def _special_labnumber_changed(self):
-        if not self.special_labnumber in ('Special Labnumber', LINE_STR):
-            ln = convert_special_name(self.special_labnumber)
-            if ln:
-                if ln in ('dg', 'pa'):
-                    pass
-                else:
-                    db = self.db
-                    if not db:
-                        return
-                    with db.session_ctx():
-                        ms = db.get_mass_spectrometer(self.mass_spectrometer)
-                        ed = db.get_extraction_device(self.extract_device)
-                        if ln in ('a', 'ba', 'c', 'bc'):
-                            ln = make_standard_identifier(ln, '##', ms.name[0].capitalize())
-                        else:
-                            msname = ms.name[0].capitalize()
-                            edname = ''.join(map(lambda x:x[0].capitalize(), ed.name.split(' ')))
-                            ln = make_special_identifier(ln, edname, msname)
-
-                self.labnumber = ln
-                self._load_extraction_info()
-
-                self._labnumber = NULL_STR
-            self._frequency_enabled = True
-            self.edit_mode = True
-#            self.clear_selection = True
-        else:
-            self._frequency_enabled = False
-
-    def _labnumber_changed(self, old, new):
-        labnumber = self.labnumber
-        if not labnumber or labnumber == NULL_STR:
-            return
-
-        db = self.db
-        if not db:
-            return
-
-        special = False
-        try:
-            _ = int(labnumber)
-        except ValueError:
-            special = True
-
-        # if labnumber has a place holder load default script and return
-        if '##' in labnumber:
-            self._load_scripts(old, new)
-            return
-
-        self.irradiation = ''
-        self.sample = ''
-
-        self._aliquot = 0
-        if labnumber:
-            with db.session_ctx():
-                # convert labnumber (a, bg, or 10034 etc)
-                ln = db.get_labnumber(labnumber)
-                if ln:
-                    # set sample and irrad info
-                    try:
-                        self.sample = ln.sample.name
-                    except AttributeError:
-                        pass
-
-                    try:
-                        a = int(ln.analyses[-1].aliquot + 1)
-                    except IndexError, e:
-                        a = 1
-
-                    self._aliquot = a
-
-                    self.irradiation = self._make_irrad_level(ln)
-                    self._load_scripts(old, new)
-
-                elif special:
-                    ln = labnumber[:2]
-                    if ln == 'dg':
-                        self._load_extraction_defaults(ln)
-
-                    if not (ln in ('pa', 'dg')):
-                        '''
-                            don't add pause or degas to database
-                        '''
-                        if self.confirmation_dialog('Lab Identifer {} does not exist. Would you like to add it?'.format(labnumber)):
-                            db.add_labnumber(labnumber)
-                            self._aliquot = 1
-                            self._load_scripts(old, new)
-                        else:
-                            self.labnumber = ''
-                    else:
-                        self._load_scripts(old, new)
-                else:
-                    self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 
     def _template_closed(self):
         self.load_templates()
@@ -691,237 +590,11 @@ post_equilibration_script:name
 #         self.pattern = os.path.splitext(self._pattern.name)[0]
         del self._pattern
 
-
-    def _edit_template_fired(self):
-        temp = self._new_template()
-        temp.on_trait_change(self._template_closed, 'close_event')
-        self.open_view(temp)
-        self._template = temp
-
-    def _edit_pattern_fired(self):
-        pat = self._new_pattern()
-        pat.on_trait_change(self._pattern_closed, 'close_event')
-        self.open_view(pat)
-        self._pattern = pat
-
-    def _edit_mode_button_fired(self):
-        self.edit_mode = not self.edit_mode
-#===============================================================================
-# property get/set
-#===============================================================================
-    def _get_edit_mode_label(self):
-        return 'Editing' if self.edit_mode else ''
-
-    def _get_extractable(self):
-        ln = self.labnumber
-        if '-' in ln:
-            ln = ln.split('-')[0]
-
-        return not ln in NON_EXTRACTABLE
-
-    @cached_property
-    def _get_irradiations(self):
-#        return {'a':'1:xxx','g':'2:bbb',}
-#         if self.db:
-#             keys = [(pi, pi.name) for pi in self.db.get_irradiations()]
-#             keys = [(a, '{:02n}:{}'.format(i + 2, b)) for i, (a, b) in enumerate(keys)]
-#             keys = [
-#                     ('Irradiation', '00:Irradiation'.format(NULL_STR)),
-#                     (LINE_STR, '01:{}'.format(LINE_STR)),
-#                     ] + keys
-#             return dict(keys)
-#         else:
-#             return dict()
-
-        irradiations = []
-        if self.db:
-            irradiations = [pi.name for pi in self.db.get_irradiations()]
-
-        return ['Irradiation', LINE_STR] + irradiations
-
-    @cached_property
-    def _get_levels(self):
-        levels = []
-        if self.db:
-            with self.db.session_ctx():
-                if not self.selected_irradiation in ('IRRADIATION', LINE_STR):
-                    irrad = self.db.get_irradiation(self.selected_irradiation)
-                    if irrad:
-                        levels = sorted([li.name for li in irrad.levels])
-        if levels:
-            self.selected_level = levels[0] if levels else 'LEVEL'
-
-        return ['Level', LINE_STR] + levels
-#         if self.db:
-#             r = [
-#                  ('Level', '00:Level'.format(NULL_STR)),
-#                  (LINE_STR, '01:{}'.format(LINE_STR)),
-#                  ]
-
-#             if self.selected_irradiation and self.selected_irradiation != 'Irradiation':
-#                 irrad = self.db.get_irradiation(self.selected_irradiation)
-#                 if irrad:
-#                     rr = sorted(((pi, pi.name) for pi in irrad.levels), key=lambda p: p[1])
-#                     rr = [(a, '{:02n}:{}'.format(i + 1, b)) for i, (a, b) in enumerate(rr)]
-#                     r.extend(rr)
-#
-#             return dict(r)
-#         else:
-#             return dict()
-
-    @cached_property
-    def _get_projects(self):
-
-        if self.db:
-            keys = [(pi, pi.name) for pi in self.db.get_projects()]
-            keys = [(NULL_STR, NULL_STR)] + keys
-            return dict(keys)
-        else:
-            return dict()
-
-    @cached_property
-    def _get_labnumbers(self):
-        lns = []
-        db = self.db
-        if db:
-            with db.session_ctx():
-                if self.selected_level and not self.selected_level in ('Level', LINE_STR):
-                    level = db.get_irradiation_level(self.selected_irradiation,
-                                                     self.selected_level)
-                    if level:
-                        lns = [str(pi.labnumber.identifier)
-                            for pi in level.positions]
-
-
-        return sorted(lns)
-#         if self.selected_level and not self.selected_level in ('Level', LINE_STR):
-#             lns = [str(pi.labnumber.identifier)
-#                     for pi in self.selected_level.positions]
-
-#         project = self.project
-#         if project and project != NULL_STR:
-#             project = self.db.get_project(project)
-#             if project is not None:
-#                 lns = [str(ln.identifier)
-#                     for s in project.samples
-#                         for ln in s.labnumbers]
-#         return sorted(lns)
-#        return [NULL_STR] + sorted(lns)
-
-    def _get_position(self):
-        return self._position
-
-    def _set_position(self, pos):
-        self._position = pos
-
-    def _get_info_label(self):
-        return '{} {} {}'.format(self.labnumber, self.irradiation, self.sample)
-
-    def _validate_position(self, pos):
-        if not pos.strip():
-            return ''
-
-        ps = pos.split(',')
-#        try:
-        ok = False
-        for pi in ps:
-            if not pi:
-                continue
-
-            ok = False
-            if TRANSECT_REGEX.match(pi):
-                ok = True
-
-            elif POSITION_REGEX.match(pi):
-                ok = True
-
-        if not ok:
-            pos = self._position
-        return pos
-
-    def _validate_extract_value(self, d):
-        return self._validate_float(d)
-
-    def _validate_float(self, d):
-        try:
-            return float(d)
-        except ValueError:
-            pass
-
-    def _get_extract_value(self):
-        return self._extract_value
-
-    def _set_extract_value(self, t):
-        if t is not None:
-            self._extract_value = t
-            if not t:
-                self.extract_units = NULL_STR
-            elif self.extract_units == NULL_STR:
-                self.extract_units = self._default_extract_units
-        else:
-            self.extract_units = NULL_STR
-
-    def _get_edit_pattern_label(self):
-        return 'Edit' if self._use_pattern() else 'New'
-
     def _use_pattern(self):
         return self.pattern and not self.pattern in (LINE_STR,)
 
     def _use_template(self):
         return self.template and not self.template in ('Step Heat Template', LINE_STR)
-
-    def _get_edit_template_label(self):
-        return 'Edit' if self._use_template() else 'New'
-
-    def _get_patterns(self, ps):
-        p = paths.pattern_dir
-        extension = '.lp'
-        patterns = list_directory(p, extension)
-        return ['', ] + ps + [LINE_STR] + patterns
-
-    def _get_templates(self):
-        p = paths.incremental_heat_template_dir
-        extension = '.txt'
-        temps = list_directory(p, extension)
-        if self.template in temps:
-            self.template = temps[temps.index(self.template)]
-        else:
-            self.template = 'Step Heat Template'
-
-        return ['Step Heat Template', LINE_STR] + temps
-
-    def _get_truncations(self):
-        p = paths.truncation_dir
-        extension = '.yaml'
-        temps = list_directory(p, extension)
-        return ['', ] + temps
-
-    def _aliquot_changed(self):
-        if self.edit_mode:
-            for si in self._selected_runs:
-                if si.aliquot != self.aliquot:
-                    si.user_defined_aliquot = True
-                    si.assigned_aliquot = int(self.aliquot)
-#                else:
-#                    si.user_defined_aliquot = self.user_defined_aliquot
-#
-#                if si.user_defined_aliquot:
-#                    si.aliquot = int(self.aliquot)
-
-            self.update_info_needed = True
-
-    def _get_beam_diameter(self):
-        bd = ''
-        if self._beam_diameter is not None:
-            bd = self._beam_diameter
-        return bd
-
-    def _set_beam_diameter(self, v):
-        try:
-            self._beam_diameter = float(v)
-            self._update_run_values('beam_diameter', self._beam_diameter)
-        except (ValueError, TypeError):
-            pass
 
     def _update_run_values(self, attr, v):
         def func():
@@ -944,40 +617,6 @@ post_equilibration_script:name
             t = Thread(target=func)
             self._update_thread = t
             t.start()
-
-    def _get_truncation_str(self):
-        if self.trunc_attr is not None and\
-            self.trunc_comp is not None and \
-                self.trunc_crit is not None:
-            return '{}{}{}, {}'.format(self.trunc_attr, self.trunc_comp,
-                                       self.trunc_crit, self.trunc_start)
-
-    @cached_property
-    def _get_flux(self):
-        return self._get_flux_from_db()
-
-    @cached_property
-    def _get_flux_error(self):
-        return self._get_flux_from_db(attr='j_err')
-
-    def _get_flux_from_db(self, attr='j'):
-        j = 0
-        if self.labnumber:
-            with self.db.session_ctx():
-                dbln = self.db.get_labnumber(self.labnumber)
-                if dbln:
-                    if dbln.selected_flux_history:
-                        f = dbln.selected_flux_history.flux
-                        j = getattr(f, attr)
-        return j
-
-    def _set_flux(self, a):
-        if self.labnumber and a is not None:
-            self._flux = a
-
-    def _set_flux_error(self, a):
-        if self.labnumber and a is not None:
-            self._flux_error = a
 
     def _save_flux(self):
         if self._flux is None and self._flux_error is None:
@@ -1090,10 +729,391 @@ post_equilibration_script:name
         defaults = dict([(k.lower(), v) for k, v in defaults.iteritems()])
         return defaults
 
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_edit_mode_label(self):
+        return 'Editing' if self.edit_mode else ''
+
+    def _get_extractable(self):
+        ln = self.labnumber
+        if '-' in ln:
+            ln = ln.split('-')[0]
+
+        return not ln in NON_EXTRACTABLE
+
+    @cached_property
+    def _get_irradiations(self):
+        irradiations = []
+        if self.db:
+            irradiations = [pi.name for pi in self.db.get_irradiations()]
+
+        return ['Irradiation', LINE_STR] + irradiations
+
+    @cached_property
+    def _get_levels(self):
+        levels = []
+        if self.db:
+            with self.db.session_ctx():
+                if not self.selected_irradiation in ('IRRADIATION', LINE_STR):
+                    irrad = self.db.get_irradiation(self.selected_irradiation)
+                    if irrad:
+                        levels = sorted([li.name for li in irrad.levels])
+        if levels:
+            self.selected_level = levels[0] if levels else 'LEVEL'
+
+        return ['Level', LINE_STR] + levels
+
+    @cached_property
+    def _get_projects(self):
+
+        if self.db:
+            keys = [(pi, pi.name) for pi in self.db.get_projects()]
+            keys = [(NULL_STR, NULL_STR)] + keys
+            return dict(keys)
+        else:
+            return dict()
+
+    @cached_property
+    def _get_labnumbers(self):
+        lns = []
+        db = self.db
+        if db:
+            with db.session_ctx():
+                if self.selected_level and not self.selected_level in ('Level', LINE_STR):
+                    level = db.get_irradiation_level(self.selected_irradiation,
+                                                     self.selected_level)
+                    if level:
+                        lns = [str(pi.labnumber.identifier)
+                            for pi in level.positions]
+
+
+        return sorted(lns)
+
+    def _get_position(self):
+        return self._position
+
+    def _set_position(self, pos):
+        self._position = pos
+
+    def _get_info_label(self):
+        return '{} {} {}'.format(self.labnumber, self.irradiation, self.sample)
+
+    def _validate_position(self, pos):
+        if not pos.strip():
+            return ''
+
+        for r in (SLICE_REGEX, SSLICE_REGEX, PSLICE_REGEX):
+            if r.match(pos):
+                return pos
+        else:
+            ps = pos.split(',')
+
+            ok = False
+            for pi in ps:
+                ok = False
+                if not pi:
+                    break
+
+                if TRANSECT_REGEX.match(pi):
+                    ok = True
+
+                elif POSITION_REGEX.match(pi):
+                    ok = True
+        if ok:
+            return pos
+
+    def _validate_extract_value(self, d):
+        return self._validate_float(d)
+
+    def _validate_float(self, d):
+        try:
+            return float(d)
+        except ValueError:
+            pass
+
+    def _get_extract_value(self):
+        return self._extract_value
+
+    def _set_extract_value(self, t):
+        if t is not None:
+            self._extract_value = t
+            if not t:
+                self.extract_units = NULL_STR
+            elif self.extract_units == NULL_STR:
+                self.extract_units = self._default_extract_units
+        else:
+            self.extract_units = NULL_STR
+
+    def _get_edit_pattern_label(self):
+        return 'Edit' if self._use_pattern() else 'New'
+
+    def _get_edit_template_label(self):
+        return 'Edit' if self._use_template() else 'New'
+
+    def _get_patterns(self, ps):
+        p = paths.pattern_dir
+        extension = '.lp'
+        patterns = list_directory(p, extension)
+        return ['', ] + ps + [LINE_STR] + patterns
+
+    def _get_templates(self):
+        p = paths.incremental_heat_template_dir
+        extension = '.txt'
+        temps = list_directory(p, extension)
+        if self.template in temps:
+            self.template = temps[temps.index(self.template)]
+        else:
+            self.template = 'Step Heat Template'
+
+        return ['Step Heat Template', LINE_STR] + temps
+
+    def _get_truncations(self):
+        p = paths.truncation_dir
+        extension = '.yaml'
+        temps = list_directory(p, extension)
+        return ['', ] + temps
+
+    def _get_beam_diameter(self):
+        bd = ''
+        if self._beam_diameter is not None:
+            bd = self._beam_diameter
+        return bd
+
+    def _set_beam_diameter(self, v):
+        try:
+            self._beam_diameter = float(v)
+            self._update_run_values('beam_diameter', self._beam_diameter)
+        except (ValueError, TypeError):
+            pass
+
+    def _get_truncation_str(self):
+        if self.trunc_attr is not None and\
+            self.trunc_comp is not None and \
+                self.trunc_crit is not None:
+            return '{}{}{}, {}'.format(self.trunc_attr, self.trunc_comp,
+                                       self.trunc_crit, self.trunc_start)
+
+    @cached_property
+    def _get_flux(self):
+        return self._get_flux_from_db()
+
+    @cached_property
+    def _get_flux_error(self):
+        return self._get_flux_from_db(attr='j_err')
+
+    def _get_flux_from_db(self, attr='j'):
+        j = 0
+        if self.labnumber:
+            with self.db.session_ctx():
+                dbln = self.db.get_labnumber(self.labnumber)
+                if dbln:
+                    if dbln.selected_flux_history:
+                        f = dbln.selected_flux_history.flux
+                        j = getattr(f, attr)
+        return j
+
+    def _set_flux(self, a):
+        if self.labnumber and a is not None:
+            self._flux = a
+
+    def _set_flux_error(self, a):
+        if self.labnumber and a is not None:
+            self._flux_error = a
 
 #===============================================================================
-#
+# handlers
 #===============================================================================
+    def _extract_group_button_fired(self):
+        if self.edit_mode and \
+            self._selected_runs and \
+                not self.suppress_update:
+
+            eg = self._selected_runs[0].extract_group + 1
+            self.extract_group = eg
+
+    @on_trait_change('trunc_+, truncation_path')
+    def _edit_truncation(self, obj, trait, name, new):
+
+        if self.edit_mode and\
+             self._selected_runs and \
+                not self.suppress_update:
+
+            if name == 'truncation_path':
+                t = add_extension(new, '.yaml') if new else None
+            else:
+                t = self.truncation_str
+
+            if t:
+                for s in self._selected_runs:
+                    s.truncate_condition = t
+
+            self.changed = True
+            self.refresh_table_needed = True
+    @on_trait_change('''cleanup, duration, extract_value,ramp_duration,
+extract_units,
+pattern,
+position,
+weight, comment, skip, end_after, extract_group''')
+    def _edit_handler(self, name, new):
+        self._update_run_values(name, new)
+
+    @on_trait_change('''measurement_script:name, 
+extraction_script:name, 
+post_measurement_script:name,
+post_equilibration_script:name
+    ''')
+    def _edit_script_handler(self, obj, name, new):
+        if self.edit_mode and not self.suppress_update:
+            if obj.label == 'Extraction':
+                self._load_extraction_info(obj)
+
+            if self._selected_runs:
+                for si in self._selected_runs:
+                    name = '{}_script'.format(obj.label)
+                    setattr(si, name, new)
+            self.changed = True
+            self.refresh_table_needed = True
+
+    def _skip_changed(self):
+        self.update_info_needed = True
+
+    def __labnumber_changed(self):
+        if self._labnumber != NULL_STR:
+            self.labnumber = self._labnumber
+            self.edit_mode = True
+
+    def _project_changed(self):
+        self._clear_labnumber()
+
+    def _selected_irradiation_changed(self):
+        self._clear_labnumber()
+
+    def _selected_level_changed(self):
+        self._clear_labnumber()
+
+
+    def _special_labnumber_changed(self):
+        if not self.special_labnumber in ('Special Labnumber', LINE_STR):
+            ln = convert_special_name(self.special_labnumber)
+            if ln:
+                if ln in ('dg', 'pa'):
+                    pass
+                else:
+                    db = self.db
+                    if not db:
+                        return
+                    with db.session_ctx():
+                        ms = db.get_mass_spectrometer(self.mass_spectrometer)
+                        ed = db.get_extraction_device(self.extract_device)
+                        if ln in ('a', 'ba', 'c', 'bc'):
+                            ln = make_standard_identifier(ln, '##', ms.name[0].capitalize())
+                        else:
+                            msname = ms.name[0].capitalize()
+                            edname = ''.join(map(lambda x:x[0].capitalize(), ed.name.split(' ')))
+                            ln = make_special_identifier(ln, edname, msname)
+
+                self.labnumber = ln
+                self._load_extraction_info()
+
+                self._labnumber = NULL_STR
+            self._frequency_enabled = True
+            self.edit_mode = True
+#            self.clear_selection = True
+        else:
+            self._frequency_enabled = False
+
+    def _labnumber_changed(self, old, labnumber):
+#         print old, new, id(self)
+#         labnumber = self.labnumber
+        if not labnumber or labnumber == NULL_STR:
+            return
+
+        db = self.db
+        if not db:
+            return
+        self.update_labnumber = labnumber
+
+        special = False
+        try:
+            _ = int(labnumber)
+        except ValueError:
+            special = True
+
+        # if labnumber has a place holder load default script and return
+        if '##' in labnumber:
+            self._load_scripts(old, labnumber)
+            return
+
+        self.irradiation = ''
+        self.sample = ''
+
+        self._aliquot = 0
+        if labnumber:
+            with db.session_ctx():
+                # convert labnumber (a, bg, or 10034 etc)
+                ln = db.get_labnumber(labnumber)
+                if ln:
+                    # set sample and irrad info
+                    try:
+                        self.sample = ln.sample.name
+                    except AttributeError:
+                        pass
+
+                    try:
+                        a = int(ln.analyses[-1].aliquot + 1)
+                    except IndexError, e:
+                        a = 1
+
+                    self._aliquot = a
+
+                    self.irradiation = self._make_irrad_level(ln)
+                    self._load_scripts(old, labnumber)
+
+                elif special:
+                    ln = labnumber[:2]
+                    if ln == 'dg':
+                        self._load_extraction_defaults(ln)
+
+                    if not (ln in ('pa', 'dg')):
+                        '''
+                            don't add pause or degas to database
+                        '''
+                        if self.confirmation_dialog('Lab Identifer {} does not exist. Would you like to add it?'.format(labnumber)):
+                            db.add_labnumber(labnumber)
+                            self._aliquot = 1
+                            self._load_scripts(old, labnumber)
+                        else:
+                            self.labnumber = ''
+                    else:
+                        self._load_scripts(old, labnumber)
+                else:
+                    self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
+
+    def _edit_template_fired(self):
+        temp = self._new_template()
+        temp.on_trait_change(self._template_closed, 'close_event')
+        self.open_view(temp)
+        self._template = temp
+
+    def _edit_pattern_fired(self):
+        pat = self._new_pattern()
+        pat.on_trait_change(self._pattern_closed, 'close_event')
+        self.open_view(pat)
+        self._pattern = pat
+
+    def _edit_mode_button_fired(self):
+        self.edit_mode = not self.edit_mode
+
+    def _aliquot_changed(self):
+        if self.edit_mode:
+            for si in self._selected_runs:
+                if si.aliquot != self.aliquot:
+                    si.user_defined_aliquot = True
+                    si.assigned_aliquot = int(self.aliquot)
+
+            self.update_info_needed = True
+
     def _edit_mode_changed(self):
         if self.edit_mode:
             self._load_default_scripts(self.labnumber)
@@ -1113,6 +1133,9 @@ post_equilibration_script:name
             script = getattr(self, si)
             setattr(script, name, new)
 
+#===============================================================================
+# defaults
+#===============================================================================
     def _script_factory(self, label, name, kind='ExtractionLine'):
         return Script(label=label,
 #                      names=getattr(self, '{}_scripts'.format(name)),
@@ -1121,7 +1144,6 @@ post_equilibration_script:name
                       kind=kind,
 #                       can_edit=self.can_edit
                       )
-
     def _extraction_script_default(self):
         return self._script_factory('Extraction', 'extraction')
 
