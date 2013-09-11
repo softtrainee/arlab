@@ -18,7 +18,7 @@
 from traits.api import Color, Instance
 from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
     ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label, InstanceEditor, \
-    CheckListEditor
+    CheckListEditor, VSplit
 # from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from src.experiment.utilities.identifier import SPECIAL_NAMES
@@ -30,6 +30,8 @@ from src.constants import MEASUREMENT_COLOR, EXTRACTION_COLOR, \
 from src.ui.custom_label_editor import CustomLabel
 from src.paths import paths
 from pyface.image_resource import ImageResource
+from src.experiment.plot_panel import PlotPanel
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -504,13 +506,23 @@ class ExplanationPane(TraitsDockPane):
 class IsotopeEvolutionPane(TraitsDockPane):
     id = 'pychron.experiment.isotope_evolution'
     name = 'Isotope Evolutions'
-    plot_panel = Instance('src.experiment.plot_panel.PlotPanel')
+    plot_panel = Instance(PlotPanel, ())
     def traits_view(self):
-        v = View(UItem('plot_panel',
-#                        editor=InstanceEditor(view='graph_view'),
-                       style='custom',
-                       width=600
-                       ),
+        v = View(
+                 VSplit(
+                        UItem('object.plot_panel.graph_container',
+                              style='custom',
+                              height=0.75),
+                        UItem('object.plot_panel.display_container',
+                              style='custom',
+                              height=0.25),
+                        )
+
+#                  UItem('plot_panel',
+# #                        editor=InstanceEditor(view='graph_view'),
+#                        style='custom',
+#                        width=600
+#                        ),
 
                  )
         return v

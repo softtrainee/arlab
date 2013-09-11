@@ -1085,7 +1085,7 @@ class Graph(Viewable, ContextMenuMixin):
                      padding=5,
 #                     padding=[40, 10, 60, 10],
                      fill_padding=True,
-                     use_backbuffer=True
+#                      use_backbuffer=True
                      )
 
         for k in options:

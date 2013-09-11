@@ -168,6 +168,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         '''
             fired when the index metadata changes e.i user selection
         '''
+#         print obj, name, old, new
         sel = obj.metadata.get('selections', None)
 #
         if sel:
@@ -201,18 +202,18 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 self.regressors.append(None)
                 return
 
-            args = self._regress(plot, scatter, line)
+            self._regress(plot, scatter, line)
 
-            if args:
-                r, fx, fy, ly, uy = args
-                line.index.set_data(fx)
-                line.value.set_data(fy)
-                if hasattr(line, 'error_envelope'):
-                    line.error_envelope.lower = ly
-                    line.error_envelope.upper = uy
-                    line.error_envelope.invalidate()
+#             if args:
+#                 r, fx, fy, ly, uy = args
+#                 line.index.set_data(fx)
+#                 line.value.set_data(fy)
+#                 if hasattr(line, 'error_envelope'):
+#                     line.error_envelope.lower = ly
+#                     line.error_envelope.upper = uy
+#                     line.error_envelope.invalidate()
 
-                self.regressors.append(r)
+#                 self.regressors.append(r)
 
         except KeyError:
             pass
@@ -287,18 +288,31 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         low = plot.index_range.low
         high = plot.index_range.high
         fx = linspace(low, high, 50)
-
+#         fy, ly, uy = y, y, y
         fy = r.predict(fx)
-        ci = r.calculate_ci(fx)
-        if ci is not None:
-            ly, uy = ci
-        else:
-            ly, uy = fy, fy
-
         if line:
             line.regressor = r
+            line.index.set_data(fx)
+            line.value.set_data(fy)
+            if hasattr(line, 'error_envelope'):
+                ci = r.calculate_ci(fx, fy)
+                if ci is not None:
+                    ly, uy = ci
+                else:
+                    ly, uy = fy, fy
 
-        return r, fx, fy, ly, uy
+                line.error_envelope.lower = ly
+                line.error_envelope.upper = uy
+                line.error_envelope.invalidate()
+
+        self.regressors.append(r)
+
+
+#                 if hasattr(line, 'error_envelope'):
+#                     line.error_envelope.lower = ly
+#                     line.error_envelope.upper = uy
+#                     line.error_envelope.invalidate()
+#         return r  # , fx, fy, ly, uy
 
     def _least_square_regress(self, r, x, y, ox, oy, index,
                       fit, fod, apply_filter):
@@ -512,6 +526,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                    fx=None, fy=None,
                    fit='linear',
                    filter_outliers_dict=None,
+                   use_error_envelope=True,
 #                   filter_outliers=True,
 #                   filter_outliers=False,
                    marker='circle',
@@ -569,13 +584,14 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         plot, names, rd = self._series_factory(fx, fy, plotid=plotid,
                                                **kw)
         line = plot.plot(names, **rd)[0]
-        self._add_error_envelope_overlay(line)
+        if use_error_envelope:
+            self._add_error_envelope_overlay(line)
+
         if r is not None:
             line.regressor = r
             if hasattr(line, 'error_envelope'):
                 line.error_envelope.lower = ly
                 line.error_envelope.upper = uy
-
 
         line.index.sort_order = 'ascending'
         self.set_series_label('fit{}'.format(si), plotid=plotid)
@@ -595,7 +611,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         index = scatter.index
         index.on_trait_change(self.update_metadata, 'metadata_changed')
 
-        self.indices.append(index)
+#         self.indices.append(index)
 
 
     def _add_error_envelope_overlay(self, line):
@@ -737,7 +753,7 @@ class RegressionTimeSeriesGraph(RegressionGraph, TimeSeriesGraph):
 
 
 class StackedRegressionGraph(RegressionGraph, StackedGraph):
-
+    pass
 
     def _bind_index(self, scatter, bind_selection=True, **kw):
         super(StackedRegressionGraph, self)._bind_index(scatter)

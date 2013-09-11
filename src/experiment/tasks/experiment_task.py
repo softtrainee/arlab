@@ -408,13 +408,12 @@ class ExperimentEditorTask(EditorTask):
 
     @on_trait_change('manager:executor:current_run:plot_panel')
     def _update_plot_panel(self, new):
-        self.isotope_evolution_pane.plot_panel = new
+        if new is not None:
+            self.isotope_evolution_pane.plot_panel = new
 #         self.summary_pane.plot_panel = new
 
     @on_trait_change('manager:executor:run_completed')
     def _update_run_completed(self, new):
-        self.manager.db.reset()
-
         if self.auto_figure_window:
             task = self.auto_figure_window.active_task
             invoke_in_main_thread(task.refresh_plots, new)

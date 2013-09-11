@@ -73,8 +73,8 @@ class OLSRegressor(BaseRegressor):
             try:
 #                 print ys
 #                 print X
-                self._ols = OLS(ys, X)
-                self._result = self._ols.fit()
+                ols = OLS(ys, X)
+                self._result = ols.fit()
             except Exception, e:
                 print 'calculate', e
 #                print 'X', X
