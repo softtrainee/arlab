@@ -139,10 +139,15 @@ extract_device, delay_+, tray, username, load_name]''')
 
         self.queue.changed = True
 
-    @on_trait_change('run_factory:[labnumber]')
-    def _update_labnumber(self, name, new):
-        if name == 'labnumber':
-            self._labnumber = new
+#     def _run_factory_labnumber_changed(self):
+#         print 'asdfasfsdafasdf'
+
+#     @on_trait_change('run_factory')
+#     def _update_labnumber(self, new):
+#         self._labnumber=new
+#         print name, new
+#         if name == 'labnumber':
+#             self._labnumber = new
 
 #     @on_trait_change('queue:[mass_spectrometer, extract_device, username, delay_+]')
 #     def _update_queue_values(self, name, new):
@@ -180,9 +185,13 @@ extract_device, delay_+, tray, username, load_name]''')
         '''
             tol should be a user permission
         '''
+        return self._username and \
+                not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR) and \
+                self._labnumber
+
 #        print self._mass_spectrometer, not self._mass_spectrometer in ('Spectrometer', LINE_STR)
 #        print bool(self._username and not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR))
-        return self._username and not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR)
+#         return self._username and not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR)
 #        tol = self.max_allowable_runs
 #        ntest = len(self.queue.automated_runs) < tol
 #        return  self.ok_run and self._labnumber and ntest
@@ -225,6 +234,7 @@ extract_device, delay_+, tray, username, load_name]''')
 #                   can_edit=self.can_edit_scripts
                    )
         rf.load_truncations()
+        rf.on_trait_change(lambda x: self.trait_set(_labnumber=x), 'labnumber')
 
         return rf
 

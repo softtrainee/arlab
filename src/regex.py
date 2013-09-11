@@ -38,13 +38,14 @@ TRANSECT_REGEX = re.compile('[tT]+[\d\W]+-+[\d\W]+$')
 
     this re says
     match any string where
-    1. [pPlLrRdD\d]     the first character is t,T,l,L,r,R,d,D or any digit
+    1. [pPlLrRdD\d]     the first character is p,P,l,L,r,R,d,D or any digit
     2. [\d\W]$  followed by at least one digit character and no word characters
     3. | or
     4. [\d\W]$  at least one digit character and no word characters
 
 '''
-POSITION_REGEX = re.compile('[pPlLrRdD\d]+[\d\W]$|[\d\W]$')
+# POSITION_REGEX = re.compile('[pPlLrRdD\d]+[\d\W]$|[\d\W]$')
+POSITION_REGEX = re.compile('[pPlLrRdD\d]?[\d]$|[\d]$')
 
 '''
     e.g. 1.00,3.01
@@ -60,6 +61,14 @@ XY_REGEX = re.compile('[-,\d+].*\d*,[-,\d+].*\d*')
 DRILL_REGEX = re.compile('[dD]\d+$')
 
 ALIQUOT_REGEX = re.compile('\d+-+\d+$')
+
+'''
+    e.g. 1-4
+    
+'''
+SLICE_REGEX = re.compile('[\d]+-{1}[\d]+$')
+SSLICE_REGEX = re.compile('\d+:{1}\d+:{1}\d+$')
+PSLICE_REGEX = re.compile('\d+:{1}\d+$')
 
 def make_image_regex(ext):
     if ext is None:

@@ -74,16 +74,16 @@ class SignalAdapter(MultiTextTableAdapter):
 from traits.api import HasTraits, Any
 from traitsui.api import ListEditor
 class TraitsContainer(HasTraits):
-    model=Any
+    model = Any
     def trait_context(self):
         """ Use the model object for the Traits UI context, if appropriate.
         """
         if self.model:
             return { 'object': self.model }
         return super(TraitsContainer, self).trait_context()
-    
+
 class DisplayContainer(TraitsContainer):
-    model=Any
+    model = Any
     def _get_display_group(self):
         results_grp = Group(
 #                             HGroup(
@@ -128,23 +128,23 @@ class DisplayContainer(TraitsContainer):
         return display_grp
 
     def traits_view(self):
-        v=View(
+        v = View(
                VGroup(
                       Item('ncounts'),
                       self._get_display_group()
                      ),
                )
         return v
-        
+
 class GraphContainer(TraitsContainer):
-    
+
 #    graphs = List
 #    selected_tab = Any
 #    label = Str
 #     def _selected_tab_changed(self):
 #         print 'sel', self.selected_tab
-    
-    
+
+
     def traits_view(self):
         v = View(
                  VGroup(
@@ -155,7 +155,7 @@ class GraphContainer(TraitsContainer):
                                spring
                                ),
                         UItem(
-                             'graphs', 
+                             'graphs',
                              editor=ListEditor(use_notebook=True,
                                                          selected='selected_graph',
                                                          page_name='.page_name'
@@ -171,13 +171,13 @@ class PlotPanel(Loggable):
     graph_container = Instance(GraphContainer)
     display_container = Instance(DisplayContainer)
     arar_age = Instance(ArArAge)
-    
+
     isotope_graph = Instance(Graph, ())
     peak_center_graph = Instance(Graph, ())
-    selected_graph=Any
+    selected_graph = Any
 
-    graphs=Tuple
-    
+    graphs = Tuple
+
     plot_title = Str
 
     ncounts = Property(Int(enter_set=True, auto_set=False), depends_on='_ncounts')
@@ -318,10 +318,6 @@ class PlotPanel(Loggable):
 
     def clear_displays(self):
         self._print_results()
-
-   
-
-    
 
     def _make_display_summary(self):
         def factory(n, v):
@@ -486,7 +482,7 @@ class PlotPanel(Loggable):
         v = View(g)
         return v
 
-    
+
     def _get_graph_group(self):
         graph_grp = Group(
                         Group(Item('graph', show_label=False,
@@ -544,19 +540,19 @@ class PlotPanel(Loggable):
 
             g.page_name = 'Isotopes'
             p.page_name = 'Peak Center'
-            self.graphs=[g,p]
+            self.graphs = [g, p]
 
 #            self.graph_container.graphs = [g, p]
 
     def _plot_title_changed(self, new):
         self.graph_container.label = new
-        
+
     @on_trait_change('correct_for_baseline, correct_for_blank')
     def _print_results(self):
         self.display_signals = self._make_display_signals()
         self.display_ratios = self._make_display_ratios()
         self.display_summary = self._make_display_summary()
-    
+
     @on_trait_change('isotope_graph:regression_results')
     def _update_display(self, new):
         if new:
@@ -590,19 +586,19 @@ class PlotPanel(Loggable):
 # defaults
 #===============================================================================
     def _display_container_default(self):
-        d=DisplayContainer(model=self)
+        d = DisplayContainer(model=self)
         return d
-    
+
     def _isotope_graph_default(self):
         return self._graph_factory()
-    
+
     def _graph_container_default(self):
         self.isotope_graph.page_name = 'Isotopes'
         self.peak_center_graph.page_name = 'Peak Center'
-        
+
 #        return GraphContainer(graphs=[self.graph, self.peak_center_graph])
         return GraphContainer(model=self)
-    
+
     def _graphs_default(self):
         return [self.isotope_graph, self.peak_center_graph]
 #============= EOF =============================================

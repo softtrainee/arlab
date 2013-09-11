@@ -36,6 +36,17 @@ from pyface.image_resource import ImageResource
 #===============================================================================
 # editing
 #===============================================================================
+POSITION_TOOLTIP = '''Set the position for this analysis or group of analyses. 
+Examples:
+1. 4 or p4 (goto position 4)
+2. 3,4,5 (goto positions 3,4,5. treat as one analysis)
+3. 7-12 (goto positions 7,8,9,10,11,12. treat as individual analyses)
+4. 7:12 (same as #3)
+5. 10:16:2 (goto positions 10,12,14,16. treat as individual analyses)
+6. D1 (drill position 1)
+7. T1-2 (goto named position T1-2 i.e transect 1, point 2)
+8. L3 (trace path L3) 
+'''
 def spacer(w):
     return Spring(width=w, springy=False)
 
@@ -264,24 +275,6 @@ class ExperimentFactoryPane(TraitsDockPane):
                         )
         return script_grp
 
-#     def _get_position_group(self):
-#         grp = VGroup(
-#  #                         Item('autocenter',
-#  #                              tooltip='Should the extract device try to autocenter on the sample'
-#  #                              ),
-#                          HGroup(RFItem('position',
-#                                      tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
-#                                      ),
-#                                 RFItem('endposition', label='End',
-#                                      enabled_when='position'
-#                                      )
-#                                 ),
-#  #                         Item('multiposition', label='Multi. position run'),
-#                          show_border=True,
-#                          label='Position'
-#                      )
-#         return grp
-
     def _get_extract_group(self):
         sspring = lambda width = 17:Spring(springy=False, width=width)
 
@@ -312,27 +305,21 @@ class ExperimentFactoryPane(TraitsDockPane):
                                            tooltip='Group selected runs as a step heating experiment'
                                            ),
                                     RFItem('extract_group', label='Group ID'),
-                                    
-                                    ),
-#                             HGroup(
-#                                    RFItem('extract_group_button', show_label=False,
-#                                           tooltip='Group selected runs as a step heating experiment'
-#                                           ),
-#                                    RFItem('extract_group', label='Group ID'),
-#                                    
-                                    
-#                                    ),
-                             RFItem('duration', label='Duration (s)',
-                                  tooltip='Set the number of seconds to run the extraction device.'
 
-                                  ),
-                             RFItem('cleanup', label='Cleanup (s)',
-                                  tooltip='Set the number of seconds to getter the sample gas'
-                                  ),
-                             RFItem('beam_diameter'),
-                             
-                             # Item('ramp_rate', label='Ramp Rate (C/s)'),
+                                    ),
                              HGroup(
+                                    RFItem('duration', label='Duration (s)',
+                                          tooltip='Set the number of seconds to run the extraction device.'
+
+                                          ),
+                                    RFItem('cleanup', label='Cleanup (s)',
+                                          tooltip='Set the number of seconds to getter the sample gas'
+                                          )
+                                    ),
+                             RFItem('beam_diameter'),
+                             HGroup(
+                                    RFItem('position',
+                                           tooltip=POSITION_TOOLTIP),
                                     RFItem('pattern',
                                            editor=EnumEditor(name=make_rf_name('patterns'))),
                                     RFItem('edit_pattern',
@@ -341,13 +328,13 @@ class ExperimentFactoryPane(TraitsDockPane):
                                            )
                                     ),
 
-                             HGroup(RFItem('position',
-                                     tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
-                                     ),
-                                RFItem('endposition', label='End',
-                                     enabled_when='position'
-                                     )
-                                ),
+#                              HGroup(
+#                                      ),
+#                                     spring,
+#                                 RFItem('endposition', label='End',
+#                                      enabled_when='position'
+#                                      )
+#                                 ),
 
                              label='Extract',
                              show_border=True

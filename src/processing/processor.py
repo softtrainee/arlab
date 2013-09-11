@@ -146,13 +146,14 @@ class Processor(IsotopeDatabaseManager):
 #                 self.preceeding_blank_correct(ai, pd=pd)
 #             db.commit()
 
-    def refit_isotopes(self, analysis, pd=None, fits=None, keys=None, verbose=False):
-        if not isinstance(analysis, Analysis):
-            analysis = self.make_analyses([analysis])[0]
+    def refit_isotopes(self, meas_analysis, pd=None, fits=None, keys=None, verbose=False):
 
-        analysis.load_isotopes()
+#         if not isinstance(analysis, Analysis):
+        analysis = self.make_analyses([meas_analysis])[0]
 
-        dbr = analysis.dbrecord
+#         analysis.load_isotopes()
+        dbr = meas_analysis
+#         dbr = analysis.dbrecord
         if keys is None:
             keys = [iso.molecular_weight.name for iso in dbr.isotopes
                                 if iso.kind == 'signal']
@@ -182,7 +183,7 @@ class Processor(IsotopeDatabaseManager):
 
         if not dbr.selected_histories:
             db.add_selected_histories(dbr)
-            db.flush()
+            db.sess.flush()
 
         msg = 'fitting isotopes for {}'.format(analysis.record_id)
         if pd is not None:
@@ -321,7 +322,7 @@ class Processor(IsotopeDatabaseManager):
         from src.regression.interpolation_regressor import InterpolationRegressor
         if not isinstance(analysis, Analysis):
             analysis = self.make_analyses([analysis])[0]
-            analysis.load_isotopes()
+#             analysis.load_isotopes()
 
         msg = 'applying preceeding blank for {}'.format(analysis.record_id)
         if pd is not None:
@@ -336,20 +337,20 @@ class Processor(IsotopeDatabaseManager):
 #         delta = -5
         atype = 'blank_{}'.format(analysis.analysis_type)
 
-        ai = self._get_preceeding_analysis(ms, post, atype)
+        an = self._get_preceeding_analysis(ms, post, atype)
 
-        if not ai:
+        if not an:
             self.warning('no preceeding blank for {}'.format(analysis.record_id))
             return
 
-        ai = self.make_analyses([ai])[0]
-        ai.load_isotopes()
+        ai = self.make_analyses([an])[0]
+#         ai.load_isotopes()
 
         if keys is None:
             keys = analysis.isotope_keys
 
         kind = 'blanks'
-        history = self.add_history(analysis, kind)
+        history = self.add_history(an, kind)
 
         fit = 'preceeding'
 
@@ -372,7 +373,7 @@ class Processor(IsotopeDatabaseManager):
 
                 fit_obj = Fit(name=key, fit=fit)
                 v, e = reg.predict(post), reg.predict_error(post)
-                analysis.set_blank(key, v[0], e[0])
+                analysis.set_blank(key, (v[0], e[0]))
                 self.apply_correction(history, analysis, fit_obj, [ai], kind)
 
 
@@ -467,8 +468,8 @@ class Processor(IsotopeDatabaseManager):
 #===============================================================================
 # corrections
 #===============================================================================
-    def add_history(self, analysis, kind):
-        dbrecord = analysis.dbrecord
+    def add_history(self, dbrecord, kind):
+#         dbrecord = analysis.dbrecord
         db = self.db
 
         # new history
@@ -479,7 +480,7 @@ class Processor(IsotopeDatabaseManager):
         # set analysis' selected history
         sh = db.add_selected_histories(dbrecord)
         setattr(sh, 'selected_{}'.format(kind), history)
-        db.flush()
+        db.sess.flush()
 
 #        sh.selected_blanks = history
         return history
@@ -531,8 +532,11 @@ class Processor(IsotopeDatabaseManager):
 
 #        ps = self.interpolation_correction.predictors
         if predictors:
+            db = self.db
             for pi in predictors:
-                self.db.add_blanks_set(item, pi.dbrecord)
+                dbr = db.get_analysis_uuid(pi.uuid)
+#                 self.db.add_blanks_set(item, pi.dbrecord)
+                db.add_blanks_set(item, dbr)
 #
 # class Processor2(IsotopeDatabaseManager):
 #    count = 0

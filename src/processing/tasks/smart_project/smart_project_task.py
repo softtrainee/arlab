@@ -181,7 +181,7 @@ class SmartProjectTask(AnalysisEditTask):
         dry_run = fitting['dry_run']
         projects = fitting['projects']
 
-        sf = SmartIsotopeFits()
+        sf = SmartIsotopeFits(processor=self.manager)
         if meta.has_key('irradiations'):
             irradiations = self._make_fit_selection(meta)
 
@@ -213,32 +213,32 @@ class SmartProjectTask(AnalysisEditTask):
 
         f = meta['fit_blanks']
         atypes = f['atypes']
-        n, ans = self._analysis_generator(irradiations, projects, atypes)
-        interp = f['interpolate']
+        with self.manager.db.session_ctx():
+            n, ans = self._analysis_generator(irradiations, projects, atypes)
+            interp = f['interpolate']
+            sb = SmartBlanks(processor=self.manager)
+            if interp is True:
 
-        sb = SmartBlanks(processor=self.manager)
-        if interp is True:
+                fits = f['fits']
+                save_figure = f['save_figure']
+                with_table = f['with_table']
+                be = BlanksEditor(name='Blanks',
+                              auto_find=False,
+                              show_current=False)
 
-            fits = f['fits']
-            save_figure = f['save_figure']
-            with_table = f['with_table']
-            be = BlanksEditor(name='Blanks',
-                          auto_find=False,
-                          show_current=False)
+                sb.editor = be
+                invoke_in_main_thread(self._open_editor, be)
+                time.sleep(1)
 
-            sb.editor = be
-            invoke_in_main_thread(self._open_editor, be)
-            time.sleep(1)
+                sb.interpolate_blanks(n, ans, fits, root, save_figure, with_table)
+    #             self._interpolate_blanks(n, ans, fits, root,
+    #                                      save_figure, with_table)
+            else:
+                sb.simple_fit_blanks(n, ans, interp, dry_run)
+    #             self._simple_fit_blanks(n, ans, interp, dry_run)
 
-            sb.interpolate_blanks(n, ans, fits, root, save_figure, with_table)
-#             self._interpolate_blanks(n, ans, fits, root,
-#                                      save_figure, with_table)
-        else:
-            sb.simple_fit_blanks(n, ans, interp, dry_run)
-#             self._simple_fit_blanks(n, ans, interp, dry_run)
-
-        self._finish_db_session(dry_run)
-        self.info('fit blanks finished elapsed time {}'.format(time.time() - st))
+            self._finish_db_session(dry_run)
+            self.info('fit blanks finished elapsed time {}'.format(time.time() - st))
 
     def _fit_detector_intercalibrations(self, meta, project):
         # make graphs
@@ -317,9 +317,9 @@ class SmartProjectTask(AnalysisEditTask):
 #===============================================================================
     def _finish_db_session(self, dry_run):
         if dry_run:
-            self.manager.db.rollback()
+            self.manager.db.sess.rollback()
         else:
-            self.manager.db.commit()
+            self.manager.db.sess.commit()
 
 #     def _gather_analyses_for_blank_fit(self, irradiations, projects):
 #         return self._labnumber_generator(irradiations, projects)

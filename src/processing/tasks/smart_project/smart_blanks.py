@@ -49,10 +49,10 @@ class SmartBlanks(BaseSmarter):
 
                 self.info('applying blank {:04n}/{:04n} ({:0.2f}%) estimated remain {:0.1f} (mins)'.format(i, n, p, er))
                 if dry_run:
-                    man.db.rollback()
+                    man.db.sess.rollback()
                 else:
                     self.info('committing changes')
-                    man.db.commit()
+                    man.db.sess.commit()
 
     def interpolate_blanks(self, n, ans, fits, root, save_figure, with_table):
         func = self._do_fit_blanks  # (gs, fits, atype, root, save_figure, with_table)

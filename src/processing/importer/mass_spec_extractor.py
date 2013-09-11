@@ -347,6 +347,8 @@ class MassSpecExtractor(Extractor):
             msname = 'PJ'
         elif msname == 'Jan':
             msname = 'J'
+        elif msname == 'NMGRL MAP':
+            msname = 'MAP'
         else:
             msname = 'O'
         return msname
@@ -435,7 +437,7 @@ class MassSpecExtractor(Extractor):
                                  comment=changeable.Comment,
                                  step=step,
                                  analysis_timestamp=dbanalysis.RunDateTime,
-                                 status=changeable.StatusLevel,
+                                 status=1 if changeable.StatusLevel == 1 else 0,
                                  )
         if dest_an is None:
             return
@@ -505,8 +507,8 @@ class MassSpecExtractor(Extractor):
             try:
                 noncor_y = [struct.unpack('{}f'.format(endianness),
                                        blob[i:i + 4])[0] for i in xrange(0, len(blob), 4)]
-            except Exception:
-                self.import_err_file.write('{}\n'.format(identifier))
+            except Exception, e:
+                self.import_err_file.write('{}-{}\n'.format(identifier, e))
                 continue
 
             det = None
