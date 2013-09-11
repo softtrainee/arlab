@@ -58,6 +58,7 @@ from src.consumer_mixin import consumable
 from src.codetools.memory_usage import mem_log, measure_type, calc_growth
 from src.codetools.file_log import file_log
 from src.pyscripts.uv_extraction_line_pyscript import UVExtractionPyScript
+from src.experiment.automated_run.data_collector import DataCollector
 
 
 class ScriptInfo(HasTraits):
@@ -94,6 +95,7 @@ class AutomatedRun(Loggable):
     experiment_manager = Any
     ion_optics_manager = Any
     data_manager = Instance(DataManager)
+    data_collector = Instance(DataCollector)
 
     db = Instance(IsotopeAdapter)
     local_lab_db = Instance(LocalLabAdapter)
@@ -229,7 +231,8 @@ class AutomatedRun(Loggable):
         # set plot_panels, baselines, backgrounds
 
 #         p.baselines = baselines = self.experiment_manager._prev_baselines
-#         p.blanks = blanks = self.experiment_manager._prev_blanks
+#         p.blanks = blanks = self.experiment_manager.
+
 #         p.baselines = baselines = self.experiment_manager.get_prev_baselines()
 #         p.blanks = blanks = self.experiment_manager.get_prev_blanks()
         # sync the arar_age object's signals
@@ -549,6 +552,8 @@ class AutomatedRun(Loggable):
             don't save run
             
         '''
+        self.data_collector.stop()
+
 #        self.aliquot='##'
         self._save_enabled = False
         for s in ('extraction', 'measurement'):
@@ -581,12 +586,12 @@ class AutomatedRun(Loggable):
         if self.measuring:
             style = style.lower()
             if style == 'normal':
-                self._measurement_script.truncate('normal')
+                self.measurement_script.truncate('normal')
             elif style == 'quick':
-                self._measurement_script.truncate('quick')
+                self.measurement_script.truncate('quick')
 
-            self._truncate_signal = True
-
+#             self._truncate_signal = True
+            self.data_collector.set_truncated()
             self.truncated = True
             self.state = 'truncated'
 #===============================================================================
@@ -598,6 +603,7 @@ class AutomatedRun(Loggable):
 
 #         if self.plot_panel:
 #             self.plot_panel.automated_run = None
+#         self.plot_panel = None
 #             self.plot_panel.arar_age = None
 #             self.plot_panel.info_func = None
 
@@ -642,8 +648,11 @@ class AutomatedRun(Loggable):
         if self.state not in ('not run', 'canceled', 'success', 'truncated'):
             self.state = 'failed'
 
-        self._alive = False
+        self.stop()
 
+    def stop(self):
+        self._alive = False
+        self.data_collector.stop()
 
     def info(self, msg, color=None, *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
@@ -720,7 +729,7 @@ class AutomatedRun(Loggable):
 
         # setup the scripts
         if self.measurement_script:
-            self.measurement_script.reset(self)
+            self.measurement_script.reset(weakref.ref(self)())
 
         for si in ('extraction', 'post_measurement', 'post_equilibration'):
             script = getattr(self, '{}_script'.format(si))
@@ -854,7 +863,9 @@ class AutomatedRun(Loggable):
         self.info('========= Post Termination Started ========')
         self.do_post_equilibration()
         self.do_post_measurement()
-        self._alive = False
+
+        self.stop()
+
         self.info('========= Post Termination Finished ========')
         self.experiment_manager.executable = oex
 
@@ -1137,9 +1148,10 @@ anaylsis_type={}
                         if len(graph.series[pi]) < series + 1:
                             graph_kw = dict(marker='circle', type='scatter', marker_size=1.25)
                             func = lambda xi, yi, kw: graph.new_series(x=[xi],
-                                                                             y=[yi],
-                                                                             **kw
-                                                                             )
+                                                                       y=[yi],
+                                                                       use_error_envelope=False,
+                                                                       **kw
+                                                                       )
                         else:
                             graph_kw = dict(series=series,
 #                                             do_after=100,
@@ -1159,56 +1171,6 @@ anaylsis_type={}
 
         return True
 
-    def _get_fit_block(self, iter_cnt, fits):
-        for sli, fs in fits:
-            if sli:
-
-                s, e = sli
-                if s is None:
-                    s = 0
-                if e is None:
-                    e = Inf
-
-                if iter_cnt > s and iter_cnt < e:
-                    break
-
-#        self.debug('fs {}'.format(fs))
-        return fs
-
-    def _make_write_iteration(self, grpname, data_write_hook,
-                         series, fits, refresh, graph):
-        def _write(data):
-            dets = self._active_detectors
-            i, x, intensities = data
-            nfs = self._get_fit_block(i, fits)
-            keys, signals = intensities
-            if graph:
-                if grpname == 'signal':
-                    self.plot_panel.fits = nfs
-
-    #             self.signals = weakref.ref(dict(zip(keys, signals)))()
-                for pi, (fi, dn) in enumerate(zip(nfs, dets)):
-                    signal = signals[keys.index(dn.name)]
-                    graph.add_datum((x, signal),
-                                    series=series,
-                                    plotid=pi,
-                                    update_y_limits=True,
-                                    ypadding='0.1'
-                                    )
-                    if fi:
-                        graph.set_fit(fi, plotid=pi, series=0)
-
-            data_write_hook(dets, x, keys, signals)
-
-            if refresh and graph:
-#                 pass
-                # only refresh regression every 5th iteration
-#                 test if graph.refresh is consuming memory
-#                 if i % 5 == 0 or i < 10:
-                graph.refresh()
-
-        return _write
-
     def _get_data_generator(self):
         def gen():
             spec = self.spectrometer_manager.spectrometer
@@ -1218,16 +1180,9 @@ anaylsis_type={}
 
         return gen()
 
-#     @profile
-    def _measure(self, grpname, data_write_hook,
-                           ncounts, starttime, starttime_offset,
-                            series, fits, check_conditions, refresh):
-#         print '------------------------{}----------------------------'.format(grpname)
-#         before = measure_type()
-
-
-        mem_log('pre measure {}'.format(grpname))
-#         st = time.time()
+    def _measure(self, grpname, data_writer,
+                 ncounts, starttime, starttime_offset,
+                 series, fits, check_conditions, refresh):
 
         if not self.spectrometer_manager:
             self.warning('no spectrometer manager')
@@ -1236,15 +1191,35 @@ anaylsis_type={}
         self.info('measuring {}. ncounts={}'.format(grpname, ncounts),
                   color=MEASUREMENT_COLOR)
 
-        self._total_counts += ncounts
 
-#         spectrometer = self.spectrometer_manager.spectrometer
-#         get_data = lambda: self.spectrometer_manager.spectrometer.get_intensities(tagged=True)
-#         get_data = self._get_data_generator()
+        get_data = self._get_data_generator()
+        debug = globalv.experiment_debug
+        if debug:
+            period = 1
+        else:
+            period = self.integration_time
 
-        ncounts = int(ncounts)
-#         iter_cnt = 1
-        graph = None
+        m = self.data_collector
+        m.trait_set(
+                    plot_panel=self.plot_panel,
+                    measurement_script=self.measurement_script,
+                    detectors=self._active_detectors,
+                    truncation_conditions=self.truncation_conditions,
+                    termination_conditions=self.termination_conditions,
+                    action_conditions=self.action_conditions,
+
+                    grpname=grpname,
+                    series_idx=series,
+                    fits=fits,
+                    check_conditions=check_conditions,
+                    ncounts=ncounts,
+                    period_ms=period * 1000,
+                    data_generator=get_data,
+                    data_writer=data_writer,
+                    starttime=starttime,
+                    total_counts=self._total_counts
+                    )
+
         if self.plot_panel:
             graph = self.plot_panel.isotope_graph
             mi, ma = graph.get_x_limits()
@@ -1253,8 +1228,8 @@ anaylsis_type={}
                 graph.set_x_limits(-starttime_offset, self._total_counts + (ma - mi) * 0.25)
             elif starttime_offset > mi:
                 graph.set_x_limits(min_=-starttime_offset)
-            nfs = self._get_fit_block(0, fits)
-    #         for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+
+            nfs = m.get_fit_block(0, fits)
             for pi, fi in enumerate(nfs):
                 graph.new_series(marker='circle', type='scatter',
                                  marker_size=1.25,
@@ -1262,137 +1237,11 @@ anaylsis_type={}
                                  plotid=pi
                                  )
 
-        func = self._make_write_iteration(grpname, data_write_hook,
-                                                    series, fits, refresh,
-                                                    graph)
         dm = self.data_manager
         with dm.open_file(self._current_data_frame):
-            with consumable(func) as con:
-                self._iteration(con, ncounts, check_conditions, starttime)
-
-        if graph:
-            graph.refresh()
-
-        mem_log('post measure {}'.format(grpname))
-
+            tc = m.measure()
+        self._total_counts = tc
         return True
-
-    def _iteration(self, con, ncounts, check_conditions, starttime):
-        st = time.time()
-        if starttime is None:
-            starttime = time.time()
-
-        iter_cnt = 1
-        iter_step = self._iter_step
-        get_data = self._get_data_generator()
-
-        debug = globalv.experiment_debug
-        if debug:
-            m = 0.2
-        else:
-            m = self.integration_time
-
-        check = lambda x: self._check_iteration(x, ncounts, check_conditions)
-        while 1:
-#             if iter_cnt > ncounts:
-#                 break
-            ck = check(iter_cnt)
-            if ck == 'break':
-                break
-            elif ck == 'cancel':
-                return False
-
-            data = get_data.next()
-            iter_step(iter_cnt, con, data, starttime, m, debug)
-            iter_cnt += 1
-
-        t = time.time() - st
-        iter_cnt -= 1
-        et = iter_cnt * self.integration_time
-        self.debug('%%%%%%%%%%%%%%%%%%%%%%%% counts: {} {} {}'.format(iter_cnt, et, t))
-
-#     @profile
-    def _iter_step(self, iter_cnt, con, data, starttime, period, debug=False):
-
-        x = time.time() - starttime  # if not self._debug else iter_cnt + starttime
-        if debug:
-            x *= period ** -1
-        con.add_consumable((iter_cnt, x, data))
-
-        if iter_cnt % 50 == 0:
-            self.info('collecting point {}'.format(iter_cnt))
-#             mem_log('collecting point {}'.format(iter_cnt))
-
-        iter_cnt += 1
-        time.sleep(period)
-
-    def _check_conditions(self, conditions, cnt):
-        for ti in conditions:
-            if ti.check(self.arar_age, cnt):
-                return ti
-
-    def _check_iteration(self, i, ncounts, check_conditions):
-
-#         if self.plot_panel is None:
-#             return 'break'
-
-        j = i - 1
-        # exit the while loop if counts greater than max of original counts and the plot_panel counts
-        pc = 0
-        if self.plot_panel:
-            pc = self.plot_panel.ncounts
-
-        maxcounts = max(ncounts, pc)
-        if i > maxcounts:
-            return 'break'
-
-        if check_conditions:
-            termination_condition = self._check_conditions(self.termination_conditions, i)
-            if termination_condition:
-                self.info('termination condition {}. measurement iteration executed {}/{} counts'.format(termination_condition.message, j, ncounts),
-                          color='red'
-                          )
-                return 'cancel'
-
-            truncation_condition = self._check_conditions(self.truncation_conditions, i)
-            if truncation_condition:
-                self.info('truncation condition {}. measurement iteration executed {}/{} counts'.format(truncation_condition.message, j, ncounts),
-                          color='red'
-                          )
-                self.state = 'truncated'
-                self.measurement_script.abbreviated_count_ratio = truncation_condition.abbreviated_count_ratio
-
-#                self.condition_truncated = True
-                return 'break'
-
-            action_condition = self._check_conditions(self.action_conditions, i)
-            if action_condition:
-                self.info('action condition {}. measurement iteration executed {}/{} counts'.format(action_condition.message, j, ncounts),
-                          color='red'
-                          )
-                action_condition.perform(self.measurement_script)
-                if not action_condition.resume:
-                    return 'break'
-
-        if i > self.measurement_script.ncounts:
-            self.info('script termination. measurement iteration executed {}/{} counts'.format(j, ncounts))
-            return 'break'
-
-        if pc:
-            if i > pc:
-                self.info('user termination. measurement iteration executed {}/{} counts'.format(j, ncounts))
-                self._total_counts -= (ncounts - i)
-                return 'break'
-
-        if self._truncate_signal:
-            self.info('measurement iteration executed {}/{} counts'.format(j, ncounts))
-            self._truncate_signal = False
-
-            return 'break'
-
-        if not self._alive:
-            self.info('measurement iteration executed {}/{} counts'.format(j, ncounts))
-            return 'cancel'
 
 #===============================================================================
 # save
@@ -1844,33 +1693,6 @@ anaylsis_type={}
                                               signal_=float(s.value), signal_err=float(s.error),
                                               )
 
-#             for iso, detname, kind in self._save_isotopes:
-# #                st = time.time()
-#                 det = db.get_detector(detname)
-#                 if det is None:
-#                     det = db.add_detector(detname)
-# #                     db.flush()
-#                 # add isotope
-#                 dbiso = db.add_isotope(analysis, iso, det, kind=kind)
-#
-#                 s = signals['{}{}'.format(iso, kind)]
-#
-#                 # add signal data
-#                 data = ''.join([struct.pack('>ff', x, y)
-#                                 for x, y in zip(s.xs, s.ys)])
-#                 db.add_signal(dbiso, data)
-#
-#                 if s.fit:
-#                     # add fit
-#                     db.add_fit(dbhist, dbiso, fit=s.fit)
-#
-#                 if kind in ['signal', 'baseline']:
-#                     # add isotope result
-#                     db.add_isotope_result(dbiso,
-#                                           dbhist,
-#                                           signal_=float(s.value), signal_err=float(s.error),
-#                                           )
-
         return self._time_save(func, 'isotope info')
 
     def _save_monitor_info(self, analysis):
@@ -1937,7 +1759,7 @@ anaylsis_type={}
 
         rs_name, rs_text = self._assemble_script_blob()
         rid = self.runid
-        fb = self._get_fit_block(self._total_counts, self.fits)
+        fb = self.data_collector.get_fit_block(self._total_counts, self.fits)
 
         exp = ExportSpec(rid=rid,
                          runscript_name=rs_name,
@@ -2232,21 +2054,7 @@ anaylsis_type={}
 #===============================================================================
 # property get/set
 #===============================================================================
-#     @cached_property
-#     def _get_post_measurement_script(self):
-#         return self._load_script('post_measurement')
-#
-#     @cached_property
-#     def _get_post_equilibration_script(self):
-#         return self._load_script('post_equilibration')
-#
-#     @cached_property
-#     def _get_measurement_script(self):
-#         return self._load_script('measurement')
-#
-#     @cached_property
-#     def _get_extraction_script(self):
-#         return self._load_script('extraction')
+
     def refresh_scripts(self):
         for name in SCRIPT_KEYS:
             setattr(self, '{}_script'.format(name), self._load_script(name))
@@ -2256,8 +2064,10 @@ anaylsis_type={}
 
     def _post_measurement_script_default(self):
         return self._load_script('post_measurement')
+
     def _post_equilibration_script_default(self):
         return self._load_script('post_equilibration')
+
     def _extraction_script_default(self):
         return self._load_script('extraction')
 
@@ -2279,420 +2089,231 @@ anaylsis_type={}
             sc = getattr(self, '{}_script'.format(s))
             if sc is not None:
                 setattr(sc, 'runner', new)
+
+#===============================================================================
+# defaults
+#===============================================================================
+    def _data_collector_default(self):
+        return DataCollector()
+
 #============= EOF =============================================
-#    def _get_peakhop_data_writer(self, grpname):
-#        def write_data(x, det, iso, signal):
-#            '''
-#                root.peakhop.iso.det
-#            '''
-#            dm = self.data_manager
-# #            tab = dm.get_table(iso, '/{}/{}'.format(grpname, det))
-#            tab = dm.get_table(det, '/{}/{}'.format(grpname, iso))
-#            nrow = tab.row
-#            nrow['time'] = x
-#            nrow['value'] = signal
-#            nrow.append()
-#            tab.flush()
+#     def _get_fit_block(self, iter_cnt, fits):
+#         for sli, fs in fits:
+#             if sli:
 #
-#        return write_data
-# def _peak_hop_factory(self, detector, isotopes, ncycles, nintegrations, starttime, series,
-#                          name='',
-#                          masses=None
-#                          ):
-#        if not self.spectrometer_manager:
-#            self.warning('not spectrometer manager')
-#            return
-#        add_plot = False
-#        p = self.peak_plot_panel
-#        if p is None:
-# #        name = 'peakhop_{}'.format(name)
-#            p = self._new_plot_panel(stack_order='top_to_bottom')
-#            self.peak_plot_panel = p
-#            add_plot = True
-#            p.series_cnt = 0
+#                 s, e = sli
+#                 if s is None:
+#                     s = 0
+#                 if e is None:
+#                     e = Inf
 #
-#        p.detector = detector
-# #        p.isotopes = isotopes
-# #        p._ncounts = ncycles
-#
-#        dm = self.data_manager
-# #        db = self.db
-# #        dm.new_group('peakhop', root='/')
-# #        grp = dm.new_group(detector, parent=grp)
-#
-#        # get/add the detector to db
-#
-#        pgrp = dm.new_group(name)
-#        for iso in isotopes:
-#            grp = dm.new_group(iso, parent=pgrp)
-#            dm.new_table(grp, detector)
-#
-#            # add isotope to db
-# #            db.add_isotope(iso, det, kind=name)
-#            self._save_isotopes.append((iso, detector, name))
-#
-#        data_write_hook = self._get_peakhop_data_writer(name)
-#
-#        self.info('peak hopping {} on {}'.format(','.join(isotopes), detector))
-# #        spec = None
-#        spec = self.spectrometer_manager.spectrometer
-#
-#        graph = self.peak_plot_panel.graph
-#        for iter_cnt, iso in enumerate(isotopes):
-#            if add_plot:
-#                graph.new_plot(xtitle='Time (s)',
-#                           ytitle='{}'.format(iso))
-#
-#                graph.set_x_limits(0, 400, plotid=iter_cnt)
-#                pi = graph.plots[iter_cnt]
-#                pi.value_range.margin = 0.5
-#                pi.value_range.tight_bounds = False
-#
-#            graph.new_series(type='scatter',
-#                             marker='circle',
-#                             marker_size=1.25,
-#                             plotid=iter_cnt)
-#
-#        kw = dict(series=p.series_cnt, do_after=1)
-#
-#        _debug = globalv.automated_run_debug
-#        p.series_cnt += 1
-#        ti = self.integration_time * 0.99 if not _debug else 0.1
-#        settle_time = ti * 1.1
-#
-#        for _ in xrange(0, ncycles, 1):
-#            if not self._alive:
-#                return False
-#
-#            for mi, iso in enumerate(isotopes):
-#                if not self._alive:
-#                    return False
-#
-#                if masses:
-#                    mass = masses[mi]
-#                else:
-#                    mass = iso
-#                # position isotope onto detector
-#                self.set_position(mass, detector)
-#                time.sleep(settle_time)
-#                for _ni in xrange(int(nintegrations)):
-#                    if not self._alive:
-#                        return False
-#
-#                    time.sleep(ti)
-#                    x = time.time() - starttime
-#
-#                    if _debug:
-#                        v = random.random()
-#                        x *= 3
-#                    else:
-#                        v = spec.get_intensity(detector)
-#
-#                    data_write_hook(x, detector, iso, v)
-#                    graph.add_datum((x, v), plotid=mi, **kw)
-#
-#                    if x > graph.get_x_limits()[1]:
-#                        graph.set_x_limits(0, x + 10)
-#
-#        return True
-#===============================================================================
-# views
-#===============================================================================
-#    def _get_position_group(self):
-#        grp = VGroup(
-# #                         Item('autocenter',
-# #                              tooltip='Should the extract device try to autocenter on the sample'
-# #                              ),
-#                         HGroup(Item('position',
-#                                     tooltip='Set the position for this analysis. Examples include 1, P1, L2, etc...'
-#                                     ),
-#                                Item('endposition', label='End')
-#                                ),
-# #                         Item('multiposition', label='Multi. position run'),
-#                         show_border=True,
-#                         label='Position'
-#                     )
-#        return grp
+#                 if iter_cnt > s and iter_cnt < e:
+#                     break
+#         return fs
 
-#    def _get_supplemental_extract_group(self):
-#        pass
+#     def _make_write_iteration(self, grpname, data_write_hook,
+#                          series, fits, refresh, graph):
+#         def _write(data):
+#             dets = self._active_detectors
+#             i, x, intensities = data
+#             nfs = self._get_fit_block(i, fits)
+#             keys, signals = intensities
+#             if graph:
+#                 if grpname == 'signal':
+#                     self.plot_panel.fits = nfs
 #
-#    def simple_view(self):
-#        ext_grp = VGroup(
-# #                         HGroup(Spring(springy=False, width=33),
-#                         HGroup(Item('labnumber', style='readonly'),
-#                                Item('aliquot'),
-#                                Item('step')
-#                                ),
-#                         HGroup(
-#                                Item('extract_value', label='Extract'),
-#                                spring,
-#                                Item('extract_units', editor=EnumEditor(name='extract_units_names'),
-#                                     show_label=False)
-#                                ),
-#                         Item('ramp_rate', label='Ramp Rate (C/s)'),
-#                         Item('duration', label='Duration'),
-#                         label='Extract'
-#                         )
+#     #             self.signals = weakref.ref(dict(zip(keys, signals)))()
+#                 for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+#                     signal = signals[keys.index(dn.name)]
+#                     graph.add_datum((x, signal),
+#                                     series=series,
+#                                     plotid=pi,
+#                                     update_y_limits=True,
+#                                     ypadding='0.1'
+#                                     )
+#                     if fi:
+#                         graph.set_fit(fi, plotid=pi, series=0)
 #
-#        pos_grp = self._get_position_group()
-#        grp = Group(ext_grp,
-#                     pos_grp,
-#                     layout='tabbed',
-#                     enabled_when='not skip'
-#                     )
-#        extra_grp = self._get_supplemental_extract_group()
-#        if extra_grp:
-#            grp.content.append(extra_grp)
+#             data_write_hook(dets, x, keys, signals)
 #
-#        v = View(Item('skip'), grp)
-#        return v
+#             if refresh and graph:
+# #                 pass
+#                 # only refresh regression every 5th iteration
+# #                 test if graph.refresh is consuming memory
+# #                 if i % 5 == 0 or i < 10:
+#                 graph.refresh()
 #
-#    def traits_view(self):
+#         return _write
+#     def _measure2(self, grpname, data_write_hook,
+#                            ncounts, starttime, starttime_offset,
+#                             series, fits, check_conditions, refresh):
+# #         print '------------------------{}----------------------------'.format(grpname)
+# #         before = measure_type()
 #
-# #        scripts = VGroup(
-# #                       Item('extraction_line_script_name',
-# #                        editor=EnumEditor(name='extraction_line_scripts'),
-# #                        label='Extraction'
-# #                        ),
-# #                       Item('measurement_script_name',
-# #                            editor=EnumEditor(name='measurement_scripts'),
-# #                            label='Measurement'
-# #                            ),
-# #                       label='Scripts',
-# #                       show_border=True
-# #                       )
-#        def readonly(n, **kw):
-#            return Item(n, style='readonly', **kw)
+#         mem_log('pre measure {}'.format(grpname))
+# #         st = time.time()
 #
-#        sspring = lambda width = 17:Spring(springy=False, width=width)
+#         if not self.spectrometer_manager:
+#             self.warning('no spectrometer manager')
+#             return True
 #
-#        extract_grp = VGroup(
-#                             HGroup(sspring(width=33),
-#                                    Item('extract_value', label='Extract',
-#                                         tooltip='Set the extract value in extract units'
-#                                         ),
-#                                    spring,
-#                                    Item('extract_units', editor=EnumEditor(name='extract_units_names'),
-#                                    show_label=False),
-#                                    ),
-#                             Item('duration', label='Duration (s)',
-#                                  tooltip='Set the number of seconds to run the extraction device.'
-#                                  ),
-#                             Item('cleanup', label='Cleanup (s)',
-#                                  tooltip='Set the number of seconds to getter the sample gas'
-#                                  ),
-#                             # Item('ramp_rate', label='Ramp Rate (C/s)'),
-#                             Item('pattern', editor=EnumEditor(name='patterns')),
-#                             label='Extract'
-#                             )
-#        pos_grp = self._get_position_group()
-# #        extract_grp = Group(extract_grp, pos_grp, layout='tabbed')
-#        sup = self._get_supplemental_extract_group()
-#        if sup:
-#            extract_grp = Group(extract_grp, sup, layout='tabbed')
-#        else:
-#            extract_grp.show_border = True
+#         self.info('measuring {}. ncounts={}'.format(grpname, ncounts),
+#                   color=MEASUREMENT_COLOR)
 #
-#        extract_grp = VGroup(extract_grp, pos_grp)
+#         self._total_counts += ncounts
 #
-#        v = View(
-#                 Group(
-#                       Item('project', editor=EnumEditor(name='projects'),
-#                           tooltip='Select a project to constrain the labnumbers'
-#                           ),
-#                       Item('special_labnumber', editor=EnumEditor(values=SPECIAL_NAMES),
-#                           tooltip='Select a special Labnumber for special runs, e.g Blank, Air, etc...'
-#                           ),
-#                       HGroup(Item('labnumber',
-#                                  tooltip='Enter a Labnumber'
-#                                  ),
-#                              Item('_labnumber', show_label=False,
-#                                  editor=EnumEditor(name='labnumbers'),
-#                                  tooltip='Select a Labnumber from the selected Project'
+# #         spectrometer = self.spectrometer_manager.spectrometer
+# #         get_data = lambda: self.spectrometer_manager.spectrometer.get_intensities(tagged=True)
+# #         get_data = self._get_data_generator()
+#
+#         ncounts = int(ncounts)
+# #         iter_cnt = 1
+#         graph = None
+#         if self.plot_panel:
+#             graph = self.plot_panel.isotope_graph
+#             mi, ma = graph.get_x_limits()
+#             dev = (ma - mi) * 0.05
+#             if (self._total_counts + dev) > ma:
+#                 graph.set_x_limits(-starttime_offset, self._total_counts + (ma - mi) * 0.25)
+#             elif starttime_offset > mi:
+#                 graph.set_x_limits(min_=-starttime_offset)
+#             nfs = self._get_fit_block(0, fits)
+#     #         for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+#             for pi, fi in enumerate(nfs):
+#                 graph.new_series(marker='circle', type='scatter',
+#                                  marker_size=1.25,
+#                                  fit=fi,
+#                                  plotid=pi
 #                                  )
-#                             ),
-#                       readonly('object.run_info.sample',
-#                              tooltip='Sample info retreived from Database'
-#                              ),
-#                       readonly('object.run_info.irrad_level',
-#                              tooltip='Irradiation info retreived from Database',
-#                              label='Irradiation'),
-#                       Item('weight',
-#                            label='Weight (mg)',
-#                            tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis'
-#                            ),
-#                       Item('comment',
-#                            tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
-#                            ),
-#                       extract_grp,
-#                       show_border=True,
-#                       label='Info'
-#                       )
-#                 )
-#        return v
-#    def _get_spectrometer_signals(self, series):
-#        keys, signals = None, None
-#        spec = self.spectrometer_manager.spectrometer
-#        if not _debug:
-#            data = spec.get_intensities(tagged=True)
-#            if data is not None:
-#                keys, signals = data
-# #                keys, signals = zip(*data)
-#        else:
-#            keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 #
-#            if series == 0:
-#                signals = [10, 1000, 8, 8, 8, 3]
-#            elif series == 1:
-#                r = random.randint(0, 10)
-#                signals = [0.1, (0.015 * (iter_cnt - 2800 + r)) ** 2,
-#                           0.1, 1, 0.1, (0.001 * (iter_cnt - 2000 + r)) ** 2
-#                           ]
-#            else:
-#                signals = [1, 2, 3, 4, 5, 6]
-#        return keys, signals
+#         func = self._make_write_iteration(grpname, data_write_hook,
+#                                                     series, fits, refresh,
+#                                                     graph)
+#         dm = self.data_manager
+#         with dm.open_file(self._current_data_frame):
+#             with consumable(func) as con:
+#                 self._iteration(con, ncounts, check_conditions, starttime)
+#
+#         if graph:
+#             graph.refresh()
+#
+#         mem_log('post measure {}'.format(grpname))
+#
+#         return True
+#
+#     def _iteration(self, con, ncounts, check_conditions, starttime):
+#         st = time.time()
+#         if starttime is None:
+#             starttime = time.time()
+#
+#         iter_cnt = 1
+#         iter_step = self._iter_step
+#         get_data = self._get_data_generator()
+#
+#         debug = globalv.experiment_debug
+#         if debug:
+#             m = 0.2
+#         else:
+#             m = self.integration_time
+#
+#         check = lambda x: self._check_iteration(x, ncounts, check_conditions)
+#         while 1:
+# #             if iter_cnt > ncounts:
+# #                 break
+#             ck = check(iter_cnt)
+#             if ck == 'break':
+#                 break
+#             elif ck == 'cancel':
+#                 return False
+#
+#             data = get_data.next()
+#             iter_step(iter_cnt, con, data, starttime, m, debug)
+#             iter_cnt += 1
+#
+#         t = time.time() - st
+#         iter_cnt -= 1
+#         et = iter_cnt * self.integration_time
+#         self.debug('%%%%%%%%%%%%%%%%%%%%%%%% counts: {} {} {}'.format(iter_cnt, et, t))
 
-#    def _regress_graph(self, reg, g, iso, dn, fi, tab, pi):
-#        x, y = zip(*[(ri['time'], ri['value']) for ri in tab.iterrows()])
-#        reg.xs=x
-#        reg.ys=y
-#        reg.fit=fi
-# #        reg.predict()
+#     @profile
+#     def _iter_step(self, iter_cnt, con, data, starttime, period, debug=False):
 #
-#        iter_cnt=reg.coefficients[-1]
-#        ie=reg.coefficient_errors[-1]
-#        self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,iter_cnt,ie))
+#         x = time.time() - starttime  # if not self._debug else iter_cnt + starttime
+#         if debug:
+#             x *= period ** -1
+#         con.add_consumable((iter_cnt, x, data))
 #
-#        mi,ma=g.get_x_limits()
-#        fx=linspace(mi,ma,200)
-#        fy=reg.predict(fx)
-#        lci,uci=reg.calculate_ci(fx)
-#        #plot fit
-#        g.new_series(
-#                     fx,fy,
-#                     plotid=pi, color='black')
+#         if iter_cnt % 50 == 0:
+#             self.info('collecting point {}'.format(iter_cnt))
+# #             mem_log('collecting point {}'.format(iter_cnt))
 #
-#
-#        kw = dict(color='red',
-#                         line_style='dash',
-#                         plotid=pi)
-#        #plot upper ci
-#        g.new_series(fx,uci
-#                     **kw
-#                     )
-#        g.new_series(fx,lci,
-#                     **kw
-#                     )
-#        g.redraw()
-#        return reg
-        # plot lower ci
+#         iter_cnt += 1
+#         time.sleep(period)
 
-#        rdict = reg._regress_(x, y, fi)
-#        try:
-# #        self.regression_results[dn.name] = rdict
-#            self.info('{}-{}-{} intercept {}+/-{}'.format(iso, dn, fi,
-#                                                    rdict['coefficients'][-1],
-#                                                 rdict['coeff_errors'][-1]
-#                                                 ))
+#     def _check_conditions(self, conditions, cnt):
+#         for ti in conditions:
+#             if ti.check(self.arar_age, cnt):
+#                 return ti
 #
-#            g.new_series(rdict['x'],
-#                         rdict['y'],
-#                         plotid=pi, color='black')
-#            kw = dict(color='red',
-#                         line_style='dash',
-#                         plotid=pi)
+#     def _check_iteration(self, i, ncounts, check_conditions):
 #
-#            g.new_series(rdict['upper_x'],
-#                         rdict['upper_y'],
-#                         **kw
-#                         )
-#            g.new_series(rdict['lower_x'],
-#                         rdict['lower_y'],
-#                         **kw
-#                         )
-#            g.redraw()
-#            return rdict
-#        except:
-#            self.warning('problem regressing')
-#    def get_estimated_duration(self):
-#        '''
-#            use the pyscripts to calculate etd
-#        '''
-#        s = self.duration
+# #         if self.plot_panel is None:
+# #             return 'break'
 #
-#        for si in [self.measurement_script,
-#                   self.extraction_script,
-#                   self.post_equilibration_script,
-#                   self.post_measurement_script]:
-#            if si is not None:
-#                s += si.get_estimated_duration()
+#         j = i - 1
+#         # exit the while loop if counts greater than max of original counts and the plot_panel counts
+#         pc = 0
+#         if self.plot_panel:
+#             pc = self.plot_panel.ncounts
 #
-#        return s
-
-#    def to_string_attrs(self, attr):
-#        def get_attr(attrname):
-#            if attrname in ['measurement_script',
-#                            'extraction_script',
-#                            'post_measurement_script',
-#                            'post_equilibration_script']:
-#                v = getattr(self.script_info, '{}_name'.format(attrname))
-#                if v:
-#                    v = str(v).replace(self.mass_spectrometer, '')
-#            elif attrname == 'labnumber':
-#                if self.user_defined_aliquot:
-#                    v = '{}-{}'.format(self.labnumber, self.aliquot)
-#                else:
-#                    v = self.labnumber
-#            else:
-#                v = getattr(self, attrname)
+#         maxcounts = max(ncounts, pc)
+#         if i > maxcounts:
+#             return 'break'
 #
+#         if check_conditions:
+#             termination_condition = self._check_conditions(self.termination_conditions, i)
+#             if termination_condition:
+#                 self.info('termination condition {}. measurement iteration executed {}/{} counts'.format(termination_condition.message, j, ncounts),
+#                           color='red'
+#                           )
+#                 return 'cancel'
 #
-#            return v
+#             truncation_condition = self._check_conditions(self.truncation_conditions, i)
+#             if truncation_condition:
+#                 self.info('truncation condition {}. measurement iteration executed {}/{} counts'.format(truncation_condition.message, j, ncounts),
+#                           color='red'
+#                           )
+#                 self.state = 'truncated'
+#                 self.measurement_script.abbreviated_count_ratio = truncation_condition.abbreviated_count_ratio
 #
-#        return [get_attr(ai) for ai in attr]
-
-#    def do_regress(self, fits, series=0):
-#        if not self._alive:
-#            return
-# #        time_zero_offset = 0#int(self.experiment_manager.equilibration_time * 2 / 3.)
-#        self.regression_results = dict()
+# #                self.condition_truncated = True
+#                 return 'break'
 #
-#        reg = PolynomialRegressor()
-#        dm = self.data_manager
-#        ppp = self.peak_plot_panel
-#        if ppp:
-# #            print ppp.isotopes
-#            n = len(ppp.isotopes)
-#            if isinstance(fits, str) or len(fits) < n:
-#                fits = [fits[0], ] * n
-#            for pi, (iso, fi) in enumerate(zip(ppp.isotopes, fits)):
-#                tab = dm.get_table(ppp.detector, '/signals/{}'.format(iso))
-#                if tab is None:
-#                    continue
+#             action_condition = self._check_conditions(self.action_conditions, i)
+#             if action_condition:
+#                 self.info('action condition {}. measurement iteration executed {}/{} counts'.format(action_condition.message, j, ncounts),
+#                           color='red'
+#                           )
+#                 action_condition.perform(self.measurement_script)
+#                 if not action_condition.resume:
+#                     return 'break'
 #
-#                rdict = self._regress_graph(reg,
-#                                            ppp.graph,
-#                                            iso,
-#                                            ppp.detector,
-#                                            fi, tab, pi)
-#                self.regression_results[ppp.detector + iso] = rdict
-#                tab.attrs.fit = fi
-#            ppp.series_cnt += 3
+#         if i > self.measurement_script.ncounts:
+#             self.info('script termination. measurement iteration executed {}/{} counts'.format(j, ncounts))
+#             return 'break'
 #
-#        n = len(self._active_detectors)
-#        if isinstance(fits, str) or len(fits) < n:
-#            fits = [fits[0], ] * n
+#         if pc:
+#             if i > pc:
+#                 self.info('user termination. measurement iteration executed {}/{} counts'.format(j, ncounts))
+#                 self._total_counts -= (ncounts - i)
+#                 return 'break'
 #
-#        if self.plot_panel:
-#            for pi, (dn, fi) in enumerate(zip(self._active_detectors, fits)):
-#                tab = dm.get_table(dn.name, '/signals/{}'.format(dn.isotope))
-#                if tab is None:
-#                    continue
+#         if self._truncate_signal:
+#             self.info('measurement iteration executed {}/{} counts'.format(j, ncounts))
+#             self._truncate_signal = False
 #
-#                rdict = self._regress_graph(reg,
-#                                            self.plot_panel.graph,
-#                                            iso,
-#                                            dn.name, fi, tab, pi)
-#                self.regression_results[dn.name] = rdict
-#                tab.attrs.fit = fi
+#             return 'break'
+#
+#         if not self._alive:
+#             self.info('measurement iteration executed {}/{} counts'.format(j, ncounts))
+#             return 'cancel'

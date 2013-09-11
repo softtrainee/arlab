@@ -16,14 +16,14 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Event, Button, Float, String, \
-    Bool, Enum, Property, Instance, Int, List, Any, Color
+    Bool, Enum, Property, Instance, Int, List, Any, Color, Dict
 from traitsui.api import View, Item
 #============= standard library imports ========================
 from threading import Thread, Event as Flag
 import weakref
 #============= local library imports  ==========================
 from src.ui.thread import Thread as uThread
-from src.loggable import Loggable
+# from src.loggable import Loggable
 from src.displays.display import DisplayController
 from src.helpers.parsers.initialization_parser import InitializationParser
 from src.pyscripts.pyscript_runner import RemotePyScriptRunner, PyScriptRunner
@@ -126,8 +126,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
     _canceled = False
     _state_thread = None
     _end_flag = None
-    _prev_blanks = None
-    _prev_baselines = None
+    _prev_blanks = Dict
+    _prev_baselines = Dict
     _err_message = None
 
     def set_queue_modified(self):
@@ -801,6 +801,10 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     self.cancel(confirm=False)
 
     def _pre_execute_check(self, inform=True):
+        if globalv.experiment_debug:
+            self.debug('********************** NOT DOING PRE EXECUTE CHECK ')
+            return True
+
         with self.db.session_ctx():
             dbr = self._get_preceeding_blank_or_background(inform=inform)
             if not dbr is True:
@@ -810,10 +814,6 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     self.info('using {} as the previous blank'.format(dbr.record_id))
                     self._prev_blanks = dbr.get_baseline_corrected_signal_dict()
                     self._prev_baselines = dbr.get_baseline_dict()
-
-        if globalv.experiment_debug:
-            self.debug('********************** NOT DOING PRE EXECUTE CHECK ')
-            return True
 
         if not self.pyscript_runner.connect():
             self.info('Failed connecting to pyscript_runner')

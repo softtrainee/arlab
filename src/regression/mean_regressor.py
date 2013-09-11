@@ -66,13 +66,13 @@ sem={}
     def predict(self, xs, *args):
         return ones(asarray(xs).shape) * self.mean
 
-    def calculate_ci(self, fx):
-        c = self.predict(fx)
+    def calculate_ci(self, fx, fy):
+#         c = self.predict(fx)
         fit = self.fit.lower()
         ec = 'sem' if fit.endswith('sem') else 'sd'
         e = self.predict_error(fx, error_calc=ec)
-        ly = c - e
-        uy = c + e
+        ly = fy - e
+        uy = fy + e
         return ly, uy
 
     def tostring(self, sig_figs=5, error_sig_figs=5):

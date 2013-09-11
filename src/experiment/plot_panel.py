@@ -283,7 +283,7 @@ class PlotPanel(Loggable):
 #
 #         print toadd
         for det in dets:
-            p = g.new_plot(
+            g.new_plot(
 #                       title=self.plot_title if i == 0 else '',
                        ytitle='{} {} (fA)'.format(det.name, det.isotope),
                        xtitle='time (s)',
@@ -460,73 +460,73 @@ class PlotPanel(Loggable):
                                              padding_bottom=35
                                       )
 
-    def graph_view(self):
-        gg = self._get_graph_group()
-        gg.height = 0.90
-
-        v = View(
-                  VSplit(
-                        gg,
-                        Group(
-                              Item('ncounts'),
-                              label='Controls',
-                             ),
-                        )
-                 )
-        return v
-
-    def summary_view(self):
-        g = self._get_display_group()
-#         g.orientation = 'vertical'
-#         g.layout = 'normal'
-        v = View(g)
-        return v
-
-
-    def _get_graph_group(self):
-        graph_grp = Group(
-                        Group(Item('graph', show_label=False,
-                                   height=0.65,
-                                   style='custom'),
-                              label='Isotopes'
-                              ),
-                        Group(Item('peak_center_graph', show_label=False,
-                                   height=0.65,
-                                   style='custom'),
-                              label='Peak Center'
-                              ),
-                          layout='tabbed'
-                          )
-
-        return graph_grp
-
-    def traits_view(self):
+#     def graph_view(self):
 #         gg = self._get_graph_group()
-#         gg.height = 0.65
-
-        v = View(
-                 VSplit(
-                        UItem('graph_container',
-                              style='custom',
-                              height=0.75),
-                        UItem('display_container',
-                              style='custom',
-                              height=0.25)
+#         gg.height = 0.90
+#
+#         v = View(
+#                   VSplit(
 #                         gg,
-#                        VGroup(
-#                              Item('ncounts'),
-#                              self._get_display_group()
-#                             ),
-
-                        ),
-                width=500,
-#                 height=0.9,
-#                 x=self.window_x,
-#                 y=self.window_y,
-#                 title=self.window_title,
-#                 handler=PlotPanelHandler
-                 )
-        return v
+#                         Group(
+#                               Item('ncounts'),
+#                               label='Controls',
+#                              ),
+#                         )
+#                  )
+#         return v
+#
+#     def summary_view(self):
+#         g = self._get_display_group()
+# #         g.orientation = 'vertical'
+# #         g.layout = 'normal'
+#         v = View(g)
+#         return v
+#
+#
+#     def _get_graph_group(self):
+#         graph_grp = Group(
+#                         Group(Item('graph', show_label=False,
+#                                    height=0.65,
+#                                    style='custom'),
+#                               label='Isotopes'
+#                               ),
+#                         Group(Item('peak_center_graph', show_label=False,
+#                                    height=0.65,
+#                                    style='custom'),
+#                               label='Peak Center'
+#                               ),
+#                           layout='tabbed'
+#                           )
+#
+#         return graph_grp
+#
+#     def traits_view(self):
+# #         gg = self._get_graph_group()
+# #         gg.height = 0.65
+#
+#         v = View(
+#                  VSplit(
+#                         UItem('graph_container',
+#                               style='custom',
+#                               height=0.75),
+#                         UItem('display_container',
+#                               style='custom',
+#                               height=0.25)
+# #                         gg,
+# #                        VGroup(
+# #                              Item('ncounts'),
+# #                              self._get_display_group()
+# #                             ),
+#
+#                         ),
+#                 width=500,
+# #                 height=0.9,
+# #                 x=self.window_x,
+# #                 y=self.window_y,
+# #                 title=self.window_title,
+# #                 handler=PlotPanelHandler
+#                  )
+#         return v
 
     def _get_isotopes(self):
         return [d.isotope for d in self.detectors]

@@ -41,6 +41,7 @@ class BaseRegressor(HasTraits):
     _result = None
     fit = Property
     _fit = None
+
     def _xs_changed(self):
 #        if len(self.xs) and len(self.ys):
         self.calculate()
@@ -169,29 +170,32 @@ class BaseRegressor(HasTraits):
     def calculate_residuals(self):
         return self.predict(self.xs) - self.ys
 
-    def calculate_ci(self, rx):
-        rmodel, cors = self._calculate_ci(rx)
+    def calculate_ci(self, rx, rmodel):
+        cors = self._calculate_ci(rx, rmodel)
         if rmodel is not None and cors is not None:
-            if len(rmodel) and len(cors):
-                lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
-                return asarray(lci), asarray(uci)
+            if rmodel.shape[0] and cors.shape[0]:
+                return rmodel - cors, rmodel + cors
 
-    def _calculate_ci(self, rx):
+#                 lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
+#                 return asarray(lci), asarray(uci)
+
+    def _calculate_ci(self, rx, rmodel):
         if isinstance(rx, (float, int)):
             rx = [rx]
+
         X = self.xs
         Y = self.ys
-        model = self.predict(X)
-        rmodel = self.predict(rx)
-        cors = self._calculate_confidence_interval(X, Y, model, rx, rmodel)
-        return rmodel, cors
+#         model = self.predict(X)
+#         rmodel = self.predict(rx)
+
+        cors = self._calculate_confidence_interval(X, Y, rx, rmodel)
+        return cors
 
     def _calculate_confidence_interval(self,
                                        x,
                                        observations,
-                                       model,
                                        rx,
-                                       rmodel,
+                                       model,
                                        confidence=95):
 
         alpha = 1.0 - confidence / 100.0
@@ -205,28 +209,34 @@ class BaseRegressor(HasTraits):
 
             ti = tinv(alpha, n - 2)
 
-            syx = self.syx
-            ssx = self.ssx
+            syx = self.syx()
+            ssx = self.ssx(xm)
 
             d = n ** -1 + (rx - xm) ** 2 / ssx
             cors = ti * syx * d ** 0.5
 
             return cors
 
-    @property
+
     def syx(self):
-        n = len(self.xs)
+        n = self.xs.shape[0]
         obs = self.ys
-        model = self.predict(self.xs)
+
+#         for di in dir(self._result):
+#             print di
+
+        model = self._result.fittedvalues
+
         if model is not None:
             return (1. / (n - 2) * ((obs - model) ** 2).sum()) ** 0.5
         else:
             return 0
 
-    @property
-    def ssx(self):
+    def ssx(self, xm=None):
         x = self.xs
-        xm = x.mean()
+        if xm is None:
+            xm = x.mean()
+
         return ((x - xm) ** 2).sum()
 
     def _get_fit(self):

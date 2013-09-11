@@ -78,7 +78,9 @@ class Monitor(ConfigLoadable):
 
             if self.load():
                 t = Thread(target=self._monitor_)
+                t.setDaemon(1)
                 t.start()
+
                 return True
         else:
             return True
