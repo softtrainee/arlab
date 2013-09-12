@@ -19,7 +19,7 @@ from traits.api import HasTraits, Event, Button, Float, String, \
     Bool, Enum, Property, Instance, Int, List, Any, Color, Dict
 from traitsui.api import View, Item
 #============= standard library imports ========================
-from threading import Thread, Event as Flag
+from threading import Thread, Event as Flag, Timer
 import weakref
 #============= local library imports  ==========================
 from src.ui.thread import Thread as uThread
@@ -54,6 +54,7 @@ from src.helpers.filetools import add_extension
 import gc
 from src.globals import globalv
 from src.wait.wait_group import WaitGroup
+from pyface.timer.do_later import do_after
 
 
 class ExperimentExecutor(IsotopeDatabaseManager):
@@ -607,75 +608,52 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         wc.start()
         self.delaying_between_runs = False
 
-#         time.sleep(1)
-
-#         self.delaying_between_runs = True
-#         self.resume_runs = False
-#         st = time.time()
-#         while time.time() - st < delay - 1:
-#             if not self.isAlive():
-#                 break
-#             if self.resume_runs:
-#                 break
-#
-#             time.sleep(0.5)
-#             self.delay_between_runs_readback -= 0.5
-#         self.delaying_between_runs = False
-#         self.delay_between_runs_readback = 0
-
-    def _set_extract_state(self, state, flash=0.75, color='green'):
-
-        def loop(end_flag, label, color):
-            '''
-                freq== percent label is shown e.g 0.75 means display label 75% of the iterations
-                iperiod== iterations per second (inverse period == rate)
-                
-            '''
-            freq = flash
-            if freq:
-                iperiod = 20
-                period = 1 / float(iperiod)
-
-                threshold = freq ** 2 * iperiod  # mod * freq
-
-                i = 0
-                kw = dict(extraction_state_label=label,
-                        extraction_state_color=color)
-                while not end_flag.is_set():
-                    if i % iperiod < threshold:
-                        invoke_in_main_thread(self.trait_set, **kw)
-                    else:
-                        invoke_in_main_thread(self.trait_set,
-                                              extraction_state_label='')
-
-                    time.sleep(period)
-                    i += 1
-                    if i > 1000:
-                        i = 0
-            else:
-                invoke_in_main_thread(self.trait_set,
-                                      extraction_state_label=label,
-                                      extraction_state_color=color)
+    def _set_extract_state(self, state, flash, color='green'):
 
         if state:
-            if self._state_thread:
-                self._end_flag.set()
+            label = state.upper()
+            if flash:
+                if self._state_thread:
+                    self._end_flag.set()
 
-            time.sleep(0.1)
-            self._end_flag = Flag()
-            t = uThread(target=loop,
-                       args=(self._end_flag,
-                             state.upper(),
-#                              '*** {} ***'.format(state.upper()),
-                             color,
-                             )
-                       )
-            t.start()
-            self._state_thread = t
+                self._end_flag = end_flag = Flag()
+
+                def loop():
+                    '''
+                        freq== percent label is shown e.g 0.75 means display label 75% of the iterations
+                        iperiod== iterations per second (inverse period == rate)
+                        
+                    '''
+                    freq = flash
+                    iperiod = 5
+                    threshold = freq ** 2 * iperiod  # mod * freq
+                    self._extraction_state_iter(0, iperiod, threshold, label, color, end_flag)
+
+                invoke_in_main_thread(loop)
+            else:
+                invoke_in_main_thread(self.trait_set, extraction_state_label=label,
+                                      extraction_state_color=color)
+
         else:
             if self._end_flag:
                 self._end_flag.set()
             invoke_in_main_thread(self.trait_set, extraction_state_label='')
+
+    def _extraction_state_iter(self, i, iperiod, threshold, label, color, end_flag):
+#         print '{} {} {} {}'.format(i, iperiod, i % iperiod, threshold)
+        if i % iperiod > threshold:
+            self.trait_set(extraction_state_label='')
+        else:
+            self.trait_set(extraction_state_label=label,
+                           extraction_state_color=color)
+
+        if not end_flag.isSet():
+            if i > 1000:
+                i = 0
+            do_after(1000 / float(iperiod), self._extraction_state_iter, i + 1, iperiod,
+                     threshold, label, color, end_flag)
+        else:
+            self.trait_set(extraction_state_label='')
 
     def _add_backup(self, uuid_str):
         with open(paths.backup_recovery_file, 'a') as fp:

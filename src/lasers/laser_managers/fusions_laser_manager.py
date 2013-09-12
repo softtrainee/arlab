@@ -121,9 +121,9 @@ class FusionsLaserManager(LaserManager):
 #===============================================================================
 #   IExtractionDevice interface
 #===============================================================================
-    def extract(self, power):
+    def extract(self, power, **kw):
         self.enable_laser()
-        self.set_laser_power(power)
+        self.set_laser_power(power, **kw)
 
     def end_extract(self):
         self.disable_laser()

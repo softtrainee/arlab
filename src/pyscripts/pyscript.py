@@ -574,7 +574,7 @@ class PyScript(Loggable):
 
         self.info('SLEEP {}'.format(duration))
         if globalv.experiment_debug:
-            duration = 0.5
+#             duration = 0.5
             self.debug('using debug sleep {}'.format(duration))
 
         self._sleep(duration, message=message)
@@ -675,7 +675,7 @@ class PyScript(Loggable):
 
         if v > 1:
             self._block(v, message=message, dialog=True)
-            
+
 #            if v >= :
 #            else:
 #                self._block(v, dialog=False)
@@ -691,8 +691,8 @@ class PyScript(Loggable):
 
             if self.manager:
                 wd = self.manager.wait_group.active_control
-                if wd.current_time>1:
-                    wd=self.manager.wait_group.add_control()
+                if wd.current_time > 1:
+                    wd = self.manager.wait_group.add_control()
             else:
                 wd = self._wait_dialog
 
@@ -713,7 +713,7 @@ class PyScript(Loggable):
             wd.start(block=True)
             if self.manager:
                 self.manager.wait_group.pop()
-                
+
             if wd._canceled:
                 self.cancel()
             elif wd._continued:
