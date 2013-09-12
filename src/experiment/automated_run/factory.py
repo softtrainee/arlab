@@ -399,8 +399,8 @@ class AutomatedRunFactory(Loggable):
             elif self.position:
                 arvs = self._new_runs_by_position()
 
-        if arvs is None:
-            arvs = [self._new_run]
+        if not arvs:
+            arvs = [self._new_run()]
 
         return arvs
 
@@ -803,23 +803,31 @@ class AutomatedRunFactory(Loggable):
         if not pos.strip():
             return ''
 
-        for r in (SLICE_REGEX, SSLICE_REGEX, PSLICE_REGEX):
+        for r in (SLICE_REGEX, SSLICE_REGEX, PSLICE_REGEX,
+                  TRANSECT_REGEX, POSITION_REGEX
+                  ):
             if r.match(pos):
                 return pos
         else:
-            ps = pos.split(',')
-
-            ok = False
-            for pi in ps:
-                ok = False
-                if not pi:
+            for po in pos.split(','):
+                try:
+                    int(po)
+                except ValueError:
+                    ok = False
                     break
-
-                if TRANSECT_REGEX.match(pi):
-                    ok = True
-
-                elif POSITION_REGEX.match(pi):
-                    ok = True
+            else:
+                ok = True
+#             ok = False
+#             for pi in ps:
+#                 ok = False
+#                 if not pi:
+#                     break
+#
+#                 if TRANSECT_REGEX.match(pi):
+#                     ok = True
+#
+#                 elif POSITION_REGEX.match(pi):
+#                     ok = True
         if ok:
             return pos
 
