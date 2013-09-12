@@ -172,6 +172,7 @@ class BaseRegressor(HasTraits):
 
     def calculate_ci(self, rx, rmodel):
         cors = self._calculate_ci(rx, rmodel)
+#         print cors
         if rmodel is not None and cors is not None:
             if rmodel.shape[0] and cors.shape[0]:
                 return rmodel - cors, rmodel + cors
@@ -187,7 +188,6 @@ class BaseRegressor(HasTraits):
         Y = self.ys
 #         model = self.predict(X)
 #         rmodel = self.predict(rx)
-
         cors = self._calculate_confidence_interval(X, Y, rx, rmodel)
         return cors
 
@@ -201,7 +201,6 @@ class BaseRegressor(HasTraits):
         alpha = 1.0 - confidence / 100.0
 
         n = len(observations)
-
         if n > 2:
             xm = x.mean()
             observations = array(observations)
@@ -225,8 +224,9 @@ class BaseRegressor(HasTraits):
 #         for di in dir(self._result):
 #             print di
 
-        model = self._result.fittedvalues
-
+#         model = self._result.fittedvalues
+        model = self.predict(self.xs)
+#         print 'sssss', model.shape, obs.shape
         if model is not None:
             return (1. / (n - 2) * ((obs - model) ** 2).sum()) ** 0.5
         else:

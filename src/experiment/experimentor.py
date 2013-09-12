@@ -44,7 +44,7 @@ class Experimentor(IsotopeDatabaseManager):
     stats = Instance(StatsGroup, ())
 
     mode = None
-    unique_executor_db = True
+    unique_executor_db = False
 
     save_enabled = Bool
 

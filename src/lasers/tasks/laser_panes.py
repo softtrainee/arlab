@@ -269,75 +269,7 @@ class ClientPane(TraitsTaskPane):
                  title='Laser Manager',
                  )
         return v
-#===============================================================================
-# co2
-#===============================================================================
-class FusionsCO2Pane(BaseLaserPane):
-    pass
 
-class FusionsCO2ClientPane(ClientPane):
-    pass
-
-class FusionsCO2StagePane(StageControlPane):
-    id = 'pychron.fusions.co2.stage'
-
-class FusionsCO2ControlPane(ControlPane):
-    id = 'pychron.fusions.co2.control'
-
-class FusionsCO2AxesPane(AxesPane):
-    id = 'pychron.fusions.co2.axes'
-
-#===============================================================================
-# Diode
-#===============================================================================
-class FusionsDiodeClientPane(ClientPane):
-    pass
-
-class FusionsDiodePane(BaseLaserPane):
-    pass
-
-
-class FusionsDiodeStagePane(StageControlPane):
-    id = 'pychron.fusions.diode.stage'
-
-
-class FusionsDiodeControlPane(ControlPane):
-    id = 'pychron.fusions.diode.control'
-
-
-class FusionsDiodeAxesPane(AxesPane):
-    id = 'pychron.fusions.diode.axes'
-
-
-class FusionsDiodeSupplementalPane(SupplementalPane):
-    id = 'pychron.fusions.diode.supplemental'
-    name = 'Diode'
-    def traits_view(self):
-        v = View(
-               VGroup(Item('temperature_controller', style='custom',
-                               editor=InstanceEditor(view='control_view'),
-                               show_label=False,
-                               ),
-                      label='Watlow',
-#                      show_border = True,
-                      ),
-                 VGroup(Item('pyrometer', show_label=False, style='custom',
-                              ),
-#                      show_border = True,
-                      label='Pyrometer',
-
-                      ),
-                 VGroup(Item('control_module_manager', show_label=False, style='custom',
-                             ),
-#                      show_border = True,
-                      label='ControlModule',
-
-                      ),
-                  VGroup(Item('fiber_light', style='custom', show_label=False),
-                         label='FiberLight'
-                         )
-               )
-        return v
 
 class AuxilaryGraphPane(TraitsDockPane):
     name = 'Auxilary Graph'

@@ -18,13 +18,16 @@
 from traits.api import Property
 # from traitsui.api import View, Item, TextEditor
 from src.envisage.tasks.base_task import BaseHardwareTask
-from src.lasers.tasks.laser_panes import FusionsDiodePane, \
-    FusionsDiodeControlPane, FusionsDiodeStagePane, PulsePane, OpticsPane, \
-    FusionsCO2Pane, FusionsCO2StagePane, FusionsCO2ControlPane, \
-    FusionsDiodeSupplementalPane, FusionsDiodeClientPane, FusionsCO2ClientPane, \
-    FusionsCO2AxesPane, AuxilaryGraphPane
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 from src.lasers.pattern.pattern_maker_view import PatternMakerView
+from src.lasers.tasks.panes.co2 import FusionsCO2Pane, FusionsCO2StagePane, \
+    FusionsCO2ControlPane
+from src.lasers.tasks.laser_panes import PulsePane, OpticsPane, \
+    AuxilaryGraphPane
+from src.lasers.tasks.panes.diode import FusionsDiodeClientPane, \
+    FusionsDiodePane, FusionsDiodeStagePane, FusionsDiodeControlPane, \
+    FusionsDiodeSupplementalPane
+from src.lasers.tasks.panes.uv import FusionsUVPane, FusionsUVClientPane
 # from pyface.tasks.action.schema import SMenu
 # from src.lasers.tasks.laser_actions import OpenScannerAction
 #============= standard library imports ========================
@@ -155,4 +158,20 @@ class FusionsDiodeTask(FusionsTask):
                 OpticsPane(model=self.manager),
                 AuxilaryGraphPane(model=self.manager),
                 ]
+
+class FusionsUVTask(FusionsTask):
+    id = 'fusions.uv'
+    name = 'Fusions UV'
+    def create_central_pane(self):
+        klass = FusionsUVPane
+        if self.manager.mode == 'client':
+            klass = FusionsUVClientPane
+
+        return klass(model=self.manager)
+
+    def create_dock_panes(self):
+        if self.manager.mode == 'client':
+            return []
+        else:
+            return []
 #============= EOF =============================================
