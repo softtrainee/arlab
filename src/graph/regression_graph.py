@@ -296,13 +296,15 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
             line.index.set_data(fx)
             line.value.set_data(fy)
+
             if hasattr(line, 'error_envelope'):
                 ci = r.calculate_ci(fx, fy)
+#                 print ci
                 if ci is not None:
                     ly, uy = ci
                 else:
                     ly, uy = fy, fy
-#
+
                 line.error_envelope.lower = ly
                 line.error_envelope.upper = uy
                 line.error_envelope.invalidate()

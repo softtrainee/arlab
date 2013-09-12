@@ -38,9 +38,10 @@ PACKAGE_DICT = dict(
 
 #                   SVNPlugin='src.svn.plugins.svn_plugin',
 
-                   FusionsDiodePlugin='src.lasers.tasks.laser_plugin',
-                   FusionsCO2Plugin='src.lasers.tasks.laser_plugin',
-                   CoreLaserPlugin='src.lasers.tasks.laser_plugin',
+                   FusionsDiodePlugin='src.lasers.tasks.plugins.diode',
+                   FusionsCO2Plugin='src.lasers.tasks.plugins.co2',
+                   FusionsUVPlugin='src.lasers.tasks.plugins.uv',
+                   CoreLaserPlugin='src.lasers.tasks.plugins.laser_plugin',
 #                   FusionsDiodePlugin='src.lasers.plugins.fusions.diode.plugin',
 #                   FusionsCO2Plugin='src.lasers.plugins.fusions.co2.plugin',
 #                   FusionsUVPlugin='src.lasers.plugins.fusions.uv.plugin',
