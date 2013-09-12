@@ -33,7 +33,7 @@ class DatabaseManager(Manager):
         try:
 #            bind_preference(self, 'username', 'envisage.ui.workbench.username')
             bind_preference(self.db, 'save_username', 'envisage.ui.workbench.username')
-            prefid = 'pychron.experiment'
+            prefid = 'pychron.database'
             bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
             if self.db.kind == 'mysql':
                 bind_preference(self.db, 'host', '{}.db_host'.format(prefid))

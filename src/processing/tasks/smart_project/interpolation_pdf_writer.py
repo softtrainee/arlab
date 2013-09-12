@@ -20,7 +20,7 @@ from src.pdf.base_pdf_writer import BasePDFWriter
 from reportlab.lib.units import inch
 from datetime import datetime
 from reportlab.lib import colors
-from src.experiment.loading.component_flowable import ComponentFlowable
+from src.loading.component_flowable import ComponentFlowable
 from reportlab.platypus.flowables import PageBreak
 #============= standard library imports ========================
 #============= local library imports  ==========================

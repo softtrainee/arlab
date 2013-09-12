@@ -24,15 +24,16 @@ from pyface.tasks.action.schema import SToolBar
 #============= local library imports  ==========================
 
 from src.envisage.tasks.base_task import BaseManagerTask
-from src.experiment.loading.panes import LoadPane, LoadControlPane, LoadTablePane
+from src.loading.panes import LoadPane, LoadControlPane, LoadTablePane
 from src.canvas.canvas2D.loading_canvas import LoadingCanvas
-from src.experiment.loading.actions import SaveLoadingAction
-from src.experiment.loading.loading_manager import LoadingManager, LoadPosition
-from src.experiment.loading.loading_pdf_writer import LoadingPDFWriter
+from src.loading.actions import SaveLoadingAction
+from src.loading.loading_manager import LoadingManager, LoadPosition
+from src.loading.loading_pdf_writer import LoadingPDFWriter
 from apptools.preferences.preference_binding import bind_preference
 import os
 from src.paths import paths
 from datetime import datetime
+from pyface.timer.do_later import do_later
 
 class LoadingTask(BaseManagerTask):
     name = 'Loading'
@@ -50,14 +51,16 @@ class LoadingTask(BaseManagerTask):
                           )]
 
     def activated(self):
-        self.manager.tray = 'A'
-        self.manager.irradiation = 'NM-251'
-        self.manager.level = 'H'
-        self.manager.labnumber = '61311'
+#         self.manager.tray = 'A'
+#         self.manager.irradiation = 'NM-251'
+#         self.manager.level = 'H'
+#         self.manager.labnumber = '61311'
 
-        self.manager.setup()
+        if self.manager.setup():
+            bind_preference(self, 'save_directory', 'pychron.loading.save_directory')
+        else:
+            do_later(self.window.close)
 
-        bind_preference(self, 'save_directory', 'pychron.loading.save_directory')
 
     def _manager_default(self):
         return LoadingManager()
@@ -108,11 +111,11 @@ class LoadingTask(BaseManagerTask):
         path = os.path.join(root, '{}.pdf'.format(ln))
         p.build(path, positions, self.canvas, meta)
 
-    @on_trait_change('manager:load_name')
-    def _load_changed(self, new):
-        if new:
-            self.manager.tray = ''
-            self.manager.load_load(new)
+#     @on_trait_change('manager:load_name')
+#     def _load_changed(self, new):
+#         if new:
+#             self.manager.tray = ''
+#             self.manager.load_load(new)
 
     @on_trait_change('manager:tray')
     def _tray_changed(self, new):

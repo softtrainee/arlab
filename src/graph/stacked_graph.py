@@ -196,9 +196,9 @@ class StackedGraph(Graph):
                 except ValueError:
                     pass
 
-    def _bind_index(self, scatter, series_id, bind_selection=True, **kw):
-        if bind_selection:
-            u = lambda obj, name, old, new: self._update_metadata(scatter, series_id, obj, name, old, new)
-            scatter.index.on_trait_change(u, 'metadata_changed')
+#     def _bind_index(self, scatter, series_id, bind_selection=True, **kw):
+#         if bind_selection:
+#             u = lambda obj, name, old, new: self._update_metadata(scatter, series_id, obj, name, old, new)
+#             scatter.index.on_trait_change(u, 'metadata_changed')
 #        pass
 #============= EOF ====================================

@@ -35,8 +35,8 @@ from src.experiment.tasks.experiment_editor import ExperimentEditor
 from src.paths import paths
 from src.helpers.filetools import add_extension
 from src.ui.gui import invoke_in_main_thread
-from src.experiment.loading.panes import LoadDockPane, LoadTablePane
-from src.experiment.loading.loading_manager import LoadingManager
+from src.loading.panes import LoadDockPane, LoadTablePane
+from src.loading.loading_manager import LoadingManager
 from src.messaging.notify.notifier import Notifier
 from src.lasers.pattern.pattern_maker_view import PatternMakerView
 
@@ -142,9 +142,10 @@ class ExperimentEditorTask(EditorTask):
     def create_dock_panes(self):
         self.isotope_evolution_pane = IsotopeEvolutionPane()
 
+        self.load_pane = self.application.get_service('src.loading.panes.LoadDockPane')
+#         self.load_pane = LoadDockPane()
+#         self.load_table_pane = LoadTablePane(model=self.loading_manager)
 
-        self.load_pane = LoadDockPane()
-        self.load_table_pane = LoadTablePane(model=self.loading_manager)
         self.experiment_factory_pane = ExperimentFactoryPane(model=self.manager.experiment_factory)
         self.wait_pane = WaitPane(model=self.manager.executor)
         panes = [
@@ -155,7 +156,7 @@ class ExperimentEditorTask(EditorTask):
 #                 ExplanationPane(),
                 self.isotope_evolution_pane,
                 self.load_pane,
-                self.load_table_pane,
+#                 self.load_table_pane,
                 self.wait_pane
 #                 self.summary_pane,
                 ]

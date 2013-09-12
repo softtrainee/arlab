@@ -18,7 +18,7 @@
 from traits.api import HasTraits
 from traitsui.api import View, Item
 from src.loggable import Loggable
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.database.isotope_database_manager import IsotopeDatabaseManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

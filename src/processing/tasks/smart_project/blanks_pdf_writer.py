@@ -21,7 +21,7 @@ from reportlab.lib.units import inch
 from reportlab.lib import colors
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.experiment.loading.component_flowable import ComponentFlowable
+from src.loading.component_flowable import ComponentFlowable
 from src.processing.tasks.smart_project.interpolation_pdf_writer import InterpolationPDFWriter
 
 class BlanksPDFWrtier(InterpolationPDFWriter):

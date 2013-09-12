@@ -17,28 +17,15 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits
 from traitsui.api import View, Item
-import unittest
-from src.loading.load_task import LoadingTask
-from src.unittests.database import get_test_database
-from src.loading.loading_manager import LoadingManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
+from src.database.tasks.connection_preferences import ConnectionPreferencesPane
 
-class LoadingTest(unittest.TestCase):
-    def setUp(self):
-#         self.t = LoadingTask()
-        db = get_test_database().db
-        lm = LoadingManager(db=db)
 
-#         lm.irradiation = 'NM-251'
-#         lm.level = 'H'
-        self.t = LoadingTask(manager=lm)
-
-    def testSave(self):
-        lm = self.t.manager
-        c = lm.make_canvas('1401')
-
-        self.t.canvas = c
-        self.t.save_loading()
-
+class DatabasePlugin(BaseTaskPlugin):
+    def _preferences_panes_default(self):
+        return [
+                ConnectionPreferencesPane
+                ]
 #============= EOF =============================================

@@ -22,7 +22,7 @@ from traitsui.api import View, Item, EnumEditor
 
 from itertools import groupby
 #============= local library imports  ==========================
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.canvas.canvas2D.loading_canvas import LoadingCanvas
 
 from src.database.orms.isotope_orm import loading_LoadTable
@@ -166,17 +166,20 @@ class LoadingManager(IsotopeDatabaseManager):
             self.load_name = self.loads[0]
 
     def setup(self):
-        self.populate_default_tables()
+        if self.db.connected:
+            self.populate_default_tables()
 
-        ls = self._get_loads()
-        if ls:
-            self.loads = ls
+            ls = self._get_loads()
+            if ls:
+                self.loads = ls
 
-        ts = self._get_trays()
-        if ts:
-            self.trays = ts
+            ts = self._get_trays()
+            if ts:
+                self.trays = ts
 
-        ls = self._get_last_load()
+            ls = self._get_last_load()
+            return True
+
 
     def _get_loads(self):
         loads = self.db.get_loads(order=loading_LoadTable.create_date.desc())
@@ -196,8 +199,8 @@ class LoadingManager(IsotopeDatabaseManager):
             lt = self.db.get_loadtable()
             if lt:
                 self.load_name = lt.name
-                if set_tray and lt.holder_:
-                    self.load_load(lt, set_tray=set_tray)
+#                 if set_tray and lt.holder_:
+#                     self.load_load(lt, set_tray=set_tray)
 
         return self.load_name
 
@@ -264,8 +267,6 @@ class LoadingManager(IsotopeDatabaseManager):
 
         self._set_canvas_hole_selected(canvas_hole)
 
-
-
     def _set_position(self, canvas_hole):
 
         _, pos = self._get_pid_pos(canvas_hole)
@@ -275,9 +276,9 @@ class LoadingManager(IsotopeDatabaseManager):
             self._new_position_group(canvas_hole)
 
     def make_canvas(self, new, editable=True):
-
         db = self.db
         with db.session_ctx():
+
 #         with session(None) as s:
             lt = db.get_loadtable(new)
 
@@ -449,17 +450,18 @@ class LoadingManager(IsotopeDatabaseManager):
     @cached_property
     def _get_labnumbers(self):
         db = self.db
-        with db.session_ctx():
-            level = db.get_irradiation_level(self.irradiation,
-                                                  self.level,
-    #                                               sess=sess
-                                                  )
-            if level:
-    #             self._positions = [str(li.position) for li in level.positions]
-                return sorted([li.labnumber.identifier
-                               for li in level.positions if li.labnumber])
-            else:
-                return []
+        r = []
+        if db.connected:
+            with db.session_ctx():
+                level = db.get_irradiation_level(self.irradiation,
+                                                      self.level,
+        #                                               sess=sess
+                                                      )
+                if level:
+        #             self._positions = [str(li.position) for li in level.positions]
+                    r = sorted([li.labnumber.identifier
+                                   for li in level.positions if li.labnumber])
+        return r
 
 #     def _labnumber_changed(self):
 #         print self.labnumber
@@ -486,11 +488,12 @@ class LoadingManager(IsotopeDatabaseManager):
     @cached_property
     def _get_sample(self):
         sample = ''
-        with self.db.session_ctx():
-            pos = self._get_irradiation_position_record()
-            if pos is not None:
-                dbsample = pos.labnumber.sample
-                sample = dbsample.name if dbsample else ''
+        if self.db.connected:
+            with self.db.session_ctx():
+                pos = self._get_irradiation_position_record()
+                if pos is not None:
+                    dbsample = pos.labnumber.sample
+                    sample = dbsample.name if dbsample else ''
         return sample
 
     @cached_property
@@ -505,10 +508,11 @@ class LoadingManager(IsotopeDatabaseManager):
     @cached_property
     def _get_irradiation_hole(self):
         ir = ''
-        with self.db.session_ctx():
-            pos = self._get_irradiation_position_record()
-            if pos is not None:
-                ir = pos.position
+        if self.db.connected:
+            with self.db.session_ctx():
+                pos = self._get_irradiation_position_record()
+                if pos is not None:
+                    ir = pos.position
         return ir
 
     def _new_load_view(self):
@@ -523,6 +527,11 @@ class LoadingManager(IsotopeDatabaseManager):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _load_name_changed(self, new):
+        if new:
+            self.tray = ''
+            self.load_load(new)
+
     def _show_labnumbers_changed(self, new):
         for lp in self.positions:
             for pid in lp.positions:
@@ -559,18 +568,21 @@ class LoadingManager(IsotopeDatabaseManager):
         if new.fill:
             self._deselect_position(new)
         else:
-            for _ in range(self.npositions):
-                if not new:
-                    continue
+            if not self.irradiation_hole:
+                self.warning_dialog('Select a Labnumber')
+            else:
+                for _ in range(self.npositions):
+                    if not new:
+                        continue
 
-                self._set_position(new)
-                id_ = int(new.name) + 1
-                new = self.canvas.scene.get_item(str(id_))
+                    self._set_position(new)
+                    id_ = int(new.name) + 1
+                    new = self.canvas.scene.get_item(str(id_))
 
-            if not self.retain_weight:
-                self.weight = 0
-            if not self.retain_note:
-                self.note = ''
+                if not self.retain_weight:
+                    self.weight = 0
+                if not self.retain_note:
+                    self.note = ''
 
         self.refresh_table = True
 #============= EOF =============================================

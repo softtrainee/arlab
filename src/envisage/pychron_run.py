@@ -30,6 +30,7 @@ logger = new_logger('launcher')
 PACKAGE_DICT = dict(
 #                   DatabasePlugin='src.database.plugins.database_plugin',
                    ExperimentPlugin='src.experiment.tasks.experiment_plugin',
+                   LoadingPlugin='src.loading.loading_plugin',
                    ExtractionLinePlugin='src.extraction_line.tasks.extraction_line_plugin',
                    VideoPlugin='src.image.tasks.video_plugin',
 #                   CanvasDesignerPlugin='src.canvas.plugins.canvas_designer_plugin',
@@ -57,7 +58,7 @@ PACKAGE_DICT = dict(
 
                    MediaServerPlugin='src.media_server.tasks.media_server_plugin',
                    PyScriptPlugin='src.pyscripts.tasks.pyscript_plugin',
-
+                   DatabasePlugin='src.database.tasks.database_plugin'
 
                  )
 

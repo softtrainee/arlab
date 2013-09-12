@@ -17,24 +17,15 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Enum, Instance, Str, Password, \
      Button, List, Any, Bool, Property, Event, cached_property, Int
-# from traitsui.api import View, Item, VGroup, HGroup, spring, Group, TabularEditor
-# from traitsui.tabular_adapter import TabularAdapter
-# from apptools.preferences.preference_binding import bind_preference
-# from src.processing.database_manager import DatabaseManager
-# from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
-# from src.ui.custom_label_editor import CustomLabel
-# from src.loggable import Loggable
-# from src.database.database_connection_spec import DBConnectionSpec
-from src.processing.importer.mass_spec_extractor import Extractor, \
-    MassSpecExtractor
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
-from src.constants import NULL_STR
+#============= standard library imports ========================
 from collections import namedtuple
 import time
-from src.ui.qt.thread import Thread
-# from threading import Thread
-#============= standard library imports ========================
 #============= local library imports  ==========================
+from src.processing.importer.mass_spec_extractor import Extractor, \
+    MassSpecExtractor
+from src.database.isotope_database_manager import IsotopeDatabaseManager
+from src.constants import NULL_STR
+from src.ui.qt.thread import Thread
 
 
 records = namedtuple('Record', 'name')

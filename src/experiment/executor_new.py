@@ -39,7 +39,7 @@ from src.database.orms.isotope_orm import meas_AnalysisTable, \
     gen_ExtractionDeviceTable, gen_MassSpectrometerTable, gen_AnalysisTypeTable, \
     meas_MeasurementTable, meas_ExtractionTable
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.codetools.memory_usage import mem_available, mem_log, measure_type, \
     calc_growth, MemCTX
 from src.ui.gui import invoke_in_main_thread

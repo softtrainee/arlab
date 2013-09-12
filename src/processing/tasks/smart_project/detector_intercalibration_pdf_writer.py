@@ -20,7 +20,7 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # from src.pdf.base_pdf_writer import BasePDFWriter
-# from src.experiment.loading.component_flowable import ComponentFlowable
+# from src.loading.component_flowable import ComponentFlowable
 # from reportlab.platypus.flowables import PageBreak
 from src.processing.tasks.smart_project.interpolation_pdf_writer import InterpolationPDFWriter
 
