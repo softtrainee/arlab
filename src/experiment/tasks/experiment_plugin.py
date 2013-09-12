@@ -136,10 +136,10 @@ class ExperimentPlugin(BaseTaskPlugin):
 #                           protocol=Experimentor,
 #                           factory=self._experimentor_factory
 #                           )
-        so_isodb = self.service_offer_factory(
-                          protocol=IsotopeDatabaseManager,
-                          factory=self._iso_db_factory
-                          )
+#         so_isodb = self.service_offer_factory(
+#                           protocol=IsotopeDatabaseManager,
+#                           factory=self._iso_db_factory
+#                           )
 #        so_lab_entry = self.service_offer_factory(
 #                          protocol=LabnumberEntry,
 #                          factory=self._labnumber_entry_factory
@@ -181,7 +181,7 @@ class ExperimentPlugin(BaseTaskPlugin):
 #                so_import_manager,
                 so_image_browser,
 #                 so_export_manager,
-                so_isodb
+#                 so_isodb
 #                so_lab_entry
                 ]
 

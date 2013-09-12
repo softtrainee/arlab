@@ -36,6 +36,8 @@ from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from src.loading.load_task import LoadingTask
 from src.loading.actions import SaveLoadingAction
 from src.loading.loading_preferences import LoadingPreferencesPane
+from src.loading.panes import LoadDockPane, LoadTablePane
+from src.loading.loading_manager import LoadingManager
 
 class LoadingPlugin(BaseTaskPlugin):
     id = 'pychron.loading'
@@ -59,8 +61,29 @@ class LoadingPlugin(BaseTaskPlugin):
                             )
                 ]
 
+    def _service_offers_default(self):
+        load = self.service_offer_factory(
+                                        protocol=LoadDockPane,
+                                        factory=LoadDockPane
+                                        )
+        table = self.service_offer_factory(
+                                        protocol=LoadTablePane,
+                                        factory=LoadTablePane
+                                        )
+        man = self.service_offer_factory(
+                                        protocol=LoadingManager,
+                                        factory=self._loading_manager_factory
+                                        )
+
+        return [load, table, man]
+
+    def _loading_manager_factory(self):
+        print 'adsfasdfasdff'
+        return LoadingManager()
+
     def _load_task_factory(self):
-        return LoadingTask()
+        lm = self.window.application.get_service(LoadingManager)
+        return LoadingTask(manager=lm)
 
     def _preferences_panes_default(self):
         return [
