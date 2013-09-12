@@ -78,12 +78,6 @@ class Experimentor(IsotopeDatabaseManager):
     def update_queues(self):
         self._update_queues()
 
-#     def test_queues(self, qs=None):
-#         if qs is None:
-#             qs = self.experiment_queues
-#
-#         self.refresh_executable(qs)
-
     def test_connections(self):
         if not self.db:
             return
@@ -94,26 +88,9 @@ class Experimentor(IsotopeDatabaseManager):
 
         return True
 
-    # @deprecated
-    def start_file_listener(self, path):
-        fl = FileListener(
-                          path,
-                          callback=self._reload_from_disk,
-                          check=self._check_for_file_mods
-                          )
-        self.filelistener = fl
-
-    # @deprecated
-    def stop_file_listener(self):
-        if self.filelistener:
-            self.filelistener.stop()
-
-#     def update_info(self, reset_db=False):
     def update_info(self):
-#         if reset_db:
-#             self.db.reset()
-
         self._update()
+
 #===============================================================================
 # info update
 #===============================================================================
@@ -356,12 +333,6 @@ class Experimentor(IsotopeDatabaseManager):
         self.experiment_factory.run_factory.edit_mode = True
         self._set_factory_runs(self.experiment_queue.selected)
 
-#     @on_trait_change('executor:update_needed')
-#     def _refresh1(self):
-#         self.debug('update needed fired')
-#         self.executor.clear_run_states()
-#         self.update_info()
-
     @on_trait_change('executor:non_clear_update_needed')
     def _refresh2(self):
         self.debug('non clear update needed fired')
@@ -377,7 +348,7 @@ class Experimentor(IsotopeDatabaseManager):
     def _refresh5(self, new):
         if new:
             self.debug('queue modified fired')
-            self.update_info(reset_db=True)
+            self.update_info()
 
     @on_trait_change('experiment_factory:run_factory:refresh_table_needed')
     def _refresh4(self):
@@ -450,6 +421,7 @@ class Experimentor(IsotopeDatabaseManager):
 
         if not self.unique_executor_db:
             kw['db'] = self.db
+            kw['connect'] = False
 
         e = ExperimentExecutor(
                                mode=self.mode,
@@ -467,7 +439,6 @@ class Experimentor(IsotopeDatabaseManager):
     def _experiment_factory_default(self):
         e = ExperimentFactory(db=self.db,
                               application=self.application,
-#                               queue=self.experiment_queue,
 #                              max_allowable_runs=self.max_allowable_runs,
 #                              can_edit_scripts=self.can_edit_scripts
                               )
@@ -480,260 +451,15 @@ class Experimentor(IsotopeDatabaseManager):
         return e
 
 #============= EOF =============================================
-#    def _update_run_info(self, ans, exclude=None):
-#        self.debug('update run info')
+#     def start_file_listener(self, path):
+#         fl = FileListener(
+#                           path,
+#                           callback=self._reload_from_disk,
+#                           check=self._check_for_file_mods
+#                           )
+#         self.filelistener = fl
 #
-#        for ln, aruns in self._group_analyses(ans, exclude=exclude):
-#            dbln = self._get_labnumber(ln)
-#            if dbln:
-#
-#                sample = dbln.sample
-#                if sample:
-#                    sample = sample.name
-#
-#                irradiationpos = dbln.irradiation_position
-#                if irradiationpos:
-#                    level = irradiationpos.level
-#                    irradiationpos = '{}{}'.format(level.irradiation.name, level.name)
-#
-#                for ai in aruns:
-#                    ai.trait_set(sample=sample or '',
-#                                 irradiation=irradiationpos or ''
-#                                 )
-
-#    def _modify_aliquots2(self, ans, exclude=None):
-#        if exclude is None:
-#            exclude = tuple()
-#        self.debug('modifying aliquots')
-# #        print ans
-#        offset = 0
-#
-#        # update the aliquots
-#        idcnt_dict = dict()
-#        stdict = dict()
-#        fixed_dict = dict()
-#
-#        for arun in ans:
-#            arunid = arun.labnumber
-#
-#            if arun.skip:
-#                arun.aliquot = 0
-#                continue
-#
-#            if arun.state in ('failed', 'canceled'):
-#                continue
-#
-#            # dont set degas or pause aliquot
-#            if arunid in exclude:
-#                continue
-#
-#            c = 1
-#            st = 0
-#
-#            if arunid in fixed_dict:
-#                st = fixed_dict[arunid]
-#
-#            if arunid in idcnt_dict:
-#                c = idcnt_dict[arunid]
-#                if not arun.extract_group:
-#                    c += 1
-#                st = stdict[arunid] if arunid in stdict else 0
-#            else:
-#                ln = self._get_labnumber(arun.labnumber)
-#                if ln is not None:
-#                    try:
-#                        st = ln.analyses[-1].aliquot
-#                    except IndexError:
-#                        st = 0
-#                else:
-#                    st = stdict[arunid] if arunid in stdict else 0
-#
-#            if not arun.user_defined_aliquot:
-#                if arun.state == 'not run':
-#                    arun.aliquot = int(st + c - offset)
-#            else:
-#                c = 0
-#                fixed_dict[arunid] = arun.aliquot
-#                st = arun.aliquot
-#
-# #            print '{:<20s}'.format(str(arun.labnumber)), arun.aliquot, st, c
-#            idcnt_dict[arunid] = c
-#            stdict[arunid] = st
-
-#    def _modify_steps(self, ans, exclude=None):
-#        if exclude is None:
-#            exclude = tuple()
-#        self.debug('modifying steps')
-#
-#        idcnt_dict = dict()
-#        stdict = dict()
-#        extract_group = -1
-#        aoffs = dict()
-#        for arun in ans:
-#            arunid = arun.labnumber
-#            if arun.skip:
-#                continue
-#
-#            if arun.state in ('canceled', 'failed'):
-#                continue
-# #            if arun.state == 'canceled':
-# #                continue
-# #            if arun.aliquot == '##':
-# #                continue
-#
-#            # dont set degas or pause aliquot
-#            if arunid in exclude:
-#                continue
-#
-#            if arun.extract_group:
-#                if not arun.extract_group == extract_group:
-#                    if arunid in aoffs:
-#                        aoffs[arunid] += 1
-#                    else:
-#                        aoffs[arunid] = 0
-#
-# #                    aoff += 1
-#                    idcnt_dict, stdict = dict(), dict()
-#                    c = 1
-#                else:
-#                    if arunid in idcnt_dict:
-#                        c = idcnt_dict[arunid]
-#                        c += 1
-#                    else:
-#                        c = 1
-#
-#                ln = self._get_labnumber(arun.labnumber)
-#                if ln is not None:
-#                    st = 0
-#                    if ln.analyses:
-#                        an = next((ai for ai in ln.analyses if ai.aliquot == arun.aliquot), None)
-#                        if not an:
-#                            st = 0
-#                        else:
-#                            try:
-#                                st = an.step
-#                                st = list(ALPHAS).index(st) + 1
-#                            except (IndexError, ValueError):
-#                                st = 0
-#                else:
-#                    st = stdict[arunid] if arunid in stdict else 0
-#
-#                arun._step = st + c
-#                idcnt_dict[arunid] = c
-#                stdict[arunid] = st
-#                extract_group = arun.extract_group
-#
-#            if arunid in aoffs:
-#                aoff = aoffs[arunid]
-#            else:
-#                aoff = 0
-# #             print arun.labnumber, aoff
-#
-#            if arun.state == 'not run':
-#                arun.aliquot += aoff
-#     def _clear_cache(self):
-#         for di in dir(self):
-#             if di.startswith('_cached'):
-#                 setattr(self, di, None)
-#    def _load_experiment_queue_hook(self):
-#
-#        for ei in self.experiment_queues:
-#            self.debug('ei executable={}'.format(ei.executable))
-#        self.executor.executable = all([ei.executable
-#                                        for ei in self.experiment_queues])
-#        self.debug('setting executor executable={}'.format(self.executor.executable))
-
-#    def _validate_experiment_queues(self, eq):
-#        for exp in eq:
-#            if exp.test_runs():
-#                return
-#
-#        return True
-#
-#    def _dump_experiment_queues(self, p, queues):
-#
-#        if not p:
-#            return
-#        if not p.endswith('.txt'):
-#            p += '.txt'
-#
-#        self.info('saving experiment to {}'.format(p))
-#        with open(p, 'wb') as fp:
-#            n = len(queues)
-#            for i, exp in enumerate(queues):
-#                exp.path = p
-#                exp.dump(fp)
-#                if i < (n - 1):
-#                    fp.write('\n')
-#                    fp.write('*' * 80)
-#
-#        return p
-#    @on_trait_change('selected')
-#    def _update_selected(self, new):
-#        self.experiment_factory.run_factory.suppress_update = True
-#        self.experiment_factory.set_selected_runs(new)
-
-#    def _pasted_changed(self):
-#        self._update()
-#    @on_trait_change('can_edit_script, max_allowable_runs')
-#    def _update_value(self, name, value):
-#        setattr(self.experiment_factory, name, value)
-    #    @on_trait_change('experiment_factory:run_factory:clear_selection')
-#    def _on_clear_selection(self):
-#        self.selected = []
-#    def _experiment_queue_factory(self, add=True, **kw):
-#        exp = ExperimentQueue(
-#                             db=self.db,
-#                             application=self.application,
-#                             **kw)
-#        exp.on_trait_change(self._update, 'update_needed')
-#        if add:
-#            self.experiment_queues.append(exp)
-# #        exp.on_trait_change(self._update_dirty, 'dirty')
-#        return exp
-
-#    def _experiment_queue_default(self):
-#        return self._experiment_queue_factory()
-#    def new_experiment_queue(self):
-#        exp = self._experiment_queue_factory()
-#        self.experiment_queue = exp
-#    @deprecated
-#    def load_experiment_queue(self, path=None, edit=True, saveable=False):
-#
-# #        self.bind_preferences()
-#        # make sure we have a database connection
-#        if not self.test_connections():
-#            return
-#
-#        if path is None:
-#            dlg = FileDialog(default_directory=paths.experiment_dir)
-#            if dlg.open():
-#                path = dlg.path
-# #            path = self.open_file_dialog(default_directory=paths.experiment_dir)
-#
-#        if path:
-#
-# #            self.experiment_queue = None
-# #            self.experiment_queues = []
-#
-#            # parse the file into individual experiment sets
-#            ts = self._parse_experiment_file(path)
-#            ws = []
-#            for text in ts:
-#                exp = self._experiment_queue_factory(path=path, add=False)
-#
-#                exp._warned_labnumbers = ws
-#                if exp.load(text):
-#                    self.experiment_queues.append(exp)
-#                ws = exp._warned_labnumbers
-#
-#            self._update(all_info=True, stats=False)
-#            if self.experiment_queues:
-#                self.test_runs()
-#                self.experiment_queue = self.experiment_queues[0]
-#                self.start_file_listener(self.experiment_queue.path)
-#
-#                self._load_experiment_queue_hook()
-#                self.save_enabled = True
-#
-#                return True
+#     # @deprecated
+#     def stop_file_listener(self):
+#         if self.filelistener:
+#             self.filelistener.stop()

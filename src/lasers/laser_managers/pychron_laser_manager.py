@@ -449,7 +449,7 @@ class PychronUVLaserManager(PychronLaserManager):
     attenuators = Property
     zoom = Range(0.0, 100.0)
 
-    def extract(self, power):
+    def extract(self, power, **kw):
         self._set_nburst(power)
         self._ask('Fire burst')
 
