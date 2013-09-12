@@ -51,13 +51,16 @@ class ExperimentEditorTask(EditorTask):
     use_notifications = Bool
     notifications_port = Int
 
-    loading_manager = Instance(LoadingManager)
+    loading_manager = Instance('src.loading.loading_manager.LoadingManager')
     notifier = Instance(Notifier)
 
     def _loading_manager_default(self):
-        lm = LoadingManager(db=self.manager.db,
-                            show_group_positions=True
-                            )
+        lm = self.window.application.get_service('src.loading.loading_manager.LoadingManager')
+        lm.trait_set(db=self.manager.db,
+                     show_group_positions=True)
+#         lm = LoadingManager(db=self.manager.db,
+#                             show_group_positions=True
+#                             )
         return lm
 
     def _default_directory_default(self):
@@ -142,9 +145,11 @@ class ExperimentEditorTask(EditorTask):
     def create_dock_panes(self):
         self.isotope_evolution_pane = IsotopeEvolutionPane()
 
-        self.load_pane = self.application.get_service('src.loading.panes.LoadDockPane')
+        self.load_pane = self.window.application.get_service('src.loading.panes.LoadDockPane')
 #         self.load_pane = LoadDockPane()
 #         self.load_table_pane = LoadTablePane(model=self.loading_manager)
+        self.load_table_pane = self.window.application.get_service('src.loading.panes.LoadTablePane')
+        self.load_table_pane.model = self.loading_manager
 
         self.experiment_factory_pane = ExperimentFactoryPane(model=self.manager.experiment_factory)
         self.wait_pane = WaitPane(model=self.manager.executor)
@@ -156,7 +161,7 @@ class ExperimentEditorTask(EditorTask):
 #                 ExplanationPane(),
                 self.isotope_evolution_pane,
                 self.load_pane,
-#                 self.load_table_pane,
+                self.load_table_pane,
                 self.wait_pane
 #                 self.summary_pane,
                 ]
@@ -568,7 +573,8 @@ class ExperimentEditorTask(EditorTask):
 
         exp = Experimentor(application=app,
                            mode=mode,
-                           connect=False)
+#                            connect=False
+                           )
 
         return exp
 

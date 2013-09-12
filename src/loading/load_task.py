@@ -62,8 +62,8 @@ class LoadingTask(BaseManagerTask):
             do_later(self.window.close)
 
 
-    def _manager_default(self):
-        return LoadingManager()
+#     def _manager_default(self):
+#         return LoadingManager()
 
     def _default_layout_default(self):
         return TaskLayout(

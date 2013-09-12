@@ -148,6 +148,7 @@ class DatabaseAdapter(Loggable):
     def connect(self, test=True, force=False, warn=True):
         '''
         '''
+
         if force:
             self.debug('forcing database connection')
 #             self.reset()
@@ -414,6 +415,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             if self.session_factory:
                 sess = self.session_factory()
 
+#         print 'get items', sess, self.session_factory
 #         sess = self.get_session()
         if sess is not None:
             q = sess.query(table)
