@@ -19,7 +19,7 @@ from traits.api import HasTraits, List, Instance
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.paths import paths
 from src.processing.window import Window
 from src.processing.search.selector_manager import SelectorManager

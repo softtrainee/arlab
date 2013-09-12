@@ -22,7 +22,7 @@ from traitsui.api import View, Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
 import unittest
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.database.isotope_database_manager import IsotopeDatabaseManager
 
 def get_test_database():
     man = IsotopeDatabaseManager(connect=False)

@@ -32,7 +32,7 @@ from src.processing.entry.level import Level
 # from src.irradiation.irradiated_position import IrradiatedPosition, \
 #    IrradiatedPositionAdapter
 from src.constants import NULL_STR, ALPHAS
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.processing.entry.irradiated_position import IrradiatedPosition
 # import math
 # from src.processing.publisher.writers.pdf_writer import SimplePDFWriter

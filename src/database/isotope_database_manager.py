@@ -28,11 +28,12 @@ from src.database.records.isotope_record import IsotopeRecordView
 # from src.processing.analysis import Analysis, NonDBAnalysis
 from src.codetools.simple_timeit import simple_timer
 from src.processing.analyses.analysis import DBAnalysis, Analysis
+from src.loggable import Loggable
 # from src.constants import NULL_STR
 # from src.ui.gui import invoke_in_main_thread
 
 
-class IsotopeDatabaseManager(Manager):
+class IsotopeDatabaseManager(Loggable):
     db = Instance(IsotopeAdapter)
 
     irradiation = String
@@ -54,8 +55,11 @@ class IsotopeDatabaseManager(Manager):
             except AttributeError, e:
                 self.debug('bind exception. {}'.format(e))
 
-        if connect and not self.db.connect(warn=warn):
-            self.db = None
+#         if connect and not self.db.connect(warn=warn):
+        if connect:
+            self.db.connect(warn=warn)
+
+#             self.db = None
 
     def isConnected(self):
         if self.db:
@@ -87,7 +91,7 @@ class IsotopeDatabaseManager(Manager):
         if self.db is None:
             self.db = self._db_factory()
 
-        prefid = 'pychron.experiment'
+        prefid = 'pychron.database'
         try:
             bind_preference(self, 'username', '{}.username'.format(prefid))
     #        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
@@ -202,7 +206,7 @@ class IsotopeDatabaseManager(Manager):
 #        r = ['NM-Test', 'NM-100', 'NM-200']
 #         r = [NULL_STR] +
         r = []
-        if self.db:
+        if self.db and self.db.connected:
 #             with self.db.session_() as sess:
             r = [str(ri.name) for ri in self.db.get_irradiations()
                             if ri.name]
@@ -217,7 +221,7 @@ class IsotopeDatabaseManager(Manager):
 
 #         self.level = NULL_STR
         r = []
-        if self.db:
+        if self.db and self.db.connected:
 
             with self.db.session_ctx():
                 irrad = self.db.get_irradiation(self.irradiation)

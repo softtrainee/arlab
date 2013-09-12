@@ -27,7 +27,7 @@ from reportlab.platypus.frames import Frame
 
 # from chaco.pdf_graphics_context import PdfPlotGraphicsContext
 #============= local library imports  ==========================
-from src.experiment.loading.component_flowable import ComponentFlowable
+from src.loading.component_flowable import ComponentFlowable
 from src.canvas.canvas2D.scene.primitives.primitives import LoadIndicator
 from reportlab.platypus.flowables import Spacer
 from src.pdf.base_pdf_writer import BasePDFWriter

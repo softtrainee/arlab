@@ -21,7 +21,7 @@ from traits.api import Instance, List, on_trait_change, Bool, Event
 #============= standard library imports ========================
 from itertools import groupby
 #============= local library imports  ==========================
-# from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+# from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.queue.experiment_queue import ExperimentQueue
 
 from src.experiment.factory import ExperimentFactory
@@ -33,7 +33,7 @@ from src.experiment.utilities.file_listener import FileListener
 from src.experiment.utilities.identifier import convert_identifier, \
     ANALYSIS_MAPPING
 from src.deprecate import deprecated
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.database.isotope_database_manager import IsotopeDatabaseManager
 LAlphas = list(ALPHAS)
 
 class Experimentor(IsotopeDatabaseManager):

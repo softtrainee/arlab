@@ -32,10 +32,10 @@ from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
     UpdateDatabaseAction, DeselectAction, SendTestNotificationAction, \
     NewPatternAction, OpenPatternAction, ResetQueuesAction
 from src.experiment.tasks.constants_preferences import ConstantsPreferencesPane
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
-from src.experiment.loading.load_task import LoadingTask
-from src.experiment.loading.actions import SaveLoadingAction
-from src.experiment.loading.loading_preferences import LoadingPreferencesPane
+from src.database.isotope_database_manager import IsotopeDatabaseManager
+# from src.loading.load_task import LoadingTask
+# from src.loading.actions import SaveLoadingAction
+# from src.loading.loading_preferences import LoadingPreferencesPane
 
 class ExperimentPlugin(BaseTaskPlugin):
     id = 'pychron.experiment'
@@ -50,12 +50,12 @@ class ExperimentPlugin(BaseTaskPlugin):
             return SaveAsExperimentQueueAction(self._get_manager())
 
         return [
-                TaskExtension(task_id='pychron.loading',
-                               actions=[SchemaAddition(id='save_loading_figure',
-                                                       factory=SaveLoadingAction,
-                                                       path='MenuBar/File')
-                                        ],
-                              ),
+#                 TaskExtension(task_id='pychron.loading',
+#                                actions=[SchemaAddition(id='save_loading_figure',
+#                                                        factory=SaveLoadingAction,
+#                                                        path='MenuBar/File')
+#                                         ],
+#                               ),
                 TaskExtension(task_id='pychron.experiment',
                                actions=[
                                         SchemaAddition(
@@ -262,12 +262,12 @@ class ExperimentPlugin(BaseTaskPlugin):
                             name='Experiment',
                             task_group='experiment'
                             ),
-                TaskFactory(id='pychron.loading',
-                            factory=self._load_task_factory,
-                            name='Loading',
-                            accelerator='Ctrl+Y',
-                            task_group='experiment'
-                            )
+#                 TaskFactory(id='pychron.loading',
+#                             factory=self._load_task_factory,
+#                             name='Loading',
+#                             accelerator='Ctrl+Y',
+#                             task_group='experiment'
+#                             )
 
 #                TaskFactory(id='pychron.labnumber_entry',
 #                            factory=self._labnumber_task_factory,
@@ -279,8 +279,8 @@ class ExperimentPlugin(BaseTaskPlugin):
 #        return LabnumberEntryTask(manager=self.application.get_service(LabnumberEntry),
 #                                  importer=self.application.get_service(ImportManager)
 #                                  )
-    def _load_task_factory(self):
-        return LoadingTask()
+#     def _load_task_factory(self):
+#         return LoadingTask()
 
     def _task_factory(self):
 #         return ExperimentEditorTask(manager=self._get_manager())
@@ -291,8 +291,9 @@ class ExperimentPlugin(BaseTaskPlugin):
 #         return self.application.get_service(Experimentor)
 
     def _preferences_panes_default(self):
-        return [ExperimentPreferencesPane,
+        return [
+                ExperimentPreferencesPane,
                 ConstantsPreferencesPane,
-                LoadingPreferencesPane
+#                 LoadingPreferencesPane
                 ]
 #============= EOF =============================================

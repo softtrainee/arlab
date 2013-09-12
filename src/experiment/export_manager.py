@@ -25,7 +25,7 @@ from pyface.constant import OK
 import time
 #============= local library imports  ==========================
 from src.experiment.export.export_spec import ExportSpec
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.utilities.identifier import convert_special_name, make_runid
 from src.experiment.automated_run.automated_run import assemble_script_blob
 from src.processing.search.selector_manager import SelectorManager

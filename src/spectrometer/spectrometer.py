@@ -29,7 +29,7 @@ from src.spectrometer.magnet import Magnet
 from src.spectrometer.detector import Detector
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.constants import NULL_STR
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.paths import paths
 from memory_profiler import profile
 

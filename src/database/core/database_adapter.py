@@ -157,12 +157,16 @@ class DatabaseAdapter(Loggable):
             force = True
 
 #        print not self.isConnected() or force, self.connection_parameters_changed
+
         if not self.isConnected() or force:
             self.connected = True if self.kind == 'sqlite' else False
             if self.kind == 'sqlite':
                 test = False
 
-            if self.enabled:
+            if not self.enabled:
+                self.warning_dialog('Database type not set. Set in Preferences')
+
+            else:
                 url = self.url
                 if url is not None:
                     self.info('connecting to database {}'.format(url))
@@ -356,7 +360,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
         if sess:
             sess.add(obj)
             sess.flush()
-            
+
 
 #     def _add_item(self, obj, sess=None):
 
@@ -407,7 +411,8 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
                         limit=None, order=None):
         sess = self.sess
         if sess is None:
-            sess = self.session_factory()
+            if self.session_factory:
+                sess = self.session_factory()
 
 #         sess = self.get_session()
         if sess is not None:

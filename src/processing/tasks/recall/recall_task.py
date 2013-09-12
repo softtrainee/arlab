@@ -22,7 +22,7 @@ from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTa
 from pyface.tasks.task_layout import Splitter, TaskLayout, PaneItem
 from src.processing.tasks.analysis_edit.panes import ControlsPane
 from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
-from src.experiment.loading.actions import SaveLoadingAction
+from src.loading.actions import SaveLoadingAction
 from pyface.tasks.action.schema import SToolBar
 from pyface.tasks.action.task_action import TaskAction
 from pyface.image_resource import ImageResource

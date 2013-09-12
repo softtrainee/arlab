@@ -21,7 +21,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import and_, not_
 import datetime
 #============= local library imports  ==========================
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.processing.plotter_options_manager import IdeogramOptionsManager, \
     SpectrumOptionsManager, InverseIsochronOptionsManager
 from src.database.orms.isotope_orm import meas_AnalysisTable, \

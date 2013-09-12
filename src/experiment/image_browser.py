@@ -35,7 +35,7 @@ import httplib
 from src.loggable import Loggable
 from src.ui.custom_label_editor import CustomLabel
 from src.database.adapters.isotope_adapter import IsotopeAdapter
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.paths import paths
 
 PORT = 8083

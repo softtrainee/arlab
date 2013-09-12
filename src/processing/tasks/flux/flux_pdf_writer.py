@@ -18,7 +18,7 @@
 from traits.api import HasTraits
 from traitsui.api import View, Item
 from src.pdf.base_pdf_writer import BasePDFWriter
-from src.experiment.loading.component_flowable import ComponentFlowable
+from src.loading.component_flowable import ComponentFlowable
 from reportlab.platypus.flowables import PageBreak
 #============= standard library imports ========================
 #============= local library imports  ==========================

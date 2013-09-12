@@ -18,7 +18,7 @@
 from traits.api import List, Any, Event, Unicode
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.experiment.isotope_database_manager import IsotopeDatabaseManager
+from src.database.isotope_database_manager import IsotopeDatabaseManager
 
 
 class Experimentable(IsotopeDatabaseManager):
