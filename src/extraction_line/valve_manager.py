@@ -34,6 +34,8 @@ from src.paths import paths
 from src.helpers.parsers.valve_parser import ValveParser
 from src.loggable import Loggable
 from src.constants import ALPHAS
+from pyface.timer.do_later import do_later
+from src.ui.gui import invoke_in_main_thread
 
 
 class ValveGroup(object):
@@ -130,7 +132,9 @@ class ValveManager(Manager):
                 if word.has_key(k):
                     s = word[k]
                     v.set_state(s)
-                    elm.update_valve_state(k, s)
+                    elm.update_valve_state(k, s, refresh=False)
+            
+            invoke_in_main_thread(elm.refresh_canvas)
 
 
     def load_valve_lock_states(self):
@@ -142,10 +146,12 @@ class ValveManager(Manager):
                 if word.has_key(k):
                     if word[k]:
                         self.lock(k, save=False)
-                        elm.update_valve_lock_state(k, True)
+                        elm.update_valve_lock_state(k, True, refresh=False)
                     else:
                         self.unlock(k, save=False)
-                        elm.update_valve_lock_state(k, False)
+                        elm.update_valve_lock_state(k, False, refresh=False)
+                        
+            invoke_in_main_thread(elm.refresh_canvas)
 
     def get_state_word(self):
         if self.actuators:
@@ -191,7 +197,7 @@ class ValveManager(Manager):
         elm = self.extraction_line_manager
         for k, v in self.valves.iteritems():
             s = v.get_hardware_state()
-            elm.update_valve_state(k, s)
+            elm.update_valve_state(k, s, refresh=False)
 #             time.sleep(0.025)
 
     def _load_soft_lock_states(self):

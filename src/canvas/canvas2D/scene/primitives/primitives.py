@@ -27,6 +27,7 @@ import math
 from numpy import array
 #============= local library imports  ==========================
 from src.geometry.convex_hull import convex_hull
+import weakref
 
 
 def calc_rotation(x1, y1, x2, y2):

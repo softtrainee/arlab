@@ -34,6 +34,7 @@ from pyface.constant import OK, CANCEL
 from itertools import groupby
 from pyface.confirmation_dialog import ConfirmationDialog
 from src.loggable import Loggable
+from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -385,7 +386,9 @@ class BaseExtractionLineTask(BaseManagerTask):
     def _window_opened(self):
         man = self._get_el_manager()
         if man:
+#            do_later(man.activate)
             man.activate()
+#            man.canvas.refresh()
 
 class BaseHardwareTask(BaseManagerTask):
     pass

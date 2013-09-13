@@ -14,7 +14,7 @@
 # limitations under the License.
 #===============================================================================
 #=============enthought library imports=======================
-from traits.api import  Instance, List
+from traits.api import  Instance, List, Any
 #=============standard library imports ========================
 import os
 import time
@@ -29,6 +29,7 @@ from src.managers.manager import Manager
 from src.monitors.system_monitor import SystemMonitor
 
 from view_controller import ViewController
+from src.extraction_line.status_monitor import StatusMonitor
 
 # from src.managers.multruns_report_manager import MultrunsReportManager
 
@@ -49,12 +50,13 @@ class ExtractionLineManager(Manager):
     _canvases = List
     explanation = Instance(ExtractionLineExplanation, ())
 
-    valve_manager = Instance(Manager)
-    gauge_manager = Instance(Manager)
+    valve_manager = Any#Instance(Manager)
+    gauge_manager = Any#Instance(Manager)
+    status_monitor = Any
 #    environmental_manager = Instance(Manager)
 #    device_stream_manager = Instance(Manager)
-    multiplexer_manager = Instance(Manager)
-    multruns_report_manager = Instance(Manager)
+    multiplexer_manager = Any#Instance(Manager)
+    multruns_report_manager = Any#Instance(Manager)
 #    multruns_report_manager = Instance(MultrunsReportManager)
 
     view_controller = Instance(ViewController)
@@ -122,7 +124,11 @@ class ExtractionLineManager(Manager):
             # m.exit_on_close = False
 
             return m
-
+        
+    def refresh_canvas(self):
+        for ci in self._canvases:
+            ci.refresh()
+        
     def finish_loading(self):
         '''
         '''
@@ -148,9 +154,10 @@ class ExtractionLineManager(Manager):
         return True
 
     def stop_status_monitor(self):
-        if self._update_status_flag:
-            self.info('stopping status monitor')
-            self._update_status_flag.set()
+        self.info('stopping status monitor')
+        self.status_monitor.stop()
+#        if self._update_status_flag:
+#            self._update_status_flag.set()
 
     def deactivate(self):
         self.debug('$$$$$$$$$$$$$$$$$$$$$$$$ EL deactivated')
@@ -173,7 +180,6 @@ class ExtractionLineManager(Manager):
 #                self.info('start gauge scans')
 #                self.gauge_manager.start_scans()
     def activate(self):
-        self.reload_scene_graph()
 #        p = os.path.join(paths.hidden_dir, 'show_explanantion')
 #        if os.path.isfile(p):
 #            with open(p, 'rb') as f:
@@ -188,57 +194,71 @@ class ExtractionLineManager(Manager):
             if self.gauge_manager:
                 self.info('start gauge scans')
                 self.gauge_manager.start_scans()
+        
+        self.valve_manager.load_valve_states()
+        self.valve_manager.load_valve_lock_states()
+#        if reload:
+#            self.reload_scene_graph()
 
     def start_status_monitor(self):
-        def func():
-            self._monitoring_valve_status = True
-            cnt = 0
-            state_freq = self._valve_state_frequency
-            lock_freq = self._valve_lock_frequency
-            vm = self.valve_manager
-#             while not self._update_status_flag.isSet():
-            while 1:
-                if self._update_status_flag.isSet():
-                    # dont stop the monitor until all "clients" have stopped
-                    # clients could be the spectrometer or experiment task
-                    if self._monitor_cnt > 0:
-                        self.info('{} connections still present. Keeping status monitor alive'.format(self._monitor_cnt))
-                        self._monitor_cnt -= 1
-                        self._update_status_flag.clear()
-                    else:
-                        break
+        self.info('starting status monitor')  
+#        return  
+        self.status_monitor.start()
+#        if not self.status_monitor.isAlive():
+            
+#        def func():
+#            self._monitoring_valve_status = True
+#            cnt = 0
+#            state_freq = self._valve_state_frequency
+#            lock_freq = self._valve_lock_frequency
+#            vm = self.valve_manager
+##             while not self._update_status_flag.isSet():
+#            while 1:
+#                if self._update_status_flag.isSet():
+#                    # dont stop the monitor until all "clients" have stopped
+#                    # clients could be the spectrometer or experiment task
+#                    if self._monitor_cnt > 0:
+#                        self.info('{} connections still present. Keeping status monitor alive'.format(self._monitor_cnt))
+#                        self._monitor_cnt -= 1
+#                        self._update_status_flag.clear()
+#                    else:
+#                        break
+#
+#                time.sleep(1)
+#                if cnt % state_freq == 0:
+#                    vm.load_valve_states()
+#                if cnt % lock_freq == 0:
+#                    vm.load_valve_lock_states()
+#
+#                cnt += 1
+#                if cnt > 100:
+#                    cnt = 0
+#
+#            self.info('status monitor stopped')
+#            self._monitoring_valve_status = False
+#
+#        if self._update_status_flag is None:
+#            self._update_status_flag = Event()
+#
+#        self._update_status_flag.clear()
+#        if self.isMonitoringValveState():
+#            self.info('monitor already running')
+#            self._monitor_cnt += 1
+#        else:
+#
+#            self._monitor_cnt = 0
+#            t = Thread(target=func)
+#            t.start()
+#            self.info('starting status monitor')
+#            self._monitor_thread = t
+#
+#    def isMonitoringValveState(self):
+#        return self._monitoring_valve_status
+##        return self._update_status_flag.isSet()
 
-                time.sleep(1)
-                if cnt % state_freq == 0:
-                    vm.load_valve_states()
-                if cnt % lock_freq == 0:
-                    vm.load_valve_lock_states()
 
-                cnt += 1
-                if cnt > 100:
-                    cnt = 0
+    
 
-            self.info('status monitor stopped')
-            self._monitoring_valve_status = False
-
-        if self._update_status_flag is None:
-            self._update_status_flag = Event()
-
-        self._update_status_flag.clear()
-        if self.isMonitoringValveState():
-            self.info('monitor already running')
-            self._monitor_cnt += 1
-        else:
-
-            self._monitor_cnt = 0
-            t = Thread(target=func)
-            t.start()
-            self.info('starting status monitor')
-            self._monitor_thread = t
-
-    def isMonitoringValveState(self):
-        return self._monitoring_valve_status
-#        return self._update_status_flag.isSet()
 
     def bind_preferences(self):
         from apptools.preferences.preference_binding import bind_preference
@@ -490,17 +510,26 @@ class ExtractionLineManager(Manager):
             return v
 
     def _valve_manager_changed(self):
-        e = self.explanation
-        if self.valve_manager is not None and e is not None:
-            e.load(self.valve_manager.explanable_items)
-            self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
+        if self.valve_manager is not None:
+            self.status_monitor.valve_manager=self.valve_manager 
+            e = self.explanation
+            if e is not None:
+                e.load(self.valve_manager.explanable_items)
+                self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
+        
+            
 #            self.valve_manager.mode = self.mode
 #=================== defaults ===========================
 #    def _view_controller_default(self):
 #        return self._view_controller_factory()
 #    def _pyscript_editor_default(self):
 #        return PyScriptManager(parent=self)
-
+    def _status_monitor_default(self):
+        sm=StatusMonitor(valve_manager=self.valve_manager,
+                         state_freq=self._valve_state_frequency,
+                         lock_freq=self._valve_lock_frequency)
+        return sm
+    
     def _valve_manager_default(self):
         from src.extraction_line.valve_manager import ValveManager
         return ValveManager(extraction_line_manager=self)

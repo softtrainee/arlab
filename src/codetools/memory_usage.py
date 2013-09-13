@@ -44,7 +44,7 @@ def mem_break():
 
 def mem_log(msg, verbose=False):
     if USE_MEM_LOG:
-        gc.collect()
+#        gc.collect()
         mem = _get_current_mem()
         write_mem(msg, mem, verbose)
 

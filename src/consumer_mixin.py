@@ -28,7 +28,9 @@ class ConsumerMixin(object):
         self._consume_func = func
         self._buftime = buftime  # ms
         self._consumer_queue = Queue()
-        self._consumer = Thread(target=self._consume)
+        self._consumer = Thread(target=self._consume,
+                                name='consumer'
+                                )
         self._should_consume = True
         if auto_start:
             self._consumer.setDaemon(1)

@@ -187,9 +187,11 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 #             self._prev_blanks = dict()
 
             self.pyscript_runner.connect()
-
+            self.massspec_importer.connect()
             self.experiment_queue.executed = True
-            t = Thread(target=self._execute)
+
+            t = Thread(name='execute',
+                       target=self._execute)
             t.start()
             return t
         else:
@@ -227,7 +229,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 # private
 #===============================================================================
     def _execute(self):
-        self.massspec_importer.connect()
+        
 #         self._alive = True
 #
 #         # check the first aliquot before delaying
@@ -286,7 +288,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     rgen, nruns = exp.new_runs_generator()
                     cnt = 0
                     self.queue_modified = False
-                    force_delay = True
+#                    force_delay = True
 
                 overlapping = self.current_run and self.current_run.isAlive()
                 if not overlapping:
@@ -303,25 +305,41 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     self.debug('stop iteration')
                     break
 
-                runargs = self._execute_run(spec)
-
-                if not runargs:
-                    pass
-#                     break
-                else:
-                    t, run = runargs
-                    self.wait_group.active_control.page_name = run.runid
+#                runargs = self._execute_run(spec)
+                
+                run=self._make_run(spec)
+                self.wait_group.active_control.page_name = run.runid
 #                    self.wait_group.add_control(page_name=run.runid)
 
-                    if spec.analysis_type == 'unknown' and spec.overlap:
-                        self.info('overlaping')
-                        run.wait_for_overlap()
-                        self.debug('overlap finished. starting next run')
+                if spec.analysis_type == 'unknown' and spec.overlap:
+                    self.info('overlaping')
+                    t=Thread(target=self._do_runA,args=(run,))
+                    t.start()
+                    run.wait_for_overlap()
+                    
+                    self.debug('overlap finished. starting next run')
 
-                        con.add_consumable((t, run))
-                    else:
-                        last_runid = run.runid
-                        self._join_run(spec, t, run)
+                    con.add_consumable((t,run))
+                else:
+                    last_runid = run.runid
+                    self._join_run(spec, run)
+#                if not runargs:
+#                    pass
+##                     break
+#                else:
+#                    t, run = runargs
+#                    self.wait_group.active_control.page_name = run.runid
+##                    self.wait_group.add_control(page_name=run.runid)
+#
+#                    if spec.analysis_type == 'unknown' and spec.overlap:
+#                        self.info('overlaping')
+#                        run.wait_for_overlap()
+#                        self.debug('overlap finished. starting next run')
+#
+#                        con.add_consumable((t, run))
+#                    else:
+#                        last_runid = run.runid
+#                        self._join_run(spec, t, run)
 
 #                        print '{} =========================================='.format(cnt)
 #                         calc_growth(before)
@@ -341,26 +359,26 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
         self.info('experiment queue {} finished'.format(exp.name))
 
-    def _execute_run(self, spec):
-
-        run = self._make_run(spec)
-        self.info('%%%%%%%%%%%%%%%%%%%% starting run {}'.format(run.runid))
+#    def _execute_run(self, spec):
 #
-        t = Thread(target=self._do_run,
-                    name=run.runid,
-                    args=(run,),
-                    )
-        t.start()
-        return t, run
+#        run = self._make_run(spec)
+#        self.info('%%%%%%%%%%%%%%%%%%%% starting run {}'.format(run.runid))
+##
+#        t = Thread(target=self._do_run,
+#                    name=run.runid,
+#                    args=(run,),
+#                    )
+#        t.start()
+#        return t, run
 
-    _prev = 0
-    def _do_run(self, run):
+#    _prev = 0
+#    def _do_run(self, run):
         # hp=hpy()
         # #hp.setrelheap()
 #         with MemCTX('sqlalchemy.orm.session.SessionMaker'):
 #             self._do_runA(run)
-        self._do_runA(run)
-        gc.collect()
+#        self._do_runA(run)
+#        gc.collect()
 #         from src.codetools.memory_usage import count_instances
 #         self._prev = count_instances(group='sqlalchemy', prev=self._prev)
 
@@ -408,9 +426,11 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
         mem_log('end run')
 
-    def _join_run(self, spec, t, run):
-        t.join()
-
+    def _join_run(self, spec,run):
+#    def _join_run(self, spec, t, run):
+#        t.join()
+        self._do_runA(run)
+        
         self.debug('{} finished'.format(run.runid))
         if self.isAlive():
 
@@ -486,7 +506,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             self.stats.stop_timer()
 
 #         self.db.close()
-        self.extraction_state = False
+        self.set_extract_state(False)
+#        self.extraction_state = False
 #        def _set_extraction_state():
         if self.end_at_run_completion:
             c = 'orange'
@@ -520,12 +541,12 @@ class ExperimentExecutor(IsotopeDatabaseManager):
     def _extraction(self, ai):
         ret = True
 #         invoke_in_main_thread(self.trait_set, extracting=True)
-#         self.extracting = True
+        self.extracting = True
         if not ai.do_extraction():
             ret = self._failed_execution_step('Extraction Failed')
 #
 #         invoke_in_main_thread(self.trait_set, extraction_state_label='', extraction=False)
-        self.trait_set(extraction_state_label='', extraction=False)
+        self.trait_set(extraction_state_label='', extracting=False)
 
         return ret
 
@@ -584,9 +605,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         arun.massspec_importer = self.massspec_importer
         arun.runner = self.pyscript_runner
         arun.extract_device = exp.extract_device
-        
-        
-
+    
         mon = self.monitor
         if mon is not None:
             mon.automated_run = weakref.ref(arun)()
@@ -595,14 +614,17 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         return arun
 
     def _delay(self, delay, message='between'):
-        self.delaying_between_runs = True
+#        self.delaying_between_runs = True
         msg = 'Delay {} runs {} sec'.format(message, delay)
         self.info(msg)
-
+    
         wg = self.wait_group
         wc = wg.active_control
-        wc.trait_set(wtime=delay,
-                     message=msg)
+        invoke_in_main_thread(wc.trait_set, wtime=delay, message=msg)
+#        wc.trait_set(wtime=delay,
+##                     message=msg
+#                     )
+        time.sleep(0.1)
         wc.reset()
         wc.start()
         self.delaying_between_runs = False
@@ -612,10 +634,12 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         if state:
             label = state.upper()
             if flash:
-                if self._state_thread:
+                if self._end_flag:
                     self._end_flag.set()
-
-                self._end_flag = end_flag = Flag()
+                    time.sleep(0.25)
+                    self._end_flag.clear()
+                else:
+                    self._end_flag  = Flag()
 
                 def loop():
                     '''
@@ -626,7 +650,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     freq = flash
                     iperiod = 5
                     threshold = freq ** 2 * iperiod  # mod * freq
-                    self._extraction_state_iter(0, iperiod, threshold, label, color, end_flag)
+                    self._extraction_state_iter(0, iperiod, threshold, label, color)
 
                 invoke_in_main_thread(loop)
             else:
@@ -638,19 +662,19 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                 self._end_flag.set()
             invoke_in_main_thread(self.trait_set, extraction_state_label='')
 
-    def _extraction_state_iter(self, i, iperiod, threshold, label, color, end_flag):
+    def _extraction_state_iter(self, i, iperiod, threshold, label, color):
 #         print '{} {} {} {}'.format(i, iperiod, i % iperiod, threshold)
         if i % iperiod > threshold:
             self.trait_set(extraction_state_label='')
         else:
             self.trait_set(extraction_state_label=label,
                            extraction_state_color=color)
-
+        end_flag=self._end_flag
         if not end_flag.isSet():
             if i > 1000:
                 i = 0
             do_after(1000 / float(iperiod), self._extraction_state_iter, i + 1, iperiod,
-                     threshold, label, color, end_flag)
+                     threshold, label, color)
         else:
             self.trait_set(extraction_state_label='')
 

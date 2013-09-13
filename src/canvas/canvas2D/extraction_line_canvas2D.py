@@ -59,30 +59,35 @@ class ExtractionLineCanvas2D(SceneCanvas):
             except AttributeError:
                 pass
 
-        self.request_redraw()
+#        self.request_redraw()
 
-    def update_valve_state(self, name, nstate, mode=None):
+    def update_valve_state(self, name, nstate, refresh=True, mode=None):
         '''
         '''
+#        print name, nstate
         valve = self._get_valve_by_name(name)
+#        print valve
         if valve is not None:
             valve.state = nstate
+#
+#        if refresh:
+#            self.request_redraw()
 
-        self.request_redraw()
+#        return 
 
-    def update_valve_lock_state(self, name, lockstate):
+    def update_valve_lock_state(self, name, lockstate, refresh=True):
         valve = self._get_valve_by_name(name)
         if valve is not None:
             valve.soft_lock = lockstate
 
-        self.request_redraw()
+#        if refresh:
+#            self.request_redraw()
 
     def _get_valve_by_name(self, name):
         '''
         
         '''
-        valves = self.scene.valves.itervalues()
-        return next((i for i in valves
+        return next((i for i in self.scene.valves.itervalues()
                     if isinstance(i, BaseValve) and i.name == name), None)
 
     def _get_object_by_name(self, name):
@@ -95,8 +100,7 @@ class ExtractionLineCanvas2D(SceneCanvas):
 
     def _over_item(self, event):
         x , y = event.x, event.y
-        valves = self.scene.valves.itervalues()
-        return next((item for item in valves
+        return next((item for item in self.scene.valves.itervalues()
                      if hasattr(item, 'is_in') and \
                         item.is_in(x, y)), None)
 

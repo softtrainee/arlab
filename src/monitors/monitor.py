@@ -77,7 +77,8 @@ class Monitor(ConfigLoadable):
             self._stop_signal = Event()
 
             if self.load():
-                t = Thread(target=self._monitor_)
+                t = Thread(name='Thread-{}'.format(self.name),
+                           target=self._monitor_)
                 t.setDaemon(1)
                 t.start()
 

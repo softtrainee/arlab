@@ -37,7 +37,7 @@ class ExtractionLineTask(BaseHardwareTask):
 
     def activated(self):
         self.manager.activate()
-
+        
     def prepare_destroy(self):
         self.manager.closed(True)
 
