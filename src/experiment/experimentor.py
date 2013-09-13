@@ -73,7 +73,9 @@ class Experimentor(IsotopeDatabaseManager):
     def refresh_executable(self, qs=None):
         if qs is None:
             qs = self.experiment_queues
+            
         self.executor.executable = all([ei.isExecutable() for ei in qs])
+        self.debug('setting executable {}'.format(self.executor.executable))
 
     def update_queues(self):
         self._update_queues()

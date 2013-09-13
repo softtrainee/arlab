@@ -20,13 +20,14 @@ from traitsui.api import View, Item
 from pyface.timer.do_later import do_after
 #============= standard library imports ========================
 import time
-from threading import Event
+from threading import Event, Thread, Timer
 from numpy import Inf
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from src.ui.gui import invoke_in_main_thread
 from src.globals import globalv
 from src.consumer_mixin import consumable
+from src.codetools.memory_usage import mem_log
 
 class DataCollector(Loggable):
     measurement_script = Any
@@ -67,11 +68,15 @@ class DataCollector(Loggable):
 
         et = self.ncounts * self.period_ms * 0.001
         evt = Event()
+#        evt = None
+#        con=None
         self._evt=evt
         with consumable(func=self._iter_step) as con:
             self._alive = True
-            invoke_in_main_thread(self._iter, con, evt, 1)
-            evt.wait(et * 1.1)
+#            invoke_in_main_thread(self._iter, con, evt, 1)
+            self._iter(con,evt, 1)
+#            self._iter2(con,evt, 1)
+            evt.wait(et*1.1)
 
         tt = time.time() - st
         self.debug('estimated time: {:0.3f} actual time: :{:0.3f}'.format(et, tt))
@@ -81,6 +86,10 @@ class DataCollector(Loggable):
         ct = time.time()
         x = ct - self.starttime
         if not self._check_iteration(i):
+            if i%10==0:
+                self.info('collecting point {}'.format(i))
+                mem_log('point {}'.format(i), verbose=True)
+                
             # get the data
             data = self._get_data()
 #             self._iter_step((x, data, i))
@@ -88,9 +97,53 @@ class DataCollector(Loggable):
 
             p = self.period_ms
             p -= prev * 1000
+            p = max(0, p*0.001)
+            t=Timer(p, self._iter, args=(con, evt, i+1))
+            t.name='iter'
+            t.start()
 
-            p = max(1, p)
-            do_after(p, self._iter, con, evt, i + 1, prev=time.time() - ct)
+#            p = max(1, p)
+#            do_after(p, self._iter, con, evt, i + 1, prev=time.time() - ct)
+
+        else:
+            evt.set()
+            
+    def _iter2(self, con, evt, i, prev=0):
+        p=self.period_ms*0.001
+        for i in xrange(self.ncounts):
+#        while i<self.ncounts:
+            if i%10==0:
+#                self.info('collecting point {}'.format(i))
+                mem_log('point {}'.format(i), verbose=True)
+            time.sleep(p)
+#            i+=1
+#        evt.set()
+        return
+        
+#        ct = time.time()
+#        x = ct - self.starttime
+#        if not self._check_iteration(i):
+        if i<self.ncounts:
+            if i%10==0:
+                self.info('collecting point {}'.format(i))
+                mem_log('point {}'.format(i), verbose=True)
+            # get the data
+#            data = self._get_data()
+#             self._iter_step((x, data, i))
+#            con.add_consumable((x, data, i))
+
+            p -= prev * 1000
+
+            p = max(0, p)
+            
+#            tip = self.period_ms*0.001-prev
+#         me.sleep(p)
+#            self._iter(con, evt, i+1
+#                       #, prev=time.time()-ct
+#                       )
+            t=Timer(p, self._iter, args=(con, evt, i+1))
+            t.start()
+#            do_after(p, self._iter, con, evt, i + 1, prev=time.time() - ct)
 
         else:
             evt.set()
@@ -107,7 +160,9 @@ class DataCollector(Loggable):
         return self.data_generator.next()
 
     def _save_data(self, x, keys, signals):
-        self.data_writer(self.detectors, x, keys, signals)
+        return 
+    
+#        self.data_writer(self.detectors, x, keys, signals)
 
 
     def _plot_data(self, i, x, keys, signals):

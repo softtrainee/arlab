@@ -60,6 +60,7 @@ from src.codetools.file_log import file_log
 from src.pyscripts.uv_extraction_line_pyscript import UVExtractionPyScript
 from src.experiment.automated_run.data_collector import DataCollector
 
+DEBUG=True
 
 class ScriptInfo(HasTraits):
     measurement_script_name = Str
@@ -409,7 +410,7 @@ class AutomatedRun(Loggable):
                 ion.position(mass, detector, False)
 
                 self.info('Delaying {}s for detectors to settle'.format(settling_time))
-
+                self.data_collector.total_counts+=settling_time
                 self._wait(settling_time)
 
         if self.plot_panel:
@@ -673,7 +674,6 @@ class AutomatedRun(Loggable):
         return self._alive
 
     def start(self):
-
         if self.monitor is None:
             return self._start()
         elif self.monitor.check():
@@ -1192,7 +1192,7 @@ anaylsis_type={}
     def _measure(self, grpname, data_writer,
                  ncounts, starttime, starttime_offset,
                  series, fits, check_conditions, refresh):
-
+        mem_log('pre measure')
         if not self.spectrometer_manager:
             self.warning('no spectrometer manager')
             return True
@@ -1219,7 +1219,8 @@ anaylsis_type={}
                     grpname=grpname,
                     series_idx=series,
                     fits=fits,
-                    check_conditions=check_conditions,
+#                    check_conditions=check_conditions,
+                    check_conditions=False,
                     ncounts=ncounts,
                     period_ms=period * 1000,
                     data_generator=get_data,
@@ -1234,7 +1235,7 @@ anaylsis_type={}
 #            dev = (ma - mi)
             tc=m.total_counts
             if tc > ma:
-                graph.set_x_limits(-starttime_offset, tc*1.05)
+                graph.set_x_limits(-starttime_offset, tc*1.1)
             elif starttime_offset > mi:
                 graph.set_x_limits(min_=-starttime_offset)
 
@@ -1250,6 +1251,7 @@ anaylsis_type={}
         with dm.open_file(self._current_data_frame):
             m.measure()
             
+        mem_log('post measure')
         return True
 
 #===============================================================================
@@ -1264,6 +1266,10 @@ anaylsis_type={}
 
     def _post_extraction_save(self):
         db = self.db
+        if DEBUG:
+            self.debug('Not saving extraction to database')
+            return
+        
         with db.session_ctx() as sess:
             loadtable = db.get_loadtable(self.load_name)
             if loadtable is None:
@@ -1319,6 +1325,11 @@ anaylsis_type={}
 
 
     def _post_measurement_save(self):
+        
+        if DEBUG:
+            self.debug('Not measurement saving to database')
+            return
+        
         self.info('post measurement save')
 #         mem_log('pre post measurement save')
         if not self._save_enabled:
