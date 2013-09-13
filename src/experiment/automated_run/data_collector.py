@@ -39,20 +39,26 @@ class DataCollector(Loggable):
     grpname = Str
     fits = List
     series_idx = Int
-    total_counts = Int
+    total_counts = CInt
 
+    canceled=False
+    
     _truncate_signal = False
     starttime = None
     _alive = False
-
-
+    _evt=None
     def set_truncated(self):
         self._truncate_signal = True
 
     def stop(self):
         self._alive = False
-
+        if self._evt:
+            self._evt.set()
+            
     def measure(self):
+        if self.canceled:
+            return
+        
         self._truncate_signal = False
 
         st = time.time()
@@ -61,6 +67,7 @@ class DataCollector(Loggable):
 
         et = self.ncounts * self.period_ms * 0.001
         evt = Event()
+        self._evt=evt
         with consumable(func=self._iter_step) as con:
             self._alive = True
             invoke_in_main_thread(self._iter, con, evt, 1)
@@ -87,7 +94,6 @@ class DataCollector(Loggable):
 
         else:
             evt.set()
-
 
     def _iter_step(self, data):
         x, data, i = data
@@ -161,7 +167,10 @@ class DataCollector(Loggable):
 
 #         if self.plot_panel is None:
 #             return 'break'
-
+        if self._evt:
+            if self._evt.isSet():
+                return True
+            
         j = i - 1
         # exit the while loop if counts greater than max of original counts and the plot_panel counts
         pc = 0

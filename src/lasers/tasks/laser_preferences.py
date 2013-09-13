@@ -47,9 +47,7 @@ class LaserPreferences(BasePreferencesHelper):
 #            value = super(LaserPreferences, self)._get_value(name, value)
 #        return value
 
-
 class FusionsLaserPreferences(LaserPreferences):
-
     use_video = Bool(False)
     video_output_mode = Enum('MPEG', 'Raw')
     ffmpeg_path = File
@@ -107,10 +105,16 @@ class FusionsLaserPreferences(LaserPreferences):
 
 
 class FusionsDiodePreferences(FusionsLaserPreferences):
+    name = 'Fusions Diode'
     preferences_path = 'pychron.fusions.diode'
 
 class FusionsCO2Preferences(FusionsLaserPreferences):
+    name = 'Fusions CO2'
     preferences_path = 'pychron.fusions.co2'
+
+class FusionsUVPreferences(FusionsLaserPreferences):
+    name = 'Fusions UV'
+    preferences_path = 'pychron.fusions.uv'
 
 
 
@@ -212,9 +216,15 @@ class FusionsLaserPreferencesPane(PreferencesPane):
                  ]
 
 class FusionsDiodePreferencesPane(FusionsLaserPreferencesPane):
+    category = 'Fusions Diode'
     model_factory = FusionsDiodePreferences
 
 class FusionsCO2PreferencesPane(FusionsLaserPreferencesPane):
+    category = 'Fusions CO2'
     model_factory = FusionsCO2Preferences
+
+class FusionsUVPreferencesPane(FusionsLaserPreferencesPane):
+    category = 'Fusions UV'
+    model_factory = FusionsUVPreferences
 
 #============= EOF =============================================

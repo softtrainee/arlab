@@ -227,7 +227,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
         ox = x[:]
         oy = y[:]
-        ox, oy = None, None
+#        ox, oy = None, None
         fit = self._convert_fit(scatter.fit)
         if fit is None:
             return
@@ -293,7 +293,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         fy = r.predict(fx)
         if line:
             line.regressor = r
-
+            
             line.index.set_data(fx)
             line.value.set_data(fy)
 
@@ -382,9 +382,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             if r is None or not isinstance(r, PolynomialRegressor):
                 r = PolynomialRegressor()
 
-        r.trait_set(xs=x, ys=y,
+        r.trait_set(xs=x, ys=y,degree=fit,
                     trait_change_notify=False)
-        r.degree = fit
+#        r.degree = fit
+        r.calculate()
 
         if apply_filter:
             r = self._apply_outlier_filter(r, ox, oy, index, fod)

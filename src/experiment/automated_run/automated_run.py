@@ -154,7 +154,7 @@ class AutomatedRun(Loggable):
     truncation_conditions = List
     action_conditions = List
 
-    _total_counts = 0
+#    _total_counts = 0
     _processed_signals_dict = None
 
     fits = List
@@ -238,13 +238,20 @@ class AutomatedRun(Loggable):
         # sync the arar_age object's signals
 #         if self._use_arar_age():
 
-        blanks = self.experiment_manager.get_prev_blanks()
-        if not blanks:
-            blanks = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
+        p.correct_for_blank=False
+        
+        self.arar_age.clear_blanks()
+        if (not self.spec.analysis_type.startswith('blank') \
+                                     and not self.spec.analysis_type.startswith('background')):
+            p.correct_for_blank=True
+            blanks = self.experiment_manager.get_prev_blanks()
+            if not blanks:
+                blanks = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
+    
+            for iso, v in blanks.iteritems():
+                self.arar_age.set_blank(iso, v)
 
-        for iso, v in blanks.iteritems():
-            self.arar_age.set_blank(iso, v)
-
+        self.arar_age.clear_baselines()
         baselines = self.experiment_manager.get_prev_baselines()
         if not baselines:
             baselines = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
@@ -252,9 +259,6 @@ class AutomatedRun(Loggable):
         for iso, v in baselines.iteritems():
             self.arar_age.set_baseline(iso, v)
 
-
-        p.correct_for_blank = False
-        p.correct_for_baseline = False
         p.clear_displays()
 
     def py_set_regress_fits(self, fits, series=0):
@@ -377,10 +381,10 @@ class AutomatedRun(Loggable):
                                 )
         mem_log('post sniff')
 
-        if self.plot_panel:
-            self.plot_panel.correct_for_blank = True if (not self.spec.analysis_type.startswith('blank') \
-                                        and not self.spec.analysis_type.startswith('background')) else False
-            self.plot_panel.correct_for_baseline = True
+#        if self.plot_panel:
+#            self.plot_panel.correct_for_blank = True if (not self.spec.analysis_type.startswith('blank') \
+#                                                         and not self.spec.analysis_type.startswith('background')) else False
+##            self.plot_panel.correct_for_baseline = True
 
         return result
 
@@ -552,7 +556,7 @@ class AutomatedRun(Loggable):
             don't save run
             
         '''
-        self.data_collector.stop()
+        self.data_collector.canceled=True
 
 #        self.aliquot='##'
         self._save_enabled = False
@@ -723,7 +727,9 @@ class AutomatedRun(Loggable):
 
         self.overlap_evt = TEvent()
         self._alive = True
-        self._total_counts = 0
+        self.data_collector.total_counts=0
+        self.data_collector.canceled=False
+#        self._total_counts = 0
         self._equilibration_done = False
         self.refresh_scripts()
 
@@ -754,7 +760,9 @@ class AutomatedRun(Loggable):
         msg = 'Extraction Started {}'.format(self.extraction_script.name)
         self.info('======= {} ======='.format(msg))
         self.state = 'extraction'
-
+        
+        self.debug('DO EXTRACTION {}'.format(self.runner))
+        self.extraction_script.runner = self.runner
         self.extraction_script.manager = self.experiment_manager
         self.extraction_script.run_identifier = self.runid
 
@@ -829,7 +837,7 @@ class AutomatedRun(Loggable):
         self.info('======== {} ========'.format(msg))
         self.state = 'extraction'
         self.post_measurement_script.manager = self.experiment_manager
-
+        
         if self.post_measurement_script.execute():
             self.info('======== Post Measurement Finished ========')
             return True
@@ -851,6 +859,7 @@ class AutomatedRun(Loggable):
         msg = 'Post Equilibration Started {}'.format(self.post_equilibration_script.name)
         self.info('======== {} ========'.format(msg))
         self.post_equilibration_script.manager = self.experiment_manager
+        
 #         self.post_equilibration_script.syntax_checked = True
         if self.post_equilibration_script.execute():
             self.info('======== Post Equilibration Finished ========')
@@ -1088,7 +1097,7 @@ anaylsis_type={}
         settle_time = 2 / 10.
 
         ncounts = sum([ci for _h, ci in hops]) * ncycles
-        self._total_counts += ncounts
+#        self._total_counts += ncounts
         mi, ma = graph.get_x_limits()
         dev = (ma - mi) * 0.05
         if (self._total_counts + dev) > ma:
@@ -1191,14 +1200,13 @@ anaylsis_type={}
         self.info('measuring {}. ncounts={}'.format(grpname, ncounts),
                   color=MEASUREMENT_COLOR)
 
-
         get_data = self._get_data_generator()
         debug = globalv.experiment_debug
         if debug:
             period = 1
         else:
             period = self.integration_time
-
+        
         m = self.data_collector
         m.trait_set(
                     plot_panel=self.plot_panel,
@@ -1217,15 +1225,16 @@ anaylsis_type={}
                     data_generator=get_data,
                     data_writer=data_writer,
                     starttime=starttime,
-                    total_counts=self._total_counts
                     )
-
+        
+        m.total_counts+=ncounts
         if self.plot_panel:
             graph = self.plot_panel.isotope_graph
             mi, ma = graph.get_x_limits()
-            dev = (ma - mi) * 0.05
-            if (self._total_counts + dev) > ma:
-                graph.set_x_limits(-starttime_offset, self._total_counts + (ma - mi) * 0.25)
+#            dev = (ma - mi)
+            tc=m.total_counts
+            if tc > ma:
+                graph.set_x_limits(-starttime_offset, tc*1.05)
             elif starttime_offset > mi:
                 graph.set_x_limits(min_=-starttime_offset)
 
@@ -1239,8 +1248,8 @@ anaylsis_type={}
 
         dm = self.data_manager
         with dm.open_file(self._current_data_frame):
-            tc = m.measure()
-        self._total_counts = tc
+            m.measure()
+            
         return True
 
 #===============================================================================
@@ -1262,7 +1271,6 @@ anaylsis_type={}
     #             db.flush()
 
             ext = self._save_extraction(loadtable=loadtable)
-
             sess.flush()
             self._db_extraction_id = int(ext.id)
 
@@ -1541,6 +1549,7 @@ anaylsis_type={}
             exp = db.add_script(self.experiment_manager.experiment_queue.name,
                               self.experiment_manager.experiment_blob(),
                               )
+            self.debug('Script id {}'.format(exp.id))
             ext.experiment_blob_id = exp.id
 
             if self.extraction_script:
@@ -1561,7 +1570,7 @@ anaylsis_type={}
                 else:
                     dbpos = db.add_analysis_position(ext, pi)
 
-                if loadtable:
+                if loadtable and dbpos:
                     dbpos.load_identifier = loadtable.name
 
             return ext
@@ -1759,7 +1768,8 @@ anaylsis_type={}
 
         rs_name, rs_text = self._assemble_script_blob()
         rid = self.runid
-        fb = self.data_collector.get_fit_block(self._total_counts, self.fits)
+        dc=self.data_collector
+        fb = dc.get_fit_block(dc.total_counts, self.fits)
 
         exp = ExportSpec(rid=rid,
                          runscript_name=rs_name,
@@ -1907,7 +1917,7 @@ anaylsis_type={}
 
     def _ext_factory(self, root, file_name, klass=None):
         file_name = self._make_script_name(file_name)
-
+        self.debug('EXT FACTORY runner:{}'.format(self.runner))
         if os.path.isfile(os.path.join(root, file_name)):
             if klass is None:
                 klass = ExtractionPyScript
@@ -2085,6 +2095,7 @@ anaylsis_type={}
             self.spec.state = self.state
 
     def _runner_changed(self, new):
+        self.debug('Runner runner:{}'.format(new))
         for s in ['measurement', 'extraction', 'post_equilibration', 'post_measurement']:
             sc = getattr(self, '{}_script'.format(s))
             if sc is not None:
