@@ -21,7 +21,6 @@ from src.pyscripts.pyscript import PyScript, verbose_skip, makeRegistry, \
 #============= standard library imports ========================
 import time
 from src.globals import globalv
-import weakref
 #============= local library imports  ==========================
 
 ELPROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
@@ -44,7 +43,7 @@ class ValvePyScript(PyScript):
     def gosub(self, *args, **kw):
         kw['runner'] = self.runner
         
-        self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%% GOSUB setting runner {}'.format(self.runner))
+        self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%% GOSUB setting runner {}'.format(id(self.runner)))
         
         super(ValvePyScript, self).gosub(*args, **kw)
 

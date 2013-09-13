@@ -86,7 +86,7 @@ class DataCollector(Loggable):
         ct = time.time()
         x = ct - self.starttime
         if not self._check_iteration(i):
-            if i%10==0:
+            if i%50==0:
                 self.info('collecting point {}'.format(i))
 #                mem_log('point {}'.format(i), verbose=True)
                 

@@ -487,6 +487,7 @@ class ExtractionLineManager(Manager):
 #            if result:
             if change:
                 self.update_valve_state(name, True if action == 'open' else False)
+                self.refresh_canvas()
 #                 self.canvas.update_valve_state(name, True if action == 'open' else False)
 #                result = True
 
