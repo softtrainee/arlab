@@ -194,16 +194,14 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_analysis_position(self, extraction, pos, **kw):
         try:
             pos = int(pos)
+            dbpos = meas_PositionTable(position=pos, **kw)
+            if extraction:
+                dbpos.extraction_id = extraction.id
+    #             extraction.positions.append(dbpos)
+            self._add_item(dbpos)
+            return dbpos
         except (ValueError, TypeError), e:
-            print e
-            pos = 0
-
-        dbpos = meas_PositionTable(position=pos, **kw)
-        if extraction:
-            dbpos.extraction_id = extraction.id
-#             extraction.positions.append(dbpos)
-        self._add_item(dbpos)
-        return dbpos
+            pass
 
     def add_note(self, analysis, note, **kw):
         analysis = self.get_analysis(analysis)

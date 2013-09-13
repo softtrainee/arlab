@@ -151,10 +151,17 @@ class ArArAge(Loggable):
         else:
             return 0
 
-
     def get_signal_value(self, k):
         return self._get_arar_result_attr(k)
-
+    
+    def clear_baselines(self):
+        for k in self.isotopes:
+            self.set_blank(k, (0,0))
+            
+    def clear_blanks(self):
+        for k in self.isotopes:
+            self.set_blank(k, (0,0))
+        
     def set_isotope(self, iso, v):
         if not self.isotopes.has_key(iso):
             niso = Isotope(name=iso)

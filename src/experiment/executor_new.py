@@ -17,12 +17,20 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Event, Button, Float, String, \
     Bool, Enum, Property, Instance, Int, List, Any, Color, Dict
-from traitsui.api import View, Item
+#from traitsui.api import View, Item
+from apptools.preferences.preference_binding import bind_preference
+from pyface.constant import CANCEL, YES, NO
+from pyface.timer.do_later import do_after
+
 #============= standard library imports ========================
-from threading import Thread, Event as Flag, Timer
+from threading import Thread, Event as Flag
 import weakref
+import time
+from sqlalchemy.orm.exc import NoResultFound
+import os
+import gc
 #============= local library imports  ==========================
-from src.ui.thread import Thread as uThread
+#from src.ui.thread import Thread as uThread
 # from src.loggable import Loggable
 from src.displays.display import DisplayController
 from src.helpers.parsers.initialization_parser import InitializationParser
@@ -30,31 +38,22 @@ from src.pyscripts.pyscript_runner import RemotePyScriptRunner, PyScriptRunner
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
 from src.experiment.stats import StatsGroup
-import time
 from src.constants import NULL_STR
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
-from pyface.constant import CANCEL, YES, NO
-from sqlalchemy.orm.exc import NoResultFound
 from src.database.orms.isotope_orm import meas_AnalysisTable, \
     gen_ExtractionDeviceTable, gen_MassSpectrometerTable, gen_AnalysisTypeTable, \
     meas_MeasurementTable, meas_ExtractionTable
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.database.isotope_database_manager import IsotopeDatabaseManager
-from src.codetools.memory_usage import mem_available, mem_log, measure_type, \
-    calc_growth, MemCTX
+from src.codetools.memory_usage import mem_available, mem_log
 from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import consumable
 from src.paths import paths
 from src.managers.data_managers.h5_data_manager import H5DataManager
-from apptools.preferences.preference_binding import bind_preference
-import os
 from src.experiment.automated_run.automated_run import AutomatedRun
 from src.helpers.filetools import add_extension
-
-import gc
 from src.globals import globalv
 from src.wait.wait_group import WaitGroup
-from pyface.timer.do_later import do_after
 
 
 class ExperimentExecutor(IsotopeDatabaseManager):
@@ -211,10 +210,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             self.cancel()
 
     def _set_message(self, msg, color='black'):
-        def func():
-            self.trait_set(extraction_state_label=msg,
-                           extraction_state_color=color)
-        invoke_in_main_thread(func)
+        invoke_in_main_thread(self.trait_set ,extraction_state_label=msg,
+                              extraction_state_color=color)
 
     def experiment_blob(self):
         path = self.experiment_queue.path
@@ -576,17 +573,19 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         arun.load_name = exp.load_name
         arun.integration_time = 1.04
 
-        if self.current_run is None:
-            arun.experiment_manager = weakref.ref(self)()
+#        if self.current_run is None:
+        arun.experiment_manager = weakref.ref(self)()
 
-            arun.spectrometer_manager = self.spectrometer_manager
-            arun.extraction_line_manager = self.extraction_line_manager
-            arun.ion_optics_manager = self.ion_optics_manager
-            arun.data_manager = self.data_manager
-            arun.db = self.db
-            arun.massspec_importer = self.massspec_importer
-            arun.runner = self.pyscript_runner
-            arun.extract_device = exp.extract_device
+        arun.spectrometer_manager = self.spectrometer_manager
+        arun.extraction_line_manager = self.extraction_line_manager
+        arun.ion_optics_manager = self.ion_optics_manager
+        arun.data_manager = self.data_manager
+        arun.db = self.db
+        arun.massspec_importer = self.massspec_importer
+        arun.runner = self.pyscript_runner
+        arun.extract_device = exp.extract_device
+        
+        
 
         mon = self.monitor
         if mon is not None:

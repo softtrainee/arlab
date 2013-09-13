@@ -28,7 +28,7 @@ class ErrorEnvelopeOverlay(AbstractOverlay):
 
     upper = Array
     lower = Array
-    use_downsampling = True
+    use_downsampling = False
 
     def invalidate(self):
         self._cache_valid = False

@@ -519,7 +519,7 @@ class PyScript(Loggable):
         if self._cancel:
             return
 
-        self.info('COMPLETE INTERVAL waiting for begin interval {} to complete'.format(n))
+        self.info('COMPLETE INTERVAL waiting for {} to complete'.format(n))
         # wait until flag is set
         while not f.isSet():
             if self._cancel:
