@@ -187,6 +187,7 @@ class ExtractionLineManager(Manager):
 #                    self.show_explanation = pickle.load(f)
 #                except pickle.PickleError:
 #                    pass
+        self.reload_scene_graph()
         self.debug('$$$$$$$$$$$$$$$$$$$$$$$$ EL Activated')
         if self.mode == 'client':
             self.start_status_monitor()
@@ -198,7 +199,6 @@ class ExtractionLineManager(Manager):
         self.valve_manager.load_valve_states()
         self.valve_manager.load_valve_lock_states()
 #        if reload:
-#            self.reload_scene_graph()
 
     def start_status_monitor(self):
         self.info('starting status monitor')  

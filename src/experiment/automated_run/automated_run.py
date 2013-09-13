@@ -60,7 +60,7 @@ from src.codetools.file_log import file_log
 from src.pyscripts.uv_extraction_line_pyscript import UVExtractionPyScript
 from src.experiment.automated_run.data_collector import DataCollector
 
-DEBUG=True
+DEBUG=False
 
 class ScriptInfo(HasTraits):
     measurement_script_name = Str
