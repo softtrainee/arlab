@@ -88,7 +88,7 @@ class DataCollector(Loggable):
         if not self._check_iteration(i):
             if i%10==0:
                 self.info('collecting point {}'.format(i))
-                mem_log('point {}'.format(i), verbose=True)
+#                mem_log('point {}'.format(i), verbose=True)
                 
             # get the data
             data = self._get_data()
@@ -126,7 +126,7 @@ class DataCollector(Loggable):
         if i<self.ncounts:
             if i%10==0:
                 self.info('collecting point {}'.format(i))
-                mem_log('point {}'.format(i), verbose=True)
+#                mem_log('point {}'.format(i), verbose=True)
             # get the data
 #            data = self._get_data()
 #             self._iter_step((x, data, i))
@@ -160,9 +160,7 @@ class DataCollector(Loggable):
         return self.data_generator.next()
 
     def _save_data(self, x, keys, signals):
-        return 
-    
-#        self.data_writer(self.detectors, x, keys, signals)
+        self.data_writer(self.detectors, x, keys, signals)
 
 
     def _plot_data(self, i, x, keys, signals):
