@@ -1235,6 +1235,7 @@ anaylsis_type={}
         dm = self.data_manager
         with dm.open_file(self._current_data_frame):
             m.measure()
+            
 
         mem_log('post measure')
         return True

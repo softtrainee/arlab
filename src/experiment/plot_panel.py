@@ -357,7 +357,8 @@ class PlotPanel(Loggable):
     def _get_signal_dicts(self):
         sig, base, blank = {}, {}, {}
         if self.arar_age:
-            isos = [iso for iso in self.arar_age.isotopes.values()]
+            isos=self.arar_age.isotopes.values()
+#            isos = [iso for iso in self.arar_age.isotopes.values()]
 
             sig = dict([(v.name, v.uvalue) for v in isos])
             base = dict([(v.name, v.baseline.uvalue) for v in isos])
@@ -405,7 +406,6 @@ class PlotPanel(Loggable):
 #         blank = self.blanks
 #         sig=dict([(k,v) ])
         sig, base, blank = self._get_signal_dicts()
-
         cfb = self.correct_for_baseline
         cfbl = self.correct_for_blank
         def factory(det, fi):

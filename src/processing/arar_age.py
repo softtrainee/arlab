@@ -156,7 +156,7 @@ class ArArAge(Loggable):
     
     def clear_baselines(self):
         for k in self.isotopes:
-            self.set_blank(k, (0,0))
+            self.set_baseline(k, (0,0))
             
     def clear_blanks(self):
         for k in self.isotopes:

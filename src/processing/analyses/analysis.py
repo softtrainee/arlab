@@ -230,10 +230,11 @@ class DBAnalysis(Analysis):
         self.irradiation_info = self._get_irradition_info(ln)
 
         dbpos = ln.irradiation_position
-        pos = dbpos.position
-        irrad = dbpos.level.irradiation.name
-        level = dbpos.level.name
-        self.irradiation_str = '{} {}{}'.format(irrad, level, pos)
+        if dbpos:
+            pos = dbpos.position
+            irrad = dbpos.level.irradiation.name
+            level = dbpos.level.name
+            self.irradiation_str = '{} {}{}'.format(irrad, level, pos)
 
         self.j = self._get_j(ln)
         self.production_ratios = self._get_production_ratios(ln)

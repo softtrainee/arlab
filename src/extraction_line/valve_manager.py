@@ -134,7 +134,8 @@ class ValveManager(Manager):
                     v.set_state(s)
                     elm.update_valve_state(k, s, refresh=False)
             
-            invoke_in_main_thread(elm.refresh_canvas)
+            elm.refresh_canvas()
+#            invoke_in_main_thread(elm.refresh_canvas)
 
 
     def load_valve_lock_states(self):
@@ -151,7 +152,8 @@ class ValveManager(Manager):
                         self.unlock(k, save=False)
                         elm.update_valve_lock_state(k, False, refresh=False)
                         
-            invoke_in_main_thread(elm.refresh_canvas)
+            elm.refresh_canvas()
+#            invoke_in_main_thread(elm.refresh_canvas)
 
     def get_state_word(self):
         if self.actuators:
@@ -553,6 +555,7 @@ class ValveManager(Manager):
             ev = self.get_evalve_by_name(name)
             if ev is not None:
                 ev.soft_lock = True
+           
             v.lock()
             if save:
                 self._save_soft_lock_states()

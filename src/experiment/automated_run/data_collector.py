@@ -15,19 +15,19 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, List, CInt, Str, Int
-from traitsui.api import View, Item
-from pyface.timer.do_later import do_after
+from traits.api import Any, List, CInt, Str, Int
+#from traitsui.api import View, Item
+#from pyface.timer.do_later import do_after
 #============= standard library imports ========================
 import time
-from threading import Event, Thread, Timer
+from threading import Event, Timer
 from numpy import Inf
 #============= local library imports  ==========================
 from src.loggable import Loggable
-from src.ui.gui import invoke_in_main_thread
+#from src.ui.gui import invoke_in_main_thread
 from src.globals import globalv
 from src.consumer_mixin import consumable
-from src.codetools.memory_usage import mem_log
+#from src.codetools.memory_usage import mem_log
 
 class DataCollector(Loggable):
     measurement_script = Any
@@ -48,6 +48,14 @@ class DataCollector(Loggable):
     starttime = None
     _alive = False
     _evt = None
+    def wait(self):
+        st=time.time()
+        self.debug('wait started')
+        while 1:
+            if self._evt and self._evt.set():
+                break
+        self.debug('wait complete {:0.1f}s'.format(time.time()-st))
+        
     def set_truncated(self):
         self._truncate_signal = True
 
@@ -81,11 +89,9 @@ class DataCollector(Loggable):
         evt.wait(0.05)
 
         self._alive = True
-        with consumable(func=self._iter_step) as con:
+        with consumable(func=self._iter_step, main=True) as con:
             self._alive = True
-#            invoke_in_main_thread(self._iter, con, evt, 1)
             self._iter(con, evt, 1)
-#            self._iter2(con,evt, 1)
             evt.wait(et * 1.1)
 
         tt = time.time() - st
@@ -124,7 +130,7 @@ class DataCollector(Loggable):
         # save the data
         self._save_data(x, *data)
         # plot the data
-        invoke_in_main_thread(self._plot_data, i, x, *data)
+        self._plot_data(i, x, *data)
 
     def _get_data(self):
         return self.data_generator.next()
