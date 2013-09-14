@@ -1230,26 +1230,7 @@ anaylsis_type={}
 
         m.total_counts += ncounts
         if self.plot_panel:
-
-            def setup_graph():
-                graph = self.plot_panel.isotope_graph
-                mi, ma = graph.get_x_limits()
-    #            dev = (ma - mi)
-                tc = m.total_counts
-                if tc > ma:
-                    graph.set_x_limits(-starttime_offset, tc * 1.05)
-                elif starttime_offset > mi:
-                    graph.set_x_limits(min_=-starttime_offset)
-
-                nfs = m.get_fit_block(0, fits)
-                for pi, fi in enumerate(nfs):
-                    graph.new_series(marker='circle', type='scatter',
-                                     marker_size=1.25,
-                                     fit=fi,
-                                     plotid=pi
-                                     )
-
-            invoke_in_main_thread(setup_graph)
+            invoke_in_main_thread(self._setup_isotope_graph, fits, starttime_offset)
 
         dm = self.data_manager
         with dm.open_file(self._current_data_frame):
@@ -1258,6 +1239,31 @@ anaylsis_type={}
         mem_log('post measure')
         return True
 
+    def _setup_isotope_graph(self, fits, starttime_offset):
+        '''
+            execute in main thread is necessary.
+            set the graph limits and construct the necessary series
+            set 0-count fits
+            
+        '''
+        m = self.data_collector
+        graph = self.plot_panel.isotope_graph
+        # update limits
+        mi, ma = graph.get_x_limits()
+        tc = m.total_counts
+        if tc > ma:
+            graph.set_x_limits(-starttime_offset, tc * 1.05)
+        elif starttime_offset > mi:
+            graph.set_x_limits(min_=-starttime_offset)
+
+        # update fites
+        nfs = m.get_fit_block(0, fits)
+        for pi, fi in enumerate(nfs):
+            graph.new_series(marker='circle', type='scatter',
+                             marker_size=1.25,
+                             fit=fi,
+                             plotid=pi
+                             )
 #===============================================================================
 # save
 #===============================================================================

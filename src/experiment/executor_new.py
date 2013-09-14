@@ -175,7 +175,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         self._alive = True
 
         if self._pre_execute_check():
-            self.info('Starting Execution')
+            name = self.experiment_queue.name
+            self.info('Starting Execution {}'.format(name))
             if self.stats:
                 self.stats.reset()
                 self.stats.start_timer()
@@ -189,8 +190,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             self.pyscript_runner.connect()
             self.massspec_importer.connect()
             self.experiment_queue.executed = True
-
-            t = Thread(name='execute',
+            t = Thread(name='execute_{}'.format(name),
                        target=self._execute)
             t.start()
             return t

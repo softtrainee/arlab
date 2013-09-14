@@ -519,16 +519,16 @@ class Graph(Viewable, ContextMenuMixin):
         if max_ is None:
             max_ = mmax
 
-#         self._set_limits(min_, max_, 'value', plotid, pad, **kw)
-        invoke_in_main_thread(self._set_limits,
-                              min_, max_, 'value', plotid, pad, **kw)
+        self._set_limits(min_, max_, 'value', plotid, pad, **kw)
+#         invoke_in_main_thread(self._set_limits,
+#                               min_, max_, 'value', plotid, pad, **kw)
 
     def set_x_limits(self, min_=None, max_=None, pad=0, plotid=0, **kw):
         '''
         '''
-        invoke_in_main_thread(self._set_limits,
-                              min_, max_, 'index', plotid, pad, **kw)
-#         self._set_limits(min_, max_, 'index', plotid, pad, **kw)
+#         invoke_in_main_thread(self._set_limits,
+#                               min_, max_, 'index', plotid, pad, **kw)
+        self._set_limits(min_, max_, 'index', plotid, pad, **kw)
 
     def set_x_tracking(self, track, plotid=0):
         '''
