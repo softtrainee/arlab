@@ -53,6 +53,7 @@ from src.paths import paths
 from src.graph.tools.point_inspector import PointInspector, \
     PointInspectorOverlay
 from chaco.array_data_source import ArrayDataSource
+from src.ui.gui import invoke_in_main_thread
 # from chaco.tools.pan_tool import PanTool
 VALID_FONTS = [
 #                'Helvetica',
@@ -518,12 +519,16 @@ class Graph(Viewable, ContextMenuMixin):
         if max_ is None:
             max_ = mmax
 
-        self._set_limits(min_, max_, 'value', plotid, pad, **kw)
+#         self._set_limits(min_, max_, 'value', plotid, pad, **kw)
+        invoke_in_main_thread(self._set_limits,
+                              min_, max_, 'value', plotid, pad, **kw)
 
     def set_x_limits(self, min_=None, max_=None, pad=0, plotid=0, **kw):
         '''
         '''
-        self._set_limits(min_, max_, 'index', plotid, pad, **kw)
+        invoke_in_main_thread(self._set_limits,
+                              min_, max_, 'index', plotid, pad, **kw)
+#         self._set_limits(min_, max_, 'index', plotid, pad, **kw)
 
     def set_x_tracking(self, track, plotid=0):
         '''
@@ -883,6 +888,9 @@ class Graph(Viewable, ContextMenuMixin):
                            plotid=pi,
                            ** kw)
 
+#     def add_datum(self, *args, **kw):
+#         invoke_in_main_thread(self._add_datum, *args, **kw)
+
     def add_datum(self, datum, plotid=0, series=0,
                    update_y_limits=False,
                    ypadding=10,
@@ -891,7 +899,12 @@ class Graph(Viewable, ContextMenuMixin):
                    **kw):
         '''
         '''
+
+
+
+
 #         def add(datum):
+#         print plotid, series, self.series
         names = self.series[plotid][series]
         plot = self.plots[plotid]
 

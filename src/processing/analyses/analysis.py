@@ -61,6 +61,7 @@ class Analysis(ArArAge):
 class DBAnalysis(Analysis):
     analysis_summary_klass = DBAnalysisSummary
     status = Int
+    temp_status = Int
     record_id = Str
     uuid = Str
 
@@ -78,6 +79,7 @@ class DBAnalysis(Analysis):
     analysis_type = Str
 
     ic_factors = Dict
+
 
     def get_baseline_corrected_signal_dict(self):
         get = lambda iso: iso.baseline_corrected_value()
@@ -226,6 +228,13 @@ class DBAnalysis(Analysis):
     def _sync_irradiation(self, meas_analysis):
         ln = meas_analysis.labnumber
         self.irradiation_info = self._get_irradition_info(ln)
+
+        dbpos = ln.irradiation_position
+        pos = dbpos.position
+        irrad = dbpos.level.irradiation.name
+        level = dbpos.level.name
+        self.irradiation_str = '{} {}{}'.format(irrad, level, pos)
+
         self.j = self._get_j(ln)
         self.production_ratios = self._get_production_ratios(ln)
 

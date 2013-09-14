@@ -51,6 +51,12 @@ class SummaryTablePDFWriter(BasePDFWriter):
 
         return flowables, None
 
+    def _short_material_name(self, mat):
+        if mat.lower() == 'groundmass concentrate':
+            mat = 'GMC'
+
+        return mat
+
     def _make_table(self, samples):
         style = self._new_style(
 #                                 debug_grid=True,
@@ -211,7 +217,7 @@ class SummaryTablePDFWriter(BasePDFWriter):
         row.add_item(value=sample.sample)
         row.add_item(value=sample.identifier)
         row.add_item(value=sample.irradiation)
-        row.add_item(value=sample.material)
+        row.add_item(value=self._short_material_name(sample.material))
         row.add_item(value=sample.age_type)
         row.add_item(value=sample.nanalyses)
         row.add_item(value=floatfmt(sample.mswd, n=1))

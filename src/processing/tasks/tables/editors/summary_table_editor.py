@@ -24,13 +24,15 @@ from src.processing.tasks.tables.summary_table_pdf_writer import SummaryTablePDF
 import os
 from src.paths import paths
 import cPickle as pickle
+from src.column_sorter_mixin import ColumnSorterMixin
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 
-class SummaryTableEditor(BaseTableEditor):
+class SummaryTableEditor(BaseTableEditor, ColumnSorterMixin):
     use_alternating_background = Bool(False)
     notes_template = Str
+
     def make_table(self, title):
         samples = self.items
         uab = self.use_alternating_background
@@ -85,7 +87,8 @@ class SummaryTableEditor(BaseTableEditor):
                                                       col_widths='col_widths',
                                                       selected='selected',
                                                       multi_select=True,
-                                                      refresh='refresh_needed'
+                                                      refresh='refresh_needed',
+                                                      column_clicked='column_clicked'
                                                       )))
         return v
 

@@ -410,36 +410,38 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
                         joins=None,
                         filters=None,
                         limit=None, order=None):
+
         sess = self.sess
         if sess is None:
             if self.session_factory:
                 sess = self.session_factory()
 
-#         print 'get items', sess, self.session_factory
-#         sess = self.get_session()
-        if sess is not None:
-            q = sess.query(table)
+        with self.session_ctx(sess):
+    #         print 'get items', sess, self.session_factory
+    #         sess = self.get_session()
+            if sess is not None:
+                q = sess.query(table)
 
-            if joins:
-                try:
-                    for ji in joins:
-                        if ji != table:
-                            q = q.join(ji)
-                except InvalidRequestError:
-                    pass
+                if joins:
+                    try:
+                        for ji in joins:
+                            if ji != table:
+                                q = q.join(ji)
+                    except InvalidRequestError:
+                        pass
 
-            if filters is not None:
-                for fi in filters:
-                    q = q.filter(fi)
+                if filters is not None:
+                    for fi in filters:
+                        q = q.filter(fi)
 
-            if order is not None:
-                q = q.order_by(order)
+                if order is not None:
+                    q = q.order_by(order)
 
-            if limit is not None:
-                q = q.limit(limit)
-            r = q.all()
-            sess.close()
-            return r
+                if limit is not None:
+                    q = q.limit(limit)
+
+                r = q.all()
+                return r
 
     def _retrieve_first(self, table, value, key='name', order_by=None):
         if not isinstance(value, (str, int, unicode, long, float)):

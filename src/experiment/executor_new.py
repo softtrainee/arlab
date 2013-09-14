@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Event, Button, Float, String, \
     Bool, Enum, Property, Instance, Int, List, Any, Color, Dict
-#from traitsui.api import View, Item
+# from traitsui.api import View, Item
 from apptools.preferences.preference_binding import bind_preference
 from pyface.constant import CANCEL, YES, NO
 from pyface.timer.do_later import do_after
@@ -30,7 +30,7 @@ from sqlalchemy.orm.exc import NoResultFound
 import os
 import gc
 #============= local library imports  ==========================
-#from src.ui.thread import Thread as uThread
+# from src.ui.thread import Thread as uThread
 # from src.loggable import Loggable
 from src.displays.display import DisplayController
 from src.helpers.parsers.initialization_parser import InitializationParser
@@ -212,7 +212,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             self.cancel()
 
     def _set_message(self, msg, color='black'):
-        invoke_in_main_thread(self.trait_set ,extraction_state_label=msg,
+        invoke_in_main_thread(self.trait_set , extraction_state_label=msg,
                               extraction_state_color=color)
 
     def experiment_blob(self):
@@ -229,7 +229,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 # private
 #===============================================================================
     def _execute(self):
-        
+
 #         self._alive = True
 #
 #         # check the first aliquot before delaying
@@ -306,30 +306,30 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     break
 
 #                runargs = self._execute_run(spec)
-                
-                run=self._make_run(spec)
+
+                run = self._make_run(spec)
                 self.wait_group.active_control.page_name = run.runid
 #                    self.wait_group.add_control(page_name=run.runid)
 
                 if spec.analysis_type == 'unknown' and spec.overlap:
                     self.info('overlaping')
-                    t=Thread(target=self._do_runA,args=(run,))
+                    t = Thread(target=self._do_runA, args=(run,))
                     t.start()
                     run.wait_for_overlap()
-                    
+
                     self.debug('overlap finished. starting next run')
 
-                    con.add_consumable((t,run))
+                    con.add_consumable((t, run))
                 else:
                     last_runid = run.runid
                     self._join_run(spec, run)
 #                if not runargs:
 #                    pass
-##                     break
+# #                     break
 #                else:
 #                    t, run = runargs
 #                    self.wait_group.active_control.page_name = run.runid
-##                    self.wait_group.add_control(page_name=run.runid)
+# #                    self.wait_group.add_control(page_name=run.runid)
 #
 #                    if spec.analysis_type == 'unknown' and spec.overlap:
 #                        self.info('overlaping')
@@ -363,7 +363,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 #
 #        run = self._make_run(spec)
 #        self.info('%%%%%%%%%%%%%%%%%%%% starting run {}'.format(run.runid))
-##
+# #
 #        t = Thread(target=self._do_run,
 #                    name=run.runid,
 #                    args=(run,),
@@ -426,11 +426,11 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
         mem_log('end run')
 
-    def _join_run(self, spec,run):
+    def _join_run(self, spec, run):
 #    def _join_run(self, spec, t, run):
 #        t.join()
         self._do_runA(run)
-        
+
         self.debug('{} finished'.format(run.runid))
         if self.isAlive():
 
@@ -605,7 +605,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         arun.massspec_importer = self.massspec_importer
         arun.runner = self.pyscript_runner
         arun.extract_device = exp.extract_device
-    
+
         mon = self.monitor
         if mon is not None:
             mon.automated_run = weakref.ref(arun)()
@@ -617,12 +617,12 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 #        self.delaying_between_runs = True
         msg = 'Delay {} runs {} sec'.format(message, delay)
         self.info(msg)
-    
+
         wg = self.wait_group
         wc = wg.active_control
         invoke_in_main_thread(wc.trait_set, wtime=delay, message=msg)
 #        wc.trait_set(wtime=delay,
-##                     message=msg
+# #                     message=msg
 #                     )
         time.sleep(0.1)
         wc.reset()
@@ -639,7 +639,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                     time.sleep(0.25)
                     self._end_flag.clear()
                 else:
-                    self._end_flag  = Flag()
+                    self._end_flag = Flag()
 
                 def loop():
                     '''
@@ -669,7 +669,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         else:
             self.trait_set(extraction_state_label=label,
                            extraction_state_color=color)
-        end_flag=self._end_flag
+        end_flag = self._end_flag
         if not end_flag.isSet():
             if i > 1000:
                 i = 0
@@ -946,6 +946,10 @@ If "No" select from database
 
     def _check_managers(self, inform=True, n=1):
         self.debug('checking for managers')
+        if globalv.experiment_debug:
+            self.debug('********************** NOT DOING  managers check')
+            return True
+
         exp = self.experiment_queue
         for i in range(n):
             nonfound = self._check_for_managers(exp)

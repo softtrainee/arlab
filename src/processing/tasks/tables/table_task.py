@@ -78,23 +78,27 @@ class TableTask(BrowserTask):
         self._open_editor(editor)
         self.load_projects()
 
-        self.selected_project = self.projects[2]
-        self._dclicked_sample_changed('')
+        self.selected_project = self.projects[1]
+#         self._dclicked_sample_changed('')
 
 #         super(TableTask, self).activated()
 #         self.make_laser_table()
     def _dclicked_sample_changed(self, new):
 
         man = self.manager
-
-        ans = [ai for ai in self.analyses if not ai.step]  # [:5]
+        ans = [ai for ai in self.analyses
+#                 if not ai.step
+                ]  # [:5]
+#         self.manager.make
         ans = man.make_analyses(ans)
-        man.load_analyses(ans, unpack=False)
+#         man.load_analyses(ans, unpack=False)
 
-        aa = []
-        for ai in ans:
-            aa.append(ai)
-            aa.append(TableBlank(analysis=ai))
+#         aa = []
+#         for ai in ans:
+#             aa.append(ai)
+#             aa.append(TableBlank(analysis=ai))
+        aa = [r for ai in ans
+                for r in (ai, TableBlank(analysis=(ai)))]
 
         self.active_editor.oitems = aa
         self.active_editor.items = aa
@@ -123,7 +127,8 @@ class TableTask(BrowserTask):
 
     def append_summary_table(self):
         if isinstance(self.active_editor, SummaryTableEditor):
-            do_later(self._append_summary_table)
+#             do_later(self._append_summary_table)
+            self._append_summary_table()
 
     def _append_summary_table(self):
         ss = self.active_editor.items
@@ -146,22 +151,17 @@ class TableTask(BrowserTask):
         def factory(s):
             sam = s.name
             if s.material:
-                mat = s.material.name
+                mat = s.material
 
-            ans = self._get_sample_analyses(sam)
-            ans = [ai for ai in ans if ai.step == ''][:5]
-            ans = self.manager.make_analyses(ans)
-
-            ref = ans[0]
-            dbpos = ref.dbrecord.labnumber.irradiation_position
-            pos = dbpos.position
-            irrad = dbpos.level.irradiation.name
-            level = dbpos.level.name
-            irrad_str = '{} {}{}'.format(irrad, level, pos)
+            ans = self._get_sample_analyses(s)
+#             ans = [ai for ai in ans if ai.step == ''][:5]
+#             ans = [ai for ai in ans][:5]
+            ans = self.manager.make_analyses(ans[:4])
 
             ref = ans[0]
+            irrad_str = ref.irradiation_str
+
             klass = StepHeatingSummary if ref.step else FusionSummary
-
             ss = klass(
                        sample=sam,
                        material=mat,
@@ -180,10 +180,10 @@ class TableTask(BrowserTask):
                     for si in self.selected_sample
                         if not test(si)]
 
-        ans = [ai for si in items
-                    for ai in si.analyses]
+#         ans = [ai for si in items
+#                     for ai in si.analyses]
 
-        self.manager.load_analyses(ans)
+#         self.manager.load_analyses(ans)
         return items
 
 

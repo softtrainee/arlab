@@ -35,36 +35,37 @@ from src.ui.custom_label_editor import CustomLabel
 from traitsui.tabular_adapter import TabularAdapter
 from src.ui.gui import invoke_in_main_thread
 from pyface.timer.do_later import do_later
+from src.column_sorter_mixin import ColumnSorterMixin
 
 class BaseTabularAdapter(TabularAdapter):
     columns = [('ID', 'record_id'),
                ('Timestamp', 'timestamp')
                ]
 
-class ColumnSorterMixin(HasTraits):
-    _sort_field = None
-    _reverse_sort = False
-    column_clicked = Any
-
-    def _column_clicked_changed(self, event):
-        values = event.editor.value
-
-        fields = [name for _, name in event.editor.adapter.columns]
-        field = fields[event.column]
-        self._reverse_sort = not self._reverse_sort
-
-        self._sort_columns(values, field)
-
-    def _sort_columns(self, values, field=None):
-        # get the field to sort on
-        if field is None:
-            field = self._sort_field
-            if field is None:
-                return
-
-        values.sort(key=lambda x: getattr(x, field),
-                    reverse=self._reverse_sort)
-        self._sort_field = field
+# class ColumnSorterMixin(HasTraits):
+#     _sort_field = None
+#     _reverse_sort = False
+#     column_clicked = Any
+#
+#     def _column_clicked_changed(self, event):
+#         values = event.editor.value
+#
+#         fields = [name for _, name in event.editor.adapter.columns]
+#         field = fields[event.column]
+#         self._reverse_sort = not self._reverse_sort
+#
+#         self._sort_columns(values, field)
+#
+#     def _sort_columns(self, values, field=None):
+#         # get the field to sort on
+#         if field is None:
+#             field = self._sort_field
+#             if field is None:
+#                 return
+#
+#         values.sort(key=lambda x: getattr(x, field),
+#                     reverse=self._reverse_sort)
+#         self._sort_field = field
 
 
 class SelectorHandler(Handler):
