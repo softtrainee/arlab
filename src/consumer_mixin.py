@@ -22,10 +22,12 @@
 # from src.ui.thread import Thread
 from threading import Thread
 from Queue import Queue, Empty
+from src.ui.gui import invoke_in_main_thread
 
 class ConsumerMixin(object):
-    def setup_consumer(self, func=None, buftime=None, auto_start=True):
+    def setup_consumer(self, func=None, buftime=None, auto_start=True, main=False):
         self._consume_func = func
+        self._main=main
         self._buftime = buftime  # ms
         self._consumer_queue = Queue()
         self._consumer = Thread(target=self._consume,
@@ -83,10 +85,16 @@ class ConsumerMixin(object):
             v = get_func()
             if v:
                 if cfunc:
-                    cfunc(v)
+                    if self._main:
+                        invoke_in_main_thread(cfunc,v)
+                    else:
+                        cfunc(v)
                 elif isinstance(v, tuple):
                     func, a = v
-                    func(a)
+                    if self._main:
+                        invoke_in_main_thread(func,a)
+                    else:
+                        func(a)
 
 #             if not self._should_consume:
 #                 break
@@ -95,12 +103,13 @@ class ConsumerMixin(object):
 class consumable(object):
     _func = None
     _consumer = None
-    def __init__(self, func=None):
+    _main=False
+    def __init__(self, func=None, main=False):
         self._func = func
-
+        self._main=main
     def __enter__(self):
         self._consumer = c = ConsumerMixin()
-        c.setup_consumer(func=self._func)
+        c.setup_consumer(func=self._func, main=self._main)
         return c
 
     def __exit__(self, *args, **kw):
@@ -114,3 +123,4 @@ class consumable(object):
 
 
 #============= EOF =============================================
+    

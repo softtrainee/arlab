@@ -1,5 +1,6 @@
 from src.loggable import Loggable
 from threading import Event, Timer
+from pyface.timer.do_later import do_later, do_after
 
 class StatusMonitor(Loggable):
     valve_manager=None
@@ -19,7 +20,6 @@ class StatusMonitor(Loggable):
         self._iter(1)
         self._clients+=1
             
-    
     def isAlive(self):
         if self._stop_evt:
             return not self._stop_evt.isSet()
@@ -36,12 +36,14 @@ class StatusMonitor(Loggable):
         vm=self.valve_manager
         if not i%self.state_freq:
             vm.load_valve_states()
+            
         if not i%self.lock_freq:
             vm.load_valve_lock_states()
          
-        if i>1000:
+        if i>100:
             i=0
         if not self._stop_evt.isSet():
-            t=Timer(self.period, self._iter, (i+1,))
-            t.start()
+            do_after(self.period*1000, self._iter, i+1)
+#            t=Timer(self.period, self._iter, (i+1,))
+#            t.start()
     

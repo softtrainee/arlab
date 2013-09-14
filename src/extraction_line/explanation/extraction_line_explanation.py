@@ -20,6 +20,7 @@ from traitsui.api import View, Item, TableEditor, \
     Handler, TabularEditor
 from traitsui.table_column import ObjectColumn
 from traitsui.tabular_adapter import TabularAdapter
+import weakref
 # from traitsui.extras.checkbox_column import CheckboxColumn
 
 #=============standard library imports ========================
@@ -86,14 +87,14 @@ class ExtractionLineExplanation(HasTraits):
     def load_item(self, obj, name, old, new):
         if isinstance(new, list):
             for n in new:
-                self.explanable_items.append(n)
+                self.explanable_items.append(weakref.ref(n)())
 
     def load(self, l):
         '''
         '''
         if isinstance(l, list):
             for v in l:
-                self.explanable_items.append(v)
+                self.explanable_items.append(weakref.ref(v)())
 
     def traits_view(self):
         '''

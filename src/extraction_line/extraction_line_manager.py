@@ -203,6 +203,7 @@ class ExtractionLineManager(Manager):
     def start_status_monitor(self):
         self.info('starting status monitor')  
 #        return  
+#        self.info('starting status monitor NOT')  
         self.status_monitor.start()
 #        if not self.status_monitor.isAlive():
             
