@@ -25,6 +25,7 @@ import time
 from spectrometer_task import SpectrometerTask
 from src.globals import globalv
 from memory_profiler import profile
+from src.ui.gui import invoke_in_main_thread
 
 def psuedo_peak(center, start, stop, step, magnitude=500, peak_width=0.008):
     x = linspace(start, stop, step)
@@ -140,11 +141,15 @@ class MagnetScan(SpectrometerTask):
             mag.set_dac(di, verbose=False)
             if period:
                 time.sleep(period)
+
             intensities = self._magnet_step_hook(detector=det,
                                                  peak_generator=peak_generator)
-            self._graph_hook(di, intensities, update_y_limits=True)
-
             rintensities.append(intensities)
+
+            invoke_in_main_thread(self._graph_hook, di, intensities,
+                                  update_y_limits=True)
+#             self._graph_hook(di, intensities, update_y_limits=True)
+
 
         return rintensities
 

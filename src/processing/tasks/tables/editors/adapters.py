@@ -145,7 +145,11 @@ class LaserTableAdapter(BaseAdapter):
         return c
 
     def _get_aliquot_step_str_text(self):
-        return self._get_text_value('aliquot_step_str')
+        item = self.item
+        r = ''
+        if not isinstance(item, TableBlank):
+            r = '{:02n}{}'.format(item.aliquot, item.step)
+        return r
 
     def _get_extract_value_text(self):
         return self._get_text_value('extract_value')

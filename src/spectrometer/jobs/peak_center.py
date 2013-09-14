@@ -103,16 +103,14 @@ class PeakCenter(MagnetScan):
     _markup_idx = 1
 
     def cancel(self):
-        self.canceled=True
+        self.canceled = True
         self.stop()
-        
+
     def get_peak_center(self, ntries=2):
         self._alive = True
         graph = self.graph
         center_dac = self.center_dac
         self.info('starting peak center. center dac= {}'.format(center_dac))
-
-
 
         graph.clear()
         self._graph_factory(graph=graph)

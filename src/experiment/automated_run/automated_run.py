@@ -60,7 +60,7 @@ from src.codetools.file_log import file_log
 from src.pyscripts.uv_extraction_line_pyscript import UVExtractionPyScript
 from src.experiment.automated_run.data_collector import DataCollector
 
-DEBUG=False
+DEBUG = False
 
 class ScriptInfo(HasTraits):
     measurement_script_name = Str
@@ -239,16 +239,16 @@ class AutomatedRun(Loggable):
         # sync the arar_age object's signals
 #         if self._use_arar_age():
 
-        p.correct_for_blank=False
-        
+        p.correct_for_blank = False
+
         self.arar_age.clear_blanks()
         if (not self.spec.analysis_type.startswith('blank') \
                                      and not self.spec.analysis_type.startswith('background')):
-            p.correct_for_blank=True
+            p.correct_for_blank = True
             blanks = self.experiment_manager.get_prev_blanks()
             if not blanks:
                 blanks = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
-    
+
             for iso, v in blanks.iteritems():
                 self.arar_age.set_blank(iso, v)
 
@@ -385,7 +385,7 @@ class AutomatedRun(Loggable):
 #        if self.plot_panel:
 #            self.plot_panel.correct_for_blank = True if (not self.spec.analysis_type.startswith('blank') \
 #                                                         and not self.spec.analysis_type.startswith('background')) else False
-##            self.plot_panel.correct_for_baseline = True
+# #            self.plot_panel.correct_for_baseline = True
 
         return result
 
@@ -410,7 +410,7 @@ class AutomatedRun(Loggable):
                 ion.position(mass, detector, False)
 
                 self.info('Delaying {}s for detectors to settle'.format(settling_time))
-                self.data_collector.total_counts+=settling_time
+                self.data_collector.total_counts += settling_time
                 self._wait(settling_time)
 
         if self.plot_panel:
@@ -557,7 +557,7 @@ class AutomatedRun(Loggable):
             don't save run
             
         '''
-        self.data_collector.canceled=True
+        self.data_collector.canceled = True
 
 #        self.aliquot='##'
         self._save_enabled = False
@@ -727,8 +727,8 @@ class AutomatedRun(Loggable):
 
         self.overlap_evt = TEvent()
         self._alive = True
-        self.data_collector.total_counts=0
-        self.data_collector.canceled=False
+        self.data_collector.total_counts = 0
+        self.data_collector.canceled = False
 #        self._total_counts = 0
         self._equilibration_done = False
         self.refresh_scripts()
@@ -760,7 +760,7 @@ class AutomatedRun(Loggable):
         msg = 'Extraction Started {}'.format(self.extraction_script.name)
         self.info('======= {} ======='.format(msg))
         self.state = 'extraction'
-        
+
         self.debug('DO EXTRACTION {}'.format(self.runner))
         self.extraction_script.runner = self.runner
         self.extraction_script.manager = self.experiment_manager
@@ -837,7 +837,7 @@ class AutomatedRun(Loggable):
         self.info('======== {} ========'.format(msg))
         self.state = 'extraction'
         self.post_measurement_script.manager = self.experiment_manager
-        
+
         if self.post_measurement_script.execute():
             self.info('======== Post Measurement Finished ========')
             return True
@@ -859,7 +859,7 @@ class AutomatedRun(Loggable):
         msg = 'Post Equilibration Started {}'.format(self.post_equilibration_script.name)
         self.info('======== {} ========'.format(msg))
         self.post_equilibration_script.manager = self.experiment_manager
-        
+
 #         self.post_equilibration_script.syntax_checked = True
         if self.post_equilibration_script.execute():
             self.info('======== Post Equilibration Finished ========')
@@ -1206,7 +1206,7 @@ anaylsis_type={}
             period = 1
         else:
             period = self.integration_time
-        
+
         m = self.data_collector
         m.trait_set(
                     plot_panel=self.plot_panel,
@@ -1227,30 +1227,34 @@ anaylsis_type={}
                     data_writer=data_writer,
                     starttime=starttime,
                     )
-        
-        m.total_counts+=ncounts
-        if self.plot_panel:
-            graph = self.plot_panel.isotope_graph
-            mi, ma = graph.get_x_limits()
-#            dev = (ma - mi)
-            tc=m.total_counts
-            if tc > ma:
-                graph.set_x_limits(-starttime_offset, tc*1.1)
-            elif starttime_offset > mi:
-                graph.set_x_limits(min_=-starttime_offset)
 
-            nfs = m.get_fit_block(0, fits)
-            for pi, fi in enumerate(nfs):
-                graph.new_series(marker='circle', type='scatter',
-                                 marker_size=1.25,
-                                 fit=fi,
-                                 plotid=pi
-                                 )
+        m.total_counts += ncounts
+        if self.plot_panel:
+
+            def setup_graph():
+                graph = self.plot_panel.isotope_graph
+                mi, ma = graph.get_x_limits()
+    #            dev = (ma - mi)
+                tc = m.total_counts
+                if tc > ma:
+                    graph.set_x_limits(-starttime_offset, tc * 1.05)
+                elif starttime_offset > mi:
+                    graph.set_x_limits(min_=-starttime_offset)
+
+                nfs = m.get_fit_block(0, fits)
+                for pi, fi in enumerate(nfs):
+                    graph.new_series(marker='circle', type='scatter',
+                                     marker_size=1.25,
+                                     fit=fi,
+                                     plotid=pi
+                                     )
+
+            invoke_in_main_thread(setup_graph)
 
         dm = self.data_manager
         with dm.open_file(self._current_data_frame):
             m.measure()
-            
+
         mem_log('post measure')
         return True
 
@@ -1269,7 +1273,7 @@ anaylsis_type={}
         if DEBUG:
             self.debug('Not saving extraction to database')
             return
-        
+
         with db.session_ctx() as sess:
             loadtable = db.get_loadtable(self.load_name)
             if loadtable is None:
@@ -1325,11 +1329,11 @@ anaylsis_type={}
 
 
     def _post_measurement_save(self):
-        
+
         if DEBUG:
             self.debug('Not measurement saving to database')
             return
-        
+
         self.info('post measurement save')
 #         mem_log('pre post measurement save')
         if not self._save_enabled:
@@ -1779,7 +1783,7 @@ anaylsis_type={}
 
         rs_name, rs_text = self._assemble_script_blob()
         rid = self.runid
-        dc=self.data_collector
+        dc = self.data_collector
         fb = dc.get_fit_block(dc.total_counts, self.fits)
 
         exp = ExportSpec(rid=rid,

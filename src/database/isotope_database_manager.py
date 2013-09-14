@@ -115,12 +115,18 @@ class IsotopeDatabaseManager(Loggable):
     def make_analyses(self, ans, **kw):
         with self.db.session_ctx():
             if ans:
-                return [self._record_factory(ai, **kw) for ai in ans]
+                progress = None
+                n = len(ans)
+                if n > 1:
+                    progress = self._open_progress(n)
+
+                return [self._record_factory(ai, progress=progress, **kw)
+                            for ai in ans]
 
     def load_analyses(self, ans, show_progress=True, **kw):
         progress = None
 
-        ans = [ai for ai in ans if not ai.loaded]
+#         ans = [ai for ai in ans if not ai.loaded]
 
         n = len(ans)
         if show_progress and n > 1:
@@ -147,7 +153,7 @@ class IsotopeDatabaseManager(Loggable):
         if func is None:
 #             @simple_timer('load')
             def func(x):
-                x.load_isotopes(unpack=unpack)
+#                 x.load_isotopes(unpack=unpack)
                 x.calculate_age()
 
         if len(ans) == 1:
@@ -175,24 +181,26 @@ class IsotopeDatabaseManager(Loggable):
         pd.open()
         return pd
 
-    def _record_factory(self, pi, **kw):
-        if isinstance(pi, (Analysis, DBAnalysis)):
-            return pi
+    def _record_factory(self, rec, progress=None, **kw):
+        if isinstance(rec, (Analysis, DBAnalysis)):
+            return rec
         else:
-            pi = self.db.get_analysis_uuid(pi.uuid)
+            meas_analysis = self.db.get_analysis_uuid(rec.uuid)
+            def func():
+                a = DBAnalysis()
+                a.sync(meas_analysis)
+                return a
 
-#         if isinstance(pi, IsotopeRecordView):
-#             rec = self.db.get_analysis(pi.uuid, key='uuid')
-#             kw.update(dict(graph_id=pi.graph_id,
-#                            group_id=pi.group_id))
-#             pi = rec
+            if progress:
+                msg = 'loading {}'.format(rec.record_id)
+                progress.change_message(msg)
+                a = func()
+                progress.increment()
+            else:
+                a = func()
 
-#         rec = IsotopeRecord(_dbrecord=pi, **kw)
-        a = DBAnalysis()
-        a.sync(pi)
+            return a
 
-#        a.load_isotopes()
-        return a
     def _db_factory(self):
 
         db = IsotopeAdapter(application=self.application)

@@ -42,12 +42,12 @@ class DataCollector(Loggable):
     series_idx = Int
     total_counts = CInt
 
-    canceled=False
-    
+    canceled = False
+
     _truncate_signal = False
     starttime = None
     _alive = False
-    _evt=None
+    _evt = None
     def set_truncated(self):
         self._truncate_signal = True
 
@@ -55,11 +55,11 @@ class DataCollector(Loggable):
         self._alive = False
         if self._evt:
             self._evt.set()
-            
+
     def measure(self):
         if self.canceled:
             return
-        
+
         self._truncate_signal = False
 
         st = time.time()
@@ -70,13 +70,16 @@ class DataCollector(Loggable):
         evt = Event()
 #        evt = None
 #        con=None
-        self._evt=evt
+        self._evt = evt
+
+        # wait for graphs to be fully constructed in the MainThread
+        evt.wait(0.1)
         with consumable(func=self._iter_step) as con:
             self._alive = True
 #            invoke_in_main_thread(self._iter, con, evt, 1)
-            self._iter(con,evt, 1)
+            self._iter(con, evt, 1)
 #            self._iter2(con,evt, 1)
-            evt.wait(et*1.1)
+            evt.wait(et * 1.1)
 
         tt = time.time() - st
         self.debug('estimated time: {:0.3f} actual time: :{:0.3f}'.format(et, tt))
@@ -86,10 +89,10 @@ class DataCollector(Loggable):
         ct = time.time()
         x = ct - self.starttime
         if not self._check_iteration(i):
-            if i%50==0:
+            if i % 50 == 0:
                 self.info('collecting point {}'.format(i))
 #                mem_log('point {}'.format(i), verbose=True)
-                
+
             # get the data
             data = self._get_data()
 #             self._iter_step((x, data, i))
@@ -97,9 +100,9 @@ class DataCollector(Loggable):
 
             p = self.period_ms
             p -= prev * 1000
-            p = max(0, p*0.001)
-            t=Timer(p, self._iter, args=(con, evt, i+1))
-            t.name='iter'
+            p = max(0, p * 0.001)
+            t = Timer(p, self._iter, args=(con, evt, i + 1))
+            t.name = 'iter'
             t.start()
 
 #            p = max(1, p)
@@ -107,46 +110,46 @@ class DataCollector(Loggable):
 
         else:
             evt.set()
-            
-    def _iter2(self, con, evt, i, prev=0):
-        p=self.period_ms*0.001
-        for i in xrange(self.ncounts):
-#        while i<self.ncounts:
-            if i%10==0:
-#                self.info('collecting point {}'.format(i))
-                mem_log('point {}'.format(i), verbose=True)
-            time.sleep(p)
-#            i+=1
-#        evt.set()
-        return
-        
-#        ct = time.time()
-#        x = ct - self.starttime
-#        if not self._check_iteration(i):
-        if i<self.ncounts:
-            if i%10==0:
-                self.info('collecting point {}'.format(i))
-#                mem_log('point {}'.format(i), verbose=True)
-            # get the data
-#            data = self._get_data()
-#             self._iter_step((x, data, i))
-#            con.add_consumable((x, data, i))
 
-            p -= prev * 1000
-
-            p = max(0, p)
-            
-#            tip = self.period_ms*0.001-prev
-#         me.sleep(p)
-#            self._iter(con, evt, i+1
-#                       #, prev=time.time()-ct
-#                       )
-            t=Timer(p, self._iter, args=(con, evt, i+1))
-            t.start()
-#            do_after(p, self._iter, con, evt, i + 1, prev=time.time() - ct)
-
-        else:
-            evt.set()
+#     def _iter2(self, con, evt, i, prev=0):
+#         p=self.period_ms*0.001
+#         for i in xrange(self.ncounts):
+# #        while i<self.ncounts:
+#             if i%10==0:
+# #                self.info('collecting point {}'.format(i))
+#                 mem_log('point {}'.format(i), verbose=True)
+#             time.sleep(p)
+# #            i+=1
+# #        evt.set()
+#         return
+#
+# #        ct = time.time()
+# #        x = ct - self.starttime
+# #        if not self._check_iteration(i):
+#         if i<self.ncounts:
+#             if i%10==0:
+#                 self.info('collecting point {}'.format(i))
+# #                mem_log('point {}'.format(i), verbose=True)
+#             # get the data
+# #            data = self._get_data()
+# #             self._iter_step((x, data, i))
+# #            con.add_consumable((x, data, i))
+#
+#             p -= prev * 1000
+#
+#             p = max(0, p)
+#
+# #            tip = self.period_ms*0.001-prev
+# #         me.sleep(p)
+# #            self._iter(con, evt, i+1
+# #                       #, prev=time.time()-ct
+# #                       )
+#             t=Timer(p, self._iter, args=(con, evt, i+1))
+#             t.start()
+# #            do_after(p, self._iter, con, evt, i + 1, prev=time.time() - ct)
+#
+#         else:
+#             evt.set()
 
     def _iter_step(self, data):
         x, data, i = data
@@ -154,7 +157,7 @@ class DataCollector(Loggable):
         # save the data
         self._save_data(x, *data)
         # plot the data
-        self._plot_data(i, x, *data)
+        invoke_in_main_thread(self._plot_data, i, x, *data)
 
     def _get_data(self):
         return self.data_generator.next()
@@ -223,7 +226,7 @@ class DataCollector(Loggable):
         if self._evt:
             if self._evt.isSet():
                 return True
-            
+
         j = i - 1
         # exit the while loop if counts greater than max of original counts and the plot_panel counts
         pc = 0

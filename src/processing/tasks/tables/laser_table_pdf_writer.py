@@ -43,6 +43,7 @@ class LaserTablePDFWriter(BasePDFWriter):
 
         return flowables, None
 
+
     def _make_table(self, analyses, means):
         style = self._new_style()
         style.add('GRID', (0, 0), (-1, -1), 0.25, colors.red)

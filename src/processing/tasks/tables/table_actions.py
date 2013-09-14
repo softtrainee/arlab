@@ -35,6 +35,7 @@ class ToggleStatusAction(TaskAction):
                                       paths.app_resources
                                       ]
                          )
+    tooltip = 'Toggle status'
 
 class SummaryTableAction(TaskAction):
     method = 'open_summary_table'
@@ -43,6 +44,7 @@ class SummaryTableAction(TaskAction):
                                       paths.app_resources
                                       ]
                          )
+    tooltip = 'New summary table'
 
 class AppendSummaryTableAction(TaskAction):
     method = 'append_summary_table'
@@ -51,5 +53,6 @@ class AppendSummaryTableAction(TaskAction):
                                       paths.app_resources
                                       ]
                          )
+    tooltip = 'Append to current summary table'
 
 #============= EOF =============================================

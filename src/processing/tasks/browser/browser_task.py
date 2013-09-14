@@ -27,6 +27,9 @@ from src.envisage.tasks.editor_task import BaseEditorTask
 from src.processing.tasks.browser.panes import BrowserPane
 from src.processing.tasks.recall.recall_editor import RecallEditor
 from src.paths import paths
+from src.database.orms.isotope_orm import gen_SampleTable, gen_ProjectTable
+# from sqlalchemy.orm import subqueryload
+from src.database.records.isotope_record import IsotopeRecordView
 '''
 add toolbar action to open another editor tab
 
@@ -39,6 +42,16 @@ class NewBrowserEditorAction(TaskAction):
                                       paths.app_resources
                                       ]
                          )
+class SampleRecordView(HasTraits):
+    name = Str
+    material = Str
+    def __init__(self, dbrecord):
+        self._create(dbrecord)
+
+    def _create(self, dbrecord):
+        self.name = dbrecord.name
+        if dbrecord.material:
+            self.material = dbrecord.material.name
 
 class BrowserTask(BaseEditorTask):
     projects = List
@@ -71,9 +84,11 @@ class BrowserTask(BaseEditorTask):
         self.load_projects()
 
     def load_projects(self):
-        ps = self.manager.db.get_projects()
-        self.projects = [p.name for p in ps]
-        self.oprojects = [p.name for p in ps]
+        db = self.manager.db
+        with db.session_ctx():
+            ps = db.get_projects()
+            self.projects = [p.name for p in ps]
+            self.oprojects = [p.name for p in ps]
 
     def new_editor(self):
         editor = RecallEditor()
@@ -119,30 +134,65 @@ class BrowserTask(BaseEditorTask):
 #===============================================================================
     def _selected_project_changed(self, new):
         if new:
-            ss = self.manager.db.get_samples(project=new)
-#             ss = [s for s in samples]
-            self.samples = ss
-            self.osamples = ss
-#             self.analyses = []
-#             self.onalyses = []
-            if ss:
-                self.selected_sample = ss[:1]
-    def _get_sample_analyses(self, name):
-        sample = self.manager.db.get_sample(name,
-                                            project=self.selected_project
-                                            )
-        return [a for ln in sample.labnumbers
-                        for a in ln.analyses
-                            ]
+            db = self.manager.db
+            with db.session_ctx() as sess:
+#                 q = sess.query(gen_SampleTable)
+#                 q = q.join(gen_ProjectTable)
+#                 q = q.filter(gen_ProjectTable.name == new)
+#
+#                 ss = q.all()
+#                 print ss[0].material
+
+#             with db.session_ctx():
+#             with db.session_ctx
+#                 q = sess.query(gen_SampleTable)
+#                 q = q.join(gen_ProjectTable)
+
+#                 q = q.filter(gen_ProjectTable.name == new)
+#                 q = q.options(subqueryload(gen_SampleTable.material))
+
+#                 ss = q.all()
+                ss = db.get_samples(project=new)
+#             sa = ss[0]
+#             print sa.material
+#                 def f(si):
+#                     x = SampleRecordView()
+#                     x.create(si)
+#                     return x
+
+                ss = [SampleRecordView(s) for s in ss]
+#                 sss = [f(s) for s in ss]
+                self.samples = ss
+                self.osamples = ss
+    #             self.analyses = []
+    #             self.onalyses = []
+                if ss:
+                    self.selected_sample = ss[:1]
+
+    def _get_sample_analyses(self, srv):
+        db = self.manager.db
+        with db.session_ctx():
+            sample = db.get_sample(srv.name, project=self.selected_project)
+            def f(ai):
+                iso = IsotopeRecordView()
+                iso.create(ai)
+                return iso
+
+            return [f(a) for ln in sample.labnumbers
+                            for a in ln.analyses
+                                ]
 
     def _selected_sample_changed(self, new):
         if new:
             ans = self._get_sample_analyses(new[0])
-            self.oanalyses = ans
 
+
+#             ans = self._get_sample_analyses(new[0])
+            self.oanalyses = ans
+#
             if self.omit_bogus:
                 ans = filter(self._omit_bogus_filter, ans)
-
+#
             self.analyses = ans
             if ans:
                 self.selected_analysis = ans[0]

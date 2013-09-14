@@ -33,6 +33,7 @@ from src.ui.qt.text_table_editor import FastTextTableEditor
 from src.experiment.display_signal import DisplaySignal, DisplayRatio, DisplayValue
 from src.loggable import Loggable
 from src.ui.custom_label_editor import CustomLabel
+from src.ui.gui import invoke_in_main_thread
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -257,6 +258,9 @@ class PlotPanel(Loggable):
         '''
             dets: list of Detector instances
         '''
+        invoke_in_main_thread(self._create, dets)
+
+    def _create(self, dets):
         self.reset()
 
         g = self.isotope_graph

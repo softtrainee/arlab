@@ -34,47 +34,46 @@ class BrowserAdapter(TabularAdapter):
                 ('IC', 'ic_fit_status'),
                 ('Flux', 'flux_fit_status'),
                ]
-    record_id_text = Property
-    blank_fit_status_text = Property
-    flux_fit_status_text = Property
-    iso_fit_status_text = Property
-    ic_fit_status_text = Property
+#     record_id_text = Property
+#     blank_fit_status_text = Property
+#     flux_fit_status_text = Property
+#     iso_fit_status_text = Property
+#     ic_fit_status_text = Property
 
     odd_bg_color = 'lightgray'
 
-    def _get_record_id_text(self):
-        a = self.item
-        return make_runid(a.labnumber.identifier,
-                   a.aliquot, a.step)
+#     def _get_record_id_text(self):
+#         a = self.item
+#         return make_runid(a.labnumber.identifier,
+#                    a.aliquot, a.step)
 
-    def _get_blank_fit_status_text(self):
-        return self._get_selected_history_item('selected_blanks_id')
-
-    def _get_flux_fit_status_text(self):
-        labnumber = self.item.labnumber
-        return 'X' if labnumber.selected_flux_id else ''
-
-    def _get_ic_fit_status_text(self):
-        return self._get_selected_history_item('selected_det_intercal_id')
-
-    def _get_iso_fit_status_text(self):
-        return self._get_selected_history_item('selected_fits_id')
-
-    def _get_selected_history_item(self, key):
-        sh = self.item.selected_histories
-        return 'X' if getattr(sh, key) else ''
+#     def _get_blank_fit_status_text(self):
+#         return self._get_selected_history_item('selected_blanks_id')
+#
+#     def _get_flux_fit_status_text(self):
+#         labnumber = self.item.labnumber
+#         return 'X' if labnumber.selected_flux_id else ''
+#
+#     def _get_ic_fit_status_text(self):
+#         return self._get_selected_history_item('selected_det_intercal_id')
+#
+#     def _get_iso_fit_status_text(self):
+#         return self._get_selected_history_item('selected_fits_id')
+#
+#     def _get_selected_history_item(self, key):
+#         sh = self.item.selected_histories
+#         return 'X' if getattr(sh, key) else ''
 
 
 class SampleAdapter(TabularAdapter):
     columns = [('Sample', 'name'), ('Material', 'material')]
-    material_text = Property
+#     material_text = Property
     odd_bg_color = 'lightgray'
 
-    def _get_material_text(self):
-        n = ''
-        if self.item.material:
-            n = self.item.material.name
-        return n
+#     def _get_material_text(self):
+#         n = ''
+#         n = self.item.material
+#         return n
 
 class BrowserPane(TraitsDockPane):
     name = 'Browser'

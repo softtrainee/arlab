@@ -92,6 +92,12 @@ class IsotopeRecordView(HasTraits):
     mass_spectrometer = ''
     analysis_type = ''
     uuid = ''
+
+    iso_fit_status = False
+    blank_fit_status = False
+    ic_fit_status = False
+    flux_fit_status = False
+
     def create(self, dbrecord):
         try:
             if dbrecord is None or not dbrecord.labnumber:
@@ -109,6 +115,7 @@ class IsotopeRecordView(HasTraits):
                 irl = irp.level
                 ir = irl.irradiation
                 self.irradiation_info = '{}{} {}'.format(ir.name, irl.name, irp.position)
+
             else:
                 self.irradiation_info = ''
     #        self.mass_spectrometer = ''
@@ -122,6 +129,12 @@ class IsotopeRecordView(HasTraits):
 
             self.uuid = dbrecord.uuid
             self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
+
+            self.flux_fit_status = self._get_flux_fit_status(dbrecord)
+            self.blank_fit_status = self._get_selected_history_item(dbrecord, 'selected_blanks_id')
+            self.ic_fit_status = self._get_selected_history_item(dbrecord, 'selected_det_intercal_id')
+            self.iso_fit_status = self._get_selected_history_item(dbrecord, 'selected_fits_id')
+
             return True
         except Exception, e:
             import traceback
@@ -130,6 +143,14 @@ class IsotopeRecordView(HasTraits):
 
     def to_string(self):
         return '{} {} {} {}'.format(self.labnumber, self.aliquot, self.timestamp, self.uuid)
+
+    def _get_flux_fit_status(self, item):
+        labnumber = item.labnumber
+        return 'X' if labnumber.selected_flux_id else ''
+
+    def _get_selected_history_item(self, item, key):
+        sh = item.selected_histories
+        return ('X' if getattr(sh, key) else '') if sh else ''
 
 #
 # def DBProperty():
