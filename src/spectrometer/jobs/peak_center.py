@@ -21,6 +21,7 @@ from numpy import array, max, polyfit, argmax
 #============= local library imports  ==========================
 from magnet_scan import MagnetScan
 from src.graph.graph import Graph
+from src.ui.gui import invoke_in_main_thread
 
 def calculate_peak_center(x, y, min_peak_height=1.0, percent=80):
         x = array(x)
@@ -113,7 +114,7 @@ class PeakCenter(MagnetScan):
         self.info('starting peak center. center dac= {}'.format(center_dac))
 
         graph.clear()
-        self._graph_factory(graph=graph)
+        invoke_in_main_thread(self._graph_factory, graph=graph)
 
         for i in range(ntries):
             if not self.isAlive():
@@ -121,14 +122,17 @@ class PeakCenter(MagnetScan):
 
             if i > 0:
                 graph.clear()
-                self._graph_factory(graph=graph)
+                invoke_in_main_thread(self._graph_factory, graph=graph)
 
             wnd = self.window
 
             start = center_dac - wnd * (i + 1)
             end = center_dac + wnd * (i + 1)
             self.info('Scan parameters center={} start={} end={} step width={}'.format(center_dac, start, end, self.step_width))
-            graph.set_x_limits(min_=min([start, end]), max_=max([start, end]))
+            invoke_in_main_thread(graph.set_x_limits,
+                                  min_=min([start, end]),
+                                  max_=max([start, end]))
+#             graph.set_x_limits(min_=min([start, end]), max_=max([start, end]))
 
             width = self.step_width
             try:
@@ -140,7 +144,9 @@ class PeakCenter(MagnetScan):
 #            print center_dac + 0.001, start, end, nsteps
 #            intensities = self._scan_dac(dac_values, self.detector)
 #            self.data = (dac_values, intensities)
+
             ok = self._do_scan(start, end, width, directions=self.directions, map_mass=False)
+
             if ok and self.directions != 'Oscillate':
                 if not self.canceled:
                     dac_values = graph.get_data()

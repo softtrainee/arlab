@@ -131,8 +131,8 @@ class IonOpticsManager(Manager):
 
         # correct for deflection
         return spec.correct_dac(det, dac)
-    
-    def do_peak_center(self, 
+
+    def do_peak_center(self,
                        save=True,
                        confirm_save=False,
                        warn=False,
@@ -157,10 +157,10 @@ class IonOpticsManager(Manager):
             return t
         else:
             self._peak_center(*args)
-    
-    def setup_peak_center(self,detector=None, isotope=None,
+
+    def setup_peak_center(self, detector=None, isotope=None,
                           period=900,
-                          directions = 'Increase',
+                          directions='Increase',
                           center_dac=None, plot_panel=None):
         if detector is None or isotope is None:
             pcc = self.peak_center_config
@@ -187,13 +187,14 @@ class IonOpticsManager(Manager):
 
         if center_dac is None:
             center_dac = self.get_center_dac(ref, isotope)
+
         self._setup_peak_center(detectors, isotope, period,
                                       center_dac, directions, plot_panel)
         return self.peak_center
-    
+
     def _setup_peak_center(self, detectors, isotope, period,
                            center_dac, directions, plot_panel):
-        
+
 
         spec = self.spectrometer
 
@@ -242,6 +243,10 @@ class IonOpticsManager(Manager):
         isotope = self.reference_isotope
 
         dac_d = pc.get_peak_center()
+
+
+
+
         self.peak_center_result = dac_d
         if dac_d:
             args = ref, isotope, dac_d
