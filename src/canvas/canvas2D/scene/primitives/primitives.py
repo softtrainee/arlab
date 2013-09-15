@@ -482,15 +482,15 @@ class Valve(RoundedRectangle, BaseValve):
             gc.set_line_width(2)
             gc.move_to(x + o, y + o)
             gc.line_to(x + l, y + l)
-            gc.draw_path()
+#            gc.draw_path()
 
             gc.move_to(x + o, y - o + h)
             gc.line_to(x + o + l, y - o + h - l)
-            gc.draw_path()
+#            gc.draw_path()
 
             gc.move_to(x - o + w, y - o + h)
             gc.line_to(x - o + w - l, y - o + h - l)
-            gc.draw_path()
+#            gc.draw_path()
 
             gc.move_to(x - o + w, y + o)
             gc.line_to(x - o + w - l, y + o + l)

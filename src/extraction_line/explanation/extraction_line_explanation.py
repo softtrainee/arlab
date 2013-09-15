@@ -39,6 +39,10 @@ class ExplanationAdapter(TabularAdapter):
     columns = [('Name', 'name'), ('Description', 'description'),
              ('State', 'state'), ('Lock', 'lock')
              ]
+    
+    lock_text=Property
+    state_text=Property
+    
     def get_bg_color(self, obj, trait, row, column):
         item = self.item
         color = 'white'
@@ -47,6 +51,12 @@ class ExplanationAdapter(TabularAdapter):
             color = '#CCE5FF'
 
         return color
+    def _get_lock_text(self):
+        return 'Yes' if self.soft_lock else 'No'
+
+    def _get_state_text(self):
+        return 'Open' if self._state else 'Closed'
+
 
 class ExtractionLineExplanation(HasTraits):
     '''

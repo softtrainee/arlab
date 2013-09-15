@@ -140,7 +140,7 @@ class HardwareValve(Loggable):
 
     def _state_changed(self):
         if self.evalve:
-            self.evalve._state = self.state
+            self.evalve.state = self.state
 
     def _software_lock_changed(self):
         if self.evalve:

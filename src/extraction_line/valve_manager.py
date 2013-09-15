@@ -36,6 +36,7 @@ from src.loggable import Loggable
 from src.constants import ALPHAS
 from pyface.timer.do_later import do_later
 from src.ui.gui import invoke_in_main_thread
+import weakref
 
 
 class ValveGroup(object):
@@ -123,7 +124,7 @@ class ValveManager(Manager):
 
             pickle.dump(obj, f)
 
-    def load_valve_states(self):
+    def load_valve_states(self, refresh=True):
         elm = self.extraction_line_manager
         word = self.get_state_word()
 #         self.debug('valve state word= {}'.format(word))
@@ -134,11 +135,12 @@ class ValveManager(Manager):
                     v.set_state(s)
                     elm.update_valve_state(k, s, refresh=False)
             
-            elm.refresh_canvas()
+            if refresh:
+                elm.refresh_canvas()
 #            invoke_in_main_thread(elm.refresh_canvas)
 
 
-    def load_valve_lock_states(self):
+    def load_valve_lock_states(self, refresh=True):
         elm = self.extraction_line_manager
         word = self.get_lock_word()
         # self.debug('valve lock word= {}'.format(word))
@@ -146,13 +148,15 @@ class ValveManager(Manager):
             for k in self.valves.keys():
                 if word.has_key(k):
                     if word[k]:
+                        pass
                         self.lock(k, save=False)
                         elm.update_valve_lock_state(k, True, refresh=False)
                     else:
+                        pass
                         self.unlock(k, save=False)
                         elm.update_valve_lock_state(k, False, refresh=False)
-                        
-            elm.refresh_canvas()
+#            if refresh:
+#                elm.refresh_canvas()
 #            invoke_in_main_thread(elm.refresh_canvas)
 
     def get_state_word(self):
@@ -552,9 +556,9 @@ class ValveManager(Manager):
         '''
         v = self.get_valve_by_name(name)
         if v is not None:
-            ev = self.get_evalve_by_name(name)
-            if ev is not None:
-                ev.soft_lock = True
+#            ev = self.get_evalve_by_name(name)
+#            if ev is not None:
+#                ev.soft_lock = True
            
             v.lock()
             if save:
@@ -565,9 +569,10 @@ class ValveManager(Manager):
         '''
         v = self.get_valve_by_name(name)
         if v is not None:
-            ev = self.get_evalve_by_name(name)
-            if ev is not None:
-                ev.soft_lock = False
+#            ev = self.get_evalve_by_name(name)
+#            if ev is not None:
+#                ev.soft_lock = False
+
             v.unlock()
             if save:
                 self._save_soft_lock_states()
@@ -754,7 +759,9 @@ class ValveManager(Manager):
 #                    canvas=self.extraction_line_manager.canvas,
                     )
 #        ev.state = s if s is not None else False
-        v.evalve = ev
+#        ev=weakref.ref(ev)()
+        v.evalve=ev
+#        v.evalve = weakref.ref(ev)()
         self.explanable_items.append(ev)
 
 
