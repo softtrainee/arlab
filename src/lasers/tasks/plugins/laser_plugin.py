@@ -174,6 +174,7 @@ class FusionsPlugin(BaseLaserPlugin):
         return rs
 
     def _my_task_extensions_default(self):
+#     def _get_task_extensions(self):
         def efactory():
             return SMenu(id='Laser', name='Laser')
         return [TaskExtension(actions=[

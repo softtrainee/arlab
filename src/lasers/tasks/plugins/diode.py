@@ -33,6 +33,7 @@ class FusionsDiodePlugin(FusionsPlugin):
     klass = ('src.lasers.laser_managers.fusions_diode_manager', 'FusionsDiodeManager')
     task_name = 'Fusions Diode'
     accelerator = 'Ctrl+Shift+['
+
     def _my_task_extensions_default(self):
         def factory_scan():
             return OpenScannerAction(self._get_manager())

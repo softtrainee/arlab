@@ -29,6 +29,7 @@ class FusionsUVPlugin(FusionsPlugin):
     klass = ('src.lasers.laser_managers.fusions_uv_manager', 'FusionsUVManager')
     task_name = 'Fusions UV'
     accelerator = 'Ctrl+Shift+\\'
+
     def _my_task_extensions_default(self):
 #         def factory_scan():
 #             return OpenScannerAction(self._get_manager())

@@ -27,6 +27,8 @@ from src.paths import paths
 import shelve
 
 import webbrowser
+from pyface.confirmation_dialog import ConfirmationDialog, confirm
+from pyface.constant import YES
 
 #===============================================================================
 # help
@@ -67,6 +69,27 @@ class MinimizeAction(TaskAction):
     def perform(self, event):
         app = self.task.window.application
         app.active_window.control.showMinimized()
+
+
+class CloseAction(TaskAction):
+    name = 'Close'
+    accelerator = 'Ctrl+W'
+    def perform(self, event):
+        ok = YES
+        if len(self.task.window.application.windows) == 1:
+            ok = confirm(self.task.window.control, message='Quit Pychron?')
+
+        if ok == YES:
+            self.task.window.close()
+
+class CloseOthersAction(TaskAction):
+    name = 'Close others'
+    accelerator = 'Ctrl+Shift+W'
+    def perform(self, event):
+        win = self.task.window
+        for wi in self.task.window.application.windows:
+            if wi != win:
+                wi.close()
 
 
 class RaiseAction(TaskAction):

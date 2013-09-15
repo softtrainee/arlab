@@ -18,7 +18,7 @@
 from traits.api import Any, on_trait_change, Event, List, Unicode
 # from traitsui.api import View, Item
 from pyface.tasks.task import Task
-from pyface.tasks.action.schema import SMenu, SMenuBar
+from pyface.tasks.action.schema import SMenu, SMenuBar, SGroup
 # from pyface.tasks.action.task_toggle_group import TaskToggleGroup
 # from envisage.ui.tasks.action.task_window_toggle_group import TaskWindowToggleGroup
 from envisage.ui.tasks.action.api import TaskWindowLaunchGroup
@@ -28,13 +28,14 @@ from envisage.ui.tasks.action.task_window_launch_group import TaskWindowLaunchAc
 from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.envisage.tasks.actions import GenericSaveAction, GenericSaveAsAction, \
     GenericFindAction, RaiseAction, RaiseUIAction, ResetLayoutAction, \
-    MinimizeAction, PositionAction, IssueAction
+    MinimizeAction, PositionAction, IssueAction, CloseAction, CloseOthersAction
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK, CANCEL
 from itertools import groupby
 from pyface.confirmation_dialog import ConfirmationDialog
 from src.loggable import Loggable
 from pyface.timer.do_later import do_later
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -285,12 +286,26 @@ class BaseTask(Task, Loggable):
 
     def _file_menu(self):
         file_menu = SMenu(
-                          SMenu(id='Open', name='Open'),
-                          SMenu(id='New', name='New'),
-#                          GenericOpenAction(),
-#                          GenericNewAction(),
-                          GenericSaveAsAction(),
-                          GenericSaveAction(),
+                          SGroup(id='Open'),
+                          SGroup(id='New'),
+                          SGroup(
+                               GenericSaveAsAction(),
+                               GenericSaveAction(),
+                               id='Save'
+                             ),
+                          SGroup(),
+#                         SMenu(id='Open', name='Open',),
+#                         SMenu(id='New', name='New'),
+
+#                         Group(
+#                                GenericSaveAsAction(),
+#                                GenericSaveAction(),
+#                                id='Save'
+#                                ),
+#
+#                           SGroup(),
+#
+#                                 ),
 
                           id='File', name='File')
         return file_menu
@@ -301,6 +316,11 @@ class BaseTask(Task, Loggable):
 
     def _window_menu(self):
         window_menu = SMenu(
+                            Group(
+                               CloseAction(),
+                               CloseOthersAction(),
+                              id='Close'
+                              ),
                           Group(MinimizeAction(),
                                 ResetLayoutAction(),
                                 PositionAction(),

@@ -81,8 +81,8 @@ class LoadingPlugin(BaseTaskPlugin):
         return LoadingManager(connect=False)
 
     def _load_task_factory(self):
-        lm = self.window.application.get_service(LoadingManager)
-        lm.connect()
+        lm = self.application.get_service(LoadingManager)
+        lm.db.connect()
         return LoadingTask(manager=lm)
 
     def _preferences_panes_default(self):

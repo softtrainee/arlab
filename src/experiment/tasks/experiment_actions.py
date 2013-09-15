@@ -107,7 +107,7 @@ class NewExperimentQueueAction(QueueAction):
     '''
     '''
     description = 'Create a new experiment queue'
-    name = 'Experiment'
+    name = 'New Experiment'
     accelerator = 'Ctrl+N'
 
     def perform(self, event):
@@ -133,7 +133,7 @@ class OpenExperimentQueueAction(QueueAction):
     '''
     '''
     description = 'Open experiment set'
-    name = 'Experiment...'
+    name = 'Open Experiment...'
     accelerator = 'Ctrl+O'
 
     def perform(self, event):
@@ -158,17 +158,17 @@ class OpenExperimentQueueAction(QueueAction):
 
 class SaveExperimentQueueAction(ExperimentAction):
     name = 'Save Experiment'
-    manager = Any
+#     manager = Any
     enabled = False
     accelerator = 'Ctrl+s'
-    def __init__(self, manager, *args, **kw):
-        super(SaveExperimentQueueAction, self).__init__(*args, **kw)
-
-        manager.on_trait_change(self._update_state, 'save_enabled')
-        if manager.save_enabled:
-            self.enabled = True
-
-        self.manager = manager
+#     def __init__(self, manager, *args, **kw):
+#         super(SaveExperimentQueueAction, self).__init__(*args, **kw)
+#
+#         manager.on_trait_change(self._update_state, 'save_enabled')
+#         if manager.save_enabled:
+#             self.enabled = True
+#
+#         self.manager = manager
 
     def perform(self, event):
         manager = self._get_experimentor(event)
@@ -182,14 +182,14 @@ class SaveAsExperimentQueueAction(ExperimentAction):
     name = 'Save As Experiment...'
     enabled = False
     accelerator = 'Ctrl+Shift+s'
-    def __init__(self, manager, *args, **kw):
-        super(SaveAsExperimentQueueAction, self).__init__(*args, **kw)
-        application = manager.application
-        application.on_trait_change(self._update_state, 'active_window')
+#     def __init__(self, manager, *args, **kw):
+#         super(SaveAsExperimentQueueAction, self).__init__(*args, **kw)
+#         application = manager.application
+#         application.on_trait_change(self._update_state, 'active_window')
 
-    def _update_state(self, win):
-        if win.active_task:
-            self.enabled = win.active_task.id == self.task_id
+#     def _update_state(self, win):
+#         if win.active_task:
+#             self.enabled = win.active_task.id == self.task_id
 
     def perform(self, event):
         manager = self._get_experimentor(event)

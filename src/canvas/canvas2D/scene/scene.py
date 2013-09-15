@@ -63,13 +63,17 @@ class Scene(HasTraits):
         pass
 
     def render_components(self, gc, canvas):
+
+
         for li in self.layers:
             if li.visible:
                 for ci in li.components:
-                    ci.set_canvas(canvas)
                     if self.font:
                         ci.font = self.font
+
+                    ci.set_canvas(canvas)
                     ci.render(gc)
+
 
     def get_items(self, klass=None):
 #         return [ci for li in self.layers

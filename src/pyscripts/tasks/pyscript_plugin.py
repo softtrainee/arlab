@@ -53,18 +53,18 @@ class PyScriptPlugin(BaseTaskPlugin):
                 TaskExtension(
 #                              task_id='pychron.pyscript',
                               actions=[
-                                       SchemaAddition(
-                                                      id='Open',
-                                                      factory=lambda:SMenu(id='Open', name='Open'),
-                                                      path='MenuBar/File',
-                                                      before='find_bake'
-                                                      ),
-                                       SchemaAddition(
-                                                      id='New',
-                                                      factory=lambda:SMenu(id='New', name='New'),
-                                                      path='MenuBar/File',
-                                                      before='find_bake'
-                                                      ),
+#                                        SchemaAddition(
+#                                                       id='Open',
+#                                                       factory=lambda:SMenu(id='Open', name='Open'),
+#                                                       path='MenuBar/File',
+# #                                                       before='find_bake'
+#                                                       ),
+#                                        SchemaAddition(
+#                                                       id='New',
+#                                                       factory=lambda:SMenu(id='New', name='New'),
+#                                                       path='MenuBar/File',
+# #                                                       before='find_bake'
+#                                                       ),
                                        SchemaAddition(id='open_script',
                                                     path='MenuBar/File/Open',
                                                     factory=OpenPyScriptAction

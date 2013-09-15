@@ -16,18 +16,18 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, List, CInt, Str, Int
-#from traitsui.api import View, Item
-#from pyface.timer.do_later import do_after
+# from traitsui.api import View, Item
+# from pyface.timer.do_later import do_after
 #============= standard library imports ========================
 import time
 from threading import Event, Timer
 from numpy import Inf
 #============= local library imports  ==========================
 from src.loggable import Loggable
-#from src.ui.gui import invoke_in_main_thread
+# from src.ui.gui import invoke_in_main_thread
 from src.globals import globalv
 from src.consumer_mixin import consumable
-#from src.codetools.memory_usage import mem_log
+# from src.codetools.memory_usage import mem_log
 
 class DataCollector(Loggable):
     measurement_script = Any
@@ -49,13 +49,13 @@ class DataCollector(Loggable):
     _alive = False
     _evt = None
     def wait(self):
-        st=time.time()
+        st = time.time()
         self.debug('wait started')
         while 1:
             if self._evt and self._evt.set():
                 break
-        self.debug('wait complete {:0.1f}s'.format(time.time()-st))
-        
+        self.debug('wait complete {:0.1f}s'.format(time.time() - st))
+
     def set_truncated(self):
         self._truncate_signal = True
 
@@ -118,7 +118,7 @@ class DataCollector(Loggable):
             t = Timer(p, self._iter, args=(con, evt, i + 1,
                                            time.time() - ot))
 
-            t.name = 'iter_{}'.format(i)
+            t.name = 'iter_{}'.format(i + 1)
             t.start()
 
         else:

@@ -25,7 +25,7 @@ class OpenPyScriptAction(Action):
     '''
     '''
     description = 'Open pyscript'
-    name = 'Script'
+    name = 'Open Script...'
     accelerator = 'Ctrl+Shift+O'
 
     def perform(self, event):
@@ -47,7 +47,7 @@ class NewPyScriptAction(Action):
     '''
     '''
     description = 'New pyscript'
-    name = 'Script'
+    name = 'New Script'
 #    accelerator = 'Shift+Ctrl+O'
 
     def perform(self, event):
