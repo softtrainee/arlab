@@ -18,6 +18,9 @@
 from traits.api import List
 from envisage.plugin import Plugin
 from envisage.service_offer import ServiceOffer
+from envisage.ui.tasks.task_extension import TaskExtension
+from src.envisage.tasks.actions import CloseAction, CloseOthersAction
+from pyface.tasks.action.schema_addition import SchemaAddition
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -29,12 +32,25 @@ class BaseTaskPlugin(Plugin):
     tasks = List(contributes_to=TASKS)
     service_offers = List(contributes_to=SERVICE_OFFERS)
     my_task_extensions = List(contributes_to=TASK_EXTENSIONS)
+#     base_task_extensions = List(contributes_to=TASK_EXTENSIONS)
 
     preferences = List(contributes_to='envisage.preferences')
     preferences_panes = List(
         contributes_to='envisage.ui.tasks.preferences_panes')
 
     managers = List(contributes_to='pychron.hardware.managers')
+
+#     def base_task_extensions_default(self):
+#         return [TaskExtension(actions=[
+#                                        SchemaAddition(CloseAction),
+#                                        SchemaAddition(CloseOthersAction),
+#
+#                                        ]),
+#                 ]
+
+
+    def _get_task_extensions(self):
+        return []
 
     def _preferences_panes_default(self):
         return []

@@ -62,6 +62,7 @@ class ProcessingPlugin(BaseTaskPlugin):
 #         return TaskExtension(actions=[SchemaAddition(id=i, factory=f, path=p)
 #                                       for i, f, p in actions])
 
+
     def _my_task_extensions_default(self):
         def figure_group():
             return Group(

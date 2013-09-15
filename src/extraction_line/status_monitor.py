@@ -17,7 +17,10 @@ class StatusMonitor(Loggable):
 
             self._stop_evt = Event()
 
-        self._iter(1)
+            self._iter(1)
+        else:
+            self.debug('Monitor already running')
+
         self._clients += 1
 
     def isAlive(self):
@@ -29,6 +32,7 @@ class StatusMonitor(Loggable):
 
         if not self._clients:
             self._stop_evt.set()
+            self.debug('Status monitor stopped')
         else:
             self.debug('Alive clients {}'.format(self._clients))
 

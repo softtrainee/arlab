@@ -44,10 +44,10 @@ class ExperimentPlugin(BaseTaskPlugin):
 #            return OpenScannerAction(self._get_manager())
 #        def factory_tune():
 #            return OpenAutoTunerAction(self._get_manager())
-        def save_factory():
-            return SaveExperimentQueueAction(self._get_manager())
-        def save_as_factory():
-            return SaveAsExperimentQueueAction(self._get_manager())
+#         def save_factory():
+#             return SaveExperimentQueueAction(self._get_manager())
+#         def save_as_factory():
+#             return SaveAsExperimentQueueAction(self._get_manager())
 
         return [
 #                 TaskExtension(task_id='pychron.loading',
@@ -82,13 +82,15 @@ class ExperimentPlugin(BaseTaskPlugin):
                                                       factory=NewExperimentQueueAction,
                                                       path='MenuBar/File/New'),
 
-                                       SchemaAddition(id='save_experiment',
-                                                      factory=save_factory,
-                                                      path='MenuBar/File/Save'),
-
-                                       SchemaAddition(id='save_as_experiment',
-                                                      factory=save_as_factory,
-                                                      path='MenuBar/File/Save'),
+#                                        SchemaAddition(id='save_experiment',
+#                                                       factory=SaveExperimentQueueAction,
+# #                                                       factory=save_factory,
+#                                                       path='MenuBar/File/Save'),
+#
+#                                        SchemaAddition(id='save_as_experiment',
+#                                                       factory=SaveAsExperimentQueueAction,
+# #                                                       factory=save_as_factory,
+#                                                       path='MenuBar/File/Save'),
 
 #                                       SchemaAddition(id='labnumber_entry',
 #                                                      factory=LabnumberEntryAction,
