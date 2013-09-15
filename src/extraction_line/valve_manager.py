@@ -134,7 +134,7 @@ class ValveManager(Manager):
                     s = word[k]
                     v.set_state(s)
                     elm.update_valve_state(k, s, refresh=False)
-            
+
             if refresh:
                 elm.refresh_canvas()
 #            invoke_in_main_thread(elm.refresh_canvas)
@@ -155,8 +155,8 @@ class ValveManager(Manager):
                         pass
                         self.unlock(k, save=False)
                         elm.update_valve_lock_state(k, False, refresh=False)
-#            if refresh:
-#                elm.refresh_canvas()
+            if refresh:
+                elm.refresh_canvas()
 #            invoke_in_main_thread(elm.refresh_canvas)
 
     def get_state_word(self):
@@ -559,7 +559,7 @@ class ValveManager(Manager):
 #            ev = self.get_evalve_by_name(name)
 #            if ev is not None:
 #                ev.soft_lock = True
-           
+
             v.lock()
             if save:
                 self._save_soft_lock_states()
@@ -760,7 +760,7 @@ class ValveManager(Manager):
                     )
 #        ev.state = s if s is not None else False
 #        ev=weakref.ref(ev)()
-        v.evalve=ev
+        v.evalve = ev
 #        v.evalve = weakref.ref(ev)()
         self.explanable_items.append(ev)
 
