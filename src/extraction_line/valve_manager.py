@@ -37,6 +37,7 @@ from src.constants import ALPHAS
 from pyface.timer.do_later import do_later
 from src.ui.gui import invoke_in_main_thread
 import weakref
+from src.codetools.memory_usage import get_current_mem
 
 
 class ValveGroup(object):
@@ -127,37 +128,39 @@ class ValveManager(Manager):
     def load_valve_states(self, refresh=True):
         elm = self.extraction_line_manager
         word = self.get_state_word()
+        changed = False
 #         self.debug('valve state word= {}'.format(word))
         if word is not None:
             for k, v in self.valves.iteritems():
                 if word.has_key(k):
                     s = word[k]
+                    if s != v.state:
+                        changed = True
+
                     v.set_state(s)
                     elm.update_valve_state(k, s, refresh=False)
 
-            if refresh:
-                elm.refresh_canvas()
-#            invoke_in_main_thread(elm.refresh_canvas)
-
+        if refresh and changed:
+            elm.refresh_canvas()
 
     def load_valve_lock_states(self, refresh=True):
         elm = self.extraction_line_manager
         word = self.get_lock_word()
         # self.debug('valve lock word= {}'.format(word))
+        changed = False
         if word is not None:
             for k in self.valves.keys():
                 if word.has_key(k):
-                    if word[k]:
-                        pass
-                        self.lock(k, save=False)
-                        elm.update_valve_lock_state(k, True, refresh=False)
-                    else:
-                        pass
-                        self.unlock(k, save=False)
-                        elm.update_valve_lock_state(k, False, refresh=False)
-            if refresh:
-                elm.refresh_canvas()
-#            invoke_in_main_thread(elm.refresh_canvas)
+                    v = self.get_valve_by_name(k)
+                    s = word[k]
+                    if v.soft_lock != s:
+                        changed = True
+
+                    v.soft_lock = s
+                    elm.update_valve_lock_state(k, s, refresh=False)
+
+        if refresh and changed:
+            elm.refresh_canvas()
 
     def get_state_word(self):
         if self.actuators:

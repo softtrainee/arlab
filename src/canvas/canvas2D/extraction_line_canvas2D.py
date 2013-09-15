@@ -36,6 +36,7 @@ class ExtractionLineCanvas2D(SceneCanvas):
     '''
 #     valves = Dict
     active_item = Any
+
     selected_id = Str
     show_axes = False
     show_grids = False
@@ -45,6 +46,7 @@ class ExtractionLineCanvas2D(SceneCanvas):
     padding_right = 0
     padding_bottom = 0
     padding_top = 0
+
     manager = Any
 
     aspect_ratio = 4 / 3.
@@ -119,11 +121,14 @@ class ExtractionLineCanvas2D(SceneCanvas):
             event.window.set_pointer(self.select_pointer)
             self.manager.set_selected_explanation_item(item)
         else:
-            self.active_item = None
+            del self.active_item
+#             self.active_item = None
             self.event_state = 'normal'
             event.window.set_pointer(self.normal_pointer)
+            self.manager.set_selected_explanation_item(None)
+
         event.handled = True
-        self.invalidate_and_redraw()
+#         self.invalidate_and_redraw()
 
     def select_mouse_move(self, event):
         '''

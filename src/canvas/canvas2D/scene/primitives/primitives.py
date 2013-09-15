@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Any, Dict, Bool, Str, Property, List, Int, \
-    Color, on_trait_change, String
+    Color, on_trait_change, String, cached_property
 from traitsui.api import View, VGroup, HGroup, Item, Group
 from chaco.default_colormaps import color_map_name_dict
 from chaco.data_range_1d import DataRange1D
@@ -66,7 +66,11 @@ class Primitive(HasTraits):
     primitives = List
     label = Property
     font = Str('modern 14')
+    gfont = Property(depends_on='font')
 #     font = str_to_font('modern 14')
+    @cached_property
+    def _get_gfont(self):
+        return str_to_font(self.font)
 
     def _get_label(self):
         return '{} {} {}'.format(self.klass_name, self.name, self.identifier)
@@ -79,24 +83,22 @@ class Primitive(HasTraits):
         super(Primitive, self).__init__(*args, **kw)
 
     def render(self, gc):
-        if self.visible:
 
-            gc.begin_path()
+        with gc:
+            if self.visible:
+                self.set_stroke_color(gc)
+                self.set_fill_color(gc)
 
-            self.set_stroke_color(gc)
-            self.set_fill_color(gc)
+                gc.set_font(self.gfont)
+                gc.set_line_width(self.line_width)
 
-            gc.set_font(str_to_font(self.font))
-            gc.set_line_width(self.line_width)
+                self._render_(gc)
 
-            self._render_(gc)
-            gc.stroke_path()
 
     def _convert_color(self, c):
-        f = lambda x:x / 255.
         if not isinstance(c, (list, tuple)):
             c = c.red, c.green, c.blue
-        c = map(f, c)
+        c = map(lambda x:x / 255., c)
         return c
 
     def set_stroke_color(self, gc):
@@ -639,10 +641,10 @@ class Circle(QPrimitive):
         self._render_name(gc, x, y, r / 4., r / 2.)
 
 
-    def is_in(self, event):
+    def is_in(self, sx, sy):
         x, y = self.get_xy()
         r = self.map_dimension(self.radius)
-        if ((x - event.x) ** 2 + (y - event.y) ** 2) ** 0.5 < r:
+        if ((x - sx) ** 2 + (y - sy) ** 2) ** 0.5 < r:
             return True
 
     def _radius_changed(self):
@@ -885,9 +887,9 @@ class PointIndicator(Indicator):
         self.vline.state = state
         self.circle.state = state
 
-    def is_in(self, event):
+    def is_in(self, sx, sy):
         x, y = self.get_xy()
-        if ((x - event.x) ** 2 + (y - event.y) ** 2) ** 0.5 < self.radius:
+        if ((x - sx) ** 2 + (y - sy) ** 2) ** 0.5 < self.radius:
             return True
 
     def adjust(self, dx, dy):
