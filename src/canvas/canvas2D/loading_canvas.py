@@ -73,7 +73,7 @@ class LoadingCanvas(SceneCanvas):
     def hittest(self, event):
         for li in self.scene.layers:
             for it in li.components:
-                if it.is_in(event):
+                if it.is_in(event.x, event.y):
 #                     it.fill = not it.fill
                     self.selected = it
 

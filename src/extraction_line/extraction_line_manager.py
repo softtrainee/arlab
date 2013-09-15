@@ -199,6 +199,7 @@ class ExtractionLineManager(Manager):
 
         self.valve_manager.load_valve_states()
         self.valve_manager.load_valve_lock_states()
+        self.refresh_canvas()
 #        if reload:
 
     def start_status_monitor(self):
@@ -500,9 +501,11 @@ class ExtractionLineManager(Manager):
 
     def set_selected_explanation_item(self, obj):
         if self.explanation:
-            selected = next((i for i in self.explanation.explanable_items if obj.name == i.name), None)
-            if selected:
-                self.explanation.selected = selected
+            selected = None
+            if obj:
+                selected = next((i for i in self.explanation.explanable_items if obj.name == i.name), None)
+
+            self.explanation.selected = selected
 
 #=================== factories ==========================
 
