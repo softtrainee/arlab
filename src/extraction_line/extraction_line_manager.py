@@ -30,6 +30,8 @@ from src.monitors.system_monitor import SystemMonitor
 
 from view_controller import ViewController
 from src.extraction_line.status_monitor import StatusMonitor
+import weakref
+from src.ui.gui import invoke_in_main_thread
 
 # from src.managers.multruns_report_manager import MultrunsReportManager
 
@@ -126,8 +128,12 @@ class ExtractionLineManager(Manager):
             return m
         
     def refresh_canvas(self):
-        for ci in self._canvases:
-            ci.refresh()
+        def f():
+            for ci in self._canvases:
+                ci.refresh()
+
+        f()
+#        invoke_in_main_thread(f)
         
     def finish_loading(self):
         '''
@@ -196,8 +202,9 @@ class ExtractionLineManager(Manager):
                 self.info('start gauge scans')
                 self.gauge_manager.start_scans()
         
-        self.valve_manager.load_valve_states()
-        self.valve_manager.load_valve_lock_states()
+        self.valve_manager.load_valve_states(refresh=False)
+        self.valve_manager.load_valve_lock_states(refresh=False)
+        self.refresh_canvas()
 #        if reload:
 
     def start_status_monitor(self):
@@ -285,6 +292,7 @@ class ExtractionLineManager(Manager):
 
         for c in self._canvases:
             if c is not None:
+                self.debug('loading canvas {}'.format(c.path_name))
                 p = os.path.join(paths.canvas2D_dir, c.path_name)
                 c.load_canvas_file(p)
 #                 print p
@@ -551,10 +559,11 @@ class ExtractionLineManager(Manager):
         return e
 
     def new_canvas(self, name='canvas'):
-        c = ExtractionLineCanvas(manager=self,
+        c = ExtractionLineCanvas(manager=weakref.ref(self)(),
                                  path_name='{}.xml'.format(name)
                                  )
         self._canvases.append(c)
+#        self.refresh_canvas()
 
         return c
 
