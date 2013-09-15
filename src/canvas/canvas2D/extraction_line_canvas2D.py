@@ -25,6 +25,7 @@ from src.canvas.scene_viewer import SceneCanvas
 from src.canvas.canvas2D.scene.extraction_line_scene import ExtractionLineScene
 from src.canvas.canvas2D.scene.primitives.primitives import BaseValve, \
     RoughValve
+import weakref
 
 W = 2
 H = 2
@@ -73,7 +74,7 @@ class ExtractionLineCanvas2D(SceneCanvas):
 #        if refresh:
 #            self.request_redraw()
 
-#        return 
+#        return
 
     def update_valve_lock_state(self, name, lockstate, refresh=True):
         valve = self._get_valve_by_name(name)
@@ -286,7 +287,7 @@ class ExtractionLineCanvas2D(SceneCanvas):
         self.invalidate_and_redraw()
 
     def _scene_default(self):
-        s = ExtractionLineScene(canvas=self)
+        s = ExtractionLineScene(canvas=weakref.ref(self)())
         return s
 #============= EOF ====================================
 #        cp = self._get_canvas_parser(p)

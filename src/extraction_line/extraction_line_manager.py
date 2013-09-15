@@ -31,7 +31,6 @@ from src.monitors.system_monitor import SystemMonitor
 from view_controller import ViewController
 from src.extraction_line.status_monitor import StatusMonitor
 import weakref
-from src.ui.gui import invoke_in_main_thread
 
 # from src.managers.multruns_report_manager import MultrunsReportManager
 
@@ -52,13 +51,13 @@ class ExtractionLineManager(Manager):
     _canvases = List
     explanation = Instance(ExtractionLineExplanation, ())
 
-    valve_manager = Any#Instance(Manager)
-    gauge_manager = Any#Instance(Manager)
+    valve_manager = Any  # Instance(Manager)
+    gauge_manager = Any  # Instance(Manager)
     status_monitor = Any
 #    environmental_manager = Instance(Manager)
 #    device_stream_manager = Instance(Manager)
-    multiplexer_manager = Any#Instance(Manager)
-    multruns_report_manager = Any#Instance(Manager)
+    multiplexer_manager = Any  # Instance(Manager)
+    multruns_report_manager = Any  # Instance(Manager)
 #    multruns_report_manager = Instance(MultrunsReportManager)
 
     view_controller = Instance(ViewController)
@@ -126,20 +125,16 @@ class ExtractionLineManager(Manager):
             # m.exit_on_close = False
 
             return m
-        
-    def refresh_canvas(self):
-        def f():
-            for ci in self._canvases:
-                ci.refresh()
 
-        f()
-#        invoke_in_main_thread(f)
-        
+    def refresh_canvas(self):
+        for ci in self._canvases:
+            ci.refresh()
+
     def finish_loading(self):
         '''
         '''
         if self.mode != 'client':
-            self.monitor = SystemMonitor(manager=self,
+            self.monitor = SystemMonitor(manager=weakref.ref(self),
                                          name='system_monitor'
                                          )
             self.monitor.monitor()
@@ -201,26 +196,25 @@ class ExtractionLineManager(Manager):
             if self.gauge_manager:
                 self.info('start gauge scans')
                 self.gauge_manager.start_scans()
-        
-        self.valve_manager.load_valve_states(refresh=False)
-        self.valve_manager.load_valve_lock_states(refresh=False)
-        self.refresh_canvas()
+
+        self.valve_manager.load_valve_states()
+        self.valve_manager.load_valve_lock_states()
 #        if reload:
 
     def start_status_monitor(self):
-        self.info('starting status monitor')  
-#        return  
-#        self.info('starting status monitor NOT')  
+        self.info('starting status monitor')
+#        return
+#        self.info('starting status monitor NOT')
         self.status_monitor.start()
 #        if not self.status_monitor.isAlive():
-            
+
 #        def func():
 #            self._monitoring_valve_status = True
 #            cnt = 0
 #            state_freq = self._valve_state_frequency
 #            lock_freq = self._valve_lock_frequency
 #            vm = self.valve_manager
-##             while not self._update_status_flag.isSet():
+# #             while not self._update_status_flag.isSet():
 #            while 1:
 #                if self._update_status_flag.isSet():
 #                    # dont stop the monitor until all "clients" have stopped
@@ -262,10 +256,10 @@ class ExtractionLineManager(Manager):
 #
 #    def isMonitoringValveState(self):
 #        return self._monitoring_valve_status
-##        return self._update_status_flag.isSet()
+# #        return self._update_status_flag.isSet()
 
 
-    
+
 
 
     def bind_preferences(self):
@@ -292,7 +286,6 @@ class ExtractionLineManager(Manager):
 
         for c in self._canvases:
             if c is not None:
-                self.debug('loading canvas {}'.format(c.path_name))
                 p = os.path.join(paths.canvas2D_dir, c.path_name)
                 c.load_canvas_file(p)
 #                 print p
@@ -521,13 +514,13 @@ class ExtractionLineManager(Manager):
 
     def _valve_manager_changed(self):
         if self.valve_manager is not None:
-            self.status_monitor.valve_manager=self.valve_manager 
+            self.status_monitor.valve_manager = self.valve_manager
             e = self.explanation
             if e is not None:
                 e.load(self.valve_manager.explanable_items)
                 self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
-        
-            
+
+
 #            self.valve_manager.mode = self.mode
 #=================== defaults ===========================
 #    def _view_controller_default(self):
@@ -535,11 +528,11 @@ class ExtractionLineManager(Manager):
 #    def _pyscript_editor_default(self):
 #        return PyScriptManager(parent=self)
     def _status_monitor_default(self):
-        sm=StatusMonitor(valve_manager=self.valve_manager,
+        sm = StatusMonitor(valve_manager=self.valve_manager,
                          state_freq=self._valve_state_frequency,
                          lock_freq=self._valve_lock_frequency)
         return sm
-    
+
     def _valve_manager_default(self):
         from src.extraction_line.valve_manager import ValveManager
         return ValveManager(extraction_line_manager=self)
@@ -559,11 +552,10 @@ class ExtractionLineManager(Manager):
         return e
 
     def new_canvas(self, name='canvas'):
-        c = ExtractionLineCanvas(manager=weakref.ref(self)(),
+        c = ExtractionLineCanvas(manager=self,
                                  path_name='{}.xml'.format(name)
                                  )
         self._canvases.append(c)
-#        self.refresh_canvas()
 
         return c
 
