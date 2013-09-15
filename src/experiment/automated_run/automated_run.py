@@ -27,7 +27,7 @@ import yaml
 import struct
 from threading import Thread, Event as TEvent
 from uncertainties import ufloat
-from numpy import Inf
+from numpy import Inf, inf
 import gc
 # from memory_profiler import profile
 import weakref
@@ -457,6 +457,10 @@ class AutomatedRun(Loggable):
         ion = self.ion_optics_manager
 
         if ion is not None:
+            if not self.plot_panel:
+                p = self._new_plot_panel(self.plot_panel, stack_order='top_to_bottom')
+                self.plot_panel = p
+
             self.debug('peak center started')
 #             if self.plot_panel:
 #                 self.plot_panel.show_peak_center()
@@ -470,6 +474,7 @@ class AutomatedRun(Loggable):
             self.peak_center = pc
 
             ion.do_peak_center(new_thread=False)
+
             if pc.result:
                 dm = self.data_manager
 
@@ -1235,7 +1240,7 @@ anaylsis_type={}
         dm = self.data_manager
         with dm.open_file(self._current_data_frame):
             m.measure()
-            
+
 
         mem_log('post measure')
         return True
@@ -1251,8 +1256,9 @@ anaylsis_type={}
         graph = self.plot_panel.isotope_graph
         # update limits
         mi, ma = graph.get_x_limits()
+
         tc = m.total_counts
-        if tc > ma:
+        if tc > ma or (ma - tc) < tc * 2 or ma == inf:
             graph.set_x_limits(-starttime_offset, tc * 1.05)
         elif starttime_offset > mi:
             graph.set_x_limits(min_=-starttime_offset)

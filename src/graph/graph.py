@@ -54,6 +54,7 @@ from src.graph.tools.point_inspector import PointInspector, \
     PointInspectorOverlay
 from chaco.array_data_source import ArrayDataSource
 from src.ui.gui import invoke_in_main_thread
+import weakref
 # from chaco.tools.pan_tool import PanTool
 VALID_FONTS = [
 #                'Helvetica',
@@ -300,6 +301,7 @@ class Graph(Viewable, ContextMenuMixin):
     def clear(self):
         '''
         '''
+        self.clear_plots()
 
         self.plots = []
 
@@ -719,7 +721,7 @@ class Graph(Viewable, ContextMenuMixin):
                 contextmenu = False
 
         if contextmenu:
-            menu = ContextualMenuTool(parent=self,
+            menu = ContextualMenuTool(parent=weakref.ref(self)(),
                                       component=pc,
 #                                      plotid=plotid
                                       )

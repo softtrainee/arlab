@@ -34,6 +34,7 @@ from src.experiment.display_signal import DisplaySignal, DisplayRatio, DisplayVa
 from src.loggable import Loggable
 from src.ui.custom_label_editor import CustomLabel
 from src.ui.gui import invoke_in_main_thread
+from pyface.timer.do_later import do_later
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -201,9 +202,6 @@ class PlotPanel(Loggable):
     display_summary = List
 #    refresh = Event
 
-#     signals = Dict
-#     baselines = Dict
-#     blanks = Dict
     correct_for_baseline = Bool(True)
     correct_for_blank = Bool(True)
     isbaseline = Bool(False)
@@ -211,20 +209,21 @@ class PlotPanel(Loggable):
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
     info_func = None
 
-#     def show_isotopes(self):
-
-#         self.graph_container.selected_tab = self.graph
 
     def set_peak_center_graph(self, graph):
+#         self.selected_graph = None
         self.peak_center_graph = graph
-        self.selected_graph = self.peak_center_graph
+        self.show_graph(graph)
+#         invoke_in_main_thread(self.trait_set, selected_graph=self.peak_center_graph)
+#         print self.selected_graph
+
+    def show_graph(self, g):
+        invoke_in_main_thread(self.trait_set, selected_graph=g)
 
     def show_isotope_graph(self):
-        self.selected_graph = self.isotope_graph
-#     def show_peak_center(self):
-# #         self.graph_container.selected_tab = self.peak_center_graph
-#         print 'sss', self.graph_container.selected_tab
-#         self.graph_container.selected_tab = self.peak_center_graph
+#         self.selected_graph = None
+#         self.selected_graph = self.isotope_graph
+        self.show_graph(self.isotope_graph)
 
     def info(self, *args, **kw):
         if self.info_func:
@@ -233,26 +232,10 @@ class PlotPanel(Loggable):
             super(PlotPanel, self).info(*args, **kw)
 
     def reset(self):
-#         if self.graph:
-#             self.graph.on_trait_change(self._update_display,
-#                                        'regression_results', remove=True)
-#             self.graph.clear()
-#             del self.graph.plotcontainer
-
-
-        # this values could be retrieved from the arar_age instance
-#         self.signals = dict()
-#         self.baselines = dict()
-#         self.blanks = dict()
-
         self.clear_displays()
-
-#         self.graph = self._graph_factory()
-#         self.graph.on_trait_change(self._update_display, 'regression_results')
 
         self.isotope_graph.clear()
         self.peak_center_graph.clear()
-
 
     def create(self, dets):
         '''
@@ -266,26 +249,6 @@ class PlotPanel(Loggable):
         g = self.isotope_graph
         self.selected_graph = g
 
-#        g.suppress_regression = True
-#        # construct plot panels graph
-#         if hasattr(g, 'detectors'):
-#             cd = g.detectors
-#         else:
-#             cd = set(tuple())
-#
-#         d = set(dets)
-#         toadd = d - cd
-#         toremove = cd - d
-#
-#         print toremove
-#         for det in toremove:
-#             p = next((p for p in g.plots if p.ytitle.startswith(det)), None)
-#             print p
-#             if p:
-#                 del p.plots
-#                 g.plots.remove(p)
-#
-#         print toadd
         for det in dets:
             g.new_plot(
 #                       title=self.plot_title if i == 0 else '',
@@ -294,30 +257,7 @@ class PlotPanel(Loggable):
                        padding_left=70,
                        padding_right=10,
                        )
-#             p.value_mapper.tight_bounds = False
-
-#         g.detectors = toadd
-        # sort plots based on ytitle
-#         splots = sorted(g.plots, key=lambda x: x.ytitle.split(' ')[1], reverse=True)
-#         g.plots = splots
-#         splots = sorted(g.plots, key=key)
-
-#         for i, det in enumerate(dets):
-#             if not det in cd:
-#                 g.new_plot(
-#     #                       title=self.plot_title if i == 0 else '',
-#                            ytitle='{} {} (fA)'.format(det.name, det.isotope),
-#                            xtitle='time (s)',
-#                            padding_left=70,
-#                            padding_right=10,
-#                            )
-#
-#         for ci in cd:
-#
-
-        g.set_x_limits(min_=0, max_=400)
-#
-#        g.suppress_regression = False
+#         g.set_x_limits(min_=0, max_=400)
         self.detectors = dets
 
     def clear_displays(self):
@@ -357,7 +297,7 @@ class PlotPanel(Loggable):
     def _get_signal_dicts(self):
         sig, base, blank = {}, {}, {}
         if self.arar_age:
-            isos=self.arar_age.isotopes.values()
+            isos = self.arar_age.isotopes.values()
 #            isos = [iso for iso in self.arar_age.isotopes.values()]
 
             sig = dict([(v.name, v.uvalue) for v in isos])

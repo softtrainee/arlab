@@ -48,6 +48,8 @@ def mem_log(msg, verbose=False):
         mem = _get_current_mem()
         write_mem(msg, mem, verbose)
 
+def get_current_mem():
+    return _get_current_mem()
 
 def mem_log_func(func, *args, **kw):
     n = func.func_name
