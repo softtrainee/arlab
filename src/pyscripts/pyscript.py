@@ -691,7 +691,7 @@ class PyScript(Loggable):
 
             if self.manager:
                 wd = self.manager.wait_group.active_control
-                if wd.isActive() > 1:
+                if wd.isActive():
                     wd = self.manager.wait_group.add_control()
             else:
                 wd = self._wait_dialog
