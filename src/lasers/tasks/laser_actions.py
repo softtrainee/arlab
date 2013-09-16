@@ -119,13 +119,13 @@ class LaserCalibrationAction(Action):
         return task
 
 class PowerMapAction(LaserCalibrationAction):
-    name = 'Power Map...'
+    name = 'New Power Map...'
     def perform(self, event):
         task = self._get_task(event)
         task.new_power_map()
 
 class OpenPowerMapAction(LaserCalibrationAction):
-    name = 'Power Map'
+    name = 'Open Power Map'
     accelerator = 'Ctrl+3'
     def perform(self, event):
         app = event.task.window.application
