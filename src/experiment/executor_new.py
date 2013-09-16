@@ -176,7 +176,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
         if self._pre_execute_check():
             name = self.experiment_queue.name
-            self.info('Starting Execution {}'.format(name))
+            self.info('Starting Execution "{}"'.format(name))
             if self.stats:
                 self.stats.reset()
                 self.stats.start_timer()

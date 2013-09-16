@@ -220,8 +220,8 @@ class IonOpticsManager(Manager):
                    spectrometer=spec)
 
         self.peak_center = pc
+        graph = pc.graph
         if plot_panel:
-            graph = pc.graph
 #             plot_panel.peak_center_graph = graph
             plot_panel.set_peak_center_graph(graph)
         else:
@@ -296,6 +296,7 @@ class IonOpticsManager(Manager):
         self.canceled = True
         self.peak_center.canceled = True
         self.peak_center.stop()
+        self.info('peak center canceled')
 
 #===============================================================================
 # handler
