@@ -164,16 +164,20 @@ class PeakCenter(MagnetScan):
                         xs, ys, mx, my = result
 
                         center = xs[1]
-                        graph.set_data(xs, series=self._markup_idx)
-                        graph.set_data(ys, series=self._markup_idx, axis=1)
-
-                        graph.set_data([mx], series=self._markup_idx + 1)
-                        graph.set_data([my], series=self._markup_idx + 1, axis=1)
-
-                        graph.add_vertical_rule(center)
-                        graph.redraw()
+                        invoke_in_main_thread(self._plot_center, xs,ys,mx,my, center)
                         return center
+                    
+    def _plot_center(self, xs,ys, mx, my, center):
+        graph=self.graph
+        graph.set_data(xs, series=self._markup_idx)
+        graph.set_data(ys, series=self._markup_idx, axis=1)
 
+        graph.set_data([mx], series=self._markup_idx + 1)
+        graph.set_data([my], series=self._markup_idx + 1, axis=1)
+
+        graph.add_vertical_rule(center)
+        graph.redraw()
+        
     def _calculate_peak_center(self, x, y):
         result = calculate_peak_center(x, y,
                                        min_peak_height=self.min_peak_height,

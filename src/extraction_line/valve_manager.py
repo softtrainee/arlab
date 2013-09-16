@@ -153,10 +153,10 @@ class ValveManager(Manager):
                 if word.has_key(k):
                     v = self.get_valve_by_name(k)
                     s = word[k]
-                    if v.soft_lock != s:
+                    if v.software_lock != s:
                         changed = True
 
-                    v.soft_lock = s
+                    v.software_lock = s
                     elm.update_valve_lock_state(k, s, refresh=False)
 
         if refresh and changed:

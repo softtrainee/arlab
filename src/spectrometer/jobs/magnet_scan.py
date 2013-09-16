@@ -161,7 +161,9 @@ class MagnetScan(SpectrometerTask):
         gen = (vi for vi in values)
         evt = Event()
         intensities = []
-        invoke_in_main_thread(self._iter_dac, gen.next(),
+        mag=self.spectrometer.magnet
+        
+        invoke_in_main_thread(self._iter_dac, mag, gen.next(),
                               gen, evt, intensities,
                               det, peak_generator
                               )
@@ -171,7 +173,9 @@ class MagnetScan(SpectrometerTask):
 
         return intensities
 
-    def _iter_dac(self, di, gen, evt, intensities, det, peak_generator):
+    def _iter_dac(self, mag, di, gen, evt, intensities, det, peak_generator):
+        mag.set_dac(di, verbose=False)
+        
         d = self._magnet_step_hook(detector=det,
                                    peak_generator=peak_generator)
         self._graph_hook(di, d, update_y_limits=True)
@@ -184,7 +188,7 @@ class MagnetScan(SpectrometerTask):
 
         if di is not None and self.isAlive():
             p = self.period
-            do_after(p, self._iter_dac, di, gen, evt, intensities,
+            do_after(p, self._iter_dac, mag, di, gen, evt, intensities,
                      det, peak_generator)
         else:
             evt.set()

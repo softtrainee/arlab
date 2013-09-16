@@ -45,14 +45,18 @@ class WaitControl(Loggable):
     continue_button = Button('Continue')
 
     _continued = Bool
-
-
+    _canceled = Bool
+    
     def __init__(self, *args, **kw):
         self.reset()
         super(WaitControl, self).__init__(*args, **kw)
         if self.auto_start:
             self.start(evt=self.end_evt)
-
+            
+    def isActive(self):
+        if self.timer:
+            return self.timer.isActive()
+    
     def start(self, block=True, evt=None):
         if evt is None:
             evt = Event()
