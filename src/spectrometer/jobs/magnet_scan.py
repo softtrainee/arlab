@@ -22,7 +22,6 @@ from pyface.timer.do_later import do_after
 from numpy import linspace, exp, hstack
 import random
 import time
-from memory_profiler import profile
 from threading import Event
 #============= local library imports  ==========================
 from spectrometer_task import SpectrometerTask
