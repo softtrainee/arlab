@@ -63,9 +63,9 @@ class BaseEditorTask(BaseManagerTask):
                 path = self.save_file_dialog()
 
             if path:
-                self._save_file(path)
-                self.active_editor.dirty = False
-                self.active_editor.path = path
+                if self._save_file(path):
+                    self.active_editor.dirty = False
+                    self.active_editor.path = path
 
     def new(self):
         pass
@@ -73,9 +73,9 @@ class BaseEditorTask(BaseManagerTask):
     def save_as(self):
         path = self.save_file_dialog()
         if path:
-            self._save_file(path)
-            self.active_editor.path = path
-            self.active_editor.dirty = False
+            if self._save_file(path):
+                self.active_editor.path = path
+                self.active_editor.dirty = False
 
     def _save_file(self, path):
         pass

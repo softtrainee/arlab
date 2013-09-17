@@ -80,6 +80,10 @@ class DBAnalysis(Analysis):
 
     ic_factors = Dict
 
+    def set_temporary_blank(self, k, v, e):
+        if self.isotopes.has_key(k):
+            iso = self.isotopes[k]
+            iso.temporary_blank = Blank(value=v, error=e)
 
     def get_baseline_corrected_signal_dict(self):
         get = lambda iso: iso.baseline_corrected_value()
@@ -211,7 +215,6 @@ class DBAnalysis(Analysis):
         self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
 
 
-
     def _sync_analysis_info(self, meas_analysis):
         self.sample = self._get_sample(meas_analysis)
         self.material = self._get_material(meas_analysis)
@@ -241,7 +244,7 @@ class DBAnalysis(Analysis):
 
     def _sync_isotopes(self, meas_analysis):
         self.isotopes = self._get_isotopes(meas_analysis, unpack=True)
-
+        self.isotope_fits = self._get_isotope_fits()
 #         self._load_blanks(meas_analysis)
 #         self._load_sniffs(meas_analysis)
 
@@ -301,7 +304,16 @@ class DBAnalysis(Analysis):
 #
 #                 if not keys:
 #                     break
-
+    def _get_isotope_fits(self):
+        keys = self.isotope_keys
+        fs = [self.isotopes[ki].fit
+                    for ki in keys]
+        return fs
+# #         fits = [iso.fit for iso in self.isotopes.itervalues()]
+# #         z = zip(keys, fits)
+# #         zs = sort_isotopes(z)
+# #         _ks, fs = zip(*zs)
+#         return fs
     def _get_isotopes(self, meas_analysis, unpack):
         isotopes = dict()
         self._get_signals(isotopes, meas_analysis, unpack)

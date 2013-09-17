@@ -24,9 +24,10 @@ import datetime
 from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.processing.plotter_options_manager import IdeogramOptionsManager, \
     SpectrumOptionsManager, InverseIsochronOptionsManager
-from src.database.orms.isotope_orm import meas_AnalysisTable, \
-    meas_MeasurementTable, gen_AnalysisTypeTable, gen_LabTable, gen_SampleTable, \
-    gen_MassSpectrometerTable, gen_ExtractionDeviceTable, meas_ExtractionTable
+from src.database.orms.isotope.gen import gen_AnalysisTypeTable, gen_LabTable, gen_SampleTable, \
+    gen_MassSpectrometerTable, gen_ExtractionDeviceTable
+
+from src.database.orms.isotope.meas import meas_AnalysisTable, meas_ExtractionTable, meas_MeasurementTable
 from src.processing.analysis import Analysis
 from src.processing.tasks.analysis_edit.fits import Fit
 from src.processing.plotters.spectrum import Spectrum
@@ -306,7 +307,7 @@ class Processor(IsotopeDatabaseManager):
             analysis = self.make_analyses([analysis])[0]
 #             analysis.load_isotopes()
 
-        ms = analysis.spectrometer
+        ms = analysis.mass_spectrometer
         post = analysis.timestamp
 
 #         delta = -2

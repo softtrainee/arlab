@@ -17,54 +17,56 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 from sqlalchemy.sql.expression import  and_, func
-# import hashlib
+from sqlalchemy.orm.exc import NoResultFound
 from cStringIO import StringIO
+import hashlib
 #============= local library imports  ==========================
+from src.database.core.functions import delete_one
 from src.database.core.database_adapter import DatabaseAdapter
 from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 
-# meas_
-from src.database.orms.isotope_orm import meas_AnalysisTable, \
-    meas_ExperimentTable, meas_ExtractionTable, meas_IsotopeTable, meas_MeasurementTable, \
-    meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
-    meas_SignalTable, meas_PeakCenterTable, meas_PositionTable, \
-    meas_ScriptTable, meas_MonitorTable, loading_LoadTable, gen_LoadHolderTable, \
-    loading_PositionsTable, proc_FigurePrefTable
 
 
 # med_
-from src.database.orms.isotope_orm import med_ImageTable, med_SnapshotTable
+from src.database.orms.isotope.med import med_ImageTable, med_SnapshotTable
 
-# proc_
-from src.database.orms.isotope_orm import proc_DetectorIntercalibrationHistoryTable, \
-    proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
-    proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable, \
-    proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable, \
-    proc_DetectorParamHistoryTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
-    proc_FitTable, proc_DetectorParamTable, proc_NotesTable, proc_FigureTable, proc_FigureAnalysisTable
 
-# irrad_
-from src.database.orms.isotope_orm import irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, \
-    irrad_ChronologyTable, irrad_LevelTable, irrad_PositionTable
 
 # flux_
-from src.database.orms.isotope_orm import flux_FluxTable, flux_HistoryTable, flux_MonitorTable
+from src.database.orms.isotope.flux import flux_FluxTable, flux_HistoryTable, flux_MonitorTable
+
+
+#===============================================================================
+# new location
+#===============================================================================
+# loading_
+from src.database.orms.isotope.loading import loading_LoadTable, loading_PositionsTable
 
 # gen_
-from src.database.orms.isotope_orm import gen_DetectorTable, gen_ExtractionDeviceTable, gen_ProjectTable, \
+from src.database.orms.isotope.gen import gen_LoadHolderTable, gen_DetectorTable, \
+    gen_ExtractionDeviceTable, gen_ProjectTable, \
     gen_MolecularWeightTable, gen_MaterialTable, gen_MassSpectrometerTable, \
     gen_SampleTable, gen_LabTable, gen_AnalysisTypeTable, gen_UserTable, \
     gen_ImportTable, gen_SensitivityTable
 
+# irrad_
+from src.database.orms.isotope.irrad import irrad_HolderTable, irrad_ProductionTable, irrad_IrradiationTable, \
+    irrad_ChronologyTable, irrad_LevelTable, irrad_PositionTable
+# meas_
+from src.database.orms.isotope.meas import meas_AnalysisTable, \
+    meas_ExperimentTable, meas_ExtractionTable, meas_IsotopeTable, meas_MeasurementTable, \
+    meas_SpectrometerParametersTable, meas_SpectrometerDeflectionsTable, \
+    meas_SignalTable, meas_PeakCenterTable, meas_PositionTable, \
+    meas_ScriptTable, meas_MonitorTable
 
-from src.database.core.functions import delete_one
-
-# from src.experiment.utilities.identifier import convert_identifier
-# from src.repo.repository import Repository, ZIPRepository
-# from src.paths import paths
-# import binascii
-import hashlib
-from sqlalchemy.orm.exc import NoResultFound
+# proc_
+from src.database.orms.isotope.proc import proc_DetectorIntercalibrationHistoryTable, \
+    proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
+    proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable, \
+    proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable, \
+    proc_DetectorParamHistoryTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
+    proc_FitTable, proc_DetectorParamTable, proc_NotesTable, proc_FigureTable, proc_FigureAnalysisTable, \
+    proc_FigurePrefTable
 
 # @todo: change rundate and runtime to DateTime columns
 

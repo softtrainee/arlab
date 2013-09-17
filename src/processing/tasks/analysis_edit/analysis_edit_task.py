@@ -38,6 +38,7 @@ class AnalysisEditTask(BaseEditorTask):
     def _save_file(self, path):
         if self.active_editor:
             self.active_editor.save_file(path)
+            return True
 
     def prepare_destroy(self):
         if self.unknowns_pane:

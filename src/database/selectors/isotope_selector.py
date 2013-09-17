@@ -26,10 +26,13 @@ from traits.api import Int, Property, Str
 #============= local library imports  ==========================
 from src.database.core.database_selector import DatabaseSelector
 # from src.database.core.base_db_result import DBResult
-from src.database.orms.isotope_orm import meas_AnalysisTable, gen_LabTable, \
-    gen_SampleTable, irrad_PositionTable, irrad_LevelTable, \
-    irrad_IrradiationTable, gen_ProjectTable, meas_MeasurementTable, \
+
+from src.database.orms.isotope.gen import gen_LabTable, \
+    gen_SampleTable, gen_ProjectTable, \
     gen_MassSpectrometerTable, gen_AnalysisTypeTable
+from src.database.orms.isotope.irrad import irrad_PositionTable, irrad_LevelTable, \
+    irrad_IrradiationTable
+from src.database.orms.isotope.meas import meas_AnalysisTable, meas_MeasurementTable
 
 from src.database.core.base_results_adapter import BaseResultsAdapter
 # from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
@@ -41,7 +44,7 @@ class IsotopeResultsAdapter(BaseResultsAdapter):
     columns = [
 #               ('ID', 'rid'),
                ('Labnumber', 'labnumber'),
-               ('Aliquot', 'aliquot'),
+                ('Aliquot', 'aliquot'),
                ('Analysis Time', 'timestamp'),
 #               ('Time', 'runtime'),
                ('Irradiation', 'irradiation_info'),
@@ -52,8 +55,15 @@ class IsotopeResultsAdapter(BaseResultsAdapter):
 #     font = 'monospace 14'
 #    rid_width = Int(50)
     labnumber_width = Int(90)
-    aliquot_width = Int(50)
     rundate_width = Int(140)
+    aliquot_text = Property
+
+    def _get_aliquot_text(self):
+        return '{:02n}{}'.format(self.item.aliquot, self.item.step)
+#     def _get_daliquot_str_text(self):
+#         print 'ffff'
+#         return '{:02n}{}'.format(self.item.aliquot, self.item.step)
+
 #    runtime_width = Int(90)
 #    aliquot_text = Property
 #    irradiation_text = Property

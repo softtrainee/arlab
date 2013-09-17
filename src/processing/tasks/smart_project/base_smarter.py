@@ -21,8 +21,10 @@ from traits.api import Instance
 from sqlalchemy.sql.expression import and_
 #============= local library imports  ==========================
 from src.loggable import Loggable
-from src.database.orms.isotope_orm import meas_AnalysisTable, \
-    meas_MeasurementTable, gen_AnalysisTypeTable
+# from src.database.orms.isotope_orm import meas_AnalysisTable, \
+#     meas_MeasurementTable, gen_AnalysisTypeTable
+from src.database.orms.isotope.gen import gen_AnalysisTypeTable
+from src.database.orms.isotope.meas import meas_AnalysisTable, meas_MeasurementTable
 import time
 
 

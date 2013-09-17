@@ -293,7 +293,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         fy = r.predict(fx)
         if line:
             line.regressor = r
-            
+
             line.index.set_data(fx)
             line.value.set_data(fy)
 
@@ -310,6 +310,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 line.error_envelope.invalidate()
 
         self.regressors.append(r)
+
 
     def _least_square_regress(self, r, x, y, ox, oy, index,
                       fit, fod, apply_filter):
@@ -382,7 +383,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             if r is None or not isinstance(r, PolynomialRegressor):
                 r = PolynomialRegressor()
 
-        r.trait_set(xs=x, ys=y,degree=fit,
+        r.trait_set(xs=x, ys=y, degree=fit,
                     trait_change_notify=False)
 #        r.degree = fit
         r.calculate()
@@ -580,11 +581,11 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter.filter = None
         scatter.filter_outliers_dict = filter_outliers_dict
 
-        r = None
-        if x is not None and y is not None:
-            args = self._regress(plot, scatter, None)
-            if args:
-                r, fx, fy, ly, uy = args
+#         r = None
+#         if x is not None and y is not None:
+#             r = self._regress(plot, scatter, None)
+#             if args:
+#                 r, fx, fy, ly, uy = args
 
         kw['color'] = 'black'
         kw['type'] = 'line'
@@ -595,11 +596,15 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         if use_error_envelope:
             self._add_error_envelope_overlay(line)
 
-        if r is not None:
-            line.regressor = r
-            if hasattr(line, 'error_envelope'):
-                line.error_envelope.lower = ly
-                line.error_envelope.upper = uy
+        r = None
+        if x is not None and y is not None:
+            self._regress(plot, scatter, line)
+
+#         if r is not None:
+#             line.regressor = r
+#             if hasattr(line, 'error_envelope'):
+#                 line.error_envelope.lower = ly
+#                 line.error_envelope.upper = uy
 
         line.index.sort_order = 'ascending'
         self.set_series_label('fit{}'.format(si), plotid=plotid)

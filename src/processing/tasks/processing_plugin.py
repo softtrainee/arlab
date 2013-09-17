@@ -134,7 +134,7 @@ class ProcessingPlugin(BaseTaskPlugin):
                         ('pychron.processing.publisher', self._table_task_factory, 'Table', '', 'Ctrl+t'),
                         ('pychron.processing.auto_figure', self._auto_figure_task_factory, 'AutoFigure'),
                         ('pychron.processing.smart_project', self._smart_project_task_factory, 'SmartProject'),
-                        ('pychron.processing.browser', self._browser_task_factory, 'Browser', '', 'Ctrl+B'),
+                        ('pychron.processing.browser', self._browser_task_factory, 'Browser', '', 'Ctrl+Shift+B'),
                         )
                 ]
 

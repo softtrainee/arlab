@@ -43,7 +43,7 @@ class InterpolationEditor(GraphEditor):
 
     def make_references(self):
         self._references = self.processor.make_analyses(self.references)
-        self.processor.load_analyses(self._references)
+#         self.processor.load_analyses(self._references)
         self._make_references()
 
     def _make_references(self):
@@ -67,7 +67,7 @@ class InterpolationEditor(GraphEditor):
     def _find_references(self):
         ans = set([ai for ui in self._unknowns
                 for ai in self.processor.find_associated_analyses(ui)])
-#
+
         ans = sorted(list(ans), key=lambda x: x.analysis_timestamp)
         ans = self.processor.make_analyses(ans)
         self.task.references_pane.items = ans
@@ -125,7 +125,7 @@ class InterpolationEditor(GraphEditor):
 
             r_ys, r_es = None, None
             if self._references:
-                r_ys, r_es = self._get_reference_values(iso, fit)
+                r_ys, r_es = self._get_reference_values(iso)
 
             p = graph.new_plot(
                                ytitle=iso,
@@ -153,7 +153,7 @@ class InterpolationEditor(GraphEditor):
                                                  ys=r_ys,
                                                  yserr=r_es,
                                                  kind=fit)
-                    scatter, _p = graph.new_series(r_xs, r_ys,
+                    graph.new_series(r_xs, r_ys,
                                  yerror=r_es,
                                  type='scatter',
                                  plotid=i,
@@ -161,7 +161,7 @@ class InterpolationEditor(GraphEditor):
                                  )
 
                 else:
-                    _p, scatter, l = graph.new_series(r_xs, r_ys,
+                    _p, _s, l = graph.new_series(r_xs, r_ys,
                                        display_index=ArrayDataSource(data=display_xs),
                                        yerror=ArrayDataSource(data=r_es),
                                        fit=fit,
@@ -172,7 +172,7 @@ class InterpolationEditor(GraphEditor):
                 if reg:
                     p_uys, p_ues = self._set_interpolated_values(iso, reg, c_uxs)
                     # display the predicted values
-                    ss, _ = graph.new_series(c_uxs,
+                    graph.new_series(c_uxs,
                                              p_uys,
                                              isotope=iso,
                                              yerror=ArrayDataSource(p_ues),

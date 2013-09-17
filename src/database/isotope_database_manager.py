@@ -183,21 +183,26 @@ class IsotopeDatabaseManager(Loggable):
 
     def _record_factory(self, rec, progress=None, **kw):
         if isinstance(rec, (Analysis, DBAnalysis)):
+            if progress:
+                progress.increment()
+
             return rec
+
         else:
-            meas_analysis = self.db.get_analysis_uuid(rec.uuid)
-            def func():
+
+            def func(r):
+                meas_analysis = self.db.get_analysis_uuid(r.uuid)
                 a = DBAnalysis()
                 a.sync(meas_analysis)
                 return a
 
             if progress:
-                msg = 'loading {}'.format(rec.record_id)
+                msg = 'loading {}'.format(id(rec))
                 progress.change_message(msg)
-                a = func()
+                a = func(rec)
                 progress.increment()
             else:
-                a = func()
+                a = func(rec)
 
             return a
 

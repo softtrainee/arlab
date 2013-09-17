@@ -56,13 +56,14 @@ class ExperimentEditorTask(EditorTask):
 
     def _loading_manager_default(self):
         lm = self.window.application.get_service('src.loading.loading_manager.LoadingManager')
-        lm.trait_set(db=self.manager.db,
-                     show_group_positions=True,
-                     )
-#         lm = LoadingManager(db=self.manager.db,
-#                             show_group_positions=True
-#                             )
-        return lm
+        if lm:
+            lm.trait_set(db=self.manager.db,
+                         show_group_positions=True,
+                         )
+    #         lm = LoadingManager(db=self.manager.db,
+    #                             show_group_positions=True
+    #                             )
+            return lm
 
     def _default_directory_default(self):
         return paths.experiment_dir
@@ -146,11 +147,6 @@ class ExperimentEditorTask(EditorTask):
     def create_dock_panes(self):
         self.isotope_evolution_pane = IsotopeEvolutionPane()
 
-        self.load_pane = self.window.application.get_service('src.loading.panes.LoadDockPane')
-#         self.load_pane = LoadDockPane()
-#         self.load_table_pane = LoadTablePane(model=self.loading_manager)
-        self.load_table_pane = self.window.application.get_service('src.loading.panes.LoadTablePane')
-        self.load_table_pane.model = self.loading_manager
 
         self.experiment_factory_pane = ExperimentFactoryPane(model=self.manager.experiment_factory)
         self.wait_pane = WaitPane(model=self.manager.executor)
@@ -160,12 +156,19 @@ class ExperimentEditorTask(EditorTask):
                 ControlsPane(model=self.manager.executor),
                 ConsolePane(model=self.manager.executor),
 #                 ExplanationPane(),
-                self.isotope_evolution_pane,
-                self.load_pane,
-                self.load_table_pane,
+
                 self.wait_pane
 #                 self.summary_pane,
                 ]
+
+        if self.loading_manager:
+            self.load_pane = self.window.application.get_service('src.loading.panes.LoadDockPane')
+            self.load_table_pane = self.window.application.get_service('src.loading.panes.LoadTablePane')
+            self.load_table_pane.model = self.loading_manager
+
+            panes.extend([self.isotope_evolution_pane,
+                          self.load_pane,
+                          self.load_table_pane])
 
         panes = self._add_canvas_pane(panes)
 
@@ -214,6 +217,10 @@ class ExperimentEditorTask(EditorTask):
 #        ps = (os.path.join(paths.experiment_dir, 'demo.txt'),)
         if path is None:
             ps = self.open_file_dialog(action='open files',
+#                                        default_path='Current Experiment.txt',
+                                       default_filename='Current Experiment.txt',
+#                                        default_path=
+#                                        default_filename=
 #                                        default_directroy=
                                        )
         else:
@@ -294,6 +301,7 @@ class ExperimentEditorTask(EditorTask):
             self.manager.refresh_executable()
             self.debug('queues saved')
             self.manager.reset_run_generator()
+            return True
 
     def _active_editor_changed(self):
         if self.active_editor:
@@ -383,16 +391,15 @@ class ExperimentEditorTask(EditorTask):
     @on_trait_change('manager.experiment_factory:queue_factory:load_name')
     def _update_load(self, new):
         lm = self.loading_manager
-#         lm.db.reset()
+        if lm is not None:
+            if lm.load_name != new:
+                lm.load_name = new
+                canvas = lm.make_canvas(new, editable=False)
+                self.load_pane.component = weakref.ref(canvas)()
 
-        if lm.load_name != new:
-            lm.load_name = new
-            canvas = lm.make_canvas(new, editable=False)
-            self.load_pane.component = weakref.ref(canvas)()
+            lm.load_load(new, group_labnumbers=False)
 
-        lm.load_load(new, group_labnumbers=False)
-
-        self.load_pane.load_name = new
+            self.load_pane.load_name = new
 
     @on_trait_change('active_editor:queue:update_needed')
     def _update_runs(self, new):

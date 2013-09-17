@@ -16,27 +16,32 @@
 
 #============= enthought library imports =======================
 # from traits.api import HasTraits
+#============= standard library imports ========================
 import os
 import yaml
 from datetime import datetime
 from datetime import timedelta
 
 from sqlalchemy.sql.expression import and_
-#============= standard library imports ========================
+import time
 #============= local library imports  ==========================
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.paths import paths, rec_make
 from src.processing.importer.import_manager import ImportManager
 
-from src.database.orms.isotope_orm import meas_AnalysisTable, \
-    meas_MeasurementTable, gen_AnalysisTypeTable, irrad_IrradiationTable, \
-    irrad_LevelTable, gen_LabTable, irrad_PositionTable, \
-    gen_MassSpectrometerTable
-import time
+# from src.database.orms.isotope_orm import meas_AnalysisTable, \
+#     meas_MeasurementTable, gen_AnalysisTypeTable, irrad_IrradiationTable, \
+#     irrad_LevelTable, gen_LabTable, irrad_PositionTable, \
+#     gen_MassSpectrometerTable
+
+from src.database.orms.isotope.meas import meas_AnalysisTable, meas_MeasurementTable
+from src.database.orms.isotope.irrad import irrad_PositionTable, irrad_IrradiationTable, irrad_LevelTable
+from src.database.orms.isotope.gen import gen_AnalysisTypeTable, gen_MassSpectrometerTable, gen_LabTable
+
 from src.processing.tasks.blanks.blanks_editor import BlanksEditor
 from src.ui.gui import invoke_in_main_thread
-from src.helpers.filetools import unique_path
-from src.processing.tasks.smart_project.blanks_pdf_writer import BlanksPDFWrtier
+# from src.helpers.filetools import unique_path
+# from src.processing.tasks.smart_project.blanks_pdf_writer import BlanksPDFWrtier
 from src.processing.tasks.smart_project.smart_blanks import SmartBlanks
 from src.processing.tasks.smart_project.smart_isotope_fits import SmartIsotopeFits
 from src.processing.tasks.smart_project.smart_detector_intercalibration import SmartDetectorIntercalibration

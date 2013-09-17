@@ -47,7 +47,7 @@ class IntercalibrationFactorEditor(InterpolationEditor):
         p_ues = reg.predict_error(xs)
         return p_uys, p_ues
 
-    def _get_reference_values(self, iso, fit):
+    def _get_reference_values(self, iso):
         n, d = iso.split('/')
         nys = array([ri.isotopes[n].uvalue for ri in self._references])
         dys = array([ri.isotopes[d].uvalue for ri in self._references])

@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,21 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from src.graph.tools.info_inspector import InfoInspector, InfoOverlay
 #============= standard library imports ========================
+# from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy import Column, BLOB, DateTime
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql.expression import func
+
 #============= local library imports  ==========================
+from src.database.orms.isotope.util import foreignkey, stringcolumn
+from src.database.core.base_orm import BaseMixin, NameMixin
 
+from util import Base
 
-class RegressionInspectorTool(InfoInspector):
-    def assemble_lines(self):
-        reg = self.component.regressor
-        lines = [reg.make_equation()]
+class med_ImageTable(Base, NameMixin):
+    create_date = Column(DateTime, default=func.now())
+    image = Column(BLOB)
+    extractions = relationship('meas_ExtractionTable', backref='image')
 
-        lines += map(unicode.strip, map(unicode, reg.tostring().split(',')))
-
-        return lines
-
-class RegressionInspectorOverlay(InfoOverlay):
-    pass
-
+class med_SnapshotTable(Base, BaseMixin):
+    path = stringcolumn(200)
+    create_date = Column(DateTime, default=func.now())
+    image = Column(BLOB)
+    extraction_id = foreignkey('meas_ExtractionTable')
 #============= EOF =============================================

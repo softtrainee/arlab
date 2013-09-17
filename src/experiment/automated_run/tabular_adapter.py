@@ -83,14 +83,15 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 
         if item.skip:
             color = SKIP_COLOR  # '#33CCFF'  # light blue
+        elif item.state in COLORS:
+            color = COLORS[item.state]
+        elif item.end_after:
+            color = COLORS['end_after']
         else:
-            if item.state in COLORS:
-                color = COLORS[item.state]
+            if row % 2 == 0:
+                color = 'white'
             else:
-                if row % 2 == 0:
-                    color = 'white'
-                else:
-                    color = '#E6F2FF'  # light gray blue
+                color = '#E6F2FF'  # light gray blue
 
         return color
 

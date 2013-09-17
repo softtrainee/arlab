@@ -37,7 +37,8 @@ from src.processing.entry.irradiated_position import IrradiatedPosition
 # import math
 # from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
 # from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
-from src.database.orms.isotope_orm import gen_ProjectTable, gen_SampleTable
+# from src.database.orms.isotope_orm import gen_ProjectTable, gen_SampleTable
+from src.database.orms.isotope.gen import gen_ProjectTable, gen_SampleTable
 from src.codetools.simple_timeit import timethis, simple_timer
 # from src.ui.thread import Thread
 # from pyface.timer.do_later import do_later
@@ -334,48 +335,48 @@ class LabnumberEntry(IsotopeDatabaseManager):
                 ln = irs.labnumber
                 if not ln:
                     continue
-    
+
                 sam = irs.sample
                 proj = irs.project
                 mat = irs.material
                 if proj:
                     proj = db.add_project(proj)
-    
+
                 if mat:
                     mat = db.add_material(mat)
-    
+
                 if sam:
                     sam = db.add_sample(sam,
                                         project=proj,
                                         material=mat,
                                         )
-    
+
                 dbln = db.get_labnumber(ln)
                 if dbln:
                     pos = dbln.irradiation_position
                     if pos is None:
                         pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
                     else:
-    
+
                         lev = pos.level
                         irrad = lev.irradiation
                         if self.irradiation != irrad.name:
                             self.warning_dialog('Labnumber {} already exists in Irradiation {}'.format(ln, irrad.name))
                             return
-    
+
                     dbln.sample = db.get_sample(sam)
                     dbln.note = irs.note
-    
+
                 else:
                     dbln = db.add_labnumber(ln, sample=sam,)
                     pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
-    
+
                 def add_flux():
                     hist = db.add_flux_history(pos)
                     dbln.selected_flux_history = hist
                     f = db.add_flux(irs.j, irs.j_err)
                     f.history = hist
-    
+
                 if dbln.selected_flux_history:
                     tol = 1e-10
                     flux = dbln.selected_flux_history.flux
@@ -383,7 +384,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
                         add_flux()
                 else:
                     add_flux()
-    
+
                 self.info('changes saved to database')
 
 #===============================================================================
