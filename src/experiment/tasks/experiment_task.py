@@ -156,7 +156,7 @@ class ExperimentEditorTask(EditorTask):
                 ControlsPane(model=self.manager.executor),
                 ConsolePane(model=self.manager.executor),
 #                 ExplanationPane(),
-
+                self.isotope_evolution_pane,
                 self.wait_pane
 #                 self.summary_pane,
                 ]
@@ -166,8 +166,7 @@ class ExperimentEditorTask(EditorTask):
             self.load_table_pane = self.window.application.get_service('src.loading.panes.LoadTablePane')
             self.load_table_pane.model = self.loading_manager
 
-            panes.extend([self.isotope_evolution_pane,
-                          self.load_pane,
+            panes.extend([self.load_pane,
                           self.load_table_pane])
 
         panes = self._add_canvas_pane(panes)
