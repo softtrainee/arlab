@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int
+from traits.api import HasTraits, Int, Property
 from traitsui.api import View, Item, InstanceEditor, ListEditor, \
     VGroup, UItem, spring, HGroup, VSplit, EnumEditor, TableEditor
 
@@ -139,6 +139,10 @@ class ResultsAdapter(TabularAdapter):
     timestamp_width = Int(110)
     irradiation_info_width = Int(65)
 
+    aliquot_text = Property
+
+    def _get_aliquot_text(self):
+        return '{:02n}{}'.format(self.item.aliquot, self.item.step)
 
 # class ResultsPane(TraitsDockPane):
 #    id = 'pychron.search.results'

@@ -64,6 +64,7 @@ class BaseRegressor(HasTraits):
         ce = self.coefficient_errors[::-1]
 
         coeffs = []
+        s = u''
         for a, ci, ei in zip(ALPHAS, cs, ce):
             pp = '({:0.2f}%)'.format(self.percent_error(ci, ei))
 #            print pp, ci, ei, self.percent_error(ci, ei)
@@ -73,13 +74,13 @@ class BaseRegressor(HasTraits):
             fmt = '{{:0.{}e}}' if abs(ei) < math.pow(10, -error_sig_figs) else '{{:0.{}f}}'
             ei = fmt.format(error_sig_figs).format(ei)
 
-            vfmt = u'{}= {}{}{} {}'
-            coeffs.append(vfmt.format(a, ci, PLUSMINUS, ei, pp))
+            vfmt = u'{}= {} +/- {} {}'
+            coeffs.append(vfmt.format(a, ci, ei, pp))
 
 #        s = ', '.join([fmt.format(a, ci, pm, cei, self.percent_error(ci, cei))
 #                       for a, ci, cei in zip(ALPHAS, cs, ce)
 #                       ])
-        s = ', '.join(coeffs)
+        s = u', '.join(coeffs)
         return s
 
     def make_equation(self):

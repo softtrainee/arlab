@@ -36,7 +36,10 @@ from threading import Thread
 import time
 from src.paths import paths
 from src.processing.signal import Signal
-from src.database.orms.isotope_orm import meas_AnalysisTable, gen_LabTable
+# from src.database.orms.isotope_orm import meas_AnalysisTable, gen_LabTable
+from src.database.orms.isotope.meas import meas_AnalysisTable
+from src.database.orms.isotope.gen import gen_LabTable
+
 from sqlalchemy.sql.expression import and_
 # from src.helpers.datetime_tools import get_datetime
 # from datetime import datetime

@@ -79,6 +79,7 @@ class BlanksEditor(InterpolationEditor):
         for i, (fit, reg) in enumerate(zip(gen, new)):
             iso = fit.name
             plotobj = self.graph.plots[i]
+
             scatter = plotobj.plots['Unknowns-predicted'][0]
             xs = scatter.index.get_data()
 
@@ -231,8 +232,8 @@ class BlanksEditor(InterpolationEditor):
         keys = set([ki  for ui in self._references
                         for ki in ui.isotope_keys])
         keys = sort_isotopes(keys)
-
-        self.tool.load_fits(keys)
+        fits = ['linear', ] * len(keys)
+        self.tool.load_fits(keys, fits)
 
     def _graph_default(self):
         return StackedRegressionGraph(container_dict=dict(stack_order='top_to_bottom'))

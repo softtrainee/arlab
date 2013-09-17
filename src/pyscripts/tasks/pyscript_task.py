@@ -210,6 +210,7 @@ class PyScriptTask(EditorTask, ExecuteMixin):
 
     def _save_file(self, path):
         self.active_editor.dump(path)
+        return True
 
     def find(self):
         if self.active_editor:

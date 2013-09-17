@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,23 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from sqlalchemy.schema import Column, ForeignKey
+from sqlalchemy.types import Integer, String
+from sqlalchemy.ext.declarative import declarative_base
 
 #============= enthought library imports =======================
-from src.graph.tools.info_inspector import InfoInspector, InfoOverlay
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
+Base = declarative_base()
 
+def foreignkey(name):
+    return Column(Integer, ForeignKey('{}.id'.format(name)))
 
-class RegressionInspectorTool(InfoInspector):
-    def assemble_lines(self):
-        reg = self.component.regressor
-        lines = [reg.make_equation()]
-
-        lines += map(unicode.strip, map(unicode, reg.tostring().split(',')))
-
-        return lines
-
-class RegressionInspectorOverlay(InfoOverlay):
-    pass
-
+def stringcolumn(size=40, *args, **kw):
+    return Column(String(size), *args, **kw)
 #============= EOF =============================================

@@ -40,9 +40,10 @@ from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
 from src.experiment.stats import StatsGroup
 from src.constants import NULL_STR
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
-from src.database.orms.isotope_orm import meas_AnalysisTable, \
-    gen_ExtractionDeviceTable, gen_MassSpectrometerTable, gen_AnalysisTypeTable, \
-    meas_MeasurementTable, meas_ExtractionTable
+
+from src.database.orms.isotope.meas import meas_AnalysisTable, meas_MeasurementTable, meas_ExtractionTable
+from src.database.orms.isotope.gen import gen_ExtractionDeviceTable, gen_MassSpectrometerTable, gen_AnalysisTypeTable
+
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.codetools.memory_usage import mem_available, mem_log
@@ -196,6 +197,9 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             return t
         else:
             self._alive = False
+
+    def wait(self, t, msg=''):
+        self._wait(t, msg)
 
     def stop(self):
         if self.delaying_between_runs:
@@ -617,7 +621,10 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 #        self.delaying_between_runs = True
         msg = 'Delay {} runs {} sec'.format(message, delay)
         self.info(msg)
+        self._wait(delay, msg)
+        self.delaying_between_runs = False
 
+    def _wait(self, delay, msg):
         wg = self.wait_group
         wc = wg.active_control
         invoke_in_main_thread(wc.trait_set, wtime=delay, message=msg)
@@ -627,7 +634,6 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         time.sleep(0.1)
         wc.reset()
         wc.start()
-        self.delaying_between_runs = False
 
     def _set_extract_state(self, state, flash, color='green'):
 

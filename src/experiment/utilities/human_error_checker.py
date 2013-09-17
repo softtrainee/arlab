@@ -19,11 +19,29 @@ from traits.api import HasTraits
 from traitsui.api import View, Item
 from src.loggable import Loggable
 from src.experiment.utilities.identifier import get_analysis_type
+from src.constants import NULL_STR, LINE_STR
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class HumanErrorChecker(Loggable):
-    def check(self, runs, test_all=False, inform=True):
+    _extraction_line_required = False
+    _mass_spec_required = False
+
+    def check_queue(self, qi):
+        self.info('check queue {}'.format(qi.name))
+        if self._extraction_line_required:
+            if not qi.extract_device or \
+                qi.extract_device in ('Extract Device', LINE_STR):
+                self.info('no extraction line')
+                return 'no extraction line'
+
+        if self._mass_spec_required:
+            if not qi.mass_spectrometer or \
+                qi.mass_spectrometer in ('Spectrometer', LINE_STR):
+                self.info('no mass spectrometer')
+                return 'no mass spectrometer'
+
+    def check_runs(self, runs, test_all=False, inform=True):
         ret = dict()
 
         inform = inform and not test_all
@@ -38,6 +56,7 @@ class HumanErrorChecker(Loggable):
                 ai.state = 'not run'
 
         return ret
+
     def report_errors(self, errdict):
 
         msg = '\n'.join(['{} {}'.format(k, v) for k, v in errdict.iteritems()])
@@ -62,6 +81,12 @@ class HumanErrorChecker(Loggable):
             if run.position:
                 if not run.extract_value:
                     return 'position but no extract value'
+
+        if ant in ('unknown', 'background') or ant.startswith('blank'):
+            self._mass_spec_required = True
+
+        if run.extract_value or run.cleanup or run.duration:
+            self._extraction_line_required = True
 
     def _check_attr(self, run, attr, inform):
         if not getattr(run, attr):

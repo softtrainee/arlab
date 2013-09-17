@@ -195,7 +195,7 @@ class IsotopeEvolutionEditor(GraphEditor):
     def refresh_unknowns(self):
         if not self._suppress_update:
             for ui in self._unknowns:
-                ui.load_age()
+#                 ui.load_age()
                 ui.analysis_summary.update_needed = True
 
     def traits_view(self):

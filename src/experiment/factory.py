@@ -76,16 +76,6 @@ class ExperimentFactory(Loggable, ConsumerMixin):
     def set_selected_runs(self, runs):
         self.run_factory.set_selected_runs(runs)
 
-    def _clear_button_fired(self):
-        self.queue.clear_frequency_runs()
-
-    def _add_button_fired(self):
-        '''
-            only allow add button to be fired every 0.5s
-            
-            use consumermixin.add_consumable instead of frequency limiting
-        '''
-        self.add_consumable(1)
 
 #     _prev_add_time = None
     def _add_run(self, *args, **kw):
@@ -113,13 +103,29 @@ class ExperimentFactory(Loggable, ConsumerMixin):
         self.queue.add_runs(new_runs, freq)
 
             # trigger dirty event
+#===============================================================================
+# handlers
+#===============================================================================
+    def _clear_button_fired(self):
+        self.queue.clear_frequency_runs()
+
+    def _add_button_fired(self):
+        '''
+            only allow add button to be fired every 0.5s
+            
+            use consumermixin.add_consumable instead of frequency limiting
+        '''
+        self.add_consumable(1)
 
     def _edit_mode_button_fired(self):
         self.run_factory.edit_mode = not self.run_factory.edit_mode
-#        tol = self.max_allowable_runs
-#        n = len(self.queue.automated_runs)
-#        if n >= tol:
-#            self.warning_dialog('You are at or have existed your max. allowable runs. N={} Max={}'.format(n, tol))
+
+    @on_trait_change('run_factory:clear_end_after')
+    def _clear_end_after(self):
+        for ai in self.queue.automated_runs:
+            ai.end_after = False
+
+        self.run_factory.set_end_after()
 
     @on_trait_change('''queue_factory:[mass_spectrometer, 
 extract_device, delay_+, tray, username, load_name]''')
@@ -139,26 +145,6 @@ extract_device, delay_+, tray, username, load_name]''')
 
         self.queue.changed = True
 
-#     def _run_factory_labnumber_changed(self):
-#         print 'asdfasfsdafasdf'
-
-#     @on_trait_change('run_factory')
-#     def _update_labnumber(self, new):
-#         self._labnumber=new
-#         print name, new
-#         if name == 'labnumber':
-#             self._labnumber = new
-
-#     @on_trait_change('queue:[mass_spectrometer, extract_device, username, delay_+]')
-#     def _update_queue_values(self, name, new):
-#         print name, new
-#         self.queue_factory.trait_set({name:new})
-#
-#    def _queue_changed(self):
-#        for a in ('username','mass_spectrometer','extract_device','username',
-#                  'delay_before_analyses','delay_between_analyses'
-#                  ):
-#            setattr(self.queue_factory, a, getattr(self.queue, a))
 #===============================================================================
 # private
 #===============================================================================
@@ -189,38 +175,9 @@ extract_device, delay_+, tray, username, load_name]''')
                 not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR) and \
                 self._labnumber
 
-#        print self._mass_spectrometer, not self._mass_spectrometer in ('Spectrometer', LINE_STR)
-#        print bool(self._username and not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR))
-#         return self._username and not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR)
-#        tol = self.max_allowable_runs
-#        ntest = len(self.queue.automated_runs) < tol
-#        return  self.ok_run and self._labnumber and ntest
-
-#    def _get_ok_run(self):
-#        return (self._mass_spectrometer and self._mass_spectrometer != NULL_STR) and\
-#                (self._extract_device and self._extract_device != NULL_STR) and self._username
 #===============================================================================
-# views
-#===============================================================================
-#     def traits_view(self):
-#         grp = VGroup(
-#                      HGroup(UItem('add_button', enabled_when='ok_add'), spring),
-# #                     UCustom('queue_factory'),
 #
-#                      UCustom('run_factory', enabled_when='ok_run'),
-#                      HGroup(
-#                             UItem('add_button', enabled_when='ok_add'),
-#                             Item('auto_increment'),
-# #                            spring,
-#                             UItem('clear_button',
-#                                  tooltip='Clear all runs added using "frequency"'
-#                                  )
-#                             ),
-# #                     scrollable=True
-#                      )
-#         v = View(grp)
-#         return v
-
+#===============================================================================
     def _run_factory_factory(self):
         if self._extract_device == 'Fusions UV':
             klass = UVAutomatedRunFactory

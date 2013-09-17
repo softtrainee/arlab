@@ -25,7 +25,7 @@ from itertools import groupby
 from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.canvas.canvas2D.loading_canvas import LoadingCanvas
 
-from src.database.orms.isotope_orm import loading_LoadTable
+from src.database.orms.isotope.loading import loading_LoadTable
 from src.canvas.canvas2D.scene.primitives.primitives import LoadIndicator
 
 

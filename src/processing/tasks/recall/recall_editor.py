@@ -27,8 +27,10 @@ from src.envisage.tasks.base_editor import BaseTraitsEditor
 class RecallEditor(BaseTraitsEditor):
 
     model = Any
+
+    analysis_summary = Any
 #     analysis_summary = Any  # DelegatesTo('model')
-    analysis_summary = DelegatesTo('model')
+#     analysis_summary = DelegatesTo('model')
     name = Property(depends_on='model')
 #    def trait_context(self):
 #        """ Use the model object for the Traits UI context, if appropriate.
@@ -41,6 +43,12 @@ class RecallEditor(BaseTraitsEditor):
 #         if self.model:
 #             keys = self.model.isotope_keys
 #             self.tool.load_fits(keys)
+#     def _get_analysis_summary(self):
+#         if self.model:
+#             return self.model.analysis_summary
+
+#     def _set_analysis_summary(self):
+
 
     def traits_view(self):
         v = View(

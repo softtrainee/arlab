@@ -409,9 +409,11 @@ class AutomatedRun(Loggable):
 
                 ion.position(mass, detector, False)
 
-                self.info('Delaying {}s for detectors to settle'.format(settling_time))
+                msg = 'Delaying {}s for detectors to settle'.format(settling_time)
+                self.info(msg)
                 self.data_collector.total_counts += settling_time
-                self._wait(settling_time)
+                self.experiment_manager.delay(settling_time, msg)
+#                 self._wait(settling_time)
 
         if self.plot_panel:
             self.plot_panel._ncounts = ncounts

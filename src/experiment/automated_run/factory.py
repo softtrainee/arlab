@@ -161,13 +161,13 @@ class AutomatedRunFactory(Loggable):
     update_info_needed = Event
     refresh_table_needed = Event
     changed = Event
+    clear_end_after = Event
     suppress_update = False
 #    clear_selection = Event
 
     edit_mode = Bool(False)
     edit_mode_label = Property(depends_on='edit_mode')
     edit_enabled = Bool(False)
-
 
     mass_spectrometer = String
     extract_device = Str
@@ -192,7 +192,7 @@ class AutomatedRunFactory(Loggable):
             return True if ok to add runs else False
         '''
         hec = self.human_error_checker
-        ret = hec.check(runs, test_all=True)
+        ret = hec.check_runs(runs, test_all=True)
         if ret:
             hec.report_errors(ret)
             return False
@@ -231,6 +231,7 @@ class AutomatedRunFactory(Loggable):
 
         self._selected_runs = runs
         self.suppress_update = False
+        self.end_after = False
 
         self.debug('len selected runs {}'.format(len(runs)))
         if not runs:
@@ -803,8 +804,8 @@ class AutomatedRunFactory(Loggable):
         if not pos.strip():
             return ''
 
-        for r in (SLICE_REGEX, SSLICE_REGEX, PSLICE_REGEX, 
-                  TRANSECT_REGEX,POSITION_REGEX
+        for r in (SLICE_REGEX, SSLICE_REGEX, PSLICE_REGEX,
+                  TRANSECT_REGEX, POSITION_REGEX
                   ):
             if r.match(pos):
                 return pos
@@ -817,7 +818,7 @@ class AutomatedRunFactory(Loggable):
                     break
             else:
                 ok = True
-           
+
         if ok:
             return pos
 
@@ -952,9 +953,16 @@ class AutomatedRunFactory(Loggable):
 extract_units,
 pattern,
 position,
-weight, comment, skip, end_after, extract_group''')
+weight, comment, skip, extract_group''')
     def _edit_handler(self, name, new):
         self._update_run_values(name, new)
+
+    def _end_after_changed(self, new):
+        if new:
+            self.clear_end_after = True
+
+    def set_end_after(self):
+        self._update_run_values('end_after', True)
 
     @on_trait_change('''measurement_script:name, 
 extraction_script:name, 

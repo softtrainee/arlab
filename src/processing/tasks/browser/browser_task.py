@@ -27,9 +27,11 @@ from src.envisage.tasks.editor_task import BaseEditorTask
 from src.processing.tasks.browser.panes import BrowserPane
 from src.processing.tasks.recall.recall_editor import RecallEditor
 from src.paths import paths
-from src.database.orms.isotope_orm import gen_SampleTable, gen_ProjectTable
+# from src.database.orms.isotope.gen import gen_SampleTable, gen_ProjectTable
+# from src.database.orms.isotope_orm import gen_SampleTable, gen_ProjectTable
 # from sqlalchemy.orm import subqueryload
 from src.database.records.isotope_record import IsotopeRecordView
+from src.processing.analyses.analysis import DBAnalysis
 '''
 add toolbar action to open another editor tab
 
@@ -103,7 +105,7 @@ class BrowserTask(BaseEditorTask):
 #             l, a, s = strip_runid(s)
 #             an = self.manager.db.get_unique_analysis(l, a, s)
             an = self.manager.make_analyses([an])[0]
-            an.load_isotopes(refit=False)
+#             an.load_isotopes(refit=False)
             self.active_editor.analysis_summary = an.analysis_summary
 
 #     @cached_property

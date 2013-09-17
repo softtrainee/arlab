@@ -144,7 +144,7 @@ class ExperimentQueue(BaseExperimentQueue):
 
     def check_runs(self):
         hec = HumanErrorChecker()
-        err = hec.check(self.automated_runs, test_all=True)
+        err = hec.check_runs(self.automated_runs, test_all=True)
         if err:
             hec.report_errors(err)
             return
