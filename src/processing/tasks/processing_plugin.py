@@ -33,7 +33,7 @@ from src.processing.tasks.processing_actions import IdeogramAction, \
 
 from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     FluxAction, SeriesAction, IsotopeEvolutionAction, ICFactorAction, \
-    BatchEditAction, RefitIsotopeEvolutionAction, SCLFTableAction
+    BatchEditAction, RefitIsotopeEvolutionAction, SCLFTableAction, TagAction
 from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
 from src.processing.tasks.figures.auto_figure_preferences import AutoFigurePreferencesPane
 from src.processing.tasks.smart_project.smart_project_task import SmartProjectTask
@@ -98,6 +98,7 @@ class ProcessingPlugin(BaseTaskPlugin):
                    ('equil_inspector', EquilibrationInspectorAction, 'MenuBar/Tools'),
                    ('data', data_menu, 'MenuBar',
                     {'before':'Tools', 'after':'View'}),
+                   ('tag', TagAction, 'MenuBar/Data'),
                    ('grouping_group', grouping_group, 'MenuBar/Data'),
                    ('smart_project', SmartProjectAction, 'MenuBar/File')
                    ]),

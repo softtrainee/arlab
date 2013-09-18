@@ -44,16 +44,26 @@ class NewBrowserEditorAction(TaskAction):
                                       paths.app_resources
                                       ]
                          )
-class SampleRecordView(HasTraits):
-    name = Str
-    material = Str
+
+class RecordView(HasTraits):
     def __init__(self, dbrecord):
         self._create(dbrecord)
+    def _create(self, *args, **kw):
+        pass
+
+class SampleRecordView(RecordView):
+    name = Str
+    material = Str
 
     def _create(self, dbrecord):
         self.name = dbrecord.name
         if dbrecord.material:
             self.material = dbrecord.material.name
+
+class ProjectRecordView(RecordView):
+    name = Str
+    def _create(self, dbrecord):
+        self.name = dbrecord.name
 
 class BrowserTask(BaseEditorTask):
     projects = List
@@ -89,8 +99,12 @@ class BrowserTask(BaseEditorTask):
         db = self.manager.db
         with db.session_ctx():
             ps = db.get_projects()
-            self.projects = [p.name for p in ps]
-            self.oprojects = [p.name for p in ps]
+
+            ad = [ProjectRecordView(p) for p in ps]
+            self.projects = ad
+            self.oprojects = ad
+#             self.projects = [p.name for p in ps]
+#             self.oprojects = [p.name for p in ps]
 
     def new_editor(self):
         editor = RecallEditor()
@@ -154,7 +168,7 @@ class BrowserTask(BaseEditorTask):
 #                 q = q.options(subqueryload(gen_SampleTable.material))
 
 #                 ss = q.all()
-                ss = db.get_samples(project=new)
+                ss = db.get_samples(project=new.name)
 #             sa = ss[0]
 #             print sa.material
 #                 def f(si):
@@ -174,7 +188,8 @@ class BrowserTask(BaseEditorTask):
     def _get_sample_analyses(self, srv):
         db = self.manager.db
         with db.session_ctx():
-            sample = db.get_sample(srv.name, project=self.selected_project)
+            sample = db.get_sample(srv.name,
+                                   project=self.selected_project.name)
             def f(ai):
                 iso = IsotopeRecordView()
                 iso.create(ai)
@@ -188,19 +203,19 @@ class BrowserTask(BaseEditorTask):
         if new:
             ans = self._get_sample_analyses(new[0])
 
-
-#             ans = self._get_sample_analyses(new[0])
             self.oanalyses = ans
-#
+
             if self.omit_bogus:
                 ans = filter(self._omit_bogus_filter, ans)
-#
+
             self.analyses = ans
             if ans:
                 self.selected_analysis = ans[0]
 
-    def _filter_func(self, new):
+    def _filter_func(self, new, attr=None):
         def func(x):
+            if attr:
+                x = getattr(x, attr)
             return x.lower().startswith(new.lower())
         return func
 
@@ -208,13 +223,13 @@ class BrowserTask(BaseEditorTask):
         return x.status == 0
 
     def _project_filter_changed(self, new):
-        self.projects = filter(self._filter_func(new), self.oprojects)
+        self.projects = filter(self._filter_func(new, 'name'), self.oprojects)
 
     def _sample_filter_changed(self, new):
-        self.samples = filter(self._filter_func(new), self.osamples)
+        self.samples = filter(self._filter_func(new, 'name'), self.osamples)
 
     def _analysis_filter_changed(self, new):
-        self.analyses = filter(self._filter_func(new), self.oanalyses)
+        self.analyses = filter(self._filter_func(new, 'record_id'), self.oanalyses)
 
     def _omit_bogus_changed(self, new):
         if new:

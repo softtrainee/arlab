@@ -50,6 +50,8 @@ class meas_AnalysisTable(Base, BaseMixin):
     step = stringcolumn(10)
     comment = Column(BLOB)
 
+    tag = Column(String(40), ForeignKey('proc_TagTable.name'))
+
     # meas relationships
     isotopes = relationship('meas_IsotopeTable', backref='analysis',
 #                             lazy='subquery'

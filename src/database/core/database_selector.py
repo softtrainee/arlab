@@ -123,11 +123,16 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     multi_graphable = Bool(False)
 
     add_query_button = Button('+')
+    delete_query_button = Button('-')
+
     queries = List(Query)
     lookup = Dict
     style = Enum('normal', 'panel', 'simple', 'single')
 
     verbose = False
+
+    selected_queries = Any
+
 
 #    def onKeyDown(self, evt):
 #        import wx
@@ -159,27 +164,46 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             self.scroll_to_row = len(self.records) - 1
 #         self.debug('scb= {}, scroll to row={}'.format(self.scroll_to_bottom, self.scroll_to_row))
 
-    def query_factory(self, **kw):
+    def table_add_query(self):
+        self._add_query(add=False)
+    def query_factory(self, *args, **kw):
         return self._query_factory(**kw)
 
+    def _delete_query_button_fired(self):
+        if self.selected_queries:
+
+            for si in self.selected_queries:
+                self.remove_query(si)
+
+            self.selected_queries = []
+
     def _add_query_button_fired(self):
-        pq = next((pi for pi in self.queries), None)
+        self._add_query()
+
+    def _add_query(self, add=True):
+        pq = None
+        if self.queries:
+            pq = self.queries[-1]
+
         if pq is None:
             q = self._query_factory()
-            self.queries.append(q)
+            if add:
+                self.queries.append(q)
         else:
-            self.add_query(pq, pq.parameter, pq.criterion)
+            self.add_query(pq, pq.parameter, pq.criterion, add=add)
 
-    def add_query(self, parent_query, parameter, criterion):
+    def add_query(self, parent_query, parameter, criterion, add=True):
         q = self._query_factory(
                                 parent_parameters=parent_query.parent_parameters + [parameter],
                                 parent_criterions=parent_query.parent_criterions + [criterion])
-        self.queries.append(q)
+        if add:
+            self.queries.append(q)
         parent_query.on_trait_change(q._update_parent_parameter, 'parameter')
         parent_query.on_trait_change(q._update_parent_criterion, 'criterion')
 
     def remove_query(self, q):
-        self.queries.remove(q)
+        if q in self.queries:
+            self.queries.remove(q)
 
     def load_recent(self):
         with self.db.session_ctx():
@@ -431,6 +455,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     def _record_factory(self, di):
         di.on_trait_change(self._record_closed, 'close_event')
         return di
+
 #===============================================================================
 # views
 #===============================================================================

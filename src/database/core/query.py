@@ -249,18 +249,20 @@ class Query(HasTraits):
         if self.parent_parameters:
             tjs = []
             for pi in self.parent_parameters:
-                js = self.selector.lookup[pi][0]
-                for ji in js:
-                    if ji not in tjs:
-                        tjs.append(ji)
+                if pi in self.selector.lookup:
+                    js = self.selector.lookup[pi][0]
+                    for ji in js:
+                        if ji not in tjs:
+                            tjs.append(ji)
             return tjs
 
     def _cumulate_filters(self):
         if self.parent_parameters:
             tfs = []
             for pi, ci in zip(self.parent_parameters, self.parent_criterions):
-                fi = self.selector.lookup[pi][1]
-                tfs.append(fi == ci)
+                if pi in self.selector.lookup:
+                    fi = self.selector.lookup[pi][1]
+                    tfs.append(fi == ci)
             return tfs
 
 #===============================================================================

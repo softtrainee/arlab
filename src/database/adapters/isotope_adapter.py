@@ -66,7 +66,7 @@ from src.database.orms.isotope.proc import proc_DetectorIntercalibrationHistoryT
     proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable, \
     proc_DetectorParamHistoryTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
     proc_FitTable, proc_DetectorParamTable, proc_NotesTable, proc_FigureTable, proc_FigureAnalysisTable, \
-    proc_FigurePrefTable
+    proc_FigurePrefTable, proc_TagTable
 
 # @todo: change rundate and runtime to DateTime columns
 
@@ -162,6 +162,11 @@ class IsotopeAdapter(DatabaseAdapter):
             self._add_item(item,)
 
         return item
+
+    def add_tag(self, name, **kw):
+        tag = proc_TagTable(name=name, **kw)
+        self._add_item(tag)
+        return tag
 
     def add_import(self, **kw):
         dbimport = gen_ImportTable(**kw)
@@ -921,6 +926,10 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_flux_monitor(self, value):
         return self._retrieve_item(flux_MonitorTable, value)
+
+    def get_tag(self, name):
+        return self._retrieve_item(proc_TagTable, name)
+
 #===============================================================================
 # ##getters multiple
 #===============================================================================
@@ -1022,6 +1031,10 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_molecular_weights(self, **kw):
         return self._retrieve_items(gen_MolecularWeightTable, **kw)
+
+    def get_tags(self, **kw):
+        return self._retrieve_items(proc_TagTable, **kw)
+
 #===============================================================================
 # deleters
 #===============================================================================
