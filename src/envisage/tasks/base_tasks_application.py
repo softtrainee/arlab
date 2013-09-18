@@ -52,13 +52,16 @@ class BaseTasksApplication(TasksApplication, Loggable):
 #                             win.open()
                     break
         else:
-            try:
-                win = self.create_window(TaskWindowLayout(tid))
-                if activate:
-                    win.open()
-            except Exception,e:
-                self.debug('failed getting task {}: {}'.format(tid, e))
-                win=None
+            win = self.create_window(TaskWindowLayout(tid))
+            if activate:
+                win.open()
+#            try:
+#                win = self.create_window(TaskWindowLayout(tid))
+#                if activate:
+#                    win.open()
+#            except Exception,e:
+#                self.debug('failed getting task {}: {}'.format(tid, e))
+#                win=None
         
         if win:
             return win.active_task

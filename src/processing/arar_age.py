@@ -466,7 +466,7 @@ class ArArAge(Loggable):
     @cached_property
     def _get_rad40(self):
         a = self._get_arar_result_attr('rad40')
-#         a = self.arar_result['rad40']
+#        a = self.arar_result['rad40']
         if a is not None:
             return a
         else:
@@ -476,7 +476,7 @@ class ArArAge(Loggable):
 
     @cached_property
     def _get_k39(self):
-#         a = self.arar_result['k39']
+#        a = self.arar_result['k39']
         a = self._get_arar_result_attr('k39')
         if a is not None:
             return a

@@ -52,7 +52,8 @@ from src.processing.tasks.smart_project.smart_flux import SmartFlux
 class SmartProjectTask(AnalysisEditTask):
     id = 'pychron.processing.smart_project'
     def process_project_file(self):
-        p = os.path.join(paths.processed_dir, 'minna_bluff_prj.yaml')
+        
+        p = os.path.join(paths.processed_dir, 'miller.yaml')
         with open(p, 'r') as fp:
             md = yaml.load_all(fp)
 

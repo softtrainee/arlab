@@ -19,6 +19,9 @@ from traits.api import HasTraits, List, Any, Event
 from traitsui.api import View, Item
 from src.envisage.tasks.base_editor import BaseTraitsEditor
 from src.processing.tasks.tables.editors.adapters import TableBlank
+from pyface.file_dialog import FileDialog
+from src.helpers.filetools import add_extension
+from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -33,4 +36,10 @@ class BaseTableEditor(BaseTraitsEditor):
 
     def _clean_items(self):
         return filter(lambda x: not isinstance(x, TableBlank), self.oitems)
+    
+    def _get_save_path(self, ext='.pdf'):
+        dlg=FileDialog(action='save as', default_directory=paths.processed_dir)
+        if dlg.open():
+            
+            return add_extension(dlg.path,ext)
 #============= EOF =============================================

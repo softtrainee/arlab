@@ -44,11 +44,11 @@ class LaserTableEditor(BaseTableEditor):
                                 )
 
         t.col_widths = self._get_column_widths()
-
-        p = '/Users/ross/Sandbox/aaatable.pdf'
-
-        t.build(p, ans, means, title=title)
-        return p
+        
+        p=self._get_save_path()
+        if p:
+            t.build(p, ans, means, title=title)
+            return p
 
     def _get_column_widths(self):
         status_width = 6
@@ -80,7 +80,9 @@ class LaserTableEditor(BaseTableEditor):
                                               editable=False,
                                               col_widths='col_widths',
                                               selected='selected',
-                                              multi_select=True
+                                              multi_select=True,
+                                              auto_update=False,
+                                              operations=['delete']
 #                                               auto_resize=True,
 #                                               stretch_last_section=False
                                             )

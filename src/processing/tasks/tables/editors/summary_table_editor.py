@@ -32,7 +32,7 @@ from src.column_sorter_mixin import ColumnSorterMixin
 class SummaryTableEditor(BaseTableEditor, ColumnSorterMixin):
     use_alternating_background = Bool(False)
     notes_template = Str
-
+    
     def make_table(self, title):
         samples = self.items
         uab = self.use_alternating_background
@@ -43,14 +43,14 @@ class SummaryTableEditor(BaseTableEditor, ColumnSorterMixin):
 
         t.col_widths = self._get_column_widths()
 
-        p = '/Users/ross/Sandbox/aaasumtable.pdf'
-
-        t.build(p, samples, title=title)
-
-        # dump our col widths
-        self._dump_widths()
-
-        return p
+#        p = '/Users/ross/Sandbox/aaasumtable.pdf'
+        p=self._get_save_path()
+        if p:
+            t.build(p, samples, title=title)    
+            # dump our col widths
+            self._dump_widths()
+    
+            return p
 
     def _get_column_widths(self):
         cs = []

@@ -153,13 +153,15 @@ class TableTask(BrowserTask):
     def _make_summary_table(self, pitems=None):
         def factory(s):
             sam = s.name
+            mat=''
             if s.material:
                 mat = s.material
 
             ans = self._get_sample_analyses(s)
 #             ans = [ai for ai in ans if ai.step == ''][:5]
 #             ans = [ai for ai in ans][:5]
-            ans = self.manager.make_analyses(ans[:4])
+#            ans = self.manager.make_analyses(ans[:4])
+            ans = self.manager.make_analyses(ans)
 
             ref = ans[0]
             irrad_str = ref.irradiation_str
@@ -215,7 +217,8 @@ class TableTask(BrowserTask):
     def _update_selected(self, new):
         if new:
             ref = new[0]
-            self.editor.age_types = ref.age_types
+            if hasattr(ref, 'age_types'):
+                self.editor.age_types = ref.age_types
 
 
 #============= EOF =============================================
