@@ -211,7 +211,6 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 #         '''
         sess = self.sess
         if sess is None:
-            self.debug('get session Session ')
             sess = self.session_factory()
 
         return sess

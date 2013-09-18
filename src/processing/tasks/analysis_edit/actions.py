@@ -55,11 +55,11 @@ class BlankEditAction(AnalysisEditAction):
     task_id = 'pychron.analysis_edit.blanks'
 
 
-class SeriesAction(AnalysisEditAction):
-    name = 'Series...'
-    accelerator = 'Ctrl+L'
-    method = 'new_series'
-    task_id = 'pychron.analysis_edit.series'
+# class SeriesAction(AnalysisEditAction):
+#     name = 'Series...'
+#     accelerator = 'Ctrl+L'
+#     method = 'new_series'
+#     task_id = 'pychron.analysis_edit.series'
 
 class IsotopeEvolutionAction(AnalysisEditAction):
     name = 'Isotope Evolution...'

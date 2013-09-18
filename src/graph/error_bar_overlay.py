@@ -60,7 +60,7 @@ class ErrorBarOverlay(AbstractOverlay):
                 ylow, yhigh = y - err, y + err
                 ylow = comp.value_mapper.map_screen(ylow)
                 yhigh = comp.value_mapper.map_screen(yhigh)
-                idx = arange(len(x))
+#                 idx = arange(len(x))
                 start, end = column_stack((x, ylow)), column_stack((x, yhigh))
 
 

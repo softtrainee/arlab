@@ -177,7 +177,7 @@ class AutoFigureTask(FigureTask):
             unks = self.manager.load_series(at, ms, ed,
                                             **kw)
             if unks:
-                self.manager.load_analyses(unks)
+#                 self.manager.load_analyses(unks)
                 self.new_series(unks, klass,
 #                                add_baseline_fits=True,
 #                                add_derivate_fits=True,
@@ -224,7 +224,7 @@ class AutoFigureTask(FigureTask):
 
         else:
             unks = self.manager.load_sample_analyses(sample, aliquot)
-            self.manager.load_analyses(unks)
+#             self.manager.load_analyses(unks)
             self.new_spectrum(unks, klass)
         self.group_by_aliquot()
 
@@ -246,7 +246,7 @@ class AutoFigureTask(FigureTask):
 
         else:
             unks = self.manager.load_sample_analyses(ln, sample)
-            self.manager.load_analyses(unks)
+#             self.manager.load_analyses(unks)
 #             self.new_ideogram(unks, klass, name='Ideo. {}'.format(labnumber))
             self.new_ideogram(unks, klass, name='Ideo. {}'.format(sample),
                               plotter_kw=dict(color_map_analysis_number=False)

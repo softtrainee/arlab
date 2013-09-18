@@ -45,10 +45,10 @@ class FigureEditor(GraphEditor):
                        editor=EnableComponentEditor()))
         return v
 
-    @on_trait_change('unknowns[]')
-    def _update_unknowns(self, new):
-        if not self._suppress_rebuild and new:
-            self.rebuild()
+#     @on_trait_change('unknowns[]')
+#     def _update_unknowns(self, new):
+#         if not self._suppress_rebuild and new:
+#             self.rebuild()
 
     def set_group(self, idxs, gid, refresh=True):
         for i, (ui, uu) in enumerate(zip(self._unknowns, self.unknowns)):
@@ -72,7 +72,7 @@ class FigureEditor(GraphEditor):
         ans = self._unknowns
         if refresh_data or not ans:
             unks = self.processor.make_analyses(self.unknowns)
-            self.processor.load_analyses(unks)
+#             self.processor.load_analyses(unks)
             ans = unks
 
             if ans:

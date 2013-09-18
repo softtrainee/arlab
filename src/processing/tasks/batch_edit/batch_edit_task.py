@@ -40,6 +40,7 @@ class BatchEditTask(AnalysisEditTask):
                                      orientation='vertical'
                                      ),
                           right=Splitter(
+                                         PaneItem('pychron.search.results'),
                                          PaneItem('pychron.search.query'),
                                          orientation='vertical'
                                          )
@@ -93,7 +94,7 @@ class BatchEditTask(AnalysisEditTask):
     def _update_unknowns_runs(self, obj, name, old, new):
         if not obj._no_update:
             self.unknowns = unks = self.manager.make_analyses(self.unknowns_pane.items)
-            self.manager.load_analyses(unks)
+#             self.manager.load_analyses(unks)
             self.batch_edit_pane.unknowns = unks
 
     def _prompt_for_save(self):

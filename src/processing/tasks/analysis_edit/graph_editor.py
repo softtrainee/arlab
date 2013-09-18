@@ -89,6 +89,7 @@ class GraphEditor(BaseTraitsEditor):
         graph = self.graph
         graph.clear()
         self._rebuild_graph()
+#         graph.refresh()
 
         self.component_changed = True
 
@@ -98,7 +99,7 @@ class GraphEditor(BaseTraitsEditor):
     def _make_unknowns(self):
         if self.unknowns:
             self._unknowns = self.processor.make_analyses(self.unknowns)
-            self.processor.load_analyses(self._unknowns)
+#             self.processor.load_analyses(self._unknowns)
 
     def traits_view(self):
         v = View(UItem('graph',

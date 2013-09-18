@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Int, Str, Float, Dict
+from traits.api import HasTraits, Instance, Int, Str, Float, Dict, Property
 # from traitsui.api import View, Item
 #============= standard library imports ========================
 import time
@@ -79,6 +79,16 @@ class DBAnalysis(Analysis):
     analysis_type = Str
 
     ic_factors = Dict
+
+    group_id = Int
+    graph_id = Int
+
+    status_text = Property
+    def _get_status_text(self):
+        if self.temp_status == 0:
+            return 'OK'
+        else:
+            return 'Omitted'
 
     def set_temporary_blank(self, k, v, e):
         if self.isotopes.has_key(k):
