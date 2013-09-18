@@ -202,6 +202,7 @@ class IsotopeDatabaseManager(Loggable):
                 meas_analysis = self.db.get_analysis_uuid(r.uuid)
                 a = DBAnalysis()
                 a.sync(meas_analysis)
+                a.age
                 return a
 
             if progress:

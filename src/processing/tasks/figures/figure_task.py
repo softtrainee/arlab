@@ -59,6 +59,7 @@ class FigureTask(AnalysisEditTask):
                                      ),
 
                           right=Splitter(
+                                         PaneItem('pychron.search.results'),
                                          PaneItem('pychron.search.query'),
                                          orientation='vertical'
                                          )
@@ -76,11 +77,11 @@ class FigureTask(AnalysisEditTask):
         panes = super(FigureTask, self).create_dock_panes()
         self.plotter_options_pane = PlotterOptionsPane()
 
+        self.figure_selector_pane = FigureSelectorPane()
+        
         fs = [fi.name for fi in self.manager.db.get_figures()]
-        self.figure_selector_pane = FigureSelectorPane(
-                                                       figure=fs[0],
-                                                       figures=fs
-                                                       )
+        if fs:
+            self.figure_selector_pane.trait_set(figures=fs, figure=fs[0])
 
         return panes + [self.plotter_options_pane,
                         self.figure_selector_pane,

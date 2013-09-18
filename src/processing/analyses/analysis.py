@@ -32,6 +32,7 @@ from src.experiment.utilities.identifier import make_runid, make_aliquot_step
 # from src.constants import NULL_STR
 from src.processing.isotope import Isotope, Blank, Baseline, Sniff
 from src.constants import ARGON_KEYS
+from src.helpers.formatting import calc_percent_error
 
 Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_outlier_std_devs')
 
@@ -96,6 +97,17 @@ class DBAnalysis(Analysis):
     graph_id = Int
 
     status_text = Property
+    age_string=Property
+    
+    def _get_age_string(self):
+        
+        a=self.age.nominal_value
+        e=self.age.std_dev
+        
+        pe=calc_percent_error(a,e)
+        
+        return u'{:0.3f} +/-{:0.3f}{}'.format(a, e, pe)
+    
     def _get_status_text(self):
         if self.temp_status == 0:
             return 'OK'
