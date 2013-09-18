@@ -33,7 +33,7 @@ from src.paths import paths
 class AddIsoEvoAction(TaskAction):
     method = 'add_iso_evo'
     image = ImageResource(name='chart_curve_add.png',
-                        search_path=[paths.icons, paths.app_resources]
+                        search_path=paths.icon_search_path
                         )
 
 class RecallTask(AnalysisEditTask):

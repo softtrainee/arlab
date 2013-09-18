@@ -27,8 +27,6 @@ class SaveLoadingAction(TaskAction):
     name = 'Save PDF'
     method = 'save_loading'
     image = ImageResource(name='file_pdf.png',
-                         search_path=[paths.resources,
-                                      paths.app_resources
-                                      ]
+                         search_path=paths.icon_search_path
                          )
 #============= EOF =============================================

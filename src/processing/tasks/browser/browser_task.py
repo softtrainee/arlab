@@ -40,9 +40,7 @@ add toolbar action to open another editor tab
 class NewBrowserEditorAction(TaskAction):
     method = 'new_editor'
     image = ImageResource(name='add.png',
-                         search_path=[paths.resources,
-                                      paths.app_resources
-                                      ]
+                         search_path=paths.icon_search_path
                          )
 
 class RecordView(HasTraits):
