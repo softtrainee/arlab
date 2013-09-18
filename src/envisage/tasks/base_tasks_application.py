@@ -42,7 +42,6 @@ class BaseTasksApplication(TasksApplication, Loggable):
 #         print event.window
 
     def get_task(self, tid, activate=True):
-
         for win in self.windows:
             if win.active_task:
                 if win.active_task.id == tid:
@@ -53,11 +52,16 @@ class BaseTasksApplication(TasksApplication, Loggable):
 #                             win.open()
                     break
         else:
-            win = self.create_window(TaskWindowLayout(tid))
-            if activate:
-                win.open()
-
-        return win.active_task
+            try:
+                win = self.create_window(TaskWindowLayout(tid))
+                if activate:
+                    win.open()
+            except Exception,e:
+                self.debug('failed getting task {}: {}'.format(tid, e))
+                win=None
+        
+        if win:
+            return win.active_task
 
     def open_task(self, tid):
         return self.get_task(tid, True)
