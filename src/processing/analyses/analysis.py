@@ -28,7 +28,7 @@ from src.processing.analyses.summary import AnalysisSummary
 from src.processing.analyses.db_summary import DBAnalysisSummary
 # from src.database.orms.isotope_orm import meas_AnalysisTable
 # from src.database.records.isotope_record import IsotopeRecordView
-from src.experiment.utilities.identifier import make_runid
+from src.experiment.utilities.identifier import make_runid, make_aliquot_step
 # from src.constants import NULL_STR
 from src.processing.isotope import Isotope, Blank, Baseline, Sniff
 from src.constants import ARGON_KEYS
@@ -40,6 +40,14 @@ Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_ou
 class Analysis(ArArAge):
     analysis_summary_klass = AnalysisSummary
     analysis_summary = Instance(AnalysisSummary)
+
+    labnumber = Str
+    aliquot = Int
+    step = Str
+
+    aliquot_step_str = Str
+
+
     def flush(self, *args, **kw):
         '''
         '''
@@ -50,7 +58,11 @@ class Analysis(ArArAge):
         '''
         return
 
-    def sync(self, *args, **kw):
+    def sync(self, obj):
+        self._sync(obj)
+        self.aliquot_step_str = make_aliquot_step(self.aliquot, self.step)
+
+    def _sync(self, *args, **kw):
         '''
         '''
         return
@@ -146,15 +158,6 @@ class DBAnalysis(Analysis):
             save changes to database
         '''
 
-    def sync(self, obj):
-        '''
-            copy values from meas_AnalysisTable
-            and other associated tables
-        '''
-
-        self._sync(obj)
-
-
     def _get_position(self, extraction):
         r = ''
         pos = extraction.positions
@@ -196,6 +199,10 @@ class DBAnalysis(Analysis):
             self.position = self._get_position(extraction)
 
     def _sync(self, meas_analysis):
+        '''
+            copy values from meas_AnalysisTable
+            and other associated tables
+        '''
         # copy meas_analysis attrs
         nocast = lambda x: x
         attrs = [

@@ -153,15 +153,15 @@ class ArArAge(Loggable):
 
     def get_signal_value(self, k):
         return self._get_arar_result_attr(k)
-    
+
     def clear_baselines(self):
         for k in self.isotopes:
-            self.set_baseline(k, (0,0))
-            
+            self.set_baseline(k, (0, 0))
+
     def clear_blanks(self):
         for k in self.isotopes:
-            self.set_blank(k, (0,0))
-        
+            self.set_blank(k, (0, 0))
+
     def set_isotope(self, iso, v):
         if not self.isotopes.has_key(iso):
             niso = Isotope(name=iso)
@@ -465,8 +465,8 @@ class ArArAge(Loggable):
 
     @cached_property
     def _get_rad40(self):
-#         a = self._get_arar_result_attr('rad40')
-        a = self.arar_result['rad40']
+        a = self._get_arar_result_attr('rad40')
+#         a = self.arar_result['rad40']
         if a is not None:
             return a
         else:
@@ -476,18 +476,22 @@ class ArArAge(Loggable):
 
     @cached_property
     def _get_k39(self):
-        a = self.arar_result['k39']
-#         a = self._get_arar_result_attr('k39')
+#         a = self.arar_result['k39']
+        a = self._get_arar_result_attr('k39')
         if a is not None:
             return a
         else:
             return ufloat(0, 1e-20)
 #         return a or ufloat(0, 1e-20)
 #         return self.arar_result['k39']
+    @cached_property
     def _get_R(self):
-        return self.rad40 / self.k39
+        try:
+            return self.rad40 / self.k39
+        except (ZeroDivisionError, TypeError):
+            return ufloat(0, 1e-20)
 
-#     @cached_property
+    @cached_property
     def _get_rad40_percent(self):
         try:
             return self.rad40 / self.Ar40 * 100
@@ -632,7 +636,7 @@ class ArArAge(Loggable):
     def load_irradiation(self, ln):
         self.irradiation_info = self._get_irradiation_info(ln)
         self.j = self._get_j()
-    
+
         self.production_ratios = self._get_production_ratios()
 
 

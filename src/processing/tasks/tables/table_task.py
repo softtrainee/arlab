@@ -61,6 +61,8 @@ class FusionSummary(Summary):
 
 
 class TableTask(BrowserTask):
+    name = 'Tables'
+
     tool_bars = [
                  SToolBar(
                           MakeTableAction(),
@@ -102,6 +104,7 @@ class TableTask(BrowserTask):
 
         self.active_editor.oitems = aa
         self.active_editor.items = aa
+        self.active_editor.refresh_blanks()
 
         self.active_editor.name = self.selected_sample[0].name
 
