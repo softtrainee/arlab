@@ -49,6 +49,8 @@ class Paths():
     # _dir suffix ensures the path is checked for existence
     root_dir = root
     stable_root = None
+
+    icon_search_path = None
     #==============================================================================
     # #database
     #==============================================================================
@@ -267,6 +269,8 @@ class Paths():
         #=======================================================================
         self.backup_recovery_file = join(self.hidden_dir, 'backup_recovery')
 
+
+        self.icon_search_path = [self.icons, self.app_resources]
 
 paths = Paths()
 paths.build('_beta')

@@ -23,35 +23,27 @@ from src.paths import paths
 class MakeTableAction(TaskAction):
     method = 'make_table'
     image = ImageResource(name='file_pdf.png',
-                         search_path=[paths.icons,
-                                      paths.app_resources
-                                      ]
+                         search_path=paths.icon_search_path
                          )
 
 class ToggleStatusAction(TaskAction):
     method = 'toggle_status'
     image = ImageResource(name='arrow_switch.png',
-                         search_path=[paths.icons,
-                                      paths.app_resources
-                                      ]
+                         search_path=paths.icon_search_path
                          )
     tooltip = 'Toggle status'
 
 class SummaryTableAction(TaskAction):
     method = 'open_summary_table'
     image = ImageResource(name='report.png',
-                         search_path=[paths.icons,
-                                      paths.app_resources
-                                      ]
+                         search_path=paths.icon_search_path
                          )
     tooltip = 'New summary table'
 
 class AppendSummaryTableAction(TaskAction):
     method = 'append_summary_table'
     image = ImageResource(name='report_add.png',
-                         search_path=[paths.icons,
-                                      paths.app_resources
-                                      ]
+                         search_path=paths.icon_search_path
                          )
     tooltip = 'Append to current summary table'
 

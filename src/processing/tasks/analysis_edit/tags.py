@@ -91,7 +91,7 @@ class TagTableView(HasTraits):
                 self.table.delete_tag(si)
 
     def traits_view(self):
-        ps = [paths.app_resources, paths.icons]
+
         v = View(UItem('object.table.tags',
                         editor=TabularEditor(adapter=TagAdapter(),
                                             editable=False,
@@ -104,7 +104,7 @@ class TagTableView(HasTraits):
                      UItem('add_tag_button',
                            style='custom',
                            editor=ButtonEditor(image=ImageResource(name='add.png',
-                                                                   search_path=ps))
+                                                                   search_path=paths.icon_search_path))
                            ),
 #                      UItem('delete_tag_button',
 #                            style='custom',

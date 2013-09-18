@@ -72,12 +72,11 @@ def RTItem(name, **kw):
 
 
 def new_button_editor(trait, name, **kw):
-    ps = [paths.icons,
-          paths.app_resources]
+
     name = '{}.png'.format(name)
     return UItem(trait, style='custom',
                  editor=ButtonEditor(image=ImageResource(name=name,
-                                                  search_path=ps
+                                                  search_path=paths.icon_search_path
                                                   )),
                  **kw
                  )

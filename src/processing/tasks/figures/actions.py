@@ -25,11 +25,11 @@ from src.paths import paths
 class SaveFigureAction(TaskAction):
     method = 'save_figure'
     image = ImageResource(name='database_save.png',
-                        search_path=[paths.icons, paths.app_resources]
+                        search_path=paths.icon_search_path
                         )
 class OpenFigureAction(TaskAction):
     method = 'open_figure'
     image = ImageResource(name='page_white_database.png',
-                        search_path=[paths.icons, paths.app_resources]
+                        search_path=paths.icon_search_path
                         )
 #============= EOF =============================================

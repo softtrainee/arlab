@@ -126,10 +126,7 @@ class QueryPane(TraitsDockPane):
                                     editor=ButtonEditor(label='',
                                                         image=ImageResource(name='add.png',
 
-                                                                            search_path=[
-                                                                                         paths.icons,
-                                                                                         paths.app_resources,
-                                                                                         ]
+                                                                            search_path=paths.icon_search_path
                                                                             ),
                                                         )
 
@@ -138,10 +135,7 @@ class QueryPane(TraitsDockPane):
                                UItem(selector_name('delete_query_button'),
                                     style='custom',
                                     editor=ButtonEditor(image=ImageResource(name='delete.png',
-                                                                            search_path=[
-                                                                                         paths.icons,
-                                                                                         paths.app_resources,
-                                                                                         ]
+                                                                            search_path=paths.icon_search_path
                                                                             ))
 
                                      ),
