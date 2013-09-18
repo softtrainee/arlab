@@ -29,6 +29,8 @@ from src.database.records.isotope_record import IsotopeRecordView
 from src.codetools.simple_timeit import simple_timer
 from src.processing.analyses.analysis import DBAnalysis, Analysis
 from src.loggable import Loggable
+from src.database.orms.isotope.meas import meas_AnalysisTable
+from src.experiment.utilities.identifier import make_runid
 # from src.constants import NULL_STR
 # from src.ui.gui import invoke_in_main_thread
 
@@ -189,6 +191,12 @@ class IsotopeDatabaseManager(Loggable):
             return rec
 
         else:
+            if isinstance(rec, meas_AnalysisTable):
+                rid = make_runid(rec.labnumber.identifier, rec.aliquot, rec.step)
+            elif hasattr(rec, 'record_id'):
+                rid = rec.record_id
+            else:
+                rid = id(rec)
 
             def func(r):
                 meas_analysis = self.db.get_analysis_uuid(r.uuid)
@@ -197,7 +205,7 @@ class IsotopeDatabaseManager(Loggable):
                 return a
 
             if progress:
-                msg = 'loading {}'.format(id(rec))
+                msg = 'loading {}'.format(rid)
                 progress.change_message(msg)
                 a = func(rec)
                 progress.increment()

@@ -158,49 +158,50 @@ class myTaskWindowLaunchAction(TaskWindowLaunchAction):
 #             self.checked = (window is not None
 #                             and window.active_task == self.task)
 #         print self.checked
-class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
-    '''
-        uses myTaskWindowLaunchAction instead of enthoughts TaskWindowLaunchLaunchGroup 
-    '''
-    def _items_default(self):
-        manager = self
-        while isinstance(manager, Group):
-            manager = manager.parent
-
-        task = manager.controller.task
-        application = task.window.application
-
-        groups = []
-        def groupfunc(task_factory):
-            gid = 0
-            if hasattr(task_factory, 'task_group'):
-                gid = task_factory.task_group
-
-            return gid
-
-        for gi, factories in groupby(application.task_factories, groupfunc):
-            items = []
-            for factory in factories:
-#         for factory in application.task_factories:
-                for win in application.windows:
-                    if win.active_task:
-                        if win.active_task.id == factory.id:
-                            checked = True
-                            break
-                else:
-                    checked = False
-
-                action = myTaskWindowLaunchAction(task_id=factory.id,
-                                                  checked=checked)
-
-                if hasattr(factory, 'accelerator'):
-                    action.accelerator = factory.accelerator
-
-                    items.append(ActionItem(action=action))
-            groups.append(Group(*items))
-
-        return groups
-
+# class myTaskWindowLaunchGroup(TaskWindowLaunchGroup):
+#     '''
+#         uses myTaskWindowLaunchAction instead of enthoughts TaskWindowLaunchLaunchGroup
+#     '''
+#     def _items_default(self):
+#         manager = self
+#         while isinstance(manager, Group):
+#             manager = manager.parent
+#
+#         task = manager.controller.task
+#         application = task.window.application
+#
+#         groups = []
+#         def groupfunc(task_factory):
+#             gid = 0
+#             if hasattr(task_factory, 'task_group'):
+#                 gid = task_factory.task_group
+#
+#             return gid
+#
+#         for gi, factories in groupby(application.task_factories, groupfunc):
+#             items = []
+#             for factory in factories:
+# #         for factory in application.task_factories:
+#                 for win in application.windows:
+#                     if win.active_task:
+#                         if win.active_task.id == factory.id:
+#                             checked = True
+#                             break
+#                 else:
+#                     checked = False
+#
+#                 action = myTaskWindowLaunchAction(task_id=factory.id,
+#                                                   checked=checked)
+#
+#                 if hasattr(factory, 'accelerator'):
+#                     action.accelerator = factory.accelerator
+#                     print action.accelerator
+#                     items.append(ActionItem(action=action))
+#                 print items
+#             groups.append(Group(*items))
+#
+#         return groups
+#
 class TaskGroup(Group):
     items = List
 
@@ -265,8 +266,12 @@ class BaseTask(Task, Loggable):
 
                 if hasattr(factory, 'accelerator'):
                     action.accelerator = factory.accelerator
+                add = True
+                if hasattr(factory, 'include_view_menu'):
+                    add = factory.include_view_menu
+                if add:
+                    items.append(ActionItem(action=action))
 
-                items.append(ActionItem(action=action))
             groups.append(TaskGroup(items=items))
         return groups
 

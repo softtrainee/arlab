@@ -22,12 +22,13 @@ from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTa
 from pyface.tasks.task_layout import PaneItem, Splitter, TaskLayout
 from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane
-from src.processing.tasks.search_panes import  QueryPane
+from src.processing.tasks.search_panes import  QueryPane, ResultsPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 
 class SeriesTask(AnalysisEditTask):
+    name = 'Series'
     unknowns_adapter = UnknownsAdapter
     series_editor_count = 1
     def _default_layout_default(self):
@@ -35,12 +36,13 @@ class SeriesTask(AnalysisEditTask):
                           id='pychron.analysis_edit.series',
                           left=Splitter(
                                      PaneItem('pychron.analysis_edit.unknowns'),
-                                     PaneItem('pychron.analysis_edit.references'),
+#                                      PaneItem('pychron.analysis_edit.references'),
                                      PaneItem('pychron.analysis_edit.controls'),
                                      orientation='vertical'
                                      ),
                           right=Splitter(
-                                         PaneItem('pychron.analysis_edit.irradiation'),
+#                                          PaneItem('pychron.analysis_edit.irradiation'),
+                                         PaneItem('pychron.search.results'),
                                          PaneItem('pychron.search.query'),
                                          orientation='vertical'
                                          )
@@ -67,11 +69,14 @@ class SeriesTask(AnalysisEditTask):
                 self.unknowns_pane,
                 self.controls_pane,
                 QueryPane(model=ds),
+                ResultsPane(model=ds)
                 ]
 #        panes = super(FluxTask, self).create_dock_panes()
 #        return panes + [
 #                      IrradiationPane(model=self.manager)
 #                      ]
+    def activated(self):
+        self.new_series()
 
     def new_series(self):
         from src.processing.tasks.figures.figure_editor import SeriesEditor
@@ -86,7 +91,7 @@ class SeriesTask(AnalysisEditTask):
 #        selector._search_fired()
 #        selector = self.manager.db.selector
 #        self.unknowns_pane.items = selector.records[:10]
-        editor.unknowns = self.unknowns_pane.items
+#         editor.unknowns = self.unknowns_pane.items
         self._open_editor(editor)
         self.series_editor_count += 1
 

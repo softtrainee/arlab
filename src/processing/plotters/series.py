@@ -74,8 +74,8 @@ class Series(Plotter):
         # normalize x to last analysis
         x = array(x)
         ox = x[:]
-
-        x -= time.time()
+        x -= min(x)
+#         x -= time.time()
         x = x[::-1]
 
         # scale timestamp to hours
@@ -100,6 +100,7 @@ class Series(Plotter):
                                     scatter,
                                     0,
                                     )
+
         self._add_error_bars(scatter, es, 'y', nsigma)
 
         sel = [i for i, ai in enumerate(analyses) if ai.status != 0]

@@ -131,11 +131,13 @@ class AnalysisEditTask(BaseEditorTask):
 
     def _set_previous_selection(self, pane, new):
         if new:
-            func = self._record_view_factory
-            ps = [func(si, graph_id=si.graph_id,
-                            group_id=si.group_id) for si in new.analysis_ids]
-            ps = [pi for pi in ps if pi]
-            pane.items = ps
+            db = self.manager.db
+            with db.session_ctx():
+                func = self._record_view_factory
+                ps = [func(si, graph_id=si.graph_id,
+                                group_id=si.group_id) for si in new.analysis_ids]
+                ps = [pi for pi in ps if pi]
+                pane.items = ps
 
     def _save_file(self, path):
         if self.active_editor:
@@ -168,6 +170,7 @@ class AnalysisEditTask(BaseEditorTask):
         if not obj._no_update:
             if self.active_editor:
                 self.active_editor.unknowns = self.unknowns_pane.items
+
 
     @on_trait_change('''unknowns_pane:dclicked, 
 references_pane:dclicked,

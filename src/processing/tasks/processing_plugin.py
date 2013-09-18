@@ -32,7 +32,7 @@ from src.processing.tasks.processing_actions import IdeogramAction, \
     SmartProjectAction
 
 from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
-    FluxAction, SeriesAction, IsotopeEvolutionAction, ICFactorAction, \
+    FluxAction, IsotopeEvolutionAction, ICFactorAction, \
     BatchEditAction, RefitIsotopeEvolutionAction, SCLFTableAction, TagAction
 from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
 from src.processing.tasks.figures.auto_figure_preferences import AutoFigurePreferencesPane
@@ -86,7 +86,7 @@ class ProcessingPlugin(BaseTaskPlugin):
                    ('labnumber_entry', LabnumberEntryAction, 'MenuBar/Edit'),
                    ('blank_edit', BlankEditAction, 'MenuBar/Edit'),
                    ('flux_edit', FluxAction, 'MenuBar/Edit'),
-                   ('series', SeriesAction, 'MenuBar/Edit'),
+#                    ('series', SeriesAction, 'MenuBar/Edit'),
                    ('iso_evo', IsotopeEvolutionAction, 'MenuBar/Edit'),
                    ('ic_factor', ICFactorAction, 'MenuBar/Edit'),
                    ('batch_edit', BatchEditAction, 'MenuBar/Edit'),
@@ -110,10 +110,13 @@ class ProcessingPlugin(BaseTaskPlugin):
                 ]
 
 
-    def _meta_task_factory(self, i, f, n, task_group=None, accelerator=''):
+    def _meta_task_factory(self, i, f, n, task_group=None,
+                           accelerator='', include_view_menu=False):
+
         return TaskFactory(id=i, factory=f, name=n,
                            task_group=task_group,
-                           accelerator=accelerator
+                           accelerator=accelerator,
+                           include_view_menu=include_view_menu or accelerator
                            )
 
 
@@ -126,7 +129,7 @@ class ProcessingPlugin(BaseTaskPlugin):
                         ('pychron.recall', self._recall_task_factory, 'Recall'),
                         ('pychron.analysis_edit.blanks', self._blanks_edit_task_factory, 'Blanks'),
                         ('pychron.analysis_edit.flux', self._flux_task_factory, 'Flux'),
-                        ('pychron.analysis_edit.series', self._series_task_factory, 'Series'),
+                        ('pychron.analysis_edit.series', self._series_task_factory, 'Series', '', '', True),
                         ('pychron.analysis_edit.isotope_evolution', self._iso_evo_task_factory, 'Isotope Evolution'),
                         ('pychron.analysis_edit.ic_factor', self._ic_factor_task_factory, 'IC Factor'),
                         ('pychron.analysis_edit.batch', self._batch_edit_task_factory, 'Batch Edit'),

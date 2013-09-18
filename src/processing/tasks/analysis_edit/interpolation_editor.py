@@ -65,12 +65,21 @@ class InterpolationEditor(GraphEditor):
             self._find_references()
 
     def _find_references(self):
-        ans = set([ai for ui in self._unknowns
-                for ai in self.processor.find_associated_analyses(ui)])
+#         ans = set([ai for ui in self._unknowns
+#                 for ai in self.processor.find_associated_analyses(ui)])
+        ans = []
+        proc = self.processor
+        uuids = []
+        with proc.db.session_ctx():
+            for ui in self._unknowns:
+                for ai in proc.find_associated_analyses(ui):
+                    if not ai.uuid in uuids:
+                        uuids.append(ai.uuid)
+                        ans.append(ai)
 
-        ans = sorted(list(ans), key=lambda x: x.analysis_timestamp)
-        ans = self.processor.make_analyses(ans)
-        self.task.references_pane.items = ans
+            ans = sorted(list(ans), key=lambda x: x.analysis_timestamp)
+            ans = self.processor.make_analyses(ans)
+            self.task.references_pane.items = ans
 
     def _get_current_values(self, *args, **kw):
         pass

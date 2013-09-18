@@ -25,6 +25,7 @@ from src.processing.tasks.analysis_edit.interpolation_task import InterpolationT
 class BlanksTask(InterpolationTask):
     id = 'pychron.analysis_edit.blanks'
     blank_editor_count = 1
+    name = 'Blanks'
 
     def _default_layout_default(self):
         return TaskLayout(
@@ -36,6 +37,7 @@ class BlanksTask(InterpolationTask):
                                      orientation='vertical'
                                      ),
                           right=Splitter(
+                                         PaneItem('pychron.search.results'),
                                          PaneItem('pychron.search.query'),
                                          orientation='vertical'
                                          )
