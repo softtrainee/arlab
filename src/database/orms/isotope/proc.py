@@ -29,13 +29,25 @@ from src.database.orms.isotope.util import foreignkey, stringcolumn
 
 from util import Base
 
-class HistoryMixin(BaseMixin):
+class History(object):
     @declared_attr
     def analysis_id(self):
         return foreignkey('meas_AnalysisTable')
-
     create_date = Column(DateTime, default=func.now())
     user = stringcolumn()
+
+
+class HistoryMixin(BaseMixin, History):
+    pass
+
+class proc_TagTable(Base):
+    __tablename__ = 'proc_TagTable'
+    name = Column(String(40), primary_key=True)
+    create_date = Column(DateTime, default=func.now())
+    user = stringcolumn()
+
+    analyses = relationship('meas_AnalysisTable')
+
 
 class proc_ArArHistoryTable(Base, HistoryMixin):
     arar_results = relationship('proc_ArArTable', backref='history')

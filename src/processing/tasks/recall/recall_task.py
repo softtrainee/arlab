@@ -41,7 +41,7 @@ class RecallTask(AnalysisEditTask):
 
     tool_bars = [
                  SToolBar(AddIsoEvoAction(),
-                          image_size=(32, 32)
+                          image_size=(16, 16)
                           )
                  ]
 
@@ -53,6 +53,7 @@ class RecallTask(AnalysisEditTask):
 #                                     orientation='vertical'
 #                                     ),
                           left=Splitter(
+                                         PaneItem('pychron.search.results'),
                                          PaneItem('pychron.search.query'),
                                          orientation='vertical'
                                          ),

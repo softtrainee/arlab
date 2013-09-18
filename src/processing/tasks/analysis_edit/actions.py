@@ -37,6 +37,11 @@ class AnalysisEditAction(TaskAction):
 
         super(AnalysisEditAction, self).perform(event)
 
+class TagAction(TaskAction):
+    name = 'Tag...'
+    accelerator = 'Ctrl+Shift+t'
+    method = 'set_tag'
+
 class FluxAction(AnalysisEditAction):
     name = 'Flux...'
     accelerator = 'Ctrl+g'

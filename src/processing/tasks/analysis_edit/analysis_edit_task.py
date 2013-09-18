@@ -35,10 +35,28 @@ class AnalysisEditTask(BaseEditorTask):
     plot_editor_pane = Instance(PlotEditorPane)
     unknowns_adapter = UnknownsAdapter
     unknowns_pane_klass = UnknownsPane
-    def _save_file(self, path):
-        if self.active_editor:
-            self.active_editor.save_file(path)
-            return True
+
+    def set_tag(self):
+        if self.unknowns_pane:
+            from src.processing.tasks.analysis_edit.tags import TagTableView
+
+            items = self.unknowns_pane.items
+            db = self.manager.db
+            with db.session_ctx():
+                v = TagTableView()
+                v.table.db = db
+                v.table.load()
+
+            info = v.edit_traits()
+            if info.result:
+                tag = v.selected
+                name = tag.name
+                with db.session_ctx():
+                    for it in items:
+                        self.debug('setting {} tag= {}'.format(it.record_id, name))
+                        ma = db.get_analysis_uuid(it.uuid)
+                        ma.tag = name
+
 
     def prepare_destroy(self):
         if self.unknowns_pane:
@@ -73,9 +91,11 @@ class AnalysisEditTask(BaseEditorTask):
             selector._search_fired()
 
             from src.processing.selection.data_selector import DataSelector
+            from src.processing.tasks.search_panes import ResultsPane
+
             ds = DataSelector(database_selector=selector)
 
-            return (QueryPane(model=ds),)  # ResultsPane(model=ds)
+            return (QueryPane(model=ds), ResultsPane(model=ds))
 
     def _create_unknowns_pane(self):
         self.unknowns_pane = up = self.unknowns_pane_klass(adapter_klass=self.unknowns_adapter)
@@ -116,6 +136,12 @@ class AnalysisEditTask(BaseEditorTask):
                             group_id=si.group_id) for si in new.analysis_ids]
             ps = [pi for pi in ps if pi]
             pane.items = ps
+
+    def _save_file(self, path):
+        if self.active_editor:
+            self.active_editor.save_file(path)
+            return True
+
 
 #===============================================================================
 # handlers

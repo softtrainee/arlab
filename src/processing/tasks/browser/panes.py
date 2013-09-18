@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property
+from traits.api import HasTraits, Property, Int
 from traitsui.api import View, Item, UItem, VGroup, HGroup, Label, spring, \
     VSplit, TableEditor, EnumEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
@@ -24,10 +24,16 @@ from traitsui.tabular_adapter import TabularAdapter
 from traitsui.editors.tabular_editor import TabularEditor
 from src.experiment.utilities.identifier import make_runid
 from traitsui.table_column import ObjectColumn
+from traitsui.list_str_adapter import ListStrAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
 class BrowserAdapter(TabularAdapter):
+    font = 'arial 10'
+
+class ProjectAdapter(BrowserAdapter):
+    columns = [('Name', 'name')]
+
+class AnalysisAdapter(BrowserAdapter):
     columns = [('RunID', 'record_id'),
                 ('Iso Fits', 'iso_fit_status'),
                 ('Blank', 'blank_fit_status'),
@@ -40,7 +46,9 @@ class BrowserAdapter(TabularAdapter):
 #     iso_fit_status_text = Property
 #     ic_fit_status_text = Property
 
+    record_id_width = Int(65)
     odd_bg_color = 'lightgray'
+    font = 'arial 10'
 
 #     def _get_record_id_text(self):
 #         a = self.item
@@ -65,7 +73,8 @@ class BrowserAdapter(TabularAdapter):
 #         return 'X' if getattr(sh, key) else ''
 
 
-class SampleAdapter(TabularAdapter):
+class SampleAdapter(BrowserAdapter):
+
     columns = [('Sample', 'name'), ('Material', 'material')]
 #     material_text = Property
     odd_bg_color = 'lightgray'
@@ -85,8 +94,9 @@ class BrowserPane(TraitsDockPane):
                                          width=75
                                          )),
                             UItem('projects',
-                                editor=ListStrEditor(editable=False,
-                                          selected='selected_project'
+                                editor=TabularEditor(editable=False,
+                                          selected='selected_project',
+                                          adapter=ProjectAdapter()
                                           ),
                                 width=75
                                 )
@@ -112,7 +122,7 @@ class BrowserPane(TraitsDockPane):
                                         width=75)),
                            UItem('analyses',
                                  editor=TabularEditor(
-                                                      adapter=BrowserAdapter(),
+                                                      adapter=AnalysisAdapter(),
                                                       editable=False,
                                                       selected='selected_analysis'
                                                       ),
