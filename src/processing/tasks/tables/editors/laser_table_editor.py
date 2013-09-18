@@ -33,7 +33,7 @@ from src.processing.tasks.tables.laser_table_pdf_writer import LaserTablePDFWrit
 class LaserTableEditor(BaseTableEditor):
 
     means = Property(List, depends_on='items[]')
-    show_blanks = Bool(True)
+    show_blanks = Bool(False)
 
     def make_table(self, title):
         ans = self._clean_items()
@@ -62,6 +62,9 @@ class LaserTableEditor(BaseTableEditor):
     @cached_property
     def _get_means(self):
         return [Mean(analyses=self._clean_items()), ]
+
+    def refresh_blanks(self):
+        self._show_blanks_changed(self.show_blanks)
 
     def _show_blanks_changed(self, new):
         if new:

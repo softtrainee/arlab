@@ -142,10 +142,8 @@ def get_analysis_type(idn):
         return 'unknown'
 
 def make_runid(ln, a, s):
-    if not isinstance(a, str):
-        a = '{:02n}'.format(int(a))
-
-    return '{}-{}{}'.format(ln, a, s)
+    _as = make_aliquot_step(a, s)
+    return '{}-{}'.format(ln, _as)
 
 def strip_runid(r):
     l, x = r.split('-')
@@ -166,6 +164,11 @@ def strip_runid(r):
     return l, int(a), s
 
 
+def make_aliquot_step(a, s):
+    if not isinstance(a, str):
+        a = '{:02n}'.format(int(a))
+
+    return '{}{}'.format(a, s)
 
 def make_identifier(ln, ed, ms):
     try:

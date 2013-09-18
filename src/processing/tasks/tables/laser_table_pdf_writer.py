@@ -43,17 +43,18 @@ class LaserTablePDFWriter(BasePDFWriter):
 
         return flowables, None
 
-
     def _make_table(self, analyses, means):
-        style = self._new_style()
-        style.add('GRID', (0, 0), (-1, -1), 0.25, colors.red)
+        style = self._new_style(
+                                debug_grid=False
+                                )
+#         style.add('GRID', (0, 0), (-1, -1), 0.25, colors.red)
 
         style.add('ALIGN', (0, 0), (-1, -1), 'LEFT')
         style.add('LEFTPADDING', (0, 0), (-1, -1), 1)
         self._new_line(style, 0, cmd='LINEABOVE')
 
         data = []
-
+        bdata = []
         # make meta
         meta = self._make_meta(analyses, style)
         data.extend(meta)
@@ -66,13 +67,14 @@ class LaserTablePDFWriter(BasePDFWriter):
         for i, ai in enumerate(analyses):
             r, b = self._make_analysis_row(ai)
             data.append(r)
-            data.append(b)
+            bdata.append(b)
 
             if self.use_alternating_background:
-                idx = cnt + i * 2
-                style.add('BACKGROUND', (0, idx), (-1, idx),
-                          colors.lightgrey,
-                          )
+                idx = cnt + i
+                if idx % 2 == 0:
+                    style.add('BACKGROUND', (0, idx), (-1, idx),
+                              colors.lightgrey,
+                              )
 #         data.extend([self._make_analysis_row(ai)
 #                      for ai in analyses])
 
