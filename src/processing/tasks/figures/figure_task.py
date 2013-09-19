@@ -17,7 +17,8 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, on_trait_change, Instance, List
 from traitsui.api import View, Item
-from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed
+from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed, \
+    HSplitter
 from pyface.timer.do_later import do_later
 from pyface.tasks.action.schema import SToolBar
 # from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
@@ -29,13 +30,16 @@ from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTa
 from src.processing.tasks.figures.panes import PlotterOptionsPane, \
     FigureSelectorPane
 # from src.ui.gui import invoke_in_main_thread
-from src.processing.plotters.ideogram import Ideogram
+# from src.processing.plotters.ideogram import Ideogram
 from src.processing.plotter_options_manager import IdeogramOptionsManager
 from src.processing.tasks.figures.actions import SaveFigureAction, \
     OpenFigureAction
+from src.processing.tasks.browser.browser_task import BaseBrowserTask
+from src.processing.tasks.browser.panes import BrowserPane
+from src.codetools.simple_timeit import timethis
 
 
-class FigureTask(AnalysisEditTask):
+class FigureTask(AnalysisEditTask, BaseBrowserTask):
     name = 'Figure'
     id = 'pychron.processing.figures'
     plotter_options_pane = Instance(PlotterOptionsPane)
@@ -43,30 +47,35 @@ class FigureTask(AnalysisEditTask):
                           SaveFigureAction(),
                           OpenFigureAction(),
                           image_size=(16, 16))]
+
     def _default_layout_default(self):
         return TaskLayout(
                           id='pychron.analysis_edit',
-                          left=Splitter(
-                                     Tabbed(
-                                            PaneItem('pychron.analysis_edit.unknowns'),
-                                            PaneItem('pychron.processing.figures.plotter_options')
-                                            ),
-                                     Tabbed(
-                                            PaneItem('pychron.analysis_edit.controls'),
-                                            PaneItem('pychron.processing.editor'),
-                                            ),
-                                     orientation='vertical'
-                                     ),
-
-                          right=Splitter(
-                                         PaneItem('pychron.search.results'),
-                                         PaneItem('pychron.search.query'),
+                          left=HSplitter(
+                                    PaneItem('pychron.browser'),
+                                    Splitter(
+                                         Tabbed(
+                                                PaneItem('pychron.analysis_edit.unknowns'),
+                                                PaneItem('pychron.processing.figures.plotter_options')
+                                                ),
+                                         Tabbed(
+                                                PaneItem('pychron.analysis_edit.controls'),
+                                                PaneItem('pychron.processing.editor'),
+                                                ),
                                          orientation='vertical'
                                          )
+                                    ),
+
+#                           right=Splitter(
+#                                          PaneItem('pychron.search.results'),
+#                                          PaneItem('pychron.search.query'),
+#                                          orientation='vertical'
+#                                          )
                           )
 #===============================================================================
 # task protocol
 #===============================================================================
+
     def prepare_destroy(self):
         if self.active_editor:
             pom = self.active_editor.plotter_options_manager
@@ -78,13 +87,14 @@ class FigureTask(AnalysisEditTask):
         self.plotter_options_pane = PlotterOptionsPane()
 
         self.figure_selector_pane = FigureSelectorPane()
-        
+
         fs = [fi.name for fi in self.manager.db.get_figures()]
         if fs:
             self.figure_selector_pane.trait_set(figures=fs, figure=fs[0])
 
         return panes + [self.plotter_options_pane,
                         self.figure_selector_pane,
+                        BrowserPane(model=self)
                         ]
 #===============================================================================
 # grouping
@@ -122,8 +132,8 @@ class FigureTask(AnalysisEditTask):
 # figures
 #===============================================================================
     def new_ideogram(self, ans=None, klass=None, name='Ideo', plotter_kw=None):
-        func = self._ideogram_factory
-#         func = self.manager.new_ideogram
+#         func = self._ideogram_factory
+        func = self.manager.new_ideogram
         if klass is None:
             from src.processing.tasks.figures.figure_editor import IdeogramEditor as klass
 
@@ -285,53 +295,57 @@ class FigureTask(AnalysisEditTask):
             self.unknowns_pane.refresh_needed = True
             self.active_editor.rebuild(refresh_data=False)
 
-    def _ideogram_factory(self, ans, plotter_options=None):
-        probability_curve_kind = 'cumulative'
-        mean_calculation_kind = 'weighted_mean'
-        data_label_font = None
-        metadata_label_font = None
-#        highlight_omitted = True
-        display_mean_indicator = True
-        display_mean_text = True
-
-        p = Ideogram(
-#                     db=self.db,
-#                     processing_manager=self,
-                     probability_curve_kind=probability_curve_kind,
-                     mean_calculation_kind=mean_calculation_kind
-                     )
-        options = dict(
-                       title='',
-                       data_label_font=data_label_font,
-                       metadata_label_font=metadata_label_font,
-                       display_mean_text=display_mean_text,
-                       display_mean_indicator=display_mean_indicator,
-                       )
-
-        if plotter_options is None:
-            pom = IdeogramOptionsManager()
-            plotter_options = pom.plotter_options
-
-        if ans:
-#             self.analyses = ans
-            gideo = p.build(ans, options=options,
-                            plotter_options=plotter_options)
-            if gideo:
-                gideo, _plots = gideo
-
-            return gideo, p
+#     def _ideogram_factory(self, ans, plotter_options=None):
+#         probability_curve_kind = 'cumulative'
+#         mean_calculation_kind = 'weighted_mean'
+#         data_label_font = None
+#         metadata_label_font = None
+# #        highlight_omitted = True
+#         display_mean_indicator = True
+#         display_mean_text = True
+#
+#         p = Ideogram(
+# #                     db=self.db,
+# #                     processing_manager=self,
+#                      probability_curve_kind=probability_curve_kind,
+#                      mean_calculation_kind=mean_calculation_kind
+#                      )
+#         options = dict(
+#                        title='',
+#                        data_label_font=data_label_font,
+#                        metadata_label_font=metadata_label_font,
+#                        display_mean_text=display_mean_text,
+#                        display_mean_indicator=display_mean_indicator,
+#                        )
+#
+#         if plotter_options is None:
+#             pom = IdeogramOptionsManager()
+#             plotter_options = pom.plotter_options
+#
+#         if ans:
+# #             self.analyses = ans
+#             gideo = p.build(ans, options=options,
+#                             plotter_options=plotter_options)
+#             if gideo:
+#                 gideo, _plots = gideo
+#
+#             return gideo, p
 
 
 #===============================================================================
 # handlers
 #===============================================================================
+#     @on_trait_change('plotter_options_pane:pom:plotter_options:aux_plots:x_error')
+#     def _update_x_error(self):
+
 
     @on_trait_change('plotter_options_pane:pom:plotter_options:[+, aux_plots:+]')
     def _options_update(self, name, new):
         if name == 'initialized':
             return
 
-        do_later(self.active_editor.rebuild)
+        self.active_editor.rebuild(refresh_data=False)
+#         do_later(self.active_editor.rebuild, refresh_data=False)
 #         self.active_editor.rebuild()
         self.active_editor.dirty = True
 
@@ -340,4 +354,23 @@ class FigureTask(AnalysisEditTask):
             self.plotter_options_pane.pom = self.active_editor.plotter_options_manager
 
         super(FigureTask, self)._active_editor_changed()
+
+
+    #===========================================================================
+    # browser protocol
+    #===========================================================================
+    def _dclicked_sample_changed(self, new):
+        for sa in self.selected_sample:
+
+            ans = self._get_sample_analyses(sa)
+#             ans = man.make_analyses(ans)
+            self.unknowns_pane.items = ans
+
+#             sam = next((si
+#                         for si in self.active_editor.items
+#                             if si.sample == sa.name), None)
+#             if sam is None:
+#                 man = self.manager
+#                 ans = self._get_sample_analyses(sa)
+#                 ans = man.make_analyses(ans)
 #============= EOF =============================================

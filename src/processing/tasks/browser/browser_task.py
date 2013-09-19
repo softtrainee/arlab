@@ -63,7 +63,7 @@ class ProjectRecordView(RecordView):
     def _create(self, dbrecord):
         self.name = dbrecord.name
 
-class BrowserTask(BaseEditorTask):
+class BaseBrowserTask(BaseEditorTask):
     projects = List
     oprojects = List
 
@@ -87,10 +87,7 @@ class BrowserTask(BaseEditorTask):
     tool_bars = [SToolBar(NewBrowserEditorAction(),
                           image_size=(16, 16)
                           )]
-
     def activated(self):
-        editor = RecallEditor()
-        self._open_editor(editor)
         self.load_projects()
 
     def load_projects(self):
@@ -101,85 +98,15 @@ class BrowserTask(BaseEditorTask):
             ad = [ProjectRecordView(p) for p in ps]
             self.projects = ad
             self.oprojects = ad
-#             self.projects = [p.name for p in ps]
-#             self.oprojects = [p.name for p in ps]
 
-    def new_editor(self):
-        editor = RecallEditor()
-        self._open_editor(editor)
-
-    def _default_layout_default(self):
-        return TaskLayout(left=PaneItem('pychron.browser'))
-
-    def _selected_analysis_changed(self):
-        an = self.selected_analysis
-        if an and isinstance(self.active_editor, RecallEditor):
-#             l, a, s = strip_runid(s)
-#             an = self.manager.db.get_unique_analysis(l, a, s)
-            an = self.manager.make_analyses([an])[0]
-#             an.load_isotopes(refit=False)
-            self.active_editor.analysis_summary = an.analysis_summary
-
-#     @cached_property
-#     def _get_samples(self):
-#         samples = []
-#         if self.selected_project:
-#             samples = self.manager.db.get_samples(project=self.selected_project)
-#         return [s.name for s in samples]
-
-#     @cached_property
-#     def _get_analyses(self):
-#         ans = []
-#         if self.selected_sample:
-#             sample = self.manager.db.get_sample(self.selected_sample,
-#                                                 project=self.selected_project
-#                                                 )
-#             ans = [make_runid(ln.identifier,
-#                               a.aliquot, a.step) for ln in sample.labnumbers
-#                             for a in ln.analyses]
-# #             ans = self.manager.db.get_analyses(sample=self.s)
-#         return ans
-
-    def create_dock_panes(self):
-        return [BrowserPane(model=self)]
-
-#===============================================================================
-# handlers
-#===============================================================================
     def _selected_project_changed(self, new):
         if new:
             db = self.manager.db
-            with db.session_ctx() as sess:
-#                 q = sess.query(gen_SampleTable)
-#                 q = q.join(gen_ProjectTable)
-#                 q = q.filter(gen_ProjectTable.name == new)
-#
-#                 ss = q.all()
-#                 print ss[0].material
-
-#             with db.session_ctx():
-#             with db.session_ctx
-#                 q = sess.query(gen_SampleTable)
-#                 q = q.join(gen_ProjectTable)
-
-#                 q = q.filter(gen_ProjectTable.name == new)
-#                 q = q.options(subqueryload(gen_SampleTable.material))
-
-#                 ss = q.all()
+            with db.session_ctx():
                 ss = db.get_samples(project=new.name)
-#             sa = ss[0]
-#             print sa.material
-#                 def f(si):
-#                     x = SampleRecordView()
-#                     x.create(si)
-#                     return x
-
                 ss = [SampleRecordView(s) for s in ss]
-#                 sss = [f(s) for s in ss]
                 self.samples = ss
                 self.osamples = ss
-    #             self.analyses = []
-    #             self.onalyses = []
                 if ss:
                     self.selected_sample = ss[:1]
 
@@ -234,4 +161,35 @@ class BrowserTask(BaseEditorTask):
             self.analyses = filter(self._omit_bogus_filter, self.oanalyses)
         else:
             self.analyses = self.oanalyses
+
+
+class BrowserTask(BaseBrowserTask):
+
+    def activated(self):
+        editor = RecallEditor()
+        self._open_editor(editor)
+
+    def new_editor(self):
+        editor = RecallEditor()
+        self._open_editor(editor)
+
+    def _default_layout_default(self):
+        return TaskLayout(left=PaneItem('pychron.browser'))
+
+    def _selected_analysis_changed(self):
+        an = self.selected_analysis
+        if an and isinstance(self.active_editor, RecallEditor):
+#             l, a, s = strip_runid(s)
+#             an = self.manager.db.get_unique_analysis(l, a, s)
+            an = self.manager.make_analyses([an])[0]
+#             an.load_isotopes(refit=False)
+            self.active_editor.analysis_summary = an.analysis_summary
+
+    def create_dock_panes(self):
+        return [BrowserPane(model=self)]
+
+#===============================================================================
+# handlers
+#===============================================================================
+
 #============= EOF =============================================

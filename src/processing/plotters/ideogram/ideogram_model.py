@@ -15,34 +15,41 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Any, Event, Bool
-from src.envisage.tasks.base_editor import BaseTraitsEditor
-from src.processing.tasks.tables.editors.adapters import TableBlank, \
-    TableSeparator
-from pyface.file_dialog import FileDialog
-from src.helpers.filetools import add_extension
-from src.paths import paths
+from traits.api import HasTraits, List, Property, on_trait_change, Any
+
 #============= standard library imports ========================
+from itertools import groupby
 #============= local library imports  ==========================
+from src.processing.plotters.ideogram.ideogram_panel import IdeogramPanel
 
-class BaseTableEditor(BaseTraitsEditor):
-    items = List
-    oitems = List
-    col_widths = List
-    selected = Any
-    refresh_needed = Event
-    use_alternating_background = Bool(False)
+class BaseModel(HasTraits):
+    pass
 
-    def clean_rows(self):
-        return self._clean_items()
+class IdeogramModel(BaseModel):
+    panels = List
+    npanels = Property(depends_on='panels[]')
+    analyses = List
+    plot_options = Any
 
-    def _clean_items(self):
-        return filter(lambda x: not isinstance(x, (TableBlank, TableSeparator)),
-                                                    self.items)
+    @on_trait_change('analyses[]')
+    def _analyses_items_changed(self):
+        self.panels = self._make_panels()
+        self.panel_gen = (gi for gi in self.panels)
 
-    def _get_save_path(self, ext='.pdf'):
-        dlg = FileDialog(action='save as', default_directory=paths.processed_dir)
-        if dlg.open():
+    def _make_panels(self):
+        key = lambda x: x.graph_id
+        ans = sorted(self.analyses, key=key)
+        gs = [IdeogramPanel(analyses=list(ais),
+                            plot_options=self.plot_options,
+                            group_id=gid)
+                for gid, ais in groupby(ans, key=key)]
 
-            return add_extension(dlg.path, ext)
+        return gs
+
+    def _get_npanels(self):
+        return len(self.panels)
+
+    def next_panel(self):
+        return self.panel_gen.next()
+
 #============= EOF =============================================

@@ -82,7 +82,9 @@ class ArArAge(Loggable):
     isotopes = Dict
     isotope_keys = Property(depends='isotopes')
 
-    age = Property(depends_on='include_decay_error, include_j_error, include_irradiation_error,age_dirty')
+#     age = Property(depends_on='include_decay_error, include_j_error, include_irradiation_error, age_dirty')
+
+    age = None
     R = AgeProperty()
 
     age_error = AgeProperty()
@@ -227,11 +229,21 @@ class ArArAge(Loggable):
 
 
     def calculate_age(self, **kw):
-        self.age_dirty = True
+        if not self.age:
+            self.age = self._calculate_age(**kw)
+            self.age_dirty = True
+
+#         if not self.age_dirty:
+
+#             if self.age:
+#                 return self.age
+#         a = self._calculate_age(**kw)
+#         self.age = a
         return self.age
+#         self.age_dirty = True
+#         return self.age
 
     def _calculate_age(self, include_j_error=None, include_decay_error=None, include_irradiation_error=None):
-
         if include_decay_error is None:
             include_decay_error = self.include_decay_error
         else:
@@ -343,10 +355,11 @@ class ArArAge(Loggable):
 #
 #        return self._signals
 
-    @cached_property
-    def _get_age(self):
-        r = self._calculate_age()
-        return r
+#     @cached_property
+#     def _get_age(self):
+#         print 'ggggg'
+#         r = self._calculate_age()
+#         return r
 
 #     @cached_property
     def _get_age_error(self):
@@ -466,24 +479,19 @@ class ArArAge(Loggable):
     @cached_property
     def _get_rad40(self):
         a = self._get_arar_result_attr('rad40')
-#        a = self.arar_result['rad40']
         if a is not None:
             return a
         else:
             return ufloat(0, 1e-20)
 
-#         return self.arar_result['rad40']
-
     @cached_property
     def _get_k39(self):
-#        a = self.arar_result['k39']
         a = self._get_arar_result_attr('k39')
         if a is not None:
             return a
         else:
             return ufloat(0, 1e-20)
-#         return a or ufloat(0, 1e-20)
-#         return self.arar_result['k39']
+
     @cached_property
     def _get_R(self):
         try:
@@ -618,8 +626,9 @@ class ArArAge(Loggable):
 
         arar_attr = 's{}'.format(key)
 
-#        print self.arar_result
-        if self.arar_result.has_key(arar_attr):
+        if self.arar_result.has_key(key):
+            return self.arar_result[key]
+        elif self.arar_result.has_key(arar_attr):
             return self.arar_result[arar_attr]
         else:
             iso_attr = 'Ar{}'.format(key)

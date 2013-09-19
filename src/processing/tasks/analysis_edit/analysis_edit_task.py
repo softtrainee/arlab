@@ -91,11 +91,12 @@ class AnalysisEditTask(BaseEditorTask):
             selector._search_fired()
 
             from src.processing.selection.data_selector import DataSelector
-            from src.processing.tasks.search_panes import ResultsPane
+#             from src.processing.tasks.search_panes import ResultsPane
 
             ds = DataSelector(database_selector=selector)
 
-            return (QueryPane(model=ds), ResultsPane(model=ds))
+#             return (QueryPane(model=ds), ResultsPane(model=ds))
+            return QueryPane(model=ds),
 
     def _create_unknowns_pane(self):
         self.unknowns_pane = up = self.unknowns_pane_klass(adapter_klass=self.unknowns_adapter)

@@ -29,6 +29,7 @@ from src.stats.core import calculate_weighted_mean
 from src.stats.peak_detection import find_peaks
 from src.processing.plotters.point_move_tool import PointMoveTool
 from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
+from src.codetools.simple_timeit import simple_timer
 
 N = 500
 
@@ -105,6 +106,7 @@ class Ideogram(Plotter):
                               tick_label_font=ytick_font
                               )
 
+    @simple_timer('ad')
     def _build_hook(self, g, analyses, aux_plots=None):
         g.analyses = analyses
         g.maxprob = None
@@ -115,23 +117,9 @@ class Ideogram(Plotter):
         if not analyses:
             return
 
-#        def get_ages_errors(group_id):
-#
-#            nages, nerrors = zip(*[(a.age.nominal_value, a.age.std_dev())
-#                                   for a in analyses if a.group_id == group_id])
-#            return array(nages), array(nerrors)
-
-#        if self.ideogram_of_means:
-#
-#            ages, errors = zip(*[calculate_weighted_mean(*get_ages_errors(gi)) for gi in group_ids])
-#            xmin, xmax = self._get_limits(ages)
-#            self._add_ideo(g, ages, errors, xmin, xmax, padding, 0, len(analyses))
-#
-#        else:
-
-
         options = self.plotter_options
         ucr = options.use_centered_range
+
         if ucr:
             xmin, xmax = self._get_limits(analyses, centered_range=options.centered_range)
         else:
@@ -149,11 +137,14 @@ class Ideogram(Plotter):
         groups = groupby(sorted(analyses, key=key), key)
 
         for group_id, analyses in groups:
+            ans = list(analyses)
             # buffer the analyses generator
-            ans = [ai for ai in analyses]
+#             ans = [ai for ai in analyses]
             labnumber = self.get_labnumber(ans)
-            nages, nerrors = self._get_ages(ans)
 
+            nages, nerrors = self._get_ages(ans, calculate=False)
+            self._ages = nages
+            self._errors = nerrors
 #         for group_id in group_ids:
 #             ans = [a for a in analyses if a.group_id == group_id]
 #             labnumber = self.get_labnumber(ans)
@@ -192,6 +183,7 @@ class Ideogram(Plotter):
         return g
 
     def _make_sorted_pairs(self, attr, analyses, group_id):
+        print 'make sorted pairs'
         ages = self._get_ages(analyses, group_id, unzip=False)
         attrs = [getattr(a, attr) for a in analyses
                         if a.group_id == group_id]
@@ -522,7 +514,10 @@ class Ideogram(Plotter):
         dp = ideo.plots['plot{}'.format(group_id * 3 + 1)][0]
         sp = ideo.plots['plot{}'.format(group_id * 3 + 2)][0]
 
-        ages_errors = self._get_ages(graph.analyses, group_id=group_id, unzip=False)
+        ages_errors = self._get_ages(graph.analyses,
+                                     group_id=group_id,
+                                     unzip=False,
+                                     )
         ages_errors = sorted(ages_errors, key=lambda x: x.nominal_value)
         ages, errors = zip(*[(ai.nominal_value, ai.std_dev) for j, ai in enumerate(ages_errors)
                              if not j in sel])
@@ -600,7 +595,9 @@ class Ideogram(Plotter):
         return IdeoResultsAdapter
 
     def _get_limits(self, analyses, centered_range=None, pad=0.02):
-
+#         ages = self._ages
+#         errors = self._errors
+        print 'get_limits'
         ages, errors = self._get_ages(analyses)
         ma_ages = ages + errors
         mi_ages = ages - errors
