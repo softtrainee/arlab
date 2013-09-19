@@ -25,6 +25,7 @@ from itertools import groupby
 from src.processing.plotter_options_manager import IdeogramOptionsManager, \
     SpectrumOptionsManager, InverseIsochronOptionsManager, SeriesOptionsManager
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
+from src.codetools.simple_timeit import timethis
 
 
 class FigureEditor(GraphEditor):
@@ -64,46 +65,52 @@ class FigureEditor(GraphEditor):
     def rebuild(self, refresh_data=True):
         ans = self._gather_unknowns(refresh_data)
         po = self.plotter_options_manager.plotter_options
-        comp = self._get_component(ans, po)
+
+        comp = timethis(self._get_component, args=(ans, po))
+#         comp = self._get_component(ans, po)
+
         self.component = comp
         self.component_changed = True
 
-    def _gather_unknowns(self, refresh_data):
-        ans = self._unknowns
-        if refresh_data or not ans:
-            unks = self.processor.make_analyses(self.unknowns)
-#             self.processor.load_analyses(unks)
-            ans = unks
-
-            if ans:
-                # compress groups
-                self._compress_unknowns(ans)
-                self._unknowns = ans
-
-        return ans
-
-    def _compress_unknowns(self, ans):
-        key = lambda x: x.group_id
-        ans = sorted(ans, key=key)
-        groups = groupby(ans, key)
-
-        mgid, analyses = groups.next()
-        for ai in analyses:
-            ai.group_id = 0
-
-        for gid, analyses in groups:
-            for ai in analyses:
-                ai.group_id = gid - mgid
+#     def _gather_unknowns(self, refresh_data):
+#         ans = self._unknowns
+#         if refresh_data or not ans:
+#             unks = self.processor.make_analyses(self.unknowns,
+#                                                 calculate_age=False
+#                                                 )
+#             ans = unks
+#
+#             if ans:
+#                 # compress groups
+#                 self._compress_unknowns(ans)
+#                 self._unknowns = ans
+#
+#         return ans
+#
+#     def _compress_unknowns(self, ans):
+#         key = lambda x: x.group_id
+#         ans = sorted(ans, key=key)
+#         groups = groupby(ans, key)
+#
+#         mgid, analyses = groups.next()
+#         for ai in analyses:
+#             ai.group_id = 0
+#
+#         for gid, analyses in groups:
+#             for ai in analyses:
+#                 ai.group_id = gid - mgid
 
 #     def _get_component(self, ans, po):
 #         raise NotImplementedError
     def _get_component(self, ans, po):
         func = getattr(self.processor, self.func)
-        args = func(ans=ans, plotter_options=po)
-        if args:
-            comp, plotter = args
-            self.plotter = plotter
-            return comp
+        return func(ans=ans, plotter_options=po)
+
+#         if args:
+#             retur
+#             comp, plotter = args
+#             self.plotter = plotter
+#             return comp
 
 
 class IdeogramEditor(FigureEditor):

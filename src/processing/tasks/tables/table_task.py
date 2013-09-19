@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, HasTraits, Any, Enum
-from pyface.tasks.action.schema import SToolBar
+from pyface.tasks.action.schema import SToolBar, SGroup
 # from pyface.action.action import Action
 # from pyface.tasks.action.task_action import TaskAction
 # from pyface.tasks.task_layout import TaskLayout, PaneItem
@@ -27,14 +27,16 @@ import subprocess
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.tasks.tables.table_actions import  ToggleStatusAction, \
-    SummaryTableAction, AppendSummaryTableAction, MakeTableAction
+    SummaryTableAction, AppendSummaryTableAction, MakeTableAction, \
+    AppendLaserTableAction
 # from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.processing.tasks.browser.panes import BrowserPane
 from src.processing.tasks.tables.panes import TableEditorPane
 from src.processing.tasks.browser.browser_task import BrowserTask
 from src.processing.tasks.tables.editors.laser_table_editor import LaserTableEditor
 from src.processing.tasks.tables.table_task_editor import TableTaskEditor
-from src.processing.tasks.tables.editors.adapters import TableBlank
+from src.processing.tasks.tables.editors.adapters import TableBlank, \
+    TableSeparator
 from src.processing.tasks.tables.editors.summary_table_editor import SummaryTableEditor
 
 
@@ -42,6 +44,7 @@ from traits.api import Str, Float, List
 from pyface.timer.do_later import do_later
 from src.processing.analysis_means import Mean
 from traits.has_traits import on_trait_change
+from envisage.ui.action.group import Group
 
 class Summary(Mean):
     sample = Str
@@ -66,10 +69,17 @@ class TableTask(BrowserTask):
     tool_bars = [
                  SToolBar(
                           MakeTableAction(),
-                          ToggleStatusAction(),
-                          SummaryTableAction(),
-                          AppendSummaryTableAction(),
-                          image_size=(32, 32)
+                          SGroup(
+                                ToggleStatusAction(),
+                                SummaryTableAction(),
+                                AppendSummaryTableAction()
+                                ),
+                          SGroup(
+                                AppendLaserTableAction()
+                                ),
+
+
+                          image_size=(16, 16)
                           ),
                  ]
 
@@ -86,25 +96,19 @@ class TableTask(BrowserTask):
 #         super(TableTask, self).activated()
 #         self.make_laser_table()
     def _dclicked_sample_changed(self, new):
-
-        man = self.manager
-        ans = [ai for ai in self.analyses
-#                 if not ai.step
-                ]  # [:5]
-#         self.manager.make
-        ans = man.make_analyses(ans)
-#         man.load_analyses(ans, unpack=False)
-
-#         aa = []
-#         for ai in ans:
-#             aa.append(ai)
-#             aa.append(TableBlank(analysis=ai))
-        aa = [r for ai in ans
-                for r in (ai, TableBlank(analysis=(ai)))]
-
-        self.active_editor.oitems = aa
-        self.active_editor.items = aa
-        self.active_editor.refresh_blanks()
+        self._append_laser_table()
+#         man = self.manager
+#         ans = [ai for ai in self.analyses
+# #                 if not ai.step
+#                 ]  # [:5]
+# #         self.manager.make
+#         ans = man.make_analyses(ans)
+#         aa = [r for ai in ans
+#                 for r in (ai, TableBlank(analysis=(ai)))]
+#
+#         self.active_editor.oitems = aa
+#         self.active_editor.items = aa
+#         self.active_editor.refresh_blanks()
 
         self.active_editor.name = self.selected_sample[0].name
 
@@ -133,13 +137,42 @@ class TableTask(BrowserTask):
 #             do_later(self._append_summary_table)
             self._append_summary_table()
 
+    def append_laser_table(self):
+        if isinstance(self.active_editor, LaserTableEditor):
+#             do_later(self._append_summary_table)
+            self._append_laser_table()
+
+    def open_summary_table(self):
+        do_later(self._open_summary_table)
+
+    def _append_laser_table(self):
+
+        for sa in self.selected_sample:
+            sam = next((si
+                        for si in self.active_editor.items
+                            if si.sample == sa.name), None)
+            if sam is None:
+                man = self.manager
+                ans = self._get_sample_analyses(sa)
+                ans = man.make_analyses(ans)
+
+                aa = ans
+#                 aa = [r for ai in ans
+#                         for r in (ai, TableBlank(analysis=(ai)))]
+
+                if self.active_editor.oitems:
+                    aa.insert(0, TableSeparator())
+
+                self.active_editor.oitems.extend(aa)
+                self.active_editor.items.extend(aa)
+
+#         self.active_editor.refresh_blanks()
+
     def _append_summary_table(self):
         ss = self.active_editor.items
         items = self._make_summary_table(ss)
         self.active_editor.items.extend(items)
 
-    def open_summary_table(self):
-        do_later(self._open_summary_table)
 
     def _open_summary_table(self):
         items = self._make_summary_table()
@@ -153,7 +186,7 @@ class TableTask(BrowserTask):
     def _make_summary_table(self, pitems=None):
         def factory(s):
             sam = s.name
-            mat=''
+            mat = ''
             if s.material:
                 mat = s.material
 

@@ -43,6 +43,7 @@ from src.helpers.formatting import floatfmt
 # from src.constants import PLUSMINUS
 from uncertainties import ufloat
 from src.stats.core import validate_mswd, calculate_mswd
+from src.codetools.simple_timeit import simple_timer
 
 
 class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
@@ -227,7 +228,7 @@ class Plotter(Viewable):
                 for pi in g.plots:
                     plots.append(pi)
 
-        op.invalidate_and_redraw()
+#         op.invalidate_and_redraw()
         self._plots = plots
         return op, plots
 
@@ -341,7 +342,8 @@ class Plotter(Viewable):
         valid_mswd = validate_mswd(mswd, n)
         return mswd, valid_mswd, n
 
-    def _get_ages(self, analyses, group_id=None, unzip=True):
+    @simple_timer()
+    def _get_ages(self, analyses, group_id=None, unzip=True, calculate=True):
         if group_id is not None:
             analyses = [ai for ai in analyses if ai.group_id == group_id]
 
@@ -349,9 +351,13 @@ class Plotter(Viewable):
         iie = self.plotter_options.include_irradiation_error
         ide = self.plotter_options.include_decay_error
 
-        ages = [(ai.calculate_age(
+        if calculate:
+            ages = [(ai.calculate_age(
                          include_irradiation_error=iie,
                          include_decay_error=ide)) for ai in analyses]
+        else:
+            ages = [ai.age for ai in analyses]
+
         if not ije:
             ages = array([a.nominal_value for a in ages])
             errors = array([a.age_error_wo_j for a in analyses])
@@ -369,10 +375,16 @@ class Plotter(Viewable):
             else:
                 return ages
 
-    def _add_error_bars(self, scatter, errors, axis, nsigma):
-        ebo = ErrorBarOverlay(component=scatter, orientation=axis, nsigma=nsigma)
+    def _add_error_bars(self, scatter, errors, axis, nsigma,
+                        visible=True):
+        ebo = ErrorBarOverlay(component=scatter,
+                              orientation=axis,
+                              nsigma=nsigma,
+                              visible=visible)
+
         scatter.underlays.append(ebo)
         setattr(scatter, '{}error'.format(axis), ArrayDataSource(errors))
+        return ebo
 
     def _add_scatter_inspector(self, container, plot, scatter,
                                group_id=0,

@@ -125,15 +125,15 @@ class IsotopeDatabaseManager(Loggable):
                 return [self._record_factory(ai, progress=progress, **kw)
                             for ai in ans]
 
-    def load_analyses(self, ans, show_progress=True, **kw):
-        progress = None
-
-#         ans = [ai for ai in ans if not ai.loaded]
-
-        n = len(ans)
-        if show_progress and n > 1:
-            progress = self._open_progress(n)
-        self._load_analyses(ans, progress=progress, **kw)
+#     def load_analyses(self, ans, show_progress=True, **kw):
+#         progress = None
+#
+# #         ans = [ai for ai in ans if not ai.loaded]
+#
+#         n = len(ans)
+#         if show_progress and n > 1:
+#             progress = self._open_progress(n)
+#         self._load_analyses(ans, progress=progress, **kw)
 
     def get_level(self, level, irradiation=None):
         if irradiation is None:
@@ -183,7 +183,7 @@ class IsotopeDatabaseManager(Loggable):
         pd.open()
         return pd
 
-    def _record_factory(self, rec, progress=None, **kw):
+    def _record_factory(self, rec, progress=None, calculate_age=True, **kw):
         if isinstance(rec, (Analysis, DBAnalysis)):
             if progress:
                 progress.increment()
@@ -202,11 +202,13 @@ class IsotopeDatabaseManager(Loggable):
                 meas_analysis = self.db.get_analysis_uuid(r.uuid)
                 a = DBAnalysis()
                 a.sync(meas_analysis)
-                a.age
+                if calculate_age:
+                    a.calculate_age()
                 return a
 
             if progress:
-                msg = 'loading {}'.format(rid)
+                m = 'calculate age' if calculate_age else ''
+                msg = 'loading {}. {}'.format(rid, m)
                 progress.change_message(msg)
                 a = func(rec)
                 progress.increment()

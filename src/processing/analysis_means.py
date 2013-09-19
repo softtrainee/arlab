@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Property, cached_property
+from traits.api import HasTraits, List, Property, cached_property, Str
 #============= standard library imports ========================
 from numpy import array, average, ones
 #============= local library imports  ==========================
@@ -24,6 +24,7 @@ from src.processing.analysis import Marker
 from src.stats.core import calculate_mswd
 
 class Mean(HasTraits):
+    sample = Str
     analyses = List
     nanalyses = Property(depends_on='analyses:[status,temp_status]')
 #    age = Property(depends_on='analyses:[status,temp_status]')

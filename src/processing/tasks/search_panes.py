@@ -63,6 +63,50 @@ def selector_name(name):
 class QueryPane(TraitsDockPane):
     id = 'pychron.search.query'
     name = 'Query'
+    def _results_group(self):
+        grp = VGroup(
+                     CustomLabel(selector_name('id_string'), color='red'),
+                     HGroup(
+                            CustomLabel(selector_name('num_records')), spring,
+                            Item(selector_name('limit'))),
+                     Item(selector_name('records'),
+                            style='custom',
+                            editor=myTabularEditor(adapter=ResultsAdapter(),
+                                                   selected=selector_name('selected'),
+                                                   scroll_to_row=selector_name('scroll_to_row'),
+#                                                            update='update',
+                                                   column_clicked=selector_name('column_clicked'),
+                                                   multi_select=True,
+                                                   operations=['move'],
+                                                   editable=True,
+                                                   drag_external=True,
+                                                   dclicked=selector_name('dclicked')
+                                                   ),
+                            show_label=False,
+#                                     height=0.75
+                            ),
+                     label='Results'
+                )
+        return grp
+
+    def _query_edit_view(self):
+        v = View(HGroup(
+                        UItem('parameter',
+                              editor=EnumEditor(name='parameters')
+                              ),
+                        UItem('comparator',
+                              editor=EnumEditor(name='comparisons')
+                              ),
+                        UItem('criterion'),
+                        UItem('criterion',
+                              width=-25,
+                              editor=EnumEditor(name='criteria')
+                              )
+
+                        ),
+                 height=125
+                 )
+        return v
 
     def _table_editor(self):
         cols = [
@@ -86,14 +130,13 @@ class QueryPane(TraitsDockPane):
                              ),
                 ]
 
-
         editor = TableEditor(columns=cols,
                              deletable=True,
                              show_toolbar=True,
                              sortable=False,
-                             selected=selector_name('selected_queries'),
-                             selection_mode='rows',
-
+                             selected=selector_name('selected_query'),
+#                              selection_mode='row',
+                             edit_view=self._query_edit_view(),
 #                              auto_size=True
                              row_factory=self.model.database_selector.query_factory,
 #                              auto_add=True
@@ -101,11 +144,7 @@ class QueryPane(TraitsDockPane):
 
         return editor
 
-    def traits_view(self):
-#         editor = ListEditor(mutable=False,
-#                           style='custom',
-#                           editor=InstanceEditor())
-#
+    def _query_group(self):
         editor = self._table_editor()
         query_itm = Item(selector_name('queries'), show_label=False,
                                    style='custom',
@@ -116,6 +155,13 @@ class QueryPane(TraitsDockPane):
 #                              height=0.25,
                             visible_when='kind=="Database"',
                              )
+        return query_itm
+
+    def traits_view(self):
+#         editor = ListEditor(mutable=False,
+#                           style='custom',
+#                           editor=InstanceEditor())
+#
         grp = HGroup(
                    UItem('kind'),
                    UItem('open_button',
@@ -153,44 +199,18 @@ class QueryPane(TraitsDockPane):
                             )
 
         v = View(
-                 VGroup(
-                        grp,
-                        filter_grp,
-                        query_itm,
+                 VSplit(
+                        self._results_group(),
+                        VGroup(
+                               grp,
+                               filter_grp,
+                               self._query_group()
+                               )
                         )
                  )
         return v
 
-class ResultsPane(TraitsDockPane):
-    id = 'pychron.search.results'
-    name = 'Results'
-    def traits_view(self):
-        results_grp = VGroup(
-                             CustomLabel(selector_name('id_string'), color='red'),
-                             HGroup(
-                                    CustomLabel(selector_name('num_records')), spring,
-                                    Item(selector_name('limit'))),
-                             Item(selector_name('records'),
-                                    style='custom',
-                                    editor=myTabularEditor(adapter=ResultsAdapter(),
-                                                           selected=selector_name('selected'),
-                                                           scroll_to_row=selector_name('scroll_to_row'),
-#                                                            update='update',
-                                                           column_clicked=selector_name('column_clicked'),
-                                                           multi_select=True,
-                                                           operations=['move'],
-                                                           editable=True,
-                                                           drag_external=True,
-                                                           dclicked=selector_name('dclicked')
-                                                           ),
-                                    show_label=False,
-#                                     height=0.75
-                                    ),
-                             label='Results'
-                        )
 
-        v = View(results_grp)
-        return v
 
 class ResultsAdapter(TabularAdapter):
     columns = [

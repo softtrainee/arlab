@@ -30,12 +30,13 @@ from src.database.orms.isotope.gen import gen_AnalysisTypeTable, gen_LabTable, g
 from src.database.orms.isotope.meas import meas_AnalysisTable, meas_ExtractionTable, meas_MeasurementTable
 from src.processing.analysis import Analysis
 from src.processing.tasks.analysis_edit.fits import Fit
-from src.processing.plotters.spectrum import Spectrum
-from src.processing.plotters.ideogram import Ideogram
+# from src.processing.plotters.spectrum import Spectrum
+# from src.processing.plotters.ideogram import Ideogram
 from src.processing.plotters.inverse_isochron import InverseIsochron
 from src.processing.plotters.series import Series
 from src.database.core.query import compile_query
 from src.helpers.iterfuncs import partition
+from src.processing.plotters import plotter_options
 
 
 class Processor(IsotopeDatabaseManager):
@@ -383,89 +384,104 @@ class Processor(IsotopeDatabaseManager):
 #===============================================================================
 # figures
 #===============================================================================
-    def new_series(self, ans, options=None, plotter_options=None):
-        if ans:
-            p = Series()
-            gseries = p.build(ans, options=options,
-                              plotter_options=plotter_options)
-            return gseries, p
-
     def new_ideogram(self, ans, plotter_options=None):
-        '''
-            return a plotcontainer
-        '''
-
-        probability_curve_kind = 'cumulative'
-        mean_calculation_kind = 'weighted_mean'
-        data_label_font = None
-        metadata_label_font = None
-#        highlight_omitted = True
-        display_mean_indicator = True
-        display_mean_text = True
-
-        p = Ideogram(
-#                     db=self.db,
-#                     processing_manager=self,
-                     probability_curve_kind=probability_curve_kind,
-                     mean_calculation_kind=mean_calculation_kind
-                     )
-        options = dict(
-                       title='',
-                       data_label_font=data_label_font,
-                       metadata_label_font=metadata_label_font,
-                       display_mean_text=display_mean_text,
-                       display_mean_indicator=display_mean_indicator,
-                       )
-
         if plotter_options is None:
             pom = IdeogramOptionsManager()
             plotter_options = pom.plotter_options
 
-        if ans:
-#             self.analyses = ans
-            gideo = p.build(ans, options=options,
-                            plotter_options=plotter_options)
-            if gideo:
-                gideo, _plots = gideo
+        from src.processing.plotters.ideogram.ideogram_model import IdeogramModel
+        from src.processing.plotters.ideogram.ideogram_container import IdeogramContainer
+        model = IdeogramModel(plot_options=plotter_options)
+        model.analyses = ans
+        iv = IdeogramContainer(model=model)
+        return iv.component
 
-            return gideo, p
+    def new_series(self, ans, options=None, plotter_options=None):
+        pass
+#         if ans:
+#             p = Series()
+#             gseries = p.build(ans, options=options,
+#                               plotter_options=plotter_options)
+#             return gseries, p
 
+#     def new_ideogram2(self, ans, plotter_options=None):
+#         '''
+#             return a plotcontainer
+#         '''
+#
+#         probability_curve_kind = 'cumulative'
+#         mean_calculation_kind = 'weighted_mean'
+#         data_label_font = None
+#         metadata_label_font = None
+# #        highlight_omitted = True
+#         display_mean_indicator = True
+#         display_mean_text = True
+#
+#         p = Ideogram(
+# #                     db=self.db,
+# #                     processing_manager=self,
+#                      probability_curve_kind=probability_curve_kind,
+#                      mean_calculation_kind=mean_calculation_kind
+#                      )
+#         options = dict(
+#                        title='',
+#                        data_label_font=data_label_font,
+#                        metadata_label_font=metadata_label_font,
+#                        display_mean_text=display_mean_text,
+#                        display_mean_indicator=display_mean_indicator,
+#                        )
+#
+#         if plotter_options is None:
+#             pom = IdeogramOptionsManager()
+#             plotter_options = pom.plotter_options
+#
+#         if ans:
+# #             self.analyses = ans
+#             gideo = p.build(ans, options=options,
+#                             plotter_options=plotter_options)
+#             if gideo:
+#                 gideo, _plots = gideo
+#
+#             return gideo, p
+#
     def new_spectrum(self, ans, plotter_options=None):
-
-        p = Spectrum()
-
-        if plotter_options is None:
-            pom = SpectrumOptionsManager()
-            plotter_options = pom.plotter_options
-
-        options = {}
-
-        self._plotter_options = plotter_options
-        if ans:
-#             self.analyses = ans
-            gspec = p.build(ans, options=options,
-                            plotter_options=plotter_options)
-            if gspec:
-                gspec, _plots = gspec
-
-            return gspec, p
+        pass
+#
+#         p = Spectrum()
+#
+#         if plotter_options is None:
+#             pom = SpectrumOptionsManager()
+#             plotter_options = pom.plotter_options
+#
+#         options = {}
+#
+#         self._plotter_options = plotter_options
+#         if ans:
+# #             self.analyses = ans
+#             gspec = p.build(ans, options=options,
+#                             plotter_options=plotter_options)
+#             if gspec:
+#                 gspec, _plots = gspec
+#
+#             return gspec, p
 
     def new_inverse_isochron(self, ans, plotter_options=None):
-        p = InverseIsochron()
-
-        if plotter_options is None:
-            pom = InverseIsochronOptionsManager()
-            plotter_options = pom.plotter_options
-
-        options = {}
-
-        self._plotter_options = plotter_options
-        if ans:
-#             self.analyses = ans
-            giso = p.build(ans, options=options,
-                            plotter_options=plotter_options)
-            if giso:
-                return giso.plotcontainer
+        pass
+#         p = InverseIsochron()
+#
+#         if plotter_options is None:
+#             pom = InverseIsochronOptionsManager()
+#             plotter_options = pom.plotter_options
+#
+#         options = {}
+#
+#         self._plotter_options = plotter_options
+#         if ans:
+# #             self.analyses = ans
+#             giso = p.build(ans, options=options,
+#                             plotter_options=plotter_options)
+#             if giso:
+#                 return giso.plotcontainer
 #===============================================================================
 # corrections
 #===============================================================================

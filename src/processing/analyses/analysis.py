@@ -97,17 +97,17 @@ class DBAnalysis(Analysis):
     graph_id = Int
 
     status_text = Property
-    age_string=Property
-    
+    age_string = Property
+
     def _get_age_string(self):
-        
-        a=self.age.nominal_value
-        e=self.age.std_dev
-        
-        pe=calc_percent_error(a,e)
-        
+
+        a = self.age.nominal_value
+        e = self.age.std_dev
+
+        pe = calc_percent_error(a, e)
+
         return u'{:0.3f} +/-{:0.3f}{}'.format(a, e, pe)
-    
+
     def _get_status_text(self):
         if self.temp_status == 0:
             return 'OK'
@@ -555,6 +555,10 @@ class DBAnalysis(Analysis):
 
         return prs
 
+    def __getattr__(self, attr):
+        if attr in ('ar40', 'ar39', 'ar38', 'ar37', 'ar36'):
+            return getattr(self, attr.capitalize())
+        raise AttributeError
 
 if __name__ == '__main__':
     pass

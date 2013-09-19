@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 # from traits.api import HasTraits
-from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
+from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, HSplitter
 
 from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
 #============= standard library imports ========================
@@ -28,19 +28,29 @@ class BlanksTask(InterpolationTask):
     name = 'Blanks'
 
     def _default_layout_default(self):
+
+
+
         return TaskLayout(
                           id='pychron.analysis_edit.blanks',
                           left=Splitter(
+                                    Splitter(
+                                         PaneItem('pychron.search.query'),
+                                         orientation='vertical'
+                                         ),
+                                Splitter(
                                      PaneItem('pychron.analysis_edit.unknowns'),
                                      PaneItem('pychron.analysis_edit.references'),
                                      PaneItem('pychron.analysis_edit.controls'),
                                      orientation='vertical'
                                      ),
-                          right=Splitter(
-                                         PaneItem('pychron.search.results'),
-                                         PaneItem('pychron.search.query'),
-                                         orientation='vertical'
-                                         )
+                                     orientation='horizontal'
+                                ),
+#                           right=Splitter(
+#                                          PaneItem('pychron.search.results'),
+#                                          PaneItem('pychron.search.query'),
+#                                          orientation='vertical'
+#                                          )
                           )
     def new_blank(self):
 #         self.manager.auto_blank_fit('NM-205', 'E', 'preceeding')

@@ -131,7 +131,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     verbose = False
 
-    selected_queries = Any
+#     selected_queries = Any
+    selected_query = Any
 
 
 #    def onKeyDown(self, evt):
@@ -170,12 +171,13 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         return self._query_factory(**kw)
 
     def _delete_query_button_fired(self):
-        if self.selected_queries:
-
-            for si in self.selected_queries:
-                self.remove_query(si)
-
-            self.selected_queries = []
+        self.remove_query(self.selected_query)
+#         if self.selected_queries:
+#
+#             for si in self.selected_queries:
+#                 self.remove_query(si)
+#
+#             self.selected_queries = []
 
     def _add_query_button_fired(self):
         self._add_query()

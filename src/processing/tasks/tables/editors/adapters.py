@@ -26,6 +26,11 @@ class TableBlank(HasTraits):
     def __getattr__(self, attr):
         return getattr(self.analysis, attr)
 
+class TableSeparator(HasTraits):
+    name = Str
+    def __getattr__(self, attr):
+        return ''
+
 def swidth(v=60):
     return Int(v)
 def ewidth(v=50):
@@ -35,28 +40,30 @@ PM = u'\u00b1 1\u03c3'
 class BaseAdapter(TabularAdapter):
     blank_column_text = Str('')
     def _get_value(self, attr):
+        v = ''
         if isinstance(self.item, TableBlank):
-            v = ''
             if self.item.isotopes.has_key(attr):
                 v = self.item.isotopes.get(attr).blank.value
                 v = floatfmt(v)
-            return v
         else:
-            v = getattr(self.item, attr).nominal_value
-            return floatfmt(v)
+            v = getattr(self.item, attr)
+            if v:
+                v = floatfmt(v.nominal_value)
+
+        return v
 
     def _get_error(self, attr):
+        v = ''
         if isinstance(self.item, TableBlank):
-            v = ''
             if self.item.isotopes.has_key(attr):
                 v = self.item.isotopes.get(attr).blank.error
                 v = floatfmt(v)
-            return v
         else:
-            v = getattr(self.item, attr).std_dev
+            v = getattr(self.item, attr)
+            if v:
+                v = floatfmt(v.std_dev)
 
-
-            return floatfmt(v)
+        return v
 
 class LaserTableAdapter(BaseAdapter):
     columns = [
@@ -147,7 +154,7 @@ class LaserTableAdapter(BaseAdapter):
     def _get_aliquot_step_str_text(self):
         item = self.item
         r = ''
-        if not isinstance(item, TableBlank):
+        if not isinstance(item, (TableBlank, TableSeparator)):
             r = '{:02n}{}'.format(item.aliquot, item.step)
         return r
 
@@ -159,7 +166,7 @@ class LaserTableAdapter(BaseAdapter):
 
     def _get_text_value(self, attr):
         v = ''
-        if not isinstance(self.item, TableBlank):
+        if not isinstance(self.item, (TableBlank, TableSeparator)):
             v = getattr(self.item, attr)
         return v
 
@@ -211,6 +218,7 @@ class LaserTableAdapter(BaseAdapter):
 class LaserTableMeanAdapter(BaseAdapter):
 
     columns = [
+               ('Sample', 'sample'),
                ('N', 'nanalyses'),
                ('Wtd. Age', 'weighted_age'),
                ('S.E', 'age_se'),

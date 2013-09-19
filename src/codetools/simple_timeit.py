@@ -53,7 +53,7 @@ def simple_timer(msg=None):
     def _timer(func):
         def dec(*args, **kw):
             with TimerCTX(msg, func.func_name):
-                func(*args, **kw)
+                return func(*args, **kw)
         return dec
     return _timer
 

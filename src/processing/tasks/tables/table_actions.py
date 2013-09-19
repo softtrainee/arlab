@@ -47,4 +47,18 @@ class AppendSummaryTableAction(TaskAction):
                          )
     tooltip = 'Append to current summary table'
 
+class LaserTableAction(TaskAction):
+    method = 'new_laser_table'
+    image = ImageResource(name='report.png',
+                         search_path=paths.icon_search_path
+                         )
+    tooltip = 'New laser table'
+
+
+class AppendLaserTableAction(TaskAction):
+    method = 'append_laser_table'
+    image = ImageResource(name='report_add.png',
+                         search_path=paths.icon_search_path
+                         )
+    tooltip = 'Append to current laser table'
 #============= EOF =============================================

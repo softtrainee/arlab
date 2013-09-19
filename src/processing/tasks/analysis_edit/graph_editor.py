@@ -25,6 +25,7 @@ from src.helpers.isotope_utils import sort_isotopes
 from src.graph.regression_graph import StackedRegressionGraph
 import os
 import copy
+from itertools import groupby
 #============= local library imports  ==========================
 
 
@@ -57,7 +58,9 @@ class GraphEditor(BaseTraitsEditor):
         '''
             TODO: find reference analyses using the current _unknowns
         '''
-        self._make_unknowns()
+        self._unknowns = self._gather_unknowns(True)
+
+#         self._make_unknowns()
         self.rebuild_graph()
 
         keys = set([ki  for ui in self._unknowns
@@ -96,10 +99,10 @@ class GraphEditor(BaseTraitsEditor):
     def _rebuild_graph(self):
         pass
 
-    def _make_unknowns(self):
-        if self.unknowns:
-            self._unknowns = self.processor.make_analyses(self.unknowns)
-#             self.processor.load_analyses(self._unknowns)
+#     def _make_unknowns(self):
+#         if self.unknowns:
+#             self._unknowns = self.processor.make_analyses(self.unknowns)
+# #             self.processor.load_analyses(self._unknowns)
 
     def traits_view(self):
         v = View(UItem('graph',
@@ -152,4 +155,32 @@ class GraphEditor(BaseTraitsEditor):
 #         with gc:
 #         self.rebuild_graph()
 
+    def _gather_unknowns(self, refresh_data):
+
+        ans = self._unknowns
+        if refresh_data or not ans:
+            unks = self.processor.make_analyses(self.unknowns,
+#                                                 calculate_age=False
+                                                )
+            ans = unks
+
+            if ans:
+                # compress groups
+                self._compress_unknowns(ans)
+                self._unknowns = ans
+
+        return ans
+
+    def _compress_unknowns(self, ans):
+        key = lambda x: x.group_id
+        ans = sorted(ans, key=key)
+        groups = groupby(ans, key)
+
+        mgid, analyses = groups.next()
+        for ai in analyses:
+            ai.group_id = 0
+
+        for gid, analyses in groups:
+            for ai in analyses:
+                ai.group_id = gid - mgid
 #============= EOF =============================================

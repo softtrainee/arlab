@@ -25,9 +25,10 @@ from src.pdf.items import Row, Subscript, Superscript, NamedParameter, \
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 
+from itertools import groupby
+
 def DefaultInt(value=40):
     return Int(value)
-
 
 
 class LaserTablePDFWriter(BasePDFWriter):
@@ -36,14 +37,28 @@ class LaserTablePDFWriter(BasePDFWriter):
         title_para = self._new_paragraph(title)
         flowables = [title_para, self._vspacer(0.1)]
 
-        t, t2 = self._make_table(ans, means)
-        flowables.append(t)
-        flowables.append(self._vspacer(0.1))
+
+        include_footnotes = True
+#         print ans
+        i = 0
+        for _, ais in ans:
+            aa = list(ais)
+            mean = means[i]
+            i += 1
+
+            t, t2 = self._make_table(aa, mean,
+                                     include_footnotes=include_footnotes)
+
+            include_footnotes = False
+
+            flowables.append(t)
+            flowables.append(self._vspacer(0.1))
+
         flowables.append(t2)
 
         return flowables, None
 
-    def _make_table(self, analyses, means):
+    def _make_table(self, analyses, means, include_footnotes=False):
         style = self._new_style(
                                 debug_grid=False
                                 )
@@ -56,7 +71,8 @@ class LaserTablePDFWriter(BasePDFWriter):
         data = []
         bdata = []
         # make meta
-        meta = self._make_meta(analyses, style)
+        meta = self._make_meta(analyses, style,
+                               include_footnotes=include_footnotes)
         data.extend(meta)
 
         # make header
@@ -86,7 +102,7 @@ class LaserTablePDFWriter(BasePDFWriter):
         s = self._make_summary_rows(means, idx + 1, style)
         data.extend(s)
 
-        t = self._new_table(style, data, repeatRows=3)
+        t = self._new_table(style, data, repeatRows=4)
 
         fdata = []
         style = self._new_style()
@@ -98,7 +114,7 @@ class LaserTablePDFWriter(BasePDFWriter):
 #         self._set_column_widths(t, spec)
         return t, ft
 
-    def _make_meta(self, analyses, style):
+    def _make_meta(self, analyses, style, include_footnotes=False):
         ref = analyses[0]
         j = ref.j
 
@@ -122,12 +138,14 @@ class LaserTablePDFWriter(BasePDFWriter):
         js = u'{:0.2E} \u00b1{:0.2E}'.format(j[0], j[1])
         line1.add_item(value=NamedParameter('J', js), span=3)
         ics = u'{:0.3f} \u00b1{:0.4f}'.format(ic[0], ic[1])
-
-        foot = self._make_footnote('IC',
-                                   'IC Factor',
-                                   'H1/CDD intercalibration',
-                                   '<b>IC</b>',
-                                   link_extra=': {}'.format(ics))
+        if include_footnotes:
+            foot = self._make_footnote('IC',
+                                       'IC Factor',
+                                       'H1/CDD intercalibration',
+                                       '<b>IC</b>',
+                                       link_extra=': {}'.format(ics))
+        else:
+            foot = NamedParameter('IC', ics)
 
         line1.add_item(value=foot, span=3)
 
@@ -316,8 +334,7 @@ class LaserTablePDFWriter(BasePDFWriter):
 #===============================================================================
 # summary
 #===============================================================================
-    def _make_summary_rows(self, means, idx, style):
-        mean = means[0]
+    def _make_summary_rows(self, mean, idx, style):
         platrow = Row(fontsize=7, height=0.25)
         platrow.add_item(value='Weighted Mean Age', span=5)
 
@@ -381,9 +398,8 @@ class LaserTablePDFWriter(BasePDFWriter):
                          span=2)
             row.add_item(value=r, span=-1)
             rows.append(row)
-
-            row.add_item(value='')
-            rows.append(row)
+#             row.add_item(value='')
+#             rows.append(row)
 
         row = FooterRow(fontsize=df)
         row.add_item(value='<b>Interferring isotope production ratios</b>', span=-1)
