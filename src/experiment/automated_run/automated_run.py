@@ -412,7 +412,7 @@ class AutomatedRun(Loggable):
                 msg = 'Delaying {}s for detectors to settle'.format(settling_time)
                 self.info(msg)
                 self.data_collector.total_counts += settling_time
-                self.experiment_manager.delay(settling_time, msg)
+                self.experiment_manager.wait(settling_time, msg)
 #                 self._wait(settling_time)
 
         if self.plot_panel:
