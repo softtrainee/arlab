@@ -278,7 +278,7 @@ class PlotPanel(Loggable):
         if arar_age:
             # call age first
             # loads all the other attrs
-            age = arar_age.age
+            age = arar_age.calculate_age()
             summary = [
                        factory(name, v) for name, v in
                        [
@@ -525,6 +525,7 @@ class PlotPanel(Loggable):
 #                 pass
 #                 if arar_age:
 #                 arar_age.age_dirty = True
+                arar_age.age=None
                 self._print_results()
 #===============================================================================
 # defaults
