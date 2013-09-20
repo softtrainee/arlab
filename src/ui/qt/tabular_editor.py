@@ -15,11 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from PySide.QtGui import QKeySequence, QDrag, QAbstractItemView, QTableView
+from PySide.QtGui import QKeySequence, QDrag, QAbstractItemView, QTableView, QApplication
 from PySide.QtGui import QFont, QFontMetrics
 
 from PySide import QtCore
-from traits.api import Bool, Str, List
+from traits.api import Bool, Str, List, Any
 from traitsui.editors.tabular_editor import TabularEditor
 from traitsui.qt4.tabular_editor import TabularEditor as qtTabularEditor, \
     _TableView
@@ -29,6 +29,13 @@ import time
 #============= local library imports  ==========================
 from src.helpers.ctx_managers import no_update
 from src.consumer_mixin import ConsumerMixin
+
+class TabularKeyEvent(object):
+    def __init__(self, event):
+        self.text = event.text().strip()
+        mods = QApplication.keyboardModifiers()
+        self.shift = mods == QtCore.Qt.ShiftModifier
+
 
 class _myTableView(_TableView, ConsumerMixin):
     '''
@@ -152,6 +159,8 @@ class _myTableView(_TableView, ConsumerMixin):
                 self.add_consumable((self._add, items))
 
         else:
+            self._editor.key_pressed = TabularKeyEvent(event)
+
             self.super_keyPressEvent(event)
 #            super(_myTableView, self).keyPressEvent(event)
 
@@ -235,6 +244,7 @@ class _myTableView(_TableView, ConsumerMixin):
             self._dragging = None
 
         else:
+
             super(_myTableView, self).dropEvent(e)
 
 
@@ -247,6 +257,7 @@ class _TabularEditor(qtTabularEditor):
     widget_factory = _myTableView
     copy_cache = List
     col_widths = List
+    key_pressed = Any
 
     def init(self, parent):
         super(_TabularEditor, self).init(parent)
@@ -255,6 +266,7 @@ class _TabularEditor(qtTabularEditor):
         self.sync_value(self.factory.col_widths, 'col_widths', 'to')
 #        self.sync_value(self.factory.pasted, 'pasted', 'to')
         self.sync_value(self.factory.copy_cache, 'copy_cache', 'both')
+        self.sync_value(self.factory.key_pressed, 'key_pressed', 'to')
 
         if hasattr(self.object, self.factory.paste_function):
             self.control.paste_func = getattr(self.object, self.factory.paste_function)
@@ -273,6 +285,8 @@ class _TabularEditor(qtTabularEditor):
         if self.control:
             self.control._linked_copy_cache = self.copy_cache
 
+#     def _key_pressed_changed(self):
+#         print 'asdsfd'
 #     def _paste_function_changed(self):
 #         if self.control:
 #             self.control.paste_func = self.paste_function
@@ -298,6 +312,7 @@ class myTabularEditor(TabularEditor):
 #     scroll_to_row_hint = 'visible'
 #    scroll_to_row_hint = 'bottom'
 #    drag_move = Bool(False)
+    key_pressed = Str
     rearranged = Str
     pasted = Str
     copy_cache = Str

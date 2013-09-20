@@ -17,25 +17,28 @@
 #============= enthought library imports =======================
 from traits.api import Instance, on_trait_change, Any, List
 from src.envisage.tasks.editor_task import BaseEditorTask
-from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane
+from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane, \
+    TablePane
 from src.processing.tasks.search_panes import QueryPane
 from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
 # from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.database.records.isotope_record import IsotopeRecordView
 from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
 from src.processing.analysis import Analysis
+from src.processing.selection.data_selector import DataSelector
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class AnalysisEditTask(BaseEditorTask):
-    unknowns_pane = Any
+    unknowns_pane = Instance(TablePane)
     controls_pane = Instance(ControlsPane)
 #    results_pane = Instance(ResultsPane)
     plot_editor_pane = Instance(PlotEditorPane)
     unknowns_adapter = UnknownsAdapter
     unknowns_pane_klass = UnknownsPane
 
+    data_selector = Instance(DataSelector)
     _analysis_cache = List
 
     def set_tag(self):
@@ -69,7 +72,7 @@ class AnalysisEditTask(BaseEditorTask):
 
     def create_dock_panes(self):
 
-        self._create_unknowns_pane()
+        self.unknowns_pane = self._create_unknowns_pane()
 
         self.controls_pane = ControlsPane()
         self.plot_editor_pane = PlotEditorPane()
@@ -84,7 +87,6 @@ class AnalysisEditTask(BaseEditorTask):
         if ps:
             panes.extend(ps)
 
-
         return panes
 
     def _create_db_panes(self):
@@ -92,16 +94,16 @@ class AnalysisEditTask(BaseEditorTask):
             selector = self.manager.db.selector
             selector._search_fired()
 
-            from src.processing.selection.data_selector import DataSelector
+#             from src.processing.selection.data_selector import DataSelector
 #             from src.processing.tasks.search_panes import ResultsPane
 
             ds = DataSelector(database_selector=selector)
-
+            self.data_selector = ds
 #             return (QueryPane(model=ds), ResultsPane(model=ds))
             return QueryPane(model=ds),
 
     def _create_unknowns_pane(self):
-        self.unknowns_pane = up = self.unknowns_pane_klass(adapter_klass=self.unknowns_adapter)
+        up = self.unknowns_pane_klass(adapter_klass=self.unknowns_adapter)
         up.load()
         return up
 
@@ -189,10 +191,7 @@ class AnalysisEditTask(BaseEditorTask):
 
         editor.analysis_cache = self._analysis_cache
 
-    @on_trait_change('''unknowns_pane:dclicked, 
-references_pane:dclicked,
-manager:db:selector:dclicked
-''')
+    @on_trait_change('''unknowns_pane:dclicked, data_selector:selector:dclicked''')
     def _selected_changed(self, new):
         if new:
             if isinstance(new.item, (IsotopeRecordView, Analysis)):
@@ -211,6 +210,33 @@ manager:db:selector:dclicked
     def _update_up_previous_selection(self, obj, name, old, new):
         self._set_previous_selection(obj, new)
 
+    @on_trait_change('unknowns_pane:[append_button, replace_button]')
+    def _append_unknowns(self, obj, name, old, new):
+        s = self.data_selector.selector.selected
+        if name == 'append_button':
+            self.unknowns_pane.items.extend(s)
+        else:
+            self.unknowns_pane.items = s
+
+
+    @on_trait_change('data_selector:selector:key_pressed')
+    def _key_press(self, obj, name, old, new):
+        '''
+            use 'u' to add selected analyses to unknowns pane
+        '''
+        s = self.data_selector.selector.selected
+        if new and s:
+            c = new.text
+#             shift = new.shift
+            if c == 'u':
+                self.unknowns_pane.items.extend(s)
+            elif c == 'U':
+                self.unknowns_pane.items = s
+            else:
+                self._handle_key_pressed(c)
+
+    def _handle_key_pressed(self, c):
+        pass
 #===============================================================================
 #
 #===============================================================================

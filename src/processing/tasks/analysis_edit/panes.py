@@ -16,19 +16,31 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Button, List, Instance, Property, Any, Event, Bool
-from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, EnumEditor
+from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, EnumEditor, ButtonEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
-from src.ui.tabular_editor import myTabularEditor
-from src.processing.tasks.analysis_edit.ianalysis_edit_tool import IAnalysisEditTool
+from pyface.image_resource import ImageResource
 # from src.processing.search.previous_selection import PreviousSelection
 import os
-from src.paths import paths
 import shelve
 import hashlib
-from src.processing.analysis import Marker
-from src.processing.selection.previous_selection import PreviousSelection
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.ui.tabular_editor import myTabularEditor
+from src.processing.tasks.analysis_edit.ianalysis_edit_tool import IAnalysisEditTool
+from src.paths import paths
+from src.processing.analysis import Marker
+from src.processing.selection.previous_selection import PreviousSelection
+
+
+def new_button_editor(trait, name, **kw):
+
+    name = '{}.png'.format(name)
+    return UItem(trait, style='custom',
+                 editor=ButtonEditor(image=ImageResource(name=name,
+                                                  search_path=paths.icon_search_path
+                                                  )),
+                 **kw
+                 )
 
 class TablePane(TraitsDockPane):
     append_button = Button
@@ -64,6 +76,9 @@ class TablePane(TraitsDockPane):
 class HistoryTablePane(TablePane):
     previous_selection = Any
     previous_selections = List(PreviousSelection)
+
+    _add_tooltip = '''(u) Append unknowns'''
+    _replace_tooltip = '''(Shift+u) Replace unknowns'''
     def load(self):
         self.load_previous_selections()
     def dump(self):
@@ -141,6 +156,14 @@ class HistoryTablePane(TablePane):
 
     def traits_view(self):
         v = View(VGroup(
+                      HGroup(new_button_editor('append_button', 'add',
+                                               tooltip=self._add_tooltip
+                                               ),
+                             new_button_editor('replace_button', 'arrow_refresh',
+                                               tooltip=self._replace_tooltip
+                                               ),
+
+                             ),
                       UItem('previous_selection', editor=EnumEditor(name='previous_selections')),
                       UItem('items', editor=myTabularEditor(adapter=self.adapter_klass(),
                                                             operations=['move', 'delete'],
@@ -167,6 +190,8 @@ class ReferencesPane(HistoryTablePane):
     name = 'References'
     id = 'pychron.analysis_edit.references'
 
+    _add_tooltip = '''(r) Append references'''
+    _replace_tooltip = ''' (Shift+r) Replace references'''
 
 class ControlsPane(TraitsDockPane):
     dry_run = Bool(True)

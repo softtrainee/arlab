@@ -50,7 +50,7 @@ class meas_AnalysisTable(Base, BaseMixin):
     step = stringcolumn(10)
     comment = Column(BLOB)
 
-    #tag = Column(String(40), ForeignKey('proc_TagTable.name'))
+    # tag = Column(String(40), ForeignKey('proc_TagTable.name'))
 
     # meas relationships
     isotopes = relationship('meas_IsotopeTable', backref='analysis',
@@ -93,6 +93,9 @@ class meas_ExtractionTable(Base, BaseMixin):
     extract_value = Column(Float)
     extract_duration = Column(Float)
     cleanup_duration = Column(Float)
+
+    extract_units = stringcolumn(5)
+
 #    experiment_blob = Column(BLOB)
     weight = Column(Float)
     sensitivity_multiplier = Column(Float)
