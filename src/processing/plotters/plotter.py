@@ -342,7 +342,7 @@ class Plotter(Viewable):
         valid_mswd = validate_mswd(mswd, n)
         return mswd, valid_mswd, n
 
-    @simple_timer()
+    @simple_timer('age ages')
     def _get_ages(self, analyses, group_id=None, unzip=True, calculate=True):
         if group_id is not None:
             analyses = [ai for ai in analyses if ai.group_id == group_id]

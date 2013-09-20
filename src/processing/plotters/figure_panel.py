@@ -55,15 +55,17 @@ class FigurePanel(HasTraits):
             mi, ma = min(xmis), max(xmas)
 
 
-        for fig in self.figures:
+        for i, fig in enumerate(self.figures):
             fig.trait_set(xma=ma, xmi=mi,
-                           options=po
+                           options=po,
+                           graph=g,
                            )
 
             plots = list(po.get_aux_plots())
+            if i == 0:
+                fig.build(plots)
 
-            fig.build(g, plots)
-            fig.plot(g, plots)
+            fig.plot(plots)
 
         self.graph = g
         return g.plotcontainer

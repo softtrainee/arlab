@@ -38,7 +38,7 @@ class FigureEditor(GraphEditor):
 #     unknowns = List
 #     _unknowns = List
 #     _cached_unknowns = List
-    _suppress_rebuild = False
+#     _suppress_rebuild = False
     def traits_view(self):
         v = View(UItem('component',
                        style='custom',
@@ -46,16 +46,12 @@ class FigureEditor(GraphEditor):
                        editor=EnableComponentEditor()))
         return v
 
-#     @on_trait_change('unknowns[]')
-#     def _update_unknowns(self, new):
-#         if not self._suppress_rebuild and new:
-#             self.rebuild()
-
     def set_group(self, idxs, gid, refresh=True):
         for i, (ui, uu) in enumerate(zip(self._unknowns, self.unknowns)):
             if i in idxs:
                 ui.group_id = gid
                 uu.group_id = gid
+
         if refresh:
             self.rebuild(refresh_data=False)
 
@@ -67,70 +63,24 @@ class FigureEditor(GraphEditor):
         if ans:
             po = self.plotter_options_manager.plotter_options
 
-            comp = timethis(self._get_component, args=(ans, po))
+            comp = timethis(self._get_component, args=(ans, po), msg='get_component')
     #         comp = self._get_component(ans, po)
 
             self.component = comp
             self.component_changed = True
 
-#     def _gather_unknowns(self, refresh_data):
-#         ans = self._unknowns
-#         if refresh_data or not ans:
-#             unks = self.processor.make_analyses(self.unknowns,
-#                                                 calculate_age=False
-#                                                 )
-#             ans = unks
-#
-#             if ans:
-#                 # compress groups
-#                 self._compress_unknowns(ans)
-#                 self._unknowns = ans
-#
-#         return ans
-#
-#     def _compress_unknowns(self, ans):
-#         key = lambda x: x.group_id
-#         ans = sorted(ans, key=key)
-#         groups = groupby(ans, key)
-#
-#         mgid, analyses = groups.next()
-#         for ai in analyses:
-#             ai.group_id = 0
-#
-#         for gid, analyses in groups:
-#             for ai in analyses:
-#                 ai.group_id = gid - mgid
-
-#     def _get_component(self, ans, po):
-#         raise NotImplementedError
     def _get_component(self, ans, po):
         func = getattr(self.processor, self.func)
         return func(ans=ans, plotter_options=po)
-
-#         if args:
-#             retur
-#             comp, plotter = args
-#             self.plotter = plotter
-#             return comp
 
 
 class IdeogramEditor(FigureEditor):
     plotter_options_manager = Instance(IdeogramOptionsManager, ())
     func = 'new_ideogram'
-#     def _get_component(self, ans, po):
-#         args = self.processor.new_ideogram(ans=ans, plotter_options=po)
-#         if args:
-#             comp, plotter = args
-#             self.plotter = plotter
-#             return comp
 
 class SpectrumEditor(FigureEditor):
     plotter_options_manager = Instance(SpectrumOptionsManager, ())
     func = 'new_spectrum'
-#     def _get_component(self, ans, po):
-#         comp, plotter = self.processor.new_spectrum(ans=ans, plotter_options=po)
-#         self.plotter = plotter
-#         return comp
 
 class InverseIsochronEditor(FigureEditor):
     plotter_options_manager = Instance(InverseIsochronOptionsManager, ())

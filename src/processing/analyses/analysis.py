@@ -91,6 +91,7 @@ class DBAnalysis(Analysis):
     cleanup_duration = Float
     extract_duration = Float
     analysis_type = Str
+    tag = Str
 
     ic_factors = Dict
 
@@ -107,13 +108,25 @@ class DBAnalysis(Analysis):
 
         pe = calc_percent_error(a, e)
 
-        return u'{:0.3f} +/-{:0.3f}{}'.format(a, e, pe)
+        return u'{:0.3f} +/-{:0.3f} ({}%)'.format(a, e, pe)
 
     def _get_status_text(self):
-        if self.temp_status == 0:
-            return 'OK'
-        else:
-            return 'Omitted'
+        '''
+        
+        '''
+        r = 'OK'
+        if self.status != 0:
+            r = 'Invalid'
+
+        elif self.temp_status != 0:
+            r = 'Omitted'
+
+        return r
+
+#         if self.temp_status == 0:
+#             return 'OK'
+#         else:
+#             return 'Omitted'
 
     def set_temporary_blank(self, k, v, e):
         if self.isotopes.has_key(k):
@@ -238,6 +251,13 @@ class DBAnalysis(Analysis):
             v = getattr(meas_analysis, attr)
             setattr(self, key, cast(v))
 
+        tag = meas_analysis.tag
+        self.tag = tag or ''
+        if self.tag:
+#             print 'sdfasf', self.tag
+            self.temp_status = 1
+
+#         print 'ffff', id(self), self.record_id, self.temp_status
 #         analts = analysis.analysis_timestamp
 #         return time.mktime(analts.timetuple())
         # copy related table attrs

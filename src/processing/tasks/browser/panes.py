@@ -131,7 +131,7 @@ class BrowserPane(TraitsDockPane):
 #                                           )
                                 width=300
                                  ),
-                            HGroup(spring, Item('omit_bogus'))
+                            HGroup(spring, Item('omit_invalid'))
                            )
 
         v = View(

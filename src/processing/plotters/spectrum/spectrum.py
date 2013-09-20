@@ -57,10 +57,11 @@ class Spectrum(BaseArArFigure):
 #     index_key = 'age'
 #     ytitle = 'Relative Probability'
 
-    def plot(self, graph, plots):
+    def plot(self, plots):
         '''
             plot data on plots
         '''
+        graph = self.graph
 
         self._plot_age_spectrum(graph, graph.plots[0], 0)
 

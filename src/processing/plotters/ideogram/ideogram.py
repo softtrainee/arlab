@@ -16,36 +16,30 @@
 
 #============= enthought library imports =======================
 from traits.api import Float, Array
-#============= standard library imports ========================
-from numpy import linspace, pi, exp, zeros, ones, array, arange
 from chaco.array_data_source import ArrayDataSource
+from chaco.tools.broadcaster import BroadcasterTool
+#============= standard library imports ========================
+from numpy import linspace, pi, exp, zeros, ones, array, arange, \
+    Inf
 #============= local library imports  ==========================
 
 from src.processing.plotters.arar_figure import BaseArArFigure
 from src.graph.error_bar_overlay import ErrorBarOverlay
-from chaco.tools.broadcaster import BroadcasterTool
 
 from src.graph.tools.rect_selection_tool import RectSelectionOverlay, \
     RectSelectionTool
 from src.graph.tools.analysis_inspector import AnalysisPointInspector
 from src.graph.tools.point_inspector import PointInspectorOverlay
-from chaco.data_label import DataLabel, draw_arrow
 from src.stats.peak_detection import find_peaks
 from src.stats.core import calculate_weighted_mean
-from numpy.core.numeric import Inf
 from src.processing.plotters.point_move_tool import PointMoveTool
-from src.helpers.formatting import floatfmt
-from chaco.tools.data_label_tool import DataLabelTool
-# from src.processing.plotters.plotter import mDataLabelTool
-# from chaco.scatterplot import render_markers
+from chaco.data_label import DataLabel
+
 N = 500
 
 
-
-
 class Ideogram(BaseArArFigure):
-#     probability_curve_kind = 'weighted_mean'
-#     mean_calculation_kind
+
     xmi = Float
     xma = Float
     xs = Array
@@ -55,10 +49,11 @@ class Ideogram(BaseArArFigure):
     _reverse_sorted_analyses = True
     _analysis_number_cnt = 0
 
-    def plot(self, graph, plots):
+    def plot(self, plots):
         '''
             plot data on plots
         '''
+        graph = self.graph
         self._analysis_number_cnt = 0
 
         self.xs, self.xes = array([[ai.nominal_value, ai.std_dev]
@@ -66,11 +61,20 @@ class Ideogram(BaseArArFigure):
 
         self._plot_relative_probability(graph, graph.plots[0], 0)
 
+        exclude = [i for i, ai in enumerate(self.sorted_analyses)
+                    if ai.status or ai.temp_status]
+
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
-            getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1)
+            scatter = getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1,
+                                                      )
+            if exclude:
+                scatter.index.metadata['selections'] = exclude
 
         graph.set_x_limits(min_=self.xmi, max_=self.xma,
                            pad='0.1')
+
+        if exclude:
+            self._rebuild_ideo(exclude)
 
 
     def max_x(self, attr):
@@ -94,6 +98,7 @@ class Ideogram(BaseArArFigure):
                              visible=po.y_error)
 
         self._add_scatter_inspector(scatter)
+        return scatter
 
     def _plot_analysis_number(self, po, plot, pid):
         xs = self.xs
@@ -107,18 +112,18 @@ class Ideogram(BaseArArFigure):
 
         self._add_scatter_inspector(scatter,
                                     value_format=lambda x: '{:d}'.format(int(x)),
-                                    additional_info=lambda x: x.age_string,
+                                    additional_info=lambda x: u'Age= {}'.format(x.age_string),
                                     )
 
         self._analysis_number_cnt += n
         self.graph.set_y_limits(min_=0,
                                 max_=self._analysis_number_cnt,
                                 plotid=pid)
+        return scatter
 
     def _plot_relative_probability(self, graph, plot, pid):
 
         bins, probs = self._calculate_probability_curve(self.xs, self.xes)
-
 
         scatter, _p = graph.new_series(x=bins, y=probs, plotid=pid)
 
@@ -264,8 +269,10 @@ class Ideogram(BaseArArFigure):
         graph = self.graph
         plot = graph.plots[0]
 
-        lp = plot.plots['plot0'][0]
-        dp = plot.plots['plot1'][0]
+        gid = 3 * self.group_id
+        lp = plot.plots['plot{}'.format(gid)][0]
+        dp = plot.plots['plot{}'.format(gid + 1)][0]
+        sp = plot.plots['plot{}'.format(gid + 2)][0]
 
         def f(a):
             i, _ = a
@@ -283,22 +290,20 @@ class Ideogram(BaseArArFigure):
         lp.value.set_data(ys)
         lp.index.set_data(xs)
 
-#         sp.index.set_data([wm])
-#         sp.xerror.set_data([we])
+        sp.index.set_data([wm])
+        sp.xerror.set_data([we])
 
         mi = min(ys)
         ma = max(ys)
-#         self._set_y_limits(graph, mi, ma)
+        self._set_y_limits(mi, ma, min_=0)
 
-#         bounds_only = False
-#         if not bounds_only:
         # update the data label position
-#             for ov in sp.overlays:
-#                 if isinstance(ov, DataLabel):
-#                     _, y = ov.data_point
-#                     ov.data_point = wm, y
-#                     n = len(xs)
-#                     ov.label_text = self._build_label_text(wm, we, mswd, valid_mswd, n)
+        for ov in sp.overlays:
+            if isinstance(ov, DataLabel):
+                _, y = ov.data_point
+                ov.data_point = wm, y
+                n = len(fxs)
+                ov.label_text = self._build_label_text(wm, we, mswd, valid_mswd, n)
 
         if sel:
             dp.visible = True
@@ -306,7 +311,6 @@ class Ideogram(BaseArArFigure):
             dp.value.set_data(ys)
             dp.index.set_data(xs)
         else:
-#                result.oage, result.oerror, result.omswd = None, None, None
             dp.visible = False
 
 #===============================================================================
