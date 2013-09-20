@@ -15,45 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, on_trait_change
 #============= standard library imports ========================
-from itertools import groupby
-from src.graph.stacked_graph import StackedGraph
+
 from src.processing.plotters.ideogram.ideogram import Ideogram
+from src.processing.plotters.figure_panel import FigurePanel
 
 #============= local library imports  ==========================
-class IdeogramPanel(HasTraits):
-    graph = Any
-    analyses = Any
-    plot_options = Any
-
-    @on_trait_change('analyses[]')
-    def _analyses_items_changed(self):
-        self.ideograms = self._make_ideograms()
-
-    def _make_ideograms(self):
-        key = lambda x: x.group_id
-        ans = sorted(self.analyses, key=key)
-        gs = [Ideogram(analyses=list(ais), group_id=gid)
-                for gid, ais in groupby(ans, key=key)]
-        return gs
-
-    def make_graph(self):
-        g = StackedGraph(panel_height=200,
-                         equi_stack=False,
-                         container_dict=dict(padding=0),)
-
-        xmas, xmis = zip(*[(i.max_x('age'), i.min_x('age'))
-                            for i in self.ideograms])
-        po = self.plot_options
-
-        for ideo in self.ideograms:
-            ideo.trait_set(xma=max(xmas), xmi=min(xmis))
-
-            plots = list(po.get_aux_plots())
-            ideo.build(g, plots)
-            ideo.plot(g, plots)
-
-        self.graph = g
-        return g.plotcontainer
+class IdeogramPanel(FigurePanel):
+    _figure_klass = Ideogram
+    _index_attr = 'age'
 #============= EOF =============================================

@@ -91,15 +91,14 @@ class RecallTask(AnalysisEditTask):
         def func(rec):
 #             rec.load_isotopes()
             rec.calculate_age()
-            reditor = RecallEditor(
-                                    model=rec,
-#                                     analysis_summary=rec.isotope_record.analysis_summary,
-                                   )
+            reditor = RecallEditor(model=rec)
             self.editor_area.add_editor(reditor)
 #             self.add_iso_evo(reditor.name, rec)
 
         if ans:
-            self.manager._load_analyses(ans, func=func)
+            for ri in ans:
+                func(ri)
+#             self.manager._load_analyses(ans, func=func)
 
             ed = self.editor_area.editors[-1]
             self.editor_area.activate_editor(ed)

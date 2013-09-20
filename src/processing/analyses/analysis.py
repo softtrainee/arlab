@@ -67,8 +67,9 @@ class Analysis(ArArAge):
         '''
         '''
         return
-
+#
     def _analysis_summary_default(self):
+#         print 'asdfsad'
         return self.analysis_summary_klass(model=self)
 
 class DBAnalysis(Analysis):
@@ -205,7 +206,12 @@ class DBAnalysis(Analysis):
         if extraction:
             self.extract_device = self._get_extraction_device(extraction)
             self.extract_value = extraction.extract_value
-#             self.extract_units = extraction.extract_units
+
+            # add extract units to meas_ExtractionTable
+#             eu = extraction.extract_units or 'W'
+#             self.extract_units = eu
+            self.extract_units = 'W'
+
             self.cleanup = extraction.cleanup_duration
             self.duration = extraction.extract_duration
             self.position = self._get_position(extraction)
@@ -558,6 +564,7 @@ class DBAnalysis(Analysis):
     def __getattr__(self, attr):
         if attr in ('ar40', 'ar39', 'ar38', 'ar37', 'ar36'):
             return getattr(self, attr.capitalize())
+        print attr
         raise AttributeError
 
 if __name__ == '__main__':

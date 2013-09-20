@@ -26,6 +26,8 @@ from src.graph.regression_graph import StackedRegressionGraph
 import os
 import copy
 from itertools import groupby
+from src.helpers.iterfuncs import partition
+from numpy.ma.core import ids
 #============= local library imports  ==========================
 
 
@@ -40,6 +42,7 @@ class GraphEditor(BaseTraitsEditor):
 
     component_changed = Event
     path = File
+    analysis_cache = List
 
     def normalize(self, xs, start=None):
         xs = asarray(xs)
@@ -159,15 +162,23 @@ class GraphEditor(BaseTraitsEditor):
 
         ans = self._unknowns
         if refresh_data or not ans:
-            unks = self.processor.make_analyses(self.unknowns,
-#                                                 calculate_age=False
-                                                )
-            ans = unks
+            ids = [ai.uuid for ai in self.analysis_cache]
+            aa = [ai for ai in self.unknowns if ai.uuid not in ids]
 
-            if ans:
-                # compress groups
-                self._compress_unknowns(ans)
-                self._unknowns = ans
+            nids = (ai.uuid for ai in self.unknowns if ai.uuid in ids)
+            bb = [next((ai for ai in self.analysis_cache if ai.uuid == i)) for i in nids]
+            aa = list(aa)
+            if aa:
+                unks = self.processor.make_analyses(list(aa))
+                ans = unks
+                if bb:
+                    ans.extend(bb)
+            else:
+                ans = bb
+
+            # compress groups
+            self._compress_unknowns(ans)
+            self._unknowns = ans
 
         return ans
 

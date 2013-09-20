@@ -37,6 +37,7 @@ from src.processing.plotters.series import Series
 from src.database.core.query import compile_query
 from src.helpers.iterfuncs import partition
 from src.processing.plotters import plotter_options
+from src.processing.plotters.figure_container import FigureContainer
 
 
 class Processor(IsotopeDatabaseManager):
@@ -390,10 +391,9 @@ class Processor(IsotopeDatabaseManager):
             plotter_options = pom.plotter_options
 
         from src.processing.plotters.ideogram.ideogram_model import IdeogramModel
-        from src.processing.plotters.ideogram.ideogram_container import IdeogramContainer
         model = IdeogramModel(plot_options=plotter_options)
         model.analyses = ans
-        iv = IdeogramContainer(model=model)
+        iv = FigureContainer(model=model)
         return iv.component
 
     def new_series(self, ans, options=None, plotter_options=None):
@@ -404,57 +404,17 @@ class Processor(IsotopeDatabaseManager):
 #                               plotter_options=plotter_options)
 #             return gseries, p
 
-#     def new_ideogram2(self, ans, plotter_options=None):
-#         '''
-#             return a plotcontainer
-#         '''
-#
-#         probability_curve_kind = 'cumulative'
-#         mean_calculation_kind = 'weighted_mean'
-#         data_label_font = None
-#         metadata_label_font = None
-# #        highlight_omitted = True
-#         display_mean_indicator = True
-#         display_mean_text = True
-#
-#         p = Ideogram(
-# #                     db=self.db,
-# #                     processing_manager=self,
-#                      probability_curve_kind=probability_curve_kind,
-#                      mean_calculation_kind=mean_calculation_kind
-#                      )
-#         options = dict(
-#                        title='',
-#                        data_label_font=data_label_font,
-#                        metadata_label_font=metadata_label_font,
-#                        display_mean_text=display_mean_text,
-#                        display_mean_indicator=display_mean_indicator,
-#                        )
-#
-#         if plotter_options is None:
-#             pom = IdeogramOptionsManager()
-#             plotter_options = pom.plotter_options
-#
-#         if ans:
-# #             self.analyses = ans
-#             gideo = p.build(ans, options=options,
-#                             plotter_options=plotter_options)
-#             if gideo:
-#                 gideo, _plots = gideo
-#
-#             return gideo, p
-#
     def new_spectrum(self, ans, plotter_options=None):
-        pass
-#
-#         p = Spectrum()
-#
-#         if plotter_options is None:
-#             pom = SpectrumOptionsManager()
-#             plotter_options = pom.plotter_options
-#
-#         options = {}
-#
+        if plotter_options is None:
+            pom = SpectrumOptionsManager()
+            plotter_options = pom.plotter_options
+
+        from src.processing.plotters.spectrum.spectrum_model import SpectrumModel
+        model = SpectrumModel(plot_options=plotter_options)
+        model.analyses = ans
+        iv = FigureContainer(model=model)
+        return iv.component
+
 #         self._plotter_options = plotter_options
 #         if ans:
 # #             self.analyses = ans
@@ -554,6 +514,10 @@ class Processor(IsotopeDatabaseManager):
                 dbr = db.get_analysis_uuid(pi.uuid)
 #                 self.db.add_blanks_set(item, pi.dbrecord)
                 db.add_blanks_set(item, dbr)
+
+#============= EOF =============================================
+
+
 #
 # class Processor2(IsotopeDatabaseManager):
 #    count = 0
@@ -708,3 +672,62 @@ class Processor(IsotopeDatabaseManager):
 #            db.connect()
 #        return d
 #============= EOF =============================================
+#     def new_ideogram2(self, ans, plotter_options=None):
+#         '''
+#             return a plotcontainer
+#         '''
+#
+#         probability_curve_kind = 'cumulative'
+#         mean_calculation_kind = 'weighted_mean'
+#         data_label_font = None
+#         metadata_label_font = None
+# #        highlight_omitted = True
+#         display_mean_indicator = True
+#         display_mean_text = True
+#
+#         p = Ideogram(
+# #                     db=self.db,
+# #                     processing_manager=self,
+#                      probability_curve_kind=probability_curve_kind,
+#                      mean_calculation_kind=mean_calculation_kind
+#                      )
+#         options = dict(
+#                        title='',
+#                        data_label_font=data_label_font,
+#                        metadata_label_font=metadata_label_font,
+#                        display_mean_text=display_mean_text,
+#                        display_mean_indicator=display_mean_indicator,
+#                        )
+#
+#         if plotter_options is None:
+#             pom = IdeogramOptionsManager()
+#             plotter_options = pom.plotter_options
+#
+#         if ans:
+# #             self.analyses = ans
+#             gideo = p.build(ans, options=options,
+#                             plotter_options=plotter_options)
+#             if gideo:
+#                 gideo, _plots = gideo
+#
+#             return gideo, p
+#     def new_spectrum(self, ans, plotter_options=None):
+#         pass
+#
+#         p = Spectrum()
+#
+#         if plotter_options is None:
+#             pom = SpectrumOptionsManager()
+#             plotter_options = pom.plotter_options
+#
+#         options = {}
+#
+#         self._plotter_options = plotter_options
+#         if ans:
+# #             self.analyses = ans
+#             gspec = p.build(ans, options=options,
+#                             plotter_options=plotter_options)
+#             if gspec:
+#                 gspec, _plots = gspec
+#
+#             return gspec, p

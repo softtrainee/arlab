@@ -16,25 +16,24 @@
 
 #============= enthought library imports =======================
 from traits.api import Str, on_trait_change, Bool
-from chaco.array_data_source import ArrayDataSource
+# from chaco.array_data_source import ArrayDataSource
 
 #============= standard library imports ========================
-from numpy import asarray, Inf
+# from numpy import asarray, Inf
 #============= local library imports  ==========================
 # from src.constants import FIT_TYPES
 # from src.processing.tasks.analysis_edit.ianalysis_edit_tool import IAnalysisEditTool
 from src.graph.regression_graph import StackedRegressionGraph
-from src.regression.interpolation_regressor import InterpolationRegressor
+# from src.regression.interpolation_regressor import InterpolationRegressor
 # from src.regression.ols_regressor import OLSRegressor
 # from src.regression.mean_regressor import MeanRegressor
-from src.helpers.datetime_tools import convert_timestamp
+# from src.helpers.datetime_tools import convert_timestamp
 # from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 from src.processing.tasks.analysis_edit.interpolation_editor import InterpolationEditor
 from src.helpers.isotope_utils import sort_isotopes
 
 class BlanksEditor(InterpolationEditor):
     name = Str
-
 
     def do_fit(self, ans):
         pass
@@ -97,12 +96,17 @@ class BlanksEditor(InterpolationEditor):
         return p_uys, p_ues
 
     def _get_current_values(self, iso):
-
         return zip(*[self._get_isotope(ui, iso, 'blank')
                             for ui in self._unknowns
                             ])
+
+    def _get_baseline_corrected(self, analysis, k):
+        iso = analysis.isotopes[k]
+        v = iso.baseline_corrected_value()
+        return v.nominal_value, v.std_dev
+
     def _get_reference_values(self, iso):
-        return zip(*[self._get_isotope(ui, iso)
+        return zip(*[self._get_baseline_corrected(ui, iso)
                             for ui in self._references
                             ])
 
@@ -233,6 +237,7 @@ class BlanksEditor(InterpolationEditor):
                         for ki in ui.isotope_keys])
         keys = sort_isotopes(keys)
         fits = ['linear', ] * len(keys)
+
         self.tool.load_fits(keys, fits)
 
     def _graph_default(self):

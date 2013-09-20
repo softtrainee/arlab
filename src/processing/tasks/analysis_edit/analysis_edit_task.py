@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, on_trait_change, Any
+from traits.api import Instance, on_trait_change, Any, List
 from src.envisage.tasks.editor_task import BaseEditorTask
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane
 from src.processing.tasks.search_panes import QueryPane
@@ -35,6 +35,8 @@ class AnalysisEditTask(BaseEditorTask):
     plot_editor_pane = Instance(PlotEditorPane)
     unknowns_adapter = UnknownsAdapter
     unknowns_pane_klass = UnknownsPane
+
+    _analysis_cache = List
 
     def set_tag(self):
         if self.unknowns_pane:
@@ -157,9 +159,11 @@ class AnalysisEditTask(BaseEditorTask):
                     tool = self.active_editor.tool
 
                 self.controls_pane.tool = tool
-                if self.unknowns_pane and \
-                    hasattr(self.active_editor, 'unknowns'):
-                    self.unknowns_pane.items = self.active_editor.unknowns
+                if self.unknowns_pane:
+                    self.unknowns_pane.previous_selection = ''
+
+                    if hasattr(self.active_editor, 'unknowns'):
+                        self.unknowns_pane.items = self.active_editor.unknowns
 
     @on_trait_change('active_editor:component_changed')
     def _update_component(self):
@@ -170,8 +174,20 @@ class AnalysisEditTask(BaseEditorTask):
     def _update_unknowns_runs(self, obj, name, old, new):
         if not obj._no_update:
             if self.active_editor:
-                self.active_editor.unknowns = self.unknowns_pane.items
 
+                self.active_editor.unknowns = self.unknowns_pane.items
+                self._append_cache(self.active_editor)
+
+    def _append_cache(self, editor):
+        if hasattr(editor, '_unknowns'):
+            ans = editor._unknowns
+            ids = [ai.uuid for ai in self._analysis_cache]
+            c = [ai for ai in ans if ai.uuid not in ids]
+
+            if c:
+                self._analysis_cache.extend(c)
+
+        editor.analysis_cache = self._analysis_cache
 
     @on_trait_change('''unknowns_pane:dclicked, 
 references_pane:dclicked,

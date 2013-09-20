@@ -58,7 +58,9 @@ class LaserTablePDFWriter(BasePDFWriter):
 
         return flowables, None
 
-    def _make_table(self, analyses, means, include_footnotes=False):
+    def _make_table(self, analyses, means,
+                    double_first_line=True,
+                    include_footnotes=False):
         style = self._new_style(
                                 debug_grid=False
                                 )
@@ -66,7 +68,10 @@ class LaserTablePDFWriter(BasePDFWriter):
 
         style.add('ALIGN', (0, 0), (-1, -1), 'LEFT')
         style.add('LEFTPADDING', (0, 0), (-1, -1), 1)
-        self._new_line(style, 0, cmd='LINEABOVE')
+        if double_first_line:
+            self._new_line(style, 0, weight=2.5, cmd='LINEABOVE')
+        else:
+            self._new_line(style, 0, cmd='LINEABOVE')
 
         data = []
         bdata = []
@@ -336,7 +341,7 @@ class LaserTablePDFWriter(BasePDFWriter):
 #===============================================================================
     def _make_summary_rows(self, mean, idx, style):
         platrow = Row(fontsize=7, height=0.25)
-        platrow.add_item(value='Weighted Mean Age', span=5)
+        platrow.add_item(value='<b>Weighted Mean Age</b>', span=5)
 
         platrow.add_blank_item(n=10)
         wa = mean.weighted_age

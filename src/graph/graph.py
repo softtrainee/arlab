@@ -1496,6 +1496,9 @@ class Graph(Viewable, ContextMenuMixin):
                     if abs(pad) < 1e-10:
                         pad = 1
 
+            if not pad:
+                pad = 0
+
             if isinstance(ma, (int, float)):
                 if ma is not None:
                     ma += pad
