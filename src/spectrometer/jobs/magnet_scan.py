@@ -19,7 +19,7 @@ from traits.api import Any, Float, DelegatesTo, Int, List, Bool
 from traitsui.api import View, Item, EnumEditor, Group
 from pyface.timer.do_later import do_after
 #============= standard library imports ========================
-from numpy import linspace, exp, hstack
+from numpy import linspace, exp, hstack, array
 import random
 import time
 from threading import Event
@@ -160,8 +160,8 @@ class MagnetScan(SpectrometerTask):
         gen = (vi for vi in values)
         evt = Event()
         intensities = []
-        mag=self.spectrometer.magnet
-        
+        mag = self.spectrometer.magnet
+
         invoke_in_main_thread(self._iter_dac, mag, gen.next(),
                               gen, evt, intensities,
                               det, peak_generator
@@ -174,7 +174,7 @@ class MagnetScan(SpectrometerTask):
 
     def _iter_dac(self, mag, di, gen, evt, intensities, det, peak_generator):
         mag.set_dac(di, verbose=False)
-        
+
         d = self._magnet_step_hook(detector=det,
                                    peak_generator=peak_generator)
         self._graph_hook(di, d, update_y_limits=True)
@@ -195,18 +195,19 @@ class MagnetScan(SpectrometerTask):
     def _graph_hook(self, di, intensity, **kw):
         graph = self.graph
         if graph:
-            def set_data(plot, k, v):
-                plot.data.set_data(k, v)
-
-            def get_data(plot, k):
-                return plot.data.get_data(k)
-
-            def set_plot_data(plot, k, v):
-                ys = get_data(plot, k)
-                ys = hstack((ys, v))
-                set_data(plot, k, ys)
 
             plot = graph.plots[0]
+            def set_data(k, v):
+                plot.data.set_data(k, v)
+
+            def get_data(k):
+                return plot.data.get_data(k)
+
+#             def append_plot_data(k, v):
+#                 ys = get_data(k)
+#                 ys = hstack((ys, v))
+#                 set_data(plot, k, ys)
+
             R = None
             r = None
 
@@ -216,12 +217,8 @@ class MagnetScan(SpectrometerTask):
                 if hasattr(plot, k):
                     oys = getattr(plot, k)
 
-                oys = [v] if oys is None else hstack((oys, v))
+                oys = array([v]) if oys is None else hstack((oys, v))
                 setattr(plot, k, oys)
-#                 plot.odata = oys
-#                 oys = get_data(plot, k)
-#                 oys = [v] if oys is None else hstack((oys, v))
-#                 set_data(plot, k, oys)
 
                 if i == 0:
                     # calculate ref range
@@ -234,10 +231,12 @@ class MagnetScan(SpectrometerTask):
                     r = mar - mir
 
                 if r and R and self.normalize:
-                    v = (v - mir) * R / r + miR
+                    oys = (oys - mir) * R / r + miR
 
-                set_plot_data(plot, 'x{}'.format(i), di)
-                set_plot_data(plot, 'y{}'.format(i), v)
+                xs = get_data('x{}'.format(i))
+                xs = hstack((xs, di))
+                set_data('x{}'.format(i), xs)
+                set_data('y{}'.format(i), oys)
 
 
     def _magnet_step_hook(self, detector=None, peak_generator=None):
