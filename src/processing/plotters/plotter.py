@@ -70,15 +70,15 @@ class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
     def edit_analyses(self):
         self.plotter.edit_analyses()
 
-class mDataLabelTool(DataLabelTool):
-    def normal_left_down(self, event):
-        if self.is_draggable(event.x, event.y):
-            event.handled = True
-
-    def normal_mouse_move(self, event):
-        if self.is_draggable(event.x, event.y):
-            event.window.set_pointer('arrow')
-            event.handled = True
+# class mDataLabelTool(DataLabelTool):
+#     def normal_left_down(self, event):
+#         if self.is_draggable(event.x, event.y):
+#             event.handled = True
+#
+#     def normal_mouse_move(self, event):
+#         if self.is_draggable(event.x, event.y):
+#             event.window.set_pointer('arrow')
+#             event.handled = True
 
 class Plotter(Viewable):
     adapter = Property

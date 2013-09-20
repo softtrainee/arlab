@@ -20,7 +20,7 @@ from traitsui.api import View, Item
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 
 #============= standard library imports ========================
-from numpy import Inf, asarray
+from numpy import Inf, asarray, array
 from src.processing.tasks.analysis_edit.fits import InterpolationFitSelector
 from src.regression.interpolation_regressor import InterpolationRegressor
 from chaco.array_data_source import ArrayDataSource
@@ -131,7 +131,6 @@ class InterpolationEditor(GraphEditor):
             if self._unknowns and self.show_current:
                 c_uys, c_ues = self._get_current_values(iso)
 
-
             r_ys, r_es = None, None
             if self._references:
                 r_ys, r_es = self._get_reference_values(iso)
@@ -146,12 +145,15 @@ class InterpolationEditor(GraphEditor):
 
             if c_ues and c_uys:
                 # plot unknowns
-                graph.new_series(c_uxs, c_uys,
+                s, _p = graph.new_series(c_uxs, c_uys,
                                  yerror=c_ues,
                                  fit=False,
                                  type='scatter',
                                  plotid=i
                                  )
+
+                self._add_error_bars(s, c_ues)
+
                 graph.set_series_label('Unknowns-Current', plotid=i)
 
             if r_ys:
@@ -162,15 +164,16 @@ class InterpolationEditor(GraphEditor):
                                                  ys=r_ys,
                                                  yserr=r_es,
                                                  kind=fit)
-                    graph.new_series(r_xs, r_ys,
+                    s, _p = graph.new_series(r_xs, r_ys,
                                  yerror=r_es,
                                  type='scatter',
                                  plotid=i,
                                  fit=False
                                  )
+                    self._add_error_bars(s, r_es)
 
                 else:
-                    _p, _s, l = graph.new_series(r_xs, r_ys,
+                    _p, s, l = graph.new_series(r_xs, r_ys,
                                        display_index=ArrayDataSource(data=display_xs),
                                        yerror=ArrayDataSource(data=r_es),
                                        fit=fit,
@@ -178,10 +181,12 @@ class InterpolationEditor(GraphEditor):
                     if hasattr(l, 'regressor'):
                         reg = l.regressor
 
+                    self._add_error_bars(s, array(r_es))
+
                 if reg:
                     p_uys, p_ues = self._set_interpolated_values(iso, reg, c_uxs)
                     # display the predicted values
-                    graph.new_series(c_uxs,
+                    s, _p = graph.new_series(c_uxs,
                                              p_uys,
                                              isotope=iso,
                                              yerror=ArrayDataSource(p_ues),
@@ -190,10 +195,24 @@ class InterpolationEditor(GraphEditor):
                                              plotid=i,
                                              )
                     graph.set_series_label('Unknowns-predicted', plotid=i)
+                    self._add_error_bars(s, p_ues)
+
             i += 1
 
         if set_x_flag:
             m = abs(end - start) / 3600.
             graph.set_x_limits(0, m, pad='0.1')
             graph.refresh()
+
+    def _add_error_bars(self, scatter, errors,
+                        orientation='y', visible=True, nsigma=1):
+        from src.graph.error_bar_overlay import ErrorBarOverlay
+        ebo = ErrorBarOverlay(component=scatter,
+                              orientation=orientation,
+                              nsigma=nsigma,
+                              visible=visible)
+
+        scatter.underlays.append(ebo)
+        setattr(scatter, '{}error'.format(orientation), ArrayDataSource(errors))
+        return ebo
 #============= EOF =============================================

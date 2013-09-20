@@ -28,15 +28,30 @@ from chaco.plot import Plot
 class SelectorTool(BaseTool):
     editor = Any
     editor_event = Event
-    def normal_left_dclick(self, event):
-        self.event_state = 'select'
-        self.editor_event = self.editor
+    def normal_key_pressed(self, event):
+        if event.character == 's':
+            self._toggle_state()
+
+    def select_key_pressed(self, event):
+        self.normal_key_pressed(event)
+
+    def _toggle_state(self):
+        if self.event_state == 'normal':
+            self.event_state = 'select'
+            self.editor_event = self.editor
+        else:
+            self.event_state = 'normal'
+            self.editor_event = None
+
         self.component.invalidate_and_redraw()
 
-    def select_left_dclick(self, event):
-        self.event_state = 'normal'
-        self.editor_event = None
-        self.component.invalidate_and_redraw()
+
+#     def normal_left_dclick(self, event):
+
+#     def select_left_dclick(self, event):
+#         self.event_state = 'normal'
+#         self.editor_event = None
+#         self.component.invalidate_and_redraw()
 
 class SelectorOverlay(AbstractOverlay):
     tool = Any

@@ -29,6 +29,7 @@ from traitsui.table_column import ObjectColumn
 from traitsui.editors.table_editor import TableEditor
 from traitsui.extras.checkbox_column import CheckboxColumn
 from kiva.fonttools.font import str_to_font
+from traits.trait_errors import TraitError
 
 class PlotterOption(HasTraits):
     use = Bool
@@ -46,28 +47,20 @@ class PlotterOption(HasTraits):
     def _get_plot_names(self):
         return {NULL_STR:NULL_STR,
                 'analysis_number':'Analysis Number',
-                'radiogenic':'Radiogenic 40Ar',
+                'radiogenic_yield':'Radiogenic 40Ar',
                 'kca':'K/Ca',
+                'kcl':'K/Cl',
                 'moles_K39':'K39 Moles'
                 }
-#     def traits_view(self):
-#         v = View(
-#                  HGroup(
-#                         UItem('name',
-#                               width=-70,
-#                               editor=EnumEditor(name='plot_names')),
-#                         UItem('scale'),
-#                         UItem('height',
-#                               width=-50,
-#                              ),
-# #                        spring,
-#                         UItem('x_error'),
-#                         UItem('y_error'),
-#                         spring,
-#                         ),
-#                 )
-#
-#         return v
+
+class SpectrumPlotOption(PlotterOption):
+    def _get_plot_names(self):
+        return {NULL_STR:NULL_STR,
+                'radiogenic_yield':'Radiogenic 40Ar',
+                'kca':'K/Ca',
+                'kcl':'K/Cl',
+                'moles_K39':'K39 Moles'
+                }
 
 
 FONTS = ['modern', 'arial']
@@ -112,8 +105,11 @@ class BasePlotterOptions(HasTraits):
             attrs = self._get_dump_attrs()
             for t in attrs:
                 d[t] = getattr(self, t)
+            try:
+                pickle.dump(d, fp)
+            except (pickle.PickleError, TypeError, EOFError, TraitError):
+                pass
 
-            pickle.dump(d, fp)
 
     def _load(self, root):
         p = os.path.join(root, self.name)
@@ -123,7 +119,7 @@ class BasePlotterOptions(HasTraits):
                     obj = pickle.load(fp)
                     self.trait_set(**obj)
 
-                except (pickle.PickleError, TypeError, EOFError):
+                except (pickle.PickleError, TypeError, EOFError, TraitError):
                     pass
 
     def __repr__(self):
@@ -152,7 +148,7 @@ class PlotterOptions(BasePlotterOptions):
     ytitle_font_name = Enum(*FONTS)
 #     data_type_editable = Bool(True)
 
-
+    plot_option_klass = PlotterOption
 
 #    def closed(self, isok):
 #        self._dump()
@@ -166,11 +162,11 @@ class PlotterOptions(BasePlotterOptions):
         '''
             plist is a list of dictionaries
         '''
-        ps = [PlotterOption(**pi) for pi in plist]
+        ps = [self.plot_option_klass(**pi) for pi in plist]
         self.aux_plots = ps
 
     def add_aux_plot(self, **kw):
-        ap = PlotterOption(**kw)
+        ap = self.plot_option_klass(**kw)
         self.aux_plots.append(ap)
 
     def get_aux_plots(self):
@@ -241,7 +237,7 @@ class PlotterOptions(BasePlotterOptions):
         return 10
 
     def _aux_plots_default(self):
-        return [PlotterOption() for _ in range(5)]
+        return [self.plot_option_klass() for _ in range(5)]
 
 #===============================================================================
 # views
@@ -340,6 +336,8 @@ class IdeogramOptions(AgeOptions):
     xhigh = Float
     use_centered_range = Bool
     centered_range = Float(0.5)
+    display_mean_indicator = Bool(True)
+    display_mean = Bool(True)
 
     def _get_x_axis_group(self):
         vg = super(IdeogramOptions, self)._get_x_axis_group()
@@ -387,6 +385,8 @@ class IdeogramOptions(AgeOptions):
 
 class SpectrumOptions(AgeOptions):
     step_nsigma = Int(2)
+    plot_option_klass = SpectrumPlotOption
+
     def _get_dump_attrs(self):
         attrs = super(SpectrumOptions, self)._get_dump_attrs()
         return attrs + ['step_nsigma']

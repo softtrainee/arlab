@@ -28,7 +28,7 @@ class RecallEditor(BaseTraitsEditor):
 
     model = Any
 
-    analysis_summary = Any
+#     analysis_summary = Any
 #     analysis_summary = Any  # DelegatesTo('model')
 #     analysis_summary = DelegatesTo('model')
     name = Property(depends_on='model')

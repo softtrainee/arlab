@@ -23,29 +23,55 @@ from chaco.array_data_source import ArrayDataSource
 
 from src.processing.plotters.arar_figure import BaseArArFigure
 from src.graph.error_bar_overlay import ErrorBarOverlay
-N = 200
+from chaco.tools.broadcaster import BroadcasterTool
+
+from src.graph.tools.rect_selection_tool import RectSelectionOverlay, \
+    RectSelectionTool
+from src.graph.tools.analysis_inspector import AnalysisPointInspector
+from src.graph.tools.point_inspector import PointInspectorOverlay
+from chaco.data_label import DataLabel, draw_arrow
+from src.stats.peak_detection import find_peaks
+from src.stats.core import calculate_weighted_mean
+from numpy.core.numeric import Inf
+from src.processing.plotters.point_move_tool import PointMoveTool
+from src.helpers.formatting import floatfmt
+from chaco.tools.data_label_tool import DataLabelTool
+# from src.processing.plotters.plotter import mDataLabelTool
+# from chaco.scatterplot import render_markers
+N = 500
+
+
 
 
 class Ideogram(BaseArArFigure):
-    probability_curve_kind = 'weighted_mean'
+#     probability_curve_kind = 'weighted_mean'
+#     mean_calculation_kind
     xmi = Float
     xma = Float
     xs = Array
     xes = Array
     index_key = 'age'
     ytitle = 'Relative Probability'
+    _reverse_sorted_analyses = True
+    _analysis_number_cnt = 0
 
     def plot(self, graph, plots):
         '''
             plot data on plots
         '''
+        self._analysis_number_cnt = 0
+
         self.xs, self.xes = array([[ai.nominal_value, ai.std_dev]
                          for ai in self._get_xs(key=self.index_key)]).T
 
         self._plot_relative_probability(graph, graph.plots[0], 0)
 
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
-            getattr(self, '_plot_{}'.format(po.name))(po, graph, plotobj, pid + 1)
+            getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1)
+
+        graph.set_x_limits(min_=self.xmi, max_=self.xma,
+                           pad='0.1')
+
 
     def max_x(self, attr):
         return max([ai.nominal_value for ai in self._unpack_attr(attr)])
@@ -56,39 +82,98 @@ class Ideogram(BaseArArFigure):
 #===============================================================================
 # plotters
 #===============================================================================
-    def _plot_radiogenic_yield(self, po, graph, plot, pid):
 
-        ys = list(self._unpack_attr('radiogenic_percent'))
-        scatter = self._add_aux_plot(graph, ys, '%40Ar*', pid)
+    def _plot_aux(self, title, vk, ys, po, plot, pid, es=None):
+        scatter = self._add_aux_plot(ys,
+                                     title, pid)
 
         self._add_error_bars(scatter, self.xes, 'x', 1,
-                                   visible=po.x_error)
+                             visible=po.x_error)
+        if es:
+            self._add_error_bars(scatter, es, 'y', 1,
+                             visible=po.y_error)
 
-    def _plot_analysis_number(self, po, graph, plot, pid):
+        self._add_scatter_inspector(scatter)
+
+    def _plot_analysis_number(self, po, plot, pid):
         xs = self.xs
-        ys = arange(1, xs.shape[0] + 1)
-        scatter = self._add_aux_plot(graph, ys,
+        n = xs.shape[0] + 1
+        ys = arange(1, n)
+        scatter = self._add_aux_plot(ys,
                                      'Analysis #', pid)
 
         self._add_error_bars(scatter, self.xes, 'x', 1,
                              visible=po.x_error)
 
+        self._add_scatter_inspector(scatter,
+                                    value_format=lambda x: '{:d}'.format(int(x)),
+                                    additional_info=lambda x: x.age_string,
+                                    )
+
+        self._analysis_number_cnt += n
+        self.graph.set_y_limits(min_=0,
+                                max_=self._analysis_number_cnt,
+                                plotid=pid)
+
     def _plot_relative_probability(self, graph, plot, pid):
 
         bins, probs = self._calculate_probability_curve(self.xs, self.xes)
 
-        s, _p = graph.new_series(x=bins, y=probs, plotid=pid)
+
+        scatter, _p = graph.new_series(x=bins, y=probs, plotid=pid)
 
         # add the dashed original line
         graph.new_series(x=bins, y=probs,
                               plotid=pid,
                               visible=False,
-                              color=s.color,
+                              color=scatter.color,
                               line_style='dash',
                               )
+
+        self._add_central_tendency(graph, scatter, bins, probs)
+        mi, ma = min(probs), max(probs)
+        self._set_y_limits(mi, ma, min_=0)
+
+        d = lambda a, b, c, d: self.update_index_mapper(a, b, c, d)
+        plot.index_mapper.on_trait_change(d, 'updated')
 #===============================================================================
 # overlays
 #===============================================================================
+    def _add_central_tendency(self, g, scatter, bins, probs):
+        offset = 0
+        percentH = 1 - 0.954  # 2sigma
+
+        maxp = max(probs)
+        wm, we, mswd, valid_mswd = self._calculate_stats(self.xs, self.xes,
+                                                         bins, probs)
+        ym = maxp * percentH + offset
+
+        s, p = g.new_series([wm], [ym],
+                             type='scatter',
+                             marker='circle',
+                             marker_size=3,
+                             color=scatter.color,
+                             plotid=0
+                             )
+
+        self._add_error_bars(s, [we], 'x', self.options.nsigma)
+#         display_mean_indicator = self._get_plot_option(self.options, 'display_mean_indicator', default=True)
+        if not self.options.display_mean_indicator:
+            s.visible = False
+
+        label = None
+#         display_mean = self._get_plot_option(self.options, 'display_mean_text', default=True)
+        if self.options.display_mean:
+            text = self._build_label_text(wm, we, mswd, valid_mswd, len(self.xs))
+#             font = self._get_plot_option(self.options, 'data_label_font', default='modern 12')
+            self._add_data_label(s, text, (wm, ym),
+#                                 font=font
+                                 )
+        # add a tool to move the mean age point
+        s.tools.append(PointMoveTool(component=s,
+                                     label=label,
+                                     constrain='y'))
+
     def _add_error_bars(self, scatter, errors, axis, nsigma,
                         visible=True):
         ebo = ErrorBarOverlay(component=scatter,
@@ -100,17 +185,139 @@ class Ideogram(BaseArArFigure):
         setattr(scatter, '{}error'.format(axis), ArrayDataSource(errors))
         return ebo
 
+    def _add_scatter_inspector(self,
+                               # container,
+                               # plot,
+                               scatter,
+                               add_tool=True,
+                               value_format=None,
+                               additional_info=None
+                               ):
+        if add_tool:
+            broadcaster = BroadcasterTool()
+            scatter.tools.append(broadcaster)
+
+            rect_tool = RectSelectionTool(scatter)
+            rect_overlay = RectSelectionOverlay(tool=rect_tool)
+
+            scatter.overlays.append(rect_overlay)
+            broadcaster.tools.append(rect_tool)
+
+            if value_format is None:
+                value_format = lambda x:'{:0.5f}'.format(x)
+            point_inspector = AnalysisPointInspector(scatter,
+                                                     analyses=self.analyses,
+                                                     convert_index=lambda x: '{:0.3f}'.format(x),
+                                                     value_format=value_format,
+                                                     additional_info=additional_info
+                                                     )
+
+            pinspector_overlay = PointInspectorOverlay(component=scatter,
+                                                       tool=point_inspector,
+                                                       )
+#
+            scatter.overlays.append(pinspector_overlay)
+            broadcaster.tools.append(point_inspector)
+
+            u = lambda a, b, c, d: self.update_graph_metadata(a, b, c, d)
+            scatter.index.on_trait_change(u, 'metadata_changed')
+
+    def update_index_mapper(self, obj, name, old, new):
+        if new:
+            self.update_graph_metadata(None, name, old, new)
+
+    def update_graph_metadata(self, obj, name, old, new):
+        sorted_ans = self.sorted_analyses
+        if obj:
+            hover = obj.metadata.get('hover')
+            if hover:
+                hoverid = hover[0]
+                try:
+                    self.selected_analysis = sorted_ans[hoverid]
+                except IndexError, e:
+                    print 'asaaaaa', e
+                    return
+            else:
+                self.selected_analysis = None
+
+            sel = obj.metadata.get('selections', [])
+
+            if sel:
+                obj.was_selected = True
+                self._rebuild_ideo(sel)
+            elif hasattr(obj, 'was_selected'):
+                if obj.was_selected:
+                    self._rebuild_ideo(sel)
+
+                obj.was_selected = False
+
+            # set the temp_status for all the analyses
+            for i, a in enumerate(sorted_ans):
+                a.temp_status = 1 if i in sel else 0
+        else:
+            sel = [i for i, a in enumerate(sorted_ans)
+                    if a.temp_status or a.status]
+
+            self._rebuild_ideo(sel)
+
+    def _rebuild_ideo(self, sel):
+        graph = self.graph
+        plot = graph.plots[0]
+
+        lp = plot.plots['plot0'][0]
+        dp = plot.plots['plot1'][0]
+
+        def f(a):
+            i, _ = a
+            return i not in sel
+
+        d = zip(self.xs, self.xes)
+        oxs, oxes = zip(*d)
+
+        d = filter(f, enumerate(d))
+        fxs, fxes = zip(*[(a, b) for _, (a, b) in d])
+
+        xs, ys = self._calculate_probability_curve(fxs, fxes)
+        wm, we, mswd, valid_mswd = self._calculate_stats(fxs, fxes, xs, ys)
+
+        lp.value.set_data(ys)
+        lp.index.set_data(xs)
+
+#         sp.index.set_data([wm])
+#         sp.xerror.set_data([we])
+
+        mi = min(ys)
+        ma = max(ys)
+#         self._set_y_limits(graph, mi, ma)
+
+#         bounds_only = False
+#         if not bounds_only:
+        # update the data label position
+#             for ov in sp.overlays:
+#                 if isinstance(ov, DataLabel):
+#                     _, y = ov.data_point
+#                     ov.data_point = wm, y
+#                     n = len(xs)
+#                     ov.label_text = self._build_label_text(wm, we, mswd, valid_mswd, n)
+
+        if sel:
+            dp.visible = True
+            xs, ys = self._calculate_probability_curve(oxs, oxes)
+            dp.value.set_data(ys)
+            dp.index.set_data(xs)
+        else:
+#                result.oage, result.oerror, result.omswd = None, None, None
+            dp.visible = False
+
 #===============================================================================
 # utils
 #===============================================================================
-    def _unpack_attr(self, attr):
-        return (getattr(ai, attr) for ai in self.analyses)
-
     def _get_xs(self, key='age'):
         xs = array([ai for ai in self._unpack_attr(key)])
         return xs
 
-    def _add_aux_plot(self, graph, ys, title, pid, **kw):
+    def _add_aux_plot(self, ys, title, pid, **kw):
+        graph = self.graph
         graph.set_y_title(title,
                           plotid=pid)
         s, p = graph.new_series(
@@ -120,12 +327,20 @@ class Ideogram(BaseArArFigure):
                          marker_size=2,
                          plotid=pid, **kw
                          )
+
+
+        graph.set_y_limits()
+
         return s
 
     def _calculate_probability_curve(self, ages, errors):
-        xmi, xma = self.xmi, self.xma
+
+        xmi, xma = self.graph.get_x_limits()
+        if xmi == -Inf or xma == Inf:
+            xmi, xma = self.xmi, self.xma
+
 #        print self.probability_curve_kind
-        if self.probability_curve_kind == 'kernel':
+        if self.options.probability_curve_kind == 'kernel':
             return self._kernel_density(ages, errors, xmi, xma)
 
         else:
@@ -160,5 +375,35 @@ class Ideogram(BaseArArFigure):
             probs += gs
 
         return bins, probs
+
+    def _cmp_analyses(self, x):
+        return x.age
+
+    def _calculate_stats(self, ages, errors, xs, ys):
+        mswd, valid_mswd, n = self._get_mswd(ages, errors)
+#         mswd = calculate_mswd(ages, errors)
+#         valid_mswd = validate_mswd(mswd, len(ages))
+        if self.options.mean_calculation_kind == 'kernel':
+            wm , we = 0, 0
+            delta = 1
+            maxs, _mins = find_peaks(ys, delta, xs)
+            wm = max(maxs, axis=1)[0]
+        else:
+            wm, we = calculate_weighted_mean(ages, errors)
+            we = self._calc_error(we, mswd)
+
+        return wm, we, mswd, valid_mswd
+
+    def _calc_error(self, we, mswd):
+        ec = self.options.error_calc_method
+        n = self.options.nsigma
+        if ec == 'SEM':
+            a = 1
+        elif ec == 'SEM, but if MSWD>1 use SEM * sqrt(MSWD)':
+            a = 1
+            if mswd > 1:
+                a = mswd ** 0.5
+        return we * a * n
+
 
 #============= EOF =============================================

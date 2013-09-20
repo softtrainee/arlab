@@ -15,18 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Any, Int
-from traitsui.api import View, Item
+from traits.api import HasTraits, Any, Int
 from chaco.plot_containers import GridPlotContainer
 from src.processing.plotters.graph_panel_info import GraphPanelInfo
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class IdeogramContainer(HasTraits):
+class FigureContainer(HasTraits):
     component = Any
     model = Any
     nrows = Int(1)
     ncols = Int(2)
+
 
     def _model_changed(self):
 

@@ -113,10 +113,20 @@ class FitSelector(HasTraits):
 #         self.suppress_refresh_unknowns = False
 
     def load_fits(self, keys, fits):
-        self.fits = [
-                     self.fit_klass(name=ki, fit=fi)
-                     for ki, fi in zip(keys, fits)
-                    ]
+
+        nfs = []
+        for ki, fi in zip(keys, fits):
+            pf = next((fi for fi in self.fits if fi.name == ki), None)
+            if pf is None:
+                pf = self.fit_klass(name=ki, fit=fi)
+
+            nfs.append(pf)
+
+        self.fits = nfs
+#         self.fits = [
+#                      self.fit_klass(name=ki, fit=fi)
+#                      for ki, fi in zip(ks, fs)
+#                     ]
 
     def load_baseline_fits(self, keys):
         fits = self.fits

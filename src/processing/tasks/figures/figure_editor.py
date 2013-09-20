@@ -64,13 +64,14 @@ class FigureEditor(GraphEditor):
 
     def rebuild(self, refresh_data=True):
         ans = self._gather_unknowns(refresh_data)
-        po = self.plotter_options_manager.plotter_options
+        if ans:
+            po = self.plotter_options_manager.plotter_options
 
-        comp = timethis(self._get_component, args=(ans, po))
-#         comp = self._get_component(ans, po)
+            comp = timethis(self._get_component, args=(ans, po))
+    #         comp = self._get_component(ans, po)
 
-        self.component = comp
-        self.component_changed = True
+            self.component = comp
+            self.component_changed = True
 
 #     def _gather_unknowns(self, refresh_data):
 #         ans = self._unknowns

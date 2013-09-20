@@ -46,6 +46,11 @@ class PointMoveTool(DragTool):
         index = plot.index.get_data() + dx
         value = plot.value.get_data() + dy
 
+        aa = plot.map_data((0, 0), all_values=True)[1]
+        bb = plot.map_data((0, 2), all_values=True)[1]
+        dd = bb - aa
+        value[value < dd] = dd
+
         # move the point
         plot.index.set_data(index, sort_order=plot.index.sort_order)
         plot.value.set_data(value, sort_order=plot.value.sort_order)

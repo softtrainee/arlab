@@ -15,11 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
-
 #============= standard library imports ========================
-#============= local library imports  ==========================
+from src.processing.plotters.spectrum.spectrum import Spectrum
+from src.processing.plotters.figure_panel import FigurePanel
 
-class AnalysisSummary(HasTraits):
-    model = Any
+#============= local library imports  ==========================
+class SpectrumPanel(FigurePanel):
+    _figure_klass = Spectrum
+
+
 #============= EOF =============================================
