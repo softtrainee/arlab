@@ -167,7 +167,7 @@ class LoadingManager(IsotopeDatabaseManager):
 
     def setup(self):
         if self.db.connected:
-            self.populate_default_tables()
+#             self.populate_default_tables()
 
             ls = self._get_loads()
             if ls:

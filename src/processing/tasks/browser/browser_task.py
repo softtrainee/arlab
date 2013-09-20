@@ -82,7 +82,7 @@ class BaseBrowserTask(BaseEditorTask):
     selected_analysis = Any
     dclicked_sample = Any
 
-    omit_bogus = Bool(False)
+    omit_invalid = Bool(False)
 
     tool_bars = [SToolBar(NewBrowserEditorAction(),
                           image_size=(16, 16)
@@ -130,8 +130,8 @@ class BaseBrowserTask(BaseEditorTask):
 
             self.oanalyses = ans
 
-            if self.omit_bogus:
-                ans = filter(self._omit_bogus_filter, ans)
+            if self.omit_invalid:
+                ans = filter(self._omit_invalid_filter, ans)
 
             self.analyses = ans
             if ans:
@@ -144,7 +144,7 @@ class BaseBrowserTask(BaseEditorTask):
             return x.lower().startswith(new.lower())
         return func
 
-    def _omit_bogus_filter(self, x):
+    def _omit_invalid_filter(self, x):
         return x.status == 0
 
     def _project_filter_changed(self, new):
@@ -158,16 +158,17 @@ class BaseBrowserTask(BaseEditorTask):
 
     def _omit_bogus_changed(self, new):
         if new:
-            self.analyses = filter(self._omit_bogus_filter, self.oanalyses)
+            self.analyses = filter(self._omit_invalid_filter, self.oanalyses)
         else:
             self.analyses = self.oanalyses
 
 
 class BrowserTask(BaseBrowserTask):
-
+    name = 'Analysis Browser'
     def activated(self):
         editor = RecallEditor()
         self._open_editor(editor)
+        self.load_projects()
 
     def new_editor(self):
         editor = RecallEditor()

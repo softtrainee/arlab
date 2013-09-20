@@ -21,6 +21,7 @@ from traitsui.api import View, Item
 #============= local library imports  ==========================
 from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from src.database.tasks.connection_preferences import ConnectionPreferencesPane
+from src.database.isotope_database_manager import IsotopeDatabaseManager
 
 
 class DatabasePlugin(BaseTaskPlugin):
@@ -28,4 +29,10 @@ class DatabasePlugin(BaseTaskPlugin):
         return [
                 ConnectionPreferencesPane
                 ]
+
+    def start(self):
+
+        iso = IsotopeDatabaseManager()
+        iso.populate_default_tables()
+
 #============= EOF =============================================

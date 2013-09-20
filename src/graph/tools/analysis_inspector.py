@@ -40,15 +40,18 @@ class AnalysisPointInspector(PointInspector):
                 if self.value_format:
                     y = self.value_format(y)
 
-                if analysis.status == 0 and analysis.temp_status != 0:
-                    status = 'Temp. Omitted'
-                else:
-                    status = analysis.status_text
+#                 if analysis.status == 0 and analysis.temp_status != 0:
+#                     status = 'Temp. Omitted'
+#                 else:
+                status = analysis.status_text
+                tag = analysis.tag
 
                 lines = ['Analysis= {}'.format(rid),
                          'Status= {}'.format(status),
-                         '{}= {}'.format(name, y)
-                         ]
+                         'Tag= {}'.format(tag),
+                         '{}= {}'.format(name, y)]
+
+
                 if self.additional_info is not None:
                     lines.append(self.additional_info(analysis))
 

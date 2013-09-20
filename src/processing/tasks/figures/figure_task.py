@@ -252,7 +252,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
                        make_func=func
                        )
 
-        editor._suppress_rebuild = True
+#         editor._suppress_rebuild = True
         self.plot_editor_pane.component = comp
         self._open_editor(editor)
 
@@ -265,7 +265,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 
             editor._unknowns = ans
             self.unknowns_pane.items = ans
-        editor._suppress_rebuild = False
+#         editor._suppress_rebuild = False
 
 
 
@@ -293,6 +293,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 
 #             self.unknowns_pane.update_needed = True
             self.unknowns_pane.refresh_needed = True
+            print 'asdfsdfsadfsd'
             self.active_editor.rebuild(refresh_data=False)
 
 #     def _ideogram_factory(self, ans, plotter_options=None):
@@ -343,7 +344,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
     def _options_update(self, name, new):
         if name == 'initialized':
             return
-
+        print 'asdfsdf'
         self.active_editor.rebuild(refresh_data=False)
 #         do_later(self.active_editor.rebuild, refresh_data=False)
 #         self.active_editor.rebuild()

@@ -18,13 +18,12 @@
 from traits.api import HasTraits, Any, Int, Str, Tuple, Property, \
     Event
 from traitsui.api import View, Item
-from src.stats.core import calculate_mswd, validate_mswd
 from chaco.tools.data_label_tool import DataLabelTool
-from chaco.data_label import DataLabel
-from src.helpers.formatting import floatfmt
-from src.processing.plotters.flow_label import FlowDataLabel
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.stats.core import calculate_mswd, validate_mswd
+from src.helpers.formatting import floatfmt
+from src.processing.plotters.flow_label import FlowDataLabel
 
 class BaseArArFigure(HasTraits):
     analyses = Any
@@ -39,10 +38,11 @@ class BaseArArFigure(HasTraits):
 
     options = Any
 
-    def build(self, graph, plots):
+    def build(self, plots):
         '''
             make plots
         '''
+        graph = self.graph
         p = graph.new_plot(ytitle=self.ytitle,
                        padding=self.padding
                        )
@@ -89,23 +89,23 @@ class BaseArArFigure(HasTraits):
 
         ys, es = zip(*[(ai.nominal_value, ai.std_dev)
                        for ai in self._unpack_attr('rad40_percent')])
-        self._plot_aux('%40Ar*', 'rad40_percent', ys, po, plot, pid, es)
+        return self._plot_aux('%40Ar*', 'rad40_percent', ys, po, plot, pid, es)
 
     def _plot_kcl(self, po, plot, pid):
         ys, es = zip(*[(ai.nominal_value, ai.std_dev)
                        for ai in self._unpack_attr('kcl')])
-        self._plot_aux('K/Cl', 'kcl', ys, po, plot, pid, es)
+        return self._plot_aux('K/Cl', 'kcl', ys, po, plot, pid, es)
 
     def _plot_kca(self, po, plot, pid):
         ys, es = zip(*[(ai.nominal_value, ai.std_dev)
                        for ai in self._unpack_attr('kca')])
-        self._plot_aux('K/Ca', 'kca', ys, po, plot, pid, es)
+        return self._plot_aux('K/Ca', 'kca', ys, po, plot, pid, es)
 
     def _plot_moles_K39(self, po, plot, pid):
         ys, es = zip(*[(ai.nominal_value, ai.std_dev)
                        for ai in self._unpack_attr('k39')])
 
-        self._plot_aux('K39(fA)', 'k39', ys, po, plot, pid, es)
+        return self._plot_aux('K39(fA)', 'k39', ys, po, plot, pid, es)
 #===============================================================================
 # labels
 #===============================================================================

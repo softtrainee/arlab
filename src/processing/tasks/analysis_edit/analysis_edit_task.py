@@ -40,27 +40,57 @@ class AnalysisEditTask(BaseEditorTask):
 
     data_selector = Instance(DataSelector)
     _analysis_cache = List
+    def _get_tagname(self):
+        from src.processing.tasks.analysis_edit.tags import TagTableView
+        db = self.manager.db
+        with db.session_ctx():
+            v = TagTableView()
+            v.table.db = db
+            v.table.load()
+
+        info = v.edit_traits()
+        if info.result:
+            tag = v.selected
+            return tag.name
 
     def set_tag(self):
-        if self.unknowns_pane:
-            from src.processing.tasks.analysis_edit.tags import TagTableView
+        '''
+            set tag for either
+            
+            analyses in a figure with temp_status==1
+            if no analyses set all analyses to valid and remove tag
+            
+            analyses is the active_editor Analyses
+            
+            if tag is valid or invalid  set the status instead
+        '''
 
-            items = self.unknowns_pane.items
+        items = self.active_editor._unknowns
+        if items:
+            selection = [ai for ai in items if ai.temp_status]
+            if not selection:
+                name = 'valid'
+                selection = items
+            else:
+                name = self._get_tagname()
+
             db = self.manager.db
             with db.session_ctx():
-                v = TagTableView()
-                v.table.db = db
-                v.table.load()
-
-            info = v.edit_traits()
-            if info.result:
-                tag = v.selected
-                name = tag.name
-                with db.session_ctx():
-                    for it in items:
+                if name in ('valid', 'invalid'):
+                    def func(it, x):
+                        self.debug('setting {} status= {}'.format(it.record_id, name))
+                        x.status = 0 if name == 'valid' else 1
+                        x.tag = ''
+                else:
+                    def func(it, x):
                         self.debug('setting {} tag= {}'.format(it.record_id, name))
-                        ma = db.get_analysis_uuid(it.uuid)
-                        ma.tag = name
+                        x.tag = name
+                        it.tag = name
+                        it.temp_status = 1 if name else 0
+
+                for it in selection:
+                    ma = db.get_analysis_uuid(it.uuid)
+                    func(it, ma)
 
 
     def prepare_destroy(self):

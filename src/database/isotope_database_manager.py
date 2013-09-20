@@ -68,7 +68,7 @@ class IsotopeDatabaseManager(Loggable):
             return self.db.connected
 
     def load(self):
-        return self.populate_default_tables()
+        self.populate_default_tables()
 
     def populate_default_tables(self):
         self.debug('populating default tables')
@@ -122,8 +122,16 @@ class IsotopeDatabaseManager(Loggable):
                 if n > 1:
                     progress = self._open_progress(n)
 
-                return [self._record_factory(ai, progress=progress, **kw)
+                if progress:
+                    progress.on_trait_change(self._progress_closed, 'closed')
+
+                rs = [self._record_factory(ai, progress=progress, **kw)
                             for ai in ans]
+                if progress:
+                    progress.on_trait_change(self._progress_closed,
+                                             'closed', remove=True)
+
+                return rs
 
 #     def load_analyses(self, ans, show_progress=True, **kw):
 #         progress = None
@@ -182,6 +190,10 @@ class IsotopeDatabaseManager(Loggable):
                               size=(550, 15))
         pd.open()
         return pd
+
+    def _progress_closed(self):
+        win = self.application.windows[-1]
+        win.activate()
 
     def _record_factory(self, rec, progress=None, calculate_age=True, **kw):
         if isinstance(rec, (Analysis, DBAnalysis)):

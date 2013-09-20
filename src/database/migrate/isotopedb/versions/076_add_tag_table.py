@@ -3,7 +3,7 @@ from migrate import *
 
 meta = MetaData()
 t = Table('proc_TagTable', meta,
-          Column('name', String(40)),
+          Column('name', String(40), primary_key=True),
           Column('user', String(40)),
           Column('create_date', DateTime),
           )
