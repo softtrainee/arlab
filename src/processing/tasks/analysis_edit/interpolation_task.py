@@ -46,6 +46,21 @@ class InterpolationTask(AnalysisEditTask):
 
     @on_trait_change('references_pane:previous_selection')
     def _update_rp_previous_selection(self, obj, name, old, new):
-        print new
         self._set_previous_selection(obj, new)
+
+    @on_trait_change('references_pane:[append_button, replace_button]')
+    def _append_references(self, obj, name, old, new):
+        s = self.data_selector.selector.selected
+        if name == 'append_button':
+            self.references_pane.items.extend(s)
+        else:
+            self.references_pane.items = s
+
+    def _handle_key_pressed(self, c):
+        s = self.data_selector.selector.selected
+        if c == 'r':
+            self.references_pane.items.extend(s)
+        elif c == 'R':
+            self.references_pane.items = s
+
 #============= EOF =============================================

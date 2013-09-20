@@ -80,7 +80,8 @@ class QueryPane(TraitsDockPane):
                                                    operations=['move'],
                                                    editable=True,
                                                    drag_external=True,
-                                                   dclicked=selector_name('dclicked')
+                                                   dclicked=selector_name('dclicked'),
+                                                   key_pressed=selector_name('key_pressed')
                                                    ),
                             show_label=False,
 #                                     height=0.75

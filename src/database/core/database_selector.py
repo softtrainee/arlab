@@ -101,6 +101,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     selected = Any
     scroll_to_row = Int
     scroll_to_bottom = True
+    key_pressed = Event
 
 #    activated = Any
     update = Event
