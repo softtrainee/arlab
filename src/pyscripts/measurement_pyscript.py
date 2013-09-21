@@ -416,7 +416,7 @@ class MeasurementPyScript(ValvePyScript):
         '''            
         '''
         attrs = ['IonRepeller', 'ElectronVolts']
-        self._set_from_file(attrs, 'SourceParameters')
+        self._set_from_file(attrs, 'SourceParameters', **kw)
 
     @verbose_skip
     @command_register

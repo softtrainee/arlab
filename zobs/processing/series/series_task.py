@@ -22,7 +22,7 @@ from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTa
 from pyface.tasks.task_layout import PaneItem, Splitter, TaskLayout
 from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane
-from src.processing.tasks.search_panes import  QueryPane, ResultsPane
+from src.processing.tasks.search_panes import  QueryPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -69,7 +69,6 @@ class SeriesTask(AnalysisEditTask):
                 self.unknowns_pane,
                 self.controls_pane,
                 QueryPane(model=ds),
-                ResultsPane(model=ds)
                 ]
 #        panes = super(FluxTask, self).create_dock_panes()
 #        return panes + [

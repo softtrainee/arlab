@@ -46,18 +46,19 @@ class BlanksEditor(InterpolationEditor):
         cname = 'blanks'
         self.info('Attempting to save corrections to database')
 
-        for ui in self._unknowns:
-            histories = getattr(ui.dbrecord, '{}_histories'.format(cname))
-            phistory = histories[-1] if histories else None
-
-            history = self.processor.add_history(ui, cname)
-            for si in self.tool.fits:
-                if not si.use:
-                    self.debug('using previous value {} {}'.format(ui.record_id, si.name))
-                    self.processor.apply_fixed_value_correction(phistory, history, si, cname)
-                else:
-                    self.debug('saving {} {}'.format(ui.record_id, si.name))
-                    self.processor.apply_correction(history, ui, si, self._references, cname)
+        for ui in self.unknowns:
+            pass
+#             histories = getattr(ui.dbrecord, '{}_histories'.format(cname))
+#             phistory = histories[-1] if histories else None
+#
+#             history = self.processor.add_history(ui, cname)
+#             for si in self.tool.fits:
+#                 if not si.use:
+#                     self.debug('using previous value {} {}'.format(ui.record_id, si.name))
+#                     self.processor.apply_fixed_value_correction(phistory, history, si, cname)
+#                 else:
+#                     self.debug('saving {} {}'.format(ui.record_id, si.name))
+#                     self.processor.apply_correction(history, ui, si, self._references, cname)
 
 #     def _update_unknowns_hook(self):
 #         '''
@@ -90,14 +91,14 @@ class BlanksEditor(InterpolationEditor):
         p_uys = reg.predict(xs)
         p_ues = reg.predict_error(xs)
 
-        for ui, v, e in zip(self._unknowns, p_uys, p_ues):
+        for ui, v, e in zip(self.unknowns, p_uys, p_ues):
             ui.set_temporary_blank(iso, v, e)
 
         return p_uys, p_ues
 
     def _get_current_values(self, iso):
         return zip(*[self._get_isotope(ui, iso, 'blank')
-                            for ui in self._unknowns
+                            for ui in self.unknowns
                             ])
 
     def _get_baseline_corrected(self, analysis, k):
@@ -107,7 +108,7 @@ class BlanksEditor(InterpolationEditor):
 
     def _get_reference_values(self, iso):
         return zip(*[self._get_baseline_corrected(ui, iso)
-                            for ui in self._references
+                            for ui in self.references
                             ])
 
 

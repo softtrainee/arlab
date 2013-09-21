@@ -161,12 +161,15 @@ class LaserTableAdapter(BaseAdapter):
 
     def _get_extract_value_text(self):
         v = self._get_text_value('extract_value')
+        if v is not '':
+            v = '{:n}'.format(v)
+
+        return v
 #         if self.item.extract_units == 'W':
 #             f = '{:0.2f}'.format(v)
 #         else:
-        f = '{:n}'
-
-        return f.format(v)
+#         f =
+#         return f.format(v)
 
     def _get_moles_Ar40_text(self):
         return self._get_text_value('moles_Ar40')

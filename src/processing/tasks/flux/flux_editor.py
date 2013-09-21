@@ -77,7 +77,7 @@ class FluxEditor(InterpolationEditor):
             g.new_series(xs, ys - es, color='red')
 
 #            # plot predicted unknowns
-            uxs = self._get_xs(self._unknowns)
+            uxs = self._get_xs(self.unknowns)
             ys = reg2D.predict(uxs)
             es = reg2D.predict_error(uxs, ys)
             scatter, _ = g.new_series(uxs, ys, yerror=es, **skw)
@@ -146,14 +146,14 @@ class FluxEditor(InterpolationEditor):
         '''
             TODO: find reference analyses using the current _unknowns
         '''
-        self._make_unknowns()
+#         self._make_unknowns()
         self.rebuild_graph()
 
-    def _make_unknowns(self):
-        self._unknowns = self.unknowns
+#     def _make_unknowns(self):
+#         self._unknowns = self.unknowns
 
-    def make_references(self):
-        self._references = self.references
+#     def make_references(self):
+#         self._references = self.references
 
     def _graph_default(self):
         g = Graph()

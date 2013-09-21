@@ -26,6 +26,7 @@ from src.processing.plotter_options_manager import IdeogramOptionsManager, \
     SpectrumOptionsManager, InverseIsochronOptionsManager, SeriesOptionsManager
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 from src.codetools.simple_timeit import timethis
+from src.processing.plotters.figure_container import FigureContainer
 
 
 class FigureEditor(GraphEditor):
@@ -41,6 +42,7 @@ class FigureEditor(GraphEditor):
 #     _unknowns = List
 #     _cached_unknowns = List
 #     _suppress_rebuild = False
+
     def traits_view(self):
         v = View(UItem('component',
                        style='custom',
@@ -49,9 +51,11 @@ class FigureEditor(GraphEditor):
         return v
 
     def set_group(self, idxs, gid, refresh=True):
-        for i, (ui, uu) in enumerate(zip(self._unknowns, self.unknowns)):
+
+        for i, uu in enumerate(self.unknowns):
+#         for i, (ui, uu) in enumerate(zip(self._unknowns, self.unknowns)):
             if i in idxs:
-                ui.group_id = gid
+#                 ui.group_id = gid
                 uu.group_id = gid
 
         if refresh:
@@ -65,98 +69,59 @@ class FigureEditor(GraphEditor):
         if ans:
 
             for e in self.associated_editors:
-                e.items = ans
+                if isinstance(e, FigureEditor):
+                    e.analysis_cache = self.analysis_cache
+                    e.unknowns = ans
+                else:
+                    e.items = ans
+
 
             po = self.plotter_options_manager.plotter_options
 
-            comp = timethis(self._get_component, args=(ans, po), msg='get_component')
+            comp = timethis(self.get_component, args=(ans, po), msg='get_component')
     #         comp = self._get_component(ans, po)
 
             self.component = comp
             self.component_changed = True
 
-    def _get_component(self, ans, po):
-        func = getattr(self.processor, self.func)
-        return func(ans=ans, plotter_options=po)
+    def get_component(self, ans, po):
+        pass
+#         return self._get_component()
+#         func = getattr(self.processor, self.func)
+#         return func(ans=ans, plotter_options=po)
 
 
-class IdeogramEditor(FigureEditor):
-    plotter_options_manager = Instance(IdeogramOptionsManager, ())
-    func = 'new_ideogram'
-
-class SpectrumEditor(FigureEditor):
-    plotter_options_manager = Instance(SpectrumOptionsManager, ())
-    func = 'new_spectrum'
-
-class InverseIsochronEditor(FigureEditor):
-    plotter_options_manager = Instance(InverseIsochronOptionsManager, ())
-    func = 'new_inverse_isochron'
+# class SeriesEditor(FigureEditor):
+#     plotter_options_manager = Instance(SeriesOptionsManager, ())
+#     func = 'new_series'
+#     plotter_options_manager = Instance(SeriesOptionsManager, ())
 #     def _get_component(self, ans, po):
 #         if ans:
-#             comp, plotter = self.processor.new_inverse_isochron(ans=ans, plotter_options=po)
+#             comp, plotter = self.processor.new_series(ans=ans,
+#                                                       options=dict(fits=self.tool.fits),
+#                                                       plotter_options=po)
 #             self.plotter = plotter
 #             return comp
 
-class SeriesEditor(FigureEditor):
-    plotter_options_manager = Instance(SeriesOptionsManager, ())
-#     func = 'new_series'
-#     plotter_options_manager = Instance(SeriesOptionsManager, ())
-    def _get_component(self, ans, po):
-        if ans:
-            comp, plotter = self.processor.new_series(ans=ans,
-                                                      options=dict(fits=self.tool.fits),
-                                                      plotter_options=po)
-            self.plotter = plotter
-            return comp
-
-    def show_series(self, key, fit='Linear'):
-        fi = next((ti for ti in self.tool.fits if ti.name == key), None)
-#         self.tool.suppress_refresh_unknowns = True
-        if fi:
-            fi.trait_set(
-                         fit=fit,
-                         show=True,
-                         trait_change_notify=False)
-
-        self.rebuild(refresh_data=False)
+#     def show_series(self, key, fit='Linear'):
+#         fi = next((ti for ti in self.tool.fits if ti.name == key), None)
+# #         self.tool.suppress_refresh_unknowns = True
+#         if fi:
+#             fi.trait_set(
+#                          fit=fit,
+#                          show=True,
+#                          trait_change_notify=False)
+#
+#         self.rebuild(refresh_data=False)
 #             fi.fit = fit
 #             fi.show = True
 
 #         self.tool.suppress_refresh_unknowns = False
 
-class AutoIdeogramControl(HasTraits):
-    group_by_aliquot = Bool(False)
-    group_by_labnumber = Bool(False)
-    def traits_view(self):
-        v = View(
-                 Item('group_by_aliquot'),
-                 Item('group_by_labnumber'),
-
-                 )
-        return v
 
 
-class AutoSeriesControl(HasTraits):
-    days = Int(1)
-    hours = Float(0)
-    def traits_view(self):
-        v = View(
-               Item('days'),
-               Item('hours')
-               )
-        return v
 
 
-class AutoIdeogramEditor(IdeogramEditor):
-    auto_figure_control = Instance(AutoIdeogramControl, ())
-
-
-class AutoSpectrumEditor(SpectrumEditor):
-    auto_figure_control = Instance(AutoIdeogramControl, ())
-
-
-class AutoSeriesEditor(SeriesEditor):
-    auto_figure_control = Instance(AutoSeriesControl, ())
 
 
 

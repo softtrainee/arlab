@@ -76,4 +76,7 @@ def make_image_regex(ext):
     s = '[\d\w-]+\.({})'.format('|'.join(ext))
     return re.compile(s)
 
+
+ISOREGEX = re.compile('[A-Za-z]{1,2}\d+$')
+
 #============= EOF =============================================

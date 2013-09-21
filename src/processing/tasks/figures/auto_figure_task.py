@@ -20,12 +20,13 @@ from traitsui.api import View, Item
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed
 from src.processing.tasks.figures.panes import PlotterOptionsPane
 from src.processing.tasks.figures.figure_task import FigureTask
-from src.processing.tasks.figures.figure_editor import IdeogramEditor, \
-    SpectrumEditor, AutoIdeogramEditor, AutoSpectrumEditor, AutoSeriesEditor
 from src.processing.tasks.figures.auto_figure_panes import AutoFigureControlPane
 from src.messaging.notify.subscriber import Subscriber
 from src.ui.gui import invoke_in_main_thread
 from apptools.preferences.preference_binding import bind_preference
+from src.processing.tasks.figures.editors.series_editor import AutoSeriesEditor
+from src.processing.tasks.figures.editors.spectrum_editor import AutoSpectrumEditor
+from src.processing.tasks.figures.editors.ideogram_editor import AutoIdeogramEditor
 # from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
 #============= standard library imports ========================
 #============= local library imports  ==========================

@@ -105,20 +105,26 @@ class AnalysisEditTask(BaseEditorTask):
 
         self.unknowns_pane = self._create_unknowns_pane()
 
-        self.controls_pane = ControlsPane()
+#         self.controls_pane = ControlsPane()
         self.plot_editor_pane = PlotEditorPane()
         panes = [
                 self.unknowns_pane,
-                self.controls_pane,
+#                 self.controls_pane,
                 self.plot_editor_pane,
 #                self.results_pane,
                 ]
+        cp = self._create_control_pane()
+        if cp:
+            panes.append(cp)
 
         ps = self._create_db_panes()
         if ps:
             panes.extend(ps)
 
         return panes
+
+    def _create_control_pane(self):
+        return
 
     def _create_db_panes(self):
         if self.manager.db:
@@ -192,11 +198,13 @@ class AnalysisEditTask(BaseEditorTask):
                     tool = self.active_editor.tool
 
                 self.controls_pane.tool = tool
-                if self.unknowns_pane:
-                    self.unknowns_pane.previous_selection = ''
 
-                    if hasattr(self.active_editor, 'unknowns'):
-                        self.unknowns_pane.items = self.active_editor._unknowns
+            if self.unknowns_pane:
+                self.unknowns_pane.previous_selection = ''
+                if hasattr(self.active_editor, 'unknowns'):
+                    if self.active_editor.unknowns:
+                        self.unknowns_pane.items = self.active_editor.unknowns
+
 
     @on_trait_change('active_editor:component_changed')
     def _update_component(self):
@@ -212,8 +220,8 @@ class AnalysisEditTask(BaseEditorTask):
                 self._append_cache(self.active_editor)
 
     def _append_cache(self, editor):
-        if hasattr(editor, '_unknowns'):
-            ans = editor._unknowns
+        if hasattr(editor, 'unknowns'):
+            ans = editor.unknowns
             ids = [ai.uuid for ai in self._analysis_cache]
             c = [ai for ai in ans if ai.uuid not in ids]
 

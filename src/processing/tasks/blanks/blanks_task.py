@@ -19,6 +19,7 @@
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, HSplitter
 
 from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
+from src.processing.tasks.analysis_edit.panes import ControlsPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -26,11 +27,11 @@ class BlanksTask(InterpolationTask):
     id = 'pychron.analysis_edit.blanks'
     blank_editor_count = 1
     name = 'Blanks'
+    def _create_control_pane(self):
+        self.controls_pane = ControlsPane()
+        return self.controls_pane
 
     def _default_layout_default(self):
-
-
-
         return TaskLayout(
                           id='pychron.analysis_edit.blanks',
                           left=Splitter(

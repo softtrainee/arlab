@@ -88,7 +88,7 @@ def flatten(nested):
 
 class PlotEditorPane(TraitsDockPane):
     component = Any
-    name = 'Editor'
+    name = 'Plot Editor'
     id = 'pychron.processing.editor'
     current_editor = Instance(PlotEditor)
     selectors = List

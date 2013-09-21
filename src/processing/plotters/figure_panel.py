@@ -29,6 +29,8 @@ class FigurePanel(HasTraits):
     analyses = Any
     plot_options = Any
     _index_attr = None
+    equi_stack = False
+    graph_klass = StackedGraph
 
     @on_trait_change('analyses[]')
     def _analyses_items_changed(self):
@@ -42,8 +44,8 @@ class FigurePanel(HasTraits):
         return gs
 
     def make_graph(self):
-        g = StackedGraph(panel_height=200,
-                         equi_stack=False,
+        g = self.graph_klass(panel_height=200,
+                         equi_stack=self.equi_stack,
                          container_dict=dict(padding=0),)
 
         po = self.plot_options

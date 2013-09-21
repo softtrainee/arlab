@@ -385,60 +385,6 @@ class Processor(IsotopeDatabaseManager):
 #===============================================================================
 # figures
 #===============================================================================
-    def new_ideogram(self, ans, plotter_options=None):
-        if plotter_options is None:
-            pom = IdeogramOptionsManager()
-            plotter_options = pom.plotter_options
-
-        from src.processing.plotters.ideogram.ideogram_model import IdeogramModel
-        model = IdeogramModel(plot_options=plotter_options)
-        model.analyses = ans
-        iv = FigureContainer(model=model)
-        return iv.component
-
-    def new_spectrum(self, ans, plotter_options=None):
-        if plotter_options is None:
-            pom = SpectrumOptionsManager()
-            plotter_options = pom.plotter_options
-
-        from src.processing.plotters.spectrum.spectrum_model import SpectrumModel
-        model = SpectrumModel(plot_options=plotter_options)
-        model.analyses = ans
-        iv = FigureContainer(model=model)
-        return iv.component
-
-    def new_inverse_isochron(self, ans, plotter_options=None):
-        if plotter_options is None:
-            pom = InverseIsochronOptionsManager()
-            plotter_options = pom.plotter_options
-
-        from src.processing.plotters.isochron.isochron_model \
-            import InverseIsochronModel
-
-        model = InverseIsochronModel(plot_options=plotter_options)
-        model.analyses = ans
-        iv = FigureContainer(model=model)
-        return iv.component
-#         p = InverseIsochron()
-#
-#
-#         options = {}
-#
-#         self._plotter_options = plotter_options
-#         if ans:
-# #             self.analyses = ans
-#             giso = p.build(ans, options=options,
-#                             plotter_options=plotter_options)
-#             if giso:
-#                 return giso.plotcontainer
-
-    def new_series(self, ans, options=None, plotter_options=None):
-        pass
-#         if ans:
-#             p = Series()
-#             gseries = p.build(ans, options=options,
-#                               plotter_options=plotter_options)
-#             return gseries, p
 
 #===============================================================================
 # corrections
