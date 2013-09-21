@@ -64,34 +64,35 @@ class AnalysisEditTask(BaseEditorTask):
             
             if tag is valid or invalid  set the status instead
         '''
-
-        items = self.active_editor._unknowns
+        items = self.unknowns_pane.selected
+#         items = self.active_editor._unknowns
         if items:
-            selection = [ai for ai in items if ai.temp_status]
-            if not selection:
-                name = 'valid'
-                selection = items
-            else:
-                name = self._get_tagname()
+#             selection = [ai for ai in items if ai.temp_status]
+#             if not selection:
+#                 name = 'valid'
+#                 selection = items
+#             else:
+            name = self._get_tagname()
 
             db = self.manager.db
             with db.session_ctx():
-                if name in ('valid', 'invalid'):
-                    def func(it, x):
-                        self.debug('setting {} status= {}'.format(it.record_id, name))
-                        x.status = 0 if name == 'valid' else 1
-                        x.tag = ''
-                else:
-                    def func(it, x):
-                        self.debug('setting {} tag= {}'.format(it.record_id, name))
-                        x.tag = name
-                        it.tag = name
-                        it.temp_status = 1 if name else 0
+#                 if name in ('valid', 'invalid'):
+#                     def func(it, x):
+#                         self.debug('setting {} status= {}'.format(it.record_id, name))
+#                         x.status = 0 if name == 'valid' else 1
+#                         x.tag = ''
+#                 else:
+                def func(it, x):
+                    self.debug('setting {} tag= {}'.format(it.record_id, name))
+                    x.tag = name
+                    it.tag = name
+                    it.temp_status = 1 if name else 0
 
-                for it in selection:
+                for it in items:
                     ma = db.get_analysis_uuid(it.uuid)
                     func(it, ma)
 
+            self.active_editor.rebuild(refresh_data=False)
 
     def prepare_destroy(self):
         if self.unknowns_pane:
@@ -172,13 +173,13 @@ class AnalysisEditTask(BaseEditorTask):
                 ps = [func(si, graph_id=si.graph_id,
                                 group_id=si.group_id) for si in new.analysis_ids]
                 ps = [pi for pi in ps if pi]
-                pane.items = ps
+
+                pane.items = self.manager.make_analyses(ps)
 
     def _save_file(self, path):
         if self.active_editor:
             self.active_editor.save_file(path)
             return True
-
 
 #===============================================================================
 # handlers
@@ -195,7 +196,7 @@ class AnalysisEditTask(BaseEditorTask):
                     self.unknowns_pane.previous_selection = ''
 
                     if hasattr(self.active_editor, 'unknowns'):
-                        self.unknowns_pane.items = self.active_editor.unknowns
+                        self.unknowns_pane.items = self.active_editor._unknowns
 
     @on_trait_change('active_editor:component_changed')
     def _update_component(self):
@@ -206,7 +207,7 @@ class AnalysisEditTask(BaseEditorTask):
     def _update_unknowns_runs(self, obj, name, old, new):
         if not obj._no_update:
             if self.active_editor:
-
+#                 self.active_editor._unknowns = self.unknowns_pane.items
                 self.active_editor.unknowns = self.unknowns_pane.items
                 self._append_cache(self.active_editor)
 
@@ -243,11 +244,12 @@ class AnalysisEditTask(BaseEditorTask):
     @on_trait_change('unknowns_pane:[append_button, replace_button]')
     def _append_unknowns(self, obj, name, old, new):
         s = self.data_selector.selector.selected
+        s = self.manager.make_analyses(s)
+
         if name == 'append_button':
             self.unknowns_pane.items.extend(s)
         else:
             self.unknowns_pane.items = s
-
 
     @on_trait_change('data_selector:selector:key_pressed')
     def _key_press(self, obj, name, old, new):
@@ -255,6 +257,8 @@ class AnalysisEditTask(BaseEditorTask):
             use 'u' to add selected analyses to unknowns pane
         '''
         s = self.data_selector.selector.selected
+        s = self.manager.make_analyses(s)
+
         if new and s:
             c = new.text
 #             shift = new.shift

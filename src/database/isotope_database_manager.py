@@ -114,24 +114,45 @@ class IsotopeDatabaseManager(Loggable):
         except AttributeError:
             pass
 
-    def make_analyses(self, ans, **kw):
+    def filter_analysis_tag(self, ans, exclude):
+        if not isinstance(exclude, (list, tuple)):
+            exclude = (exclude,)
+
+        return filter(lambda x: not x.tag in exclude, ans)
+
+    def make_analyses(self, ans, exclude=None, **kw):
+
+        if exclude:
+            ans = self.filter_analysis_tag(ans, exclude)
+
+        if not ans:
+            return []
+
         with self.db.session_ctx():
             if ans:
                 progress = None
-                n = len(ans)
-                if n > 1:
-                    progress = self._open_progress(n)
 
-                if progress:
-                    progress.on_trait_change(self._progress_closed, 'closed')
+                dbans = filter(lambda x: isinstance(x, DBAnalysis), ans)
+                nodbans = filter(lambda x: not isinstance(x, DBAnalysis), ans)
+                if nodbans:
+                    n = len(ans)
+                    if n > 1:
+                        progress = self._open_progress(n)
 
-                rs = [self._record_factory(ai, progress=progress, **kw)
-                            for ai in ans]
-                if progress:
-                    progress.on_trait_change(self._progress_closed,
-                                             'closed', remove=True)
+                    if progress:
+                        progress.on_trait_change(self._progress_closed, 'closed')
 
-                return rs
+                    rs = [self._record_factory(ai, progress=progress, **kw)
+                                for ai in ans]
+                    rs = [ri for ri in rs if ri is not None]
+
+                    dbans.extend(rs)
+
+                    if progress:
+                        progress.on_trait_change(self._progress_closed,
+                                                 'closed', remove=True)
+
+                return dbans
 
 #     def load_analyses(self, ans, show_progress=True, **kw):
 #         progress = None
@@ -195,7 +216,7 @@ class IsotopeDatabaseManager(Loggable):
         win = self.application.windows[-1]
         win.activate()
 
-    def _record_factory(self, rec, progress=None, calculate_age=True, **kw):
+    def _record_factory(self, rec, progress=None, calculate_age=True, exclude=None, **kw):
         if isinstance(rec, (Analysis, DBAnalysis)):
             if progress:
                 progress.increment()

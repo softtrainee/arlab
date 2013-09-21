@@ -24,6 +24,11 @@ from chaco.tools.data_label_tool import DataLabelTool
 from src.stats.core import calculate_mswd, validate_mswd
 from src.helpers.formatting import floatfmt
 from src.processing.plotters.flow_label import FlowDataLabel
+from chaco.tools.broadcaster import BroadcasterTool
+from src.graph.tools.rect_selection_tool import RectSelectionOverlay, \
+    RectSelectionTool
+from src.graph.tools.analysis_inspector import AnalysisPointInspector
+from src.graph.tools.point_inspector import PointInspectorOverlay
 
 class BaseArArFigure(HasTraits):
     analyses = Any
@@ -106,6 +111,46 @@ class BaseArArFigure(HasTraits):
                        for ai in self._unpack_attr('k39')])
 
         return self._plot_aux('K39(fA)', 'k39', ys, po, plot, pid, es)
+#===============================================================================
+#
+#===============================================================================
+    def _add_scatter_inspector(self,
+                               # container,
+                               # plot,
+                               scatter,
+                               add_tool=True,
+                               value_format=None,
+                               additional_info=None
+                               ):
+        if add_tool:
+            broadcaster = BroadcasterTool()
+            scatter.tools.append(broadcaster)
+
+            rect_tool = RectSelectionTool(scatter)
+            rect_overlay = RectSelectionOverlay(tool=rect_tool)
+
+            scatter.overlays.append(rect_overlay)
+            broadcaster.tools.append(rect_tool)
+
+            if value_format is None:
+                value_format = lambda x:'{:0.5f}'.format(x)
+            point_inspector = AnalysisPointInspector(scatter,
+                                                     analyses=self.sorted_analyses,
+                                                     convert_index=lambda x: '{:0.3f}'.format(x),
+                                                     value_format=value_format,
+                                                     additional_info=additional_info
+                                                     )
+
+            pinspector_overlay = PointInspectorOverlay(component=scatter,
+                                                       tool=point_inspector,
+                                                       )
+#
+            scatter.overlays.append(pinspector_overlay)
+            broadcaster.tools.append(point_inspector)
+
+            u = lambda a, b, c, d: self.update_graph_metadata(a, b, c, d)
+            scatter.index.on_trait_change(u, 'metadata_changed')
+
 #===============================================================================
 # labels
 #===============================================================================

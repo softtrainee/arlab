@@ -20,7 +20,7 @@
 from chaco.api import AbstractOverlay
 
 #============= standard library imports ========================
-from numpy import linspace, hstack, sqrt, power, corrcoef
+from numpy import linspace, hstack, sqrt, power, corrcoef, pi, column_stack
 from numpy.linalg import eig
 import math
 
@@ -28,6 +28,7 @@ import math
 
 
 class ErrorEllipseOverlay(AbstractOverlay):
+    nsigma = 2
     def overlay(self, component, gc, view_bounds=None, mode='normal'):
         '''
             
@@ -39,14 +40,6 @@ class ErrorEllipseOverlay(AbstractOverlay):
         y = component.value.get_data()
         xer = component.xerror.get_data()
         yer = component.yerror.get_data()
-
-#        er39 = 0.00001
-#        er40 = 0.0001
-#        er36 = 0.001
-#        a = (er39 ** 2 + er40 ** 2) ** 0.5
-#        b = (er36 ** 2 + er40 ** 2) ** 0.5
-#        a = 0.001
-#        b = 0.00002
 
         pxy = corrcoef(x, y)[0][1]
         try:
@@ -87,23 +80,27 @@ class ErrorEllipseOverlay(AbstractOverlay):
         return a, b, rotation
 
     def _draw_ellipse(self, gc, component, cx, cy, a, b, rot):
-
+        a *= self.nsigma
+        b *= self.nsigma
         scx, scy = component.map_screen([(cx, cy)])[0]
         ox, oy = component.map_screen([(0, 0)])[0]
 #        gc.translate_ctm(-scx, -scy)
         # gc.rotate_ctm(45)
         x1 = linspace(-a, a, 200)
-        y1 = sqrt(power(b, 2) * (1 - power(x1, 2) / power(a, 2)))
+        y1 = b * sqrt((1 - power(x1 / a, 2)))
+#         y1 = sqrt(power(b, 2) * (1 - power(x1 / a, 2)))
 
         x2 = x1[::-1]
-        y2 = -sqrt(power(b, 2) * (1 - power(x2, 2) / power(a, 2)))
+#         y2 = -sqrt(power(b, 2) * (1 - power(x2 / a, 2)))
+        y2 = -b * sqrt((1 - power(x2 / a, 2)))
 
         x = hstack((x1, x2))
         y = hstack((y1, y2))
-        pts = component.map_screen(zip(x, y))
+        pts = component.map_screen(column_stack((x, y)))
 
         gc.translate_ctm(scx, scy)
-        gc.rotate_ctm(rot)
+
+        gc.rotate_ctm(rot - pi / 2.)
         gc.translate_ctm(-scx, -scy)
 
         gc.translate_ctm(scx - ox, scy - oy)

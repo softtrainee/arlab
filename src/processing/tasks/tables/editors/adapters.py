@@ -39,34 +39,35 @@ def ewidth(v=50):
 PM = u'\u00b1 1\u03c3'
 class BaseAdapter(TabularAdapter):
     blank_column_text = Str('')
-    def _get_value(self, attr):
+    def _get_value(self, attr, n=3, **kw):
         v = ''
         if isinstance(self.item, TableBlank):
             if self.item.isotopes.has_key(attr):
                 v = self.item.isotopes.get(attr).blank.value
-                v = floatfmt(v)
+                v = floatfmt(v, n=n, **kw)
         else:
             v = getattr(self.item, attr)
             if v:
-                v = floatfmt(v.nominal_value)
+                v = floatfmt(v.nominal_value, n=n, **kw)
 
         return v
 
-    def _get_error(self, attr):
+    def _get_error(self, attr, n=4, **kw):
         v = ''
         if isinstance(self.item, TableBlank):
             if self.item.isotopes.has_key(attr):
                 v = self.item.isotopes.get(attr).blank.error
-                v = floatfmt(v)
+                v = floatfmt(v, n=n)
         else:
             v = getattr(self.item, attr)
             if v:
-                v = floatfmt(v.std_dev)
+                v = floatfmt(v.std_dev, n=n)
 
         return v
 
 class LaserTableAdapter(BaseAdapter):
     columns = [
+               ('Lab#', 'labnumber'),
                ('N', 'aliquot_step_str'),
                ('Power', 'extract_value'),
                ('Mol. Ar40', 'moles_Ar40'),
@@ -117,7 +118,7 @@ class LaserTableAdapter(BaseAdapter):
     kca_error_text = Property
 
 
-
+    labnumber_width = Int(60)
     aliquot_step_str_width = Int(30)
     extract_value_width = Int(40)
     moles_Ar40_width = Int(50)
@@ -140,15 +141,15 @@ class LaserTableAdapter(BaseAdapter):
     R_width = Int(70)
     R_width = Int(70)
 
-    font = 'Arial 9'
+    font = 'Arial 10'
 
     def get_bg_color(self, obj, trait, row, column):
         c = 'white'
-        if row % 2 == 0:
-            c = 'lightgray'
-        if self.item.temp_status != 0 or self.item.status != 0:
-            c = '#FF9999'
-
+        if not isinstance(self.item, TableSeparator):
+            if row % 2 == 0:
+                c = 'lightgray'
+            if self.item.temp_status != 0 or self.item.tag:
+                c = '#FF9999'
         return c
 
     def _get_aliquot_step_str_text(self):
@@ -159,7 +160,13 @@ class LaserTableAdapter(BaseAdapter):
         return r
 
     def _get_extract_value_text(self):
-        return self._get_text_value('extract_value')
+        v = self._get_text_value('extract_value')
+#         if self.item.extract_units == 'W':
+#             f = '{:0.2f}'.format(v)
+#         else:
+        f = '{:n}'
+
+        return f.format(v)
 
     def _get_moles_Ar40_text(self):
         return self._get_text_value('moles_Ar40')
@@ -194,9 +201,9 @@ class LaserTableAdapter(BaseAdapter):
 
 
     def _get_rad40_percent_text(self):
-        return self._get_value('rad40_percent')
+        return self._get_value('rad40_percent', n=1)
     def _get_R_text(self):
-        return self._get_value('R')
+        return self._get_value('R', n=2)
     def _get_age_text(self):
         return self._get_value('age')
 
@@ -209,10 +216,10 @@ class LaserTableAdapter(BaseAdapter):
         return v
 
     def _get_kca_text(self):
-        return self._get_value('kca')
+        return self._get_value('kca', n=2)
 
     def _get_kca_error_text(self):
-        return self._get_error('kca')
+        return self._get_error('kca', n=3)
 
 
 class LaserTableMeanAdapter(BaseAdapter):
@@ -228,6 +235,11 @@ class LaserTableMeanAdapter(BaseAdapter):
                ]
 
     nanalyses_width = Int(40)
+    sample_width = Int(75)
+    weighted_age_width = Int(75)
+    arith_age_width = Int(75)
+    age_se_width = Int(75)
+    age_sd_width = Int(75)
 
     weighted_age_text = Property
     arith_age_text = Property

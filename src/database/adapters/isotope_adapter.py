@@ -930,6 +930,9 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_tag(self, name):
         return self._retrieve_item(proc_TagTable, name)
 
+    def get_sensitivity(self, sid):
+        return self._retrieve_item(gen_SensitivityTable, sid, key='id')
+
 #===============================================================================
 # ##getters multiple
 #===============================================================================

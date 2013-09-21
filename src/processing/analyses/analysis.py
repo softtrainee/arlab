@@ -74,7 +74,7 @@ class Analysis(ArArAge):
 
 class DBAnalysis(Analysis):
     analysis_summary_klass = DBAnalysisSummary
-    status = Int
+#     status = Int
     temp_status = Int
     record_id = Str
     uuid = Str
@@ -115,10 +115,10 @@ class DBAnalysis(Analysis):
         
         '''
         r = 'OK'
-        if self.status != 0:
-            r = 'Invalid'
+#         if self.status != 0:
+#             r = 'Invalid'
 
-        elif self.temp_status != 0:
+        if self.temp_status != 0:
             r = 'Omitted'
 
         return r
@@ -240,7 +240,7 @@ class DBAnalysis(Analysis):
                  ('labnumber', 'labnumber', lambda x: x.identifier),
                  ('aliquot', 'aliquot', int),
                  ('step', 'step', str),
-                 ('status', 'status', int),
+#                  ('status', 'status', int),
                  ('comment', 'comment', str),
                  ('uuid', 'uuid', str),
                  ('_timestamp', 'analysis_timestamp',

@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,29 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List
-# from envisage.ui.workbench.api import WorkbenchApplication
-# from pyface.api import AboutDialog, SplashScreen
-# from pyface.image_resource import ImageResource
+from traits.api import HasTraits, Array, Int, Float
+from chaco.abstract_overlay import AbstractOverlay
 #============= standard library imports ========================
-import copy
-
+from numpy import where, array
+from enable.base_tool import BaseTool
+from enable.tools.drag_tool import DragTool
+from enable.colors import color_table
 #============= local library imports  ==========================
-from src.loggable import Loggable
-from envisage.ui.tasks.tasks_application import TasksApplication
-from pyface.tasks.task_window_layout import TaskWindowLayout
-from pyface.splash_screen import SplashScreen
-from pyface.image_resource import ImageResource
-from src.applications.pychron_application import PychronApplication
 
-class Bakedpy(PychronApplication, Loggable):
-    '''
-    '''
-    id = 'tasks.bakedpy'
-    name = 'Bakedpy'
 
-    default_layout = [TaskWindowLayout('bakeout',
-                                       size=(800, 800)) ]
-
-#============= views ===================================
-#============= EOF ====================================
+#============= EOF =============================================

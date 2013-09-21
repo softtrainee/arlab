@@ -78,9 +78,8 @@ def load_isotopedb_defaults(db):
             for p, name in iterdir(mdir):
                 _load_tray_map(db, p, name)
 
-        for t in ('', 'valid', 'invalid'):
+        for t in ('', 'invalid'):
             db.add_tag(t, user='default')
-
 
 def _load_tray_map(db, p, name):
     from src.lasers.stage_managers.stage_map import StageMap

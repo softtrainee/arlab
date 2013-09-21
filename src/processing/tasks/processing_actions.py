@@ -173,27 +173,27 @@ class RecallAction(Action):
 #             task.window.activate()
 
 
-class LabnumberEntryAction(Action):
-    name = 'Labnumber Entry'
-    accelerator = 'Ctrl+Shift+l'
-
-    task_id = 'pychron.labnumber_entry'
-
-    def perform(self, event):
-        pid = 'pychron.entry'
-        app = event.task.window.application
-        app.get_task(pid)
-
-#         task = event.task
-#         if not task.id == 'pychron.entry':
-#             app = task.window.application
-#             win = app.create_window(TaskWindowLayout(
-#                                                'pychron.entry'
-#                                                )
-#                               )
-#             win.open()
-#         else:
-#             task.window.activate()
+# class LabnumberEntryAction(Action):
+#     name = 'Labnumber Entry'
+#     accelerator = 'Ctrl+Shift+l'
+#
+#     task_id = 'pychron.labnumber_entry'
+#
+#     def perform(self, event):
+#         pid = 'pychron.entry'
+#         app = event.task.window.application
+#         app.get_task(pid)
+#
+# #         task = event.task
+# #         if not task.id == 'pychron.entry':
+# #             app = task.window.application
+# #             win = app.create_window(TaskWindowLayout(
+# #                                                'pychron.entry'
+# #                                                )
+# #                               )
+# #             win.open()
+# #         else:
+# #             task.window.activate()
 
 
 class SmartProjectAction(Action):

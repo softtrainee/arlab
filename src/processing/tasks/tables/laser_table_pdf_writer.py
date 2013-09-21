@@ -37,7 +37,6 @@ class LaserTablePDFWriter(BasePDFWriter):
         title_para = self._new_paragraph(title)
         flowables = [title_para, self._vspacer(0.1)]
 
-
         include_footnotes = True
 #         print ans
         i = 0

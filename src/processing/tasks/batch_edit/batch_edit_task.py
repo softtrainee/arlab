@@ -28,6 +28,7 @@ import shelve
 #============= local library imports  ==========================
 
 class BatchEditTask(AnalysisEditTask):
+    name = 'Batch Edit'
     id = 'pychron.analysis_edit.batch'
     batch_edit_pane = Instance(BatchEditPane)
     unknowns = List

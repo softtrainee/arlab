@@ -98,6 +98,8 @@ class IsotopeRecordView(HasTraits):
     ic_fit_status = False
     flux_fit_status = False
 
+    tag = ''
+
     def create(self, dbrecord):
         try:
             if dbrecord is None or not dbrecord.labnumber:
@@ -107,7 +109,7 @@ class IsotopeRecordView(HasTraits):
             self.aliquot = dbrecord.aliquot
             self.step = dbrecord.step
             self.uuid = dbrecord.uuid
-    #        self.aliquot = '{}{}'.format(dbrecord.aliquot, dbrecord.step)
+            self.tag = dbrecord.tag or ''
             self.timestamp = dbrecord.analysis_timestamp
 
             irp = dbrecord.labnumber.irradiation_position

@@ -158,7 +158,14 @@ class GraphEditor(BaseTraitsEditor):
 #         with gc:
 #         self.rebuild_graph()
 
-    def _gather_unknowns(self, refresh_data):
+    def _gather_unknowns(self, refresh_data, exclude='invalid'):
+        '''
+            use cached runs
+            
+            use exclude keyward to specific tags that will not be 
+            gathered
+            
+        '''
 
         ans = self._unknowns
         if refresh_data or not ans:
@@ -169,7 +176,8 @@ class GraphEditor(BaseTraitsEditor):
             bb = [next((ai for ai in self.analysis_cache if ai.uuid == i)) for i in nids]
             aa = list(aa)
             if aa:
-                unks = self.processor.make_analyses(list(aa))
+                unks = self.processor.make_analyses(list(aa),
+                                                    exclude=exclude)
                 ans = unks
                 if bb:
                     ans.extend(bb)
@@ -179,6 +187,9 @@ class GraphEditor(BaseTraitsEditor):
             # compress groups
             self._compress_unknowns(ans)
             self._unknowns = ans
+        else:
+            if exclude:
+                ans = self.processor.filter_analysis_tag(ans, exclude)
 
         return ans
 

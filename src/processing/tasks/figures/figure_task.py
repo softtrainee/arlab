@@ -37,6 +37,9 @@ from src.processing.tasks.figures.actions import SaveFigureAction, \
 from src.processing.tasks.browser.browser_task import BaseBrowserTask
 from src.processing.tasks.browser.panes import BrowserPane
 from src.codetools.simple_timeit import timethis
+from src.processing.tasks.figures.figure_editor import FigureEditor, \
+    InverseIsochronEditor
+import weakref
 
 
 class FigureTask(AnalysisEditTask, BaseBrowserTask):
@@ -77,9 +80,10 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 #===============================================================================
 
     def prepare_destroy(self):
-        if self.active_editor:
-            pom = self.active_editor.plotter_options_manager
-            pom.close()
+        for ed in self.editor_area.editors:
+            if isinstance(ed, FigureEditor):
+                pom = ed.plotter_options_manager
+                pom.close()
         super(FigureTask, self).prepare_destroy()
 
     def create_dock_panes(self):
@@ -131,46 +135,68 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 #===============================================================================
 # figures
 #===============================================================================
-    def new_ideogram(self, ans=None, klass=None, name='Ideo', plotter_kw=None):
-#         func = self._ideogram_factory
+    def new_ideogram(self, ans=None, klass=None, tklass=None,
+                     name='Ideo', plotter_kw=None):
+
         func = self.manager.new_ideogram
         if klass is None:
             from src.processing.tasks.figures.figure_editor import IdeogramEditor as klass
+        if tklass is None:
+            from src.processing.tasks.tables.editors.laser_table_editor \
+                import LaserTableEditor as tklass
 
-        self._new_figure(ans, name, func, klass, plotter_kw)
+        self._new_figure(ans, name, func, klass, tklass)
 
-    def new_spectrum(self, ans=None, klass=None, name='Spec', plotter_kw=None):
+    def new_spectrum(self, ans=None, klass=None,
+                     tklass=None,
+                     name='Spec', plotter_kw=None):
         if klass is None:
             from src.processing.tasks.figures.figure_editor import SpectrumEditor as klass
 
+        if tklass is None:
+            from src.processing.tasks.tables.editors.laser_table_editor \
+                import LaserTableEditor as tklass
+
         func = self.manager.new_spectrum
-        self._new_figure(ans, name, func, klass, plotter_kw)
+        self._new_figure(ans, name, func, klass, tklass)
 
-    def new_inverse_isochron(self, ans=None, name='Inv. Iso.', plotter_kw=None):
-        func = self.manager.new_inverse_isochron
-        from src.processing.tasks.figures.figure_editor import InverseIsochronEditor
-        klass = InverseIsochronEditor
-        self._new_figure(ans, name, func, klass, plotter_kw)
-
-    def new_series(self, ans, klass=None, name='Series',
-                   plotter_kw=None
-                  ):
+    def new_inverse_isochron(self, ans=None, name='Inv. Iso.',
+                             klass=None, tklass=None, plotter_kw=None):
         if klass is None:
-            from src.processing.tasks.figures.figure_editor import SeriesEditor as klass
-        func = self.manager.new_series
+            klass = InverseIsochronEditor
 
-        self._new_figure(ans, name, func, klass, plotter_kw)
+        if tklass is None:
+            from src.processing.tasks.tables.editors.laser_table_editor \
+                import LaserTableEditor as tklass
 
-        editor = self.active_editor
-        refiso = ans[0]
-#         editor._unknowns = ans
-        editor.trait_set(_unknowns=ans,
-                         unknowns=ans,
-                         trait_change_notify=False)
-#         editor.unknowns = ans
-        editor.tool.load_fits(refiso.isotope_keys,
-                              refiso.isotope_fits
-                              )
+        func = self.manager.new_inverse_isochron
+        feditor = self._new_figure(ans, name, func, klass, tklass,
+                                   add_iso=False)
+
+#         func = self.manager.new_inverse_isochron
+#         from src.processing.tasks.figures.figure_editor import InverseIsochronEditor
+#         klass = InverseIsochronEditor
+#         self._new_figure(ans, name, func, klass, plotter_kw)
+
+#     def new_series(self, ans, klass=None, name='Series',
+#                    plotter_kw=None
+#                   ):
+#         if klass is None:
+#             from src.processing.tasks.figures.figure_editor import SeriesEditor as klass
+#         func = self.manager.new_series
+#
+#         self._new_figure(ans, name, func, klass, plotter_kw)
+#
+#         editor = self.active_editor
+#         refiso = ans[0]
+# #         editor._unknowns = ans
+#         editor.trait_set(_unknowns=ans,
+#                          unknowns=ans,
+#                          trait_change_notify=False)
+# #         editor.unknowns = ans
+#         editor.tool.load_fits(refiso.isotope_keys,
+#                               refiso.isotope_fits
+#                               )
 #===============================================================================
 # actions
 #===============================================================================
@@ -200,8 +226,6 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
         # load analyses
         items = [self._record_view_factory(ai.analysis) for ai in fig.analyses]
         self.unknowns_pane.items = items
-
-
 
     def _save_figure(self):
         db = self.manager.db
@@ -242,38 +266,55 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 #===============================================================================
 #
 #===============================================================================
-    def _new_figure(self, ans, name, func, klass, plotter_kw):
+    def _new_figure(self, ans, name, func, klass, tklass=None, add_iso=True):
         comp, plotter = None, None
+        # new figure editor
         editor = klass(
-#                        component=comp,
-#                        plotter=plotter,
                        name=name,
                        processor=self.manager,
                        make_func=func
                        )
 
-#         editor._suppress_rebuild = True
         self.plot_editor_pane.component = comp
         self._open_editor(editor)
 
         if ans:
-            if plotter_kw is None:
-                plotter_kw = {}
-            comp, plotter = func(ans, **plotter_kw)
+            comp, plotter = func(ans)
             editor.plotter = plotter
             editor.component = comp
 
             editor._unknowns = ans
             self.unknowns_pane.items = ans
-#         editor._suppress_rebuild = False
 
+        if tklass:
+            # open table
+            teditor = self._new_table(ans, name, tklass)
+            editor.associated_editors.append(weakref.ref(teditor)())
 
+        if add_iso:
+            # open associated isochron
+            ieditor = self._new_associated_isochron(ans, name)
+            editor.associated_editors.append(weakref.ref(ieditor)())
 
-#     @on_trait_change('active_editor:plotter:recall_event')
-#     def _recall(self, new):
-#         print new
+        # activate figure editor
+        self.editor_area.activate_editor(editor)
+        return editor
 
+    def _new_associated_isochron(self, ans, name):
+        name = '{}-isochron'.format(name)
+        editor = InverseIsochronEditor(name=name)
+        self.editor_area.add_editor(editor)
+        if ans:
+            editor.items = ans
+        return editor
 
+    def _new_table(self, ans, name, klass):
+        name = '{}-table'.format(name)
+        editor = klass(name=name)
+        self.editor_area.add_editor(editor)
+        if ans:
+            editor.items = ans
+        return editor
 
     def _get_unique_group_id(self):
         gids = {i.group_id for i in self.unknowns_pane.items}
@@ -293,7 +334,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 
 #             self.unknowns_pane.update_needed = True
             self.unknowns_pane.refresh_needed = True
-            print 'asdfsdfsadfsd'
+#             print 'asdfsdfsadfsd'
             self.active_editor.rebuild(refresh_data=False)
 
 #     def _ideogram_factory(self, ans, plotter_options=None):
@@ -344,7 +385,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
     def _options_update(self, name, new):
         if name == 'initialized':
             return
-        print 'asdfsdf'
+#         print 'asdfsdf'
         self.active_editor.rebuild(refresh_data=False)
 #         do_later(self.active_editor.rebuild, refresh_data=False)
 #         self.active_editor.rebuild()
@@ -352,10 +393,11 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 
     def _active_editor_changed(self):
         if self.active_editor:
-            self.plotter_options_pane.pom = self.active_editor.plotter_options_manager
+#             if hasattr(self.active_editor, 'plotter_options_manager'):
+            if isinstance(self.active_editor, FigureEditor):
+                self.plotter_options_pane.pom = self.active_editor.plotter_options_manager
 
         super(FigureTask, self)._active_editor_changed()
-
 
     #===========================================================================
     # browser protocol

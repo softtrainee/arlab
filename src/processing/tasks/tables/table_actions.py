@@ -21,12 +21,14 @@ from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class MakeTableAction(TaskAction):
+    name = 'Make PDF'
     method = 'make_table'
     image = ImageResource(name='file_pdf.png',
                          search_path=paths.icon_search_path
                          )
 
 class ToggleStatusAction(TaskAction):
+    name = 'Toggle Status'
     method = 'toggle_status'
     image = ImageResource(name='arrow_switch.png',
                          search_path=paths.icon_search_path
@@ -34,6 +36,7 @@ class ToggleStatusAction(TaskAction):
     tooltip = 'Toggle status'
 
 class SummaryTableAction(TaskAction):
+    name = 'Summary'
     method = 'open_summary_table'
     image = ImageResource(name='report.png',
                          search_path=paths.icon_search_path
@@ -48,6 +51,7 @@ class AppendSummaryTableAction(TaskAction):
     tooltip = 'Append to current summary table'
 
 class LaserTableAction(TaskAction):
+    name = 'Laser'
     method = 'new_laser_table'
     image = ImageResource(name='report.png',
                          search_path=paths.icon_search_path

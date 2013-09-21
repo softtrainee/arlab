@@ -30,6 +30,7 @@ from src.processing.tasks.analysis_edit.ianalysis_edit_tool import IAnalysisEdit
 from src.paths import paths
 from src.processing.analysis import Marker
 from src.processing.selection.previous_selection import PreviousSelection
+from src.column_sorter_mixin import ColumnSorterMixin
 
 
 def new_button_editor(trait, name, **kw):
@@ -45,16 +46,21 @@ def new_button_editor(trait, name, **kw):
 class TablePane(TraitsDockPane):
     append_button = Button
     replace_button = Button
+
     items = List
+
     _no_update = False
     update_needed = Event
     refresh_needed = Event
     selected = Any
     dclicked = Any
+
     def load(self):
         pass
     def dump(self):
         pass
+
+
     def traits_view(self):
         v = View(VGroup(
                       UItem('items', editor=myTabularEditor(adapter=self.adapter_klass(),
@@ -73,12 +79,15 @@ class TablePane(TraitsDockPane):
         return v
 
 
-class HistoryTablePane(TablePane):
+
+
+class HistoryTablePane(TablePane, ColumnSorterMixin):
     previous_selection = Any
     previous_selections = List(PreviousSelection)
 
     _add_tooltip = '''(u) Append unknowns'''
     _replace_tooltip = '''(Shift+u) Replace unknowns'''
+
     def load(self):
         self.load_previous_selections()
     def dump(self):
@@ -172,8 +181,10 @@ class HistoryTablePane(TablePane):
                                                             selected='selected',
                                                             dclicked='dclicked',
                                                             multi_select=True,
-                                                            refresh='refresh_needed',
-                                                            update='update_needed'
+                                                            auto_update=True,
+                                                            column_clicked='column_clicked'
+#                                                             refresh='refresh_needed',
+#                                                             update='update_needed'
 #                                                            auto_resize_rows=True
                                                             )
                             )
