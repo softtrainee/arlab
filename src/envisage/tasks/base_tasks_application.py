@@ -16,14 +16,15 @@
 
 #============= enthought library imports =======================
 from traits.api import List
-from src.loggable import Loggable
 from envisage.ui.tasks.tasks_application import TasksApplication
 from pyface.tasks.task_window_layout import TaskWindowLayout
-from src.globals import globalv
-from src.hardware.core.i_core_device import ICoreDevice
-from traits.has_traits import on_trait_change
 #============= standard library imports ========================
+import weakref
 #============= local library imports  ==========================
+from src.globals import globalv
+from src.loggable import Loggable
+from src.hardware.core.i_core_device import ICoreDevice
+
 
 class BaseTasksApplication(TasksApplication, Loggable):
     uis = List
@@ -31,54 +32,41 @@ class BaseTasksApplication(TasksApplication, Loggable):
         if globalv.open_logger_on_launch:
             self._load_state()
             self.get_task('pychron.logger')
-#             win = self.create_window(TaskWindowLayout('pychron.logger',
-#                                                       ),
-#                                      )
-#             win.open()
-        return super(BaseTasksApplication, self).start()
 
-#     @on_trait_change('window_closed')
-#     def _update_window_closed(self, event):
-#         print event.window
+        return super(BaseTasksApplication, self).start()
 
     def get_task(self, tid, activate=True):
         for win in self.windows:
             if win.active_task:
                 if win.active_task.id == tid:
-                    if activate:
-                        if win.control:
-                            win.activate()
-#                         else:
-#                             win.open()
+                    if activate and win.control:
+                        win.activate()
                     break
         else:
             win = self.create_window(TaskWindowLayout(tid))
             if activate:
                 win.open()
-#            try:
-#                win = self.create_window(TaskWindowLayout(tid))
-#                if activate:
-#                    win.open()
-#            except Exception,e:
-#                self.debug('failed getting task {}: {}'.format(tid, e))
-#                win=None
-        
+
         if win:
             return win.active_task
 
     def open_task(self, tid):
         return self.get_task(tid, True)
 
+    def add_view(self, ui):
+        self.uis.append(weakref.ref(ui)())
+
     def open_view(self, obj, **kw):
         info = obj.edit_traits(**kw)
-        self.uis.append(info)
+        self.add_view(info)
 
     def exit(self):
 
         self._cleanup_services()
 
         import copy
-        uis = copy.copy(self.uis)
+        uis = self.uis
+#         uis = copy.copy(self.uis)
         for ui in uis:
             try:
                 ui.dispose(abort=True)

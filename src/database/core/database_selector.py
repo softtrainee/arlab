@@ -84,13 +84,9 @@ class SelectorHandler(Handler):
 class DatabaseSelector(Viewable, ColumnSorterMixin):
     records = List
     num_records = Property(depends_on='records')
-#     searchable = Bool(True)
 
     search = Button
     dclick_recall_enabled = Bool(False)
-#    open_button = Button
-#    open_button_label = 'Open'
-
 
     db = Instance(DatabaseAdapter)
     tabular_adapter = BaseTabularAdapter
@@ -103,7 +99,6 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     scroll_to_bottom = True
     key_pressed = Event
 
-#    activated = Any
     update = Event
     selected_row = Any
 
@@ -115,13 +110,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     record_klass = None
     query_klass = None
 
-    omit_bogus = Bool(True)
-
     limit = Int(200, enter_set=True, auto_set=False)
     date_str = 'Run Date'
-
-    multi_select_graph = Bool(False)
-    multi_graphable = Bool(False)
 
     add_query_button = Button('+')
     delete_query_button = Button('-')
@@ -132,29 +122,11 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     verbose = False
 
-#     selected_queries = Any
     selected_query = Any
-
-
-#    def onKeyDown(self, evt):
-#        import wx
-#        print evt
-#        if evt.GetKeyCode() == wx.WXK_RETURN:
-#            print 'ffoasdf'
-#        evt.Skip()
-
 
     def __init__(self, *args, **kw):
         super(DatabaseSelector, self).__init__(*args, **kw)
         self._load_hook()
-
-#    def _activated_changed(self):
-#        print self.activated
-#        if self.activated:
-#            print self.activated.rid
-#
-#    def _selected_changed(self):
-#        print self.selected
 
     def load_records(self, dbs, load=True, append=False):
         if not append:
@@ -168,32 +140,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     def table_add_query(self):
         self._add_query(add=False)
+
     def query_factory(self, *args, **kw):
         return self._query_factory(**kw)
-
-    def _delete_query_button_fired(self):
-        self.remove_query(self.selected_query)
-#         if self.selected_queries:
-#
-#             for si in self.selected_queries:
-#                 self.remove_query(si)
-#
-#             self.selected_queries = []
-
-    def _add_query_button_fired(self):
-        self._add_query()
-
-    def _add_query(self, add=True):
-        pq = None
-        if self.queries:
-            pq = self.queries[-1]
-
-        if pq is None:
-            q = self._query_factory()
-            if add:
-                self.queries.append(q)
-        else:
-            self.add_query(pq, pq.parameter, pq.criterion, add=add)
 
     def add_query(self, parent_query, parameter, criterion, add=True):
         q = self._query_factory(
@@ -235,6 +184,18 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #===============================================================================
 # private
 #===============================================================================
+    def _add_query(self, add=True):
+        pq = None
+        if self.queries:
+            pq = self.queries[-1]
+
+        if pq is None:
+            q = self._query_factory()
+            if add:
+                self.queries.append(q)
+        else:
+            self.add_query(pq, pq.parameter, pq.criterion, add=add)
+
     def _get_recent(self):
         criterion = 'this month'
         q = self.queries[0]
@@ -295,24 +256,25 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             rs = [ri for ri in rs if ri]
             self.records.extend(rs)
 
-#    def _changed(self, new):
-#        db = self.db
-#        db.commit()
-
     def _record_closed(self, obj, name, old, new):
         sid = obj.record_id
         if sid in self.opened_windows:
             self.opened_windows.pop(sid)
+
         obj.on_trait_change(self._record_closed, 'close_event', remove=True)
 #        obj.on_trait_change(self._changed, '_changed', remove=True)
 
-    def open_record(self, records):
-        if not isinstance(records, (list, tuple)):
-            records = [records]
+    def _record_view_factory(self, dbrecord):
+        if hasattr(self, 'record_view_klass'):
+            d = self.record_view_klass()
+            if d.create(dbrecord):
+                return d
+        else:
+            return self.record_klass(_dbrecord=dbrecord)
 
-        self.debug('open record')
-        self._open_selected(records)
-
+#===============================================================================
+# open window
+#===============================================================================
     def _open_selected(self, records=None):
         self.debug('open selected')
         if records is None:
@@ -360,20 +322,12 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             traceback.print_exc()
             self.warning(e)
 
-    def _record_view_factory(self, dbrecord):
-        if hasattr(self, 'record_view_klass'):
-            d = self.record_view_klass()
-            if d.create(dbrecord):
-                return d
-        else:
-            return self.record_klass(_dbrecord=dbrecord)
-
     def _open_window(self, wid, ui):
         self.opened_windows[wid] = ui
         self._update_windowxy()
 
         if self.db.application is not None:
-            self.db.application.uis.append(ui)
+            self.db.application.add_view(ui)
 
     def _update_windowxy(self):
         self.wx += 0.005
@@ -409,6 +363,12 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 #===============================================================================
 # handlers
 #===============================================================================
+    def _delete_query_button_fired(self):
+        self.remove_query(self.selected_query)
+
+    def _add_query_button_fired(self):
+        self._add_query()
+
     def _dclicked_changed(self):
 #        self.debug('dclicked changed {}'.format(self.dclicked))
         if self.dclicked and self.dclick_recall_enabled:
@@ -495,10 +455,6 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
         button_grp = self._get_button_grp()
         v = View(
-#                 HGroup(Item('multi_select_graph',
-#                             defined_when='multi_graphable'
-#                             ),
-#                             spring, Item('limit')),
                 VGroup(
                        CustomLabel('id_string', color='red'),
                        VSplit(

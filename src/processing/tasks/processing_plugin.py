@@ -26,7 +26,7 @@ from pyface.tasks.action.schema import SMenu
 from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from src.processing.processor import Processor
 from src.processing.tasks.processing_actions import IdeogramAction, \
-    RecallAction, SpectrumAction, LabnumberEntryAction, \
+    RecallAction, SpectrumAction, \
     EquilibrationInspectorAction, InverseIsochronAction, GroupSelectedAction, \
     GroupbyAliquotAction, GroupbyLabnumberAction, ClearGroupAction, \
     SmartProjectAction
@@ -38,6 +38,8 @@ from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrat
 from src.processing.tasks.figures.auto_figure_preferences import AutoFigurePreferencesPane
 from src.processing.tasks.smart_project.smart_project_task import SmartProjectTask
 from src.processing.tasks.browser.browser_task import BrowserTask
+from src.processing.tasks.entry.actions import LabnumberEntryAction, \
+    SensitivityEntryAction
 
 
 class ProcessingPlugin(BaseTaskPlugin):
@@ -84,6 +86,8 @@ class ProcessingPlugin(BaseTaskPlugin):
                 self._make_task_extension([
                    ('recall_action', RecallAction, 'MenuBar/File'),
                    ('labnumber_entry', LabnumberEntryAction, 'MenuBar/Edit'),
+                   ('sensitivity_entry', SensitivityEntryAction, 'MenuBar/Edit'),
+
                    ('blank_edit', BlankEditAction, 'MenuBar/Edit'),
                    ('flux_edit', FluxAction, 'MenuBar/Edit'),
 #                    ('series', SeriesAction, 'MenuBar/Edit'),
@@ -124,7 +128,12 @@ class ProcessingPlugin(BaseTaskPlugin):
         return [
                 self._meta_task_factory(*args)
                     for args in (
-                        ('pychron.entry', self._labnumber_task_factory, 'Labnumber', 'experiment'),
+                        ('pychron.entry.labnumber',
+                            self._labnumber_task_factory,
+                                'Labnumber', 'experiment'),
+                        ('pychron.entry.sensitivity',
+                            self._sensitivity_entry_task_factory,
+                                'Sensitivity', 'experiment'),
 
                         ('pychron.recall', self._recall_task_factory, 'Recall'),
                         ('pychron.analysis_edit.blanks', self._blanks_edit_task_factory, 'Blanks'),
@@ -148,6 +157,10 @@ class ProcessingPlugin(BaseTaskPlugin):
     def _labnumber_task_factory(self):
         from src.processing.tasks.entry.labnumber_entry_task import LabnumberEntryTask
         return LabnumberEntryTask()
+
+    def _sensitivity_entry_task_factory(self):
+        from src.processing.tasks.entry.sensitivity_entry_task import SensitivityEntryTask
+        return SensitivityEntryTask()
 
     def _blanks_edit_task_factory(self):
         from src.processing.tasks.blanks.blanks_task import BlanksTask

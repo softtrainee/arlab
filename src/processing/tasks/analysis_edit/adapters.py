@@ -19,22 +19,50 @@ from traits.api import HasTraits, Int, Property
 from traitsui.api import View, Item
 from traitsui.tabular_adapter import TabularAdapter
 from src.helpers.color_generators import colornames
+from src.helpers.formatting import floatfmt
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class UnknownsAdapter(TabularAdapter):
-    columns = [('Run ID', 'record_id')]
-    font = 'helvetica 12'
+    columns = [('Run ID', 'record_id'),
+               ('Age', 'age'),
+               (u'\u00b11\u03c3', 'error'),
+               ('Tag', 'tag')
+               ]
+    font = 'arial 12'
     record_id_text_color = Property
+    tag_text_color = Property
+    age_text = Property
+    error_text = Property
+    def get_bg_color(self, obj, trait, row, column=0):
+        c = 'white'
+        if self.item.tag == 'invalid':
+            c = '#C9C5C5'
+        elif self.item.temp_status != 0 and not self.item.tag:
+            c = '#FAC0C0'
+        return c
+
+    def _get_age_text(self):
+        return floatfmt(self.item.age.nominal_value, n=2)
+
+    def _get_error_text(self):
+        return floatfmt(self.item.age.std_dev, n=3)
+
     def _get_record_id_text_color(self):
+#         print self.item.group_id
+        return colornames[self.item.group_id]
+
+    def _get_tag_text_color(self):
 #         print self.item.group_id
         return colornames[self.item.group_id]
 
 #    record_id_width = Int(50)
 
 class ReferencesAdapter(TabularAdapter):
-    columns = [('Run ID', 'record_id')]
-    font = 'helvetica 12'
+    columns = [
+               ('Run ID', 'record_id'),
+               ]
+    font = 'arial 12'
 #     font = 'modern 10'
 #    record_id_width = Int(50)
 #============= EOF =============================================

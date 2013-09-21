@@ -40,11 +40,22 @@ class TagTable(HasTraits):
         db = self.db
         with db.session_ctx():
             dbtags = db.get_tags()
-            self.tags = [Tag(name=di.name,
+
+            t1 = next((i for i, t in enumerate(dbtags) if t.name == ''))
+            t2 = next((i for i, t in enumerate(dbtags) if t.name == 'invalid'))
+
+            t1 = dbtags[t1]
+            t2 = dbtags[t2]
+            dbtags.remove(t1)
+            dbtags.remove(t2)
+
+            ts = [Tag(name=di.name,
                            user=di.user,
                            date=di.create_date
                            )
-                           for di in dbtags]
+                           for di in [t1, t2] + dbtags]
+
+            self.tags = ts
 
     def add_tag(self, tag):
         name, user = tag.name, tag.user

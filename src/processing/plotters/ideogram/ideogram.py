@@ -46,7 +46,7 @@ class Ideogram(BaseArArFigure):
     xes = Array
     index_key = 'age'
     ytitle = 'Relative Probability'
-    _reverse_sorted_analyses = True
+#     _reverse_sorted_analyses = True
     _analysis_number_cnt = 0
 
     def plot(self, plots):
@@ -59,22 +59,22 @@ class Ideogram(BaseArArFigure):
         self.xs, self.xes = array([[ai.nominal_value, ai.std_dev]
                          for ai in self._get_xs(key=self.index_key)]).T
 
-        self._plot_relative_probability(graph, graph.plots[0], 0)
+        self._plot_relative_probability(graph.plots[0], 0)
 
-        exclude = [i for i, ai in enumerate(self.sorted_analyses)
-                    if ai.status or ai.temp_status]
+        omit = [i for i, ai in enumerate(self.sorted_analyses)
+                        if ai.temp_status]
 
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
             scatter = getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1,
                                                       )
-            if exclude:
-                scatter.index.metadata['selections'] = exclude
+            if omit:
+                scatter.index.metadata['selections'] = omit
 
         graph.set_x_limits(min_=self.xmi, max_=self.xma,
                            pad='0.1')
 
-        if exclude:
-            self._rebuild_ideo(exclude)
+        if omit:
+            self._rebuild_ideo(omit)
 
 
     def max_x(self, attr):
@@ -121,8 +121,8 @@ class Ideogram(BaseArArFigure):
                                 plotid=pid)
         return scatter
 
-    def _plot_relative_probability(self, graph, plot, pid):
-
+    def _plot_relative_probability(self, plot, pid):
+        graph = self.graph
         bins, probs = self._calculate_probability_curve(self.xs, self.xes)
 
         scatter, _p = graph.new_series(x=bins, y=probs, plotid=pid)
@@ -190,42 +190,6 @@ class Ideogram(BaseArArFigure):
         setattr(scatter, '{}error'.format(axis), ArrayDataSource(errors))
         return ebo
 
-    def _add_scatter_inspector(self,
-                               # container,
-                               # plot,
-                               scatter,
-                               add_tool=True,
-                               value_format=None,
-                               additional_info=None
-                               ):
-        if add_tool:
-            broadcaster = BroadcasterTool()
-            scatter.tools.append(broadcaster)
-
-            rect_tool = RectSelectionTool(scatter)
-            rect_overlay = RectSelectionOverlay(tool=rect_tool)
-
-            scatter.overlays.append(rect_overlay)
-            broadcaster.tools.append(rect_tool)
-
-            if value_format is None:
-                value_format = lambda x:'{:0.5f}'.format(x)
-            point_inspector = AnalysisPointInspector(scatter,
-                                                     analyses=self.analyses,
-                                                     convert_index=lambda x: '{:0.3f}'.format(x),
-                                                     value_format=value_format,
-                                                     additional_info=additional_info
-                                                     )
-
-            pinspector_overlay = PointInspectorOverlay(component=scatter,
-                                                       tool=point_inspector,
-                                                       )
-#
-            scatter.overlays.append(pinspector_overlay)
-            broadcaster.tools.append(point_inspector)
-
-            u = lambda a, b, c, d: self.update_graph_metadata(a, b, c, d)
-            scatter.index.on_trait_change(u, 'metadata_changed')
 
     def update_index_mapper(self, obj, name, old, new):
         if new:
@@ -239,6 +203,7 @@ class Ideogram(BaseArArFigure):
                 hoverid = hover[0]
                 try:
                     self.selected_analysis = sorted_ans[hoverid]
+
                 except IndexError, e:
                     print 'asaaaaa', e
                     return
@@ -261,7 +226,7 @@ class Ideogram(BaseArArFigure):
                 a.temp_status = 1 if i in sel else 0
         else:
             sel = [i for i, a in enumerate(sorted_ans)
-                    if a.temp_status or a.status]
+                    if a.temp_status]
 
             self._rebuild_ideo(sel)
 

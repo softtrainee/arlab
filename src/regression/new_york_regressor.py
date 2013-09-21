@@ -111,8 +111,9 @@ class NewYorkRegressor(YorkRegressor):
         b, a, cnt = self._calculate_slope_intercept(Inf, b, cnt)
         if cnt >= 500:
             self.warning('regression did not converge')
-        else:
-            self.info('regression converged after {} iterations'.format(cnt))
+#         else:
+#             self.info('regression converged after {} iterations'.format(cnt))
+
         self._slope = b
         self._intercept = a
 
@@ -123,7 +124,7 @@ class NewYorkRegressor(YorkRegressor):
             a=intercept
         '''
 
-        if abs(pb - b) < tol and cnt < total:
+        if abs(pb - b) < tol or cnt > total:
             W = self._calculate_W(b)
             XBar, YBar = self._calculate_xy_bar(W)
             a = YBar - b * XBar
@@ -201,6 +202,9 @@ class NewYorkRegressor(YorkRegressor):
 
         return var_b
 
+    def predict(self, x):
+        m, b = self._slope, self._intercept
+        return m * x + b
 
 class ReedYorkRegressor(YorkRegressor):
     '''
@@ -284,7 +288,7 @@ class ReedYorkRegressor(YorkRegressor):
         return slope * x + intercept
 
 if __name__ == '__main__':
-    from numpy import ones, array
+    from numpy import ones, array, polyval
     from pylab import plot, show
     xs = [0.89, 1.0, 0.92, 0.87, 0.9, 0.86, 1.08, 0.86, 1.25,
             1.01, 0.86, 0.85, 0.88, 0.84, 0.79, 0.88, 0.70, 0.81,

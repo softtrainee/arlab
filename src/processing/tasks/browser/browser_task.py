@@ -156,7 +156,7 @@ class BaseBrowserTask(BaseEditorTask):
     def _analysis_filter_changed(self, new):
         self.analyses = filter(self._filter_func(new, 'record_id'), self.oanalyses)
 
-    def _omit_bogus_changed(self, new):
+    def _omit_invalid_changed(self, new):
         if new:
             self.analyses = filter(self._omit_invalid_filter, self.oanalyses)
         else:

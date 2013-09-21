@@ -71,13 +71,12 @@ class Mean(HasTraits):
     def _get_nanalyses(self):
 
         return len([ai for ai in self.analyses
-                        if ai.status == 0 and ai.temp_status == 0])
+                        if ai.temp_status == 0 and not ai.tag])
 
     def _get_values(self, attr):
         vs = (getattr(ai, attr) for ai in self.analyses
-                                if not isinstance(ai, Marker) and\
-                                    ai.status == 0 and \
-                                        ai.temp_status == 0)
+                                if not isinstance(ai, Marker) and \
+                                    ai.temp_status == 0 and not ai.tag)
 
         vs = [vi for vi in vs if vi is not None]
         if vs:

@@ -30,10 +30,12 @@ from src.codetools.simple_timeit import timethis
 
 class FigureEditor(GraphEditor):
 #     path = File
+    table_editor = Any
     component = Any
     plotter = Any
 #     tool = Any
     plotter_options_manager = Any
+    associated_editors = List
 #     processor = Any
 #     unknowns = List
 #     _unknowns = List
@@ -61,6 +63,10 @@ class FigureEditor(GraphEditor):
     def rebuild(self, refresh_data=True):
         ans = self._gather_unknowns(refresh_data)
         if ans:
+
+            for e in self.associated_editors:
+                e.items = ans
+
             po = self.plotter_options_manager.plotter_options
 
             comp = timethis(self._get_component, args=(ans, po), msg='get_component')
@@ -84,11 +90,12 @@ class SpectrumEditor(FigureEditor):
 
 class InverseIsochronEditor(FigureEditor):
     plotter_options_manager = Instance(InverseIsochronOptionsManager, ())
-    def _get_component(self, ans, po):
-        if ans:
-            comp, plotter = self.processor.new_inverse_isochron(ans=ans, plotter_options=po)
-            self.plotter = plotter
-            return comp
+    func = 'new_inverse_isochron'
+#     def _get_component(self, ans, po):
+#         if ans:
+#             comp, plotter = self.processor.new_inverse_isochron(ans=ans, plotter_options=po)
+#             self.plotter = plotter
+#             return comp
 
 class SeriesEditor(FigureEditor):
     plotter_options_manager = Instance(SeriesOptionsManager, ())

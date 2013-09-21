@@ -33,6 +33,16 @@ def errorfmt(v, e):
         return '{} ({}%)'.format(floatfmt(e), pe)
 
 def floatfmt(f, n=4, s=2, max_width=None):
+    '''
+        f: value to format
+        n: number of sig figs
+        
+        use scientific notation 
+        if f<10^-(n-1) (e.g n=#.## f=0.00001)
+        or
+        f>10^(s+1) (e.g  s=### f=3001)
+        
+    '''
     if isinstance(f, str):
         return f
     if f is None:

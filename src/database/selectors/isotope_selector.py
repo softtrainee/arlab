@@ -15,12 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Int, Property, Str
-# from traits.api import HasTraits, Any, List, String, \
-#    Float, Bool, Int, Instance, Property, Dict, Enum, on_trait_change, \
-#    Str, Trait, cached_property
-# from traitsui.api import VGroup, HGroup, Item, Group, View, ListStrEditor, \
-#    InstanceEditor, ListEditor, EnumEditor, Label, Spring
+from traits.api import Int, Property, Str, Bool
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
@@ -95,7 +90,6 @@ class IsotopeAnalysisSelector(DatabaseSelector):
 #    record_klass = DummyIsotopeRecord
     query_klass = IsotopeQuery
     tabular_adapter = IsotopeResultsAdapter
-#    multi_graphable = Bool(True)
 
     lookup = {'Labnumber':([gen_LabTable], gen_LabTable.identifier),
               'Step':([], meas_AnalysisTable.step),
@@ -125,6 +119,8 @@ class IsotopeAnalysisSelector(DatabaseSelector):
     analysis_type = Str('Analysis Type')
     analysis_types = Property
 
+    omit_invalid = Bool(True)
+
     def _record_factory(self, idn):
         if isinstance(idn, meas_AnalysisTable):
             dbr = idn
@@ -140,7 +136,12 @@ class IsotopeAnalysisSelector(DatabaseSelector):
         with self.db.session_ctx() as sess:
 #             sess = self.db.get_session()
             q = sess.query(meas_AnalysisTable)
-            q = q.filter(meas_AnalysisTable.status != -1)
+
+            if self.omit_invalid:
+                q = q.filter(meas_AnalysisTable.tag != 'invalid')
+
+#             q = q.filter(meas_AnalysisTable.status != -1)
+
             if queries and use_filters:
                 qs = self._build_filters()
                 if qs:
@@ -175,11 +176,8 @@ class IsotopeAnalysisSelector(DatabaseSelector):
     def _refresh_results(self):
         import inspect
         stack = inspect.stack()
-        self.debug('update graph called by {}'.format(stack[1][3]))
+        self.debug('refresh results by {}'.format(stack[1][3]))
 
-#        qs = self._build_filters()
-#        if qs:
-#            qq = self.queries
         self.execute_query(load=False)
 
     def _build_filters(self):

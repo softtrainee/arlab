@@ -33,6 +33,7 @@ class AnalysisPointInspector(PointInspector):
             if ind is not None:
                 ind = ind[0]
                 analysis = self.analyses[ind]
+
                 rid = analysis.record_id
                 name = self.component.container.y_axis.title
 

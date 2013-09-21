@@ -66,9 +66,13 @@ class LaserTableEditor(BaseTableEditor, ColumnSorterMixin):
             return p
 
     def _get_column_widths(self):
+        '''
+            exclude the first column from col widths
+            it is displaying in pychron but not in the pdf
+        '''
         status_width = 6
 
-        ac = map(lambda x: x * 0.6, self.col_widths)
+        ac = map(lambda x: x * 0.6, self.col_widths[1:])
         cs = [status_width]
         cs.extend(ac)
 
@@ -118,6 +122,7 @@ class LaserTableEditor(BaseTableEditor, ColumnSorterMixin):
                        ),
                 UItem('means',
                       editor=myTabularEditor(adapter=LaserTableMeanAdapter(),
+#                                              auto_resize=True,
                                              editable=False,
                                              auto_update=False,
                                              refresh='refresh_needed'

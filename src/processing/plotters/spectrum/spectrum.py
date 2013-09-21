@@ -63,7 +63,7 @@ class Spectrum(BaseArArFigure):
         '''
         graph = self.graph
 
-        self._plot_age_spectrum(graph, graph.plots[0], 0)
+        self._plot_age_spectrum(graph.plots[0], 0)
 
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
             getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1)
@@ -87,7 +87,9 @@ class Spectrum(BaseArArFigure):
 #             self._add_error_bars(scatter, es, 'y', 1,
 #                              visible=po.y_error)
 
-    def _plot_age_spectrum(self, graph, plot, pid):
+    def _plot_age_spectrum(self, plot, pid):
+        graph = self.graph
+
         xs, ys, es, c39s = self._calculate_spectrum()
         self.xs = c39s
         ref = self.analyses[0]

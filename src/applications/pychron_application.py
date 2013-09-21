@@ -32,25 +32,6 @@ from src.envisage.tasks.base_tasks_application import BaseTasksApplication
 class PychronApplication(BaseTasksApplication):
     '''
     '''
-#    id = 'tasks.pychron.diode'
-#    name = 'pyDiode'
-#
-#    default_layout = [
-# #                      TaskWindowLayout(
-# #                                       'tasks.hardware',
-# #                                       size=(700, 500)),
-# #                      TaskWindowLayout(
-# #                                        'pychron.extraction_line',),
-#                      TaskWindowLayout(
-#                                        'pychron.experiment',),
-#
-# #                      TaskWindowLayout(
-# # #                                       'pychron.extraction_line',
-# # #                                       'pychron.hardware',
-# #                                       'pychron.fusions.diode',
-# #                                       'pychron.fusions.co2',
-# #                                       size=(1150, 650)),
-#                       ]
 
     def _get_resource_root(self):
 
@@ -76,7 +57,6 @@ class PychronApplication(BaseTasksApplication):
     def _splash_screen_default(self):
         from src.paths import paths
         path = self._get_resource_root()
-#        p = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         paths.app_resources = path
 
         sp = SplashScreen(
@@ -84,23 +64,8 @@ class PychronApplication(BaseTasksApplication):
                                               search_path=[path, paths.splashes]
                                             ),
                           )
-#        self.debug(paths.version)
-#        self.debug(sp.image.search_path)
         return sp
 
-#    def exit(self):
-#        uis = copy.copy(self.uis)
-#        for ui in uis:
-#            try:
-#                ui.dispose(abort=True)
-#            except AttributeError:
-#                pass
-#
-#        super(Pychron, self).exit()
-#    def _started_fired(self):
-#        elm = self.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
-#        elm.window_x = 25
-#        elm.window_y = 25
-#        open_manager(elm)
+
 #============= views ===================================
 #============= EOF ====================================

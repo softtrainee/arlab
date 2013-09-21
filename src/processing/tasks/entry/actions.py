@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,27 +15,36 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Bool
+from traits.api import HasTraits
+from traitsui.api import View, Item
+from pyface.action.action import Action
+from pyface.tasks.action.task_action import TaskAction
+from pyface.image_resource import ImageResource
+from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.database.core.database_selector import DatabaseSelector
-from src.database.orms.hardware_orm import ScanTable
-from src.database.core.query import compile_query, DeviceScanQuery
-from src.database.records.device_scan_record import DeviceScanRecord
 
-class DeviceScanSelector(DatabaseSelector):
-    record_klass = DeviceScanRecord
-    query_klass = DeviceScanQuery
-    title = 'Device Scans'
+class LabnumberEntryAction(Action):
+    name = 'Labnumber Entry'
+    accelerator = 'Ctrl+Shift+l'
 
-    def _get_selector_records(self, queries=None, limit=None, **kw):
-        sess = self.db.get_session()
-        q = sess.query(ScanTable)
-        lookup = dict()
-        q = self._assemble_query(q, queries, lookup)
-        records = q.all()
+    def perform(self, event):
+        pid = 'pychron.entry.labnumber'
+        app = event.task.window.application
+        app.get_task(pid)
 
-        return records, compile_query(q)
+class SensitivityEntryAction(Action):
+    name = 'Sensitivity'
+    accelerator = 'Ctrl+Shift+\\'
 
+    def perform(self, event):
+        pid = 'pychron.entry.sensitivity'
+        app = event.task.window.application
+        app.get_task(pid)
 
+class SaveSensitivityAction(TaskAction):
+    name = 'Save Sensitivity'
+    image = ImageResource(name='database_save.png',
+                         search_path=paths.icon_search_path)
+    method = 'save'
 #============= EOF =============================================

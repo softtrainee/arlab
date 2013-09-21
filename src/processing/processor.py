@@ -32,11 +32,11 @@ from src.processing.analysis import Analysis
 from src.processing.tasks.analysis_edit.fits import Fit
 # from src.processing.plotters.spectrum import Spectrum
 # from src.processing.plotters.ideogram import Ideogram
-from src.processing.plotters.inverse_isochron import InverseIsochron
-from src.processing.plotters.series import Series
+# from src.processing.plotters.inverse_isochron import InverseIsochron
+# from src.processing.plotters.series import Series
 from src.database.core.query import compile_query
 from src.helpers.iterfuncs import partition
-from src.processing.plotters import plotter_options
+# from src.processing.plotters import plotter_options
 from src.processing.plotters.figure_container import FigureContainer
 
 
@@ -396,14 +396,6 @@ class Processor(IsotopeDatabaseManager):
         iv = FigureContainer(model=model)
         return iv.component
 
-    def new_series(self, ans, options=None, plotter_options=None):
-        pass
-#         if ans:
-#             p = Series()
-#             gseries = p.build(ans, options=options,
-#                               plotter_options=plotter_options)
-#             return gseries, p
-
     def new_spectrum(self, ans, plotter_options=None):
         if plotter_options is None:
             pom = SpectrumOptionsManager()
@@ -415,23 +407,20 @@ class Processor(IsotopeDatabaseManager):
         iv = FigureContainer(model=model)
         return iv.component
 
-#         self._plotter_options = plotter_options
-#         if ans:
-# #             self.analyses = ans
-#             gspec = p.build(ans, options=options,
-#                             plotter_options=plotter_options)
-#             if gspec:
-#                 gspec, _plots = gspec
-#
-#             return gspec, p
-
     def new_inverse_isochron(self, ans, plotter_options=None):
-        pass
+        if plotter_options is None:
+            pom = InverseIsochronOptionsManager()
+            plotter_options = pom.plotter_options
+
+        from src.processing.plotters.isochron.isochron_model \
+            import InverseIsochronModel
+
+        model = InverseIsochronModel(plot_options=plotter_options)
+        model.analyses = ans
+        iv = FigureContainer(model=model)
+        return iv.component
 #         p = InverseIsochron()
 #
-#         if plotter_options is None:
-#             pom = InverseIsochronOptionsManager()
-#             plotter_options = pom.plotter_options
 #
 #         options = {}
 #
@@ -442,6 +431,15 @@ class Processor(IsotopeDatabaseManager):
 #                             plotter_options=plotter_options)
 #             if giso:
 #                 return giso.plotcontainer
+
+    def new_series(self, ans, options=None, plotter_options=None):
+        pass
+#         if ans:
+#             p = Series()
+#             gseries = p.build(ans, options=options,
+#                               plotter_options=plotter_options)
+#             return gseries, p
+
 #===============================================================================
 # corrections
 #===============================================================================
