@@ -22,9 +22,10 @@ from pyface.tasks.traits_dock_pane import TraitsDockPane
 from traitsui.editors.list_str_editor import ListStrEditor
 from traitsui.tabular_adapter import TabularAdapter
 from traitsui.editors.tabular_editor import TabularEditor
-from src.experiment.utilities.identifier import make_runid
-from traitsui.table_column import ObjectColumn
-from traitsui.list_str_adapter import ListStrAdapter
+from src.ui.tabular_editor import myTabularEditor
+# from src.experiment.utilities.identifier import make_runid
+# from traitsui.table_column import ObjectColumn
+# from traitsui.list_str_adapter import ListStrAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class BrowserAdapter(TabularAdapter):
@@ -87,6 +88,7 @@ class SampleAdapter(BrowserAdapter):
 class BrowserPane(TraitsDockPane):
     name = 'Browser'
     id = 'pychron.browser'
+    multi_select = False
     def traits_view(self):
         projectgrp = VGroup(
                             HGroup(Label('Filter'),
@@ -121,10 +123,14 @@ class BrowserPane(TraitsDockPane):
                                   UItem('analysis_filter',
                                         width=75)),
                            UItem('analyses',
-                                 editor=TabularEditor(
+                                 editor=myTabularEditor(
                                                       adapter=AnalysisAdapter(),
-                                                      editable=False,
-                                                      selected='selected_analysis'
+#                                                       editable=False,
+                                                      operations=['move'],
+                                                      selected='selected_analysis',
+                                                      multi_select=self.multi_select,
+                                                      drag_external=True
+
                                                       ),
 #                                  editor=ListStrEditor(editable=False,
 #                                           selected='selected_analysis'

@@ -20,18 +20,20 @@ from traitsui.api import View, Item
 from traitsui.tabular_adapter import TabularAdapter
 from src.helpers.color_generators import colornames
 from src.helpers.formatting import floatfmt
+from src.database.records.isotope_record import IsotopeRecordView
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class UnknownsAdapter(TabularAdapter):
     columns = [('Run ID', 'record_id'),
+               ('Sample', 'sample'),
                ('Age', 'age'),
                (u'\u00b11\u03c3', 'error'),
                ('Tag', 'tag')
                ]
     font = 'arial 12'
-    record_id_text_color = Property
-    tag_text_color = Property
+#     record_id_text_color = Property
+#     tag_text_color = Property
     age_text = Property
     error_text = Property
     def get_bg_color(self, obj, trait, row, column=0):
@@ -43,18 +45,36 @@ class UnknownsAdapter(TabularAdapter):
         return c
 
     def _get_age_text(self):
-        return floatfmt(self.item.age.nominal_value, n=2)
+        r = ''
+        if not isinstance(self.item, IsotopeRecordView):
+            r = floatfmt(self.item.age.nominal_value, n=2)
+        return r
 
     def _get_error_text(self):
-        return floatfmt(self.item.age.std_dev, n=3)
+        r = ''
+        if not isinstance(self.item, IsotopeRecordView):
+            r = floatfmt(self.item.age.std_dev, n=3)
+        return r
 
-    def _get_record_id_text_color(self):
-#         print self.item.group_id
-        return colornames[self.item.group_id]
+    def get_text_color(self, obj, trait, row, column=0):
+        return colornames[obj.items[row].group_id]
 
-    def _get_tag_text_color(self):
-#         print self.item.group_id
-        return colornames[self.item.group_id]
+#     def _get_record_id_text_color(self):
+# #         print self.item.group_id
+#         return colornames[self.item.group_id]
+#
+#     def _get_tag_text_color(self):
+# #         print self.item.group_id
+#         return colornames[self.item.group_id]
+#
+#     def _get_sample_text_color(self):
+#         return colornames[self.item.group_id]
+#
+#     def _get_error_text_color(self):
+#         return colornames[self.item.group_id]
+#
+#     def _get_age_text_color(self):
+#         return colornames[self.item.group_id]
 
 #    record_id_width = Int(50)
 

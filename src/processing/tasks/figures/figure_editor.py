@@ -33,7 +33,7 @@ class FigureEditor(GraphEditor):
 #     path = File
     table_editor = Any
     component = Any
-    plotter = Any
+#     plotter = Any
 #     tool = Any
     plotter_options_manager = Any
     associated_editors = List
@@ -64,8 +64,8 @@ class FigureEditor(GraphEditor):
     def _rebuild_graph(self):
         self.rebuild(refresh_data=False)
 
-    def rebuild(self, refresh_data=True):
-        ans = self._gather_unknowns(refresh_data)
+    def rebuild(self, refresh_data=True, compress_groups=True):
+        ans = self._gather_unknowns(refresh_data, compress_groups=compress_groups)
         if ans:
 
             for e in self.associated_editors:

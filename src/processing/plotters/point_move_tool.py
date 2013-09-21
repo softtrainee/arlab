@@ -38,6 +38,8 @@ class PointMoveTool(DragTool):
         cur_pt = plot.map_data((event.x, event.y), all_values=True)
         dy = cur_pt[1] - self._prev_pt[1]
         dx = cur_pt[0] - self._prev_pt[0]
+
+
         if self.constrain == 'x':
             dy = 0
         elif self.constrain == 'y':
@@ -46,10 +48,20 @@ class PointMoveTool(DragTool):
         index = plot.index.get_data() + dx
         value = plot.value.get_data() + dy
 
-        aa = plot.map_data((0, 0), all_values=True)[1]
-        bb = plot.map_data((0, 2), all_values=True)[1]
-        dd = bb - aa
-        value[value < dd] = dd
+        pad = 10  # pixel boundary
+
+        xy = plot.map_data((0, 0), all_values=True)
+        xy2 = plot.map_data((pad, pad), all_values=True)
+        if self.constrain == 'y':
+            dd = xy2[1] - xy[1]
+            value[value < dd] = dd
+            h = plot.map_data((0, plot.y2 - pad), all_values=True)[1]
+            value[value > h] = h
+        elif self.constrain == 'x':
+            dd = xy2[0] - xy[0]
+            index[index < dd] = dd
+            w = plot.map_data((plot.x2 - pad, 0), all_values=True)[1]
+            index[value > w] = w
 
         # move the point
         plot.index.set_data(index, sort_order=plot.index.sort_order)

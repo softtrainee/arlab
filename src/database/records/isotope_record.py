@@ -99,6 +99,7 @@ class IsotopeRecordView(HasTraits):
     flux_fit_status = False
 
     tag = ''
+    temp_status = 0
 
     def create(self, dbrecord):
         try:

@@ -40,6 +40,7 @@ from src.processing.tasks.smart_project.smart_project_task import SmartProjectTa
 from src.processing.tasks.browser.browser_task import BrowserTask
 from src.processing.tasks.entry.actions import LabnumberEntryAction, \
     SensitivityEntryAction
+from pyface.message_dialog import warning
 
 
 class ProcessingPlugin(BaseTaskPlugin):
@@ -51,14 +52,23 @@ class ProcessingPlugin(BaseTaskPlugin):
                                               )
 
         return [process_so]
+
+    def start(self):
+        try:
+            import xlwt
+        except ImportError:
+            warning(None, '''"xlwt" package not installed. 
+            
+Install to enable MS Excel export''')
+
     def _make_task_extension(self, actions, **kw):
         def make_schema(args):
             if len(args) == 3:
-                kw = {}
+                mkw = {}
                 i, f, p = args
             else:
-                i, f, p, kw = args
-            return SchemaAddition(id=i, factory=f, path=p)
+                i, f, p, mkw = args
+            return SchemaAddition(id=i, factory=f, path=p, **mkw)
         return TaskExtension(actions=[make_schema(args)
                                       for args in actions], **kw)
 #         return TaskExtension(actions=[SchemaAddition(id=i, factory=f, path=p)
@@ -101,8 +111,10 @@ class ProcessingPlugin(BaseTaskPlugin):
                    ('figure_group', figure_group, 'MenuBar/Edit'),
 
                    ('equil_inspector', EquilibrationInspectorAction, 'MenuBar/Tools'),
+
                    ('data', data_menu, 'MenuBar',
                     {'before':'Tools', 'after':'View'}),
+
                    ('tag', TagAction, 'MenuBar/Data'),
                    ('grouping_group', grouping_group, 'MenuBar/Data'),
                    ('smart_project', SmartProjectAction, 'MenuBar/File')

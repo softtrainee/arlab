@@ -15,29 +15,17 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Instance
+from traits.api import HasTraits
+from traitsui.api import View, Item
+from src.loggable import Loggable
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.processing.tasks.figures.figure_editor import FigureEditor
-from src.processing.plotters.figure_container import FigureContainer
-from src.processing.plotter_options_manager import InverseIsochronOptionsManager
 
-class InverseIsochronEditor(FigureEditor):
-    plotter_options_manager = Instance(InverseIsochronOptionsManager, ())
-    basename = 'iso'
-    def get_component(self, ans, plotter_options):
-        if plotter_options is None:
-            pom = InverseIsochronOptionsManager()
-            plotter_options = pom.plotter_options
+class LaserTableCSVWriter(Loggable):
+    def build(self, p, ans, means, title):
 
-        from src.processing.plotters.isochron.isochron_model \
-            import InverseIsochronModel
+        pass
 
-        model = InverseIsochronModel(plot_options=plotter_options)
-        model.analyses = ans
-        iv = FigureContainer(model=model)
 
-        self._model = model
-        return iv.component
 
 #============= EOF =============================================

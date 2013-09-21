@@ -87,6 +87,9 @@ class BaseBrowserTask(BaseEditorTask):
     tool_bars = [SToolBar(NewBrowserEditorAction(),
                           image_size=(16, 16)
                           )]
+
+    auto_select_analysis = Bool(True)
+
     def activated(self):
         self.load_projects()
 
@@ -134,7 +137,7 @@ class BaseBrowserTask(BaseEditorTask):
                 ans = filter(self._omit_invalid_filter, ans)
 
             self.analyses = ans
-            if ans:
+            if ans and self.auto_select_analysis:
                 self.selected_analysis = ans[0]
 
     def _filter_func(self, new, attr=None):

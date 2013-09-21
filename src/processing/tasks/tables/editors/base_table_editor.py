@@ -55,4 +55,11 @@ class BaseTableEditor(BaseTraitsEditor):
         if dlg.open():
 
             return add_extension(dlg.path, ext)
+
+    def make_pdf_table(self, *args, **kw):
+        pass
+    def make_xls_table(self, *args, **kw):
+        pass
+    def make_csv_table(self, *args, **kw):
+        pass
 #============= EOF =============================================

@@ -28,14 +28,15 @@ import cPickle as pickle
 #============= local library imports  ==========================
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.processing.tasks.figures.panes import PlotterOptionsPane, \
-    FigureSelectorPane
+    FigureSelectorPane, FigureAnalysisBrowser
 # from src.ui.gui import invoke_in_main_thread
 # from src.processing.plotters.ideogram import Ideogram
-from src.processing.plotter_options_manager import IdeogramOptionsManager
+# from src.processing.plotter_options_manager import IdeogramOptionsManager
 from src.processing.tasks.figures.actions import SaveFigureAction, \
-    OpenFigureAction
+    OpenFigureAction, NewIdeogramAction, AppendIdeogramAction, NewSpectrumAction, \
+    AppendSpectrumAction
 from src.processing.tasks.browser.browser_task import BaseBrowserTask
-from src.processing.tasks.browser.panes import BrowserPane
+# from src.processing.tasks.browser.panes import BrowserPane
 from src.codetools.simple_timeit import timethis
 
 import weakref
@@ -50,10 +51,25 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
     name = 'Figure'
     id = 'pychron.processing.figures'
     plotter_options_pane = Instance(PlotterOptionsPane)
-    tool_bars = [SToolBar(
+    tool_bars = [
+                 SToolBar(
                           SaveFigureAction(),
                           OpenFigureAction(),
-                          image_size=(16, 16))]
+                          name='Figure',
+                          image_size=(16, 16)),
+                 SToolBar(
+                        NewIdeogramAction(),
+                         AppendIdeogramAction(),
+                         name='Ideogram',
+                         image_size=(16, 16)),
+                SToolBar(
+                         NewSpectrumAction(),
+                         AppendSpectrumAction(),
+                         name='Spectrum',
+                         image_size=(16, 16)),
+                ]
+
+    auto_select_analysis = False
 
     def _default_layout_default(self):
         return TaskLayout(
@@ -102,7 +118,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 
         return panes + [self.plotter_options_pane,
                         self.figure_selector_pane,
-                        BrowserPane(model=self)
+                        FigureAnalysisBrowser(model=self)
                         ]
 #===============================================================================
 # grouping
@@ -139,6 +155,26 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 #===============================================================================
 # figures
 #===============================================================================
+    def tb_new_ideogram(self):
+        if isinstance(self.active_editor, IdeogramEditor) and \
+            not self.unknowns_pane.items:
+            self.append_ideogram()
+        else:
+            self.new_ideogram()
+
+    def tb_new_spectrum(self):
+        if isinstance(self.active_editor, SpectrumEditor) and \
+            not self.unknowns_pane.items:
+            self.append_spectrum()
+        else:
+            self.new_spectrum()
+
+    def append_spectrum(self):
+        self._append_figure(SpectrumEditor)
+
+    def append_ideogram(self):
+        self._append_figure(IdeogramEditor)
+
     def new_ideogram(self, ans=None, klass=None, tklass=None,
                      name='Ideo', plotter_kw=None):
 
@@ -244,53 +280,87 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 
     def _save_figure(self):
         db = self.manager.db
-        figure = db.add_figure()
-        db.flush()
+        if not isinstance(self.active_editor, FigureEditor):
+            return
 
-#         for ai in self.unknowns_pane.items:
-        for ai in self.active_editor.plotter.analyses:
-            dban = ai.dbrecord
-            aid = ai.record_id
-            if dban:
-                db.add_figure_analysis(figure, dban,
-                                       status=ai.temp_status and ai.status,
-                                       graph=ai.graph_id,
-                                       group=ai.group_id,
-                                       )
-                self.debug('adding analysis {} to figure'.format(aid))
-            else:
-                self.debug('{} not in database'.format(aid))
+        with db.session_ctx():
+            figure = db.add_figure()
 
-        po = self.active_editor.plotter_options_manager.plotter_options
-        refg = self.active_editor.plotter.graphs[0]
-        r = refg.plots[0].index_mapper.range
-        xbounds = '{}, {}'.format(r.low, r.high)
-        ys = []
-        for pi in refg.plots:
-            r = pi.value_mapper.range
-            ys.append('{},{}'.format(r.low, r.high))
+            for ai in self.active_editor.unknowns:
+                dban = db.get_analysis_uuid(ai.uuid)
+                aid = ai.record_id
+                if dban:
+                    db.add_figure_analysis(figure, dban,
+                                           status=ai.temp_status and ai.status,
+                                           graph=ai.graph_id,
+                                           group=ai.group_id,
+                                           )
+                    self.debug('adding analysis {} to figure'.format(aid))
+                else:
+                    self.debug('{} not in database'.format(aid))
 
-        ybounds = '|'.join(ys)
+            po = self.active_editor.plotter_options_manager.plotter_options
 
-        blob = pickle.dumps(po)
-        db.add_figure_preference(figure,
-                                 xbounds=xbounds,
-                                 ybounds=ybounds,
-                                 options_pickle=blob)
-        db.commit()
+#             refg = self.active_editor.graphs[0]
+
+            panel = self.active_editor._model.panels[0]
+            refg = panel.graph
+
+            r = refg.plots[0].index_mapper.range
+            xbounds = '{}, {}'.format(r.low, r.high)
+            ys = []
+            for pi in refg.plots:
+                r = pi.value_mapper.range
+                ys.append('{},{}'.format(r.low, r.high))
+
+            ybounds = '|'.join(ys)
+
+            blob = pickle.dumps(po)
+            db.add_figure_preference(figure,
+                                     xbounds=xbounds,
+                                     ybounds=ybounds,
+                                     options_pickle=blob)
+
 #===============================================================================
 #
 #===============================================================================
+    def _append_figure(self, klass):
+        '''
+            if selected_sample append all analyses
+            else append selected analyses
+            
+        '''
+
+        if isinstance(self.active_editor, klass):
+            if self.selected_analysis:
+                ts = self.manager.make_analyses(self.selected_analysis)
+            else:
+                ts = [ai for si in self.selected_sample
+                            for ai in self._get_sample_analyses(si)]
+
+            ans = self.manager.make_analyses(ts)
+            if ans:
+                pans = self.active_editor.unknowns
+                uuids = [p.uuid for p in pans]
+                fans = [ai for ai in ans if ai.uuid not in uuids]
+
+                pans.extend(fans)
+                self.active_editor.trait_set(unknowns=pans)
+
+            gid = 0
+            for _, gans in groupby(self.active_editor.unknowns, key=lambda x: x.sample):
+                for ai in gans:
+                    ai.group_id = gid
+                gid += 1
+
+            self.active_editor.rebuild(compress_groups=False)
+
     def _new_figure(self, ans, name, klass, tklass=None, add_iso=True):
-#         comp, plotter = None, None
         # new figure editor
         editor = klass(
                        name=name,
                        processor=self.manager,
                        )
-
-#         self.plot_editor_pane.component = None
-
 
         if not ans:
             ans = self.unknowns_pane.items
@@ -298,10 +368,6 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
         if ans:
             editor.unknowns = ans
             self.unknowns_pane.items = ans
-
-#             comp, plotter = func(ans)
-#             editor.plotter = plotter
-#             editor.component = comp
 #
         self._open_editor(editor)
 
@@ -327,14 +393,6 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
                                        processor=self.manager
                                        )
         return self._add_editor(editor, ans)
-#         if ans:
-#             ed = next((e for e in self.editor_area.editors
-#                         if e.name == editor.name))
-#             if not ed:
-#                 editor.items = ans
-#                 self.editor_area.add_editor(editor)
-#
-#         return editor
 
     def _new_table(self, ans, name, klass):
         name = '{}-table'.format(name)
@@ -380,42 +438,6 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 #             print 'asdfsdfsadfsd'
             self.active_editor.rebuild(refresh_data=False)
 
-#     def _ideogram_factory(self, ans, plotter_options=None):
-#         probability_curve_kind = 'cumulative'
-#         mean_calculation_kind = 'weighted_mean'
-#         data_label_font = None
-#         metadata_label_font = None
-# #        highlight_omitted = True
-#         display_mean_indicator = True
-#         display_mean_text = True
-#
-#         p = Ideogram(
-# #                     db=self.db,
-# #                     processing_manager=self,
-#                      probability_curve_kind=probability_curve_kind,
-#                      mean_calculation_kind=mean_calculation_kind
-#                      )
-#         options = dict(
-#                        title='',
-#                        data_label_font=data_label_font,
-#                        metadata_label_font=metadata_label_font,
-#                        display_mean_text=display_mean_text,
-#                        display_mean_indicator=display_mean_indicator,
-#                        )
-#
-#         if plotter_options is None:
-#             pom = IdeogramOptionsManager()
-#             plotter_options = pom.plotter_options
-#
-#         if ans:
-# #             self.analyses = ans
-#             gideo = p.build(ans, options=options,
-#                             plotter_options=plotter_options)
-#             if gideo:
-#                 gideo, _plots = gideo
-#
-#             return gideo, p
-
 
 #===============================================================================
 # handlers
@@ -441,6 +463,11 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
                 self.plotter_options_pane.pom = self.active_editor.plotter_options_manager
 
         super(FigureTask, self)._active_editor_changed()
+
+    @on_trait_change('active_editor:unknowns')
+    def _ac_unknowns_changed(self):
+
+        self.unknowns_pane.items = self.active_editor.unknowns
 
     #===========================================================================
     # browser protocol
