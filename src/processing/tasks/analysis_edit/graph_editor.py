@@ -67,7 +67,7 @@ class GraphEditor(BaseTraitsEditor):
 #         self._make_unknowns()
         self.rebuild_graph()
 
-        keys = set([ki  for ui in self.unknowns
+        keys = set([ki for ui in self.unknowns
                             for ki in ui.isotope_keys])
         keys = sort_isotopes(keys)
 
@@ -167,7 +167,9 @@ class GraphEditor(BaseTraitsEditor):
 #         with gc:
 #         self.rebuild_graph()
 
-    def _gather_unknowns(self, refresh_data, exclude='invalid'):
+    def _gather_unknowns(self, refresh_data,
+                         exclude='invalid',
+                         compress_groups=True):
         '''
             use cached runs
             
@@ -193,8 +195,10 @@ class GraphEditor(BaseTraitsEditor):
             else:
                 ans = bb
 
-            # compress groups
-            self._compress_unknowns(ans)
+            if compress_groups:
+                # compress groups
+                self._compress_unknowns(ans)
+
             self.unknowns = ans
         else:
             if exclude:

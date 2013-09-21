@@ -37,6 +37,7 @@ class IdeogramEditor(FigureEditor):
         model = IdeogramModel(plot_options=plotter_options)
         model.analyses = ans
         iv = FigureContainer(model=model)
+        self._model = model
         return iv.component
 
 class AutoIdeogramEditor(IdeogramEditor):

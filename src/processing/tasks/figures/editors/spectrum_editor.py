@@ -35,6 +35,7 @@ class SpectrumEditor(FigureEditor):
         model = SpectrumModel(plot_options=plotter_options)
         model.analyses = ans
         iv = FigureContainer(model=model)
+        self._model = model
         return iv.component
 
 

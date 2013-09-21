@@ -20,10 +20,24 @@ from src.paths import paths
 #============= enthought library imports =======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class MakeTableAction(TaskAction):
+class MakePDFTableAction(TaskAction):
     name = 'Make PDF'
-    method = 'make_table'
+    method = 'make_pdf_table'
     image = ImageResource(name='file_pdf.png',
+                         search_path=paths.icon_search_path
+                         )
+
+class MakeXLSTableAction(TaskAction):
+    name = 'Make Excel'
+    method = 'make_xls_table'
+    image = ImageResource(name='file_xls.png',
+                         search_path=paths.icon_search_path
+                         )
+
+class MakeCSVTableAction(TaskAction):
+    name = 'Make CSV'
+    method = 'make_csv_table'
+    image = ImageResource(name='file_csv.png',
                          search_path=paths.icon_search_path
                          )
 

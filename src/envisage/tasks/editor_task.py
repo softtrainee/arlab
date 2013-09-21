@@ -29,6 +29,7 @@ from pyface.constant import CANCEL, YES
 
 from pyface.tasks.advanced_editor_area_pane import AdvancedEditorAreaPane
 import subprocess
+import os
 # class EditorTask(BaseManagerTask, Loggable):
 class BaseEditorTask(BaseManagerTask):
     active_editor = Property(Instance(IEditor),
@@ -36,9 +37,29 @@ class BaseEditorTask(BaseManagerTask):
                              )
     editor_area = Instance(IEditorAreaPane)
     def view_pdf(self, p):
-        preview_path = '/Applications/Preview.app'
-#         acrobatPath = r'C:\Program Files\Adobe\Reader 9.0\Reader\AcroRd32.exe'
-        subprocess.call(['open', '-a', preview_path, p])
+        self.view_file(p)
+
+    def view_xls(self, p):
+        application = 'Microsoft Office 2011/Microsoft Excel'
+        self.view_file(p, application)
+#         self.view_file(p)
+
+    def view_csv(self, p):
+        application = 'TextWrangler'
+        self.view_file(p, application)
+
+    def view_file(self, p, application='Preview'):
+
+        app_path = '/Applications/{}.app'.format(application)
+        if not os.path.exists(app_path):
+            app_path = '/Applications/Preview.app'
+
+        try:
+            subprocess.call(['open', '-a', app_path, p])
+        except OSError:
+            self.debug('failed opening {} using {}'.format(p, app_path))
+            subprocess.call(['open', p])
+
 
     def open(self, path=None, **kw):
         ''' Shows a dialog to open a file.

@@ -27,8 +27,8 @@ import subprocess
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.tasks.tables.table_actions import  ToggleStatusAction, \
-    SummaryTableAction, AppendSummaryTableAction, MakeTableAction, \
-    AppendLaserTableAction
+    SummaryTableAction, AppendSummaryTableAction, MakePDFTableAction, \
+    AppendLaserTableAction, MakeXLSTableAction, MakeCSVTableAction
 # from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.processing.tasks.browser.panes import BrowserPane
 from src.processing.tasks.tables.panes import TableEditorPane
@@ -65,25 +65,48 @@ class FusionSummary(Summary):
 
 class TableTask(BrowserTask):
     name = 'Tables'
-
-    tool_bars = [
-                 SToolBar(
-                          MakeTableAction(),
-                          SGroup(
-                                ToggleStatusAction(),
-                                SummaryTableAction(),
-                                AppendSummaryTableAction()
-                                ),
-                          SGroup(
-                                AppendLaserTableAction()
-                                ),
-
-
-                          image_size=(16, 16)
-                          ),
-                 ]
-
     editor = Instance(TableTaskEditor, ())
+
+    def _tool_bars_default(self):
+        xls = True
+        try:
+            import xlwt
+        except ImportError:
+            xls = False
+
+        pdf = True
+        try:
+            from reportlab import Version
+        except ImportError:
+            pdf = False
+
+        tb1 = SToolBar(
+                      SGroup(
+                            ToggleStatusAction(),
+                            SummaryTableAction(),
+                            AppendSummaryTableAction()
+                            ),
+                      SGroup(
+                            AppendLaserTableAction()
+                            ),
+                      image_size=(16, 16)
+                      )
+
+        actions = []
+        if pdf:
+            actions.append(MakePDFTableAction())
+        if xls:
+            actions.append(MakeXLSTableAction())
+
+        actions.append(MakeCSVTableAction())
+
+        tb2 = SToolBar(*actions,
+                    image_size=(16, 16))
+#                     orientation='vertical'
+#                     )
+
+        return [tb1, tb2]
+
 
     def activated(self):
         editor = LaserTableEditor()
@@ -115,17 +138,42 @@ class TableTask(BrowserTask):
 #===============================================================================
 # task actions
 #===============================================================================
-
-    def make_table(self):
+    #===========================================================================
+    # output actions
+    #===========================================================================
+    def make_pdf_table(self):
         ae = self.active_editor
         ae.use_alternating_background = self.editor.use_alternating_background
         ae.notes_template = self.editor.notes_template
 
         title = self.editor.make_title()
 
-        p = ae.make_table(title)
+        p = ae.make_pdf_table(title)
         self.view_pdf(p)
 
+    def make_xls_table(self):
+        ae = self.active_editor
+        ae.use_alternating_background = self.editor.use_alternating_background
+        ae.notes_template = self.editor.notes_template
+
+        title = self.editor.make_title()
+
+        p = ae.make_xls_table(title)
+        self.view_xls(p)
+
+    def make_csv_table(self):
+        ae = self.active_editor
+        ae.use_alternating_background = self.editor.use_alternating_background
+        ae.notes_template = self.editor.notes_template
+
+        title = self.editor.make_title()
+
+        p = ae.make_csv_table(title)
+        self.view_csv(p)
+
+    #===========================================================================
+    #
+    #===========================================================================
     def toggle_status(self):
         ae = self.active_editor
         if ae and ae.selected:
@@ -154,7 +202,7 @@ class TableTask(BrowserTask):
             if sam is None:
                 man = self.manager
                 ans = self._get_sample_analyses(sa)
-                ans = man.make_analyses(ans)
+                ans = man.make_analyses(ans[:4])
 
                 aa = ans
 #                 aa = [r for ai in ans

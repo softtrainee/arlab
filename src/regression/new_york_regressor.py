@@ -110,7 +110,8 @@ class NewYorkRegressor(YorkRegressor):
         cnt = 0
         b, a, cnt = self._calculate_slope_intercept(Inf, b, cnt)
         if cnt >= 500:
-            self.warning('regression did not converge')
+            print 'regression did not converge'
+#             self.warning('regression did not converge')
 #         else:
 #             self.info('regression converged after {} iterations'.format(cnt))
 

@@ -24,12 +24,48 @@ from src.paths import paths
 #============= local library imports  ==========================
 class SaveFigureAction(TaskAction):
     method = 'save_figure'
+    name = 'Save Figure'
     image = ImageResource(name='database_save.png',
                         search_path=paths.icon_search_path
                         )
 class OpenFigureAction(TaskAction):
     method = 'open_figure'
+    name = 'Open Figure'
     image = ImageResource(name='page_white_database.png',
+                        search_path=paths.icon_search_path
+                        )
+
+class NewIdeogramAction(TaskAction):
+    name = 'New Ideogram'
+    method = 'tb_new_ideogram'
+    image = ImageResource(name='chart_curve.png',
+                        search_path=paths.icon_search_path
+                        )
+
+class AppendIdeogramAction(TaskAction):
+    name = 'Append Ideogram'
+    method = 'append_ideogram'
+    tooltip = '''Add selected analyses to current ideogram.
+If no analyses selected add all from the selected sample'''
+
+    image = ImageResource(name='chart_curve_add.png',
+                        search_path=paths.icon_search_path
+                        )
+
+class NewSpectrumAction(TaskAction):
+    name = 'New Spectrum'
+    method = 'tb_new_spectrum'
+    image = ImageResource(name='chart_curve.png',
+                        search_path=paths.icon_search_path
+                        )
+
+class AppendSpectrumAction(TaskAction):
+    name = 'Append Spectrum'
+    method = 'append_spectrum'
+    tooltip = '''Add selected analyses to current spectrum.
+If no analyses selected add all from the selected sample'''
+
+    image = ImageResource(name='chart_curve_add.png',
                         search_path=paths.icon_search_path
                         )
 #============= EOF =============================================

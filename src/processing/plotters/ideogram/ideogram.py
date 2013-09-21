@@ -102,8 +102,16 @@ class Ideogram(BaseArArFigure):
 
     def _plot_analysis_number(self, po, plot, pid):
         xs = self.xs
-        n = xs.shape[0] + 1
-        ys = arange(1, n)
+        n = xs.shape[0]
+
+        startidx = 1
+        for p in self.graph.plots:
+            if p.y_axis.title == 'Analysis #':
+                startidx += p.default_index.get_size()
+#                 print 'asdfasfsa', p.index.data.get_size()
+
+        ys = arange(startidx, startidx + n)
+
         scatter = self._add_aux_plot(ys,
                                      'Analysis #', pid)
 
@@ -115,9 +123,9 @@ class Ideogram(BaseArArFigure):
                                     additional_info=lambda x: u'Age= {}'.format(x.age_string),
                                     )
 
-        self._analysis_number_cnt += n
+#         self._analysis_number_cnt += n
         self.graph.set_y_limits(min_=0,
-                                max_=self._analysis_number_cnt,
+                                max_=max(ys) + 1,
                                 plotid=pid)
         return scatter
 

@@ -46,6 +46,7 @@ class _myTableView(_TableView, ConsumerMixin):
     _copy_cache = None
     _linked_copy_cache = None
     paste_func = None
+    drop_factory = None
     _dragging = None
 
     def __init__(self, *args, **kw):
@@ -209,7 +210,9 @@ class _myTableView(_TableView, ConsumerMixin):
     def dropEvent(self, e):
         if self.is_external():
             data = PyMimeData.coerce(e.mimeData()).instance()
-            paste_func = lambda x: x
+            df = self.drop_factory
+            if not df:
+                df = lambda x: x
 
             row = self.rowAt(e.pos().y())
             n = len(self._editor.value)
@@ -226,12 +229,13 @@ class _myTableView(_TableView, ConsumerMixin):
 #                model.beginInsertRows(parent, row, row)
 #                editor = self._editor
 #                 self._editor.object._no_update = True
+
                 with no_update(self._editor.object):
                     for i, (_, di) in enumerate(reversed(data)):
     #                    print 'insert'
     #                    obj = paste_func1(di)
     #                    editor.callx(editor.adapter.insert, editor.object, editor.name, row + i, obj)
-                        model.insertRow(row=row, obj=paste_func(di))
+                        model.insertRow(row=row, obj=df(di))
 
     #                 model.insertRow(row=row, obj=paste_func(data[0][1]))
 #                 self._editor.object._no_update = False
@@ -270,6 +274,8 @@ class _TabularEditor(qtTabularEditor):
 
         if hasattr(self.object, self.factory.paste_function):
             self.control.paste_func = getattr(self.object, self.factory.paste_function)
+        if hasattr(self.object, self.factory.drop_factory):
+            self.control.drop_func = getattr(self.object, self.factory.drop_factory)
 
         control = self.control
         signal = QtCore.SIGNAL('sectionResized(int,int,int)')
@@ -317,6 +323,11 @@ class myTabularEditor(TabularEditor):
     pasted = Str
     copy_cache = Str
     paste_function = Str
+    '''
+        extended trait name of function to use to create an object
+        when dropped onto this table
+    '''
+    drop_factory = Str
 
     col_widths = Str
 

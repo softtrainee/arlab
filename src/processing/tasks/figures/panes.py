@@ -18,6 +18,7 @@
 from traits.api import HasTraits, Any, Str, List
 from traitsui.api import View, Item, HGroup, EnumEditor, UItem, InstanceEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
+from src.processing.tasks.browser.panes import BrowserPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class FigureSelectorPane(TraitsDockPane):
@@ -63,4 +64,6 @@ class PlotterOptionsPane(TraitsDockPane):
                  )
         return v
 
+class FigureAnalysisBrowser(BrowserPane):
+    multi_select = True
 #============= EOF =============================================

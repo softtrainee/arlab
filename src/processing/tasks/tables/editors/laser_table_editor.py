@@ -27,10 +27,10 @@ from src.processing.tasks.tables.editors.adapters import LaserTableAdapter, \
     LaserTableMeanAdapter, TableSeparator
 from src.processing.analysis_means import Mean
 from src.processing.tasks.tables.editors.base_table_editor import BaseTableEditor
-from src.processing.tasks.tables.laser_table_pdf_writer import LaserTablePDFWriter
 
 from itertools import groupby
 from src.column_sorter_mixin import ColumnSorterMixin
+
 
 class LaserTableEditor(BaseTableEditor, ColumnSorterMixin):
 
@@ -42,10 +42,10 @@ class LaserTableEditor(BaseTableEditor, ColumnSorterMixin):
     def _items_items_changed(self):
         self.refresh_needed = True
 
-    def make_table(self, title):
-        ans = self._clean_items()
-#         ans = [ai for ai in ans if not isinstance(ai, TableSeparator)]
+    def make_pdf_table(self, title):
+        from src.processing.tasks.tables.laser_table_pdf_writer import LaserTablePDFWriter
 
+        ans = self._clean_items()
         t = LaserTablePDFWriter(
                                 orientation='landscape',
                                 use_alternating_background=self.use_alternating_background
@@ -55,15 +55,25 @@ class LaserTableEditor(BaseTableEditor, ColumnSorterMixin):
         means = self.means
 
         p = '/Users/ross/Sandbox/aaaatable.pdf'
+
 #         p = self._get_save_path()
         if p:
             key = lambda x:x.sample
-#             ans = [(list(ais), mi)
-#                   for (_sam, ais), mi in zip(groupby(ans, key=key), means)]
-#             ans = zip(groupby(ans, key=key), means)
             ans = groupby(ans, key=key)
             t.build(p, ans, means, title=title)
             return p
+
+    def make_xls_table(self, title):
+        ans = self._clean_items()
+        means = self.means
+        from src.processing.tasks.tables.laser_table_xls_writer import LaserTableXLSWriter
+        t = LaserTableXLSWriter()
+#         p = self._get_save_path(ext='.xls')
+        p = '/Users/ross/Sandbox/aaaatable.xls'
+        if p:
+            t.build(p, ans, means, title)
+            return p
+
 
     def _get_column_widths(self):
         '''
