@@ -132,6 +132,12 @@ class SpectrumAction(FigureAction):
     name = 'Spectrum'
     accelerator = 'Ctrl+D'
     method = 'new_spectrum'
+
+class SeriesAction(FigureAction):
+    name = 'Series'
+    accelerator = 'Ctrl+U'
+    method = 'new_series'
+
 #     def perform(self, event):
 #
 #         task = event.task

@@ -1,6 +1,5 @@
-# @PydevCodeAnalysisIgnore
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,20 +15,27 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import  Instance
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.processing.series.fit_series_editor import FitSeriesEditor
-from src.processing.figures.detector_intercalibration_figure import DetectorIntercalibrationFigure
-from src.processing.series.detector_intercalibration_config import DetectorIntercalibrationConfig
+from src.processing.tasks.figures.figure_editor import FigureEditor
+from src.processing.plotters.figure_container import FigureContainer
+from src.processing.plotter_options_manager import InverseIsochronOptionsManager
 
-class DetectorIntercalibrationEditor(FitSeriesEditor):
-    config_klass = DetectorIntercalibrationConfig
-    figure_klass = DetectorIntercalibrationFigure
-    _series_name = 'detector_intercalibration'
-#    _series_key = 'bg'
-    _analysis_type = 'air'
+class InverseIsochronEditor(FigureEditor):
+    plotter_options_manager = Instance(InverseIsochronOptionsManager, ())
+    basename = 'iso'
+    def get_component(self, ans, plotter_options):
+        if plotter_options is None:
+            pom = InverseIsochronOptionsManager()
+            plotter_options = pom.plotter_options
 
-    def _add_history(self, func, history, uv, ue, *args):
-        func(history, user_value=uv, user_error=ue)
+        from src.processing.plotters.isochron.isochron_model \
+            import InverseIsochronModel
+
+        model = InverseIsochronModel(plot_options=plotter_options)
+        model.analyses = ans
+        iv = FigureContainer(model=model)
+        return iv.component
 
 #============= EOF =============================================

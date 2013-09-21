@@ -36,13 +36,14 @@ class GraphEditor(BaseTraitsEditor):
     graph = Any
     processor = Any
     unknowns = List
-    _unknowns = List
+#     _unknowns = List
     component = Property
     _component = Any
 
     component_changed = Event
     path = File
     analysis_cache = List
+    basename = ''
 
     def normalize(self, xs, start=None):
         xs = asarray(xs)
@@ -61,22 +62,30 @@ class GraphEditor(BaseTraitsEditor):
         '''
             TODO: find reference analyses using the current _unknowns
         '''
-        self._unknowns = self._gather_unknowns(True)
+        self.unknowns = self._gather_unknowns(True)
 
 #         self._make_unknowns()
         self.rebuild_graph()
 
-        keys = set([ki  for ui in self._unknowns
+        keys = set([ki  for ui in self.unknowns
                             for ki in ui.isotope_keys])
         keys = sort_isotopes(keys)
 
-        refiso = self._unknowns[0]
+        if self.unknowns:
+            refiso = self.unknowns[0]
 
-        self.tool.load_fits(refiso.isotope_keys,
-                            refiso.isotope_fits
-                            )
+            self.tool.load_fits(refiso.isotope_keys,
+                                refiso.isotope_fits
+                                )
 
-        self._update_unknowns_hook()
+            self._set_name()
+            self._update_unknowns_hook()
+
+    def _set_name(self):
+        na = set([ni.sample for ni in self.unknowns])
+        na = ','.join(na)
+
+        self.name = '{} {}'.format(na, self.basename)
 
     def _update_unknowns_hook(self):
         pass
@@ -167,7 +176,7 @@ class GraphEditor(BaseTraitsEditor):
             
         '''
 
-        ans = self._unknowns
+        ans = self.unknowns
         if refresh_data or not ans:
             ids = [ai.uuid for ai in self.analysis_cache]
             aa = [ai for ai in self.unknowns if ai.uuid not in ids]
@@ -186,7 +195,7 @@ class GraphEditor(BaseTraitsEditor):
 
             # compress groups
             self._compress_unknowns(ans)
-            self._unknowns = ans
+            self.unknowns = ans
         else:
             if exclude:
                 ans = self.processor.filter_analysis_tag(ans, exclude)

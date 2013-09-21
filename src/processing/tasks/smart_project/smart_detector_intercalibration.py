@@ -62,8 +62,8 @@ class SmartDetectorIntercalibration(BaseSmarter):
 #                 if fi.name in fkeys:
 #                     fi.trait_set(show=True, fit=fits[fi.name], trait_change_notify=False)
 
-            ae._unknowns = gs
-            ae._references = refs
+            ae.unknowns = gs
+            ae.references = refs
             ae.rebuild_graph()
 
             if save_figure:

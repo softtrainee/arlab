@@ -29,7 +29,7 @@ from src.processing.tasks.processing_actions import IdeogramAction, \
     RecallAction, SpectrumAction, \
     EquilibrationInspectorAction, InverseIsochronAction, GroupSelectedAction, \
     GroupbyAliquotAction, GroupbyLabnumberAction, ClearGroupAction, \
-    SmartProjectAction
+    SmartProjectAction, SeriesAction
 
 from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     FluxAction, IsotopeEvolutionAction, ICFactorAction, \
@@ -58,9 +58,9 @@ class ProcessingPlugin(BaseTaskPlugin):
                 i, f, p = args
             else:
                 i, f, p, kw = args
-            return SchemaAddition(id=i, factory=f, path=p, **kw)
+            return SchemaAddition(id=i, factory=f, path=p)
         return TaskExtension(actions=[make_schema(args)
-                                      for args in actions])
+                                      for args in actions], **kw)
 #         return TaskExtension(actions=[SchemaAddition(id=i, factory=f, path=p)
 #                                       for i, f, p in actions])
 
@@ -70,7 +70,8 @@ class ProcessingPlugin(BaseTaskPlugin):
             return Group(
                           SpectrumAction(),
                           IdeogramAction(),
-                          InverseIsochronAction()
+                          InverseIsochronAction(),
+                          SeriesAction()
                           )
         def data_menu():
             return SMenu(id='Data', name='Data')
@@ -109,7 +110,7 @@ class ProcessingPlugin(BaseTaskPlugin):
                 self._make_task_extension([
                    ('optimal_equilibration', CalcOptimalEquilibrationAction, 'MenuBar/Tools')
                    ],
-                   id='pychron.analysis_edit.isotope_evolution'),
+                   task_id='pychron.analysis_edit.isotope_evolution'),
 
                 ]
 
@@ -138,7 +139,7 @@ class ProcessingPlugin(BaseTaskPlugin):
                         ('pychron.recall', self._recall_task_factory, 'Recall'),
                         ('pychron.analysis_edit.blanks', self._blanks_edit_task_factory, 'Blanks'),
                         ('pychron.analysis_edit.flux', self._flux_task_factory, 'Flux'),
-                        ('pychron.analysis_edit.series', self._series_task_factory, 'Series', '', '', True),
+#                         ('pychron.analysis_edit.series', self._series_task_factory, 'Series', '', '', True),
                         ('pychron.analysis_edit.isotope_evolution', self._iso_evo_task_factory, 'Isotope Evolution'),
                         ('pychron.analysis_edit.ic_factor', self._ic_factor_task_factory, 'IC Factor'),
                         ('pychron.analysis_edit.batch', self._batch_edit_task_factory, 'Batch Edit'),
@@ -174,9 +175,9 @@ class ProcessingPlugin(BaseTaskPlugin):
         from src.processing.tasks.recall.recall_task import RecallTask
         return RecallTask(manager=self._processor_factory())
 
-    def _series_task_factory(self):
-        from src.processing.tasks.series.series_task import SeriesTask
-        return SeriesTask(manager=self._processor_factory())
+#     def _series_task_factory(self):
+#         from src.processing.tasks.series.series_task import SeriesTask
+#         return SeriesTask(manager=self._processor_factory())
 
     def _iso_evo_task_factory(self):
         from src.processing.tasks.isotope_evolution.isotope_evolution_task import IsotopeEvolutionTask

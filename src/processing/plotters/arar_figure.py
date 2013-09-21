@@ -55,10 +55,10 @@ class BaseArArFigure(HasTraits):
 
         for po in plots:
             p = graph.new_plot(padding=self.padding,
-                           bounds=[50, po.height])
+                           bounds=[50, po.height],
+                           ytitle=po.name)
             p.value_range.tight_bounds = False
 
-        self.graph = graph
 
     def plot(self, *args, **kw):
         pass

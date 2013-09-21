@@ -1,6 +1,5 @@
-# @PydevCodeAnalysisIgnore
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,23 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Str, Float
-from traitsui.api import View, Item, HGroup
 #============= standard library imports ========================
-#============= local library imports  ==========================
+from src.processing.plotters.series.series import Series
+from src.processing.plotters.figure_panel import FigurePanel
+from src.graph.regression_graph import StackedRegressionGraph
 
-class BlankConfig(HasTraits):
-    label = Str
-    value = Float()
-    error = Float()
-    save = Bool(False)
-    def traits_view(self):
-        v = View(HGroup(
-                        Item('label', show_label=False, style='readonly'),
-                        Item('value', show_label=False),
-                        Item('error', show_label=False),
-                        Item('save', show_label=False)
-                        )
-                 )
-        return v
+#============= local library imports  ==========================
+class SeriesPanel(FigurePanel):
+    _figure_klass = Series
+    equi_stack = True
+    graph_klass = StackedRegressionGraph
 #============= EOF =============================================

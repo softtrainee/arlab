@@ -22,7 +22,7 @@ import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.constants import NULL_STR
+from src.constants import NULL_STR, FIT_TYPES
 from src.paths import paths
 from src.viewable import Viewable
 from traitsui.table_column import ObjectColumn
@@ -53,6 +53,9 @@ class PlotterOption(HasTraits):
                 'moles_K39':'K39 Moles'
                 }
 
+class FitPlotterOption(PlotterOption):
+    fit = Enum(['', ] + FIT_TYPES)
+
 class SpectrumPlotOption(PlotterOption):
     def _get_plot_names(self):
         return {NULL_STR:NULL_STR,
@@ -73,6 +76,11 @@ class BasePlotterOptions(HasTraits):
         super(BasePlotterOptions, self).__init__(*args, **kw)
         if not clean:
             self._load(root)
+
+    def get_aux_plots(self):
+        return reversed([pi
+                for pi in self.aux_plots if pi.name != NULL_STR])
+
 
     def traits_view(self):
         v = View()
@@ -168,10 +176,6 @@ class PlotterOptions(BasePlotterOptions):
     def add_aux_plot(self, **kw):
         ap = self.plot_option_klass(**kw)
         self.aux_plots.append(ap)
-
-    def get_aux_plots(self):
-        return reversed([pi
-                for pi in self.aux_plots if pi.name != NULL_STR])
 
     def _create_axis_group(self, axis, name):
 
@@ -393,8 +397,39 @@ class SpectrumOptions(AgeOptions):
 
 class InverseIsochronOptions(AgeOptions):
     pass
+
 class SeriesOptions(BasePlotterOptions):
-    pass
+    def load_aux_plots(self, ref):
+        def f(ki):
+            ff = FitPlotterOption(name=ki)
+            ff.trait_set(use=False, fit='')
+            return ff
+        ap = [f(k) for k in ref.isotope_keys]
+        self.trait_set(
+                       aux_plots=ap,
+                       )
+
+    def traits_view(self):
+        cols = [
+              CheckboxColumn(name='use'),
+              ObjectColumn(name='name'),
+              ObjectColumn(name='fit', width=135),
+              ObjectColumn(name='scale'),
+#               ObjectColumn(name='height'),
+#               CheckboxColumn(name='x_error', label='X Error'),
+              CheckboxColumn(name='y_error', label='Y Error'),
+              ]
+        aux_plots_grp = Item('aux_plots',
+                                  style='custom',
+                                  show_label=False,
+
+                                  editor=TableEditor(columns=cols,
+                                                     sortable=False,
+                                                     deletable=False,
+                                                     reorderable=False
+                                                     ))
+        v = View(aux_plots_grp)
+        return v
 
 if __name__ == '__main__':
     ip = IdeogramOptions()

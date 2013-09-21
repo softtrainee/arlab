@@ -33,6 +33,7 @@ from src.experiment.utilities.identifier import make_runid, make_aliquot_step
 from src.processing.isotope import Isotope, Blank, Baseline, Sniff
 from src.constants import ARGON_KEYS
 from src.helpers.formatting import calc_percent_error
+from src.regex import ISOREGEX
 
 Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_outlier_std_devs')
 
@@ -582,8 +583,16 @@ class DBAnalysis(Analysis):
         return prs
 
     def __getattr__(self, attr):
-        if attr in ('ar40', 'ar39', 'ar38', 'ar37', 'ar36'):
+        lattr = attr.lower()
+#         print attr, ISOREGEX.match(attr)
+#         if ISOREGEX.match(attr):
+        if lattr in ('ar40', 'ar39', 'ar38', 'ar37', 'ar36'):
             return getattr(self, attr.capitalize())
+
+        if ISOREGEX.match(attr):
+            if attr in self.isotopes:
+                return self.isotopes[attr].uvalue
+
         print attr
         raise AttributeError
 

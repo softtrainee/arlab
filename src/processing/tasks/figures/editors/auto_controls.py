@@ -1,6 +1,5 @@
-# @PydevCodeAnalysisIgnore
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,13 +13,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-from src.processing.series.config import Config
 
 #============= enthought library imports =======================
-
+from traits.api import HasTraits, Int, Float, Bool
+from traitsui.api import View, Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
-class BackgroundConfig(Config):
+class AutoSpectrumControl(HasTraits):
     pass
+class AutoIdeogramControl(HasTraits):
+    group_by_aliquot = Bool(False)
+    group_by_labnumber = Bool(False)
+    def traits_view(self):
+        v = View(
+                 Item('group_by_aliquot'),
+                 Item('group_by_labnumber'),
+
+                 )
+        return v
+
+class AutoSeriesControl(HasTraits):
+    days = Int(1)
+    hours = Float(0)
+    def traits_view(self):
+        v = View(
+               Item('days'),
+               Item('hours')
+               )
+        return v
 #============= EOF =============================================

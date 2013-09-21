@@ -70,7 +70,7 @@ class IsotopeEvolutionEditor(GraphEditor):
         self.info('========================================')
 
         from src.processing.utils.equilibration_utils import calc_optimal_eqtime
-        for unk in self._unknowns:
+        for unk in self.unknowns:
 
             for fit in self.tool.fits:
                 if fit.fit and fit.use:
@@ -93,7 +93,7 @@ class IsotopeEvolutionEditor(GraphEditor):
         self.component.invalidate_and_redraw()
 
     def save(self):
-        for unk in self._unknowns:
+        for unk in self.unknowns:
             self._save_fit(unk)
 
     def _save_fit(self, unk):
@@ -115,7 +115,7 @@ class IsotopeEvolutionEditor(GraphEditor):
 #         timethis(self._rebuild_graph2, msg='total')
 
     def _rebuild_graph(self):
-        unk = self._unknowns
+        unk = self.unknowns
         n = len(unk)
         c = 1
         r = 1
@@ -133,7 +133,7 @@ class IsotopeEvolutionEditor(GraphEditor):
 
         self.component = self._container_factory((r, c))
 
-        for j, unk in enumerate(self._unknowns):
+        for j, unk in enumerate(self.unknowns):
             set_ytitle = j % c == 0
             set_xtitle = j >= (n / r)
             g = self._graph_factory()
@@ -194,7 +194,7 @@ class IsotopeEvolutionEditor(GraphEditor):
 
     def refresh_unknowns(self):
         if not self._suppress_update:
-            for ui in self._unknowns:
+            for ui in self.unknowns:
 #                 ui.load_age()
                 ui.analysis_summary.update_needed = True
 

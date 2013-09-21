@@ -33,6 +33,16 @@ class BaseTableEditor(BaseTraitsEditor):
     refresh_needed = Event
     use_alternating_background = Bool(False)
 
+    basename = 'table'
+    def _items_changed(self):
+        self._set_name()
+
+    def _set_name(self):
+        na = set([ni.sample for ni in self.items])
+        na = ','.join(na)
+
+        self.name = '{} {}'.format(na, self.basename)
+
     def clean_rows(self):
         return self._clean_items()
 

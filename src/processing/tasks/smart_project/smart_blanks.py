@@ -90,8 +90,8 @@ class SmartBlanks(BaseSmarter):
                 if fi.name in fkeys:
                     fi.trait_set(show=True, fit=fits[fi.name], trait_change_notify=False)
 
-            ae._unknowns = gs
-            ae._references = blanks
+            ae.unknowns = gs
+            ae.references = blanks
             ae.rebuild_graph()
 
             if save_figure:

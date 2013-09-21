@@ -31,23 +31,23 @@ from src.helpers.datetime_tools import convert_timestamp
 class InterpolationEditor(GraphEditor):
     tool = Instance(InterpolationFitSelector, ())
     references = List
-    _references = List
+#     _references = List
 
     auto_find = Bool(True)
     show_current = Bool(True)
 
     @on_trait_change('references[]')
     def _update_references(self):
-        self.make_references()
+#         self.make_references()
         self.rebuild_graph()
 
-    def make_references(self):
-        self._references = self.processor.make_analyses(self.references)
-#         self.processor.load_analyses(self._references)
-        self._make_references()
-
-    def _make_references(self):
-        pass
+#     def make_references(self):
+#         self._references = self.processor.make_analyses(self.references)
+# #         self.processor.load_analyses(self._references)
+#         self._make_references()
+#
+#     def _make_references(self):
+#         pass
 
     def _get_start_end(self, rxs, uxs):
         mrxs = min(rxs) if rxs else Inf
@@ -71,7 +71,7 @@ class InterpolationEditor(GraphEditor):
         proc = self.processor
         uuids = []
         with proc.db.session_ctx():
-            for ui in self._unknowns:
+            for ui in self.unknowns:
                 for ai in proc.find_associated_analyses(ui):
                     if not ai.uuid in uuids:
                         uuids.append(ai.uuid)
@@ -103,8 +103,8 @@ class InterpolationEditor(GraphEditor):
     def _rebuild_graph(self):
         graph = self.graph
 
-        uxs = [ui.timestamp for ui in self._unknowns]
-        rxs = [ui.timestamp for ui in self._references]
+        uxs = [ui.timestamp for ui in self.unknowns]
+        rxs = [ui.timestamp for ui in self.references]
 
         display_xs = asarray(map(convert_timestamp, rxs[:]))
 
@@ -128,7 +128,7 @@ class InterpolationEditor(GraphEditor):
             fit = fit.fit.lower()
             c_uys, c_ues = None, None
 
-            if self._unknowns and self.show_current:
+            if self.unknowns and self.show_current:
                 c_uys, c_ues = self._get_current_values(iso)
 
             r_ys, r_es = None, None

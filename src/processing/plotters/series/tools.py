@@ -1,6 +1,5 @@
-# @PydevCodeAnalysisIgnore
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,13 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-from src.processing.series.config import Config
 
 #============= enthought library imports =======================
-
+from traits.api import HasTraits, Array, Int, Float
+from chaco.abstract_overlay import AbstractOverlay
 #============= standard library imports ========================
+from numpy import where, array
+from enable.base_tool import BaseTool
+from enable.tools.drag_tool import DragTool
+from enable.colors import color_table
 #============= local library imports  ==========================
 
-class DetectorIntercalibrationConfig(Config):
-    pass
 #============= EOF =============================================
