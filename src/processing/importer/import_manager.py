@@ -26,6 +26,7 @@ from src.processing.importer.mass_spec_extractor import Extractor, \
 from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.constants import NULL_STR
 from src.ui.qt.thread import Thread
+from src.ui.gui import invoke_in_main_thread
 
 
 records = namedtuple('Record', 'name')
@@ -58,6 +59,11 @@ class ImportManager(IsotopeDatabaseManager):
     include_list = List
     update_irradiations_needed = Event
     dry_run = Bool(True)
+    def _progress_message(self, pd, m):
+        def d():
+            pd.change_message(m)
+            pd.increment()
+        invoke_in_main_thread(d)
 
     def _do_import(self, selected, pd):
         func = getattr(self.importer, 'import_{}'.format(self.import_kind))
@@ -65,8 +71,10 @@ class ImportManager(IsotopeDatabaseManager):
         db = self.db
         with db.session_ctx(commit=not self.dry_run):
             for si, inc in selected:
-                pd.change_message('Importing {} {}'.format(si, inc))
-                pd.increment()
+
+#                 pd.change_message('Importing {} {}'.format(si, inc))
+#                 pd.increment()
+                self._progress_message(pd, 'Importing {} {}'.format(si, inc))
     #            for i in range(10):
     #                time.sleep(0.1)
     #            r = False
@@ -81,11 +89,16 @@ class ImportManager(IsotopeDatabaseManager):
                          )
                 if r:
                     self.imported_names.append(r)
-                    pd.change_message('Imported {} {} successfully'.format(si, inc))
-                    pd.increment()
+                    self._progress_message(pd,
+                                           'Imported {} {} successfully'.format(si, inc)
+                                           )
+#                     pd.change_message('Imported {} {} successfully'.format(si, inc))
+#                     pd.increment()
                 else:
-                    pd.change_message('Import {} {} failed'.format(si, inc))
-                    pd.increment()
+                    self._progress_message(pd,
+                                           'Import {} {} failed'.format(si, inc))
+#                     pd.change_message('Import {} {} failed'.format(si, inc))
+#                     pd.increment()
 
             if self.imported_names:
                 self.update_irradiations_needed = True
@@ -172,6 +185,7 @@ class ImportManager(IsotopeDatabaseManager):
                     if new_thread:
                         t = Thread(target=self._do_import, args=(selected, pd))
                         t.start()
+                        self._import_thread = t
                         return t
                     else:
                         self._do_import(selected, pd)
