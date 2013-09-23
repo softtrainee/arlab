@@ -54,9 +54,8 @@ class LaserTableEditor(BaseTableEditor, ColumnSorterMixin):
         t.col_widths = self._get_column_widths()
         means = self.means
 
-        p = '/Users/ross/Sandbox/aaaatable.pdf'
-
-#         p = self._get_save_path()
+        p = self._get_save_path()
+#         p = '/Users/ross/Sandbox/aaaatable.pdf'
         if p:
             key = lambda x:x.sample
             ans = groupby(ans, key=key)
@@ -68,12 +67,23 @@ class LaserTableEditor(BaseTableEditor, ColumnSorterMixin):
         means = self.means
         from src.processing.tasks.tables.laser_table_xls_writer import LaserTableXLSWriter
         t = LaserTableXLSWriter()
-#         p = self._get_save_path(ext='.xls')
-        p = '/Users/ross/Sandbox/aaaatable.xls'
+        p = self._get_save_path(ext='.xls')
+#         p = '/Users/ross/Sandbox/aaaatable.xls'
         if p:
             t.build(p, ans, means, title)
             return p
 
+    def make_csv_table(self, title):
+        ans = self._clean_items()
+        means = self.means
+        from src.processing.tasks.tables.laser_table_csv_writer import LaserTableCSVWriter
+        t = LaserTableCSVWriter()
+
+#         p = '/Users/ross/Sandbox/aaaatable.csv'
+        p = self._get_save_path(ext='.csv')
+        if p:
+            t.build(p, ans, means, title)
+            return p
 
     def _get_column_widths(self):
         '''

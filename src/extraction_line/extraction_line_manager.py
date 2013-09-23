@@ -31,6 +31,7 @@ from src.monitors.system_monitor import SystemMonitor
 from view_controller import ViewController
 from src.extraction_line.status_monitor import StatusMonitor
 import weakref
+from src.extraction_line.graph.extraction_line_graph import ExtractionLineGraph
 
 # from src.managers.multruns_report_manager import MultrunsReportManager
 
@@ -75,6 +76,8 @@ class ExtractionLineManager(Manager):
     _monitoring_valve_status = False
     _valve_state_frequency = 3
     _valve_lock_frequency = 10
+
+    network = Instance(ExtractionLineGraph)
 
     def test_connection(self):
         return self.get_valve_states() is not None
@@ -139,6 +142,10 @@ class ExtractionLineManager(Manager):
                                          )
             self.monitor.monitor()
 
+
+        self.network = ExtractionLineGraph()
+        p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
+        self.network.load(p)
 
 #        if self.gauge_manager is not None:
 #            self.gauge_manager.on_trait_change(self.pressure_update, 'gauges.pressure')
@@ -288,7 +295,9 @@ class ExtractionLineManager(Manager):
         for c in self._canvases:
             if c is not None:
                 p = os.path.join(paths.canvas2D_dir, c.path_name)
-                c.load_canvas_file(p)
+                p2 = os.path.join(paths.canvas2D_dir, 'canvas_config.xml')
+
+                c.load_canvas_file(p, p2)
 #                 print p
 #                 # load state
                 if self.valve_manager:
@@ -317,9 +326,15 @@ class ExtractionLineManager(Manager):
 #        if self.canvas:
 #            self.canvas.update_pressure(o.name, n, o.state)
     def update_valve_state(self, *args, **kw):
+
+        if self.network:
+            r = self.network.set_valve_state(*args, **kw)
+            if r:
+                for c in self._canvases:
+                    self.network.set_canvas_states(c, r)
+
         for c in self._canvases:
             c.update_valve_state(*args, **kw)
-
 
     def update_valve_lock_state(self, *args, **kw):
         for c in self._canvases:

@@ -15,13 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Str, List, Bool
+from traits.api import HasTraits, Float, Str, List, Bool, Button, Property
 from traitsui.api import View, Item, VGroup, UItem, \
-     Label, Spring, spring, HGroup, TableEditor
+     Label, Spring, spring, HGroup, TableEditor, ButtonEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from traitsui.table_column import ObjectColumn
 from src.helpers.isotope_utils import sort_isotopes
 from traitsui.extras.checkbox_column import CheckboxColumn
+from pyface.image_resource import ImageResource
+from src.paths import paths
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class UValue(HasTraits):
@@ -40,9 +42,16 @@ class UValue(HasTraits):
 class BatchEditPane(TraitsDockPane):
     values = List
     blanks = List
-    unknowns = List
-    def _unknowns_changed(self):
-        keys = set([ki  for ui in self.unknowns
+#     unknowns = List
+
+    db_sens_button = Button
+    sens_value = Property(Float, depends_on='_sens_value')
+    _sens_value = Float
+
+    def populate(self, unks):
+
+
+        keys = set([ki  for ui in unks
                         for ki in ui.isotope_keys])
         keys = sort_isotopes(list(keys))
 
@@ -55,7 +64,7 @@ class BatchEditPane(TraitsDockPane):
 
         self.blanks = blanks
 
-        keys = set([iso.detector  for ui in self.unknowns
+        keys = set([iso.detector  for ui in unks
                         for iso in ui.isotopes.itervalues()
                             ])
         keys = sort_isotopes(list(keys))
@@ -68,7 +77,28 @@ class BatchEditPane(TraitsDockPane):
             values.append(value)
 
         self.values = [UValue(name='disc')] + values
+#===============================================================================
+# property get/set
+#===============================================================================
+    def _get_sens_value(self):
+        return self._sens_value
+    def _set_sens_value(self, v):
+        self._sens_value = v
 
+    def _validate_sens_value(self, v):
+        return self._validate_float(v)
+
+
+    def _validate_float(self, v):
+        try:
+            return float(v)
+        except ValueError:
+            pass
+
+
+#===============================================================================
+# views
+#===============================================================================
     def _discrimination_group(self):
         cols = [
                 ObjectColumn(name='name', editable=False),
@@ -104,6 +134,27 @@ class BatchEditPane(TraitsDockPane):
                      )
         return grp
 
+    def _sensitivity_group(self):
+        im = ImageResource(
+                        name='database_go.png',
+                        search_path=paths.icon_search_path
+
+                        )
+        beditor = ButtonEditor(image=im)
+
+        grp = VGroup(
+                   HGroup(
+                          UItem('sens_value',),
+                          UItem('db_sens_button',
+                                style='custom',
+                                editor=beditor)
+                          ),
+
+                     label='Sensitivity'
+                   )
+
+        return grp
+
     def _values_default(self):
         v = [
              UValue(name='disc.'),
@@ -120,7 +171,8 @@ class BatchEditPane(TraitsDockPane):
         v = View(
                  VGroup(
                         self._discrimination_group(),
-                        self._blanks_group()
+                        self._blanks_group(),
+                        self._sensitivity_group()
                         )
                  )
         return v

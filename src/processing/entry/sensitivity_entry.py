@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, List, Button, Property, Str, Int, Float, \
-    Date
+    Date, Any, Bool
 from traitsui.api import View, Item, TabularEditor, HGroup
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
@@ -32,15 +32,19 @@ class SensitivityRecord(HasTraits):
     sensitivity = Float
     create_date = Date
     primary_key = Int
-    def __init__(self, rec, *args, **kw):
+    editable = Bool(True)
+
+    def __init__(self, rec=None, *args, **kw):
         super(SensitivityRecord, self).__init__(*args, **kw)
-        self._create(rec)
+        if rec:
+            self._create(rec)
 
     def _create(self, dbrecord):
         self.user = dbrecord.user or ''
         self.note = dbrecord.note or ''
         self.create_date = dbrecord.create_date
         self.primary_key = int(dbrecord.id)
+        self.editable = False
 
         if dbrecord.mass_spectrometer:
             self.mass_spectrometer = dbrecord.mass_spectrometer.name
@@ -90,6 +94,8 @@ class SensitivityEntry(IsotopeDatabaseManager):
 #     _records = List
 #     add_button = Button('+')
 #     save_button = Button('save')
+    selected = Any
+
     def activate(self):
         self.load_records()
 
@@ -109,6 +115,14 @@ class SensitivityEntry(IsotopeDatabaseManager):
                     dbrecord = db.add_sensitivity()
 
                 si.flush(dbrecord)
+
+    def add(self):
+        rec = SensitivityRecord()
+        self.records.append(rec)
+
+    def paste(self, obj):
+        return obj.clone_traits(traits=['mass_spectrometer',
+                                        'sensitivity'])
 
 #===============================================================================
 # handlers

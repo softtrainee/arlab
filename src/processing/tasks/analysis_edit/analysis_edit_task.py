@@ -115,6 +115,7 @@ class AnalysisEditTask(BaseEditorTask):
                 ]
         cp = self._create_control_pane()
         if cp:
+            self.controls_pane = cp
             panes.append(cp)
 
         ps = self._create_db_panes()
@@ -124,7 +125,7 @@ class AnalysisEditTask(BaseEditorTask):
         return panes
 
     def _create_control_pane(self):
-        return
+        return ControlsPane()
 
     def _create_db_panes(self):
         if self.manager.db:
@@ -238,9 +239,12 @@ class AnalysisEditTask(BaseEditorTask):
 
     @on_trait_change('controls_pane:save_button')
     def _save_fired(self):
-        self._save_to_db()
-        if not self.controls_pane.dry_run:
-            self.manager.db.commit()
+        db = self.manager.db
+        commit = not self.controls_pane.dry_run
+        with db.session_ctx(commit=commit):
+            self._save_to_db()
+
+        if commit:
             self.info('committing changes')
         else:
             self.info('dry run- not committing changes')

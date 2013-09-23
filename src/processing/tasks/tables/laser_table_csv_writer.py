@@ -18,9 +18,8 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Str, Callable, Either, List
-
-import csv
 #============= standard library imports ========================
+import csv
 #============= local library imports  ==========================
 from src.processing.tasks.tables.laser_table_text_writer import LaserTableTextWriter
 
@@ -80,7 +79,7 @@ class CSVSheet(HasTraits):
 
 class CSVWorkbook(HasTraits):
     '''
-     emulates a xlwt Workbook
+     emulates an xlwt Workbook
     '''
     sheets = List
 

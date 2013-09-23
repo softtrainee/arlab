@@ -69,6 +69,7 @@ class IsotopeDatabaseManager(Loggable):
 
     def load(self):
         self.populate_default_tables()
+        return True
 
     def populate_default_tables(self):
         self.debug('populating default tables')

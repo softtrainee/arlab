@@ -74,6 +74,25 @@ class Scene(HasTraits):
                     ci.set_canvas(canvas)
                     ci.render(gc)
 
+    def iteritems(self, exclude=None, klass=None):
+        if exclude is None:
+            exclude = tuple()
+
+        if not isinstance(exclude, (list, tuple)):
+            exclude = (exclude,)
+
+        def test(cc):
+            return type(cc) not in exclude
+
+        if klass:
+            def btest(cc):
+                return isinstance(cc, klass) and test(cc)
+            test = btest
+
+        return (ci for li in self.layers
+                    for ci in li.components
+                        if test(ci))
+
 
     def get_items(self, klass=None):
 #         return [ci for li in self.layers
@@ -161,10 +180,10 @@ class Scene(HasTraits):
 
         return cp
 
-    def _get_canvas_view_range(self):
+    def _get_canvas_view_range(self, cp):
         xv = (-25, 25)
         yv = (-25, 25)
-        cp = self._get_canvas_parser()
+#         cp = self._get_canvas_parser()
         tree = cp.get_tree()
         if tree:
             elm = tree.find('xview')

@@ -97,9 +97,9 @@ class ExtractionLineCanvas2D(SceneCanvas):
         return self.scene.get_item(name)
 #        return next((i for i in self.valves.itervalues() if i.name == name), None)
 
-    def load_canvas_file(self, p):
+    def load_canvas_file(self, p, p2):
         if os.path.isfile(p):
-            self.scene.load(p)
+            self.scene.load(p, p2)
 
     def _over_item(self, event):
         x , y = event.x, event.y

@@ -38,7 +38,7 @@ class OpenFigureAction(TaskAction):
 class NewIdeogramAction(TaskAction):
     name = 'New Ideogram'
     method = 'tb_new_ideogram'
-    image = ImageResource(name='chart_curve.png',
+    image = ImageResource(name='ideo.png',
                         search_path=paths.icon_search_path
                         )
 
@@ -48,7 +48,7 @@ class AppendIdeogramAction(TaskAction):
     tooltip = '''Add selected analyses to current ideogram.
 If no analyses selected add all from the selected sample'''
 
-    image = ImageResource(name='chart_curve_add.png',
+    image = ImageResource(name='ideo_add.png',
                         search_path=paths.icon_search_path
                         )
 
