@@ -403,7 +403,7 @@ class BaseExtractionLineTask(BaseManagerTask):
         man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
         if man:
             from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
-            panes.append(CanvasDockPane(canvas=man.new_canvas(name='alt_canvas')))
+            panes.append(CanvasDockPane(canvas=man.new_canvas(name='alt_config')))
 
         return panes
 
