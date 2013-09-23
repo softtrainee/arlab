@@ -22,6 +22,7 @@ from src.canvas.canvas2D.scene.scene import Scene
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
 from src.canvas.canvas2D.scene.primitives.primitives import RoundedRectangle, Valve, \
     RoughValve, Label, BorderLine, Rectangle
+import os
 
 
 class ExtractionLineScene(Scene):
@@ -64,27 +65,34 @@ class ExtractionLineScene(Scene):
         except Exception:
             orient = None
 
+        x, y = 0, 0
         sanchor = self.get_item(skey)
-        x, y = sanchor.x, sanchor.y
-        try:
-            ox, oy = map(float, start.get('offset').split(','))
-        except Exception:
-            ox = 1
-            oy = sanchor.height / 2.0
+        if sanchor:
+            x, y = sanchor.x, sanchor.y
+            try:
+                ox, oy = map(float, start.get('offset').split(','))
+            except Exception:
+                ox = 1
+                oy = sanchor.height / 2.0
 
-        x += ox
-        y += oy
+            x += ox
+            y += oy
 
+
+        x1, y1 = x, y
         eanchor = self.get_item(ekey)
-        x1, y1 = eanchor.x, eanchor.y
-        try:
-            ox, oy = map(float, end.get('offset').split(','))
-        except Exception:
-            ox = 1
-            oy = eanchor.height / 2.0
+        if eanchor:
+            x1, y1 = eanchor.x, eanchor.y
 
-        x1 += ox
-        y1 += oy
+            try:
+                ox, oy = map(float, end.get('offset').split(','))
+            except Exception:
+                ox = 1
+                oy = eanchor.height / 2.0
+
+            x1 += ox
+            y1 += oy
+
         if orient == 'vertical':
             x1 = x
         elif orient == 'horizontal':
@@ -96,46 +104,14 @@ class ExtractionLineScene(Scene):
                  width=10)
         self.add_item(l, layer=0)
 
-    def load(self, pathname):
+    def load(self, pathname, configpath):
         self.reset_layers()
+
+        origin, color_dict = self._load_config(configpath)
+        ox, oy = origin
+
         cp = self._get_canvas_parser(pathname)
 
-        xv, yv = self._get_canvas_view_range()
-        self.canvas.view_x_range = xv
-        self.canvas.view_y_range = yv
-
-        tree = cp.get_tree()
-
-        if tree is None:
-            return
-
-        # get label font
-        font = tree.find('font')
-        if font is not None:
-            self.font = font.text.strip()
-
-        color_dict = dict()
-        # get default colors
-        for c in tree.findall('color'):
-            t = c.text.strip()
-            k = c.get('tag')
-
-            t = map(float, t.split(',')) if ',' in t else t
-#            co = self._make_color(t)
-
-            if k == 'bgcolor':
-                self.canvas.bgcolor = t
-            else:
-                color_dict[k] = t
-
-        # get an origin offset
-        ox = 0
-        oy = 0
-        o = tree.find('origin')
-        if o is not None:
-            ox, oy = map(float, o.text.split(','))
-
-        origin = ox, oy
         ndict = dict()
         for v in cp.get_elements('valve'):
             key = v.text.strip()
@@ -162,14 +138,7 @@ class ExtractionLineScene(Scene):
             ndict[key] = v
 
         self.valves = ndict
-        for key in ('stage', 'laser', 'spectrometer', 'turbo', 'getter'):
-            for b in cp.get_elements(key):
-                if key in color_dict:
-                    c = color_dict[key]
-                else:
-                    c = (204, 204, 204)
-
-                self._new_rectangle(b, c, bw=5, origin=origin)
+        self._load_rects(cp, origin, color_dict)
 
         for i, l in enumerate(cp.get_elements('label')):
             x, y = map(float, l.find('translation').text.split(','))
@@ -197,8 +166,9 @@ class ExtractionLineScene(Scene):
             end = conn.find('end')
             self._new_connection(conn, 'con{:03}'.format(i), start, end)
 
-        xv, yv = self._get_canvas_view_range()
-
+#         xv, yv = self._get_canvas_view_range()
+        xv = self.canvas.view_x_range
+        yv = self.canvas.view_y_range
         x, y = xv[0], yv[0]
         w = xv[1] - xv[0]
         h = yv[1] - yv[0]
@@ -208,6 +178,52 @@ class ExtractionLineScene(Scene):
                           fill=False, line_width=20, default_color=(0, 0, 102))
         self.add_item(brect)
 
+    def _load_rects(self, cp, origin, color_dict):
+        for key in ('stage', 'laser', 'spectrometer', 'turbo', 'getter'):
+            for b in cp.get_elements(key):
+                if key in color_dict:
+                    c = color_dict[key]
+                else:
+                    c = (204, 204, 204)
 
+                self._new_rectangle(b, c, bw=5, origin=origin)
 
+    def _load_config(self, p):
+        color_dict = dict()
+
+        if os.path.isfile(p):
+            cp = self._get_canvas_parser(p)
+
+            tree = cp.get_tree()
+            if tree:
+                xv, yv = self._get_canvas_view_range(cp)
+
+                self.canvas.view_x_range = xv
+                self.canvas.view_y_range = yv
+                # get label font
+                font = tree.find('font')
+                if font is not None:
+                    self.font = font.text.strip()
+
+                # get default colors
+                for c in tree.findall('color'):
+                    t = c.text.strip()
+                    k = c.get('tag')
+
+                    t = map(float, t.split(',')) if ',' in t else t
+        #            co = self._make_color(t)
+
+                    if k == 'bgcolor':
+                        self.canvas.bgcolor = t
+                    else:
+                        color_dict[k] = t
+
+                # get an origin offset
+                ox = 0
+                oy = 0
+                o = tree.find('origin')
+                if o is not None:
+                    ox, oy = map(float, o.text.split(','))
+
+        return (ox, oy), color_dict
 #============= EOF =============================================

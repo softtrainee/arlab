@@ -27,6 +27,7 @@ import os
 #============= local library imports  ==========================
 
 class XMLParser(object):
+    _root = None
     def __init__(self, path=None, *args, **kw):
         if path:
             self._path = path

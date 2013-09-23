@@ -28,7 +28,7 @@ import cPickle as pickle
 #============= local library imports  ==========================
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.processing.tasks.figures.panes import PlotterOptionsPane, \
-    FigureSelectorPane, FigureAnalysisBrowser
+    FigureSelectorPane, MultiSelectAnalysisBrowser
 # from src.ui.gui import invoke_in_main_thread
 # from src.processing.plotters.ideogram import Ideogram
 # from src.processing.plotter_options_manager import IdeogramOptionsManager
@@ -71,34 +71,10 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 
     auto_select_analysis = False
 
-    def _default_layout_default(self):
-        return TaskLayout(
-                          id='pychron.analysis_edit',
-                          left=HSplitter(
-                                    PaneItem('pychron.browser'),
-                                    Splitter(
-                                         Tabbed(
-                                                PaneItem('pychron.analysis_edit.unknowns'),
-                                                PaneItem('pychron.processing.figures.plotter_options')
-                                                ),
-                                         Tabbed(
-                                                PaneItem('pychron.analysis_edit.controls'),
-                                                PaneItem('pychron.processing.editor'),
-                                                ),
-                                         orientation='vertical'
-                                         )
-                                    ),
 
-#                           right=Splitter(
-#                                          PaneItem('pychron.search.results'),
-#                                          PaneItem('pychron.search.query'),
-#                                          orientation='vertical'
-#                                          )
-                          )
 #===============================================================================
 # task protocol
 #===============================================================================
-
     def prepare_destroy(self):
         for ed in self.editor_area.editors:
             if isinstance(ed, FigureEditor):
@@ -118,8 +94,12 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 
         return panes + [self.plotter_options_pane,
                         self.figure_selector_pane,
-                        FigureAnalysisBrowser(model=self)
+                        MultiSelectAnalysisBrowser(model=self)
                         ]
+
+    def _create_control_pane(self):
+        pass
+
 #===============================================================================
 # grouping
 #===============================================================================
@@ -486,4 +466,33 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 #                 man = self.manager
 #                 ans = self._get_sample_analyses(sa)
 #                 ans = man.make_analyses(ans)
+
+#===============================================================================
+# defaults
+#===============================================================================
+    def _default_layout_default(self):
+        return TaskLayout(
+                          id='pychron.analysis_edit',
+                          left=HSplitter(
+                                    PaneItem('pychron.browser'),
+                                    Splitter(
+                                         Tabbed(
+                                                PaneItem('pychron.analysis_edit.unknowns'),
+                                                PaneItem('pychron.processing.figures.plotter_options')
+                                                ),
+                                         Tabbed(
+                                                PaneItem('pychron.analysis_edit.controls'),
+                                                PaneItem('pychron.processing.editor'),
+                                                ),
+                                         orientation='vertical'
+                                         )
+                                    ),
+
+#                           right=Splitter(
+#                                          PaneItem('pychron.search.results'),
+#                                          PaneItem('pychron.search.query'),
+#                                          orientation='vertical'
+#                                          )
+                          )
+
 #============= EOF =============================================

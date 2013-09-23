@@ -27,9 +27,6 @@ class BlanksTask(InterpolationTask):
     id = 'pychron.analysis_edit.blanks'
     blank_editor_count = 1
     name = 'Blanks'
-    def _create_control_pane(self):
-        self.controls_pane = ControlsPane()
-        return self.controls_pane
 
     def _default_layout_default(self):
         return TaskLayout(

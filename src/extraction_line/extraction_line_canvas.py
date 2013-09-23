@@ -49,10 +49,10 @@ class ExtractionLineCanvas(HasTraits):
             obj = self.canvas2D._get_object_by_name(name)
             return obj
 
-    def load_canvas_file(self, path):
+    def load_canvas_file(self, path, cpath):
         '''
         '''
-        self._canvas_function('load_canvas_file', path)
+        self._canvas_function('load_canvas_file', path, cpath)
 
     def update_valve_state(self, name, state, *args, **kw):
         '''
@@ -80,8 +80,8 @@ class ExtractionLineCanvas(HasTraits):
         p = os.path.join(paths.canvas2D_dir, name)
         if not os.path.isfile(p):
             p = os.path.join(paths.canvas2D_dir, default)
-
-        e.load_canvas_file(p)
+        cp = os.path.join(paths.canvas2D_dir, 'canvas_config.xml')
+        e.load_canvas_file(p, cp)
         return e
 
 

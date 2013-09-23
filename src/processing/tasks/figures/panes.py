@@ -64,6 +64,6 @@ class PlotterOptionsPane(TraitsDockPane):
                  )
         return v
 
-class FigureAnalysisBrowser(BrowserPane):
+class MultiSelectAnalysisBrowser(BrowserPane):
     multi_select = True
 #============= EOF =============================================

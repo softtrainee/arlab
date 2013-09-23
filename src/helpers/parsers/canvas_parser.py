@@ -57,7 +57,10 @@ class CanvasParser(XMLParser):
 #        return self._get_elements(group, element, 'getter')
 
     def get_elements(self, name):
-        return self._get_elements(None, True, name)
+        root = self.get_root()
+        return root.xpath('//{}'.format(name))
+
+#         return self._get_elements(None, True, name)
 
     def _get_elements(self, group, element, name):
         if group is None:

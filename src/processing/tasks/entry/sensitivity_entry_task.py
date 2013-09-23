@@ -24,13 +24,16 @@ from pyface.tasks.task_layout import TaskLayout, PaneItem, Splitter, Tabbed
 from src.processing.tasks.entry.sensitivity_entry_panes import SensitivityPane
 from src.processing.entry.sensitivity_entry import SensitivityEntry
 from pyface.tasks.action.schema import SToolBar
-from src.processing.tasks.entry.actions import SaveSensitivityAction
+from src.processing.tasks.entry.actions import SaveSensitivityAction, \
+    AddSensitivityAction
 
 class SensitivityEntryTask(BaseManagerTask):
     name = 'Sensitivity Entry'
 
     tool_bars = [
-                 SToolBar(SaveSensitivityAction(),
+                 SToolBar(
+                          SaveSensitivityAction(),
+                          AddSensitivityAction(),
                           image_size=(16, 16)
                           ),
                  ]
@@ -62,6 +65,10 @@ class SensitivityEntryTask(BaseManagerTask):
     def save(self):
         self.debug('sensitivity entry save')
         self.manager.save()
+
+    def add(self):
+        self.debug('sensitivity entry add')
+        self.manager.add()
 #===============================================================================
 # defaults
 #===============================================================================

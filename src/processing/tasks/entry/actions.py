@@ -43,8 +43,14 @@ class SensitivityEntryAction(Action):
         app.get_task(pid)
 
 class SaveSensitivityAction(TaskAction):
-    name = 'Save Sensitivity'
+    name = 'Save'
     image = ImageResource(name='database_save.png',
                          search_path=paths.icon_search_path)
     method = 'save'
+
+class AddSensitivityAction(TaskAction):
+    name = 'Add'
+    image = ImageResource(name='database_add.png',
+                         search_path=paths.icon_search_path)
+    method = 'add'
 #============= EOF =============================================

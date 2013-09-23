@@ -451,52 +451,6 @@ class ValveManager(Manager):
         if v is not None:
             return v.software_lock
 
-    def claim_section(self, section, addr=None, name=None):
-        try:
-            vg = self.valve_groups[section]
-        except KeyError:
-            return True
-
-        if addr is None:
-            addr = self._get_system_address(name)
-
-        vg.owner = addr
-
-    def release_section(self, section):
-        try:
-            vg = self.valve_groups[section]
-        except KeyError:
-            return True
-
-        vg.owner = None
-
-    def get_system(self, addr):
-        return next((k for k, v in self.systems.iteritems() if v == addr), None)
-
-    def check_group_ownership(self, name, claimer):
-        grp = None
-        for g in self.valve_groups.itervalues():
-            for vi in g.valves:
-                if vi.is_name(name):
-                    grp = g
-                    break
-        r = False
-        if grp is not None:
-            r = grp.owner == claimer
-
-#        print name, claimer,grp, r
-        return r
-
-#    def check_ownership(self, name, sender_address):
-#        v = self.get_valve_by_name(name)
-#
-#        system = self.get_system(sender_address)
-#
-#        if v is not None:
-#            if v.system == system:
-#                return True
-
-
     def check_soft_interlocks(self, name):
         ''' 
         '''
@@ -521,38 +475,16 @@ class ValveManager(Manager):
         '''
         return self._close_(name, mode)
 
-
-
     def sample(self, name, period):
         v = self.get_valve_by_name(name)
         if v and not v.state:
             self.info('start sample')
             self.open_by_name(name)
 
-#            time.sleep(period)
-#
-#            self.info('end sample')
-#            self.close_by_name(name)
-#    def sample(self, vid, extraction_line_manager):
-#        '''
-#
-#        '''
-#        #do not sample a open valve
-#        # fixme
-#        #span a new thread to perform the the sampling
-#        v = self.get_valve_by_name(vid)
-#        if self.validate(v) and not v.state:
-#
-#            extraction_line_manager.open(v.name)
-#            extraction_line_manager.update()
-#
-#            self.info('start sampling')
-#            time.sleep(self.sampletime)
-#
-#            extraction_line_manager.close(v.name)
-#            extraction_line_manager.update()
-#
-#            self.info('end sampling')
+            time.sleep(period)
+
+            self.info('end sample')
+            self.close_by_name(name)
 
     def lock(self, name, save=True):
         '''
@@ -708,13 +640,16 @@ class ValveManager(Manager):
             self.valves[name] = hv
             return hv
 
-        self.valve_groups = dict()
+#         self.valve_groups = dict()
         parser = ValveParser(path)
         for g in parser.get_groups():
-            valves = [factory(v) for v in parser.get_valves(group=g)]
-            vg = ValveGroup()
-            vg.valves = valves
-            self.valve_groups[g.text.strip()] = vg
+            for v in parser.get_valves(group=g):
+                factory(v)
+
+#             valves = [factory(v) for v in parser.get_valves(group=g)]
+#             vg = ValveGroup()
+#             vg.valves = valves
+#             self.valve_groups[g.text.strip()] = vg
 
         for v in parser.get_valves():
             factory(v)
@@ -766,72 +701,111 @@ class ValveManager(Manager):
         v.evalve = ev
 #        v.evalve = weakref.ref(ev)()
         self.explanable_items.append(ev)
+#===============================================================================
+# deprecated
+#===============================================================================
+    #     def claim_section(self, section, addr=None, name=None):
+#         try:
+#             vg = self.valve_groups[section]
+#         except KeyError:
+#             return True
+#
+#         if addr is None:
+#             addr = self._get_system_address(name)
+#
+#         vg.owner = addr
+#
+#     def release_section(self, section):
+#         try:
+#             vg = self.valve_groups[section]
+#         except KeyError:
+#             return True
+#
+#         vg.owner = None
+#     def get_system(self, addr):
+#         return next((k for k, v in self.systems.iteritems() if v == addr), None)
+#     def check_group_ownership(self, name, claimer):
+#         grp = None
+#         for g in self.valve_groups.itervalues():
+#             for vi in g.valves:
+#                 if vi.is_name(name):
+#                     grp = g
+#                     break
+#         r = False
+#         if grp is not None:
+#             r = grp.owner == claimer
+#
+# #        print name, claimer,grp, r
+#         return r
 
 
-class Foo(Loggable):
-    def get_state_by_name(self, m):
-        b = random.randint(1, 5) / 50.0
-        r = 0.1 + b
-#        r = 3
-        self.info('sleep {}'.format(r))
-        time.sleep(r)
-        return True
 
-    def _get_states(self, times_up_event, sq):
-#        self.states = []
-        for k in ['A', 'B', 'Ca', 'Dn', 'Es', 'F', 'G', 'H', 'I']:
-            if times_up_event.isSet():
-                break
-
-            sq.put(k)
-#            self.info('geting state for {}'.format(k))
-            s = self.get_state_by_name(k)
-#            self.info('got {} for {}'.format(s, k))
-            if times_up_event.isSet():
-                break
-            sq.put('1' if s else '0')
-
-        # return ''.join(states)
-
-    def get_states(self):
-        '''
-            with this method you need to ensure the communicators timeout
-            is sufficiently low. the communicator will block until a response
-            or a timeout. the times up event only breaks between state queries.
-        
-        '''
-        states_queue = Queue()
-        times_up_event = Event()
-        t = Timer(1, lambda: times_up_event.set())
-        t.start()
-#        states = self._get_states(times_up_event)
-#        return states
-        t = Thread(target=self._get_states, args=(times_up_event, states_queue))
-        t.start()
-        t.join(timeout=1.1)
-        s = ''
-
-        n = states_queue.qsize()
-        if n % 2 != 0:
-            c = n / 2 * 2
-        else:
-            c = n
-
-        i = 0
-        while not states_queue.empty() and i < c:
-            s += states_queue.get_nowait()
-            i += 1
-
-#        n = len(s)
-#        if n % 2 != 0:
-#            sn = s[:n / 2 * 2]
-#        else:
-#            sn = s
-#        s = ''.join(self.states)
-        self.info('states = {}'.format(s))
-        return s
 
 if __name__ == '__main__':
+
+    class Foo(Loggable):
+        def get_state_by_name(self, m):
+            b = random.randint(1, 5) / 50.0
+            r = 0.1 + b
+    #        r = 3
+            self.info('sleep {}'.format(r))
+            time.sleep(r)
+            return True
+
+        def _get_states(self, times_up_event, sq):
+    #        self.states = []
+            for k in ['A', 'B', 'Ca', 'Dn', 'Es', 'F', 'G', 'H', 'I']:
+                if times_up_event.isSet():
+                    break
+
+                sq.put(k)
+    #            self.info('geting state for {}'.format(k))
+                s = self.get_state_by_name(k)
+    #            self.info('got {} for {}'.format(s, k))
+                if times_up_event.isSet():
+                    break
+                sq.put('1' if s else '0')
+
+            # return ''.join(states)
+
+        def get_states(self):
+            '''
+                with this method you need to ensure the communicators timeout
+                is sufficiently low. the communicator will block until a response
+                or a timeout. the times up event only breaks between state queries.
+            
+            '''
+            states_queue = Queue()
+            times_up_event = Event()
+            t = Timer(1, lambda: times_up_event.set())
+            t.start()
+    #        states = self._get_states(times_up_event)
+    #        return states
+            t = Thread(target=self._get_states, args=(times_up_event, states_queue))
+            t.start()
+            t.join(timeout=1.1)
+            s = ''
+
+            n = states_queue.qsize()
+            if n % 2 != 0:
+                c = n / 2 * 2
+            else:
+                c = n
+
+            i = 0
+            while not states_queue.empty() and i < c:
+                s += states_queue.get_nowait()
+                i += 1
+
+    #        n = len(s)
+    #        if n % 2 != 0:
+    #            sn = s[:n / 2 * 2]
+    #        else:
+    #            sn = s
+    #        s = ''.join(self.states)
+            self.info('states = {}'.format(s))
+            return s
+
 #    v = ValveManager()
 #    p = os.path.join(paths.extraction_line_dir, 'valves.xml')
 #    v._load_valves_from_file(p)
