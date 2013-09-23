@@ -38,29 +38,38 @@ class Node(HasTraits):
     def add_edge(self, n):
         self.edges.append(weakref.ref(n)())
 
-    def find_roots(self, direction=None):
+    def find_roots(self):
         '''
             traverse networking looking for a connection to 
             a root node
         '''
-        return list(self._find_klass(RootNode, direction))
 
-    def _find_klass(self, klass, direction):
+        rvs = self._find_klass(RootNode)
+        if rvs:
+            rs = []
+            for r, vs in rvs:
+                for vi in vs:
+                    vi.visited = False
+                rs.append(r)
+            return rs
+
+    def _find_klass(self, klass, visited=[]):
         for ei in self.edges:
             nodes = (ei.anode, ei.bnode)
-            if direction == 'left':
-                nodes = (ei.anode,)
-            elif direction == 'right':
-                nodes = (ei.bnode,)
-
             for n in nodes:
 #                 print self.name, 'nn', n
                 if n:
+                    n.visited = True
+#                     self._visited.append(n)
                     if isinstance(n, klass):
-                        yield n
-                    if isinstance(n, ValveNode) and n is not self:
+                        yield n, visited
+                    if isinstance(n, ValveNode) \
+                        and n is not self \
+                        and not n.visited:
                         if n.state:
-                            yield n.find_root()
+#                             print n.name
+                            yield n._find_klass(klass, visited), visited
+#                             yield n.find_roots()
 
 
 #     def find_node(self, n):

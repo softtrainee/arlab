@@ -294,10 +294,10 @@ class ExtractionLineManager(Manager):
 
         for c in self._canvases:
             if c is not None:
-                p = os.path.join(paths.canvas2D_dir, c.path_name)
-                p2 = os.path.join(paths.canvas2D_dir, 'canvas_config.xml')
+#                 p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
+#                 p2 = os.path.join(paths.canvas2D_dir, 'canvas_config.xml')
 
-                c.load_canvas_file(p, p2)
+                c.load_canvas_file(c.config_name)
 #                 print p
 #                 # load state
                 if self.valve_manager:
@@ -569,9 +569,10 @@ class ExtractionLineManager(Manager):
 
         return e
 
-    def new_canvas(self, name='canvas'):
+    def new_canvas(self, name='canvas_config'):
         c = ExtractionLineCanvas(manager=self,
-                                 path_name='{}.xml'.format(name)
+                                 config_name='{}.xml'.format(name)
+#                                  path_name='{}.xml'.format(name)
                                  )
         self._canvases.append(c)
 

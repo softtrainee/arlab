@@ -51,7 +51,7 @@ class ExtractionLineGraph(HasTraits):
                       )
 
         di = os.path.dirname(p)
-        p = os.path.join(di, 'canvas_config.xml')
+        p = os.path.join(di, 'network_config.xml')
         cp = CanvasParser(p)
         root = cp.get_root()
         network = root.find('network')

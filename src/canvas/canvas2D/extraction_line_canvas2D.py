@@ -26,6 +26,7 @@ from src.canvas.canvas2D.scene.extraction_line_scene import ExtractionLineScene
 from src.canvas.canvas2D.scene.primitives.primitives import BaseValve, \
     RoughValve
 import weakref
+from src.paths import paths
 
 W = 2
 H = 2
@@ -97,7 +98,11 @@ class ExtractionLineCanvas2D(SceneCanvas):
         return self.scene.get_item(name)
 #        return next((i for i in self.valves.itervalues() if i.name == name), None)
 
-    def load_canvas_file(self, p, p2):
+    def load_canvas_file(self, cname):
+
+        p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
+        p2 = os.path.join(paths.canvas2D_dir, cname)
+
         if os.path.isfile(p):
             self.scene.load(p, p2)
 
