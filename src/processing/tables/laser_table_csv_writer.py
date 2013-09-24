@@ -21,7 +21,7 @@ from traits.api import HasTraits, Any, Str, Callable, Either, List
 #============= standard library imports ========================
 import csv
 #============= local library imports  ==========================
-from src.processing.tasks.tables.laser_table_text_writer import LaserTableTextWriter
+from src.processing.tables.laser_table_text_writer import LaserTableTextWriter
 
 
 class CSVCell(HasTraits):

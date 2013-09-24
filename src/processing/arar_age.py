@@ -39,6 +39,8 @@ class ArArAge(Loggable):
     j = Any
     irradiation = Str
     irradiation_level = Str
+    irradiation_pos = Str
+    irradiation_label = Property(depends_on='irradiation, irradiation_level,irradiation_pos')
     irradiation_info = Tuple
     production_ratios = Dict
     discrimination = Any
@@ -643,6 +645,12 @@ class ArArAge(Loggable):
     def _get_timestamp(self, ln):
         x = datetime.now()
         return time.mktime(x.timetuple())
+
+    def _get_irradiation_label(self):
+        return '{}{} {}'.format(self.irradiation,
+                             self.irradiation_level,
+                             self.irradiation_pos
+                             )
 #===============================================================================
 #
 #===============================================================================

@@ -517,8 +517,10 @@ class DBAnalysis(Analysis):
 
     def _get_irradiation_level(self, ln):
         if ln:
-            if ln.irradiation_position:
-                return ln.irradiation_position.level
+            pos = ln.irradiation_position
+            if pos:
+                self.irradiation_pos = str(pos.position)
+                return pos.level
 
 
     def _get_irradiation_info(self, ln):
