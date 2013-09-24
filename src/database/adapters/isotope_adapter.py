@@ -281,11 +281,11 @@ class IsotopeAdapter(DatabaseAdapter):
         ex = meas_ExtractionTable(**kw)
         self._add_item(ex,)
 
-        an = self.get_analysis(analysis,)
+        an = self.get_analysis(analysis)
         if an:
             an.extraction = ex
 
-        ed = self.get_extraction_device(extract_device,)
+        ed = self.get_extraction_device(extract_device)
         if ed:
             ex.extract_device_id = ed.id
 

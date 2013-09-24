@@ -1312,7 +1312,7 @@ anaylsis_type={}
     #             db.flush()
 
             ext = self._save_extraction(loadtable=loadtable)
-            sess.flush()
+            sess.commit()
             self._db_extraction_id = int(ext.id)
 
     def _pre_measurement_save(self):
@@ -1581,6 +1581,9 @@ anaylsis_type={}
             sens = self._get_extraction_parameter('sensitivity_multiplier',
                                                  default=1)
             spec = self.spec
+            
+            self.debug('Saving extraction device {}'.format(spec.extract_device))
+            
             ext = db.add_extraction(analysis,
                                     extract_device=spec.extract_device,
                                     extract_value=spec.extract_value,
