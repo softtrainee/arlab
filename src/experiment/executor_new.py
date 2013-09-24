@@ -857,10 +857,12 @@ If "No" select from database
         types = ['air', 'unknown', 'cocktail']
         # get first air, unknown or cocktail
         aruns = exp.cleaned_automated_runs
-        an = next((a for a in aruns
-                                    if not a.skip and \
-                                        a.analysis_type in types and \
-                                            a.state == 'not run'), None)
+#         an = next((a for a in aruns
+#                                     if not a.skip and \
+#                                         a.analysis_type in types and \
+#                                             a.state == 'not run'), None)
+
+        an=next((a for a in aruns if a.analysis_type in types), None)
 
         if an:
             if aruns.index(an) == 0:
@@ -897,22 +899,23 @@ If "No" select from database
         with db.session_ctx() as sess:
             q = sess.query(meas_AnalysisTable)
             q = q.join(meas_MeasurementTable)
-            q = q.join(meas_ExtractionTable)
             q = q.join(gen_AnalysisTypeTable)
-            q = q.join(gen_MassSpectrometerTable)
-            q = q.join(gen_ExtractionDeviceTable)
 
             q = q.filter(gen_AnalysisTypeTable.name == 'blank_{}'.format(kind))
-
-#             q = q.filter(gen_MassSpectrometerTable.name == ms)
-#             q = q.filter(gen_ExtractionDeviceTable.name == ed)
+            if ms:
+                q = q.join(gen_MassSpectrometerTable)
+                q = q.filter(gen_MassSpectrometerTable.name == ms.lower())
+            if ed and ed!=NULL_STR and kind=='unknown':
+                q = q.join(meas_ExtractionTable)
+                q = q.join(gen_ExtractionDeviceTable)
+                q = q.filter(gen_ExtractionDeviceTable.name == ed)
 
             dbr = None
             if last:
                 q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
-                q = q.limit(1)
+                q.limit(1)
                 try:
-                    dbr = q.one()
+                    dbr = q.first()
                 except NoResultFound:
                     pass
 
@@ -925,6 +928,7 @@ If "No" select from database
                     dbr = sel.selected
 
             if dbr:
+                print dbr.aliquot
                 dbr = self.make_analyses([dbr])[0]
 #                dbr = sel._record_factory(dbr)
                 return dbr

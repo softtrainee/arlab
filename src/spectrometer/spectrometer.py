@@ -269,7 +269,7 @@ class Spectrometer(SpectrometerDevice):
 
         # write configuration to spectrometer
 
-        self._write_configuration()
+        self._send_configuration()
 
 
 
@@ -373,7 +373,17 @@ class Spectrometer(SpectrometerDevice):
 #===============================================================================
 # private
 #===============================================================================
-    def _write_configuration(self):
+
+    def _send_configuration(self):
+        COMMAND_MAP=dict(ionrepeller='IonRepeller',                 
+                         electronenergy='ElectronEnergy',
+                         ysymmetry='YSymmetry',
+                         zsymmetry='ZSymmetry',
+                         zfocus='ZFocus',
+                         extractionlens='ExtractionLens',
+                         ioncountervoltage='IonCounterVoltage'
+                         )
+        
         if self.microcontroller:
             p = os.path.join(paths.spectrometer_dir, 'config.cfg')
             config = ConfigParser()
@@ -383,7 +393,13 @@ class Spectrometer(SpectrometerDevice):
                 for attr in config.options(section):
                     v = config.getfloat(section, attr)
                     if v is not None:
-                        self.microcontroller.ask('Set{}'.format(attr), v)
+
+                        if section =='Deflections':
+                            cmd='SetDeflection {},{}'.format(attr.upper(),v)
+                        else:
+                            cmd='Set{}'.format(COMMAND_MAP[attr])
+    
+                        self.set_parameter(cmd, v)
 
 #===============================================================================
 # defaults

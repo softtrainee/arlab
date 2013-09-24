@@ -23,7 +23,6 @@ from traitsui.api import View, Item
 from src.extraction_line.graph.nodes import ValveNode, RootNode, \
     PumpNode, Edge, SpectrometerNode, LaserNode, flatten
 from src.helpers.parsers.canvas_parser import CanvasParser
-from guppy.heapy.Path import Path
 from src.canvas.canvas2D.scene.primitives.primitives import Valve
 import os
 
@@ -171,7 +170,7 @@ class ExtractionLineGraph(HasTraits):
                         if path:
                             elems = list(flatten(path))
                             if elems:
-                                print root.name, elems
+#                                 print root.name, elems
                                 states.append(elems[-1])
 
                 nstate = ''
