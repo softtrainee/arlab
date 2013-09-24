@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Bool, Property, Float, CInt
+from traits.api import Bool, Property, Float, CInt, List, Str
 from traitsui.api import View, Item, HGroup, spring
 #============= standard library imports ========================
 from threading import Timer as OneShotTimer
@@ -140,4 +140,29 @@ class TimedFlag(Flag):
     def _update_time(self):
         self._time_remaining = round(self.get())
 
+class ValveFlag(Flag):
+    '''
+        a ValveFlag holds a list of valves keys (A, B, ...)
+        
+        if the flag is set then the these valves should be locked out 
+        from being actuated by ip addresses other than the owner of this 
+        flag
+        
+        valves should (can) not occur in multiple ValveFlags
+    '''
+    valves = List
+    owner = Str
+    valves_str = Property(depends_on='valves')
+
+    def traits_view(self):
+        v = View(
+                 HGroup(Item('name', show_label=False, style='readonly'),
+                        Item('valves_str', style='readonly',
+                             label='Valves')
+                        )
+               )
+        return v
+
+    def _get_valves_str(self):
+        return ','.join(self.valves)
 #============= EOF =============================================

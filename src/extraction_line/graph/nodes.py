@@ -20,6 +20,19 @@ from traitsui.api import View, Item
 import weakref
 #============= standard library imports ========================
 #============= local library imports  ==========================
+def flatten(nested):
+#     print nested
+    if isinstance(nested, str):
+        yield nested
+    else:
+        try:
+            for sublist in nested:
+                for element in flatten(sublist):
+                    yield element
+
+        except TypeError:
+            yield nested
+
 class Edge(HasTraits):
     anode = Instance('src.extraction_line.graph.nodes.Node')
     bnode = Instance('src.extraction_line.graph.nodes.Node')
@@ -30,7 +43,7 @@ class Node(HasTraits):
 
     name = Str
     state = Str
-
+    visited = False
 
 #     def add_node(self, n):
 #         self.nodes.append(weakref.ref(n)())
@@ -38,38 +51,55 @@ class Node(HasTraits):
     def add_edge(self, n):
         self.edges.append(weakref.ref(n)())
 
-    def find_roots(self):
+    def find_roots(self, visited=[]):
         '''
             traverse networking looking for a connection to 
             a root node
         '''
 
-        rvs = self._find_klass(RootNode)
-        if rvs:
-            rs = []
-            for r, vs in rvs:
-                for vi in vs:
-                    vi.visited = False
-                rs.append(r)
-            return rs
+        rvs = self._find_klass(RootNode, None)
+        return list(flatten(rvs))
+#         try:
+#             for r in flatten(rvs):
+#                 print r
+#         except RuntimeError:
+#             pass
+# #         if rvs:
+#         rs = []
+#         for r, vs in rvs:
 
-    def _find_klass(self, klass, visited=[]):
+#             for vi in flatten(vs):
+#                 vi.visited = False
+
+#             rs.append(r)
+
+#         return rs
+
+    def _find_klass(self, klass, parent):
+#         print '------------------------------'
         for ei in self.edges:
             nodes = (ei.anode, ei.bnode)
             for n in nodes:
+#                 print self.name, n.name
 #                 print self.name, 'nn', n
-                if n:
-                    n.visited = True
+                if n and not n is self:
 #                     self._visited.append(n)
                     if isinstance(n, klass):
-                        yield n, visited
-                    if isinstance(n, ValveNode) \
-                        and n is not self \
-                        and not n.visited:
-                        if n.state:
-#                             print n.name
-                            yield n._find_klass(klass, visited), visited
-#                             yield n.find_roots()
+                        yield n
+                    if isinstance(n, ValveNode):
+                        if n.state and n.state is not 'closed':
+                            if n != parent:
+#                                 print '    check name={} state={}'.format(n.name, n.state)
+                                yield n._find_klass(klass, self)
+#                     if isinstance(n, ValveNode) \
+#                         and not n.visited:
+#                         if n.state:
+#                             print 'find roots', n.name
+# #                             print n.name
+# #                             yield n._find_klass(klass, visited), visited
+#                             yield n.find_roots(visited), visited
+
+#                     n.visited = True
 
 
 #     def find_node(self, n):
@@ -107,6 +137,9 @@ class RootNode(Node):
     state = True
 
 class SpectrometerNode(RootNode):
+    pass
+
+class LaserNode(RootNode):
     pass
 
 #     def calc_paths(self):

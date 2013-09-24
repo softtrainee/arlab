@@ -28,9 +28,9 @@ import os
 from src.ui.tabular_editor import myTabularEditor
 from src.paths import paths
 from src.viewable import Viewable
+from src.constants import alphas
 # paths.build('_experiment')
 # build_directories(paths)
-
 class IncrementalHeatAdapter(TabularAdapter):
     columns = [('Step', 'step_id'),
                ('Value', 'value'),
@@ -38,6 +38,10 @@ class IncrementalHeatAdapter(TabularAdapter):
                ('Duration (s)', 'duration'),
                ('Cleanup (s)', 'cleanup'),
              ]
+
+    step_id_text = Property
+    def _get_step_id_text(self):
+        return alphas(self.item.step_id - 1)
 
 class IncrementalHeatStep(HasTraits):
     step_id = Int

@@ -29,7 +29,7 @@ from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.lasers.tasks.laser_actions import OpenScannerAction, \
     OpenAutoTunerAction, PowerMapAction, PowerCalibrationAction, \
-    OpenPowerMapAction, TestDegasAction
+    OpenPowerMapAction, TestDegasAction, OpenPatternAction, NewPatternAction
 from pyface.tasks.action.schema import SMenu, GroupSchema, MenuSchema
 from pyface.action.group import Group
 from src.lasers.tasks.laser_calibration_task import LaserCalibrationTask
@@ -38,6 +38,8 @@ from src.lasers.tasks.laser_calibration_task import LaserCalibrationTask
 
 class CoreLaserPlugin(BaseTaskPlugin):
     def _my_task_extensions_default(self):
+
+
         actions = [
                    SchemaAddition(factory=OpenPowerMapAction,
                                   path='MenuBar/File/Open'
@@ -54,6 +56,22 @@ class CoreLaserPlugin(BaseTaskPlugin):
 #                                    path='MenuBar/Extraction'
 #                                    )
                    ]
+
+        # if experiment plugin available dont add pattern actions
+        ids = [p.id for p in self.application.plugin_manager._plugins]
+        if not 'pychron.experiment' in ids:
+            actions.extend([
+                            SchemaAddition(id='Open Pattern',
+                                           factory=OpenPatternAction,
+                                           path='MenuBar/File/Open'
+                                           ),
+                            SchemaAddition(id='New Pattern',
+                                           factory=NewPatternAction,
+                                           path='MenuBar/File/New'
+                                           ),
+                            ])
+
+
         return [TaskExtension(actions=actions),
 
                 ]
@@ -177,13 +195,17 @@ class FusionsPlugin(BaseLaserPlugin):
 #     def _get_task_extensions(self):
         def efactory():
             return SMenu(id='Laser', name='Laser')
-        return [TaskExtension(actions=[
-                   SchemaAddition(id='Laser',
+
+        actions = [SchemaAddition(id='Laser',
                                   factory=efactory,
                                   path='MenuBar',
                                   before='Tools',
                                   after='View'
-                                  ),
+                                  )
+                 ]
+
+        exts = [TaskExtension(actions=actions)]
+
 #                    SchemaAddition(id='fusions_laser_group',
 #                                  factory=lambda: GroupSchema(id='FusionsLaserGroup'
 #                                                        ),
@@ -211,11 +233,11 @@ class FusionsPlugin(BaseLaserPlugin):
 #                                    factory=TestDegasAction,
 #                                    path='MenuBar/Extraction'
 #                                    ),
-                              ]
-                            )
-                       ]
+#                               ]
+#                             )
+#                        ]
 
-
+        return exts
 
 
 

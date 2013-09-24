@@ -21,24 +21,13 @@ from traitsui.api import View, Item
 #============= local library imports  ==========================
 
 from src.extraction_line.graph.nodes import ValveNode, RootNode, \
-    PumpNode, Edge, SpectrometerNode
+    PumpNode, Edge, SpectrometerNode, LaserNode, flatten
 from src.helpers.parsers.canvas_parser import CanvasParser
 from guppy.heapy.Path import Path
 from src.canvas.canvas2D.scene.primitives.primitives import Valve
 import os
 
-def flatten(nested):
-#     print nested
-    if isinstance(nested, str):
-        yield nested
-    else:
-        try:
-            for sublist in nested:
-                for element in flatten(sublist):
-                    yield element
 
-        except TypeError:
-            yield nested
 
 class ExtractionLineGraph(HasTraits):
     nodes = Dict
@@ -82,6 +71,7 @@ class ExtractionLineGraph(HasTraits):
                         ('valve', ValveNode),
                         ('turbo', PumpNode),
                         ('ion', PumpNode),
+                        ('laser', LaserNode)
                         ):
             for si in cp.get_elements(t):
                 n = si.text.strip()
@@ -94,25 +84,43 @@ class ExtractionLineGraph(HasTraits):
             sa = ei.find('start')
             ea = ei.find('end')
 
-            sa = nodes[sa.text]
-            ea = nodes[ea.text]
-
             edge = Edge()
-            edge.anode = sa
-            edge.bnode = ea
+            if sa.text in nodes:
+                sa = nodes[sa.text]
+                edge.anode = sa
+                sa.add_edge(edge)
 
-            sa.add_edge(edge)
-            ea.add_edge(edge)
+            if ea.text in nodes:
+                ea = nodes[ea.text]
+                edge.bnode = ea
+                ea.add_edge(edge)
 
         self.nodes = nodes
 
-        colors = dict(pump='yellow',
-                      spectrometer='green',
-                      laser='red'
-                      )
-
     def set_canvas_states(self, canvas, states):
+
+        '''
+            if roots connected by an open valve then 
+            set both roots to highest state
+        '''
+        maxroot = None
+        maxstate = None
         for state, root in states:
+            if state == 'pump':
+                maxstate = 'pump'
+                maxroot = root
+            elif state == 'laser' and maxstate != 'pump':
+                maxstate = 'laser'
+                maxroot = root
+            elif state == 'spectrometer' and maxstate not in ('laser', 'pump'):
+                maxstate = 'spectrometer'
+                maxroot = root
+
+        for state, root in states:
+            nr = root.find_roots()
+            if maxroot and maxroot in nr:
+                state = maxstate
+
             self._set_canvas_states(canvas, state, root)
 
     def _set_canvas_states(self, canvas, state, root):
@@ -126,6 +134,7 @@ class ExtractionLineGraph(HasTraits):
             color = colors[state]
 
         self._set_item_state(scene, root.name, state, color)
+#         print 'fff', root.name, state
         # gather roots paths
         for path in self.assemble_paths(root, None):
             # flatten path and set state for each element
@@ -150,14 +159,19 @@ class ExtractionLineGraph(HasTraits):
             vnode = self.nodes[name]
             vnode.state = 'open' if state else 'closed'
             roots = vnode.find_roots()
+
             nstates = []
+#             roots = flatten(roots)
             for root in roots:
                 states = []
+#                 root = list(flatten(root))
+#                 print len(roots), root.name if root else '----'
                 if root is not None:
                     for path in self.assemble_paths(root, None):
                         if path:
                             elems = list(flatten(path))
                             if elems:
+                                print root.name, elems
                                 states.append(elems[-1])
 
                 nstate = ''
@@ -183,12 +197,15 @@ class ExtractionLineGraph(HasTraits):
         return paths
 
     def assemble_path(self, start, parent):
-        if isinstance(start, SpectrometerNode):
-            yield [start.name, 'spectrometer']
-        elif isinstance(start, PumpNode):
-            yield [start.name, 'pump']
-        elif start.state and start.state != 'closed':
-            yield [start.name, self.assemble_paths(start, parent)]
+        if start:
+            if isinstance(start, SpectrometerNode):
+                yield [start.name, 'spectrometer']
+            elif isinstance(start, PumpNode):
+                yield [start.name, 'pump']
+            elif isinstance(start, LaserNode):
+                yield [start.name, 'laser']
+            elif start.state and start.state != 'closed':
+                yield [start.name, self.assemble_paths(start, parent)]
 
 if __name__ == '__main__':
 #     f = ['C', [['ATurbo', 'pump']]]

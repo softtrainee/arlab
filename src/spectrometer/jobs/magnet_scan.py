@@ -170,7 +170,7 @@ class MagnetScan(SpectrometerTask):
         while not evt.isSet():
             time.sleep(0.01)
 
-        return intensities
+        return True
 
     def _iter_dac(self, mag, di, gen, evt, intensities, det, peak_generator):
         mag.set_dac(di, verbose=False)

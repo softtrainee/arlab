@@ -244,9 +244,6 @@ class IonOpticsManager(Manager):
 
         dac_d = pc.get_peak_center()
 
-
-
-
         self.peak_center_result = dac_d
         if dac_d:
             args = ref, isotope, dac_d

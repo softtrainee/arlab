@@ -252,38 +252,38 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
 #===============================================================================
 # not current used
 #===============================================================================
-    def ClaimGroup(self, manager, grp, sender_addr, *args):
-        rhm = self.application.get_service(RHM_PROTOCOL)
-        if rhm.validate_address(sender_addr):
-            err = manager.claim_section(grp, sender_addr)
-            if err is True:
-                return InvalidValveGroupErrorCode(grp)
-        else:
-            return InvalidIPAddressErrorCode(sender_addr)
-
-        return 'OK'
-
-    def ReleaseGroup(self, manager, grp, sender_addr, *args):
-        rhm = self.application.get_service(RHM_PROTOCOL)
-        if rhm.validate_address(sender_addr):
-            err = manager.release_section(grp)
-            if err:
-                return InvalidValveGroupErrorCode(grp)
-        else:
-            return InvalidIPAddressErrorCode(sender_addr)
-
-        return 'OK'
-
-
-    def GetPressure(self, manager, controller, gauge):
-        '''
-        '''
-        p = None
-        if manager:
-            p = manager.get_pressure(controller, gauge)
-
-        if p is None:
-            p = InvalidGaugeErrorCode(controller, gauge)
-
-        return str(p)
+#     def ClaimGroup(self, manager, grp, sender_addr, *args):
+#         rhm = self.application.get_service(RHM_PROTOCOL)
+#         if rhm.validate_address(sender_addr):
+#             err = manager.claim_section(grp, sender_addr)
+#             if err is True:
+#                 return InvalidValveGroupErrorCode(grp)
+#         else:
+#             return InvalidIPAddressErrorCode(sender_addr)
+#
+#         return 'OK'
+#
+#     def ReleaseGroup(self, manager, grp, sender_addr, *args):
+#         rhm = self.application.get_service(RHM_PROTOCOL)
+#         if rhm.validate_address(sender_addr):
+#             err = manager.release_section(grp)
+#             if err:
+#                 return InvalidValveGroupErrorCode(grp)
+#         else:
+#             return InvalidIPAddressErrorCode(sender_addr)
+#
+#         return 'OK'
+#
+#
+#     def GetPressure(self, manager, controller, gauge):
+#         '''
+#         '''
+#         p = None
+#         if manager:
+#             p = manager.get_pressure(controller, gauge)
+#
+#         if p is None:
+#             p = InvalidGaugeErrorCode(controller, gauge)
+#
+#         return str(p)
 #============= EOF ====================================

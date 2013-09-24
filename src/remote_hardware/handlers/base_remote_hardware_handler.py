@@ -93,7 +93,7 @@ class BaseRemoteHardwareHandler(Loggable):
         except AttributeError:
             pass
 
-    def get_device(self, name, protocol=None):
+    def get_device(self, name, protocol=None, owner=None):
 
         if self.application is not None:
             if protocol is None:
@@ -106,6 +106,9 @@ class BaseRemoteHardwareHandler(Loggable):
                     dev = m.get_flag(name)
                     if dev is None:
                         dev = m.get_mass_spec_param(name)
+                    else:
+                        dev.set_owner(owner)
+
                 else:
                     dev = DummyDevice()
         else:
@@ -143,10 +146,11 @@ class BaseRemoteHardwareHandler(Loggable):
 
         return result
 
-    def Read(self, manager, dname, *args):
-        d = self.get_device(dname)
+    def Read(self, manager, dname, sender, *args):
+        d = self.get_device(dname, owner=sender)
         if d is not None:
             result = d.get()
+            self.debug('Read owner={}'.format(sender))
             self.info('Get {} = {}'.format(d.name, result))
         else:
             result = DeviceConnectionErrorCode(dname, logger=self)

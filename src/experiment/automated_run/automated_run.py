@@ -59,6 +59,7 @@ from src.codetools.memory_usage import mem_log, measure_type, calc_growth
 from src.codetools.file_log import file_log
 from src.pyscripts.uv_extraction_line_pyscript import UVExtractionPyScript
 from src.experiment.automated_run.data_collector import DataCollector
+from src.processing.analyses.analysis import DBAnalysis
 
 DEBUG = False
 
@@ -722,8 +723,15 @@ class AutomatedRun(Loggable):
             ln = self.spec.labnumber
             ln = convert_identifier(ln)
             with self.db.session_ctx():
+
                 ln = self.db.get_labnumber(ln)
-                self.arar_age.load_irradiation(ln)
+                an = DBAnalysis()
+                an.load_irradiation(ln)
+
+                self.arar_age.j = an.j
+                self.arar_age.production_ratios = an.production_ratios
+                self.arar_age.irradiation_info = an.irradiation_info
+#                 self.arar_age.load_irradiation(ln)
 #             self.arar_age.labnumber_record = ln
 
         self.info('Start automated run {}'.format(self.runid))
@@ -1259,11 +1267,19 @@ anaylsis_type={}
         # update limits
         mi, ma = graph.get_x_limits()
 
+        max_ = ma
+        min_ = mi
         tc = m.total_counts
-        if tc > ma or (ma - tc) < tc * 2 or ma == inf:
-            graph.set_x_limits(-starttime_offset, tc * 1.05)
-        elif starttime_offset > mi:
-            graph.set_x_limits(min_=-starttime_offset)
+        if tc > ma or ma == Inf:
+            max_ = tc * 1.05
+#         if tc > ma or (ma - tc) < tc * 2 or ma == inf:
+#             graph.set_x_limits(-starttime_offset, tc * 1.05)
+
+        if starttime_offset > mi:
+            min_ = -starttime_offset
+#             graph.set_x_limits(min_=-starttime_offset)
+
+        graph.set_x_limits(min_=min_, max_=max_)
 
         # update fites
         nfs = m.get_fit_block(0, fits)

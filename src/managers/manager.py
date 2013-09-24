@@ -298,6 +298,16 @@ class Manager(Viewable, RPCable):
             if fm is not None:
                 fm.add_flag(ff)
 
+    def add_valve_flag(self, f, v):
+#         from src.hardware.flag import TimedFlag
+        from src.hardware.flag import ValveFlag
+        ff = ValveFlag(f, valves=v)
+        self.flags.append(ff)
+        if self.application:
+            fm = self.application.get_service('src.hardware.flag_manager.FlagManager')
+            if fm is not None:
+                fm.add_valve_flag(ff)
+
     def add_timed_flag(self, f):
         from src.hardware.flag import TimedFlag
         ff = TimedFlag(f)

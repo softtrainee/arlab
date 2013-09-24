@@ -33,11 +33,15 @@ class FlagManager(Viewable):
     def add_timed_flag(self, f):
         self.timed_flags.append(f)
 
+    def add_valve_flag(self, f):
+        self.valve_flags.append(f)
+
     def traits_view(self):
         v = View(
                  VGroup(
                      self._flag_item_factory('flags', 'Flags'),
-                     self._flag_item_factory('timed_flags', 'Timed Flags')
+                     self._flag_item_factory('timed_flags', 'Timed Flags'),
+                     self._flag_item_factory('valve_flags', 'Valve Flags'),
                      ),
 
                  title='Flag Manager',

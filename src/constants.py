@@ -52,6 +52,18 @@ ALPHAS = [a for a in seeds] + ['{}{}'.format(a, b)
                                     for a in seeds
                                         for b in seeds]
 
+def alphas(idx):
+    '''
+        idx should be 0-base ie. idx=0 ==>A
+    '''
+    if idx < 26:
+        return seeds[idx]
+    else:
+        a = idx / 26 - 1
+        b = idx % 26
+        return '{}{}'.format(seeds[a], seeds[b])
+
+
 ARGON_KEYS = ('Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36')
 IRRADIATION_KEYS = [('k4039', 'K_40_Over_39'),
                     ('k3839', 'K_38_Over_39'),

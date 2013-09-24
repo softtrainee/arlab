@@ -251,14 +251,20 @@ class AutomatedRunFactory(Loggable):
                     also returns self.frequency if using special labnumber else None
         '''
         _ln, special = self._make_short_labnumber()
-
         freq = self.frequency if special else None
 
-        if self._use_template() and not freq and not special:
-#        if self.template and self.template  and not freq and not special :
-            arvs = self._render_template(extract_group_cnt)
-        else:
-            arvs = self._new_runs(positions=positions)
+#         if self._use_template() and not freq and not special:
+# #        if self.template and self.template  and not freq and not special :
+#             arvs = self._render_template(extract_group_cnt,
+#                                          positions=positions
+#                                          )
+#         else:
+
+        arvs = self._new_runs(positions=positions,
+                              special=special,
+                              freq=freq,
+                              extract_group_cnt=extract_group_cnt
+                              )
 
         if auto_increment_id:
             self.labnumber = self._increment(self.labnumber)
@@ -343,7 +349,10 @@ class AutomatedRunFactory(Loggable):
 
         return template
 
-    def _render_template(self, cnt):
+    def _render_template(self, cnt, position=None):
+        if position is None:
+            position = self.position
+
         arvs = []
         template = self._new_template()
 
@@ -351,7 +360,8 @@ class AutomatedRunFactory(Loggable):
             if st.value or st.duration or st.cleanup:
                 arv = self._new_run(extract_group=cnt + 1,
                                     step=st.step_id,
-                                    position=self.position
+                                    position=position,
+                                    excludes=['position']
                                     )
                 arv.trait_set(**st.make_dict(self.duration, self.cleanup))
                 arvs.append(arv)
@@ -359,7 +369,7 @@ class AutomatedRunFactory(Loggable):
 #        self._extract_group_cnt += 1
         return arvs
 
-    def _new_runs_by_position(self):
+    def _new_runs_by_position(self, template=False, extract_group_cnt=0):
         pos = self.position
 
         arvs = []
@@ -377,8 +387,17 @@ class AutomatedRunFactory(Loggable):
                 self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
                 return
 
+#             print e - s + 1, inc, template
             for i in range(0, e - s + 1, inc):
-                arvs.append(self._new_run(position=str(s + i), excludes=['position']))
+                p = str(s + i)
+                if template:
+                    arvs.extend(self._render_template(extract_group_cnt,
+                                                      position=p
+                                                      ))
+                    extract_group_cnt += 1
+                else:
+                    arvs.append(self._new_run(position=str(p),
+                                              excludes=['position']))
                 '''
                     clear user_defined_aliquot flag
                     if adding multiple runs this allows
@@ -388,7 +407,8 @@ class AutomatedRunFactory(Loggable):
 
         return arvs
 
-    def _new_runs(self, positions):
+    def _new_runs(self, positions, special=False,
+                        freq=None, extract_group_cnt=0):
 #         s = 0
 #         e = 0
         _ln, special = self._make_short_labnumber()
@@ -398,7 +418,8 @@ class AutomatedRunFactory(Loggable):
                 arvs = [self._new_run(position=pi, excludes=['position'])
                                         for pi in positions]
             elif self.position:
-                arvs = self._new_runs_by_position()
+                template = self._use_template() and not freq and not special
+                arvs = self._new_runs_by_position(template, extract_group_cnt)
 
         if not arvs:
             arvs = [self._new_run()]
@@ -581,15 +602,15 @@ class AutomatedRunFactory(Loggable):
 
     def _template_closed(self):
         self.load_templates()
-        self.template = self._template.name
+#         self.template = self._template.name
 #         self.template = os.path.splitext(self._template.name)[0]
-        del self._template
+#         del self._template
 
     def _pattern_closed(self):
         self.load_patterns()
-        self.pattern = self._pattern.name
+#         self.pattern = self._pattern.name
 #         self.pattern = os.path.splitext(self._pattern.name)[0]
-        del self._pattern
+#         del self._pattern
 
     def _use_pattern(self):
         return self.pattern and not self.pattern in (LINE_STR,)
@@ -695,14 +716,18 @@ class AutomatedRunFactory(Loggable):
         if defaults:
             if labnumber in defaults:
                 default_scripts = defaults[labnumber]
-                for skey in SCRIPT_KEYS:
-                    new_script_name = default_scripts.get(skey) or NULL_STR
+                keys = SCRIPT_KEYS
+                if labnumber == 'dg':
+                    keys = ['extraction']
+
+                for skey in keys:
+                    new_script_name = default_scripts.get(skey) or ''
 
                     new_script_name = self._remove_file_extension(new_script_name)
                     if labnumber in ('u', 'bu') and self.extract_device != NULL_STR:
 
                         # the default value trumps pychron's
-                        if self.extract_device and new_script_name == NULL_STR:
+                        if self.extract_device:
                             e = self.extract_device.split(' ')[1].lower()
                             if skey == 'extraction':
                                 new_script_name = e
@@ -1167,6 +1192,9 @@ post_equilibration_script:name
         return self._remove_file_extension(name)
 
     def _remove_file_extension(self, name, ext='.py'):
+        if not name:
+            return name
+
         if name is NULL_STR:
             return NULL_STR
 

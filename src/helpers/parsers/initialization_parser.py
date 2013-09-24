@@ -157,6 +157,9 @@ class InitializationParser(XMLParser):
     def get_timed_flags(self, manager, **kw):
         return self._get_parameters(manager, 'timed_flag', **kw)
 
+    def get_valve_flags(self, manager, **kw):
+        return self._get_parameters(manager, 'valve_flag', **kw)
+
     def get_rpc_params(self, manager):
         if isinstance(manager, tuple):
             manager = self.get_manager(*manager)
