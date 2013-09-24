@@ -17,16 +17,16 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Bool, Str
 from traitsui.api import View, UItem
-from src.processing.tasks.tables.editors.base_table_editor import BaseTableEditor
-from src.ui.tabular_editor import myTabularEditor
-from src.processing.tasks.tables.editors.summary_adapter import SummaryTabularAdapter
-from src.processing.tasks.tables.summary_table_pdf_writer import SummaryTablePDFWriter
 import os
-from src.paths import paths
 import cPickle as pickle
-from src.column_sorter_mixin import ColumnSorterMixin
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.paths import paths
+from src.column_sorter_mixin import ColumnSorterMixin
+from src.ui.tabular_editor import myTabularEditor
+from src.processing.tasks.tables.editors.base_table_editor import BaseTableEditor
+from src.processing.tasks.tables.editors.summary_adapter import SummaryTabularAdapter
+from src.processing.tables.summary_table_pdf_writer import SummaryTablePDFWriter
 
 
 class SummaryTableEditor(BaseTableEditor, ColumnSorterMixin):

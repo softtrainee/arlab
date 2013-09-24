@@ -22,7 +22,7 @@ from xlwt.Workbook import Workbook
 from xlwt.Style import XFStyle, default_style
 from xlwt.Formatting import Borders
 from xlwt import Alignment
-from src.processing.tasks.tables.laser_table_text_writer import LaserTableTextWriter
+from src.processing.tables.laser_table_text_writer import LaserTableTextWriter
 
 
 class LaserTableXLSWriter(LaserTableTextWriter):

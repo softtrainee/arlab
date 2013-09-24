@@ -43,7 +43,7 @@ class LaserTableEditor(BaseTableEditor, ColumnSorterMixin):
         self.refresh_needed = True
 
     def make_pdf_table(self, title):
-        from src.processing.tasks.tables.laser_table_pdf_writer import LaserTablePDFWriter
+        from src.processing.tables.laser_table_pdf_writer import LaserTablePDFWriter
 
         ans = self._clean_items()
         t = LaserTablePDFWriter(
@@ -65,7 +65,7 @@ class LaserTableEditor(BaseTableEditor, ColumnSorterMixin):
     def make_xls_table(self, title):
         ans = self._clean_items()
         means = self.means
-        from src.processing.tasks.tables.laser_table_xls_writer import LaserTableXLSWriter
+        from src.processing.tables.laser_table_xls_writer import LaserTableXLSWriter
         t = LaserTableXLSWriter()
         p = self._get_save_path(ext='.xls')
 #         p = '/Users/ross/Sandbox/aaaatable.xls'
@@ -76,7 +76,7 @@ class LaserTableEditor(BaseTableEditor, ColumnSorterMixin):
     def make_csv_table(self, title):
         ans = self._clean_items()
         means = self.means
-        from src.processing.tasks.tables.laser_table_csv_writer import LaserTableCSVWriter
+        from src.processing.tables.laser_table_csv_writer import LaserTableCSVWriter
         t = LaserTableCSVWriter()
 
 #         p = '/Users/ross/Sandbox/aaaatable.csv'

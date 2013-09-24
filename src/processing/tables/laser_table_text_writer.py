@@ -55,7 +55,11 @@ class LaserTableTextWriter(Loggable):
     options = Instance(LaserTableTextOptions, ())
     columns = (
                     ('Status', 'status'),
+                    ('Labnumber', 'labnumber'),
                     ('N', 'aliquot_step_str'),
+                    ('Sample', 'sample'),
+                    ('Material', 'material'),
+                    ('Irradiation', 'irradiation_label'),
                     ('Power', 'extract_value'),
 
 #                     'Moles_40Ar',
@@ -84,6 +88,19 @@ class LaserTableTextWriter(Loggable):
 
                     )
     default_style = None
+    def build(self, p, ans, means, title):
+        wb = self._new_workbook()
+        options = self.options
+        if options.use_sample_sheets:
+            for sam, ais in self._group_samples(ans):
+
+                sh = self._add_sample_sheet(wb, sam)
+#                 ais = list(ais)
+
+#                 self._add_metadata(sh, ais[0])
+                self._add_header_row(sh, 0)
+                self._add_analyses(sh, ais, start=2)
+        wb.save(p)
 
     def _add_analyses(self, sheet, ans, start):
         for i, ai in enumerate(ans):
@@ -109,26 +126,13 @@ class LaserTableTextWriter(Loggable):
         key = lambda x:x.sample
         return groupby(ans, key=key)
 
-    def build(self, p, ans, means, title):
-        wb = self._new_workbook()
-        options = self.options
-        if options.use_sample_sheets:
-            for sam, ais in self._group_samples(ans):
-
-                sh = self._add_sample_sheet(wb, sam)
-                ais = list(ais)
-
-                self._add_metadata(sh, ais[0])
-                self._add_header_row(sh, 2)
-                self._add_analyses(sh, ais, start=4)
-        wb.save(p)
 
 
-    def _add_metadata(self, sh, refans):
-        for i, c in enumerate(('labnumber', 'sample', 'material')):
-            sh.write(0, i, getattr(refans, c))
-        for i, c in enumerate(('irradiation', 'irradiation_level')):
-            sh.write(1, i, getattr(refans, c))
+#     def _add_metadata(self, sh, refans):
+#         for i, c in enumerate(('labnumber', 'sample', 'material')):
+#             sh.write(0, i, getattr(refans, c))
+#         for i, c in enumerate(('irradiation', 'irradiation_level')):
+#             sh.write(1, i, getattr(refans, c))
 
     def _add_sample_sheet(self, wb, sample):
         sh = wb.add_sheet(sample)
