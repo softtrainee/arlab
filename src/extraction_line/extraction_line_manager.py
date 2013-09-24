@@ -286,8 +286,8 @@ class ExtractionLineManager(Manager):
 #            self.on_trait_change(self._owner_change, name)
 #            bind_preference(self, name, 'pychron.extraction_line.{}'.format(name))
 
-    def _owner_change(self, name, value):
-        self.valve_manager.claim_section(name.split('_')[0], value.lower)
+#     def _owner_change(self, name, value):
+#         self.valve_manager.claim_section(name.split('_')[0], value.lower)
 
     def reload_scene_graph(self):
         self.info('reloading canvas scene')
@@ -390,17 +390,6 @@ class ExtractionLineManager(Manager):
     def enable_valve(self, description):
         self._enable_valve(description, True)
 
-    def _enable_valve(self, description, state):
-        if self.valve_manager:
-            valve = self.valve_manager.get_valve_by_description(description)
-            if valve is None:
-                valve = self.valve_manager.get_valve_by_name(description)
-
-            if valve is not None:
-                if not state:
-                    self.close_valve(valve.name)
-
-                valve.enabled = state
 
 
     def open_valve(self, name, ** kw):
@@ -413,22 +402,6 @@ class ExtractionLineManager(Manager):
         '''
         return self._open_close_valve(name, 'close', **kw)
 
-    def _open_close_valve(self, name, action,
-                          description=None, address=None, mode='remote', **kw):
-        vm = self.valve_manager
-        if vm is not None:
-            if address:
-                name = vm.get_name_by_address(address)
-
-            if description and description != '---':
-                name = vm.get_name_by_description(description)
-
-            result = self._change_valve_state(name, mode, action, **kw)
-
-#            if self.learner:
-#                self.learner.open_close_valve(name, action, result)
-
-            return result
 
     def sample(self, name, **kw):
         def sample():
@@ -463,54 +436,11 @@ class ExtractionLineManager(Manager):
         t = Thread(target=cycle)
         t.start()
 
-    def claim_group(self, *args):
-        return self.valve_manager.claim_group(*args)
-
-    def release_group(self, *args):
-        return self.valve_manager.release_group(*args)
-
-    def _change_valve_state(self, name, mode, action, sender_address=None):
-
-        func = getattr(self.valve_manager, '{}_by_name'.format(action))
-
-#        owned = False
-#        try:
-#            claimer = self.valve_manager.get_system(sender_address)
-#            if claimer:
-#                owned = self.valve_manager.check_group_ownership(name, claimer)
-#        except AttributeError:
-#            #no systems are defined
-#            pass
-
-        result, change = func(name, mode=mode)
-#        change = False
-#        if not owned:
-#            result, change = func(name, mode=mode)
-#        else:
-#            result = '{} owned by {}'.format(name, claimer)
-#            self.warning(result)
-
-#        system,f ok = self.valve_manager.check_ownership(name, sender_address)
-# #        ok = True
-#        if ok:
-#            critical = self.valve_manager.check_critical_section()
-#            if not critical:
-#                result = func(name, mode=mode)
-#            else:
-#                result = '{} critical section enabled'.format(name)
-#                self.warning(result)
-#        else:
-        if isinstance(result, bool):
-            # valve state show as changed if even it didnt actuate
-#            if result:
-            if change:
-                self.update_valve_state(name, True if action == 'open' else False)
-                self.refresh_canvas()
-#                 self.canvas.update_valve_state(name, True if action == 'open' else False)
-#                result = True
-
-        return result, change
-
+#     def claim_group(self, *args):
+#         return self.valve_manager.claim_group(*args)
+#
+#     def release_group(self, *args):
+#         return self.valve_manager.release_group(*args)
     def get_script_state(self, key):
         return self.pyscript_editor.get_script_state(key)
 
@@ -521,6 +451,62 @@ class ExtractionLineManager(Manager):
                 selected = next((i for i in self.explanation.explanable_items if obj.name == i.name), None)
 
             self.explanation.selected = selected
+#===============================================================================
+# private
+#===============================================================================
+    def _enable_valve(self, description, state):
+        if self.valve_manager:
+            valve = self.valve_manager.get_valve_by_description(description)
+            if valve is None:
+                valve = self.valve_manager.get_valve_by_name(description)
+
+            if valve is not None:
+                if not state:
+                    self.close_valve(valve.name)
+
+                valve.enabled = state
+
+    def _open_close_valve(self, name, action,
+                          description=None, address=None, mode='remote', **kw):
+        vm = self.valve_manager
+        if vm is not None:
+            if address:
+                name = vm.get_name_by_address(address)
+
+            if description and description != '---':
+                name = vm.get_name_by_description(description)
+
+            result = self._change_valve_state(name, mode, action, **kw)
+
+#            if self.learner:
+#                self.learner.open_close_valve(name, action, result)
+
+            return result
+
+    def _change_valve_state(self, name, mode, action, sender_address=None):
+        result, change = None, False
+        if self._check_ownership(name, sender_address):
+            func = getattr(self.valve_manager, '{}_by_name'.format(action))
+            result, change = func(name, mode=mode)
+            if isinstance(result, bool):
+                if change:
+                    self.update_valve_state(name, True if action == 'open' else False)
+                    self.refresh_canvas()
+
+        return result, change
+
+    def _check_ownership(self, name, requestor):
+        self.debug('checking ownership. requestor={}'.format(requestor))
+        if requestor is not None:
+            for f in self.flags:
+                if hasattr(f, 'valves'):
+                    self.debug('flag={} id={}'.format(f.name, f.owner))
+
+                    self.debug('name={} valves={}'.format(name, f.valves))
+                    if name in f.valves:
+                        return f.owner == requestor
+        return True
+
 
 #=================== factories ==========================
 

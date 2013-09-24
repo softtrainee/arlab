@@ -196,11 +196,20 @@ class Initializer(Loggable):
             flags = parser.get_flags(mp)
             timed_flags = parser.get_timed_flags(mp)
 
+
+            valve_flags_attrs = []
+            valve_flags = parser.get_valve_flags(mp, element=True)
+            if valve_flags:
+                for vf in valve_flags:
+                    vs = vf.find('valves')
+                    if vs:
+                        vs = vs.split(',')
+                valve_flags_attrs.append((vf.text.strip(), vs))
+
             # set rpc server
             mode, _, port = parser.get_rpc_params(mp)
             if port and mode != 'client':
                 manager.load_rpc_server(port)
-
 
         if managers:
             self.info('loading managers - {}'.format(', '.join(managers)))
@@ -219,6 +228,10 @@ class Initializer(Loggable):
             self.info('loading timed flags - {}'.format(','.join(timed_flags)))
             self.load_timed_flags(manager, timed_flags)
 
+        if valve_flags:
+            self.info('loading valve flags - {}'.format(','.join(timed_flags)))
+            self.load_timed_flags(manager, valve_flags_attrs)
+
         if manager is not None:
             self.info('finish {} loading'.format(name))
             manager.finish_loading()
@@ -234,6 +247,11 @@ class Initializer(Loggable):
         for f in flags:
             self.info('loading {}'.format(f))
             manager.add_timed_flag(f)
+
+    def load_valve_flags(self, manager, flags):
+        for f, v in flags:
+            self.info('loading {}, valves={}'.format(f, v))
+            manager.add_valve_flag(f, v)
 
     def load_managers(
         self,

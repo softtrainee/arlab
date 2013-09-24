@@ -73,7 +73,7 @@ class Experimentor(IsotopeDatabaseManager):
     def refresh_executable(self, qs=None):
         if qs is None:
             qs = self.experiment_queues
-            
+
         self.executor.executable = all([ei.isExecutable() for ei in qs])
         self.debug('setting executable {}'.format(self.executor.executable))
 
@@ -149,7 +149,120 @@ class Experimentor(IsotopeDatabaseManager):
         return ((ln, group) for ln, group in groupby(sorted(ans, key=key), key)
                                 if ln not in exclude)
 
+    def _get_analysis_info(self, li):
+        dbln = self.db.get_labnumber(li)
+        sample, irradiationpos = '', ''
+        if dbln:
+            sample = dbln.sample
+            if sample:
+                sample = sample.name
+
+
+            dbpos = dbln.irradiation_position
+            if dbpos:
+                level = dbpos.level
+                irradiationpos = '{}{}'.format(level.irradiation.name,
+                                               level.name)
+
+        dban = self.db.get_last_analysis(li)
+        aliquot = 0
+        step = -1
+        if dban:
+            aliquot = dban.aliquot
+            step = dban.step
+
+#            self.debug('{} {} {}'.format(li, analysis, sample))
+        return sample, irradiationpos, aliquot, step
+
     def _modify_aliquots_steps(self, ans, exclude=None):
+        cache = dict()
+        ecache = dict()
+        db = self.db
+        with db.session_ctx():
+            for ai in ans:
+                ln = ai.labnumber
+                # is run in cache
+                if not ln in cache:
+                    sample, irrad, aliquot, step = self._get_analysis_info(ln)
+                    cache[ln] = dict(sample=sample,
+                                 irradiation=irrad,
+                                 aliquot=aliquot,
+                                 step=step,
+                                 egrp=-1)
+
+                last = cache[ln]
+
+                aq = ai.aliquot
+                st = ''
+                egrp = -1
+
+                special = self._is_special(ln)
+
+                # is run part of aq step heat
+                if ai.extract_group and not special:
+                    en = '{}_{}'.format(ln, ai.extract_group)
+                    if not en in ecache:
+                        ecache[en] = dict(egrp=-1,
+                                          step=-1,
+                                          aliquot=last['aliquot']
+                                          )
+
+                    s = -1
+                    if not ai.assigned_aliquot:
+                        egrp = ai.extract_group
+                        elast = ecache[en]
+                        aq = elast['aliquot']
+#                         print ln, egrp, elast['egrp'], elast['aliquot']
+                        if egrp == elast['egrp']:
+#                         print egrp, last['egrp']
+#                         if egrp == last['egrp']:
+                            s = elast['step']
+                        else:
+                            aq += 1
+
+                    else:
+                        dban = db.get_last_analysis(ln, aliquot=aq)
+                        aq = dban.aliquot + 1
+#                         last['aliquot'] = aq
+                        if dban.step:
+                            s = LAlphas.index(dban)
+
+                    st = s + 1
+                    elast['step'] = st
+                    elast['egrp'] = ai.extract_group
+                    elast['aliquot'] = aq
+
+                    last['aliquot'] = max(aq, last['aliquot'])
+
+                    ecache[en] = elast
+#                     last['step'] = st
+
+                else:
+                    if not ai.assigned_aliquot:
+                        aq = last['aliquot'] + 1
+                        last['aliquot'] = aq
+
+                if special:
+                    st = ''
+                    egrp = -1
+
+                ai.trait_set(aliquot=int(aq),
+                             sample=last['sample'] or '',
+                             irradiation=last['irradiation'] or '',
+                             step=st
+                             )
+#                 last.update(aliquot=aq, step=st,
+#                             egrp=egrp
+#                             )
+                cache[ln] = last
+
+    def _is_special(self, ln):
+        special = False
+        if '-' in ln:
+            special = ln.split('-')[0] in ANALYSIS_MAPPING
+        return special
+
+    def _modify_aliquots_steps2(self, ans, exclude=None):
         '''
         '''
 

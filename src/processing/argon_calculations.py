@@ -236,6 +236,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
             a39decayfactor = 1
 
 
+#     print a39decayfactor, a37decayfactor
 #    print type(s37), type(a37decayfactor)
     # calculate interference corrections
     s37dec_cor = s37 * a37decayfactor
@@ -291,7 +292,9 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     # dont include error in 40/36
     atm40 = atm36 * arar_constants.atm4036.nominal_value
     k40 = k39 * k4039
+
     ar40rad = s40 - atm40 - k40
+#     print map(lambda x: x.nominal_value, (ar40rad, s40, atm40, s36, ca36, cl36, atm36))
 
 #    age_with_jerr = ufloat(0, 0)
 #    age_wo_jerr = ufloat(0, 0)

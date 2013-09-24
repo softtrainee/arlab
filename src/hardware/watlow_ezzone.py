@@ -485,10 +485,11 @@ class WatlowEZZone(CoreDevice):
         '''
         register = 2484 if port == 1 else 2504
         r = self.read(register, response_type='int')
-        try:
-            return ibaudmap[str(r)]
-        except KeyError, e:
-            print e
+        if r:
+            try:
+                return ibaudmap[str(r)]
+            except KeyError, e:
+                self.debug('read_baudrate keyerror {}'.format(e))
 
     def set_baudrate(self, v, port=1):
         '''
@@ -502,7 +503,7 @@ class WatlowEZZone(CoreDevice):
             self.write(register, value)
 
         except KeyError, e:
-            print e
+            self.debug('set_baudrate keyerror {}'.format(e))
 
     def set_closed_loop_setpoint(self, setpoint, **kw):
         '''

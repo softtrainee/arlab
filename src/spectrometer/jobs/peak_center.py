@@ -109,6 +109,8 @@ class PeakCenter(MagnetScan):
 
     def get_peak_center(self, ntries=2):
         self._alive = True
+        self.canceled = False
+
         graph = self.graph
         center_dac = self.center_dac
         self.info('starting peak center. center dac= {}'.format(center_dac))
@@ -146,7 +148,7 @@ class PeakCenter(MagnetScan):
 #            self.data = (dac_values, intensities)
 
             ok = self._do_scan(start, end, width, directions=self.directions, map_mass=False)
-
+            self.debug('result of _do_scan={}'.format(ok))
             if ok and self.directions != 'Oscillate':
                 if not self.canceled:
                     dac_values = graph.get_data()
@@ -158,17 +160,18 @@ class PeakCenter(MagnetScan):
 
 #                    self.data = (dac_values, intensities)
                     result = self._calculate_peak_center(dac_values, intensities)
+                    self.debug('result of _calculate_peak_center={}'.format(result))
                     self.result = result
                     if result is not None:
 
                         xs, ys, mx, my = result
 
                         center = xs[1]
-                        invoke_in_main_thread(self._plot_center, xs,ys,mx,my, center)
+                        invoke_in_main_thread(self._plot_center, xs, ys, mx, my, center)
                         return center
-                    
-    def _plot_center(self, xs,ys, mx, my, center):
-        graph=self.graph
+
+    def _plot_center(self, xs, ys, mx, my, center):
+        graph = self.graph
         graph.set_data(xs, series=self._markup_idx)
         graph.set_data(ys, series=self._markup_idx, axis=1)
 
@@ -177,7 +180,7 @@ class PeakCenter(MagnetScan):
 
         graph.add_vertical_rule(center)
         graph.redraw()
-        
+
     def _calculate_peak_center(self, x, y):
         result = calculate_peak_center(x, y,
                                        min_peak_height=self.min_peak_height,

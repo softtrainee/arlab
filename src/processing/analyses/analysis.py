@@ -93,6 +93,7 @@ class DBAnalysis(Analysis):
     extract_duration = Float
     analysis_type = Str
     tag = Str
+    timestamp = Float
 
     ic_factors = Dict
 
@@ -244,9 +245,9 @@ class DBAnalysis(Analysis):
 #                  ('status', 'status', int),
                  ('comment', 'comment', str),
                  ('uuid', 'uuid', str),
-                 ('_timestamp', 'analysis_timestamp',
+                 ('timestamp', 'analysis_timestamp',
                     lambda x: time.mktime(x.timetuple())
-                 ),
+                ),
                ]
         for key, attr, cast in attrs:
             v = getattr(meas_analysis, attr)
@@ -286,7 +287,7 @@ class DBAnalysis(Analysis):
 
     def _sync_irradiation(self, meas_analysis):
         ln = meas_analysis.labnumber
-        self.irradiation_info = self._get_irradition_info(ln)
+        self.irradiation_info = self._get_irradiation_info(ln)
 
         dbpos = ln.irradiation_position
         if dbpos:
@@ -488,8 +489,11 @@ class DBAnalysis(Analysis):
 #===============================================================================
 # irradiation
 #===============================================================================
-    def _get_timestamp(self):
-        return self._timestamp
+    def _get_timestamp(self, ln):
+        ts = self.timestamp
+        if not ts:
+            ts = ArArAge._get_timestamp(self, ln)
+        return ts
 
 
     def _get_j(self, ln):
@@ -514,23 +518,20 @@ class DBAnalysis(Analysis):
     def _get_irradiation_level(self, ln):
         if ln:
             if ln.irradiation_position:
-                l = ln.irradiation_position.level
+                return ln.irradiation_position.level
 
-                return l
 
-    def _get_irradition_info(self, ln):
+    def _get_irradiation_info(self, ln):
         '''
             return k4039, k3839,k3739, ca3937, ca3837, ca3637, cl3638, chronsegments, decay_time
         '''
         prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), [], 1
-
         irradiation_level = self._get_irradiation_level(ln)
         if irradiation_level:
             irradiation = irradiation_level.irradiation
             if irradiation:
                 self.irradiation = irradiation.name
                 self.irradiation_level = irradiation_level.name
-
 
                 pr = irradiation.production
                 if pr:
@@ -561,6 +562,7 @@ class DBAnalysis(Analysis):
 #                    doses = [map(convert_datetime, d) for d in doses if d]
 
                     analts = self.timestamp
+#                     print analts
                     if isinstance(analts, float):
                         analts = datetime.fromtimestamp(analts)
 
@@ -569,16 +571,21 @@ class DBAnalysis(Analysis):
                         if st is not None and en is not None:
                             dur = en - st
                             dt = analts - st
+#                             dt = 45
                             segments.append((1, convert_days(dur), convert_days(dt)))
+#                             segments.append((1, convert_days(dur), dt))
 
                     decay_time = 0
                     d_o = doses[0][0]
                     if d_o is not None:
-                        decay_time = convert_days(analts - doses[0][0])
+                        decay_time = convert_days(analts - d_o)
 
 #                    segments = [(1, convert_days(ti)) for ti in durs]
                     prs.append(segments)
                     prs.append(decay_time)
+#                     prs.append(45)
+
+#         print 'aasfaf', ln, prs
 
         return prs
 

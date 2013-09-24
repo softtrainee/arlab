@@ -31,6 +31,7 @@ from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.constants import NULL_STR
 from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.paths import paths
+from ConfigParser import ConfigParser
 
 DETECTOR_ORDER = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 debug = False
@@ -266,6 +267,13 @@ class Spectrometer(SpectrometerDevice):
     def finish_loading(self):
         self.magnet.finish_loading()
 
+        # write configuration to spectrometer
+
+        self._write_configuration()
+
+
+
+
     def add_detector(self, **kw):
         d = Detector(spectrometer=self,
                      **kw)
@@ -293,7 +301,12 @@ class Spectrometer(SpectrometerDevice):
                             signals = map(float, [data[i + 1] for i in range(0, len(data), 2)])
 
         if not keys:
-            signals = [(i * 2 + self.testcnt * 0.1) + random.random() for i in range(6)]
+#             signals = [(ns + self.testcnt * 0.1) + random.random()
+#                         for ns in [1, 100, 3, 1, 1, 0]]
+            signals = [1, 100, 3, 0, 0, 0.01]
+
+
+#             signals = [(i * 2 + self.testcnt * 0.1) + random.random() for i in range(6)]
             self.testcnt += 1
             if tagged:
                 keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
@@ -356,6 +369,22 @@ class Spectrometer(SpectrometerDevice):
         dac -= dev
         dac /= det.relative_position
         return dac
+
+#===============================================================================
+# private
+#===============================================================================
+    def _write_configuration(self):
+        if self.microcontroller:
+            p = os.path.join(paths.spectrometer_dir, 'config.cfg')
+            config = ConfigParser()
+            config.read(p)
+
+            for section in config.sections():
+                for attr in config.options(section):
+                    v = config.getfloat(section, attr)
+                    if v is not None:
+                        self.microcontroller.ask('Set{}'.format(attr), v)
+
 #===============================================================================
 # defaults
 #===============================================================================

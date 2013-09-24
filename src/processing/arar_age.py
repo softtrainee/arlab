@@ -29,6 +29,7 @@ from src.processing.isotope import Isotope
 
 from src.loggable import Loggable
 from src.helpers.isotope_utils import sort_isotopes
+import time
 
 def AgeProperty():
     return Property(depends_on='age_dirty')
@@ -41,6 +42,8 @@ class ArArAge(Loggable):
     irradiation_info = Tuple
     production_ratios = Dict
     discrimination = Any
+
+    timestamp = Float
 
     include_j_error = Bool(True)
     include_irradiation_error = Bool(True)
@@ -63,14 +66,13 @@ class ArArAge(Loggable):
     Ar36_39 = AgeProperty()
 
 
-
     sensitivity = Property
     sensitivity_multiplier = Property
     _sensitivity_multiplier = Float
 
 #     labnumber_record = Any
 
-    timestamp = Property
+
 
 #     irradiation_info = Property
 #     irradiation_level = Property
@@ -276,7 +278,6 @@ class ArArAge(Loggable):
 
         ab = self.arar_constants.abundance_sensitivity
 
-
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
                                 self.j, irrad, abundance_sensitivity=ab,
                                 ic=self.ic_factor,
@@ -370,8 +371,8 @@ class ArArAge(Loggable):
         return float(self.arar_result['age_err_wo_jerr'] / self.arar_constants.age_scalar)
 
 #     @cached_property
-    def _get_timestamp(self):
-        return datetime.now()
+#     def _get_timestamp(self):
+#         return datetime.now()
 
 #     @cached_property
 #     def _get_irradiation_level(self, ln):
@@ -471,8 +472,8 @@ class ArArAge(Loggable):
 
 #     @cached_property
     def _get_j(self):
-        s = 1.0
-        e = 1e-3
+        s = 1.e-4
+        e = 1e-6
 
         return ufloat(s, e, 'j')
 
@@ -618,7 +619,6 @@ class ArArAge(Loggable):
         return self._sensitivity_multiplier
 
     def _get_arar_result_attr(self, key):
-
         if key.startswith('s'):
             key = key[1:]
         elif key.startswith('Ar'):
@@ -639,14 +639,19 @@ class ArArAge(Loggable):
     def _get_isotope_keys(self):
         keys = self.isotopes.keys()
         return sort_isotopes(keys)
+
+    def _get_timestamp(self, ln):
+        x = datetime.now()
+        return time.mktime(x.timetuple())
 #===============================================================================
 #
 #===============================================================================
     def load_irradiation(self, ln):
+        self.timestamp = self._get_timestamp(ln)
+
         self.irradiation_info = self._get_irradiation_info(ln)
-        self.j = self._get_j()
+        self.j = self._get_j(ln)
 
-        self.production_ratios = self._get_production_ratios()
-
+        self.production_ratios = self._get_production_ratios(ln)
 
 #============= EOF =============================================
