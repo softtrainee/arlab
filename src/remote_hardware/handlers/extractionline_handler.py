@@ -125,8 +125,10 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
         return result
 
     def GetValveOwners(self, manager, *args):
+        manager.debug('get valve owners')
         result = manager.get_valve_owners()
         return result
+
     def GetManualState(self, manager, vname, *args):
         result = manager.get_software_lock(vname)
         if result is None:

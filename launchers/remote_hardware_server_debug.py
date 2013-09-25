@@ -14,13 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+from traits.etsconfig.etsconfig import ETSConfig
+ETSConfig.toolkit = 'qt4'
 
 if __name__ == '__main__':
 
     import os
 
     from helpers import build_version
-    build_version('_uv', set_path=True)
+    build_version('_dev', debug=True)
 
     from src.helpers.logger_setup import logging_setup
     from src.managers.remote_hardware_server_manager import RemoteHardwareServerManager

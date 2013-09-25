@@ -312,14 +312,18 @@ class ValveManager(Manager):
                     D,E owned by 150
                     F free
         '''
-        vs = [(v.name, v.owner) for v in self.valves.itervalues()]
+        vs = [(v.name.split('-')[1], v.owner) for v in self.valves.itervalues()]
         key = lambda x: x[1]
         vs = sorted(vs, key=key)
 
         owners = []
         for owner, valves in groupby(vs, key=key):
+            valves, _ = zip(*valves)
+            v = ','.join(valves)
             if owner:
-                t = '{}-{}'.format(owner, ','.join(valves))
+                t = '{}-{}'.format(owner, v)
+            else:
+                t = v
             owners.append(t)
 
         return ':'.join(owners)
