@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Bool, Property, Float, CInt, List, Str
+from traits.api import Bool, Property, Float, CInt, List, Str, Any
 from traitsui.api import View, Item, HGroup, spring
 #============= standard library imports ========================
 from threading import Timer as OneShotTimer
@@ -153,6 +153,13 @@ class ValveFlag(Flag):
     valves = List
     owner = Str
     valves_str = Property(depends_on='valves')
+    manager = Any
+    def set(self):
+        super(ValveFlag, self).set()
+
+        owner = self.owner if self._set else None
+        for vi in self.valves:
+            self.manager.set_valve_owner(vi, owner)
 
     def traits_view(self):
         v = View(

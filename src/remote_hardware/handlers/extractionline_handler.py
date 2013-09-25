@@ -114,7 +114,7 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
 #            result = 'ERROR'
         return result
 
-    def GetValveLockStates(self, manager, vname, *args):
+    def GetValveLockStates(self, manager, *args):
         result = manager.get_valve_lock_states()
 #        if result is None:
 #            result = 'ERROR'
@@ -124,6 +124,9 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
         result = manager.get_software_lock(vname)
         return result
 
+    def GetValveOwners(self, manager, *args):
+        result = manager.get_valve_owners()
+        return result
     def GetManualState(self, manager, vname, *args):
         result = manager.get_software_lock(vname)
         if result is None:

@@ -301,7 +301,7 @@ class Manager(Viewable, RPCable):
     def add_valve_flag(self, f, v):
 #         from src.hardware.flag import TimedFlag
         from src.hardware.flag import ValveFlag
-        ff = ValveFlag(f, valves=v)
+        ff = ValveFlag(f, valves=v, manager=self)
         self.flags.append(ff)
         if self.application:
             fm = self.application.get_service('src.hardware.flag_manager.FlagManager')

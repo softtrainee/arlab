@@ -101,6 +101,10 @@ class PychronGPActuator(GPActuator):
 #                return False
 #
 #        return resp
+    def get_owner_word(self, verbose=True):
+        cmd = 'GetValveOwners'
+        resp = self.ask(cmd, verbose=verbose)
+        return resp
 
     def get_state_word(self, verbose=False):
         cmd = 'GetValveStates'

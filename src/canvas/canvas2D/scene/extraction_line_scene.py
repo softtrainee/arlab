@@ -48,6 +48,10 @@ class ExtractionLineScene(Scene):
         x, y = self._get_floats(elem, 'translation')
         w, h = self._get_floats(elem, 'dimension')
 
+        color = elem.find('color')
+        if color is not None:
+            c = color.text.strip()
+
         c = self._make_color(c)
 
         rect = RoundedRectangle(x + ox, y + oy, width=w, height=h,
@@ -99,7 +103,8 @@ class ExtractionLineScene(Scene):
             y1 = y
 
         klass = BorderLine
-        l = klass((x, y), (x1, y1), default_color=(74, 74, 110),
+        l = klass((x, y), (x1, y1),
+                  default_color=(204, 204, 204),
                   name=key,
                  width=10)
         self.add_item(l, layer=0)
@@ -164,7 +169,8 @@ class ExtractionLineScene(Scene):
         for i, conn in enumerate(cp.get_elements('connection')):
             start = conn.find('start')
             end = conn.find('end')
-            self._new_connection(conn, 'con{:03}'.format(i), start, end)
+            name = '{}_{}'.format(start.text, end.text)
+            self._new_connection(conn, name, start, end)
 
 #         xv, yv = self._get_canvas_view_range()
         xv = self.canvas.view_x_range
