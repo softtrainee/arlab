@@ -210,9 +210,10 @@ class ExtractionLineManager(Manager):
         for c in self._canvases:
             self.network.init_states(c)
 
-        self.valve_manager.load_valve_states()
-        self.valve_manager.load_valve_lock_states()
-        self.valve_manager.load_valve_owners()
+        if self.mode != 'client':
+            self.valve_manager.load_valve_states()
+            self.valve_manager.load_valve_lock_states()
+            self.valve_manager.load_valve_owners()
 
         self.refresh_canvas()
 #        if reload:
@@ -338,8 +339,11 @@ class ExtractionLineManager(Manager):
         if self.network:
             r = self.network.set_valve_state(*args, **kw)
             if r:
+                print r
                 for c in self._canvases:
                     self.network.set_canvas_states(c, r)
+                    self.network.init_states(c)
+#                 for c in self._canvases:
 
         for c in self._canvases:
             c.update_valve_state(*args, **kw)
@@ -478,6 +482,7 @@ class ExtractionLineManager(Manager):
                 selected = next((i for i in self.explanation.explanable_items if obj.name == i.name), None)
 
             self.explanation.selected = selected
+
 #===============================================================================
 # private
 #===============================================================================
@@ -533,7 +538,6 @@ class ExtractionLineManager(Manager):
                     if name in f.valves:
                         return f.owner == requestor
         return True
-
 
 #=================== factories ==========================
 

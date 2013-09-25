@@ -78,10 +78,11 @@ class RemoteHardwareServerManager(Manager):
     def opened(self, ui):
         self.edit_traits(
                  view='display_view',
-                 parent=self.ui.control
+#                  parent=self.ui.control
                  )
 
-        Timer(3000, self._check_connection)
+        t = Timer(3000, self._check_connection)
+        self._timer = t
 
     def display_view(self):
 

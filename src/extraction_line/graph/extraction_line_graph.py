@@ -111,7 +111,10 @@ class ExtractionLineGraph(HasTraits):
                 obj = scene.get_item(ri.name)
                 color = obj.default_color
                 for ei in ri.edges:
-                    self._set_item_state(scene, ei.name, True, color)
+                    obj = scene.get_item(ei.name)
+                    if obj:
+                        if not obj.state:
+                            self._set_item_state(scene, ei.name, True, color)
 
     def set_canvas_states(self, canvas, states):
 
@@ -153,9 +156,10 @@ class ExtractionLineGraph(HasTraits):
         if state:
 #             color = colors[state]
             obj = scene.get_item(term)
-#             print obj
             color = obj.default_color
-
+        else:
+            obj = scene.get_item(root.name)
+            color = obj.default_color
 #             print obj, root.name
 #             color = 'red'
 #             color = obj.active_color
@@ -163,19 +167,17 @@ class ExtractionLineGraph(HasTraits):
 #         print color
         self._set_item_state(scene, root.name, state, color)
 
-#         if not color:
-#             obj = scene.get_item(root.name)
-#             color = obj.default_color
         # set all edges for the root
         for ei in root.edges:
 #             print root.name, ei.name, color
             self._set_item_state(scene, ei.name, state, color)
 
+
         for path in self.assemble_paths(root, None):
             # flatten path and set state for each element
             # use a color as the state
             for elem in flatten(path):
-#                 print elem, state
+                print elem, state, color
                 self._set_item_state(scene, elem, state, color)
 
     def _set_item_state(self, scene, name, state, color=None):
@@ -188,6 +190,7 @@ class ExtractionLineGraph(HasTraits):
             obj.active_color = color
             obj.state = True
         else:
+            obj.default_color = color
             obj.state = False
 
     def set_valve_state(self, name, state, *args, **kw):
@@ -210,7 +213,7 @@ class ExtractionLineGraph(HasTraits):
                         if path:
                             elems = list(flatten(path))
                             if elems:
-#                                 print root.name, elems
+                                print root.name, elems
                                 term = None
                                 if len(elems) > 1:
                                     term = elems[-2]
@@ -228,6 +231,9 @@ class ExtractionLineGraph(HasTraits):
                 elif 'spectrometer' in states:
                     nstate = 'spectrometer'
                     nterm = terms[states.index('spectrometer')]
+#                 else:
+#                     nstate = True
+#                     nterm = ''
 
                 nstates.append(nstate)
                 nterminations.append(nterm)
@@ -252,9 +258,11 @@ class ExtractionLineGraph(HasTraits):
                 yield [edge, start.name, 'pump']
             elif isinstance(start, LaserNode):
                 yield [edge, start.name, 'laser']
-            elif start.state and start.state != 'closed':
-                yield [edge, start.name, self.assemble_paths(start, parent)]
-
+            else:
+                if start.state and start.state != 'closed':
+                    yield [edge, start.name, self.assemble_paths(start, parent)]
+                else:
+                    yield [edge]
 if __name__ == '__main__':
 #     f = ['C', [['ATurbo', 'pump']]]
 #     f = [0, [[1, 2]]]
