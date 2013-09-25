@@ -147,6 +147,7 @@ class ExtractionLineManager(Manager):
         p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
         self.network.load(p)
 
+
 #        if self.gauge_manager is not None:
 #            self.gauge_manager.on_trait_change(self.pressure_update, 'gauges.pressure')
 #    def close(self, isok):
@@ -204,8 +205,15 @@ class ExtractionLineManager(Manager):
                 self.info('start gauge scans')
                 self.gauge_manager.start_scans()
 
+        # init states with all valves closed
+        # load_valve_states will refresh network
+        for c in self._canvases:
+            self.network.init_states(c)
+
         self.valve_manager.load_valve_states()
         self.valve_manager.load_valve_lock_states()
+        self.valve_manager.load_valve_owners()
+
         self.refresh_canvas()
 #        if reload:
 
@@ -339,11 +347,26 @@ class ExtractionLineManager(Manager):
     def update_valve_lock_state(self, *args, **kw):
         for c in self._canvases:
             c.update_valve_lock_state(*args, **kw)
+
+    def update_valve_owned_state(self, *args, **kw):
+        for c in self._canvases:
+            c.update_valve_owned_state(*args, **kw)
+
+
 #         self.canvas.update_valve_lock_state(*args, **kw)
 
 #    def update_canvas2D(self, *args):
 #        if self.canvas:
 #            self.canvas.canvas2D.update_valve_state(*args)
+    def set_valve_owner(self, name, owner):
+        '''
+            set flag indicating if the valve is owned by a system
+        '''
+        if self.valve_manager is not None:
+            self.valve_manager.set_valve_owner(name, owner)
+#
+#         for c in self._canvases:
+#             c.update_valve_owner(name, owner)
 
     def show_valve_properties(self, name):
         if self.valve_manager is not None:
@@ -359,6 +382,10 @@ class ExtractionLineManager(Manager):
                 self.valve_manager.lock(name)
             else:
                 self.valve_manager.unlock(name)
+
+    def get_valve_owners(self):
+        if self.valve_manager is not None:
+            return self.valve_manager.get_owners()
 
     def get_valve_lock_states(self):
         if self.valve_manager is not None:

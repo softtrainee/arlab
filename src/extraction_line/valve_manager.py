@@ -13,9 +13,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+def func(word):
+    rs = []
+    groups = word.split(':')
+    if len(groups) > 1:
+        for gi in groups:
+            if '-' in gi:
+                owner, vs = gi.split('-')
+            else:
+                owner, vs = '', gi
+            rs.append((owner, vs.split(',')))
+    print rs
 
 #=============enthought library imports=======================
 from traits.api import Any, Dict, List, Bool
+from pyface.timer.do_later import do_later
 #=============standard library imports ========================
 import os
 import pickle
@@ -24,6 +36,8 @@ from Queue import Queue
 from threading import Timer, Thread, Event
 import time
 import random
+import weakref
+from itertools import groupby
 #=============local library imports  ==========================
 from src.globals import globalv
 from src.managers.manager import Manager
@@ -34,11 +48,8 @@ from src.paths import paths
 from src.helpers.parsers.valve_parser import ValveParser
 from src.loggable import Loggable
 from src.constants import ALPHAS
-from pyface.timer.do_later import do_later
-from src.ui.gui import invoke_in_main_thread
-import weakref
-from src.codetools.memory_usage import get_current_mem
-
+# from src.ui.gui import invoke_in_main_thread
+# from src.codetools.memory_usage import get_current_mem
 
 class ValveGroup(object):
     owner = None
@@ -137,8 +148,8 @@ class ValveManager(Manager):
                     if s != v.state:
                         changed = True
 
-                    v.set_state(s)
-                    elm.update_valve_state(k, s, refresh=False)
+                        v.set_state(s)
+                        elm.update_valve_state(k, s)
 
         if refresh and changed:
             elm.refresh_canvas()
@@ -156,11 +167,67 @@ class ValveManager(Manager):
                     if v.software_lock != s:
                         changed = True
 
-                    v.software_lock = s
-                    elm.update_valve_lock_state(k, s, refresh=False)
+                        v.software_lock = s
+                        elm.update_valve_lock_state(k, s)
 
         if refresh and changed:
             elm.refresh_canvas()
+
+    def load_valve_owners(self, refresh=True):
+        elm = self.extraction_line_manager
+
+        '''
+            needs to return all valves
+            not just ones that are owned
+        '''
+        owners = self.get_owners_word()
+        if not owners:
+            self.debug('didnt not parse owners word')
+            return
+
+        changed = False
+        ip = 'localhost'
+        for owner, valves in owners:
+            if owner != ip:
+                for k in valves:
+                    v = self.get_valve_by_name(k)
+                    if v.owner != owner:
+                        v.owner = owner
+                        elm.update_valve_owner(k, owner)
+                        changed = True
+
+        if refresh and changed:
+            elm.refresh_canvas()
+
+    def get_owners_word(self):
+        '''
+         eg.
+                1. 129.128.12.141-A,B,C:D,E,F
+                2. A,B,C,D,E,F
+                3. 129.128.12.141-A,B,C:129.138.12.150-D,E:F
+                    A,B,C owned by 141,
+                    D,E owned by 150
+                    F free
+        '''
+        if self.actuators:
+            rs = []
+            actuator = self.actuators[0]
+            word = actuator.get_owners()
+
+            groups = word.split(':')
+            if len(groups) > 1:
+                for gi in groups:
+                    if '-' in gi:
+                        owner, vs = gi.split('-')
+                    else:
+                        owner, vs = '', gi
+
+                    rs.append((owner, vs.split(',')))
+
+            else:
+                rs = [('', groups[0].split(',')), ]
+
+            return rs
 
     def get_state_word(self):
         if self.actuators:
@@ -234,6 +301,28 @@ class ValveManager(Manager):
                             self.lock(v, save=False)
                         else:
                             self.unlock(v, save=False)
+
+    def get_owners(self):
+        '''
+            eg.
+                1. 129.128.12.141-A,B,C:D,E,F
+                2. A,B,C,D,E,F
+                3. 129.128.12.141-A,B,C:129.138.12.150-D,E:F
+                    A,B,C owned by 141,
+                    D,E owned by 150
+                    F free
+        '''
+        vs = [(v.name, v.owner) for v in self.valves.itervalues()]
+        key = lambda x: x[1]
+        vs = sorted(vs, key=key)
+
+        owners = []
+        for owner, valves in groupby(vs, key=key):
+            if owner:
+                t = '{}-{}'.format(owner, ','.join(valves))
+            owners.append(t)
+
+        return ':'.join(owners)
 
     def get_software_locks(self):
 #        locks = []
@@ -512,6 +601,10 @@ class ValveManager(Manager):
             if save:
                 self._save_soft_lock_states()
 
+    def set_valve_owner(self, name, owner):
+        v = self.get_valve_by_name(name)
+        if v is not None:
+            v.owner = owner
 
     def validate(self, v):
         '''

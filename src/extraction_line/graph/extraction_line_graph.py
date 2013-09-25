@@ -33,25 +33,27 @@ class ExtractionLineGraph(HasTraits):
     color_dict = Dict
 
     def _load_config(self, p):
-        colors = dict(pump='yellow',
-                      spectrometer='green',
-                      laser='red'
-                      )
-
-        di = os.path.dirname(p)
-        p = os.path.join(di, 'network_config.xml')
-        cp = CanvasParser(p)
-        root = cp.get_root()
-        network = root.find('network')
-        if network is not None:
-            for c in network.findall('color'):
-                t = c.text.strip()
-                k = c.get('tag')
-
-                t = map(float, t.split(',')) if ',' in t else t
-                colors[k] = tuple(t)
-
-        self.color_dict = colors
+        pass
+#         colors = dict(pump='yellow',
+#                       spectrometer='green',
+#                       laser='red'
+#                       )
+#
+#         di = os.path.dirname(p)
+# #         p = os.path.join(di, 'network_config.xml')
+#
+# #         cp = CanvasParser(p)
+#         root = cp.get_root()
+#         network = root.find('network')
+#         if network is not None:
+#             for c in network.findall('color'):
+#                 t = c.text.strip()
+#                 k = c.get('tag')
+#
+#                 t = map(float, t.split(',')) if ',' in t else t
+#                 colors[k] = tuple(t)
+#
+#         self.color_dict = colors
 
     def load(self, p):
         self._load_config(p)
@@ -84,17 +86,32 @@ class ExtractionLineGraph(HasTraits):
             ea = ei.find('end')
 
             edge = Edge()
+            sname = ''
             if sa.text in nodes:
-                sa = nodes[sa.text]
+                sname = sa.text
+                sa = nodes[sname]
                 edge.anode = sa
                 sa.add_edge(edge)
 
+            ename = ''
             if ea.text in nodes:
-                ea = nodes[ea.text]
+                ename = ea.text
+                ea = nodes[ename]
                 edge.bnode = ea
                 ea.add_edge(edge)
 
+            edge.name = '{}_{}'.format(sname, ename)
+
         self.nodes = nodes
+
+    def init_states(self, canvas):
+        scene = canvas.canvas2D.scene
+        for ni in self.nodes.itervalues():
+            for ri in ni.find_roots():
+                obj = scene.get_item(ri.name)
+                color = obj.default_color
+                for ei in ri.edges:
+                    self._set_item_state(scene, ei.name, True, color)
 
     def set_canvas_states(self, canvas, states):
 
@@ -104,45 +121,66 @@ class ExtractionLineGraph(HasTraits):
         '''
         maxroot = None
         maxstate = None
-        for state, root in states:
+        maxterm = None
+        for state, root, term in states:
             if state == 'pump':
                 maxstate = 'pump'
                 maxroot = root
+                maxterm = term
             elif state == 'laser' and maxstate != 'pump':
                 maxstate = 'laser'
                 maxroot = root
+                maxterm = term
             elif state == 'spectrometer' and maxstate not in ('laser', 'pump'):
                 maxstate = 'spectrometer'
                 maxroot = root
+                maxterm = term
 
-        for state, root in states:
+        for state, root, term in states:
             nr = root.find_roots()
             if maxroot and maxroot in nr:
                 state = maxstate
 
-            self._set_canvas_states(canvas, state, root)
+            self._set_canvas_states(canvas, state, root, maxterm)
 
-    def _set_canvas_states(self, canvas, state, root):
+    def _set_canvas_states(self, canvas, state, root, term):
 
-        colors = self.color_dict
+#         colors = self.color_dict
         scene = canvas.canvas2D.scene
 
         # set root state
         color = None
         if state:
-            color = colors[state]
+#             color = colors[state]
+            obj = scene.get_item(term)
+#             print obj
+            color = obj.default_color
 
+#             print obj, root.name
+#             color = 'red'
+#             color = obj.active_color
+
+#         print color
         self._set_item_state(scene, root.name, state, color)
-#         print 'fff', root.name, state
-        # gather roots paths
+
+#         if not color:
+#             obj = scene.get_item(root.name)
+#             color = obj.default_color
+        # set all edges for the root
+        for ei in root.edges:
+#             print root.name, ei.name, color
+            self._set_item_state(scene, ei.name, state, color)
+
         for path in self.assemble_paths(root, None):
             # flatten path and set state for each element
             # use a color as the state
             for elem in flatten(path):
+#                 print elem, state
                 self._set_item_state(scene, elem, state, color)
 
     def _set_item_state(self, scene, name, state, color=None):
         obj = scene.get_item(name)
+
         if obj is None or isinstance(obj, Valve):
             return
 
@@ -160,9 +198,11 @@ class ExtractionLineGraph(HasTraits):
             roots = vnode.find_roots()
 
             nstates = []
+            nterminations = []
 #             roots = flatten(roots)
             for root in roots:
                 states = []
+                terms = []
 #                 root = list(flatten(root))
 #                 print len(roots), root.name if root else '----'
                 if root is not None:
@@ -171,40 +211,49 @@ class ExtractionLineGraph(HasTraits):
                             elems = list(flatten(path))
                             if elems:
 #                                 print root.name, elems
+                                term = None
+                                if len(elems) > 1:
+                                    term = elems[-2]
+                                terms.append(term)
                                 states.append(elems[-1])
 
                 nstate = ''
+                nterm = ''
                 if 'pump' in states:
                     nstate = 'pump'
+                    nterm = terms[states.index('pump')]
                 elif 'laser' in states:
                     nstate = 'laser'
+                    nterm = terms[states.index('laser')]
                 elif 'spectrometer' in states:
                     nstate = 'spectrometer'
+                    nterm = terms[states.index('spectrometer')]
 
                 nstates.append(nstate)
+                nterminations.append(nterm)
 
-            return zip(nstates, roots)
+            return zip(nstates, roots, nterminations)
 
     def assemble_paths(self, root, parent):
         paths = []
         for ei in root.edges:
             start = ei.bnode if ei.anode is root else ei.anode
             if not start is parent:
-                ps = self.assemble_path(start, root)
+                ps = self.assemble_path(start, root, ei.name)
                 paths.append(ps)
 
         return paths
 
-    def assemble_path(self, start, parent):
+    def assemble_path(self, start, parent, edge):
         if start:
             if isinstance(start, SpectrometerNode):
-                yield [start.name, 'spectrometer']
+                yield [edge, start.name, 'spectrometer']
             elif isinstance(start, PumpNode):
-                yield [start.name, 'pump']
+                yield [edge, start.name, 'pump']
             elif isinstance(start, LaserNode):
-                yield [start.name, 'laser']
+                yield [edge, start.name, 'laser']
             elif start.state and start.state != 'closed':
-                yield [start.name, self.assemble_paths(start, parent)]
+                yield [edge, start.name, self.assemble_paths(start, parent)]
 
 if __name__ == '__main__':
 #     f = ['C', [['ATurbo', 'pump']]]

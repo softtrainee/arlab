@@ -34,6 +34,7 @@ def flatten(nested):
             yield nested
 
 class Edge(HasTraits):
+    name = Str
     anode = Instance('src.extraction_line.graph.nodes.Node')
     bnode = Instance('src.extraction_line.graph.nodes.Node')
 
@@ -129,13 +130,13 @@ class Node(HasTraits):
 class ValveNode(Node):
     pass
 
-class PumpNode(Node):
-    pass
 
 
 class RootNode(Node):
     state = True
 
+class PumpNode(RootNode):
+    pass
 class SpectrometerNode(RootNode):
     pass
 

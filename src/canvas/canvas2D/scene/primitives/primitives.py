@@ -281,7 +281,20 @@ class Rectangle(QPrimitive):
                 )
         gc.stroke_path()
 
-class RoundedRectangle(Rectangle):
+class Bordered(Primitive):
+    def _get_border_color(self):
+        c = self.default_color
+        if self.state:
+            c = self.active_color
+
+        c = self._convert_color(c)
+        c = [ci / (2.) for ci in c]
+        if len(c) == 4:
+            c[3] = 1
+
+        return c
+
+class RoundedRectangle(Rectangle, Bordered):
     corner_radius = 8.0
     def _render_(self, gc):
         corner_radius = self.corner_radius
@@ -315,23 +328,23 @@ class RoundedRectangle(Rectangle):
 
             self._render_name(gc, x, y, width, height)
 
-    def _get_border_color(self):
-#        if self.state:
-#            c = list(self.default_color)
-#        else:
-#            c = list(self.active_color)
-#
-#        c = list(self.default_color)
-        c = self._convert_color(self.default_color)
-        c = tuple([ci / (2.) for ci in c])
-        return c
+#     def _get_border_color(self):
+# #        if self.state:
+# #            c = list(self.default_color)
+# #        else:
+# #            c = list(self.active_color)
+# #
+# #        c = list(self.default_color)
+#         c = self._convert_color(self.default_color)
+#         c = tuple([ci / (2.) for ci in c])
+#         return c
 
     def _render_border(self, gc, x, y, width, height):
         if self.use_border:
 
             corner_radius = self.corner_radius
             with gc:
-                gc.set_alpha(0.75)
+#                 gc.set_alpha(0.75)
                 gc.set_line_width(self.border_width)
 
 #                if self.state:
@@ -362,6 +375,7 @@ class RoundedRectangle(Rectangle):
 
 class BaseValve(QPrimitive):
     soft_lock = False
+    owned = False
 
     def is_in(self, x, y):
         mx, my = self.get_xy()
@@ -379,6 +393,17 @@ class BaseValve(QPrimitive):
 #            gc.rect(x - 2, y - 2, w + 4, h + 4)
             gc.draw_path()
             gc.restore_state()
+
+    def _draw_owned(self, gc, func, args):
+        if self.owned:
+            with gc:
+                gc.set_fill_color((0, 0, 0, 0))
+                gc.set_stroke_color((0, 1, 1))
+                gc.set_line_width(5)
+                func(*args)
+                gc.draw_path()
+                gc.restore_state()
+
 
 class RoughValve(BaseValve):
     width = 2
@@ -408,6 +433,7 @@ class RoughValve(BaseValve):
 #        args = (x - 2, y - 2, width + 4, height + 4)
 
         self._draw_soft_lock(gc, func, args)
+        self._draw_owned(gc, func, args)
         self._draw_state_indicator(gc, cx, cy, width, height)
         self._render_name(gc, cx, cy, width, height)
 
@@ -459,7 +485,7 @@ class Valve(RoundedRectangle, BaseValve):
         args = (x - 2, y - 2, w + 4, h + 4)
 
         self._draw_soft_lock(gc, func, args)
-
+        self._draw_owned(gc, func, args)
         self._draw_state_indicator(gc, x, y, w, h)
 
     def _get_border_color(self):
@@ -985,13 +1011,17 @@ class PolyLine(QPrimitive):
 
 
 
-class BorderLine(Line):
+class BorderLine(Line, Bordered):
     border_width = 5
-    border_color = (0, 0, 0.15)
+#     border_color = (0, 0, 0.15)
     def _render_(self, gc):
         gc.save_state()
         gc.set_line_width(self.width + self.border_width)
-        gc.set_stroke_color(self.border_color)
+#         if self.name in ('C_Bone', 'Bone_C'):
+#             print self.state, self._get_border_color()
+        gc.set_stroke_color(self._get_border_color())
+#         gc.set_fill_color(self._get_border_color())
+#             print self.state, self.name, self.default_color, self.active_color
         x, y = self.start_point.get_xy()
         x1, y1 = self.end_point.get_xy()
         # draw border

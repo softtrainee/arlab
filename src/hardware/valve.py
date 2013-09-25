@@ -62,6 +62,8 @@ class HardwareValve(Loggable):
 
     enabled = Bool(True)
 
+    owner = Str
+
     def __init__(self, name, *args, **kw):
         '''
      
