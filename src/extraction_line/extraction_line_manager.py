@@ -138,7 +138,7 @@ class ExtractionLineManager(Manager):
         '''
         '''
         if self.mode != 'client':
-            self.monitor = SystemMonitor(manager=weakref.ref(self),
+            self.monitor = SystemMonitor(manager=self,
                                          name='system_monitor'
                                          )
             self.monitor.monitor()
@@ -191,17 +191,19 @@ class ExtractionLineManager(Manager):
 #                self.gauge_manager.start_scans()
     def reload_canvas(self, load_states=False):
         self.reload_scene_graph()
-        for c in self._canvases:
-            self.network.init_states(c)
+        if self.network:
+            p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
+            self.network.load(p)
+            for c in self._canvases:
+                self.network.init_states(c)
 
-        print self.mode
         if self.mode == 'client':
             self.valve_manager.load_valve_states(refresh=False, force_network_change=True)
             self.valve_manager.load_valve_lock_states(refresh=False)
             self.valve_manager.load_valve_owners(refresh=False)
 
         self.refresh_canvas()
-        
+
     def activate(self):
 #        p = os.path.join(paths.hidden_dir, 'show_explanantion')
 #        if os.path.isfile(p):
@@ -224,12 +226,12 @@ class ExtractionLineManager(Manager):
         # load_valve_states will refresh network
 #         for c in self._canvases:
 #             self.network.init_states(c)
-# 
+#
 #         if self.mode != 'client':
 #             self.valve_manager.load_valve_states()
 #             self.valve_manager.load_valve_lock_states()
 #             self.valve_manager.load_valve_owners()
-# 
+#
 #         self.refresh_canvas()
 #        if reload:
 
@@ -537,27 +539,27 @@ class ExtractionLineManager(Manager):
                 if change:
                     self.update_valve_state(name, True if action == 'open' else False)
                     self.refresh_canvas()
-        
-            return result,change
+
+            return result, change
 
     def _check_ownership(self, name, requestor):
 #         if requestor is not None:
 #             for f in self.flags:
 #                 if hasattr(f, 'valves'):
 #                     self.debug('flag={} id={}'.format(f.name, f.owner))
-# 
+#
 #                     self.debug('name={} valves={}'.format(name, f.valves))
 #                     if name in f.valves:
 #                         return f.owner == requestor
-#                     
+#
 #         else:
-#             for 
+#             for
         if requestor is None:
-            requestor=gethostbyname(gethostname())
+            requestor = gethostbyname(gethostname())
         self.debug('checking ownership. requestor={}'.format(requestor))
-        
-        v=self.valve_manager.valves[name]
-        return not v.owner and v.owner !=requestor
+
+        v = self.valve_manager.valves[name]
+        return not v.owner and v.owner != requestor
 
 #=================== factories ==========================
 

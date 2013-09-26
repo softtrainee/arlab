@@ -137,7 +137,7 @@ class ValveManager(Manager):
 
             pickle.dump(obj, f)
 
-    def load_valve_states(self, refresh=True,force_network_change=False):
+    def load_valve_states(self, refresh=True, force_network_change=False):
         elm = self.extraction_line_manager
         word = self.get_state_word()
         changed = False
@@ -151,7 +151,7 @@ class ValveManager(Manager):
 
                         v.set_state(s)
                         elm.update_valve_state(k, s)
-                        
+
 
         if refresh and changed:
             elm.refresh_canvas()
@@ -198,7 +198,7 @@ class ValveManager(Manager):
                             v.owner = owner
                             elm.update_valve_owned_state(k, owner)
                             changed = True
-        
+
         if refresh and changed:
             elm.refresh_canvas()
 
@@ -216,19 +216,19 @@ class ValveManager(Manager):
             rs = []
             actuator = self.actuators[0]
             word = actuator.get_owners_word()
+            if word:
+                groups = word.split(':')
+                if len(groups) > 1:
+                    for gi in groups:
+                        if '-' in gi:
+                            owner, vs = gi.split('-')
+                        else:
+                            owner, vs = '', gi
 
-            groups = word.split(':')
-            if len(groups) > 1:
-                for gi in groups:
-                    if '-' in gi:
-                        owner, vs = gi.split('-')
-                    else:
-                        owner, vs = '', gi
+                        rs.append((owner, vs.split(',')))
 
-                    rs.append((owner, vs.split(',')))
-
-            else:
-                rs = [('', groups[0].split(',')), ]
+                else:
+                    rs = [('', groups[0].split(',')), ]
 
             return rs
 
@@ -315,6 +315,8 @@ class ValveManager(Manager):
                     D,E owned by 150
                     F free
         '''
+#         self.valves['C'].owner = '129.138.12.135'
+
         vs = [(v.name.split('-')[1], v.owner) for v in self.valves.itervalues()]
         key = lambda x: x[1]
         vs = sorted(vs, key=key)
@@ -332,18 +334,8 @@ class ValveManager(Manager):
         return ':'.join(owners)
 
     def get_software_locks(self):
-#        locks = []
-#        for k, v in self.valves.items():
-#            locks.append(k)
-#            locks.append('1' if v.software_lock else '0')
-
-#            if self.query_valve_state:
-#                s = self.get_state_by_name(k)
-#            else:
-#                s = v.state
-
-        return ','.join(['{}{}'.format(k, int(v.software_lock)) for k, v in self.valves.iteritems()])
-#        return ''.join(locks)
+        return ','.join(['{}{}'.format(k, int(v.software_lock))
+                            for k, v in self.valves.iteritems()])
 
     def get_states(self, timeout=1):
         '''
@@ -387,77 +379,6 @@ class ValveManager(Manager):
 
         self._prev_keys = keys
         return ','.join(states)
-
-
-#    def _get_states(self, times_up_event, sq):
-#
-#        def _gstate(ki):
-#            sq.put(ki)
-#            s = self.get_state_by_name(ki)
-#            sq.put('1' if s else '0')
-#
-#        dv = []
-#        for k, v in self.valves.iteritems():
-# #        for k, _ in self.valves.items():
-#            if v.query_state:
-#                dv.append(k)
-#                continue
-#
-#            if times_up_event.isSet():
-#                break
-#
-#            _gstate(k)
-#
-#        if times_up_event.isSet():
-#            return
-#
-#        for k in dv:
-#            if times_up_event.isSet():
-#                break
-#            _gstate(k)
-#    def get_states2(self, timeout=1):
-#        '''
-#            use event and timer to allow for partial responses
-#            the timer t will set the event in timeout seconds
-#
-#            after the timer is started _get_states is called
-#            _get_states loops thru the valves querying their state
-#
-#            each iteration the times_up_event is checked to see it
-#            has fired if it has the the loop breaks and returns the
-#            states word
-#
-#            to prevent the communicator from blocking longer then the times up event
-#            the _gs_thread is joined and timeouts out after 1.01s
-#        '''
-#
-#        states_queue = Queue()
-#        times_up_event = Event()
-#        t = Timer(1, lambda: times_up_event.set())
-#        t.start()
-#        try:
-#
-#            _gs_thread = Thread(name='valves.get_states',
-#                                target=self._get_states, args=(times_up_event, states_queue))
-#            _gs_thread.start()
-#            _gs_thread.join(timeout=1.01)
-#        except (Exception,), e:
-#            pass
-#
-#        # ensure word has even number of elements
-#        s = ''
-#        i = 0
-#        n = states_queue.qsize()
-#        if n % 2 != 0:
-#            c = n / 2 * 2
-#        else:
-#            c = n
-#
-#        while not states_queue.empty() and i < c:
-#            s += states_queue.get_nowait()
-#            i += 1
-#
-#        return s
 
     def get_valve_by_address(self, a):
         '''
@@ -621,14 +542,6 @@ class ValveManager(Manager):
 
         return next((False for vi in v.interlocks if self.get_valve_by_name(vi).state), True)
 
-#        #check interlock conditions
-#        for i in v.interlocks:
-#            t = self.get_valve_by_name(i)
-#            if t.state:
-#                return False
-#        else:
-#            return True
-
     def _open_(self, name, mode):
         '''
         '''
@@ -669,17 +582,6 @@ class ValveManager(Manager):
                 act = getattr(v, action)
 
                 result, changed = act(mode='{}-{}'.format(self.extraction_line_manager.mode, mode))
-#                 if isinstance(result, bool):  # else its an error message
-#                     if result:
-#                         ve = self.get_evalve_by_name(name)
-#                         ve.state = True if action == 'open' else False
-
-    #                update the section state
-    #                for s in self.sections:
-    #                    s.update_state(action, v, self.valves, self.sample_gas_type, self.canvas3D.scene_graph)
-
-                    # result = True
-
         else:
             self.warning('Valve {} not available'.format(vid))
             # result = 'Valve %s not available' % id
@@ -919,6 +821,75 @@ if __name__ == '__main__':
         # print r, len(r)
 
 #==================== EOF ==================================
+#    def _get_states(self, times_up_event, sq):
+#
+#        def _gstate(ki):
+#            sq.put(ki)
+#            s = self.get_state_by_name(ki)
+#            sq.put('1' if s else '0')
+#
+#        dv = []
+#        for k, v in self.valves.iteritems():
+# #        for k, _ in self.valves.items():
+#            if v.query_state:
+#                dv.append(k)
+#                continue
+#
+#            if times_up_event.isSet():
+#                break
+#
+#            _gstate(k)
+#
+#        if times_up_event.isSet():
+#            return
+#
+#        for k in dv:
+#            if times_up_event.isSet():
+#                break
+#            _gstate(k)
+#    def get_states2(self, timeout=1):
+#        '''
+#            use event and timer to allow for partial responses
+#            the timer t will set the event in timeout seconds
+#
+#            after the timer is started _get_states is called
+#            _get_states loops thru the valves querying their state
+#
+#            each iteration the times_up_event is checked to see it
+#            has fired if it has the the loop breaks and returns the
+#            states word
+#
+#            to prevent the communicator from blocking longer then the times up event
+#            the _gs_thread is joined and timeouts out after 1.01s
+#        '''
+#
+#        states_queue = Queue()
+#        times_up_event = Event()
+#        t = Timer(1, lambda: times_up_event.set())
+#        t.start()
+#        try:
+#
+#            _gs_thread = Thread(name='valves.get_states',
+#                                target=self._get_states, args=(times_up_event, states_queue))
+#            _gs_thread.start()
+#            _gs_thread.join(timeout=1.01)
+#        except (Exception,), e:
+#            pass
+#
+#        # ensure word has even number of elements
+#        s = ''
+#        i = 0
+#        n = states_queue.qsize()
+#        if n % 2 != 0:
+#            c = n / 2 * 2
+#        else:
+#            c = n
+#
+#        while not states_queue.empty() and i < c:
+#            s += states_queue.get_nowait()
+#            i += 1
+#
+#        return s
 # def _load_valves_from_filetxt(self, path):
 #        '''
 #

@@ -48,40 +48,31 @@ class Node(HasTraits):
 
 #     def add_node(self, n):
 #         self.nodes.append(weakref.ref(n)())
-    
+
     def add_edge(self, n):
         self.edges.append(weakref.ref(n)())
-        
+
     def find_roots(self):
-        roots=[]
+        roots = []
         for ei in self.edges:
             for n in (ei.anode, ei.bnode):
                 if n:
                     if isinstance(n, RootNode):
                         roots.append(n)
+                        if not n.visited:
+                            n.visited = True
+                            roots.extend(n.find_roots())
                     else:
-                        if n.state and n.state!='closed':
+                        if n.state and n.state != 'closed':
                             if not n.visited:
-                                n.visited=True
+                                n.visited = True
                                 roots.extend(n.find_roots())
-                    
-                    n.visited = True
-                    
-#                             if parent!=n:
-#                                 roots.extend(n.find_roots(parent=self))
-                        
-#                     n.find_roots()
-#                     if n.state and n.state!='closed':
-                    
-#                     paths=n.make_paths()
-                    
-#         print roots
         return roots
-    
+
 #     def _find_klass(self, klass, parent):
 #         '''
 #              find klass that is farthest away
-#              
+#
 #         '''
 #         for ei in self.edges:
 #             for n in (ei.anode, ei.bnode):
@@ -93,9 +84,9 @@ class Node(HasTraits):
 # #                                 print '    check name={} state={}'.format(n.name, n.state)
 #                                 yield n._find_klass(klass, self)
 #                     else:
-                         
-                    
-                    
+
+
+
     def find_closest_roots(self):
         '''
             traverse networking looking for a connection to 
@@ -118,7 +109,7 @@ class Node(HasTraits):
 
 #             rs.append(r)
 
-#         return rs    
+#         return rs
     def _find_closest_klass(self, klass, parent):
 #         print '------------------------------'
         for ei in self.edges:
@@ -130,7 +121,7 @@ class Node(HasTraits):
 #                     self._visited.append(n)
                     if isinstance(n, klass):
                         yield n
-                        
+
                     if isinstance(n, ValveNode):
 #                         print n.name, n.state, parent.name if parent else ''
                         if n.state and n.state is not 'closed':

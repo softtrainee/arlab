@@ -46,7 +46,7 @@ class ExtractionLineScene(Scene):
             ox, oy = origin
 
         key = elem.text.strip()
-        display_name=str_to_bool(elem.get('display_name','T'))
+        display_name = str_to_bool(elem.get('display_name', 'T'))
         x, y = self._get_floats(elem, 'translation')
         w, h = self._get_floats(elem, 'dimension')
 
@@ -63,7 +63,7 @@ class ExtractionLineScene(Scene):
                                             default_color=c,
                                             type_tag=type_tag)
         self.add_item(rect, layer=1)
-        
+
     def _new_connection(self, conn, key, start, end):
 
         skey = start.text.strip()
@@ -190,7 +190,8 @@ class ExtractionLineScene(Scene):
 
     def _load_rects(self, cp, origin, color_dict):
         for key in ('stage', 'laser', 'spectrometer',
-                     'turbo', 'getter', 'tank','pipette'):
+                     'turbo', 'getter', 'tank', 'pipette',
+                     'ionpump'):
             for b in cp.get_elements(key):
                 if key in color_dict:
                     c = color_dict[key]
