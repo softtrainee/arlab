@@ -129,12 +129,12 @@ class ValveManager(Manager):
         elm = self.extraction_line_manager
         word = self.get_state_word()
         changed = False
-        self.debug('valve state word= {}'.format(word))
+        #self.debug('valve state word= {}'.format(word))
         if word is not None:
             for k, v in self.valves.iteritems():
                 if word.has_key(k):
                     s = word[k]
-                    if s != v.state or (s and force_network_change):
+                    if s != v.state or force_network_change:
                         changed = True
 
                         v.set_state(s)
@@ -142,9 +142,8 @@ class ValveManager(Manager):
         elif force_network_change:
             changed = True
             for k, v in self.valves.iteritems():
-                if v.state:
-                    elm.update_valve_state(k, v.state)
-
+                elm.update_valve_state(k, v.state)
+                
         if refresh and changed:
             elm.refresh_canvas()
 

@@ -37,7 +37,8 @@ class Edge(HasTraits):
     name = Str
     anode = Instance('src.extraction_line.graph.nodes.Node')
     bnode = Instance('src.extraction_line.graph.nodes.Node')
-
+    def nodes(self):
+        return self.anode, self.bnode
 class Node(HasTraits):
 #     nodes = List
     edges = List
@@ -47,8 +48,8 @@ class Node(HasTraits):
     visited = False
 
 #     def add_node(self, n):
-#         self.nodes.append(weakref.ref(n)())
-
+#         self.nodes.append(weakref.ref(n)())    
+        
     def add_edge(self, n):
         self.edges.append(weakref.ref(n)())
 
