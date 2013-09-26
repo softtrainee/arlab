@@ -70,7 +70,8 @@ class RefreshCanvasAction(ExtractionLineAction):
     def perform(self, event):
         manager = self._get_manager(event)
 #        manager.window = self.window
-        manager.reload_scene_graph()
+        manager.reload_canvas()
+        
 
 
 # class OpenViewControllerAction(ExtractionLineAction):

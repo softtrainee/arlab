@@ -21,7 +21,7 @@ from traitsui.api import View, Item
 #============= local library imports  ==========================
 
 from src.extraction_line.graph.nodes import ValveNode, RootNode, \
-    PumpNode, Edge, SpectrometerNode, LaserNode, flatten
+    PumpNode, Edge, SpectrometerNode, LaserNode, flatten, TankNode, PipetteNode
 from src.helpers.parsers.canvas_parser import CanvasParser
 from src.canvas.canvas2D.scene.primitives.primitives import Valve
 import os
@@ -70,9 +70,12 @@ class ExtractionLineGraph(HasTraits):
         for t, klass in (('stage', RootNode),
                         ('spectrometer', SpectrometerNode),
                         ('valve', ValveNode),
+                        ('rough_valve', ValveNode),
                         ('turbo', PumpNode),
                         ('ion', PumpNode),
-                        ('laser', LaserNode)
+                        ('laser', LaserNode),
+                        ('tank', TankNode),
+                        ('pipette', PipetteNode)
                         ):
             for si in cp.get_elements(t):
                 n = si.text.strip()
@@ -108,6 +111,7 @@ class ExtractionLineGraph(HasTraits):
         scene = canvas.canvas2D.scene
         for ni in self.nodes.itervalues():
             for ri in ni.find_roots():
+                self.clear_visited()
                 obj = scene.get_item(ri.name)
                 color = obj.default_color
                 for ei in ri.edges:
@@ -126,25 +130,36 @@ class ExtractionLineGraph(HasTraits):
         maxstate = None
         maxterm = None
         for state, root, term in states:
-            if state == 'pump':
-                maxstate = 'pump'
+            if state in ('pump', 'tank'):
+                maxstate = state
                 maxroot = root
                 maxterm = term
-            elif state == 'laser' and maxstate != 'pump':
-                maxstate = 'laser'
-                maxroot = root
-                maxterm = term
-            elif state == 'spectrometer' and maxstate not in ('laser', 'pump'):
-                maxstate = 'spectrometer'
-                maxroot = root
-                maxterm = term
+                break
+            
+#             if state=='tank':
+#                 maxroot=root
+#                 maxterm=term
+#                 maxstate=state
+#                 break
+            
+            if state in ('laser','pipette','spectrometer'):
+                maxroot=root
+                maxterm=term
+                maxstate=state
+                
 
         for state, root, term in states:
             nr = root.find_roots()
+            self.clear_visited()
+            
             if maxroot and maxroot in nr:
                 state = maxstate
-
-            self._set_canvas_states(canvas, state, root, maxterm)
+                term=maxterm
+            
+            print 'state={} term={} maxroot={}'.format(state,term, maxroot.name if maxroot else '')
+            self._set_canvas_states(canvas, state, root, term)
+#             for ni in nr:
+#                 self._set_canvas_states(canvas, state, ni, maxterm)
 
     def _set_canvas_states(self, canvas, state, root, term):
 
@@ -168,38 +183,49 @@ class ExtractionLineGraph(HasTraits):
         self._set_item_state(scene, root.name, state, color)
 
         # set all edges for the root
-        for ei in root.edges:
-#             print root.name, ei.name, color
-            self._set_item_state(scene, ei.name, state, color)
+#         for ei in root.edges:
+# #             print root.name, ei.name, color
+#             self._set_item_state(scene, ei.name, state, color)
 
 
         for path in self.assemble_paths(root, None):
             # flatten path and set state for each element
             # use a color as the state
             for elem in flatten(path):
-                print elem, state, color
+#                 print elem, state, color
                 self._set_item_state(scene, elem, state, color)
 
     def _set_item_state(self, scene, name, state, color=None):
         obj = scene.get_item(name)
 
-        if obj is None or isinstance(obj, Valve):
+        if obj is None or isinstance(obj, Valve) or obj.type_tag in ('turbo','tank') :
             return
 
+#         print obj.name, obj.state, state
         if state:
             obj.active_color = color
             obj.state = True
         else:
-            obj.default_color = color
+#             obj.default_color = color
             obj.state = False
-
+    
+    def clear_visited(self):
+        for ni in self.nodes.itervalues():
+            ni.visited=False
+            
     def set_valve_state(self, name, state, *args, **kw):
         if name in self.nodes:
             # find the root node for this node
             vnode = self.nodes[name]
             vnode.state = 'open' if state else 'closed'
-            roots = vnode.find_roots()
-
+#             roots = vnode.find_roots()
+#             roots =[rr for ri in vnode.find_roots()
+#                         for rr in ri.find_roots()]
+            roots=vnode.find_roots()
+            self.clear_visited()
+            
+#             if name=='P':
+#                 print [ri.name for ri in roots]
             nstates = []
             nterminations = []
 #             roots = flatten(roots)
@@ -213,7 +239,10 @@ class ExtractionLineGraph(HasTraits):
                         if path:
                             elems = list(flatten(path))
                             if elems:
-                                print root.name, elems
+#                                 if root.name=='CO2':
+#                                     print elems
+#                                 if root.name in ('Minibone','CocktailPipette','Bone'):
+#                                     print root.name, elems
                                 term = None
                                 if len(elems) > 1:
                                     term = elems[-2]
@@ -222,9 +251,28 @@ class ExtractionLineGraph(HasTraits):
 
                 nstate = ''
                 nterm = ''
-                if 'pump' in states:
+                if isinstance(root, PumpNode):
+                    nstate='pump'
+                    nterm=root.name
+                elif isinstance(root, LaserNode):
+                    nstate='laser'
+                    nterm=root.name
+                elif isinstance(root, TankNode):
+                    nstate='tank'
+                    nterm=root.name
+                elif isinstance(root, PipetteNode):
+                    nstate='pipette'
+                    nterm=root.name
+                    
+                elif 'pump' in states:
                     nstate = 'pump'
                     nterm = terms[states.index('pump')]
+                elif 'tank' in states:
+                    nstate = 'tank'
+                    nterm = terms[states.index('tank')]
+                elif 'pipette' in states:
+                    nstate = 'pipette'
+                    nterm = terms[states.index('pipette')]
                 elif 'laser' in states:
                     nstate = 'laser'
                     nterm = terms[states.index('laser')]
@@ -234,9 +282,10 @@ class ExtractionLineGraph(HasTraits):
 #                 else:
 #                     nstate = True
 #                     nterm = ''
-
                 nstates.append(nstate)
                 nterminations.append(nterm)
+                if root.name in ('Minibone','CocktailPipette','Bone'):
+                    print root.name, nstates, nterminations
 
             return zip(nstates, roots, nterminations)
 
@@ -258,11 +307,16 @@ class ExtractionLineGraph(HasTraits):
                 yield [edge, start.name, 'pump']
             elif isinstance(start, LaserNode):
                 yield [edge, start.name, 'laser']
+            elif isinstance(start, PipetteNode):
+                yield [edge, start.name, 'pipette']
+            elif isinstance(start, TankNode):
+                yield [edge, start.name, 'tank']
             else:
                 if start.state and start.state != 'closed':
                     yield [edge, start.name, self.assemble_paths(start, parent)]
                 else:
                     yield [edge]
+                    
 if __name__ == '__main__':
 #     f = ['C', [['ATurbo', 'pump']]]
 #     f = [0, [[1, 2]]]

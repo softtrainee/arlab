@@ -38,6 +38,7 @@ import time
 import random
 import weakref
 from itertools import groupby
+from socket import gethostname, gethostbyname
 #=============local library imports  ==========================
 from src.globals import globalv
 from src.managers.manager import Manager
@@ -136,7 +137,7 @@ class ValveManager(Manager):
 
             pickle.dump(obj, f)
 
-    def load_valve_states(self, refresh=True):
+    def load_valve_states(self, refresh=True,force_network_change=False):
         elm = self.extraction_line_manager
         word = self.get_state_word()
         changed = False
@@ -145,11 +146,12 @@ class ValveManager(Manager):
             for k, v in self.valves.iteritems():
                 if word.has_key(k):
                     s = word[k]
-                    if s != v.state:
+                    if s != v.state or (s and force_network_change):
                         changed = True
 
                         v.set_state(s)
                         elm.update_valve_state(k, s)
+                        
 
         if refresh and changed:
             elm.refresh_canvas()
@@ -184,18 +186,19 @@ class ValveManager(Manager):
         if not owners:
             self.debug('didnt not parse owners word')
             return
-
+#         print owners
         changed = False
-        ip = 'localhost'
+        ip = gethostbyname(gethostname())
         for owner, valves in owners:
             if owner != ip:
                 for k in valves:
                     v = self.get_valve_by_name(k)
-                    if v.owner != owner:
-                        v.owner = owner
-                        elm.update_valve_owner(k, owner)
-                        changed = True
-
+                    if v is not None:
+                        if v.owner != owner:
+                            v.owner = owner
+                            elm.update_valve_owned_state(k, owner)
+                            changed = True
+        
         if refresh and changed:
             elm.refresh_canvas()
 
@@ -212,7 +215,7 @@ class ValveManager(Manager):
         if self.actuators:
             rs = []
             actuator = self.actuators[0]
-            word = actuator.get_owners()
+            word = actuator.get_owners_word()
 
             groups = word.split(':')
             if len(groups) > 1:
