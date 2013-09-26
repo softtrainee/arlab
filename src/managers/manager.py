@@ -108,7 +108,7 @@ class Manager(Viewable, RPCable):
 
     _mass_spec_params = None
 
-    _error_code = None
+    error_code = None
 
 
 #    def __init__(self, *args, **kw):
@@ -225,19 +225,18 @@ class Manager(Viewable, RPCable):
             return dlg.path
 
     def get_error(self):
-        e = self._error_code
-        self._error_code = None
+        e = self.error_code
+        self.error_code = None
         return str(e)
 
-    def _set_error_code(self, e):
-        self._error_code = e
+#     def _set_error_code(self, e):
+#         self.error_code = e
+#
+#     def _get_error_code(self):
+#         return self.error_code
+#
 
-    def _get_error_code(self):
-        return self._error_code
 
-    error_code = property(fget=_get_error_code,
-                         fset=_set_error_code
-                        )
     def get_managers(self):
 
         return [(ma, getattr(self, ma)) for ma in self.traits()
