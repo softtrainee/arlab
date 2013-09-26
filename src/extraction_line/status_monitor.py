@@ -8,6 +8,7 @@ class StatusMonitor(Loggable):
     _clients = 0
     state_freq = 3
     lock_freq = 5
+    owner_freq=5
     period = 1
     def start(self):
         if not self._clients:
@@ -43,6 +44,9 @@ class StatusMonitor(Loggable):
 
         if not i % self.lock_freq:
             vm.load_valve_lock_states()
+
+        if not i % self.owner_freq:
+            vm.load_valve_owners()
 
         if i > 100:
             i = 0

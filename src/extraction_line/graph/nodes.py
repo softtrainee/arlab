@@ -48,17 +48,61 @@ class Node(HasTraits):
 
 #     def add_node(self, n):
 #         self.nodes.append(weakref.ref(n)())
-
+    
     def add_edge(self, n):
         self.edges.append(weakref.ref(n)())
-
-    def find_roots(self, visited=[]):
+        
+    def find_roots(self):
+        roots=[]
+        for ei in self.edges:
+            for n in (ei.anode, ei.bnode):
+                if n:
+                    if isinstance(n, RootNode):
+                        roots.append(n)
+                    else:
+                        if n.state and n.state!='closed':
+                            if not n.visited:
+                                n.visited=True
+                                roots.extend(n.find_roots())
+                    
+                    n.visited = True
+                    
+#                             if parent!=n:
+#                                 roots.extend(n.find_roots(parent=self))
+                        
+#                     n.find_roots()
+#                     if n.state and n.state!='closed':
+                    
+#                     paths=n.make_paths()
+                    
+#         print roots
+        return roots
+    
+#     def _find_klass(self, klass, parent):
+#         '''
+#              find klass that is farthest away
+#              
+#         '''
+#         for ei in self.edges:
+#             for n in (ei.anode, ei.bnode):
+#                 if n and not n is self:
+#                     if isinstance(n, ValveNode):
+# #                         print n.name, n.state, parent.name if parent else ''
+#                         if n.state and n.state is not 'closed':
+#                             if n != parent:
+# #                                 print '    check name={} state={}'.format(n.name, n.state)
+#                                 yield n._find_klass(klass, self)
+#                     else:
+                         
+                    
+                    
+    def find_closest_roots(self):
         '''
             traverse networking looking for a connection to 
             a root node
         '''
 
-        rvs = self._find_klass(RootNode, None)
+        rvs = self._find_closest_klass(RootNode, None)
         return list(flatten(rvs))
 #         try:
 #             for r in flatten(rvs):
@@ -74,9 +118,8 @@ class Node(HasTraits):
 
 #             rs.append(r)
 
-#         return rs
-
-    def _find_klass(self, klass, parent):
+#         return rs    
+    def _find_closest_klass(self, klass, parent):
 #         print '------------------------------'
         for ei in self.edges:
             nodes = (ei.anode, ei.bnode)
@@ -87,11 +130,13 @@ class Node(HasTraits):
 #                     self._visited.append(n)
                     if isinstance(n, klass):
                         yield n
+                        
                     if isinstance(n, ValveNode):
+#                         print n.name, n.state, parent.name if parent else ''
                         if n.state and n.state is not 'closed':
                             if n != parent:
 #                                 print '    check name={} state={}'.format(n.name, n.state)
-                                yield n._find_klass(klass, self)
+                                yield n._find_closest_klass(klass, self)
 #                     if isinstance(n, ValveNode) \
 #                         and not n.visited:
 #                         if n.state:
@@ -138,6 +183,11 @@ class RootNode(Node):
 class PumpNode(RootNode):
     pass
 class SpectrometerNode(RootNode):
+    pass
+
+class TankNode(RootNode):
+    pass
+class PipetteNode(RootNode):
     pass
 
 class LaserNode(RootNode):

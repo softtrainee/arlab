@@ -286,20 +286,24 @@ class ExtractionLineCanvas2D(SceneCanvas):
         if self.manager is not None:
             if state:
 #                if self.manager.open_valve(item.name, mode = 'manual'):
-                if self.manager.open_valve(item.name, mode='normal'):
-                    ok = True
+                ok, change=self.manager.open_valve(item.name, mode='normal')
+#                 if self.manager.open_valve(item.name, mode='normal'):
+#                     ok = True
             else:
 #                if self.manager.close_valve(item.name, mode = 'manual'):
-                if self.manager.close_valve(item.name, mode='normal'):
-                    ok = True
+                ok, change=self.manager.close_valve(item.name, mode='normal')
+#                 if self.manager.close_valve(item.name, mode='normal'):
+#                     ok = True
         else:
             ok = True
 
 #        ok = True
         if ok and not item.soft_lock:
             item.state = state
-
-        self.invalidate_and_redraw()
+            
+        if change:
+            self.request_redraw()
+#             self.invalidate_and_redraw()
 
     def _scene_default(self):
         s = ExtractionLineScene(canvas=weakref.ref(self)())

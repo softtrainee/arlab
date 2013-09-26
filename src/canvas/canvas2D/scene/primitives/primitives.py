@@ -40,7 +40,8 @@ def calc_rotation(x1, y1, x2, y2):
 class Primitive(HasTraits):
     identifier = Str
     identifier_visible = True
-
+    type_tag=Str
+    
     x = Float
     y = Float
     state = False
@@ -296,6 +297,7 @@ class Bordered(Primitive):
 
 class RoundedRectangle(Rectangle, Bordered):
     corner_radius = 8.0
+    display_name=True
     def _render_(self, gc):
         corner_radius = self.corner_radius
         with gc:
@@ -325,8 +327,8 @@ class RoundedRectangle(Rectangle, Bordered):
             self._render_border(gc, x, y, width, height)
 
 #                self._render_border(gc, x, y, width, height)
-
-            self._render_name(gc, x, y, width, height)
+            if self.display_name:
+                self._render_name(gc, x, y, width, height)
 
 #     def _get_border_color(self):
 # #        if self.state:
@@ -394,15 +396,44 @@ class BaseValve(QPrimitive):
             gc.draw_path()
             gc.restore_state()
 
-    def _draw_owned(self, gc, func, args):
+    def _draw_owned(self, gc):
+#         print self.name, self.owned
         if self.owned:
             with gc:
                 gc.set_fill_color((0, 0, 0, 0))
-                gc.set_stroke_color((0, 1, 1))
+                gc.set_stroke_color((0, 0, 0))
                 gc.set_line_width(5)
-                func(*args)
+                
+                x,y=self.get_xy()
+                width,height=self.get_wh()
+                corner_radius=3
+                gc.translate_ctm(x, y)
+                # draw a rounded rectangle
+                x = y = 0
+    
+                gc.begin_path()
+                gc.move_to(x + corner_radius, y)
+                gc.arc_to(x + width, y,
+                        x + width,
+                        y + corner_radius, corner_radius)
+                gc.arc_to(x + width,
+                        y + height,
+                        x + width - corner_radius,
+                        y + height, corner_radius)
+                gc.arc_to(x, y + height,
+                        x, y,
+                        corner_radius)
+                gc.arc_to(x, y,
+                        x + width + corner_radius,
+                        y, corner_radius)
+    
                 gc.draw_path()
-                gc.restore_state()
+                
+#                 gc.set_line_join(1)
+#                 print args
+#                 func(*args)
+#                 gc.draw_path()
+#                 gc.restore_state()
 
 
 class RoughValve(BaseValve):
@@ -433,7 +464,7 @@ class RoughValve(BaseValve):
 #        args = (x - 2, y - 2, width + 4, height + 4)
 
         self._draw_soft_lock(gc, func, args)
-        self._draw_owned(gc, func, args)
+        self._draw_owned(gc)
         self._draw_state_indicator(gc, cx, cy, width, height)
         self._render_name(gc, cx, cy, width, height)
 
@@ -485,22 +516,24 @@ class Valve(RoundedRectangle, BaseValve):
         args = (x - 2, y - 2, w + 4, h + 4)
 
         self._draw_soft_lock(gc, func, args)
-        self._draw_owned(gc, func, args)
+        
+        args=(x - 2, y - 4, w + 8, h + 8)
+        self._draw_owned(gc)
         self._draw_state_indicator(gc, x, y, w, h)
 
-    def _get_border_color(self):
-#        if self.state:
-#            c = list(self.active_color)
-#        else:
-#            c = list(self.default_color)
-        if self.state:
-            c = self.active_color
-        else:
-            c = self.default_color
-
-        c = self._convert_color(c)
-        c = [ci / (2.) for ci in c]
-        return c
+#     def _get_border_color(self):
+# #        if self.state:
+# #            c = list(self.active_color)
+# #        else:
+# #            c = list(self.default_color)
+#         if self.state:
+#             c = self.active_color
+#         else:
+#             c = self.default_color
+# 
+#         c = self._convert_color(c)
+#         c = [ci / (2.) for ci in c]
+#         return c
 
     def _draw_state_indicator(self, gc, x, y, w, h):
         if not self.state:

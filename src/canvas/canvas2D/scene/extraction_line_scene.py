@@ -23,6 +23,7 @@ from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
 from src.canvas.canvas2D.scene.primitives.primitives import RoundedRectangle, Valve, \
     RoughValve, Label, BorderLine, Rectangle
 import os
+from src.helpers.filetools import str_to_bool
 
 
 class ExtractionLineScene(Scene):
@@ -38,13 +39,14 @@ class ExtractionLineScene(Scene):
             c = '({})'.format(c)
         return c
 
-    def _new_rectangle(self, elem, c, bw=3, origin=None):
+    def _new_rectangle(self, elem, c, bw=3, origin=None, type_tag=''):
         if origin is None:
             ox, oy = 0, 0
         else:
             ox, oy = origin
 
         key = elem.text.strip()
+        display_name=str_to_bool(elem.get('display_name','T'))
         x, y = self._get_floats(elem, 'translation')
         w, h = self._get_floats(elem, 'dimension')
 
@@ -57,9 +59,11 @@ class ExtractionLineScene(Scene):
         rect = RoundedRectangle(x + ox, y + oy, width=w, height=h,
                                             name=key,
                                             border_width=bw,
-                                            default_color=c)
+                                            display_name=display_name,
+                                            default_color=c,
+                                            type_tag=type_tag)
         self.add_item(rect, layer=1)
-
+        
     def _new_connection(self, conn, key, start, end):
 
         skey = start.text.strip()
@@ -185,14 +189,15 @@ class ExtractionLineScene(Scene):
         self.add_item(brect)
 
     def _load_rects(self, cp, origin, color_dict):
-        for key in ('stage', 'laser', 'spectrometer', 'turbo', 'getter'):
+        for key in ('stage', 'laser', 'spectrometer',
+                     'turbo', 'getter', 'tank','pipette'):
             for b in cp.get_elements(key):
                 if key in color_dict:
                     c = color_dict[key]
                 else:
                     c = (204, 204, 204)
 
-                self._new_rectangle(b, c, bw=5, origin=origin)
+                self._new_rectangle(b, c, bw=5, origin=origin, type_tag=key)
 
     def _load_config(self, p):
         color_dict = dict()
