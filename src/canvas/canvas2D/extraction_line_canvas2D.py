@@ -23,8 +23,8 @@ import os
 #============= local library imports  ==========================
 from src.canvas.scene_viewer import SceneCanvas
 from src.canvas.canvas2D.scene.extraction_line_scene import ExtractionLineScene
-from src.canvas.canvas2D.scene.primitives.primitives import BaseValve, \
-    RoughValve
+from src.canvas.canvas2D.scene.primitives.valves import Valve, RoughValve, \
+    BaseValve
 import weakref
 from src.paths import paths
 
@@ -148,7 +148,6 @@ class ExtractionLineCanvas2D(SceneCanvas):
 
     def OnLock(self):
         item = self._active_item
-        print item
         if item:
             item.soft_lock = lock = not item.soft_lock
             self.manager.set_software_lock(item.name, lock)
@@ -286,12 +285,12 @@ class ExtractionLineCanvas2D(SceneCanvas):
         if self.manager is not None:
             if state:
 #                if self.manager.open_valve(item.name, mode = 'manual'):
-                ok, change=self.manager.open_valve(item.name, mode='normal')
+                ok, change = self.manager.open_valve(item.name, mode='normal')
 #                 if self.manager.open_valve(item.name, mode='normal'):
 #                     ok = True
             else:
 #                if self.manager.close_valve(item.name, mode = 'manual'):
-                ok, change=self.manager.close_valve(item.name, mode='normal')
+                ok, change = self.manager.close_valve(item.name, mode='normal')
 #                 if self.manager.close_valve(item.name, mode='normal'):
 #                     ok = True
         else:
@@ -300,7 +299,7 @@ class ExtractionLineCanvas2D(SceneCanvas):
 #        ok = True
         if ok and not item.soft_lock:
             item.state = state
-            
+
         if change:
             self.request_redraw()
 #             self.invalidate_and_redraw()

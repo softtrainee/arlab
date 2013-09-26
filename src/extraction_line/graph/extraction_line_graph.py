@@ -23,7 +23,7 @@ from traitsui.api import View, Item
 from src.extraction_line.graph.nodes import ValveNode, RootNode, \
     PumpNode, Edge, SpectrometerNode, LaserNode, flatten, TankNode, PipetteNode
 from src.helpers.parsers.canvas_parser import CanvasParser
-from src.canvas.canvas2D.scene.primitives.primitives import Valve
+from src.canvas.canvas2D.scene.primitives.valves import Valve
 
 TAG_PREDENCE = ('pump', 'spectrometer', 'pipette', 'laser', 'tank',)
 

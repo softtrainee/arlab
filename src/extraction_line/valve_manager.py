@@ -13,17 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-def func(word):
-    rs = []
-    groups = word.split(':')
-    if len(groups) > 1:
-        for gi in groups:
-            if '-' in gi:
-                owner, vs = gi.split('-')
-            else:
-                owner, vs = '', gi
-            rs.append((owner, vs.split(',')))
-    print rs
 
 #=============enthought library imports=======================
 from traits.api import Any, Dict, List, Bool
@@ -36,7 +25,6 @@ from Queue import Queue
 from threading import Timer, Thread, Event
 import time
 import random
-import weakref
 from itertools import groupby
 from socket import gethostname, gethostbyname
 #=============local library imports  ==========================
@@ -141,7 +129,7 @@ class ValveManager(Manager):
         elm = self.extraction_line_manager
         word = self.get_state_word()
         changed = False
-#         self.debug('valve state word= {}'.format(word))
+        self.debug('valve state word= {}'.format(word))
         if word is not None:
             for k, v in self.valves.iteritems():
                 if word.has_key(k):
@@ -151,7 +139,11 @@ class ValveManager(Manager):
 
                         v.set_state(s)
                         elm.update_valve_state(k, s)
-
+        elif force_network_change:
+            changed = True
+            for k, v in self.valves.iteritems():
+                if v.state:
+                    elm.update_valve_state(k, v.state)
 
         if refresh and changed:
             elm.refresh_canvas()

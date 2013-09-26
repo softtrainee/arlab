@@ -20,10 +20,12 @@ from traits.api import Instance, Dict
 #============= local library imports  ==========================
 from src.canvas.canvas2D.scene.scene import Scene
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
-from src.canvas.canvas2D.scene.primitives.primitives import RoundedRectangle, Valve, \
-    RoughValve, Label, BorderLine, Rectangle
+from src.canvas.canvas2D.scene.primitives.primitives import RoundedRectangle, \
+    Label, BorderLine, Rectangle, Line, Image
 import os
 from src.helpers.filetools import str_to_bool
+from src.canvas.canvas2D.scene.primitives.valves import RoughValve, Valve
+from src.paths import paths
 
 
 class ExtractionLineScene(Scene):
@@ -46,7 +48,9 @@ class ExtractionLineScene(Scene):
             ox, oy = origin
 
         key = elem.text.strip()
-        display_name = str_to_bool(elem.get('display_name', 'T'))
+        display_name = elem.get('display_name', key)
+        fill = str_to_bool(elem.get('fill', 'T'))
+
         x, y = self._get_floats(elem, 'translation')
         w, h = self._get_floats(elem, 'dimension')
 
@@ -61,7 +65,9 @@ class ExtractionLineScene(Scene):
                                             border_width=bw,
                                             display_name=display_name,
                                             default_color=c,
-                                            type_tag=type_tag)
+                                            type_tag=type_tag,
+                                            fill=fill
+                                            )
         self.add_item(rect, layer=1)
 
     def _new_connection(self, conn, key, start, end):
@@ -110,8 +116,44 @@ class ExtractionLineScene(Scene):
         l = klass((x, y), (x1, y1),
                   default_color=(204, 204, 204),
                   name=key,
-                 width=10)
+                  width=10)
         self.add_item(l, layer=0)
+
+
+    def _new_line(self, line, name, start, end, color=(0, 0, 0), width=2):
+        klass = Line
+        x, y = map(float, start.text.split(','))
+        x1, y1 = map(float, end.text.split(','))
+
+        l = klass((x, y), (x1, y1),
+                  default_color=color,
+                  name=name,
+                  width=width)
+        self.add_item(l, layer=0)
+
+    def _new_image(self, image):
+        path = image.text.strip()
+#         sp = ''
+#         name = path
+        if not os.path.isfile(path):
+            for di in (paths.app_resources, paths.icons, paths.resources):
+                npath = os.path.join(di, path)
+                if os.path.isfile(npath):
+                    path = npath
+                    break
+
+        if os.path.isfile(path):
+            x, y = self._get_floats(image, 'translation')
+            scale = 1, 1
+            if image.find('scale') is not None:
+                scale = self._get_floats(image, 'scale')
+
+            im = Image(x, y,
+                       path=path,
+                       scale=scale
+                       )
+            self.add_item(im, 0)
+
 
     def load(self, pathname, configpath):
         self.reset_layers()
@@ -159,6 +201,7 @@ class ExtractionLineScene(Scene):
             c = self._make_color(c)
             l = Label(x + ox, y + oy,
                       bgcolor=c,
+                      use_border=str_to_bool(l.get('use_border', 'T')),
                       name='{:03}'.format(i),
                       text=l.text.strip())
             self.add_item(l, layer=1)
@@ -176,6 +219,16 @@ class ExtractionLineScene(Scene):
             name = '{}_{}'.format(start.text, end.text)
             self._new_connection(conn, name, start, end)
 
+        for i, line in enumerate(cp.get_elements('line')):
+            start = line.find('start')
+            end = line.find('end')
+            self._new_line(line, 'l{}'.format(i), start, end)
+
+        for i, image in enumerate(cp.get_elements('image')):
+            self._new_image(image)
+
+
+
 #         xv, yv = self._get_canvas_view_range()
         xv = self.canvas.view_x_range
         yv = self.canvas.view_y_range
@@ -191,7 +244,9 @@ class ExtractionLineScene(Scene):
     def _load_rects(self, cp, origin, color_dict):
         for key in ('stage', 'laser', 'spectrometer',
                      'turbo', 'getter', 'tank', 'pipette',
-                     'ionpump'):
+                     'ionpump',
+                     'rect'
+                     ):
             for b in cp.get_elements(key):
                 if key in color_dict:
                     c = color_dict[key]

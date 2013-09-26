@@ -197,9 +197,9 @@ class ExtractionLineManager(Manager):
             for c in self._canvases:
                 self.network.init_states(c)
 
+        self.valve_manager.load_valve_states(refresh=False, force_network_change=True)
+        self.valve_manager.load_valve_lock_states(refresh=False)
         if self.mode == 'client':
-            self.valve_manager.load_valve_states(refresh=False, force_network_change=True)
-            self.valve_manager.load_valve_lock_states(refresh=False)
             self.valve_manager.load_valve_owners(refresh=False)
 
         self.refresh_canvas()
@@ -557,10 +557,10 @@ class ExtractionLineManager(Manager):
         if requestor is None:
             requestor = gethostbyname(gethostname())
         self.debug('checking ownership. requestor={}'.format(requestor))
-
-        v = self.valve_manager.valves[name]
-        return not v.owner and v.owner != requestor
-
+        if name in self.valve_manager.valves:
+            v = self.valve_manager.valves[name]
+            return not v.owner and v.owner != requestor
+        return True
 #=================== factories ==========================
 
     def _view_controller_factory(self):

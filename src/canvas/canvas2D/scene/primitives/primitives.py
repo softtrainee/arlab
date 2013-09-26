@@ -27,7 +27,11 @@ import math
 from numpy import array
 #============= local library imports  ==========================
 from src.geometry.convex_hull import convex_hull
-import weakref
+# from pyface.image_resource import ImageResource
+# from src.paths import paths
+from kiva.agg.agg import GraphicsContextArray
+import Image as PImage
+
 
 
 def calc_rotation(x1, y1, x2, y2):
@@ -36,12 +40,32 @@ def calc_rotation(x1, y1, x2, y2):
 
     return math.degrees(math.atan2(rise, run))
 
+def rounded_rect(gc, x, y, width, height, corner_radius):
+    with gc:
+        gc.translate_ctm(x, y)  # draw a rounded rectangle
+        x = y = 0
+        gc.begin_path()
+
+        hw = width * 0.5
+        hh = height * 0.5
+        if hw < corner_radius:
+            corner_radius = hw * 0.5
+        elif  hh < corner_radius:
+            corner_radius = hh * 0.5
+
+        gc.move_to(x + corner_radius, y)
+        gc.arc_to(x + width, y, x + width, y + corner_radius, corner_radius)
+        gc.arc_to(x + width, y + height, x + width - corner_radius, y + height, corner_radius)
+        gc.arc_to(x, y + height, x, y, corner_radius)
+        gc.arc_to(x, y, x + width + corner_radius, y, corner_radius)
+        gc.draw_path()
+
 
 class Primitive(HasTraits):
     identifier = Str
     identifier_visible = True
-    type_tag=Str
-    
+    type_tag = Str
+
     x = Float
     y = Float
     state = False
@@ -54,7 +78,7 @@ class Primitive(HasTraits):
     canvas = Any
 
     line_width = 1
-    border_width = 2
+
 
     name = Str
     name_visible = True
@@ -166,15 +190,18 @@ class Primitive(HasTraits):
 
     def _render_name(self, gc, x, y, w, h):
         if self.name and self.name_visible:
+            txt = str(self.name)
+            self._render_textbox(gc, x, y, w, h, txt)
+
+    def _render_textbox(self, gc, x, y, w, h, txt):
             gc.set_fill_color((0, 0, 0))
 #             gc.set_font(str_to_font(self.font))
 
-            t = str(self.name)
-            tw, th, _, _ = gc.get_full_text_extent(t)
+            tw, th, _, _ = gc.get_full_text_extent(txt)
             x = x + w / 2. - tw / 2.
             y = y + h / 2. - th / 2.
 
-            self._render_text(gc, t, x, y)
+            self._render_text(gc, txt, x, y)
 
     def _render_text(self, gc, t, x, y):
         gc.set_text_position(x, y)
@@ -251,7 +278,6 @@ class Rectangle(QPrimitive):
     height = 0
     x = 0
     y = 0
-    use_border = True
     fill = True
     def _render_(self, gc):
         x, y = self.get_xy()
@@ -283,6 +309,8 @@ class Rectangle(QPrimitive):
         gc.stroke_path()
 
 class Bordered(Primitive):
+    use_border = True
+    border_width = 2
     def _get_border_color(self):
         c = self.default_color
         if self.state:
@@ -297,265 +325,42 @@ class Bordered(Primitive):
 
 class RoundedRectangle(Rectangle, Bordered):
     corner_radius = 8.0
-    display_name=True
+    display_name = None
+    fill = True
+
     def _render_(self, gc):
         corner_radius = self.corner_radius
         with gc:
             width, height = self.get_wh()
             x, y = self.get_xy()
-            gc.translate_ctm(x, y)
-        # draw a rounded rectangle
-            x = y = 0
+            if self.fill:
+                rounded_rect(gc, x, y, width, height, corner_radius)
 
-            gc.begin_path()
-            gc.move_to(x + corner_radius, y)
-            gc.arc_to(x + width, y,
-                    x + width,
-                    y + corner_radius, corner_radius)
-            gc.arc_to(x + width,
-                    y + height,
-                    x + width - corner_radius,
-                    y + height, corner_radius)
-            gc.arc_to(x, y + height,
-                    x, y,
-                    corner_radius)
-            gc.arc_to(x, y,
-                    x + width + corner_radius,
-                    y, corner_radius)
 
-            gc.draw_path()
             self._render_border(gc, x, y, width, height)
 
-#                self._render_border(gc, x, y, width, height)
             if self.display_name:
+                self._render_textbox(gc, x, y, width, height,
+                                     self.display_name)
+            elif not self.display_name == '':
                 self._render_name(gc, x, y, width, height)
 
-#     def _get_border_color(self):
-# #        if self.state:
-# #            c = list(self.default_color)
-# #        else:
-# #            c = list(self.active_color)
-# #
-# #        c = list(self.default_color)
-#         c = self._convert_color(self.default_color)
-#         c = tuple([ci / (2.) for ci in c])
-#         return c
 
     def _render_border(self, gc, x, y, width, height):
         if self.use_border:
 
             corner_radius = self.corner_radius
             with gc:
-#                 gc.set_alpha(0.75)
                 gc.set_line_width(self.border_width)
+                if self.fill:
+                    c = self._get_border_color()
+                else:
+                    c = self.default_color
+                    c = self._convert_color(c)
+                    gc.set_fill_color((0, 0, 0, 0))
 
-#                if self.state:
-#                    c = list(self.default_color)
-#                else:
-#                    c = list(self.active_color)
-#
-#                c=self._convert_color(c)
-#                c = [ci / (2.) for ci in c]
-                c = self._get_border_color()
                 gc.set_stroke_color(c)
-
-                gc.move_to(x + corner_radius, y)
-                gc.arc_to(x + width, y,
-                        x + width,
-                        y + corner_radius, corner_radius)
-                gc.arc_to(x + width,
-                        y + height,
-                        x + width - corner_radius,
-                        y + height, corner_radius)
-                gc.arc_to(x, y + height,
-                        x, y,
-                        corner_radius)
-                gc.arc_to(x, y,
-                        x + width + corner_radius,
-                        y, corner_radius)
-                gc.stroke_path()
-
-class BaseValve(QPrimitive):
-    soft_lock = False
-    owned = False
-
-    def is_in(self, x, y):
-        mx, my = self.get_xy()
-        w, h = self.get_wh()
-        if mx <= x <= (mx + w) and my <= y <= (my + h):
-            return True
-
-    def _draw_soft_lock(self, gc, func, args):
-        if self.soft_lock:
-            gc.save_state()
-            gc.set_fill_color((0, 0, 0, 0))
-            gc.set_stroke_color((0, 0, 1))
-            gc.set_line_width(5)
-            func(*args)
-#            gc.rect(x - 2, y - 2, w + 4, h + 4)
-            gc.draw_path()
-            gc.restore_state()
-
-    def _draw_owned(self, gc):
-#         print self.name, self.owned
-        if self.owned:
-            with gc:
-                gc.set_fill_color((0, 0, 0, 0))
-                gc.set_stroke_color((0, 0, 0))
-                gc.set_line_width(5)
-                
-                x,y=self.get_xy()
-                width,height=self.get_wh()
-                corner_radius=3
-                gc.translate_ctm(x, y)
-                # draw a rounded rectangle
-                x = y = 0
-    
-                gc.begin_path()
-                gc.move_to(x + corner_radius, y)
-                gc.arc_to(x + width, y,
-                        x + width,
-                        y + corner_radius, corner_radius)
-                gc.arc_to(x + width,
-                        y + height,
-                        x + width - corner_radius,
-                        y + height, corner_radius)
-                gc.arc_to(x, y + height,
-                        x, y,
-                        corner_radius)
-                gc.arc_to(x, y,
-                        x + width + corner_radius,
-                        y, corner_radius)
-    
-                gc.draw_path()
-                
-#                 gc.set_line_join(1)
-#                 print args
-#                 func(*args)
-#                 gc.draw_path()
-#                 gc.restore_state()
-
-
-class RoughValve(BaseValve):
-    width = 2
-    height = 2
-    def _render_(self, gc):
-        cx, cy = self.get_xy()
-        width, height = self.get_wh()
-
-        w2 = width / 2
-        x1 = cx
-        x2 = cx + width
-        x3 = cx + w2
-
-        y1 = cy
-        y2 = y1
-        y3 = cy + height
-
-        gc.lines([(x1, y1), (x2, y2), (x3, y3), (x1, y1)])
-        gc.fill_path()
-
-        gc.set_stroke_color((0, 0, 0))
-        gc.lines([(x1, y1), (x2, y2), (x3, y3), (x1, y1)])
-        gc.stroke_path()
-
-        func = gc.lines
-        args = (([(x1, y1), (x2, y2), (x3, y3), (x1, y1), (x2, y2)]),)
-#        args = (x - 2, y - 2, width + 4, height + 4)
-
-        self._draw_soft_lock(gc, func, args)
-        self._draw_owned(gc)
-        self._draw_state_indicator(gc, cx, cy, width, height)
-        self._render_name(gc, cx, cy, width, height)
-
-    def _draw_state_indicator(self, gc, x, y, w, h):
-        if not self.state:
-            l = 7
-            w2 = w / 2.
-            w3 = w / 3.
-
-            gc.set_line_width(2)
-            gc.move_to(x + w2, y + h)
-            gc.line_to(x + w2, y + h - l)
-            gc.draw_path()
-
-            gc.move_to(x, y)
-            gc.line_to(x + w3, y + l)
-            gc.draw_path()
-
-            gc.move_to(x + w, y)
-            gc.line_to(x + w - w3, y + l)
-            gc.draw_path()
-
-
-class Valve(RoundedRectangle, BaseValve):
-    width = 2
-    height = 2
-    corner_radius = 4
-    def _render_(self, gc):
-
-        super(Valve, self)._render_(gc)
-# #        if self.state:
-# #                        gc.set_fill_color((0, 1, 0))
-# #                    else:
-# #                        if item.selected:
-# #                            gc.set_fill_color((1, 1, 0))
-# #                        else:
-# #                            gc.set_fill_color((1, 0, 0))
-#
-        x, y = self.get_xy()
-        w, h = self.get_wh()
-#        gc.rect(x, y, w, h)
-#        gc.draw_path()
-#        if self.use_border:
-#            self._render_border(gc, w, y, w, h)
-#
-#        #print item.name, item.soft_lock
-
-        func = gc.rect
-        args = (x - 2, y - 2, w + 4, h + 4)
-
-        self._draw_soft_lock(gc, func, args)
-        
-        args=(x - 2, y - 4, w + 8, h + 8)
-        self._draw_owned(gc)
-        self._draw_state_indicator(gc, x, y, w, h)
-
-#     def _get_border_color(self):
-# #        if self.state:
-# #            c = list(self.active_color)
-# #        else:
-# #            c = list(self.default_color)
-#         if self.state:
-#             c = self.active_color
-#         else:
-#             c = self.default_color
-# 
-#         c = self._convert_color(c)
-#         c = [ci / (2.) for ci in c]
-#         return c
-
-    def _draw_state_indicator(self, gc, x, y, w, h):
-        if not self.state:
-            gc.set_stroke_color((0, 0, 0))
-            l = 7
-            o = 2
-            gc.set_line_width(2)
-            gc.move_to(x + o, y + o)
-            gc.line_to(x + l, y + l)
-#            gc.draw_path()
-
-            gc.move_to(x + o, y - o + h)
-            gc.line_to(x + o + l, y - o + h - l)
-#            gc.draw_path()
-
-            gc.move_to(x - o + w, y - o + h)
-            gc.line_to(x - o + w - l, y - o + h - l)
-#            gc.draw_path()
-
-            gc.move_to(x - o + w, y + o)
-            gc.line_to(x - o + w - l, y + o + l)
-            gc.draw_path()
+                rounded_rect(gc, x, y, width, height, corner_radius)
 
 
 class Line(QPrimitive):
@@ -1045,7 +850,7 @@ class PolyLine(QPrimitive):
 
 
 class BorderLine(Line, Bordered):
-    border_width = 5
+    border_width = 10
 #     border_color = (0, 0, 0.15)
     def _render_(self, gc):
         gc.save_state()
@@ -1158,7 +963,40 @@ class Polygon(QPrimitive):
 
             gc.stroke_path()
 
+class Image(QPrimitive):
+    search_path = Str
+    _cached_image = None
+    _image_cache_valid = False
+    scale = (1, 1)
+    def _render_(self, gc):
+        if not self._image_cache_valid:
+            self._compute_cached_image()
 
+        if self._cached_image:
+            x, y = self.get_xy()
+            gc.translate_ctm(x, y)
+            gc.scale_ctm(*self.scale)
+            gc.draw_image(self._cached_image,
+#                           rect=(other_component.x, other_component.y,
+#                                 other_component.width, other_component.height)
+                          )
+
+    def _compute_cached_image(self):
+        pic = PImage.open(self.path)
+        data = array(pic)
+        if not data.flags['C_CONTIGUOUS']:
+            data = data.copy()
+
+        if data.shape[2] == 3:
+            kiva_depth = "rgb24"
+        elif data.shape[2] == 4:
+            kiva_depth = "rgba32"
+        else:
+            raise RuntimeError, "Unknown colormap depth value: %i" \
+                                % data.value_depth
+
+        self._cached_image = GraphicsContextArray(data, pix_format=kiva_depth)
+        self._image_cache_valid = True
 #============= EOF ====================================
 # class CalibrationItem(QPrimitive, CalibrationObject):
 #    center = None
