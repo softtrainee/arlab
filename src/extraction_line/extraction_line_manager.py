@@ -194,13 +194,17 @@ class ExtractionLineManager(Manager):
         if self.network:
             p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
             self.network.load(p)
-            for c in self._canvases:
-                self.network.init_states(c)
-
-        self.valve_manager.load_valve_states(refresh=False, force_network_change=True)
+#             for c in self._canvases:
+#                 self.network.init_states(c)
+        
+        self.network.suppress_changes=True
+        self.valve_manager.load_valve_states(refresh=False,force_network_change=True)
         self.valve_manager.load_valve_lock_states(refresh=False)
         if self.mode == 'client':
             self.valve_manager.load_valve_owners(refresh=False)
+        self.network.suppress_changes=False
+        
+        self.valve_manager.load_valve_states(refresh=False, force_network_change=True)
 
         self.refresh_canvas()
 
@@ -351,18 +355,26 @@ class ExtractionLineManager(Manager):
 #        '''
 #        if self.canvas:
 #            self.canvas.update_pressure(o.name, n, o.state)
-    def update_valve_state(self, *args, **kw):
+    def update_valve_state(self, name, state, *args, **kw):
 
         if self.network:
-            r = self.network.set_valve_state(*args, **kw)
-            if r:
-                for c in self._canvases:
-                    self.network.set_canvas_states(c, r)
-                    self.network.init_states(c)
+            self.network.set_valve_state(name,state)
+            for c in self._canvases:
+                self.network.set_canvas_states(c, name)
+#                 self.network.init_states(c)
+#             r = self.network.set_valve_state(name, state)
+#             if r:
+#                     self.network.init_states(c)
+                    
+#             r = self.network.set_valve_state(*args, **kw)
+#             if r:
 #                 for c in self._canvases:
+#                     self.network.set_canvas_states(c, r)
+#                     self.network.init_states(c)
+
 
         for c in self._canvases:
-            c.update_valve_state(*args, **kw)
+            c.update_valve_state(name, state, *args, **kw)
 
     def update_valve_lock_state(self, *args, **kw):
         for c in self._canvases:
