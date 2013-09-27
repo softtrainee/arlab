@@ -270,7 +270,9 @@ class Paths():
         self.backup_recovery_file = join(self.hidden_dir, 'backup_recovery')
 
 
-        self.icon_search_path = [self.icons, self.app_resources]
+        self.icon_search_path = [self.icons, 
+                                 self.app_resources]
+        
 
 paths = Paths()
 paths.build('_beta')

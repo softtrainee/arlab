@@ -341,6 +341,7 @@ class ValveManager(Manager):
         states = []
         keys = []
         prev_keys = []
+        clear_prev_keys=False
         if self._prev_keys:
             clear_prev_keys = True
             prev_keys = self._prev_keys

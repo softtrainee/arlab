@@ -54,7 +54,7 @@ class ExtractionLineManager(Manager):
     explanation = Instance(ExtractionLineExplanation, ())
 
     valve_manager = Any  # Instance(Manager)
-    gauge_manager = Any  # Instance(Manager)
+    gauge_manager = Instance(Manager)
     status_monitor = Any
 #    environmental_manager = Instance(Manager)
 #    device_stream_manager = Instance(Manager)

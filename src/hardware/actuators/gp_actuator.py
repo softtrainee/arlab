@@ -25,6 +25,12 @@ from src.hardware.core.core_device import CoreDevice
 
 
 class GPActuator(CoreDevice):
+    def get_state_word(self, *args, **kw):
+        pass
+
+    def get_lock_word(self, *args, **kw):
+        pass
+    
     def get_lock_state(self, *args, **kw):
         pass
 

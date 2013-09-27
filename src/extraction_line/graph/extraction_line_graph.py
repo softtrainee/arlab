@@ -33,6 +33,9 @@ def BFT(G, s):
     P, Q = {s: None}, deque([s])
     while Q:
         u = Q.popleft()
+        if not u:
+            continue
+        
         if u.state == 'closed':
             continue
 
@@ -155,7 +158,7 @@ class ExtractionLineGraph(HasTraits):
         '''
         state, term = False, ''
         for ni in BFT(self, n):
-            print '-----', n.name, ni.name
+#            print '-----', n.name, ni.name
             if isinstance(ni, PumpNode):
                 return 'pump', ni.name
 
@@ -177,8 +180,10 @@ class ExtractionLineGraph(HasTraits):
         self._set_item_state(scene, root.name, state, term)
         for ei in root.edges:
             n = ei.get_node(root)
+            if n is None:
+                continue
             self._set_item_state(scene, ei.name, state, term)
-
+            
             if n.state != 'closed' and not n.fvisited:
                 n.fvisited = True
                 self.fill(scene, n, state, term)
