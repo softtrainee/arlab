@@ -482,6 +482,7 @@ class ExperimentEditorTask(EditorTask):
             # launch execution thread
             # if successful open an auto figure task
             if self.manager.execute_queues(qs):
+                self._show_pane(self.wait_pane)
                 self._open_auto_figure()
             else:
                 self.warning('experiment queue did not start properly')

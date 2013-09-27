@@ -15,21 +15,37 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Dict
-from traitsui.api import View, Item
+from traits.api import HasTraits, Dict
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 from src.extraction_line.graph.nodes import ValveNode, RootNode, \
-    PumpNode, Edge, SpectrometerNode, LaserNode, flatten, TankNode, PipetteNode
+    PumpNode, Edge, SpectrometerNode, LaserNode, TankNode, PipetteNode
 from src.helpers.parsers.canvas_parser import CanvasParser
 from src.canvas.canvas2D.scene.primitives.valves import Valve
+from compiler.ast import Pass
 
 TAG_PREDENCE = ('pump', 'spectrometer', 'pipette', 'laser', 'tank',)
 
+from collections import deque
+
+def BFT(G, s):
+    P, Q = {s: None}, deque([s])
+    while Q:
+        u = Q.popleft()
+        if u.state == 'closed':
+            continue
+
+        for v in G[u]:
+            if v in P:
+                continue
+            P[v] = u
+            Q.append(v)
+    return P
+
 class ExtractionLineGraph(HasTraits):
     nodes = Dict
-    suppress_changes=False
+    suppress_changes = False
     def load(self, p):
 
         cp = CanvasParser(p)
@@ -81,265 +97,138 @@ class ExtractionLineGraph(HasTraits):
 
         self.nodes = nodes
 
-#     def init_states(self, canvas):
-#         scene = canvas.canvas2D.scene
-#         for ni in self.nodes.itervalues():
-#             for ri in ni.find_roots():
-#                 self.clear_visited()
-#                 obj = scene.get_item(ri.name)
-#                 color = obj.default_color
-#                 for ei in ri.edges:
-#                     obj = scene.get_item(ei.name)
-#                     if obj:
-#                         if not obj.state:
-#                             self._set_item_state(scene, ei.name, True,'', color)
-    
+    def set_valve_state(self, name, state, *args, **kw):
+        if name in self.nodes:
+            vnode = self.nodes[name]
+            vnode.state = 'open' if state else 'closed'
+
     def set_canvas_states(self, canvas, name):
+        scene = canvas.canvas2D.scene
         if not self.suppress_changes:
-            snode=self.nodes[name]
-#             print 'start node ', name
-            r=self.find_max_state(canvas.canvas2D.scene, snode,)
-            self.clear_visited()
-            if r:
-#                 if name!='U':
-#                     return
-                
-                print name, r
-                self.flood(canvas.canvas2D.scene, snode, *r)
-                self.clear_visited()
-    
-    def flood(self, scene, start, state, term):
-#         print start.name, state
-#         self._set_item_state(scene, start, state, term)
-        if start.state=='closed':
-#             state=False
-            return
-        
-        for ei in start.edges:
-            for n in ei.nodes():
-                if n.state!='closed':
-                    if not n.visited and not n is start:
-                        print n.name,n.state
-                        n.visited=True
-                        self._set_item_state(scene, ei.name, state, term)
-                        self._set_item_state(scene, n.name, state, term)
-                        for ne in n.edges:
-                            self._set_item_state(scene, ne.name, state, term)
-                            
-                        self.flood(scene, n, state, term)
-#                         print n.name
+            if name in self.nodes:
+                snode = self.nodes[name]
+                '''
+                    new alogrithm
+                    if valve closed
+                        split tree and fill each sub tree
+                    else:
+                        for each edge of the start node
+                            breath search for the max state
                         
-#             n.visited=True
-#                         self.flood(scene,n, state,term)
+                        find max maxstate 
+                        fill nodes with maxstate
+                            using a depth traverse
                     
-    def find_max_state(self,scene,  start, k=0):
-#         print 'visiting ','='*k,start.name
-        for ei in start.edges:
-#             print 'ei',ei.name
-            for n in ei.nodes():
-#                 print 'n',n.name,n.visited,n.state
-                if not n.visited and not n is start:
-#                     print n.name, n.state,'dddd'
-                    if n.state!='closed':
-                        n.visited=True
-        
-                        ret=self.find_max_state(scene, n,k=k+1)
-                        if ret:
-#                             state,term=ret  
-#                             print 'set state',n.name, state,term
-#                             self._set_item_state(scene, n.name, state, term)
-#                             for ne in n.edges:
-#                                 self._set_item_state(scene, ne.name, state, term)
-#                             self._set_item_state(scene, ei.name, state, term)
-                            
-                            return ret
-#                         else:
-#                             self._set_item_state(scene, n.name, False, '')
-#                             for ne in n.edges:
-#                                 self._set_item_state(scene, ne.name, False, '')
-#                             self._set_item_state(scene, ei.name, False, '')
-                        
-                        if isinstance(n, PumpNode):
-#                             self._set_item_state(scene, ei.name, 'pump', n)
-#                             print n
-                            return 'pump',n
-                        
-#                         return False,''
-        
-        
-#                 self._set_item_state(scene, name, state, color)
-        
-#         snode.find_roots()
-        
-        
-#     def set_canvas_states(self, canvas, states):
-# 
-#         '''
-#             if roots connected by an open valve then 
-#             set both roots to highest state
-#         '''
-# #         maxroot = None
-# #         maxstate = None
-# #         maxterm = None
-# 
-# #         for state, root, term in states:
-# #             if state in ('pump', 'tank'):
-# #                 maxstate = state
-# #                 maxroot = root
-# #                 maxterm = term
-# #                 break
-# # 
-# #             if state in ('laser', 'pipette', 'spectrometer'):
-# #                 maxroot = root
-# #                 maxterm = term
-# #                 maxstate = state
-# #         
-# #         print maxterm, maxstate 
-# #         for state, root, term in states:
-# #             nr = root.find_roots()
-# #             self.clear_visited()
-# # #             print maxroot.name if maxroot else '', root.name, set([ri.name for ri in nr])
-# #             if maxroot and maxroot in nr:
-# #                 state = maxstate
-# #                 term = maxterm
-# # 
-# #             print 'state={} term={} root={}'.format(state, term, root.name)
-# #             self._set_canvas_states(canvas, state, root, term)
+                    new variant
+                    recursively split tree if node is closed
+                '''
+                self._set_state(scene, snode)
+                self._clear_visited()
 
-#     def _set_canvas_states(self, canvas, state, root, term):
-#         scene = canvas.canvas2D.scene
-# 
-#         color = None
-#         if state:
-#             obj = scene.get_item(term)
-#             color = obj.default_color
-#         else:
-#             obj = scene.get_item(root.name)
-#             color = obj.default_color
-# 
-# #         for ei in root.edges:
-# #             self._set_item_state(scene, ei.name, state, color)
-# 
-#         self._set_item_state(scene, root.name, state, color)
-# 
-#         
-# #         for path in self.assemble_paths(root, None):
-# #             # flatten path and set state for each element
-# #             for elem in flatten(path):
-# #                 self._set_item_state(scene, elem, state, color)
 
-    def _set_item_state(self, scene, name, state,term, color=None):
-        
+    def _set_state(self, scene, n):
+        if n.state == 'closed' and not n.visited:
+            n.visited = True
+            for ni in self._split_graph(n):
+                self._set_state(scene, ni)
+        else:
+            state, term = self._find_max_state(n)
+            self.fill(scene, n, state, term)
+
+    def _split_graph(self, n):
+        '''
+            valves only have binary connections 
+            so can only split in half
+        '''
+        if len(n.edges) == 2:
+            e1, e2 = n.edges
+            return e1.get_node(n), e2.get_node(n)
+        else:
+            return (n.edges[0].get_node(n),)
+
+    def _find_max_state(self, n):
+        '''
+            use a Breadth-First Traverse
+            acumulate the max state at each node
+        '''
+        state, term = False, ''
+        for ni in BFT(self, n):
+            if isinstance(ni, PumpNode):
+                return 'pump', ni.name
+
+            if isinstance(ni, LaserNode):
+                state, term = 'laser', ni.name
+            elif isinstance(ni, PipetteNode):
+                state, term = 'pipette', ni.name
+            elif isinstance(ni, SpectrometerNode):
+                if state not in ('laser', 'pipette'):
+                    state, term = 'spectrometer', ni.name
+            elif isinstance(ni, TankNode):
+                if state not in ('laser', 'pipette'):
+                    state, term = 'tank', ni.name
+        else:
+            return state, term
+
+
+    def fill(self, scene, root, state, term):
+#         print 'fill', root.name, state, term
+        self._set_item_state(scene, root.name, state, term)
+        for ei in root.edges:
+            n = ei.get_node(root)
+            self._set_item_state(scene, ei.name, state, term)
+
+            if n.state != 'closed' and not n.visited:
+                n.visited = True
+                self.fill(scene, n, state, term)
+
+    def _set_item_state(self, scene, name, state, term, color=None):
+        if not isinstance(name, str):
+            raise ValueError('name needs to be a str. provided={}'.format(name))
+
         obj = scene.get_item(name)
-        if not color and state:
-            nterm=scene.get_item(term.name)
-#             print term,nterm
-            color=nterm.default_color
-            
+
+#                 else:
+#                     obj.colo
+
         if obj is None \
-            or isinstance(obj, Valve) \
-                or obj.type_tag in ('turbo', 'tank'):
+                or obj.type_tag in ('turbo', 'tank', 'ionpump'):
             return
 
-        if name =='Microbone':
-            print 'set item state',name,state, color
+        if not color and state:
+            nterm = scene.get_item(term)
+            color = nterm.default_color
+
+        if isinstance(obj, Valve):
+            '''
+                set the color of the valve to 
+                the max state if the valve is open
+            '''
+            if obj.state != 'closed':
+                if state:
+                    obj.active_color = color
+                else:
+                    obj.active_color = 0, 255, 0
+            return
+
         if state:
             obj.active_color = color
             obj.state = True
         else:
             obj.state = False
 
-    def clear_visited(self):
+    def _clear_visited(self):
         for ni in self.nodes.itervalues():
             ni.visited = False
+            for ei in ni.edges:
+                ei.visited = False
 
-    def set_valve_state(self, name, state, *args, **kw):        
-        if name in self.nodes:
-            vnode = self.nodes[name]
-            vnode.state = 'open' if state else 'closed'
-            
-#             # find the root node for this node
-#             roots = vnode.find_roots()
-#             self.clear_visited()
-# 
-#             nstates = []
-#             nterminations = []
-#             for root in roots:
-#                 states = []
-#                 terms = []
-#                 if root is not None:
-#                     for path in self.assemble_paths(root, None):
-#                         if path:
-#                             elems = list(flatten(path))
-#                             if elems:
-# #                                 if root.name=='CO2':
-# #                                     print elems
-# #                                 if root.name in ('Minibone','CocktailPipette','Bone'):
-# #                                     print root.name, elems
-#                                 term = None
-#                                 if len(elems) > 1:
-#                                     term = elems[-2]
-#                                 terms.append(term)
-#                                 states.append(elems[-1])
-# 
-#                 nstate = ''
-#                 nterm = ''
-#                 if isinstance(root, PumpNode):
-#                     nstate = 'pump'
-#                     nterm = root.name
-#                 elif isinstance(root, LaserNode):
-#                     nstate = 'laser'
-#                     nterm = root.name
-#                 elif isinstance(root, TankNode):
-#                     nstate = 'tank'
-#                     nterm = root.name
-#                 elif isinstance(root, PipetteNode):
-#                     nstate = 'pipette'
-#                     nterm = root.name
-# 
-#                 else:
-#                     for attr in ('pump', 'spectrometer', 'pipette', 'laser', 'tank',):
-#                         if attr in states:
-#                             nstate = attr
-#                             nterm = terms[states.index(attr)]
-#                             break
-# 
-#                 nstates.append(nstate)
-#                 nterminations.append(nterm)
-# 
-# #                 if root.name in ('Minibone', 'CocktailPipette', 'Bone'):
-# #                     print root.name, nstates, nterminations
-# 
-#             return zip(nstates, roots, nterminations)
-# 
-#     def assemble_paths(self, root, parent):
-#         paths = []
-#         for ei in root.edges:
-#             start = ei.bnode if ei.anode is root else ei.anode
-#             if not start is parent:
-#                 ps = self.assemble_path(start, root, ei.name)
-#                 paths.append(ps)
-# 
-#         return paths
-# 
-#     def assemble_path(self, start, parent, edge):
-#         if start:
-#             if isinstance(start, SpectrometerNode):
-#                 yield [edge, start.name, 'spectrometer']
-#             elif isinstance(start, PumpNode):
-#                 yield [edge, start.name, 'pump']
-#             elif isinstance(start, LaserNode):
-#                 yield [edge, start.name, 'laser']
-#             elif isinstance(start, PipetteNode):
-#                 yield [edge, start.name, 'pipette']
-#             elif isinstance(start, TankNode):
-#                 yield [edge, start.name, 'tank']
-#             else:
-#                 if start.state and start.state != 'closed':
-#                     yield [edge, start.name, self.assemble_paths(start, parent)]
-#                 else:
-#                     yield [edge]
 
+    def __getitem__(self, key):
+        if not isinstance(key, str):
+            key = key.name
+
+        if key in self.nodes:
+            return self.nodes[key]
 if __name__ == '__main__':
 #     f = ['C', [['ATurbo', 'pump']]]
 #     f = [0, [[1, 2]]]
@@ -360,3 +249,72 @@ if __name__ == '__main__':
 
 #     elg.set_valve_state('C', False)
 #============= EOF =============================================
+#     def init_states(self, canvas):
+#         scene = canvas.canvas2D.scene
+#         for ni in self.nodes.itervalues():
+#             for ri in ni.find_roots():
+#                 self._clear_visited()
+#                 obj = scene.get_item(ri.name)
+#                 color = obj.default_color
+#                 for ei in ri.edges:
+#                     obj = scene.get_item(ei.name)
+#                     if obj:
+#                         if not obj.state:
+#                             self._set_item_state(scene, ei.name, True,'', color)
+
+# def flood(self, scene, root, snode, maxstate, maxterm, k=0):
+#         if isinstance(snode, PumpNode):
+#             self._set_item_state(scene, snode.name, 'pump', snode)
+#             snode.visited = False
+#             return 'pump', snode
+#
+#         for ei in snode.edges:
+#             n = ei.bnode if ei.anode == snode else ei.anode
+#             print '=' * (k + 1), snode.name, ei.name, n.name, n.state, n.visited
+#             if n.state != 'closed':
+#                 if not n.visited:
+#                     n.visited = True
+#                     r = self.flood(scene, root, n, maxstate, maxterm, k=k + 1)
+#                     if r and snode.state != 'closed':
+#                         maxstate, maxterm = r
+#                 else:
+#                     self._set_item_state(scene, n.name, maxstate, maxterm)
+#
+#             if snode.state != 'closed':
+#                 self._set_item_state(scene, ei.name, maxstate, maxterm)
+#
+#
+#         if isinstance(snode, PumpNode):
+#             self._set_item_state(scene, snode.name, 'pump', snode)
+#             snode.visited = False
+#             return 'pump', snode
+#
+#         elif isinstance(snode, LaserNode):
+#             print 'laser enodpoint', snode.name, maxstate
+#             if maxstate != 'pump':
+#                 self._set_item_state(scene, snode.name, 'laser', snode)
+#                 snode.visited = False
+#                 return 'laser', snode
+# #             else:
+# #                 return maxstate, maxterm
+#
+#         elif isinstance(snode, PipetteNode):
+#             if maxstate != 'pump':
+#                 self._set_item_state(scene, snode.name, 'pipette', snode)
+#                 snode.visited = False
+#                 return 'pipette', snode
+# #             else:
+# #                 return maxstate, maxterm
+#
+#         elif isinstance(snode, SpectrometerNode):
+#             if maxstate not in ('pump', 'laser', 'pipette'):
+#                 print '=' * (k + 1), 'set spectrometer', snode.name, maxstate
+#                 self._set_item_state(scene, snode.name, 'spectrometer', snode)
+#                 snode.visited = False
+#                 return 'spectrometer', snode
+# #         else:
+#         print 'visited', '=' * (k + 1), snode.name, maxstate, maxterm
+#         self._set_item_state(scene, snode.name, maxstate, maxterm)
+#     #
+#         snode.visited = False
+#         return maxstate, maxterm

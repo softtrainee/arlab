@@ -60,10 +60,11 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
     graph = DelegatesTo('_cdevice')
 
     def __getattr__(self, attr):
-        try:
+        if hasattr(self._cdevice, attr):
             return getattr(self._cdevice, attr)
-        except AttributeError, e:
-            self.debug(e)
+#         try:
+#         except AttributeError, e:
+#             self.debug(e)
 
 
     def _get_dev_klass(self):
