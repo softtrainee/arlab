@@ -159,6 +159,7 @@ class CommandProcessor(ConfigLoadable):
 
         t = Thread(name='processor.listener',
                    target=self._listener)
+        t.setDaemon(1)
         t.start()
 
         return True

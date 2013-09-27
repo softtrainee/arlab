@@ -154,14 +154,18 @@ class ExtractionLineManager(Manager):
 #    def close(self, isok):
 #        e = self.explanation
 #        self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
-    def closed(self, ok):
+#     def closed(self, ok):
+
+    def deactivate(self):
+        print 'deacat'
         self.stop_status_monitor()
         if self.gauge_manager:
             self.gauge_manager.stop_scans()
 
         if self.monitor:
             self.monitor.stop()
-        return True
+        print 'deacat'
+#         return True
 
     def stop_status_monitor(self):
         self.info('stopping status monitor')
@@ -169,9 +173,9 @@ class ExtractionLineManager(Manager):
 #        if self._update_status_flag:
 #            self._update_status_flag.set()
 
-    def deactivate(self):
-        self.debug('$$$$$$$$$$$$$$$$$$$$$$$$ EL deactivated')
-        self.closed(True)
+#     def deactivate(self):
+#         self.debug('$$$$$$$$$$$$$$$$$$$$$$$$ EL deactivated')
+#         self.closed(True)
 #    def opened(self, ui):
 #        super(ExtractionLineManager, self).opened(ui)
 #        self.reload_scene_graph()
@@ -196,14 +200,14 @@ class ExtractionLineManager(Manager):
             self.network.load(p)
 #             for c in self._canvases:
 #                 self.network.init_states(c)
-        
-        self.network.suppress_changes=True
-        self.valve_manager.load_valve_states(refresh=False,force_network_change=True)
+
+        self.network.suppress_changes = True
+        self.valve_manager.load_valve_states(refresh=False, force_network_change=True)
         self.valve_manager.load_valve_lock_states(refresh=False)
         if self.mode == 'client':
             self.valve_manager.load_valve_owners(refresh=False)
-        self.network.suppress_changes=False
-        
+        self.network.suppress_changes = False
+
         self.valve_manager.load_valve_states(refresh=False, force_network_change=True)
 
         self.refresh_canvas()
@@ -358,14 +362,14 @@ class ExtractionLineManager(Manager):
     def update_valve_state(self, name, state, *args, **kw):
 
         if self.network:
-            self.network.set_valve_state(name,state)
+            self.network.set_valve_state(name, state)
             for c in self._canvases:
                 self.network.set_canvas_states(c, name)
 #                 self.network.init_states(c)
 #             r = self.network.set_valve_state(name, state)
 #             if r:
 #                     self.network.init_states(c)
-                    
+
 #             r = self.network.set_valve_state(*args, **kw)
 #             if r:
 #                 for c in self._canvases:
