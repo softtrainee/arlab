@@ -862,7 +862,7 @@ If "No" select from database
 #                                         a.analysis_type in types and \
 #                                             a.state == 'not run'), None)
 
-        an=next((a for a in aruns if a.analysis_type in types), None)
+        an = next((a for a in aruns if a.analysis_type in types), None)
 
         if an:
             if aruns.index(an) == 0:
@@ -905,7 +905,7 @@ If "No" select from database
             if ms:
                 q = q.join(gen_MassSpectrometerTable)
                 q = q.filter(gen_MassSpectrometerTable.name == ms.lower())
-            if ed and ed!=NULL_STR and kind=='unknown':
+            if ed and ed != NULL_STR and kind == 'unknown':
                 q = q.join(meas_ExtractionTable)
                 q = q.join(gen_ExtractionDeviceTable)
                 q = q.filter(gen_ExtractionDeviceTable.name == ed)

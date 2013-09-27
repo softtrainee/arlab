@@ -525,7 +525,7 @@ class PlotPanel(Loggable):
 #                 pass
 #                 if arar_age:
 #                 arar_age.age_dirty = True
-                arar_age.age=None
+                arar_age.age = None
                 self._print_results()
 #===============================================================================
 # defaults

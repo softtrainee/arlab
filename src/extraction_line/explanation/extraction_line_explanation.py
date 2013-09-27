@@ -39,10 +39,10 @@ class ExplanationAdapter(TabularAdapter):
     columns = [('Name', 'name'), ('Description', 'description'),
              ('State', 'state'), ('Lock', 'lock')
              ]
-    
-    lock_text=Property
-    state_text=Property
-    
+
+    lock_text = Property
+    state_text = Property
+
     def get_bg_color(self, obj, trait, row, column):
         item = self.item
         color = 'white'

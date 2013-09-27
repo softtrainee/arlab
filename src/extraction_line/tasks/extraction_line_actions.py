@@ -71,7 +71,7 @@ class RefreshCanvasAction(ExtractionLineAction):
         manager = self._get_manager(event)
 #        manager.window = self.window
         manager.reload_canvas()
-        
+
 
 
 # class OpenViewControllerAction(ExtractionLineAction):

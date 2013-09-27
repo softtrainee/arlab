@@ -153,13 +153,13 @@ class MassSpecDatabaseImporter(Loggable):
 #        db=self.db
 #        with db.session_ctx() as sess:
 #            self._add_analysis_db(sess,*args)
-            
+
     def _add_analysis(self, sess, spec, irradpos, rid, runtype):
 #    def _add_analysis_db(self, sess, spec, irradpos, rid, runtype):
         gst = time.time()
 
         db = self.db
-        
+
         spectrometer = spec.spectrometer
         tray = spec.tray
 
@@ -214,11 +214,11 @@ class MassSpecDatabaseImporter(Loggable):
                                    FirstStageDly=spec.first_stage_delay,
                                    SecondStageDly=spec.second_stage_delay,
                                    PipettedIsotopes=pipetted_isotopes,
-                                   RefDetID = refdbdet.DetectorID,
-                                   ReferenceDetectorLabel = refdbdet.Label,
-                                   SampleLoadingID = self.sample_loading_id,
-                                   LoginSessionID = self.login_session_id,
-                                   RunScriptID = rs.RunScriptID,
+                                   RefDetID=refdbdet.DetectorID,
+                                   ReferenceDetectorLabel=refdbdet.Label,
+                                   SampleLoadingID=self.sample_loading_id,
+                                   LoginSessionID=self.login_session_id,
+                                   RunScriptID=rs.RunScriptID,
                                    )
 
 #        analysis.RefDetID = refdbdet.DetectorID

@@ -166,8 +166,8 @@ class AutomatedRunSpec(Loggable):
 
             db_save_time = 1
             self._estimated_duration = s + db_save_time
-        
-        self._changed=False
+
+        self._changed = False
         return self._estimated_duration
 
     def make_run(self, new_uuid=True, run=None):

@@ -484,7 +484,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
         if rs is None:
             rs = RunScriptTable(RunScriptID=crc, Label=label, TheText=text)
             self._add_item(rs)
-        
+
         return rs
 
 #===============================================================================
