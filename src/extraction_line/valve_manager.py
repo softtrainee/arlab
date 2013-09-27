@@ -129,7 +129,7 @@ class ValveManager(Manager):
         elm = self.extraction_line_manager
         word = self.get_state_word()
         changed = False
-        #self.debug('valve state word= {}'.format(word))
+        # self.debug('valve state word= {}'.format(word))
         if word is not None:
             for k, v in self.valves.iteritems():
                 if word.has_key(k):
@@ -143,7 +143,7 @@ class ValveManager(Manager):
             changed = True
             for k, v in self.valves.iteritems():
                 elm.update_valve_state(k, v.state)
-                
+
         if refresh and changed:
             elm.refresh_canvas()
 
@@ -462,15 +462,16 @@ class ValveManager(Manager):
     def check_soft_interlocks(self, name):
         ''' 
         '''
-        cv = self.get_valve_by_name(name)
 
+        cv = self.get_valve_by_name(name)
+        self.debug('check software interlocks {} {}'.format(name, cv))
         if cv is not None:
             interlocks = cv.interlocks
             valves = self.valves
-            for v in valves:
-
-                if valves[v].name in interlocks:
-                    if valves[v].state:
+            for interlock in interlocks:
+                if interlock in valves:
+                    if valves[interlock].state:
+                        self.debug('interlocked {}'.format(interlock))
                         return True
 
     def open_by_name(self, name, mode='normal'):
