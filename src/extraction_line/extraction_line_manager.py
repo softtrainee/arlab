@@ -548,15 +548,19 @@ class ExtractionLineManager(Manager):
             return result
 
     def _change_valve_state(self, name, mode, action, sender_address=None):
+        result, change = False, False
         if self._check_ownership(name, sender_address):
             func = getattr(self.valve_manager, '{}_by_name'.format(action))
-            result, change = func(name, mode=mode)
-            if isinstance(result, bool):
-                if change:
-                    self.update_valve_state(name, True if action == 'open' else False)
-                    self.refresh_canvas()
+            ret = func(name, mode=mode)
+            if ret:
+                result, change = ret
+#             result, change = func(name, mode=mode)
+                if isinstance(result, bool):
+                    if change:
+                        self.update_valve_state(name, True if action == 'open' else False)
+                        self.refresh_canvas()
 
-            return result, change
+        return result, change
 
     def _check_ownership(self, name, requestor):
 #         if requestor is not None:
