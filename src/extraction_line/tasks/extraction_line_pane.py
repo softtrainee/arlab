@@ -46,11 +46,11 @@ class GaugePane(TraitsDockPane):
     id = 'pychron.extraction_line.gauges'
     def traits_view(self):
         v = View(UItem('gauge_manager',
-                              style='custom',
-                              height=125,
+                      style='custom',
+                      height=125,
 #                              springy=False,
-                              defined_when='gauge_manager'
-                              ),
+                      defined_when='gauge_manager'
+                      ),
                  )
         return v
 

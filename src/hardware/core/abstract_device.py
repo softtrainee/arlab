@@ -84,11 +84,11 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
 #         if self._cdevice is not None:
 #             return self._cdevice.ask(cmd)
 #
-#     def initialize(self, *args, **kw):
-#         '''
-#         '''
-#         if self._cdevice is not None:
-#             return self._cdevice.initialize(*args, **kw)
+    def initialize(self, *args, **kw):
+        '''
+        '''
+        if self._cdevice is not None:
+            return self._cdevice.initialize(*args, **kw)
 
     def post_initialize(self, *args, **kw):
         self.setup_scan()

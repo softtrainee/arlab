@@ -363,7 +363,7 @@ class SerialCommunicator(Communicator):
             try:
                 # print 'cmd', cmd_str, len(cmd_str)
                 self.handle.write(cmd_str)
-            except (serial.serialutil.SerialException, OSError, IOError), e:
+            except (serial.serialutil.SerialException, OSError, IOError, ValueError), e:
                 self.warning(e)
 
         if not self.simulation:

@@ -126,10 +126,16 @@ class Template(object):
                 sname = '{}_{}.png'.format(ni, self.name)
                 ins.copy_resource(os.path.join(root, 'resources', nd, sname))
 
-        for pn in ('start', 'stop'):
-            ins.copy_resource(os.path.join(root,
-                                           'resources', 'icons',
-                                           '{}.png'.format(pn)))
+#        for pn in ('start', 'stop'):
+#            ins.copy_resource(os.path.join(root,
+#                                           'resources', 'icons',
+#                                           '{}.png'.format(pn)))
+        #copy entire icons dir
+        iroot=os.path.join(root, 'resources','icons')
+        for di in os.listdir(iroot):
+            print di
+            ins.copy_resource(os.path.join(iroot, di))
+        
         # copy helper mod
         helper = os.path.join(self.root,
                               'launchers', 'helpers.py')
