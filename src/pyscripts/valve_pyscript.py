@@ -44,7 +44,7 @@ class ValvePyScript(PyScript):
         kw['runner'] = self.runner
         if self.runner is None:
             self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%% GOSUB setting runner to None')
-        
+
         super(ValvePyScript, self).gosub(*args, **kw)
 
     @verbose_skip

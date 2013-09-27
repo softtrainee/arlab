@@ -445,10 +445,8 @@ class ValveManager(Manager):
 
     def get_actuator_by_name(self, name):
         if self.actuators:
-#            for a in self.actuators:
-#                if a.name == name:
-#                    return a
-            return next((a for a in self.actuators if a.name == name), None)
+            return next((a for a in self.actuators
+                         if a.name == name), None)
 
     def get_software_lock(self, name, description=None, **kw):
         if description:

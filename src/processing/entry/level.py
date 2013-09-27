@@ -27,18 +27,18 @@ class Level(HasTraits):
     z = Float
     trays = List
     db = Any
-    level_id=Int
+    level_id = Int
 #    irradiation=Str
 #    dblevel = Any
     def load(self, irrad):
-        db=self.db
+        db = self.db
         if not isinstance(irrad, (str, unicode)):
-            irrad=irrad.name
-            
+            irrad = irrad.name
+
 #        self.irradiation=irrad
         with db.session_ctx() as sess:
             level = db.get_irradiation_level(irrad, self.name)
-            self.level_id=int(level.id)
+            self.level_id = int(level.id)
             if level.holder:
                 name = level.holder.name
                 if not name in self.trays:
@@ -49,11 +49,11 @@ class Level(HasTraits):
 
 
     def edit_db(self):
-        db=self.db
+        db = self.db
 #        irrad=self.irradiation
         with db.session_ctx():
             level = db.get_irradiation_level_byid(self.level_id)
-        
+
             level.name = self.name
             level.z = self.z
             holder = db.get_irradiation_holder(self.tray)

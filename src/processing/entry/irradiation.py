@@ -48,7 +48,7 @@ class Irradiation(Saveable):
 #    pr_names = DelegatesTo('production_ratio_input', prefix='names')
     def load_production_name(self):
         pr = NULL_STR
-        db=self.db
+        db = self.db
         with db.session_ctx():
             irrad = db.get_irradiation(self.name)
             if irrad is not None:
@@ -57,7 +57,7 @@ class Irradiation(Saveable):
                     self.pr_name = pr.name
 
     def load_chronology(self):
-        db=self.db
+        db = self.db
         with db.session_ctx():
             irrad = db.get_irradiation(self.name)
             if irrad is not None:

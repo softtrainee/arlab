@@ -41,6 +41,7 @@ def BFT(G, s):
                 continue
             P[v] = u
             Q.append(v)
+
     return P
 
 class ExtractionLineGraph(HasTraits):
@@ -125,7 +126,6 @@ class ExtractionLineGraph(HasTraits):
                 self._set_state(scene, snode)
                 self._clear_visited()
 
-
     def _set_state(self, scene, n):
         if n.state == 'closed' and not n.visited:
             n.visited = True
@@ -133,6 +133,8 @@ class ExtractionLineGraph(HasTraits):
                 self._set_state(scene, ni)
         else:
             state, term = self._find_max_state(n)
+            self._clear_fvisited()
+            print n.name, state, term
             self.fill(scene, n, state, term)
 
     def _split_graph(self, n):
@@ -153,6 +155,7 @@ class ExtractionLineGraph(HasTraits):
         '''
         state, term = False, ''
         for ni in BFT(self, n):
+            print '-----', n.name, ni.name
             if isinstance(ni, PumpNode):
                 return 'pump', ni.name
 
@@ -169,7 +172,6 @@ class ExtractionLineGraph(HasTraits):
         else:
             return state, term
 
-
     def fill(self, scene, root, state, term):
 #         print 'fill', root.name, state, term
         self._set_item_state(scene, root.name, state, term)
@@ -177,8 +179,8 @@ class ExtractionLineGraph(HasTraits):
             n = ei.get_node(root)
             self._set_item_state(scene, ei.name, state, term)
 
-            if n.state != 'closed' and not n.visited:
-                n.visited = True
+            if n.state != 'closed' and not n.fvisited:
+                n.fvisited = True
                 self.fill(scene, n, state, term)
 
     def _set_item_state(self, scene, name, state, term, color=None):
@@ -186,9 +188,6 @@ class ExtractionLineGraph(HasTraits):
             raise ValueError('name needs to be a str. provided={}'.format(name))
 
         obj = scene.get_item(name)
-
-#                 else:
-#                     obj.colo
 
         if obj is None \
                 or obj.type_tag in ('turbo', 'tank', 'ionpump'):
@@ -219,9 +218,12 @@ class ExtractionLineGraph(HasTraits):
     def _clear_visited(self):
         for ni in self.nodes.itervalues():
             ni.visited = False
-            for ei in ni.edges:
-                ei.visited = False
+#             for ei in ni.edges:
+#                 ei.visited = False
 
+    def _clear_fvisited(self):
+        for ni in self.nodes.itervalues():
+            ni.fvisited = False
 
     def __getitem__(self, key):
         if not isinstance(key, str):
@@ -229,15 +231,10 @@ class ExtractionLineGraph(HasTraits):
 
         if key in self.nodes:
             return self.nodes[key]
+
 if __name__ == '__main__':
-#     f = ['C', [['ATurbo', 'pump']]]
-#     f = [0, [[1, 2]]]
-#     print list(flatten(f))
-
-
     elg = ExtractionLineGraph()
     elg.load('/Users/ross/Pychrondata_dev/setupfiles/canvas2D/canvas.xml')
-
 
     elg.set_valve_state('C', False)
     state, root = elg.set_valve_state('H', True)
@@ -245,76 +242,6 @@ if __name__ == '__main__':
 
     print '-------------------------------'
     print state, root
-    # print elg.set_valve_state('C', True)
 
-#     elg.set_valve_state('C', False)
 #============= EOF =============================================
-#     def init_states(self, canvas):
-#         scene = canvas.canvas2D.scene
-#         for ni in self.nodes.itervalues():
-#             for ri in ni.find_roots():
-#                 self._clear_visited()
-#                 obj = scene.get_item(ri.name)
-#                 color = obj.default_color
-#                 for ei in ri.edges:
-#                     obj = scene.get_item(ei.name)
-#                     if obj:
-#                         if not obj.state:
-#                             self._set_item_state(scene, ei.name, True,'', color)
 
-# def flood(self, scene, root, snode, maxstate, maxterm, k=0):
-#         if isinstance(snode, PumpNode):
-#             self._set_item_state(scene, snode.name, 'pump', snode)
-#             snode.visited = False
-#             return 'pump', snode
-#
-#         for ei in snode.edges:
-#             n = ei.bnode if ei.anode == snode else ei.anode
-#             print '=' * (k + 1), snode.name, ei.name, n.name, n.state, n.visited
-#             if n.state != 'closed':
-#                 if not n.visited:
-#                     n.visited = True
-#                     r = self.flood(scene, root, n, maxstate, maxterm, k=k + 1)
-#                     if r and snode.state != 'closed':
-#                         maxstate, maxterm = r
-#                 else:
-#                     self._set_item_state(scene, n.name, maxstate, maxterm)
-#
-#             if snode.state != 'closed':
-#                 self._set_item_state(scene, ei.name, maxstate, maxterm)
-#
-#
-#         if isinstance(snode, PumpNode):
-#             self._set_item_state(scene, snode.name, 'pump', snode)
-#             snode.visited = False
-#             return 'pump', snode
-#
-#         elif isinstance(snode, LaserNode):
-#             print 'laser enodpoint', snode.name, maxstate
-#             if maxstate != 'pump':
-#                 self._set_item_state(scene, snode.name, 'laser', snode)
-#                 snode.visited = False
-#                 return 'laser', snode
-# #             else:
-# #                 return maxstate, maxterm
-#
-#         elif isinstance(snode, PipetteNode):
-#             if maxstate != 'pump':
-#                 self._set_item_state(scene, snode.name, 'pipette', snode)
-#                 snode.visited = False
-#                 return 'pipette', snode
-# #             else:
-# #                 return maxstate, maxterm
-#
-#         elif isinstance(snode, SpectrometerNode):
-#             if maxstate not in ('pump', 'laser', 'pipette'):
-#                 print '=' * (k + 1), 'set spectrometer', snode.name, maxstate
-#                 self._set_item_state(scene, snode.name, 'spectrometer', snode)
-#                 snode.visited = False
-#                 return 'spectrometer', snode
-# #         else:
-#         print 'visited', '=' * (k + 1), snode.name, maxstate, maxterm
-#         self._set_item_state(scene, snode.name, maxstate, maxterm)
-#     #
-#         snode.visited = False
-#         return maxstate, maxterm

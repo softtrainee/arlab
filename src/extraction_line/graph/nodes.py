@@ -50,6 +50,7 @@ class Node(HasTraits):
     name = Str
     state = Str
     visited = False
+    fvisited = False
 
     def add_edge(self, n):
         self.edges.append(weakref.ref(n)())
