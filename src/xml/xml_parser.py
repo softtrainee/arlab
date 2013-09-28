@@ -82,6 +82,11 @@ class XMLParser(object):
                        method='xml',
                        pretty_print=pretty_print)
 
+    def tostring(self):
+        tree = self.get_tree()
+        if tree:
+            return tree.tostring()
+
 class XMLParser2(object):
     '''
         wrapper for ElementTree

@@ -19,9 +19,9 @@ from traits.api import HasTraits, List, on_trait_change, Any, Event
 from traitsui.api import TreeNode
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.helpers.parsers.canvas_parser import CanvasParser
 from src.canvas.canvas2D.scene.primitives.primitives import Primitive
 from src.canvas.canvas2D.scene.layer import Layer
+from canvas_parser import CanvasParser
 
 class PrimitiveNode(TreeNode):
     add = List([Primitive])

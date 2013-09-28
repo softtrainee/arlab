@@ -24,7 +24,7 @@ from src.canvas.canvas2D.scene.primitives.primitives import rounded_rect, \
 class BaseValve(QPrimitive):
     soft_lock = False
     owned = False
-
+    oactive_color = (0, 255, 0)
     def is_in(self, x, y):
         mx, my = self.get_xy()
         w, h = self.get_wh()

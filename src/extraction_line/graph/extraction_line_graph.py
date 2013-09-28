@@ -15,42 +15,24 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Dict
+from traits.api import HasTraits, Dict, Bool
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 from src.extraction_line.graph.nodes import ValveNode, RootNode, \
     PumpNode, Edge, SpectrometerNode, LaserNode, TankNode, PipetteNode, \
     GaugeNode
-from src.helpers.parsers.canvas_parser import CanvasParser
+
 from src.canvas.canvas2D.scene.primitives.valves import Valve
-from compiler.ast import Pass
 
-TAG_PREDENCE = ('pump', 'spectrometer', 'pipette', 'laser', 'tank',)
+from src.canvas.canvas2D.scene.canvas_parser import CanvasParser
+from src.extraction_line.graph.traverse import BFT
 
-from collections import deque
-
-def BFT(G, s):
-    P, Q = {s: None}, deque([s])
-    while Q:
-        u = Q.popleft()
-        if not u:
-            continue
-
-        if u.state == 'closed':
-            continue
-
-        for v in G[u]:
-            if v in P:
-                continue
-            P[v] = u
-            Q.append(v)
-
-    return P
 
 class ExtractionLineGraph(HasTraits):
     nodes = Dict
     suppress_changes = False
+    inherit_state = Bool
     def load(self, p):
 
         cp = CanvasParser(p)
@@ -222,11 +204,13 @@ class ExtractionLineGraph(HasTraits):
                 set the color of the valve to 
                 the max state if the valve is open
             '''
-            if obj.state != 'closed':
-                if state:
-                    obj.active_color = color
-                else:
-                    obj.active_color = 0, 255, 0
+            if self.inherit_state:
+                if obj.state != 'closed':
+                    if state:
+                        obj.active_color = color
+                    else:
+                        obj.active_color = obj.oactive_color
+#                         obj.active_color = 0, 255, 0
             return
 
         if state:

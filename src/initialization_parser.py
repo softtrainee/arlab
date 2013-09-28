@@ -15,14 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from xml_parser import XMLParser
 from pyface.message_dialog import warning
 #============= standard library imports ========================
 import os
 import sys
-#============= local library imports  ==========================
-from src.paths import paths
 import inspect
+#============= local library imports  ==========================
+from src.xml.xml_parser import XMLParser
+from src.paths import paths
 
 lower = lambda x: x.lower() if x else None
 

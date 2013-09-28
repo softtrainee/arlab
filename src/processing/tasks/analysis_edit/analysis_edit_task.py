@@ -129,16 +129,17 @@ class AnalysisEditTask(BaseEditorTask):
 
     def _create_db_panes(self):
         if self.manager.db:
-            selector = self.manager.db.selector
-            selector._search_fired()
+            if self.manager.db.connected:
+                selector = self.manager.db.selector
+                selector._search_fired()
 
-#             from src.processing.selection.data_selector import DataSelector
-#             from src.processing.tasks.search_panes import ResultsPane
+    #             from src.processing.selection.data_selector import DataSelector
+    #             from src.processing.tasks.search_panes import ResultsPane
 
-            ds = DataSelector(database_selector=selector)
-            self.data_selector = ds
-#             return (QueryPane(model=ds), ResultsPane(model=ds))
-            return QueryPane(model=ds),
+                ds = DataSelector(database_selector=selector)
+                self.data_selector = ds
+    #             return (QueryPane(model=ds), ResultsPane(model=ds))
+                return QueryPane(model=ds),
 
     def _create_unknowns_pane(self):
         up = self.unknowns_pane_klass(adapter_klass=self.unknowns_adapter)

@@ -20,7 +20,7 @@ from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from envisage.ui.tasks.task_factory import TaskFactory
 from src.lasers.tasks.laser_task import FusionsDiodeTask, FusionsCO2Task
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
-from src.helpers.parsers.initialization_parser import InitializationParser
+from src.initialization_parser import InitializationParser
 import os
 from src.paths import paths
 from src.lasers.tasks.laser_preferences import FusionsDiodePreferencesPane, \

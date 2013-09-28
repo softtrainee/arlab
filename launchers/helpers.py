@@ -63,7 +63,7 @@ def add_eggs(root):
 
 
 def build_globals(debug):
-    from src.helpers.parsers.initialization_parser import InitializationParser
+    from src.initialization_parser import InitializationParser
     ip = InitializationParser()
 
     from src.globals import globalv

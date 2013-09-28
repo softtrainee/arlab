@@ -23,6 +23,7 @@ from envisage.ui.tasks.tasks_plugin import TasksPlugin
 from src.displays.gdisplays import gTraceDisplay
 from src.helpers.logger_setup import new_logger
 from src.logger.tasks.logger_plugin import LoggerPlugin
+from src.initialization_parser import InitializationParser
 
 
 logger = new_logger('launcher')
@@ -76,7 +77,6 @@ def get_module_name(klass):
     return '_'.join(words)
 
 def get_hardware_plugins():
-    from src.helpers.parsers.initialization_parser import InitializationParser
     ip = InitializationParser()
 
     ps = []
@@ -136,7 +136,7 @@ def get_user_plugins():
     '''
     # append plugins dir to the sys path
 #    sys.path.append(plugins_dir)
-    from src.helpers.parsers.initialization_parser import InitializationParser
+
     plugins = []
     ps = InitializationParser().get_plugins()
 

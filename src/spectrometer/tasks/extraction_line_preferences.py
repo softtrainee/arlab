@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,23 +15,30 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import Str, Password, Enum, List, Button, Any, Int, \
+    on_trait_change, Bool
+from traitsui.api import View, Item, Group, VGroup, HGroup, ListStrEditor
+from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
+from envisage.ui.tasks.preferences_pane import PreferencesPane
+
 #============= standard library imports ========================
-from xml_parser import XMLParser
 #============= local library imports  ==========================
 
 
-class ValveParser(XMLParser):
-    def get_groups(self, element=True):
-        tree = self.get_root()
-#        tree = self._tree
-        return [g if element else g.text.strip()
-                for g in tree.findall('group')]
+class SpectrometerPreferences(BasePreferencesHelper):
+    name = 'Spectrometer'
+    preferences_path = 'pychron.spectrometer'
+    id = 'pychron.spectrometer.preferences_page'
+    send_config_on_startup = Bool
 
-    def get_valves(self, group=None, element=True):
-        if group is None:
-            group = self.get_root()
-        return [v if element else v.text.strip()
-                for v in group.findall('valve')]
+class SpectrometerPreferencesPane(PreferencesPane):
+    model_factory = SpectrometerPreferences
+    category = 'Spectrometer'
+    def traits_view(self):
+        return View(
+                    Item('send_config_on_startup',
+                         tooltip='Load the spectrometer parameters on startup'
+                         )
+                    )
 
 #============= EOF =============================================
-

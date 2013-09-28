@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 
 #============= standard library imports ========================
-from xml_parser import XMLParser
+from src.xml.xml_parser import XMLParser
 #============= local library imports  ==========================
 
 

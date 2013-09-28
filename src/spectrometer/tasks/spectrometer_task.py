@@ -21,7 +21,6 @@ from pyface.tasks.action.schema import SMenu
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-from src.spectrometer.tasks.spectrometer_actions import PeakCenterAction
 from src.envisage.tasks.base_task import BaseExtractionLineTask
 from src.spectrometer.tasks.spectrometer_panes import ScanPane, ControlsPane, \
     ReadoutPane, IntensitiesPane
@@ -29,7 +28,6 @@ from src.spectrometer.tasks.spectrometer_panes import ScanPane, ControlsPane, \
 class SpectrometerTask(BaseExtractionLineTask):
     scan_manager = Any
     name = 'Scan'
-
 
     def prepare_destroy(self):
         self.scan_manager.stop_scan()
@@ -80,5 +78,7 @@ class SpectrometerTask(BaseExtractionLineTask):
 
 #             panes.append(CanvasDockPane(model=man))
         return panes
+
+
 
 #============= EOF =============================================

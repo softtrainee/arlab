@@ -26,6 +26,9 @@ from src.spectrometer.jobs.relative_detector_positions import RelativeDetectorPo
 from src.spectrometer.jobs.coincidence_scan import CoincidenceScan
 from src.spectrometer.jobs.cdd_operating_voltage_scan import CDDOperatingVoltageScan
 from src.hardware.argus_controller import ArgusController
+from apptools.preferences.preference_binding import bind_preference
+from src.spectrometer.spectrometer_parameters import SpectrometerParameters, \
+    SpectrometerParametersView
 
 
 class SpectrometerManager(Manager):
@@ -33,6 +36,13 @@ class SpectrometerManager(Manager):
     spectrometer_microcontroller = Any
     def _spectrometer_default(self):
         return Spectrometer(application=self.application)
+
+    def open_parameters(self):
+        p = SpectrometerParameters(spectrometer=self.spectrometer)
+        p.load()
+
+        v = SpectrometerParametersView(model=p)
+        v.edit_traits()
 
     def make_parameters_dict(self):
         spec = self.spectrometer
@@ -87,6 +97,9 @@ class SpectrometerManager(Manager):
         # self.integration_time = 0.065536
 
         self.spectrometer.load_configurations()
+
+        bind_preference(self.spectrometer, 'send_config_on_startup',
+                        'pychron.spectrometer.send_config_on_startup')
         self.spectrometer.finish_loading()
 
     def relative_detector_positions_task_factory(self):

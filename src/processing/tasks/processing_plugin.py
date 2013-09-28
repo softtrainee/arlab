@@ -138,30 +138,42 @@ Install to enable MS Excel export''')
 
 
     def _tasks_default(self):
-        return [
-                self._meta_task_factory(*args)
-                    for args in (
-                        ('pychron.entry.labnumber',
+        tasks = [('pychron.entry.labnumber',
                             self._labnumber_task_factory,
                                 'Labnumber', 'experiment'),
-                        ('pychron.entry.sensitivity',
-                            self._sensitivity_entry_task_factory,
-                                'Sensitivity', 'experiment'),
+                ('pychron.entry.sensitivity',
+                    self._sensitivity_entry_task_factory,
+                        'Sensitivity', 'experiment'),
+                ('pychron.recall',
+                    self._recall_task_factory, 'Recall'),
+                ('pychron.analysis_edit.blanks',
+                    self._blanks_edit_task_factory, 'Blanks'),
+                ('pychron.analysis_edit.flux',
+                    self._flux_task_factory, 'Flux'),
+                ('pychron.analysis_edit.isotope_evolution',
+                    self._iso_evo_task_factory, 'Isotope Evolution'),
+                ('pychron.analysis_edit.ic_factor',
+                    self._ic_factor_task_factory, 'IC Factor'),
+                ('pychron.analysis_edit.batch',
+                    self._batch_edit_task_factory, 'Batch Edit'),
+                ('pychron.processing.figures',
+                    self._figure_task_factory, 'Figures'),
+                # ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher'),
+                ('pychron.processing.publisher',
+                    self._table_task_factory, 'Table', '', 'Ctrl+t'),
+                ('pychron.processing.auto_figure',
+                    self._auto_figure_task_factory, 'AutoFigure'),
+                ('pychron.processing.smart_project',
+                    self._smart_project_task_factory, 'SmartProject'),
+                ('pychron.processing.browser',
+                    self._browser_task_factory, 'Analysis Browser', '', 'Ctrl+Shift+B'),
+                ('pychron.processing.respository',
+                    self._repository_task_factory, 'Repository', '', 'Ctrl+Shift+R')
+               ]
 
-                        ('pychron.recall', self._recall_task_factory, 'Recall'),
-                        ('pychron.analysis_edit.blanks', self._blanks_edit_task_factory, 'Blanks'),
-                        ('pychron.analysis_edit.flux', self._flux_task_factory, 'Flux'),
-#                         ('pychron.analysis_edit.series', self._series_task_factory, 'Series', '', '', True),
-                        ('pychron.analysis_edit.isotope_evolution', self._iso_evo_task_factory, 'Isotope Evolution'),
-                        ('pychron.analysis_edit.ic_factor', self._ic_factor_task_factory, 'IC Factor'),
-                        ('pychron.analysis_edit.batch', self._batch_edit_task_factory, 'Batch Edit'),
-                        ('pychron.processing.figures', self._figure_task_factory, 'Figures'),
-                        # ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher'),
-                        ('pychron.processing.publisher', self._table_task_factory, 'Table', '', 'Ctrl+t'),
-                        ('pychron.processing.auto_figure', self._auto_figure_task_factory, 'AutoFigure'),
-                        ('pychron.processing.smart_project', self._smart_project_task_factory, 'SmartProject'),
-                        ('pychron.processing.browser', self._browser_task_factory, 'Analysis Browser', '', 'Ctrl+Shift+B'),
-                        )
+        return [
+                self._meta_task_factory(*args)
+                    for args in tasks
                 ]
 
     def _processor_factory(self):
@@ -210,6 +222,10 @@ Install to enable MS Excel export''')
     def _auto_figure_task_factory(self):
         from src.processing.tasks.figures.auto_figure_task import AutoFigureTask
         return AutoFigureTask(manager=self._processor_factory())
+
+    def _repository_task_factory(self):
+        from src.processing.tasks.repository.respository_task import RespositoryTask
+        return RespositoryTask(manager=self._processor_factory())
 
 #     def _publisher_task_factory(self):
 #         from src.processing.tasks.publisher.publisher_task import PublisherTask

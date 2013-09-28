@@ -26,46 +26,14 @@ from src.spectrometer.tasks.spectrometer_task import SpectrometerTask
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
 from src.spectrometer.tasks.spectrometer_actions import PeakCenterAction, \
-    CoincidenceScanAction
+    CoincidenceScanAction, SpectrometerParametersAction
 from pyface.tasks.action.schema import SMenu
+from src.spectrometer.tasks.extraction_line_preferences import SpectrometerPreferencesPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class SpectrometerPlugin(BaseTaskPlugin):
     id = 'pychron.spectrometer'
-    def _service_offers_default(self):
-        '''
-        '''
-        so = self.service_offer_factory(
-                          protocol=SpectrometerManager,
-                          factory=self._factory_spectrometer)
-        so1 = self.service_offer_factory(
-                          protocol=ScanManager,
-                          factory=self._factory_scan)
-        so2 = self.service_offer_factory(
-                          protocol=IonOpticsManager,
-                          factory=self._factory_ion_optics)
-
-        return [so, so1, so2]
-
-    def _my_task_extensions_default(self):
-        return [
-                TaskExtension(actions=[
-                   SchemaAddition(id='Measure',
-                                  factory=lambda: SMenu(id='Measure',
-                                                        name='Measure'),
-                                  path='MenuBar',
-                                  before='Window',
-                                  after='Tools'
-                                  ),
-                   SchemaAddition(id='peak_center',
-                                  factory=PeakCenterAction,
-                                  path='MenuBar/Measure'),
-                   SchemaAddition(id='coincidence',
-                                  factory=CoincidenceScanAction,
-                                  path='MenuBar/Measure'),
-                                       ])
-                ]
 
     def get_spectrometer(self):
         spec = self.application.get_service('src.spectrometer.spectrometer_manager.SpectrometerManager')
@@ -109,4 +77,48 @@ class SpectrometerPlugin(BaseTaskPlugin):
                              scan_manager=scm
                              )
         return t
+#===============================================================================
+# defaults
+#===============================================================================
+    def _preferences_panes_default(self):
+        return [
+                SpectrometerPreferencesPane
+                ]
+
+    def _service_offers_default(self):
+        '''
+        '''
+        so = self.service_offer_factory(
+                          protocol=SpectrometerManager,
+                          factory=self._factory_spectrometer)
+        so1 = self.service_offer_factory(
+                          protocol=ScanManager,
+                          factory=self._factory_scan)
+        so2 = self.service_offer_factory(
+                          protocol=IonOpticsManager,
+                          factory=self._factory_ion_optics)
+
+        return [so, so1, so2]
+
+    def _my_task_extensions_default(self):
+        return [
+                TaskExtension(actions=[
+                   SchemaAddition(id='Measure',
+                                  factory=lambda: SMenu(id='Measure',
+                                                        name='Measure'),
+                                  path='MenuBar',
+                                  before='Window',
+                                  after='Tools'
+                                  ),
+                   SchemaAddition(id='peak_center',
+                                  factory=PeakCenterAction,
+                                  path='MenuBar/Measure'),
+                   SchemaAddition(id='coincidence',
+                                  factory=CoincidenceScanAction,
+                                  path='MenuBar/Measure'),
+                   SchemaAddition(id='parameters',
+                                  factory=SpectrometerParametersAction,
+                                  path='MenuBar/Edit'),
+                                       ])
+                ]
 #============= EOF =============================================

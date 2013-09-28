@@ -33,7 +33,7 @@ import gc
 # from src.ui.thread import Thread as uThread
 # from src.loggable import Loggable
 from src.displays.display import DisplayController
-from src.helpers.parsers.initialization_parser import InitializationParser
+from src.initialization_parser import InitializationParser
 from src.pyscripts.pyscript_runner import RemotePyScriptRunner, PyScriptRunner
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
