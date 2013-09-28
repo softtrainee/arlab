@@ -26,6 +26,7 @@ import os
 from src.helpers.filetools import str_to_bool
 from src.canvas.canvas2D.scene.primitives.valves import RoughValve, Valve
 from src.paths import paths
+from numpy.core.numeric import Inf
 
 
 class ExtractionLineScene(Scene):
@@ -57,8 +58,11 @@ class ExtractionLineScene(Scene):
         color = elem.find('color')
         if color is not None:
             c = color.text.strip()
-
-        c = self._make_color(c)
+            cobj = self.get_item(c)
+            if cobj is not None:
+                c = cobj.default_color
+        else:
+            c = self._make_color(c)
 
         rect = RoundedRectangle(x + ox, y + oy, width=w, height=h,
                                             name=key,
@@ -69,6 +73,7 @@ class ExtractionLineScene(Scene):
                                             fill=fill
                                             )
         self.add_item(rect, layer=1)
+        return rect
 
     def _new_connection(self, conn, key, start, end):
 
@@ -120,16 +125,42 @@ class ExtractionLineScene(Scene):
         self.add_item(l, layer=0)
 
 
-    def _new_line(self, line, name, start, end, color=(0, 0, 0), width=2):
-        klass = Line
-        x, y = map(float, start.text.split(','))
-        x1, y1 = map(float, end.text.split(','))
+    def _new_line(self, line, name,
+                  color=(0, 0, 0), width=2, origin=None):
+        if origin is None:
+            ox, oy = 0, 0
+        else:
+            ox, oy = origin
 
-        l = klass((x, y), (x1, y1),
-                  default_color=color,
+        start = line.find('start')
+        if start is not None:
+            end = line.find('end')
+            if end is not None:
+                x, y = map(float, start.text.split(','))
+                x1, y1 = map(float, end.text.split(','))
+
+                l = Line((x + ox, y + oy), (x1 + ox, y1 + oy),
+                          default_color=color,
+                          name=name,
+                          width=width)
+                self.add_item(l, layer=0)
+
+    def _new_label(self, label, name, c, origin=None):
+        if origin is None:
+            ox, oy = 0, 0
+        else:
+            ox, oy = origin
+
+        x, y = map(float, label.find('translation').text.split(','))
+        c = self._make_color(c)
+        l = Label(ox + x, oy + y,
+                  bgcolor=c,
+                  use_border=str_to_bool(label.get('use_border', 'T')),
                   name=name,
-                  width=width)
-        self.add_item(l, layer=0)
+                  text=label.text.strip(),
+                  )
+        self.add_item(l, layer=1)
+        return l
 
     def _new_image(self, image):
         path = image.text.strip()
@@ -192,19 +223,12 @@ class ExtractionLineScene(Scene):
         self._load_rects(cp, origin, color_dict)
 
         for i, l in enumerate(cp.get_elements('label')):
-            x, y = map(float, l.find('translation').text.split(','))
             if 'label' in color_dict:
                 c = color_dict['label']
             else:
                 c = (204, 204, 204)
-
-            c = self._make_color(c)
-            l = Label(x + ox, y + oy,
-                      bgcolor=c,
-                      use_border=str_to_bool(l.get('use_border', 'T')),
-                      name='{:03}'.format(i),
-                      text=l.text.strip())
-            self.add_item(l, layer=1)
+            name = '{:03}'.format(i)
+            self._new_label(l, name, c)
 
         for g in cp.get_elements('gauge'):
             if 'gauge' in color_dict:
@@ -220,14 +244,12 @@ class ExtractionLineScene(Scene):
             self._new_connection(conn, name, start, end)
 
         for i, line in enumerate(cp.get_elements('line')):
-            start = line.find('start')
-            end = line.find('end')
-            self._new_line(line, 'l{}'.format(i), start, end)
+#             start = line.find('start')
+#             end = line.find('end')
+            self._new_line(line, 'l{}'.format(i))
 
         for i, image in enumerate(cp.get_elements('image')):
             self._new_image(image)
-
-
 
 #         xv, yv = self._get_canvas_view_range()
         xv = self.canvas.view_x_range
@@ -241,11 +263,13 @@ class ExtractionLineScene(Scene):
                           fill=False, line_width=20, default_color=(0, 0, 102))
         self.add_item(brect)
 
+        self._load_legend(cp, origin, color_dict)
+
     def _load_rects(self, cp, origin, color_dict):
         for key in ('stage', 'laser', 'spectrometer',
                      'turbo', 'getter', 'tank', 'pipette',
                      'ionpump',
-                     'rect'
+#                      'rect'
                      ):
             for b in cp.get_elements(key):
                 if key in color_dict:
@@ -254,6 +278,55 @@ class ExtractionLineScene(Scene):
                     c = (204, 204, 204)
 
                 self._new_rectangle(b, c, bw=5, origin=origin, type_tag=key)
+
+    def _load_legend(self, cp, origin, color_dict):
+        ox, oy = origin
+        root = cp.get_root()
+        legend = root.find('legend')
+        c = (204, 204, 204)
+
+        maxx = -Inf
+        minx = Inf
+        maxy = -Inf
+        miny = Inf
+
+        if legend is not None:
+            lox, loy = self._get_floats(legend, 'origin')
+            for b in legend.findall('rect'):
+#                 print b
+                rect = self._new_rectangle(b, c, bw=5, origin=(ox + lox, oy + loy),
+                                    type_tag='rect')
+
+                maxx = max(maxx, rect.x)
+                maxy = max(maxy, rect.y)
+                minx = min(minx, rect.x)
+                miny = min(miny, rect.y)
+
+            for i, label in enumerate(legend.findall('llabel')):
+                name = '{:03n}label'.format(i)
+                ll = self._new_label(label, name, c, origin=(ox + lox, oy + loy))
+                maxx = max(maxx, ll.x)
+                maxy = max(maxy, ll.y)
+                minx = min(minx, ll.x)
+                miny = min(miny, ll.y)
+
+            for i, line in enumerate(legend.findall('lline')):
+                name = '{:03n}line'.format(i)
+                self._new_line(line, name, origin=(ox + lox, oy + loy))
+
+
+            width, height = maxx - minx, maxy - miny
+            pad = 0.5
+            rect = RoundedRectangle(x=ox + lox - pad,
+                                    y=oy + loy - pad,
+                                    width=width + 1 + 2 * pad,
+                                    height=height + 1 + 2 * pad,
+                                    fill=False,
+                                    border_width=5,
+                                    default_color=self._make_color((0, 0, 0))
+                                    )
+            self.add_item(rect)
+
 
     def _load_config(self, p):
         color_dict = dict()
@@ -291,6 +364,9 @@ class ExtractionLineScene(Scene):
                 o = tree.find('origin')
                 if o is not None:
                     ox, oy = map(float, o.text.split(','))
+
+                for i, image in enumerate(cp.get_elements('image')):
+                    self._new_image(image)
 
         return (ox, oy), color_dict
 #============= EOF =============================================

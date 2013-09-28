@@ -25,6 +25,8 @@ from src.extraction_line.extraction_line_manager import ExtractionLineManager
 from src.extraction_line.tasks.extraction_line_task import ExtractionLineTask
 from src.extraction_line.tasks.extraction_line_actions import LoadCanvasAction, \
     RefreshCanvasAction
+from src.extraction_line.tasks.extraction_line_preferences import ExtractionLinePreferences, \
+    ExtractionLinePreferencesPane
 
 class ExtractionLinePlugin(BaseTaskPlugin):
     id = 'pychron.extraction_line.plugin'
@@ -90,6 +92,10 @@ class ExtractionLinePlugin(BaseTaskPlugin):
         t = ExtractionLineTask(manager=elm)
         return t
 
+    def _preferences_panes_default(self):
+        return [
+                ExtractionLinePreferencesPane
+                ]
 #    def _my_task_extensions_default(self):
 #        return [TaskExtension(actions=[SchemaAddition(id='Load Canvas',
 #                                                      factory=LoadCanvasAction,
