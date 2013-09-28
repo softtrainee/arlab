@@ -66,6 +66,9 @@ class ValveNode(Node):
 class RootNode(Node):
     state = True
 
+class GaugeNode(RootNode):
+    pass
+
 class PumpNode(RootNode):
     pass
 

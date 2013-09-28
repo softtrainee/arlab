@@ -20,7 +20,8 @@ from traits.api import HasTraits, Dict
 #============= local library imports  ==========================
 
 from src.extraction_line.graph.nodes import ValveNode, RootNode, \
-    PumpNode, Edge, SpectrometerNode, LaserNode, TankNode, PipetteNode
+    PumpNode, Edge, SpectrometerNode, LaserNode, TankNode, PipetteNode, \
+    GaugeNode
 from src.helpers.parsers.canvas_parser import CanvasParser
 from src.canvas.canvas2D.scene.primitives.valves import Valve
 from compiler.ast import Pass
@@ -35,7 +36,7 @@ def BFT(G, s):
         u = Q.popleft()
         if not u:
             continue
-        
+
         if u.state == 'closed':
             continue
 
@@ -69,7 +70,8 @@ class ExtractionLineGraph(HasTraits):
                         ('ionpump', PumpNode),
                         ('laser', LaserNode),
                         ('tank', TankNode),
-                        ('pipette', PipetteNode)
+                        ('pipette', PipetteNode),
+                        ('gauge', GaugeNode),
                         ):
             for si in cp.get_elements(t):
                 n = si.text.strip()
@@ -137,7 +139,7 @@ class ExtractionLineGraph(HasTraits):
         else:
             state, term = self._find_max_state(n)
             self._clear_fvisited()
-            print n.name, state, term
+#             print n.name, state, term
             self.fill(scene, n, state, term)
 
     def _split_graph(self, n):
@@ -166,12 +168,25 @@ class ExtractionLineGraph(HasTraits):
                 state, term = 'laser', ni.name
             elif isinstance(ni, PipetteNode):
                 state, term = 'pipette', ni.name
-            elif isinstance(ni, SpectrometerNode):
-                if state not in ('laser', 'pipette'):
+            elif isinstance(ni, GaugeNode):
+                state, term = 'gauge', ni.name
+
+
+            if state not in ('laser', 'pipette'):
+                if isinstance(ni, SpectrometerNode):
                     state, term = 'spectrometer', ni.name
-            elif isinstance(ni, TankNode):
-                if state not in ('laser', 'pipette'):
+                elif isinstance(ni, TankNode):
                     state, term = 'tank', ni.name
+#                 elif isinstance(ni, GaugeNode):
+#                     state, term = 'gauge', ni.name
+
+#             elif isinstance(ni, SpectrometerNode):
+#                 if state not in ('laser', 'pipette'):
+#                     state, term = 'spectrometer', ni.name
+#             elif isinstance(ni, TankNode):
+#                 if state not in ('laser', 'pipette'):
+#                     state, term = 'tank', ni.name
+
         else:
             return state, term
 
@@ -183,7 +198,7 @@ class ExtractionLineGraph(HasTraits):
             if n is None:
                 continue
             self._set_item_state(scene, ei.name, state, term)
-            
+
             if n.state != 'closed' and not n.fvisited:
                 n.fvisited = True
                 self.fill(scene, n, state, term)

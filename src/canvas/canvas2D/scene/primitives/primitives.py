@@ -279,6 +279,7 @@ class Rectangle(QPrimitive):
     x = 0
     y = 0
     fill = True
+    use_border = True
     def _render_(self, gc):
         x, y = self.get_xy()
         w, h = self.get_wh()
@@ -286,8 +287,8 @@ class Rectangle(QPrimitive):
         gc.rect(x, y, w, h)
         if self.fill:
             gc.draw_path()
-            if self.use_border:
-                self._render_border(gc, x, y, w, h)
+#             if self.use_border:
+#                 self._render_border(gc, x, y, w, h)
         else:
             gc.stroke_path()
 
@@ -335,7 +336,6 @@ class RoundedRectangle(Rectangle, Bordered):
             x, y = self.get_xy()
             if self.fill:
                 rounded_rect(gc, x, y, width, height, corner_radius)
-
 
             self._render_border(gc, x, y, width, height)
 

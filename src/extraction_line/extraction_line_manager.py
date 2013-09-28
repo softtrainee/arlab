@@ -14,7 +14,7 @@
 # limitations under the License.
 #===============================================================================
 #=============enthought library imports=======================
-from traits.api import  Instance, List, Any
+from traits.api import  Instance, List, Any, Bool
 #=============standard library imports ========================
 import os
 import time
@@ -79,6 +79,7 @@ class ExtractionLineManager(Manager):
     _valve_lock_frequency = 10
 
     network = Instance(ExtractionLineGraph)
+    check_master_owner = Bool
 
     def test_connection(self):
         return self.get_valve_states() is not None
@@ -306,33 +307,22 @@ class ExtractionLineManager(Manager):
 
     def bind_preferences(self):
         from apptools.preferences.preference_binding import bind_preference
-#         bind_preference(self.canvas, 'style', 'pychron.extraction_line.style')
-#         bind_preference(self.canvas, 'width', 'pychron.extraction_line.width')
-#         bind_preference(self.canvas, 'height', 'pychron.extraction_line.height')
+        bind_preference(self, 'check_master_owner',
+                        'pychron.extraction_line.check_master_owner')
 
-        bind_preference(self, 'enable_close_after', 'pychron.extraction_line.enable_close_after')
-        bind_preference(self, 'close_after_minutes', 'pychron.extraction_line.close_after')
+
+#         bind_preference(self, 'enable_close_after', 'pychron.extraction_line.enable_close_after')
+#         bind_preference(self, 'close_after_minutes', 'pychron.extraction_line.close_after')
 
 #        from src.extraction_line.plugins.extraction_line_preferences_page import get_valve_group_names
-#
-#        for name in get_valve_group_names():
-#            self.add_trait(name, Str(''))
-#            self.on_trait_change(self._owner_change, name)
-#            bind_preference(self, name, 'pychron.extraction_line.{}'.format(name))
-
-#     def _owner_change(self, name, value):
-#         self.valve_manager.claim_section(name.split('_')[0], value.lower)
 
     def reload_scene_graph(self):
         self.info('reloading canvas scene')
 
         for c in self._canvases:
             if c is not None:
-#                 p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
-#                 p2 = os.path.join(paths.canvas2D_dir, 'canvas_config.xml')
-
                 c.load_canvas_file(c.config_name)
-#                 print p
+
 #                 # load state
                 if self.valve_manager:
                     for k, v in self.valve_manager.valves.iteritems():
@@ -563,23 +553,23 @@ class ExtractionLineManager(Manager):
         return result, change
 
     def _check_ownership(self, name, requestor):
-#         if requestor is not None:
-#             for f in self.flags:
-#                 if hasattr(f, 'valves'):
-#                     self.debug('flag={} id={}'.format(f.name, f.owner))
-#
-#                     self.debug('name={} valves={}'.format(name, f.valves))
-#                     if name in f.valves:
-#                         return f.owner == requestor
-#
-#         else:
-#             for
-        if requestor is None:
-            requestor = gethostbyname(gethostname())
-        self.debug('checking ownership. requestor={}'.format(requestor))
-        if name in self.valve_manager.valves:
-            v = self.valve_manager.valves[name]
-            return not v.owner and v.owner != requestor
+        '''
+            check if this valve is owned by
+            another client 
+            
+            if this is not a client but you want it to 
+            respect valve ownership 
+            set check_master_owner=True
+            
+        '''
+        if self.mode == 'client' or self.check_master_owner:
+            if requestor is None:
+                requestor = gethostbyname(gethostname())
+
+            self.debug('checking ownership. requestor={}'.format(requestor))
+            if name in self.valve_manager.valves:
+                v = self.valve_manager.valves[name]
+            return not (v.owner and v.owner != requestor)
         return True
 #=================== factories ==========================
 
