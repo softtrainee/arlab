@@ -14,13 +14,13 @@
 # limitations under the License.
 #===============================================================================
 #=============enthought library imports=======================
-from traits.api import  Instance, List, Any, Bool
+from traits.api import  Instance, List, Any, Bool, on_trait_change
 #=============standard library imports ========================
 import os
 import time
-from threading import Thread, Event
-import pickle
+from threading import Thread
 from socket import gethostbyname, gethostname
+import weakref
 #=============local library imports  ==========================
 from src.extraction_line.explanation.extraction_line_explanation import ExtractionLineExplanation
 from src.extraction_line.extraction_line_canvas import ExtractionLineCanvas
@@ -29,9 +29,7 @@ from src.managers.manager import Manager
 # from src.pyscripts.manager import PyScriptManager
 from src.monitors.system_monitor import SystemMonitor
 
-from view_controller import ViewController
 from src.extraction_line.status_monitor import StatusMonitor
-import weakref
 from src.extraction_line.graph.extraction_line_graph import ExtractionLineGraph
 
 # from src.managers.multruns_report_manager import MultrunsReportManager
@@ -51,35 +49,35 @@ class ExtractionLineManager(Manager):
     '''
     canvas = Instance(ExtractionLineCanvas)
     _canvases = List
+
     explanation = Instance(ExtractionLineExplanation, ())
+    gauge_manager = Instance(Manager)
+    monitor = Instance(SystemMonitor)
 
     valve_manager = Any  # Instance(Manager)
-    gauge_manager = Instance(Manager)
     status_monitor = Any
-#    environmental_manager = Instance(Manager)
-#    device_stream_manager = Instance(Manager)
     multiplexer_manager = Any  # Instance(Manager)
     multruns_report_manager = Any  # Instance(Manager)
+    network = Instance(ExtractionLineGraph)
+
 #    multruns_report_manager = Instance(MultrunsReportManager)
-
-    view_controller = Instance(ViewController)
-
+#    environmental_manager = Instance(Manager)
+#    device_stream_manager = Instance(Manager)
+#     view_controller = Instance(ViewController)
 #    pumping_monitor = Instance(PumpingMonitor)
 
     runscript = None
-
-
-    monitor = Instance(SystemMonitor)
-
     learner = None
+
     mode = 'normal'
+
     _update_status_flag = None
     _monitoring_valve_status = False
     _valve_state_frequency = 3
     _valve_lock_frequency = 10
 
-    network = Instance(ExtractionLineGraph)
     check_master_owner = Bool
+    use_network = Bool
 
     def test_connection(self):
         return self.get_valve_states() is not None
@@ -92,7 +90,6 @@ class ExtractionLineManager(Manager):
             return ss.get_module(module)
         except AttributeError:
             self.warning('{} not initialized'.format(subsystem))
-
 
     def _create_manager(self, klass, manager, params, **kw):
         gdict = globals()
@@ -144,84 +141,57 @@ class ExtractionLineManager(Manager):
                                          )
             self.monitor.monitor()
 
-
-        self.network = ExtractionLineGraph()
-        p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
-        self.network.load(p)
-
-
-#        if self.gauge_manager is not None:
-#            self.gauge_manager.on_trait_change(self.pressure_update, 'gauges.pressure')
-#    def close(self, isok):
-#        e = self.explanation
-#        self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
-#     def closed(self, ok):
+        if self.use_network:
+            p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
+            self.network.load(p)
 
     def deactivate(self):
-        print 'deacat'
         self.stop_status_monitor()
         if self.gauge_manager:
             self.gauge_manager.stop_scans()
 
         if self.monitor:
             self.monitor.stop()
-        print 'deacat'
-#         return True
 
     def stop_status_monitor(self):
         self.info('stopping status monitor')
         self.status_monitor.stop()
-#        if self._update_status_flag:
-#            self._update_status_flag.set()
 
-#     def deactivate(self):
-#         self.debug('$$$$$$$$$$$$$$$$$$$$$$$$ EL deactivated')
-#         self.closed(True)
-#    def opened(self, ui):
-#        super(ExtractionLineManager, self).opened(ui)
-#        self.reload_scene_graph()
-#        p = os.path.join(paths.hidden_dir, 'show_explanantion')
-#        if os.path.isfile(p):
-#            with open(p, 'rb') as f:
-#                try:
-#                    self.show_explanation = pickle.load(f)
-#                except pickle.PickleError:
-#                    pass
-#
-#        if self.mode == 'client':
-#            self.start_status_monitor()
-#        else:
-#            if self.gauge_manager:
-#                self.info('start gauge scans')
-#                self.gauge_manager.start_scans()
     def reload_canvas(self, load_states=False):
         self.reload_scene_graph()
-        if self.network:
+        net = self.network
+        vm = self.valve_manager
+        if net:
             p = os.path.join(paths.canvas2D_dir, 'canvas.xml')
-            self.network.load(p)
-#             for c in self._canvases:
-#                 self.network.init_states(c)
+            net.load(p)
 
-        self.network.suppress_changes = True
-        self.valve_manager.load_valve_states(refresh=False, force_network_change=True)
-        self.valve_manager.load_valve_lock_states(refresh=False)
+        if net:
+            net.suppress_changes = True
+
+        vm.load_valve_states(refresh=False, force_network_change=True)
+        vm.load_valve_lock_states(refresh=False)
         if self.mode == 'client':
             self.valve_manager.load_valve_owners(refresh=False)
-        self.network.suppress_changes = False
 
-        self.valve_manager.load_valve_states(refresh=False, force_network_change=True)
+        if net:
+            net.suppress_changes = False
+
+        vm.load_valve_states(refresh=False, force_network_change=True)
+
+        for p in vm.pipette_trackers:
+            self._set_pipette_counts(p.name, p.counts)
 
         self.refresh_canvas()
 
     def activate(self):
-#        p = os.path.join(paths.hidden_dir, 'show_explanantion')
-#        if os.path.isfile(p):
-#            with open(p, 'rb') as f:
-#                try:
-#                    self.show_explanation = pickle.load(f)
-#                except pickle.PickleError:
-#                    pass
-#         self.reload_scene_graph()
+#         p = os.path.join(paths.hidden_dir, 'show_explanantion')
+#         if os.path.isfile(p):
+#             with open(p, 'rb') as f:
+#                 try:
+#                     self.show_explanation = pickle.load(f)
+#                 except pickle.PickleError:
+#                     pass
+
         self.debug('$$$$$$$$$$$$$$$$$$$$$$$$ EL Activated')
         if self.mode == 'client':
             self.start_status_monitor()
@@ -231,84 +201,26 @@ class ExtractionLineManager(Manager):
                 self.gauge_manager.start_scans()
 
         self.reload_canvas(load_states=True)
-        # init states with all valves closed
-        # load_valve_states will refresh network
-#         for c in self._canvases:
-#             self.network.init_states(c)
-#
-#         if self.mode != 'client':
-#             self.valve_manager.load_valve_states()
-#             self.valve_manager.load_valve_lock_states()
-#             self.valve_manager.load_valve_owners()
-#
-#         self.refresh_canvas()
-#        if reload:
+
+        # need to wait until now to load the ptrackers
+        # this way our canvases are created
+        for p in self.valve_manager.pipette_trackers:
+            p.load()
 
     def start_status_monitor(self):
         self.info('starting status monitor')
 #        return
 #        self.info('starting status monitor NOT')
         self.status_monitor.start()
-#        if not self.status_monitor.isAlive():
-
-#        def func():
-#            self._monitoring_valve_status = True
-#            cnt = 0
-#            state_freq = self._valve_state_frequency
-#            lock_freq = self._valve_lock_frequency
-#            vm = self.valve_manager
-# #             while not self._update_status_flag.isSet():
-#            while 1:
-#                if self._update_status_flag.isSet():
-#                    # dont stop the monitor until all "clients" have stopped
-#                    # clients could be the spectrometer or experiment task
-#                    if self._monitor_cnt > 0:
-#                        self.info('{} connections still present. Keeping status monitor alive'.format(self._monitor_cnt))
-#                        self._monitor_cnt -= 1
-#                        self._update_status_flag.clear()
-#                    else:
-#                        break
-#
-#                time.sleep(1)
-#                if cnt % state_freq == 0:
-#                    vm.load_valve_states()
-#                if cnt % lock_freq == 0:
-#                    vm.load_valve_lock_states()
-#
-#                cnt += 1
-#                if cnt > 100:
-#                    cnt = 0
-#
-#            self.info('status monitor stopped')
-#            self._monitoring_valve_status = False
-#
-#        if self._update_status_flag is None:
-#            self._update_status_flag = Event()
-#
-#        self._update_status_flag.clear()
-#        if self.isMonitoringValveState():
-#            self.info('monitor already running')
-#            self._monitor_cnt += 1
-#        else:
-#
-#            self._monitor_cnt = 0
-#            t = Thread(target=func)
-#            t.start()
-#            self.info('starting status monitor')
-#            self._monitor_thread = t
-#
-#    def isMonitoringValveState(self):
-#        return self._monitoring_valve_status
-# #        return self._update_status_flag.isSet()
-
-
-
-
 
     def bind_preferences(self):
         from apptools.preferences.preference_binding import bind_preference
         bind_preference(self, 'check_master_owner',
                         'pychron.extraction_line.check_master_owner')
+        bind_preference(self, 'use_network',
+                        'pychron.extraction_line.use_network')
+        bind_preference(self.network, 'inherit_state',
+                        'pychron.extraction_line.inherit_state')
 
 
 #         bind_preference(self, 'enable_close_after', 'pychron.extraction_line.enable_close_after')
@@ -351,21 +263,10 @@ class ExtractionLineManager(Manager):
 #            self.canvas.update_pressure(o.name, n, o.state)
     def update_valve_state(self, name, state, *args, **kw):
 
-        if self.network:
+        if self.use_network:
             self.network.set_valve_state(name, state)
             for c in self._canvases:
                 self.network.set_canvas_states(c, name)
-#                 self.network.init_states(c)
-#             r = self.network.set_valve_state(name, state)
-#             if r:
-#                     self.network.init_states(c)
-
-#             r = self.network.set_valve_state(*args, **kw)
-#             if r:
-#                 for c in self._canvases:
-#                     self.network.set_canvas_states(c, r)
-#                     self.network.init_states(c)
-
 
         for c in self._canvases:
             c.update_valve_state(name, state, *args, **kw)
@@ -378,12 +279,6 @@ class ExtractionLineManager(Manager):
         for c in self._canvases:
             c.update_valve_owned_state(*args, **kw)
 
-
-#         self.canvas.update_valve_lock_state(*args, **kw)
-
-#    def update_canvas2D(self, *args):
-#        if self.canvas:
-#            self.canvas.canvas2D.update_valve_state(*args)
     def set_valve_owner(self, name, owner):
         '''
             set flag indicating if the valve is owned by a system
@@ -391,9 +286,6 @@ class ExtractionLineManager(Manager):
         if self.valve_manager is not None:
             self.valve_manager.set_valve_owner(name, owner)
 #
-#         for c in self._canvases:
-#             c.update_valve_owner(name, owner)
-
     def show_valve_properties(self, name):
         if self.valve_manager is not None:
             self.valve_manager.show_valve_properties(name)
@@ -432,7 +324,6 @@ class ExtractionLineManager(Manager):
         if self.valve_manager is not None:
             return self.valve_manager.get_valve_by_name(name)
 
-#    def open_valve(self, name, description=None, address=None, mode='remote', **kw):
     def get_pressure(self, controller, name):
         if self.gauge_manager:
             return self.gauge_manager.get_pressure(controller, name)
@@ -443,8 +334,6 @@ class ExtractionLineManager(Manager):
     def enable_valve(self, description):
         self._enable_valve(description, True)
 
-
-
     def open_valve(self, name, ** kw):
         '''
         '''
@@ -454,7 +343,6 @@ class ExtractionLineManager(Manager):
         '''
         '''
         return self._open_close_valve(name, 'close', **kw)
-
 
     def sample(self, name, **kw):
         def sample():
@@ -489,11 +377,6 @@ class ExtractionLineManager(Manager):
         t = Thread(target=cycle)
         t.start()
 
-#     def claim_group(self, *args):
-#         return self.valve_manager.claim_group(*args)
-#
-#     def release_group(self, *args):
-#         return self.valve_manager.release_group(*args)
     def get_script_state(self, key):
         return self.pyscript_editor.get_script_state(key)
 
@@ -544,7 +427,6 @@ class ExtractionLineManager(Manager):
             ret = func(name, mode=mode)
             if ret:
                 result, change = ret
-#             result, change = func(name, mode=mode)
                 if isinstance(result, bool):
                     if change:
                         self.update_valve_state(name, True if action == 'open' else False)
@@ -571,14 +453,9 @@ class ExtractionLineManager(Manager):
                 v = self.valve_manager.valves[name]
             return not (v.owner and v.owner != requestor)
         return True
-#=================== factories ==========================
-
-    def _view_controller_factory(self):
-        if self.canvas.canvas3D:
-            v = ViewController(scene_graph=self.canvas.canvas3D.scene_graph)
-            self.canvas.canvas3D.user_views = v.views
-            return v
-
+#===============================================================================
+# handlers
+#===============================================================================
     def _valve_manager_changed(self):
         if self.valve_manager is not None:
             self.status_monitor.valve_manager = self.valve_manager
@@ -587,10 +464,38 @@ class ExtractionLineManager(Manager):
                 e.load(self.valve_manager.explanable_items)
                 self.valve_manager.on_trait_change(e.load_item, 'explanable_items[]')
 
+    @on_trait_change('valve_manager:pipette_trackers:counts')
+    def _update_pipette_counts(self, obj, name, old, new):
+        self._set_pipette_counts(obj.name, new)
 
-#            self.valve_manager.mode = self.mode
-#=================== defaults ===========================
-#    def _view_controller_default(self):
+    def _set_pipette_counts(self, name, value):
+        for c in self._canvases:
+            scene = c.canvas2D.scene
+            obj = scene.get_item('vlabel_{}Pipette'.format(name))
+            if obj is not None:
+                obj.value = value
+                c.refresh()
+
+    @on_trait_change('use_network,network:inherit_state')
+    def _update_network(self):
+        from src.canvas.canvas2D.scene.primitives.valves import Valve
+        if not self.use_network:
+            for c in self._canvases:
+                scene = c.canvas2D.scene
+                for item in scene.get_items():
+                    if not isinstance(item, Valve):
+                        item.active_color = item.default_color
+                    else:
+                        item.active_color = item.oactive_color
+        else:
+            net = self.network
+            for k, vi in self.valve_manager.valves.iteritems():
+                net.set_valve_state(k, vi.state)
+            self.reload_canvas()
+
+#===============================================================================
+# defaults
+#===============================================================================
 #        return self._view_controller_factory()
 #    def _pyscript_editor_default(self):
 #        return PyScriptManager(parent=self)
@@ -632,6 +537,9 @@ class ExtractionLineManager(Manager):
         '''
         return self.new_canvas()
 
+    def _network_default(self):
+        return ExtractionLineGraph()
+
 #    def _pumping_monitor_default(self):
 #        '''
 #        '''
@@ -647,6 +555,12 @@ if __name__ == '__main__':
     elm.configure_traits()
 
 #=================== EOF ================================
+#     def _view_controller_factory(self):
+#         if self.canvas.canvas3D:
+#             v = ViewController(scene_graph=self.canvas.canvas3D.scene_graph)
+#             self.canvas.canvas3D.user_views = v.views
+#             return v
+
 #    def add_extraction_line_macro_delay(self):
 #        global Macro
 #        if Macro is None:

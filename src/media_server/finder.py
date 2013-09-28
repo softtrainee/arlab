@@ -20,11 +20,11 @@ from traitsui.api import View, Item, TableEditor
 from traitsui.tree_node import TreeNode, ITreeNode
 from traitsui.editors.tree_editor import TreeEditor
 # from xml.etree.ElementTree import XMLParser
-from src.regex import make_image_regex
-import os
-from src.helpers.parsers.xml_parser import XMLParser
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.regex import make_image_regex
+# from src.xml.xml_parser import XMLParser
+
 class FilePath(HasTraits):
     name = Str
     root = Any

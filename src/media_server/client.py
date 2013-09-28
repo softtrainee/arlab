@@ -25,8 +25,8 @@ from cStringIO import StringIO
 from src.loggable import Loggable
 from apptools.preferences.preference_binding import bind_preference
 from src.paths import paths
-from src.helpers.parsers.xml_parser import XMLParser
-from src.regex import make_image_regex
+from src.xml.xml_parser import XMLParser
+# from src.regex import make_image_regex
 
 class MediaClient(Loggable):
     host = Str

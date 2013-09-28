@@ -570,7 +570,7 @@ class ExperimentEditorTask(EditorTask):
 
     def _manager_factory(self):
         from src.experiment.experimentor import Experimentor
-        from src.helpers.parsers.initialization_parser import InitializationParser
+        from src.initialization_parser import InitializationParser
         ip = InitializationParser()
         plugin = ip.get_plugin('Experiment', category='general')
         mode = ip.get_parameter(plugin, 'mode')

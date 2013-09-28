@@ -18,11 +18,12 @@
 from traits.api import Str, Property, cached_property
 from traitsui.api import Item, EnumEditor
 #============= standard library imports ========================
+import os
 #============= local library imports  ==========================
 from src.pyscripts.commands.core import Command
-from src.helpers.parsers.valve_parser import ValveParser
 from src.paths import paths
-import os
+from src.extraction_line.valve_parser import ValveParser
+
 
 class ValveCommand(Command):
     valve = Str

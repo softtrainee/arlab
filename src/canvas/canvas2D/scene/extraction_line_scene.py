@@ -21,7 +21,7 @@ from traits.api import Instance, Dict
 from src.canvas.canvas2D.scene.scene import Scene
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
 from src.canvas.canvas2D.scene.primitives.primitives import RoundedRectangle, \
-    Label, BorderLine, Rectangle, Line, Image
+    Label, BorderLine, Rectangle, Line, Image, ValueLabel
 import os
 from src.helpers.filetools import str_to_bool
 from src.canvas.canvas2D.scene.primitives.valves import RoughValve, Valve
@@ -145,20 +145,31 @@ class ExtractionLineScene(Scene):
                           width=width)
                 self.add_item(l, layer=0)
 
-    def _new_label(self, label, name, c, origin=None):
+    def _new_label(self, label, name, c, origin=None, klass=None, **kw):
         if origin is None:
             ox, oy = 0, 0
         else:
             ox, oy = origin
+        if klass is None:
+            klass = Label
+        x, y = 0, 0
+        trans = label.find('translation')
+        if trans is not None:
+            x, y = map(float, trans.text.split(','))
 
-        x, y = map(float, label.find('translation').text.split(','))
+
         c = self._make_color(c)
-        l = Label(ox + x, oy + y,
+        l = klass(ox + x, oy + y,
                   bgcolor=c,
                   use_border=str_to_bool(label.get('use_border', 'T')),
                   name=name,
                   text=label.text.strip(),
+                  **kw
                   )
+        font = label.find('font')
+        if font is not None:
+            l.font = font.text.strip()
+
         self.add_item(l, layer=1)
         return l
 
@@ -222,34 +233,15 @@ class ExtractionLineScene(Scene):
         self.valves = ndict
         self._load_rects(cp, origin, color_dict)
 
-        for i, l in enumerate(cp.get_elements('label')):
-            if 'label' in color_dict:
-                c = color_dict['label']
-            else:
-                c = (204, 204, 204)
-            name = '{:03}'.format(i)
-            self._new_label(l, name, c)
 
-        for g in cp.get_elements('gauge'):
-            if 'gauge' in color_dict:
-                c = color_dict['gauge']
-            else:
-                c = (255, 255, 0)
-            self._new_rectangle(g, c, origin=origin)
+#         for g in cp.get_elements('gauge'):
+#             if 'gauge' in color_dict:
+#                 c = color_dict['gauge']
+#             else:
+#                 c = (255, 255, 0)
+#             self._new_rectangle(g, c, origin=origin)
 
-        for i, conn in enumerate(cp.get_elements('connection')):
-            start = conn.find('start')
-            end = conn.find('end')
-            name = '{}_{}'.format(start.text, end.text)
-            self._new_connection(conn, name, start, end)
 
-        for i, line in enumerate(cp.get_elements('line')):
-#             start = line.find('start')
-#             end = line.find('end')
-            self._new_line(line, 'l{}'.format(i))
-
-        for i, image in enumerate(cp.get_elements('image')):
-            self._new_image(image)
 
 #         xv, yv = self._get_canvas_view_range()
         xv = self.canvas.view_x_range
@@ -263,12 +255,46 @@ class ExtractionLineScene(Scene):
                           fill=False, line_width=20, default_color=(0, 0, 102))
         self.add_item(brect)
 
+        self._load_pipettes(cp, origin, color_dict)
+
+        self._load_markup(cp, origin, color_dict)
+
+        '''
+            need to load all components that will be connected 
+            before loading connections
+        '''
+        self._load_connections(cp, origin, color_dict)
         self._load_legend(cp, origin, color_dict)
+
+    def _load_markup(self, cp, origin, color_dict):
+        '''
+            labels,images, and lines
+        '''
+        for i, l in enumerate(cp.get_elements('label')):
+            if 'label' in color_dict:
+                c = color_dict['label']
+            else:
+                c = (204, 204, 204)
+            name = '{:03}'.format(i)
+            self._new_label(l, name, c)
+
+        for i, line in enumerate(cp.get_elements('line')):
+            self._new_line(line, 'l{}'.format(i))
+
+        for i, image in enumerate(cp.get_elements('image')):
+            self._new_image(image)
+
+    def _load_connections(self, cp, origin, color_dict):
+        for i, conn in enumerate(cp.get_elements('connection')):
+            start = conn.find('start')
+            end = conn.find('end')
+            name = '{}_{}'.format(start.text, end.text)
+            self._new_connection(conn, name, start, end)
 
     def _load_rects(self, cp, origin, color_dict):
         for key in ('stage', 'laser', 'spectrometer',
-                     'turbo', 'getter', 'tank', 'pipette',
-                     'ionpump',
+                     'turbo', 'getter', 'tank',
+                     'ionpump', 'gauge',
 #                      'rect'
                      ):
             for b in cp.get_elements(key):
@@ -278,6 +304,30 @@ class ExtractionLineScene(Scene):
                     c = (204, 204, 204)
 
                 self._new_rectangle(b, c, bw=5, origin=origin, type_tag=key)
+
+    def _load_pipettes(self, cp, origin, color_dict):
+        if 'pipette' in color_dict:
+            c = color_dict['pipette']
+        else:
+            c = (204, 204, 204)
+
+        for p in cp.get_elements('pipette'):
+            rect = self._new_rectangle(p, c, bw=5,
+                                origin=origin, type_tag='pipette')
+            # add vlabel
+            vlabel = p.find('vlabel')
+            if vlabel is not None:
+                name = 'vlabel_{}'.format(rect.name)
+                ox, oy = 0, 0
+                if origin:
+                    ox, oy = origin
+
+                self._new_label(vlabel, name, c,
+                                origin=(ox + rect.x, oy + rect.y),
+                                klass=ValueLabel,
+                                value=0
+                                )
+
 
     def _load_legend(self, cp, origin, color_dict):
         ox, oy = origin

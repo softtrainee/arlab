@@ -18,10 +18,10 @@
 
 #============= enthought library imports =======================
 from traits.api import  Instance, Int, Property, List, \
-    Any, Enum, Str, DelegatesTo, Event
+    Any, Enum, Str, DelegatesTo, Event, Bool
 
 #============= standard library imports ========================
-import random
+from ConfigParser import ConfigParser
 import os
 #============= local library imports  ==========================
 from src.spectrometer.source import Source
@@ -31,7 +31,6 @@ from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.constants import NULL_STR
 from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.paths import paths
-from ConfigParser import ConfigParser
 
 DETECTOR_ORDER = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 debug = False
@@ -78,6 +77,14 @@ class Spectrometer(SpectrometerDevice):
     intensity_dirty = Event
 
     testcnt = 0
+    send_config_on_startup = Bool
+
+    def send_configuration(self):
+        '''
+            send the configuration values to the device
+        '''
+        self._send_configuration()
+
     def set_parameter(self, name, v):
         cmd = '{} {}'.format(name, v)
         self.ask(cmd)
@@ -267,11 +274,9 @@ class Spectrometer(SpectrometerDevice):
     def finish_loading(self):
         self.magnet.finish_loading()
 
-        # write configuration to spectrometer
-
-        self._send_configuration()
-
-
+        if self.send_config_on_startup:
+            # write configuration to spectrometer
+            self._send_configuration()
 
 
     def add_detector(self, **kw):
@@ -384,7 +389,9 @@ class Spectrometer(SpectrometerDevice):
                          ioncountervoltage='IonCounterVoltage'
                          )
 
+        self.debug('Sending configuration to spectrometer')
         if self.microcontroller:
+
             p = os.path.join(paths.spectrometer_dir, 'config.cfg')
             config = ConfigParser()
             config.read(p)

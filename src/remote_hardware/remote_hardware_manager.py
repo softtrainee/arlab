@@ -24,7 +24,7 @@ from traitsui.table_column import ObjectColumn
 import os
 #============= local library imports  ==========================
 from src.managers.manager import Manager
-from src.helpers.parsers.initialization_parser import InitializationParser
+from src.initialization_parser import InitializationParser
 from src.remote_hardware.command_processor import CommandProcessor
 from src.messaging.remote_command_server import RemoteCommandServer
 from src.globals import globalv

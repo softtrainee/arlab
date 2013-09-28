@@ -16,7 +16,6 @@
 
 #=============enthought library imports=======================
 from traits.api import Any, Dict, List, Bool
-from pyface.timer.do_later import do_later
 #=============standard library imports ========================
 import os
 import pickle
@@ -32,13 +31,12 @@ from src.globals import globalv
 from src.managers.manager import Manager
 from src.extraction_line.explanation.explanable_item import ExplanableValve
 from src.hardware.valve import HardwareValve
-from src.extraction_line.section import Section
 from src.paths import paths
-from src.helpers.parsers.valve_parser import ValveParser
 from src.loggable import Loggable
 from src.constants import ALPHAS
-# from src.ui.gui import invoke_in_main_thread
-# from src.codetools.memory_usage import get_current_mem
+from src.extraction_line.pipettes.tracking import PipetteTracker
+from valve_parser import ValveParser
+
 
 class ValveGroup(object):
     owner = None
@@ -65,12 +63,11 @@ class ValveManager(Manager):
 
     query_valve_state = Bool(True)
 
-    systems = None
-    valve_groups = None
-
     use_explanation = True
 
     _prev_keys = None
+
+    pipette_trackers = List(PipetteTracker)
 
     def show_valve_properties(self, name):
         v = self.get_valve_by_name(name)
@@ -111,7 +108,11 @@ class ValveManager(Manager):
         if globalv.load_soft_locks:
             self._load_soft_lock_states()
 
-        self._load_system_dict()
+        # load the pipette trackers
+#         for p in self.pipette_trackers:
+#             p.load()
+
+#         self._load_system_dict()
         # self.info('loading section definitions file')
         # open config file
         # setup_file = os.path.join(paths.extraction_line_dir, 'section_definitions.cfg')
@@ -342,7 +343,7 @@ class ValveManager(Manager):
         states = []
         keys = []
         prev_keys = []
-        clear_prev_keys=False
+        clear_prev_keys = False
         if self._prev_keys:
             clear_prev_keys = True
             prev_keys = self._prev_keys
@@ -543,7 +544,16 @@ class ValveManager(Manager):
             self.warning('Software Interlock')
             return
 
-        return self._actuate_(name, action, mode)
+        r, c = self._actuate_(name, action, mode)
+        if r and c:
+            for pip in self.pipette_trackers:
+                '''
+                    a single valve can increment at most one pipette
+                '''
+                if pip.check_shot(name):
+                    break
+
+        return r, c
 
     def _close_(self, name, mode):
         '''
@@ -574,54 +584,12 @@ class ValveManager(Manager):
                 act = getattr(v, action)
 
                 result, changed = act(mode='{}-{}'.format(self.extraction_line_manager.mode, mode))
+
         else:
             self.warning('Valve {} not available'.format(vid))
             # result = 'Valve %s not available' % id
 
         return result, changed
-
-    def _get_system_address(self, name):
-        return next((h for k, h in self.systems.iteritems() if k == name), None)
-
-    def _load_system_dict(self):
-#        config = self.configparser_factory()
-
-        from src.helpers.parsers.initialization_parser import InitializationParser
-#        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
-        ip = InitializationParser()
-
-        self.systems = dict()
-        for name, host in ip.get_systems():
-            self.systems[name] = host
-
-#        config.read(os.path.join(setup_dir, 'system_locks.cfg'))
-#
-#        for sect in config.sections():
-#            name = config.get(sect, 'name')
-#            host = config.get(sect, 'host')
-# #            names.append(name)
-#            self.systems[name] = host
-#
-    def _load_sections_from_file(self, path):
-        '''
-        '''
-        self.sections = []
-        config = self.get_configuration(path=path)
-        if config is not None:
-            for s in config.sections():
-                section = Section()
-                comps = config.get(s, 'components')
-                for c in comps.split(','):
-                    section.add_component(c)
-
-                for option in config.options(s):
-                    if 'test' in option:
-                        test = config.get(s, option)
-                        tkey, prec, teststr = test.split(',')
-                        t = (int(prec), teststr)
-                        section.add_test(tkey, t)
-
-                self.sections.append(section)
 
     def _load_valves_from_file(self, path):
         '''
@@ -634,19 +602,35 @@ class ValveManager(Manager):
             self.valves[name] = hv
             return hv
 
-#         self.valve_groups = dict()
         parser = ValveParser(path)
         for g in parser.get_groups():
             for v in parser.get_valves(group=g):
                 factory(v)
 
-#             valves = [factory(v) for v in parser.get_valves(group=g)]
-#             vg = ValveGroup()
-#             vg.valves = valves
-#             self.valve_groups[g.text.strip()] = vg
-
         for v in parser.get_valves():
             factory(v)
+
+        ps = []
+        for p in parser.get_pipettes():
+            pip = self._pipette_factory(p)
+            if pip:
+                ps.append(pip)
+
+        self.pipette_trackers = ps
+
+    def _pipette_factory(self, p):
+        inner = p.find('inner')
+        outer = p.find('outer')
+        if inner is not None and outer is not None:
+            innerk = inner.text.strip()
+            outerk = outer.text.strip()
+            if innerk in self.valves \
+                and outerk in self.valves:
+                    return PipetteTracker(
+                                         name=p.text.strip(),
+                                         inner=innerk,
+                                         outer=outerk
+                                         )
 
     def _valve_factory(self, v_elem):
         name = v_elem.text.strip()
@@ -813,6 +797,49 @@ if __name__ == '__main__':
         # print r, len(r)
 
 #==================== EOF ==================================
+#     def _get_system_address(self, name):
+#         return next((h for k, h in self.systems.iteritems() if k == name), None)
+#
+#     def _load_system_dict(self):
+# #        config = self.configparser_factory()
+#
+#         from src.helpers.parsers.initialization_parser import InitializationParser
+# #        ip = InitializationParser(os.path.join(setup_dir, 'initialization.xml'))
+#         ip = InitializationParser()
+#
+#         self.systems = dict()
+#         for name, host in ip.get_systems():
+#             self.systems[name] = host
+
+#        config.read(os.path.join(setup_dir, 'system_locks.cfg'))
+#
+#        for sect in config.sections():
+#            name = config.get(sect, 'name')
+#            host = config.get(sect, 'host')
+# #            names.append(name)
+#            self.systems[name] = host
+#
+#     def _load_sections_from_file(self, path):
+#         '''
+#         '''
+#         self.sections = []
+#         config = self.get_configuration(path=path)
+#         if config is not None:
+#             for s in config.sections():
+#                 section = Section()
+#                 comps = config.get(s, 'components')
+#                 for c in comps.split(','):
+#                     section.add_component(c)
+#
+#                 for option in config.options(s):
+#                     if 'test' in option:
+#                         test = config.get(s, option)
+#                         tkey, prec, teststr = test.split(',')
+#                         t = (int(prec), teststr)
+#                         section.add_test(tkey, t)
+#
+#                 self.sections.append(section)
+
 #    def _get_states(self, times_up_event, sq):
 #
 #        def _gstate(ki):

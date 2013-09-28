@@ -21,7 +21,7 @@ import time
 #============= local library imports  ==========================
 from src.paths import paths
 from src.hardware.core.i_core_device import ICoreDevice
-from src.helpers.parsers.initialization_parser import InitializationParser
+from src.initialization_parser import InitializationParser
 from loggable import Loggable
 from src.ui.progress_dialog import myProgressDialog
 import os

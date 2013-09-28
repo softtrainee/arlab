@@ -50,6 +50,14 @@ def get_manager(event, protocol):
 #        manager = app.get_service(SPECTROMETER_PROTOCOL)
 #        manager.peak_center(update_mftable=True)
 #
+class SpectrometerParametersAction(Action):
+    name = 'Spectrometer Parameters...'
+    description = 'View/Set spectrometer parameters'
+    accelerator = 'Alt+Ctrl+S'
+    def perform(self, event):
+        man = get_manager(event, SPECTROMETER_PROTOCOL)
+        man.open_parameters()
+
 class PeakCenterAction(Action):
     description = 'Calculate peak center'
     name = 'Peak Center...'

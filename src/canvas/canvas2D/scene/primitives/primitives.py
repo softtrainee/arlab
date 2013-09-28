@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Any, Dict, Bool, Str, Property, List, Int, \
-    Color, on_trait_change, String, cached_property
+    Color, on_trait_change, String, cached_property, Either
 from traitsui.api import View, VGroup, HGroup, Item, Group
 from chaco.default_colormaps import color_map_name_dict
 from chaco.data_range_1d import DataRange1D
@@ -638,11 +638,14 @@ class Label(QPrimitive):
     def _text_changed(self):
         self.request_redraw()
 
+    def _get_text(self):
+        return self.text
+
     def _render_(self, gc):
         ox, oy = self.get_xy()
         loffset = 3
         x, y = ox + loffset, oy + loffset
-        lines = self.text.split('\n')
+        lines = self._get_text().split('\n')
 
         gc.set_stroke_color((0, 0, 0))
         if self.use_border:
@@ -661,7 +664,8 @@ class Label(QPrimitive):
             gc.draw_path()
 
         gc.set_fill_color((0, 0, 0))
-        gc.set_font(str_to_font(self.font))
+
+        gc.set_font(self.gfont)
         for i, li in enumerate(lines[::-1]):
             w, h, _, _ = gc.get_full_text_extent(li)
             x += self.ox
@@ -673,6 +677,11 @@ class Label(QPrimitive):
     def _get_group(self):
         g = Item('text', style='custom')
         return g
+
+class ValueLabel(Label):
+    value = Either(Float, Int, Str)
+    def _get_text(self):
+        return self.text.format(self.value)
 
 class Indicator(QPrimitive):
     hline_length = 0.5

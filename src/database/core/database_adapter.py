@@ -60,6 +60,7 @@ class SessionCTX(object):
     def __enter__(self):
         if self._parent:
             if self._sess is None:
+
                 self._sess = self._parent.session_factory()
 
             self._parent._sess_stack += 1

@@ -48,10 +48,10 @@ def generate_datetimestamp(resolution='seconds'):
     '''
     '''
     ti = time.time()
-    millisecs = math.modf(ti)[0] * 1000
     if resolution == 'seconds':
         r = time.strftime(ISO_FORMAT_STR)
     else:
+        millisecs = math.modf(ti)[0] * 1000
         r = '{}{:0.5f}'.format(time.strftime(ISO_FORMAT_STR), millisecs)
     return r
 

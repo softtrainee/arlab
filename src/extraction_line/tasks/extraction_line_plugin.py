@@ -55,7 +55,7 @@ class ExtractionLinePlugin(BaseTaskPlugin):
         return [so]
 
     def _factory(self):
-        from src.helpers.parsers.initialization_parser import InitializationParser
+        from src.initialization_parser import InitializationParser
         ip = InitializationParser()
         try:
             plugin = ip.get_plugin('ExtractionLine', category='hardware')
