@@ -31,22 +31,26 @@ class ExtractionLineInfoTool(InfoInspector):
     volume = Float
 
     active = Bool(False)
+    display_volume = Bool(False)
+    volume_key = Str('v')
 
     def assemble_lines(self):
         return [self.name, 'volume= {}'.format(self.volume)]
 
     def normal_mouse_move(self, event):
-        if self.active:
+        if self.active and self.display_volume:
             x, y = event.x, event.y
             item = self.scene.get_is_in(x, y)
             if not item:
+                self.active = False
                 self.current_position = None
                 self.metadata_changed = True
-                self.active = False
 
     def normal_key_pressed(self, event):
+        if not self.display_volume:
+            return
 
-        ok = event.character == 'v' and not self.active
+        ok = event.character == self.volume_key and not self.active
         self.active = False
 
         if self.manager.use_network and ok:
@@ -59,10 +63,8 @@ class ExtractionLineInfoTool(InfoInspector):
 
                 self.volume = self.manager.get_volume(item.name)
                 self.name = item.name
-                self.metadata_changed = True
                 self.active = True
-                #else:
-                #    self.current_position=None
+                self.metadata_changed = True
 
 
 class ExtractionLineInfoOverlay(InfoOverlay):

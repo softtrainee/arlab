@@ -32,6 +32,9 @@ from src.extraction_line.graph.traverse import BFT
 
 
 def get_volume(elem, tag='volume', default=0):
+    """
+        get volume tag from xml
+    """
     vol = elem.find(tag)
     if vol is not None:
         vol = float(vol.text.strip())
@@ -61,7 +64,7 @@ class ExtractionLineGraph(HasTraits):
     def load(self, p):
 
         cp = CanvasParser(p)
-        if cp._root is None:
+        if cp.get_root() is None:
             return
 
         nodes = dict()
@@ -121,30 +124,30 @@ class ExtractionLineGraph(HasTraits):
 
     def set_valve_state(self, name, state, *args, **kw):
         if name in self.nodes:
-            vnode = self.nodes[name]
-            vnode.state = 'open' if state else 'closed'
+            v_node = self.nodes[name]
+            v_node.state = 'open' if state else 'closed'
 
     def set_canvas_states(self, canvas, name):
         scene = canvas.canvas2D.scene
         if not self.suppress_changes:
             if name in self.nodes:
-                snode = self.nodes[name]
-                '''
-                    new alogrithm
-                    if valve closed
-                        split tree and fill each sub tree
-                    else:
-                        for each edge of the start node
-                            breath search for the max state
-                        
-                        find max maxstate 
-                        fill nodes with maxstate
-                            using a depth traverse
-                    
-                    new variant
-                    recursively split tree if node is closed
-                '''
-                self._set_state(scene, snode)
+                s_node = self.nodes[name]
+
+                # new algorithm
+                # if valve closed
+                #    split tree and fill each sub tree
+                # else:
+                #    for each edge of the start node
+                #        breath search for the max state
+                #
+                #    find max max_state
+                #    fill nodes with max_state
+                #        using a depth traverse
+                #
+                # new variant
+                # recursively split tree if node is closed
+
+                self._set_state(scene, s_node)
                 self._clear_visited()
 
     def _set_state(self, scene, n):
@@ -155,10 +158,9 @@ class ExtractionLineGraph(HasTraits):
         else:
             state, term = self._find_max_state(n)
             self._clear_fvisited()
-            #             print n.name, state, term
             self.fill(scene, n, state, term)
 
-            self._clear_fvisited()
+        self._clear_fvisited()
 
     def calculate_volumes(self, node):
         if isinstance(node, str):
@@ -235,21 +237,10 @@ class ExtractionLineGraph(HasTraits):
                     m_state, term = 'spectrometer', ni.name
                 elif isinstance(ni, TankNode):
                     m_state, term = 'tank', ni.name
-                    #                 elif isinstance(ni, GaugeNode):
-                    #                     state, term = 'gauge', ni.name
-
-                    #             elif isinstance(ni, SpectrometerNode):
-                    #                 if state not in ('laser', 'pipette'):
-                    #                     state, term = 'spectrometer', ni.name
-                    #             elif isinstance(ni, TankNode):
-                    #                 if state not in ('laser', 'pipette'):
-                    #                     state, term = 'tank', ni.name
-
         else:
             return m_state, term
 
     def fill(self, scene, root, state, term):
-    #         print 'fill', root.name, state, term
         self._set_item_state(scene, root.name, state, term)
         for ei in root.edges:
             n = ei.get_node(root)
@@ -272,14 +263,12 @@ class ExtractionLineGraph(HasTraits):
             return
 
         if not color and state:
-            nterm = scene.get_item(term)
-            color = nterm.default_color
+            color = scene.get_item(term).default_color
 
         if isinstance(obj, Valve):
-            '''
-                set the color of the valve to 
-                the max state if the valve is open
-            '''
+
+            # set the color of the valve to
+            # the max state if the valve is open
             if self.inherit_state:
                 if obj.state != 'closed':
                     if state:

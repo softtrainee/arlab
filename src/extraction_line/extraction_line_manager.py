@@ -14,7 +14,7 @@
 # limitations under the License.
 #===============================================================================
 #=============enthought library imports=======================
-from traits.api import  Instance, List, Any, Bool, on_trait_change
+from traits.api import Instance, List, Any, Bool, on_trait_change, Str
 #=============standard library imports ========================
 import os
 import time
@@ -78,6 +78,8 @@ class ExtractionLineManager(Manager):
 
     check_master_owner = Bool
     use_network = Bool
+    display_volume = Bool
+    volume_key = Str
 
     def get_volume(self, node_name):
         v = 0
@@ -229,8 +231,11 @@ class ExtractionLineManager(Manager):
         bind_preference(self.network, 'inherit_state',
                         'pychron.extraction_line.inherit_state')
 
+        bind_preference(self, 'display_volume', 'pychron.extraction_line.display_volume')
+        bind_preference(self, 'volume_key', 'pychron.extraction_line.volume_key')
 
-#         bind_preference(self, 'enable_close_after', 'pychron.extraction_line.enable_close_after')
+
+    #         bind_preference(self, 'enable_close_after', 'pychron.extraction_line.enable_close_after')
 #         bind_preference(self, 'close_after_minutes', 'pychron.extraction_line.close_after')
 
 #        from src.extraction_line.plugins.extraction_line_preferences_page import get_valve_group_names
@@ -500,7 +505,11 @@ class ExtractionLineManager(Manager):
                 net.set_valve_state(k, vi.state)
             self.reload_canvas()
 
-#===============================================================================
+    @on_trait_change('display_volume,volume_key')
+    def _update_canvas_inspector(self, name, new):
+        for c in self._canvases:
+            c.canvas2D.trait_set(**{name: new})
+        #===============================================================================
 # defaults
 #===============================================================================
 #        return self._view_controller_factory()
@@ -532,10 +541,12 @@ class ExtractionLineManager(Manager):
 
     def new_canvas(self, name='canvas_config'):
         c = ExtractionLineCanvas(manager=self,
-                                 config_name='{}.xml'.format(name)
-#                                  path_name='{}.xml'.format(name)
+                                 config_name='{}.xml'.format(name),
+                                 #                                  path_name='{}.xml'.format(name)
                                  )
         self._canvases.append(c)
+        c.canvas2D.trait_set(display_volume=self.display_volume,
+                             volume_key=self.volume_key)
 
         return c
 
