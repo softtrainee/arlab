@@ -28,6 +28,7 @@ from src.canvas.canvas2D.scene.primitives.valves import Valve
 from src.canvas.canvas2D.scene.canvas_parser import CanvasParser
 from src.extraction_line.graph.traverse import BFT
 
+#@todo: add volume calculation
 
 class ExtractionLineGraph(HasTraits):
     nodes = Dict
@@ -40,6 +41,7 @@ class ExtractionLineGraph(HasTraits):
             return
 
         nodes = dict()
+
         #=======================================================================
         # load nodes
         #=======================================================================

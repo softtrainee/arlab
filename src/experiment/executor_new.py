@@ -749,7 +749,6 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
         # if the experiment queue has been modified wait until saved or
         # timed out. if timed out autosave.
-        # @todo: add preferences for timeout and whether to autosave or stop
         self._wait_for_save()
 
     def _check_memory(self, threshold=50):
