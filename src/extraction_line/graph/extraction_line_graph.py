@@ -158,8 +158,13 @@ class ExtractionLineGraph(HasTraits):
             #             print n.name, state, term
             self.fill(scene, n, state, term)
 
+            self._clear_fvisited()
+
     def calculate_volumes(self, node):
         if isinstance(node, str):
+            if node not in self.nodes:
+                return [(0, 0), ]
+
             node = self.nodes[node]
 
         if node.state == 'closed':
@@ -167,16 +172,18 @@ class ExtractionLineGraph(HasTraits):
         else:
             nodes = (node, )
 
-        return [(ni.name, self._calculate_volume(ni)) for ni in nodes]
+        vs = [(ni.name, self._calculate_volume(ni)) for ni in nodes]
+        self._clear_fvisited()
+        return vs
 
     def _calculate_volume(self, node, k=0):
         """
             use a Depth-first Traverse
             accumulate volume
         """
-        debug = True
-
+        debug = False
         vol = node.volume
+        node.f_visited = True
         if debug:
             print '=' * (k + 1), node.name, node.volume, vol
 
@@ -194,10 +201,13 @@ class ExtractionLineGraph(HasTraits):
                 if n.state == 'closed':
                     vol += n.volume
                     if debug:
-                        print '-' * (k + i + 1), n.name, n.volume, vol
+                        print 'e' * (k + i + 1), n.name, n.volume, vol
 
                 else:
-                    vol += self._calculate_volume(n, k=k + 1)
+                    v = self._calculate_volume(n, k=k + 1)
+                    vol += v
+                    if debug:
+                        print 'n' * (k + i + 1), n.name, v, vol
 
         return vol
 
@@ -247,8 +257,8 @@ class ExtractionLineGraph(HasTraits):
                 continue
             self._set_item_state(scene, ei.name, state, term)
 
-            if n.state != 'closed' and not n.fvisited:
-                n.fvisited = True
+            if n.state != 'closed' and not n.f_visited:
+                n.f_visited = True
                 self.fill(scene, n, state, term)
 
     def _set_item_state(self, scene, name, state, term, color=None):
@@ -293,7 +303,7 @@ class ExtractionLineGraph(HasTraits):
 
     def _clear_fvisited(self):
         for ni in self.nodes.itervalues():
-            ni.fvisited = False
+            ni.f_visited = False
 
     def __getitem__(self, key):
         if not isinstance(key, str):
@@ -306,9 +316,10 @@ class ExtractionLineGraph(HasTraits):
 if __name__ == '__main__':
     elg = ExtractionLineGraph()
     elg.load('/Users/ross/Pychrondata_dev/setupfiles/canvas2D/canvas.xml')
+    elg.set_valve_state('H', True)
 
-    print elg.calculate_volumes('H')
-    #elg.set_valve_state('C', False)
+    print elg.calculate_volumes('Obama')
+    #print elg.calculate_volumes('Bone')
     #state, root = elg.set_valve_state('H', True)
     #state, root = elg.set_valve_state('H', False)
 

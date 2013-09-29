@@ -85,8 +85,8 @@ class ValveManager(Manager):
         if 'actuator' in name or 'controller' in name:
             if dev is not None:
                 self.actuators.append(dev)
-#        if name in ['valve_actuator', 'valve_controller']:
-#            self.actuator = dev
+            #        if name in ['valve_actuator', 'valve_controller']:
+            #            self.actuator = dev
             return dev
 
     def finish_loading(self, update=False):
@@ -108,15 +108,16 @@ class ValveManager(Manager):
         if globalv.load_soft_locks:
             self._load_soft_lock_states()
 
-        # load the pipette trackers
-#         for p in self.pipette_trackers:
-#             p.load()
+            # load the pipette trackers
+        #         for p in self.pipette_trackers:
+        #             p.load()
 
-#         self._load_system_dict()
+        #         self._load_system_dict()
         # self.info('loading section definitions file')
         # open config file
         # setup_file = os.path.join(paths.extraction_line_dir, 'section_definitions.cfg')
         # self._load_sections_from_file(setup_file)
+
     def _save_soft_lock_states(self):
 
         p = os.path.join(paths.hidden_dir, '{}_soft_lock_state'.format(self.name))
@@ -176,9 +177,9 @@ class ValveManager(Manager):
         '''
         owners = self.get_owners_word()
         if not owners:
-            self.debug('didnt not parse owners word')
+            #self.debug('didnt not parse owners word')
             return
-#         print owners
+        #         print owners
         changed = False
         ip = gethostbyname(gethostname())
         for owner, valves in owners:
@@ -246,7 +247,7 @@ class ValveManager(Manager):
                         state = packet[-1:].strip()
                         if key[0] in ALPHAS \
                             and state in ('0', '1'):
-                                d[key] = bool(int(state))
+                            d[key] = bool(int(state))
                 else:
                     for i in xrange(0, len(word), 2):
                         packet = word[i:i + 2]
@@ -259,7 +260,7 @@ class ValveManager(Manager):
                             if state in ('0', '1'):
                                 d[key] = bool(int(state))
 
-#                    d = dict([(word[i:i + 2][0], bool(int(word[i:i + 2][1]))) for i in xrange(0, len(word), 2)])
+                            #                    d = dict([(word[i:i + 2][0], bool(int(word[i:i + 2][1]))) for i in xrange(0, len(word), 2)])
                 return d
             except ValueError:
                 pass
@@ -269,7 +270,7 @@ class ValveManager(Manager):
         for k, v in self.valves.iteritems():
             s = v.get_hardware_state()
             elm.update_valve_state(k, s, refresh=False)
-#             time.sleep(0.025)
+        #             time.sleep(0.025)
 
     def _load_soft_lock_states(self):
         if self.extraction_line_manager.mode == 'client':
@@ -277,7 +278,7 @@ class ValveManager(Manager):
                 s = v.get_lock_state()
                 func = self.lock if s else self.unlock
                 func(k, save=False)
-#                 time.sleep(0.025)
+            #                 time.sleep(0.025)
 
         else:
             p = os.path.join(paths.hidden_dir, '{}_soft_lock_state'.format(self.name))
@@ -328,7 +329,7 @@ class ValveManager(Manager):
 
     def get_software_locks(self):
         return ','.join(['{}{}'.format(k, int(v.software_lock))
-                            for k, v in self.valves.iteritems()])
+                         for k, v in self.valves.iteritems()])
 
     def get_states(self, timeout=1):
         '''
@@ -386,7 +387,7 @@ class ValveManager(Manager):
 
     def _get_valve_by(self, a, attr):
         return next((valve for valve in self.valves.itervalues() \
-                            if getattr(valve, attr) == a), None)
+                     if getattr(valve, attr) == a), None)
 
     def get_valve_by_name(self, n):
         '''    
@@ -501,9 +502,9 @@ class ValveManager(Manager):
         '''
         v = self.get_valve_by_name(name)
         if v is not None:
-#            ev = self.get_evalve_by_name(name)
-#            if ev is not None:
-#                ev.soft_lock = True
+        #            ev = self.get_evalve_by_name(name)
+        #            if ev is not None:
+        #                ev.soft_lock = True
 
             v.lock()
             if save:
@@ -514,9 +515,9 @@ class ValveManager(Manager):
         '''
         v = self.get_valve_by_name(name)
         if v is not None:
-#            ev = self.get_evalve_by_name(name)
-#            if ev is not None:
-#                ev.soft_lock = False
+        #            ev = self.get_evalve_by_name(name)
+        #            if ev is not None:
+        #                ev.soft_lock = False
 
             v.unlock()
             if save:
@@ -595,6 +596,7 @@ class ValveManager(Manager):
         '''
         '''
         self.info('loading valve definitions file  {}'.format(path))
+
         def factory(v):
             name, hv = self._valve_factory(v)
             if self.use_explanation:
@@ -626,11 +628,11 @@ class ValveManager(Manager):
             outerk = outer.text.strip()
             if innerk in self.valves \
                 and outerk in self.valves:
-                    return PipetteTracker(
-                                         name=p.text.strip(),
-                                         inner=innerk,
-                                         outer=outerk
-                                         )
+                return PipetteTracker(
+                    name=p.text.strip(),
+                    inner=innerk,
+                    outer=outerk
+                )
 
     def _valve_factory(self, v_elem):
         name = v_elem.text.strip()
@@ -645,7 +647,9 @@ class ValveManager(Manager):
         actuator = self.get_actuator_by_name(actname)
         if actuator is None:
             if not globalv.ignore_initialization_warnings:
-                self.warning_dialog('No actuator for {}. Valve will not operate. Check setupfiles/extractionline/valves.xml'.format(name))
+                self.warning_dialog(
+                    'No actuator for {}. Valve will not operate. Check setupfiles/extractionline/valves.xml'.format(
+                        name))
 
         qs = True
         vqs = v_elem.get('query_state')
@@ -658,31 +662,33 @@ class ValveManager(Manager):
                            description=description,
                            query_state=qs,
                            interlocks=interlocks
-                           )
+        )
         return name, hv
 
     def _load_explanation_valve(self, v):
-#        s = v.get_hardware_state()
-        # update the extraction line managers canvas
-#            self.extraction_line_manager.canvas.update_valve_state(v.name[-1], s)
+    #        s = v.get_hardware_state()
+    # update the extraction line managers canvas
+    #            self.extraction_line_manager.canvas.update_valve_state(v.name[-1], s)
         name = v.name.split('-')[1]
-#        self.extraction_line_manager.update_valve_state(name, s)
-#        args = dict(
-#                    )
+        #        self.extraction_line_manager.update_valve_state(name, s)
+        #        args = dict(
+        #                    )
         ev = ExplanableValve(name=name,
-                    address=v.address,
-                    description=v.description,
-#                    canvas=self.extraction_line_manager.canvas,
-                    )
-#        ev.state = s if s is not None else False
-#        ev=weakref.ref(ev)()
+                             address=v.address,
+                             description=v.description,
+                             #                    canvas=self.extraction_line_manager.canvas,
+        )
+        #        ev.state = s if s is not None else False
+        #        ev=weakref.ref(ev)()
         v.evalve = ev
-#        v.evalve = weakref.ref(ev)()
+        #        v.evalve = weakref.ref(ev)()
         self.explanable_items.append(ev)
-#===============================================================================
-# deprecated
-#===============================================================================
+
+    #===============================================================================
+    # deprecated
+    #===============================================================================
     #     def claim_section(self, section, addr=None, name=None):
+
 #         try:
 #             vg = self.valve_groups[section]
 #         except KeyError:
@@ -725,26 +731,26 @@ if __name__ == '__main__':
         def get_state_by_name(self, m):
             b = random.randint(1, 5) / 50.0
             r = 0.1 + b
-    #        r = 3
+            #        r = 3
             self.info('sleep {}'.format(r))
             time.sleep(r)
             return True
 
         def _get_states(self, times_up_event, sq):
-    #        self.states = []
+        #        self.states = []
             for k in ['A', 'B', 'Ca', 'Dn', 'Es', 'F', 'G', 'H', 'I']:
                 if times_up_event.isSet():
                     break
 
                 sq.put(k)
-    #            self.info('geting state for {}'.format(k))
+                #            self.info('geting state for {}'.format(k))
                 s = self.get_state_by_name(k)
-    #            self.info('got {} for {}'.format(s, k))
+                #            self.info('got {} for {}'.format(s, k))
                 if times_up_event.isSet():
                     break
                 sq.put('1' if s else '0')
 
-            # return ''.join(states)
+                # return ''.join(states)
 
         def get_states(self):
             '''
@@ -757,8 +763,8 @@ if __name__ == '__main__':
             times_up_event = Event()
             t = Timer(1, lambda: times_up_event.set())
             t.start()
-    #        states = self._get_states(times_up_event)
-    #        return states
+            #        states = self._get_states(times_up_event)
+            #        return states
             t = Thread(target=self._get_states, args=(times_up_event, states_queue))
             t.start()
             t.join(timeout=1.1)
@@ -775,18 +781,19 @@ if __name__ == '__main__':
                 s += states_queue.get_nowait()
                 i += 1
 
-    #        n = len(s)
-    #        if n % 2 != 0:
-    #            sn = s[:n / 2 * 2]
-    #        else:
-    #            sn = s
-    #        s = ''.join(self.states)
+                #        n = len(s)
+                #        if n % 2 != 0:
+                #            sn = s[:n / 2 * 2]
+                #        else:
+                #            sn = s
+                #        s = ''.join(self.states)
             self.info('states = {}'.format(s))
             return s
 
-#    v = ValveManager()
-#    p = os.path.join(paths.extraction_line_dir, 'valves.xml')
-#    v._load_valves_from_file(p)
+        #    v = ValveManager()
+        #    p = os.path.join(paths.extraction_line_dir, 'valves.xml')
+        #    v._load_valves_from_file(p)
+
     from src.helpers.logger_setup import logging_setup
 
     logging_setup('foo')

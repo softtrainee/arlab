@@ -93,6 +93,10 @@ class Primitive(HasTraits):
     font = Str('modern 14')
     gfont = Property(depends_on='font')
 #     font = str_to_font('modern 14')
+
+    width = 0
+    height = 0
+
     @cached_property
     def _get_gfont(self):
         return str_to_font(self.font)
@@ -369,6 +373,8 @@ class Line(QPrimitive):
     screen_rotation = Float
     data_rotation = Float
     width = 1
+    height = Property
+
     def __init__(self, p1=None, p2=None, *args, **kw):
 
         self.set_startpoint(p1, **kw)
@@ -376,7 +382,13 @@ class Line(QPrimitive):
 
         super(Line, self).__init__(0, 0, *args, **kw)
 
-#        print self.primitives
+        #        print self.primitives
+
+    def _get_height(self):
+        x, y = self.start_point.get_xy()
+        x1, y1 = self.end_point.get_xy()
+        return abs(y1 - y)
+
     def set_endpoint(self, p1, **kw):
         if isinstance(p1, tuple):
             p1 = Point(*p1, **kw)
@@ -407,7 +419,7 @@ class Line(QPrimitive):
             self.end_point.set_canvas(canvas)
 
     def _render_(self, gc):
-#        gc.begin_path()
+    #        gc.begin_path()
         gc.set_line_width(self.width)
         if self.start_point and self.end_point:
             x, y = self.start_point.get_xy()
@@ -861,6 +873,8 @@ class PolyLine(QPrimitive):
 class BorderLine(Line, Bordered):
     border_width = 10
 #     border_color = (0, 0, 0.15)
+
+
     def _render_(self, gc):
         gc.save_state()
         gc.set_line_width(self.width + self.border_width)
