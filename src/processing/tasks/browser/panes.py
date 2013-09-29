@@ -15,19 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, Int
+from traits.api import HasTraits, Property, Int, Bool, Str
 from traitsui.api import View, Item, UItem, VGroup, HGroup, Label, spring, \
-    VSplit, TableEditor, EnumEditor
+    VSplit, TabularEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
-from traitsui.editors.list_str_editor import ListStrEditor
 from traitsui.tabular_adapter import TabularAdapter
-from traitsui.editors.tabular_editor import TabularEditor
-from src.ui.tabular_editor import myTabularEditor
 # from src.experiment.utilities.identifier import make_runid
 # from traitsui.table_column import ObjectColumn
 # from traitsui.list_str_adapter import ListStrAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.ui.tabular_editor import myTabularEditor
+
 class BrowserAdapter(TabularAdapter):
     font = 'arial 10'
 
@@ -51,28 +50,6 @@ class AnalysisAdapter(BrowserAdapter):
     odd_bg_color = 'lightgray'
     font = 'arial 10'
 
-#     def _get_record_id_text(self):
-#         a = self.item
-#         return make_runid(a.labnumber.identifier,
-#                    a.aliquot, a.step)
-
-#     def _get_blank_fit_status_text(self):
-#         return self._get_selected_history_item('selected_blanks_id')
-#
-#     def _get_flux_fit_status_text(self):
-#         labnumber = self.item.labnumber
-#         return 'X' if labnumber.selected_flux_id else ''
-#
-#     def _get_ic_fit_status_text(self):
-#         return self._get_selected_history_item('selected_det_intercal_id')
-#
-#     def _get_iso_fit_status_text(self):
-#         return self._get_selected_history_item('selected_fits_id')
-#
-#     def _get_selected_history_item(self, key):
-#         sh = self.item.selected_histories
-#         return 'X' if getattr(sh, key) else ''
-
 
 class SampleAdapter(BrowserAdapter):
 
@@ -89,6 +66,8 @@ class BrowserPane(TraitsDockPane):
     name = 'Browser'
     id = 'pychron.browser'
     multi_select = False
+    analyses_defined = Str('1')
+
     def traits_view(self):
         projectgrp = VGroup(
                             HGroup(Label('Filter'),
@@ -137,7 +116,8 @@ class BrowserPane(TraitsDockPane):
 #                                           )
                                 width=300
                                  ),
-                            HGroup(spring, Item('omit_invalid'))
+                            HGroup(spring, Item('omit_invalid')),
+                            defined_when=self.analyses_defined,
                            )
 
         v = View(

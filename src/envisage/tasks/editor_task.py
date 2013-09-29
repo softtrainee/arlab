@@ -128,9 +128,12 @@ class BaseEditorTask(BaseManagerTask):
 #                                     default=CANCEL, title='Save Changes?')
 #         return dialog.open()
 
+    def _handle_prompt_for_save(self):
+        return True
+
     def _prompt_for_save(self):
         if self.editor_area is None:
-            return
+            return self._handle_prompt_for_save()
 
         dirty_editors = dict([(editor.name, editor)
                               for editor in self.editor_area.editors
