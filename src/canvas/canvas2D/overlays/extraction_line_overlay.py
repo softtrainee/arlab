@@ -51,7 +51,7 @@ class ExtractionLineInfoTool(InfoInspector):
             return
 
         ok = event.character == self.volume_key and not self.active
-        self.active = False
+        #self.active = False
 
         if self.manager.use_network and ok:
             x, y = event.x, event.y
