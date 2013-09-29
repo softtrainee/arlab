@@ -26,7 +26,7 @@ from src.extraction_line.graph.nodes import ValveNode, RootNode, \
 from src.canvas.canvas2D.scene.primitives.valves import Valve
 
 from src.canvas.canvas2D.scene.canvas_parser import CanvasParser
-from src.extraction_line.graph.traverse import BFT
+from src.extraction_line.graph.traverse import bft, bfs
 
 #@todo: add volume calculation
 
@@ -213,14 +213,13 @@ class ExtractionLineGraph(HasTraits):
 
         return vol
 
-
     def _find_max_state(self, node):
         """
             use a Breadth-First Traverse
             accumulate the max state at each node
         """
         m_state, term = False, ''
-        for ni in BFT(self, node):
+        for ni in bft(self, node):
 
             if isinstance(ni, PumpNode):
                 return 'pump', ni.name
@@ -258,8 +257,8 @@ class ExtractionLineGraph(HasTraits):
 
         obj = scene.get_item(name)
 
-        if obj is None \
-            or obj.type_tag in ('turbo', 'tank', 'ionpump'):
+        if obj is None or \
+                        obj.type_tag in ('turbo', 'tank', 'ionpump'):
             return
 
         if not color and state:
@@ -275,7 +274,7 @@ class ExtractionLineGraph(HasTraits):
                         obj.active_color = color
                     else:
                         obj.active_color = obj.oactive_color
-                        #                         obj.active_color = 0, 255, 0
+
             return
 
         if state:
@@ -287,8 +286,6 @@ class ExtractionLineGraph(HasTraits):
     def _clear_visited(self):
         for ni in self.nodes.itervalues():
             ni.visited = False
-            #             for ei in ni.edges:
-            #                 ei.visited = False
 
     def _clear_fvisited(self):
         for ni in self.nodes.itervalues():
@@ -300,6 +297,9 @@ class ExtractionLineGraph(HasTraits):
 
         if key in self.nodes:
             return self.nodes[key]
+
+    def _get_node(self, name):
+        return bfs(self, self.root, name)
 
 
 if __name__ == '__main__':

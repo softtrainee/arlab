@@ -19,15 +19,36 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from collections import deque
-def BFT(G, s):
+
+
+def bfs(G, s, value, attr='name'):
     P, Q = {s: None}, deque([s])
     while Q:
         u = Q.popleft()
         if not u:
             continue
 
-        if u.state == 'closed':
+        print u.name, value, getattr(u, attr) == value
+        if getattr(u, attr) == value:
+            return u
+
+        for v in G[u]:
+            if v in P:
+                continue
+            P[v] = u
+            Q.append(v)
+
+
+def bft(G, s, traverse_all=False):
+    P, Q = {s: None}, deque([s])
+    while Q:
+        u = Q.popleft()
+        if not u:
             continue
+
+        if not traverse_all:
+            if u.state == 'closed':
+                continue
 
         for v in G[u]:
             if v in P:
