@@ -81,10 +81,9 @@ class ExtractionLineCanvas(HasTraits):
         from src.canvas.canvas2D.extraction_line_canvas2D import ExtractionLineCanvas2D
 
         e = ExtractionLineCanvas2D(
-                                   manager=self.manager,
-                                   )
+            manager=self.manager,
+        )
         return e
-
 
     def _canvas2D_default(self):
         return self._canvas_factory()
@@ -94,11 +93,10 @@ class ExtractionLineCanvas(HasTraits):
         '''
 
         g = Item('canvas2D',
-                    style='custom',
-                    show_label=False,
-                    editor=ComponentEditor(),
-                label='2D'
-                )
+                 style='custom',
+                 show_label=False,
+                 editor=ComponentEditor(),
+                 label='2D')
         return g
 
     def traits_view(self):
@@ -107,6 +105,7 @@ class ExtractionLineCanvas(HasTraits):
         c = self._canvas2D_group()
         v = View(c)
         return v
+
 #============= EOF ====================================
 # class ExtractionLineCanvas3DDummy(HasTraits):
 #    '''

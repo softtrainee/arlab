@@ -49,298 +49,306 @@ Examples:
 7. T1-2 (goto named position T1-2 i.e transect 1, point 2)
 8. L3 (trace path L3) 
 '''
+
+
 def spacer(w):
     return Spring(width=w, springy=False)
 
+
 def make_qf_name(name):
-            return 'object.queue_factory.{}'.format(name)
+    return 'object.queue_factory.{}'.format(name)
+
 
 def make_rf_name(name):
     return 'object.run_factory.{}'.format(name)
 
+
 def QFItem(name, **kw):
     return Item(make_qf_name(name), **kw)
+
 
 def RFItem(name, **kw):
     return Item(make_rf_name(name), **kw)
 
+
 def make_rt_name(name):
     return 'object.experiment_queue.runs_table.{}'.format(name)
+
 
 def RTItem(name, **kw):
     return Item(make_rt_name(name), **kw)
 
 
 def new_button_editor(trait, name, **kw):
-
     name = '{}.png'.format(name)
     return UItem(trait, style='custom',
                  editor=ButtonEditor(image=ImageResource(name=name,
-                                                  search_path=paths.icon_search_path
-                                                  )),
+                                                         search_path=paths.icon_search_path
+                 )),
                  **kw
-                 )
+    )
+
+
 class ExperimentFactoryPane(TraitsDockPane):
     id = 'pychron.experiment.factory'
     name = 'Experiment Editor'
+
     def traits_view(self):
         add_button = new_button_editor('add_button', 'add',
-                                        enabled_when='ok_add',
-                                        tooltip='Add run'
-                                        )
+                                       enabled_when='ok_add',
+                                       tooltip='Add run'
+        )
 
         save_button = new_button_editor('save_button', 'disk',
                                         tooltip='Save queue to file'
-                                        )
+        )
         edit_button = new_button_editor('edit_mode_button', 'table_edit',
                                         enabled_when='edit_enabled',
                                         tooltip='Toggle edit mode'
-                                        )
+        )
         clear_button = new_button_editor('clear_button',
                                          'table_row_delete',
                                          tooltip='Clear all runs added using "frequency"')
 
         queue_grp = VGroup(
-                           QFItem('username'),
-                           HGroup(
-                                  QFItem('mass_spectrometer',
-                                          show_label=False,
-                                          editor=EnumEditor(name=make_qf_name('mass_spectrometers')),
-                                          ),
-                                  QFItem('extract_device',
-                                          show_label=False,
-                                          editor=EnumEditor(name=make_qf_name('extract_devices')),
-                                          )
-                                   ),
-                           QFItem('load_name',
-                                   show_label=False,
-                                   editor=EnumEditor(name=make_qf_name('load_names'))
-                                   ),
-                           QFItem('delay_before_analyses'),
-                           QFItem('delay_between_analyses')
-                           )
+            QFItem('username'),
+            HGroup(
+                QFItem('mass_spectrometer',
+                       show_label=False,
+                       editor=EnumEditor(name=make_qf_name('mass_spectrometers')),
+                ),
+                QFItem('extract_device',
+                       show_label=False,
+                       editor=EnumEditor(name=make_qf_name('extract_devices')),
+                )
+            ),
+            QFItem('load_name',
+                   show_label=False,
+                   editor=EnumEditor(name=make_qf_name('load_names'))
+            ),
+            QFItem('delay_before_analyses'),
+            QFItem('delay_between_analyses')
+        )
 
         button_bar = HGroup(
-                            save_button,
-                            add_button,
-                            clear_button,
-                            edit_button,
-                            CustomLabel(make_rf_name('edit_mode_label'),
-                                        color='red',
-                                        width=40
-                                        ),
-                            spring,
-                            RFItem('end_after', width=30),
-                            RFItem('skip')
-                            )
+            save_button,
+            add_button,
+            clear_button,
+            edit_button,
+            CustomLabel(make_rf_name('edit_mode_label'),
+                        color='red',
+                        width=40
+            ),
+            spring,
+            RFItem('end_after', width=30),
+            RFItem('skip')
+        )
         edit_grp = VFold(
-                         VGroup(
-                                self._get_info_group(),
-                                self._get_extract_group(),
-                                label='General'
-                                ),
-                         self._get_script_group(),
-                         self._get_truncate_group(),
-                         enabled_when=make_qf_name('ok_make')
-                         )
+            VGroup(
+                self._get_info_group(),
+                self._get_extract_group(),
+                label='General'
+            ),
+            self._get_script_group(),
+            self._get_truncate_group(),
+            enabled_when=make_qf_name('ok_make')
+        )
 
         lower_button_bar = HGroup(
-                            add_button,
-                            clear_button,
-                            Label('Auto Increment'),
-                            Item('auto_increment_id', label='L#'),
-                            Item('auto_increment_position', label='Position'),
-                            )
+            add_button,
+            clear_button,
+            Label('Auto Increment'),
+            Item('auto_increment_id', label='L#'),
+            Item('auto_increment_position', label='Position'),
+        )
         v = View(
-                 VGroup(
-                        queue_grp,
-                        button_bar,
-                        CustomLabel(make_rf_name('info_label')),
-                        edit_grp,
-                        lower_button_bar
-                        ),
-                 width=225
-                 )
+            VGroup(
+                queue_grp,
+                button_bar,
+                CustomLabel(make_rf_name('info_label')),
+                edit_grp,
+                lower_button_bar
+            ),
+            width=225
+        )
         return v
 
     def _get_info_group(self):
         grp = Group(
-#                   HGroup(spring, CustomLabel('help_label', size=14), spring),
-                   HGroup(
-                          RFItem('selected_irradiation',
-#                                 label='Irradiation',
+            #                   HGroup(spring, CustomLabel('help_label', size=14), spring),
+            HGroup(
+                RFItem('selected_irradiation',
+                       #                                 label='Irradiation',
 
-                                 show_label=False,
-                                 editor=EnumEditor(name=make_rf_name('irradiations'))),
-                          RFItem('selected_level',
-                                 show_label=False,
-#                                 label='Level',
-                                 editor=EnumEditor(name=make_rf_name('levels'))),
+                       show_label=False,
+                       editor=EnumEditor(name=make_rf_name('irradiations'))),
+                RFItem('selected_level',
+                       show_label=False,
+                       #                                 label='Level',
+                       editor=EnumEditor(name=make_rf_name('levels'))),
 
-#                          RFItem('project', editor=EnumEditor(name=make_rf_name('projects')),
-#                                 ),
+                #                          RFItem('project', editor=EnumEditor(name=make_rf_name('projects')),
+                #                                 ),
 
-                          ),
+            ),
 
-                   HGroup(RFItem('special_labnumber',
-                                 show_label=False,
-                                 editor=EnumEditor(values=SPECIAL_NAMES),
-                               ),
-                          RFItem('frequency', width=50),
-                          spring
-                          ),
-                   HGroup(RFItem('labnumber',
-                              tooltip='Enter a Labnumber',
-                              width=100,
-                              ),
-                          RFItem('_labnumber', show_label=False,
-#                              editor=EnumEditor(name=make_rf_name('labnumbers')),
-                              editor=CheckListEditor(name=make_rf_name('labnumbers')),
-                              width=-20,
-                              ),
-                              spring,
-                         ),
-                   HGroup(RFItem('flux'),
-                          Label(u'\u00b1'),
-                          RFItem('flux_error', show_label=False),
-                          new_button_editor(make_rf_name('save_flux_button'),
-                                            'database_save',
-                                            tooltip='Save flux to database'
-                                            ),
-                          enabled_when=make_rf_name('labnumber')
-#                           spring,
-                          ),
-                   HGroup(
-                           RFItem('aliquot',
-                                  width=50
-                                  ),
-                           RFItem('irradiation',
-                                      tooltip='Irradiation info retreived from Database',
-                                      style='readonly',
-                                      width=90,
-                                      ),
-                           RFItem('sample',
-                                    tooltip='Sample info retreived from Database',
-                                    style='readonly',
-                                    width=100,
-                                    show_label=False
-                                    ),
-                          spring
-                          ),
-                    HGroup(
-                           RFItem('weight',
-                                  label='Weight (mg)',
-                                  tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis',
-                                  ),
-                           RFItem('comment',
-                                  tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
-                                  )
-                           ),
-                       show_border=True,
-                       label='Sample Info'
-                       )
+            HGroup(RFItem('special_labnumber',
+                          show_label=False,
+                          editor=EnumEditor(values=SPECIAL_NAMES),
+            ),
+                   RFItem('frequency', width=50),
+                   spring
+            ),
+            HGroup(RFItem('labnumber',
+                          tooltip='Enter a Labnumber',
+                          width=100,
+            ),
+                   RFItem('_labnumber', show_label=False,
+                          #                              editor=EnumEditor(name=make_rf_name('labnumbers')),
+                          editor=CheckListEditor(name=make_rf_name('labnumbers')),
+                          width=-20,
+                   ),
+                   spring,
+            ),
+            HGroup(RFItem('flux'),
+                   Label(u'\u00b1'),
+                   RFItem('flux_error', show_label=False),
+                   new_button_editor(make_rf_name('save_flux_button'),
+                                     'database_save',
+                                     tooltip='Save flux to database'
+                   ),
+                   enabled_when=make_rf_name('labnumber')
+                   #                           spring,
+            ),
+            HGroup(
+                RFItem('aliquot',
+                       width=50
+                ),
+                RFItem('irradiation',
+                       tooltip='Irradiation info retreived from Database',
+                       style='readonly',
+                       width=90,
+                ),
+                RFItem('sample',
+                       tooltip='Sample info retreived from Database',
+                       style='readonly',
+                       width=100,
+                       show_label=False
+                ),
+                spring
+            ),
+            HGroup(
+                RFItem('weight',
+                       label='Weight (mg)',
+                       tooltip='(Optional) Enter the weight of the sample in mg. Will be saved in Database with analysis',
+                ),
+                RFItem('comment',
+                       tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
+                )
+            ),
+            show_border=True,
+            label='Sample Info'
+        )
         return grp
 
     def _get_truncate_group(self):
-        # @todo: add truncate group to run factory. entire a single truncate action age>70
         grp = VGroup(
-                     HGroup(
-                            RFItem('trunc_attr', show_label=False),
-                            RFItem('trunc_comp', show_label=False),
-                            RFItem('trunc_crit', show_label=False),
-                            spacer(-10),
-                            RFItem('trunc_start', label='Start Count'),
-                            show_border=True,
-                            label='Simple'
-                            ),
-                     HGroup(
-                            RFItem('truncation_path',
-                                   editor=EnumEditor(name=make_rf_name('truncations')),
-                                   label='Path'
-                                   ),
-                            show_border=True,
-                            label='File'
-                        ),
-                     label='Actions'
-                     )
+            HGroup(
+                RFItem('trunc_attr', show_label=False),
+                RFItem('trunc_comp', show_label=False),
+                RFItem('trunc_crit', show_label=False),
+                spacer(-10),
+                RFItem('trunc_start', label='Start Count'),
+                show_border=True,
+                label='Simple'
+            ),
+            HGroup(
+                RFItem('truncation_path',
+                       editor=EnumEditor(name=make_rf_name('truncations')),
+                       label='Path'
+                ),
+                show_border=True,
+                label='File'
+            ),
+            label='Actions'
+        )
         return grp
 
     def _get_script_group(self):
         script_grp = VGroup(
-                        RFItem('extraction_script', style='custom', show_label=False),
-                        RFItem('measurement_script', style='custom', show_label=False),
-                        RFItem('post_equilibration_script', style='custom', show_label=False),
-                        RFItem('post_measurement_script', style='custom', show_label=False),
-                        show_border=True,
-                        label='Scripts'
-                        )
+            RFItem('extraction_script', style='custom', show_label=False),
+            RFItem('measurement_script', style='custom', show_label=False),
+            RFItem('post_equilibration_script', style='custom', show_label=False),
+            RFItem('post_measurement_script', style='custom', show_label=False),
+            show_border=True,
+            label='Scripts'
+        )
         return script_grp
 
     def _get_extract_group(self):
-        sspring = lambda width = 17:Spring(springy=False, width=width)
+        sspring = lambda width=17: Spring(springy=False, width=width)
 
         extract_grp = VGroup(
-                             HGroup(sspring(width=33),
-                                    RFItem('extract_value', label='Extract',
-                                         tooltip='Set the extract value in extract units',
-                                         enabled_when=make_rf_name('extractable')
-                                         ),
-                                    RFItem('extract_units',
-                                            show_label=False,
-                                            editor=EnumEditor(name=make_rf_name('extract_units_names'))),
-                                    RFItem('ramp_duration', label='Ramp Dur. (s)'),
-#                                    spring,
-#                                     Label('Step Heat Template'),
-                                    ),
-                             HGroup(
-                                    RFItem('template',
-                                        label='Step Heat Template',
-                                        editor=EnumEditor(name=make_rf_name('templates')),
-                                        show_label=False,
-                                        ),
-                                    RFItem('edit_template',
-                                       show_label=False,
-                                       editor=ButtonEditor(label_value=make_rf_name('edit_template_label'))
-                                     ),
-                                    RFItem('extract_group_button', show_label=False,
-                                           tooltip='Group selected runs as a step heating experiment'
-                                           ),
-                                    RFItem('extract_group', label='Group ID'),
+            HGroup(sspring(width=33),
+                   RFItem('extract_value', label='Extract',
+                          tooltip='Set the extract value in extract units',
+                          enabled_when=make_rf_name('extractable')
+                   ),
+                   RFItem('extract_units',
+                          show_label=False,
+                          editor=EnumEditor(name=make_rf_name('extract_units_names'))),
+                   RFItem('ramp_duration', label='Ramp Dur. (s)'),
+            ),
+            HGroup(
+                RFItem('template',
+                       label='Step Heat Template',
+                       editor=EnumEditor(name=make_rf_name('templates')),
+                       show_label=False,
+                ),
+                RFItem('edit_template',
+                       show_label=False,
+                       editor=ButtonEditor(label_value=make_rf_name('edit_template_label'))
+                ),
+                RFItem('extract_group_button', show_label=False,
+                       tooltip='Group selected runs as a step heating experiment'
+                ),
+                RFItem('extract_group', label='Group ID'),
 
-                                    ),
-                             HGroup(
-                                    RFItem('duration', label='Duration (s)',
-                                          tooltip='Set the number of seconds to run the extraction device.'
+            ),
+            HGroup(
+                RFItem('duration', label='Duration (s)',
+                       tooltip='Set the number of seconds to run the extraction device.'
 
-                                          ),
-                                    RFItem('cleanup', label='Cleanup (s)',
-                                          tooltip='Set the number of seconds to getter the sample gas'
-                                          )
-                                    ),
-                             RFItem('beam_diameter'),
-                             HGroup(
-                                    RFItem('position',
-                                           tooltip=POSITION_TOOLTIP),
-                                    RFItem('pattern',
-                                           editor=EnumEditor(name=make_rf_name('patterns'))),
-                                    RFItem('edit_pattern',
-                                           show_label=False,
-                                           editor=ButtonEditor(label_value=make_rf_name('edit_pattern_label'))
-                                           )
-                                    ),
+                ),
+                RFItem('cleanup', label='Cleanup (s)',
+                       tooltip='Set the number of seconds to getter the sample gas'
+                )
+            ),
+            RFItem('beam_diameter'),
+            HGroup(
+                RFItem('position',
+                       tooltip=POSITION_TOOLTIP),
+                RFItem('pattern',
+                       editor=EnumEditor(name=make_rf_name('patterns'))),
+                RFItem('edit_pattern',
+                       show_label=False,
+                       editor=ButtonEditor(label_value=make_rf_name('edit_pattern_label'))
+                )
+            ),
 
-#                              HGroup(
-#                                      ),
-#                                     spring,
-#                                 RFItem('endposition', label='End',
-#                                      enabled_when='position'
-#                                      )
-#                                 ),
+            #                              HGroup(
+            #                                      ),
+            #                                     spring,
+            #                                 RFItem('endposition', label='End',
+            #                                      enabled_when='position'
+            #                                      )
+            #                                 ),
 
-                             label='Extract',
-                             show_border=True
-                             )
+            label='Extract',
+            show_border=True
+        )
         return extract_grp
+
 #         return VGroup(extract_grp, self._get_position_group(),
 #                       label='Extraction'
 #                       )
@@ -351,24 +359,28 @@ class ExperimentFactoryPane(TraitsDockPane):
 class WaitPane(TraitsDockPane):
     id = 'pychron.experiment.wait'
     name = 'Wait'
+
     def traits_view(self):
         v = View(
-#                  UItem('wait_dialog',
-                 UItem('wait_group',
-                        style='custom',
-                        ),
-#                 height=-100
-                 )
+            #                  UItem('wait_dialog',
+            UItem('wait_group',
+                  style='custom',
+            ),
+            #                 height=-100
+        )
         return v
+
 
 class StatsPane(TraitsDockPane):
     id = 'pychron.experiment.stats'
     name = 'Stats'
+
     def traits_view(self):
         v = View(
-                 UItem('stats', style='custom')
-                 )
+            UItem('stats', style='custom')
+        )
         return v
+
 
 class ControlsPane(TraitsDockPane):
 #     name = 'Controls'
@@ -380,7 +392,6 @@ class ControlsPane(TraitsDockPane):
 
 
     def traits_view(self):
-
         cancel_tt = '''Cancel current run and continue to next run'''
         stop_tt = '''Cancel current run and stop queue'''
         start_tt = '''Start current experiment queue. 
@@ -393,56 +404,58 @@ Quick=   measure_iteration stopped at current step
     script continues using abbreviated_count_ratio*counts'''
         end_tt = '''Stop the queue and the end of the current run'''
 
-
         v = View(
-                 HGroup(
-                        spacer(-20),
-                        new_button_editor('start_button',
-                                                'start',
-                                                enabled_when='can_start',
-                                                tooltip=start_tt,
-                                                ),
-                        new_button_editor('stop_button', 'stop',
-                                                enabled_when='not can_start',
-                                                tooltip=stop_tt
-                                                ),
+            HGroup(
+                spacer(-20),
+                new_button_editor('start_button',
+                                  'start',
+                                  enabled_when='can_start',
+                                  tooltip=start_tt,
+                ),
+                new_button_editor('stop_button', 'stop',
+                                  enabled_when='not can_start',
+                                  tooltip=stop_tt
+                ),
 
-                        spacer(-20),
-                        Item('end_at_run_completion',
-                             label='Stop at Completion',
-                             tooltip=end_tt
-                             ),
-                        spacer(-20),
-                        new_button_editor('cancel_run_button', 'cancel',
-                                                enabled_when='can_cancel',
-                                                tooltip=cancel_tt
-                                                ),
-                        spacer(-20),
-                        new_button_editor('truncate_button',
-                                                'lightning',
-                                                enabled_when='measuring',
-                                                tooltip=truncate_tt
-                                                ),
-                        UItem('truncate_style',
-                              enabled_when='measuring',
-                              tooltip=truncate_style_tt,
-                              ),
-                        spacer(-75),
-                        CustomLabel('extraction_state_label',
-                                    color_name='extraction_state_color',
-                                    size=24,
-                                    weight='bold'
-                                    ),
-                        ),
-                 )
+                spacer(-20),
+                Item('end_at_run_completion',
+                     label='Stop at Completion',
+                     tooltip=end_tt
+                ),
+                spacer(-20),
+                new_button_editor('cancel_run_button', 'cancel',
+                                  enabled_when='can_cancel',
+                                  tooltip=cancel_tt
+                ),
+                spacer(-20),
+                new_button_editor('truncate_button',
+                                  'lightning',
+                                  enabled_when='measuring',
+                                  tooltip=truncate_tt
+                ),
+                UItem('truncate_style',
+                      enabled_when='measuring',
+                      tooltip=truncate_style_tt,
+                ),
+                spacer(-75),
+                CustomLabel('extraction_state_label',
+                            color_name='extraction_state_color',
+                            size=24,
+                            weight='bold'
+                ),
+            ),
+        )
         return v
+
 
 class ConsolePane(TraitsDockPane):
     id = 'pychron.experiment.console'
     name = 'Console'
+
     def traits_view(self):
         v = View(UItem('info_display', style='custom'))
         return v
+
 
 class ExplanationPane(TraitsDockPane):
     id = 'pychron.experiment.explanation'
@@ -459,46 +472,46 @@ class ExplanationPane(TraitsDockPane):
 
     def traits_view(self):
         v = View(
-               VGroup(
-                   HGroup(Label('Extraction'), spring,
-                          UItem('extraction',
-                                style='readonly')
-                          ),
-                   HGroup(Label('Measurement'), spring,
-                          UItem('measurement',
-                                style='readonly')
-                          ),
-                   HGroup(Label('Skip'), spring,
-                          UItem('skip',
-                                style='readonly')
-                          ),
-                   HGroup(Label('Success'), spring,
-                          UItem('success',
-                                style='readonly')
-                          ),
-                   HGroup(Label('Truncated'), spring,
-                          UItem('truncated',
-                                style='readonly')
-                          ),
-                   HGroup(Label('Canceled'), spring,
-                          UItem('canceled',
-                                style='readonly')
-                          ),
-                   HGroup(Label('Failed'), spring,
-                          UItem('failed',
-                                style='readonly')
-                          ),
-                   HGroup(Label('Not Executable'), spring,
-                          UItem('not_executable',
-                                style='readonly')
-                          ),
-                   HGroup(Label('End After'), spring,
-                          UItem('end_after',
-                                style='readonly')
-                          ),
-                      )
+            VGroup(
+                HGroup(Label('Extraction'), spring,
+                       UItem('extraction',
+                             style='readonly')
+                ),
+                HGroup(Label('Measurement'), spring,
+                       UItem('measurement',
+                             style='readonly')
+                ),
+                HGroup(Label('Skip'), spring,
+                       UItem('skip',
+                             style='readonly')
+                ),
+                HGroup(Label('Success'), spring,
+                       UItem('success',
+                             style='readonly')
+                ),
+                HGroup(Label('Truncated'), spring,
+                       UItem('truncated',
+                             style='readonly')
+                ),
+                HGroup(Label('Canceled'), spring,
+                       UItem('canceled',
+                             style='readonly')
+                ),
+                HGroup(Label('Failed'), spring,
+                       UItem('failed',
+                             style='readonly')
+                ),
+                HGroup(Label('Not Executable'), spring,
+                       UItem('not_executable',
+                             style='readonly')
+                ),
+                HGroup(Label('End After'), spring,
+                       UItem('end_after',
+                             style='readonly')
+                ),
+            )
 
-               )
+        )
         return v
 
 
@@ -506,30 +519,33 @@ class IsotopeEvolutionPane(TraitsDockPane):
     id = 'pychron.experiment.isotope_evolution'
     name = 'Isotope Evolutions'
     plot_panel = Instance(PlotPanel, ())
+
     def traits_view(self):
         v = View(
-                 VSplit(
-                        UItem('object.plot_panel.graph_container',
-                              style='custom',
-                              height=0.75),
-                        UItem('object.plot_panel.display_container',
-                              style='custom',
-                              height=0.25),
-                        )
+            VSplit(
+                UItem('object.plot_panel.graph_container',
+                      style='custom',
+                      height=0.75),
+                UItem('object.plot_panel.display_container',
+                      style='custom',
+                      height=0.25),
+            )
 
-#                  UItem('plot_panel',
-# #                        editor=InstanceEditor(view='graph_view'),
-#                        style='custom',
-#                        width=600
-#                        ),
+            #                  UItem('plot_panel',
+            # #                        editor=InstanceEditor(view='graph_view'),
+            #                        style='custom',
+            #                        width=600
+            #                        ),
 
-                 )
+        )
         return v
+
 
 class SummaryPane(TraitsDockPane):
     id = 'pychron.experiment.summary'
     name = 'Summary'
     plot_panel = Instance('src.experiment.plot_panel.PlotPanel')
+
     def traits_view(self):
         v = View(UItem('plot_panel', editor=InstanceEditor(view='summary_view'),
                        style='custom'))
