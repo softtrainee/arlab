@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Str
+from traits.api import Any, Str, on_trait_change, Bool
 from pyface.action.menu_manager import MenuManager
 from traitsui.menu import Action
 #============= standard library imports ========================`
@@ -36,7 +36,7 @@ H = 2
 class ExtractionLineCanvas2D(SceneCanvas):
     '''
     '''
-#     valves = Dict
+    #     valves = Dict
     active_item = Any
 
     selected_id = Str
@@ -55,6 +55,9 @@ class ExtractionLineCanvas2D(SceneCanvas):
 
     y_range = (-10, 25)
 
+    display_volume = Bool
+    volume_key = Str
+
     def __init__(self, *args, **kw):
         super(ExtractionLineCanvas2D, self).__init__(*args, **kw)
 
@@ -63,8 +66,13 @@ class ExtractionLineCanvas2D(SceneCanvas):
         )
         overlay = ExtractionLineInfoOverlay(tool=tool,
                                             component=self)
+        self.tool = tool
         self.tools.append(tool)
         self.overlays.append(overlay)
+
+    @on_trait_change('display_volume, volume_key')
+    def _update_tool(self, name, new):
+        self.tool.trait_set(**{name: new})
 
     def toggle_item_identify(self, name):
         v = self._get_valve_by_name(name)
@@ -74,21 +82,21 @@ class ExtractionLineCanvas2D(SceneCanvas):
             except AttributeError:
                 pass
 
-#        self.request_redraw()
+                #        self.request_redraw()
 
     def update_valve_state(self, name, nstate, refresh=True, mode=None):
         '''
         '''
-#        print name, nstate
+        #        print name, nstate
         valve = self._get_valve_by_name(name)
-#        print valve
+        #        print valve
         if valve is not None:
             valve.state = nstate
-#
-#        if refresh:
-#            self.request_redraw()
+            #
+            #        if refresh:
+            #            self.request_redraw()
 
-#        return
+            #        return
 
     def update_valve_owned_state(self, name, owned):
         valve = self._get_valve_by_name(name)
@@ -100,19 +108,20 @@ class ExtractionLineCanvas2D(SceneCanvas):
         if valve is not None:
             valve.soft_lock = lockstate
 
-#        if refresh:
-#            self.request_redraw()
+            #        if refresh:
+            #            self.request_redraw()
 
     def _get_valve_by_name(self, name):
         '''
         
         '''
         return next((i for i in self.scene.valves.itervalues()
-                    if isinstance(i, BaseValve) and i.name == name), None)
+                     if isinstance(i, BaseValve) and i.name == name), None)
 
     def _get_object_by_name(self, name):
         return self.scene.get_item(name)
-#        return next((i for i in self.valves.itervalues() if i.name == name), None)
+
+    #        return next((i for i in self.valves.itervalues() if i.name == name), None)
 
     def load_canvas_file(self, cname):
 
@@ -123,7 +132,7 @@ class ExtractionLineCanvas2D(SceneCanvas):
             self.scene.load(p, p2)
 
     def _over_item(self, event):
-        x , y = event.x, event.y
+        x, y = event.x, event.y
         return next((item for item in self.scene.valves.itervalues()
                      if hasattr(item, 'is_in') and \
                         item.is_in(x, y)), None)
@@ -168,17 +177,19 @@ class ExtractionLineCanvas2D(SceneCanvas):
 
     def OnSample(self):
         pass
+
     def OnCycle(self):
         pass
-#    def OnProperties(self, event):
-#        pass
-#    def OnSample(self, event):
-#        self.manager.sample(self.active_item.name, mode='normal')
-#
-#    def OnCycle(self, event):
-#        self.manager.cycle(self.active_item.name, mode='normal')
 
-#
+    #    def OnProperties(self, event):
+    #        pass
+    #    def OnSample(self, event):
+    #        self.manager.sample(self.active_item.name, mode='normal')
+    #
+    #    def OnCycle(self, event):
+    #        self.manager.cycle(self.active_item.name, mode='normal')
+
+    #
     def OnProperties(self, event):
         self.manager.show_valve_properties(self.active_item.name)
 
@@ -186,8 +197,8 @@ class ExtractionLineCanvas2D(SceneCanvas):
         '''
         '''
         a = Action(name=name, on_perform=getattr(self, func),
-#                   visible_when='0',
-                       **kw)
+                   #                   visible_when='0',
+                   **kw)
 
         return a
 
@@ -200,7 +211,7 @@ class ExtractionLineCanvas2D(SceneCanvas):
             action = self._action_factory(t, 'OnLock')
             actions.append(action)
 
-#        actions = [self._action_factory(name, func) for name, func in []]
+        #        actions = [self._action_factory(name, func) for name, func in []]
         if actions:
             menu_manager = MenuManager(*actions)
 
@@ -208,69 +219,70 @@ class ExtractionLineCanvas2D(SceneCanvas):
             menu = menu_manager.create_menu(event.window.control, None)
             menu.show()
 
-#    def _show_menu_wx(self, event, obj):
-#        enabled = True
-#        import wx
-#
-# #        n = self.active_item.name
-# #        obj = self.manager.get_valve_by_name()
-#        if obj is None:
-#            enabled = False
-#
-# #        self._selected = obj
-#        self._popup_menu = wx.Menu()
-#
-#        panel = event.window.control  # GetEventObject()
-#        if self.manager.mode != 'client':
-#            t = 'Lock'
-#            lfunc = self.OnLock
-#            if obj.soft_lock:
-#                t = 'Unlock'
-#
-#            item = self._popup_menu.Append(-1, t)
-#            item.Enable(enabled)
-#            panel.Bind(wx.EVT_MENU, lfunc, item)
-#
-#        en = not obj.state
-#        try:
-#            en = en and not obj.soft_lock
-#        except AttributeError:
-#            pass
-#
-#        for t, enable in [('Sample', en),
-#                           ('Cycle', en),
-#                           ('Properties...', True)]:
-#            item = self._popup_menu.Append(-1, t)
-#            item.Enable(enable and enabled)
-#            if t.endswith('...'):
-#                t = t[:-3]
-#
-#            panel.Bind(wx.EVT_MENU, getattr(self, 'On{}'.format(t)), item)
-#
-#        pos = event.x, panel.Size[1] - event.y
-#
-#        panel.PopupMenu(self._popup_menu, pos)
-#        self._popup_menu.Destroy()
-#        self.invalidate_and_redraw()
+            #    def _show_menu_wx(self, event, obj):
+            #        enabled = True
+            #        import wx
+            #
+            # #        n = self.active_item.name
+            # #        obj = self.manager.get_valve_by_name()
+            #        if obj is None:
+            #            enabled = False
+            #
+            # #        self._selected = obj
+            #        self._popup_menu = wx.Menu()
+            #
+            #        panel = event.window.control  # GetEventObject()
+            #        if self.manager.mode != 'client':
+            #            t = 'Lock'
+            #            lfunc = self.OnLock
+            #            if obj.soft_lock:
+            #                t = 'Unlock'
+            #
+            #            item = self._popup_menu.Append(-1, t)
+            #            item.Enable(enabled)
+            #            panel.Bind(wx.EVT_MENU, lfunc, item)
+            #
+            #        en = not obj.state
+            #        try:
+            #            en = en and not obj.soft_lock
+            #        except AttributeError:
+            #            pass
+            #
+            #        for t, enable in [('Sample', en),
+            #                           ('Cycle', en),
+            #                           ('Properties...', True)]:
+            #            item = self._popup_menu.Append(-1, t)
+            #            item.Enable(enable and enabled)
+            #            if t.endswith('...'):
+            #                t = t[:-3]
+            #
+            #            panel.Bind(wx.EVT_MENU, getattr(self, 'On{}'.format(t)), item)
+            #
+            #        pos = event.x, panel.Size[1] - event.y
+            #
+            #        panel.PopupMenu(self._popup_menu, pos)
+            #        self._popup_menu.Destroy()
+            #        self.invalidate_and_redraw()
 
     def select_right_down(self, event):
         item = self.active_item
 
-        if item is not None and\
-             isinstance(item, BaseValve):
+        if item is not None and \
+                isinstance(item, BaseValve):
             self._show_menu(event, item)
 
-#        item = self.valves[self.active_item]
-#        item.soft_lock = lock = not item.soft_lock
-#        self.manager.set_software_lock(item.name, lock)
+        #        item = self.valves[self.active_item]
+        #        item.soft_lock = lock = not item.soft_lock
+        #        self.manager.set_software_lock(item.name, lock)
         event.handled = True
-#        self.invalidate_and_redraw()
+
+    #        self.invalidate_and_redraw()
 
     def select_left_down(self, event):
         '''
     
         '''
-#        item = self.valves[self.active_item]
+        #        item = self.valves[self.active_item]
         item = self.active_item
         if item is None:
             return
@@ -284,10 +296,11 @@ class ExtractionLineCanvas2D(SceneCanvas):
 
             from src.ui.dialogs import myConfirmationDialog
             from pyface.api import NO
+
             dlg = myConfirmationDialog(
-                                message='Are you sure you want to open {}'.format(item.name),
-                                title='Verfiy Valve Action',
-                                style='modal')
+                message='Are you sure you want to open {}'.format(item.name),
+                title='Verfiy Valve Action',
+                style='modal')
             retval = dlg.open()
             if retval == NO:
                 return
@@ -297,29 +310,30 @@ class ExtractionLineCanvas2D(SceneCanvas):
         ok = False
         if self.manager is not None:
             if state:
-#                if self.manager.open_valve(item.name, mode = 'manual'):
+            #                if self.manager.open_valve(item.name, mode = 'manual'):
                 ok, change = self.manager.open_valve(item.name, mode='normal')
-#                 if self.manager.open_valve(item.name, mode='normal'):
-#                     ok = True
+            #                 if self.manager.open_valve(item.name, mode='normal'):
+            #                     ok = True
             else:
-#                if self.manager.close_valve(item.name, mode = 'manual'):
+            #                if self.manager.close_valve(item.name, mode = 'manual'):
                 ok, change = self.manager.close_valve(item.name, mode='normal')
-#                 if self.manager.close_valve(item.name, mode='normal'):
-#                     ok = True
+                #                 if self.manager.close_valve(item.name, mode='normal'):
+                #                     ok = True
         else:
             ok = True
 
-#        ok = True
+        #        ok = True
         if ok and not item.soft_lock:
             item.state = state
 
         if change:
             self.request_redraw()
-#             self.invalidate_and_redraw()
+            #             self.invalidate_and_redraw()
 
     def _scene_default(self):
         s = ExtractionLineScene(canvas=weakref.ref(self)())
         return s
+
 #============= EOF ====================================
 #        cp = self._get_canvas_parser(p)
 #
