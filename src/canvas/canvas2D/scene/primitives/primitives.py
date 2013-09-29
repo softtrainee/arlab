@@ -33,12 +33,12 @@ from kiva.agg.agg import GraphicsContextArray
 import Image as PImage
 
 
-
 def calc_rotation(x1, y1, x2, y2):
     rise = y2 - y1
     run = x2 - x1
 
     return math.degrees(math.atan2(rise, run))
+
 
 def rounded_rect(gc, x, y, width, height, corner_radius):
     with gc:
@@ -50,7 +50,7 @@ def rounded_rect(gc, x, y, width, height, corner_radius):
         hh = height * 0.5
         if hw < corner_radius:
             corner_radius = hw * 0.5
-        elif  hh < corner_radius:
+        elif hh < corner_radius:
             corner_radius = hh * 0.5
 
         gc.move_to(x + corner_radius, y)
@@ -79,7 +79,6 @@ class Primitive(HasTraits):
 
     line_width = 1
 
-
     name = Str
     name_visible = True
 
@@ -92,7 +91,7 @@ class Primitive(HasTraits):
     label = Property
     font = Str('modern 14')
     gfont = Property(depends_on='font')
-#     font = str_to_font('modern 14')
+    #     font = str_to_font('modern 14')
 
     width = 0
     height = 0
@@ -107,8 +106,8 @@ class Primitive(HasTraits):
     def __init__(self, x, y, *args, **kw):
         self.x = x
         self.y = y
-#        self.default_color = (1, 0, 0)
-#        self.active_color = (0, 1, 0)
+        #        self.default_color = (1, 0, 0)
+        #        self.active_color = (0, 1, 0)
         super(Primitive, self).__init__(*args, **kw)
 
     def render(self, gc):
@@ -127,7 +126,7 @@ class Primitive(HasTraits):
     def _convert_color(self, c):
         if not isinstance(c, (list, tuple)):
             c = c.red, c.green, c.blue
-        c = map(lambda x:x / 255., c)
+        c = map(lambda x: x / 255., c)
         return c
 
     def set_stroke_color(self, gc):
@@ -160,16 +159,16 @@ class Primitive(HasTraits):
         x, y = self.x, self.y
         offset = 0
         if self.space == 'data':
-#            if self.canvas is None:
-#                print self
+        #            if self.canvas is None:
+        #                print self
             x, y = self.canvas.map_screen([(self.x, self.y)])[0]
-#        offset = self.canvas.offset
+            #        offset = self.canvas.offset
             offset = 1
         return x + offset, y + offset
 
     def get_wh(self):
         w, h = self.width, self.height
-#        w, h = 20, 20
+        #        w, h = 20, 20
         if self.space == 'data':
             (w, h), (ox, oy) = self.canvas.map_screen([(self.width, self.height), (0, 0)])
             w, h = w - ox, h - oy
@@ -198,14 +197,13 @@ class Primitive(HasTraits):
             self._render_textbox(gc, x, y, w, h, txt)
 
     def _render_textbox(self, gc, x, y, w, h, txt):
-            gc.set_fill_color((0, 0, 0))
-#             gc.set_font(str_to_font(self.font))
+        gc.set_fill_color((0, 0, 0))
 
-            tw, th, _, _ = gc.get_full_text_extent(txt)
-            x = x + w / 2. - tw / 2.
-            y = y + h / 2. - th / 2.
+        tw, th, _, _ = gc.get_full_text_extent(txt)
+        x = x + w / 2. - tw / 2.
+        y = y + h / 2. - th / 2.
 
-            self._render_text(gc, txt, x, y)
+        self._render_text(gc, txt, x, y)
 
     def _render_text(self, gc, t, x, y):
         gc.set_text_position(x, y)
@@ -230,7 +228,7 @@ class Primitive(HasTraits):
                    Item('active_color'),
                    HGroup(Item('x', format_str='%0.3f', width=-50),
                           Item('y', format_str='%0.3f', width=-50))
-                   )
+        )
         cg = self._get_group()
         if cg is not None:
             g = VGroup(g, cg)
@@ -239,15 +237,16 @@ class Primitive(HasTraits):
         return v
 
     def _get_group(self):
-        pass
+        return
+
 
 class QPrimitive(Primitive):
     def _convert_color(self, c):
         if not isinstance(c, (list, tuple)):
-#            c = c.red(), c.green(), c.blue()
+        #            c = c.red(), c.green(), c.blue()
             c = c.toTuple()
 
-        c = map(lambda x:x / 255., c)
+        c = map(lambda x: x / 255., c)
         return c
 
     def is_in(self, x, y):
@@ -256,8 +255,10 @@ class QPrimitive(Primitive):
         if mx <= x <= (mx + w) and my <= y <= (my + h):
             return True
 
+
 class Point(QPrimitive):
     radius = Float(1)
+
     def _get_group(self):
         g = VGroup('radius')
         return g
@@ -284,38 +285,41 @@ class Rectangle(QPrimitive):
     y = 0
     fill = True
     use_border = True
+
     def _render_(self, gc):
         x, y = self.get_xy()
         w, h = self.get_wh()
-#        gc.set_line_width(self.line_width)
+        #        gc.set_line_width(self.line_width)
         gc.rect(x, y, w, h)
         if self.fill:
             gc.draw_path()
-#             if self.use_border:
-#                 self._render_border(gc, x, y, w, h)
+        #             if self.use_border:
+        #                 self._render_border(gc, x, y, w, h)
         else:
             gc.stroke_path()
 
-
         self._render_name(gc, x, y, w, h)
-#        if self.name:
-#            t = str(self.name)
-#            tw = gc.get_full_text_extent(t)[0]
-#            x = x + w / 2.0 - tw / 2.0
-#            gc.set_text_position(x, y + h / 2 - 6)
-#            gc.show_text(str(self.name))
-#            gc.draw_path()
+
+    #        if self.name:
+    #            t = str(self.name)
+    #            tw = gc.get_full_text_extent(t)[0]
+    #            x = x + w / 2.0 - tw / 2.0
+    #            gc.set_text_position(x, y + h / 2 - 6)
+    #            gc.show_text(str(self.name))
+    #            gc.draw_path()
 
     def _render_border(self, gc, x, y, w, h):
-#        gc.set_stroke_color((0, 0, 0))
+    #        gc.set_stroke_color((0, 0, 0))
         gc.rect(x - self.line_width, y - self.line_width,
                 w + self.line_width, h + self.line_width
-                )
+        )
         gc.stroke_path()
+
 
 class Bordered(Primitive):
     use_border = True
     border_width = 2
+
     def _get_border_color(self):
         c = self.default_color
         if self.state:
@@ -327,6 +331,7 @@ class Bordered(Primitive):
             c[3] = 1
 
         return c
+
 
 class RoundedRectangle(Rectangle, Bordered):
     corner_radius = 8.0
@@ -452,8 +457,10 @@ class Line(QPrimitive):
         b = calc_rotation(x1, y1, x2, y2)
         self.screen_rotation = b
 
+
 class Triangle(QPrimitive):
     draw_text = False
+
     def __init__(self, *args, **kw):
         super(Triangle, self).__init__(0, 0, **kw)
         self.points = []
@@ -482,7 +489,7 @@ class Triangle(QPrimitive):
                     gc.arc(x - 2, y - 2, 2, 0, 360)
                 gc.fill_path()
 
-#                        if self.draw_text:
+                #                        if self.draw_text:
                 gc.set_font_size(9)
                 for x, y, v in points:
                     x, y = func((x, y))
@@ -490,18 +497,18 @@ class Triangle(QPrimitive):
                     gc.show_text('{:0.3f}'.format(v))
 
 
-
 class Circle(QPrimitive):
     radius = Float
     fill = False
     fill_color = (1, 1, 0)
+
     def __init__(self, x, y, radius=10, *args, **kw):
         super(Circle, self).__init__(x, y, *args, **kw)
         self.radius = radius
 
     def _render_(self, gc):
         x, y = self.get_xy()
-#        print 'asaaaa', self.radius
+        #        print 'asaaaa', self.radius
         r = self.radius
         if self.space == 'data':
             r = self.map_dimension(r)
@@ -529,13 +536,14 @@ class Circle(QPrimitive):
     def _get_group(self):
         return Item('radius')
 
+
 class LoadIndicator(Circle):
     degas_indicator = False
     measured_indicator = False
     degas_color = (1, 0.5, 0)
     measured_color = (1, 0, 0)
 
-#     _text = List
+    #     _text = List
     labnumber_label = None
     weight_label = None
     weight = None
@@ -561,22 +569,23 @@ class LoadIndicator(Circle):
         self.weight_label = lb
 
     def add_text(self, t, ox=0, oy=0, **kw):
-#         x, y = self.get_xy()
+    #         x, y = self.get_xy()
         lb = Label(0, 0,
-                 text=t,
-                 hjustify='center',
-                 oy=oy,
-                 font='modern 9',
-                 use_border=False,
-                 **kw)
+                   text=t,
+                   hjustify='center',
+                   oy=oy,
+                   font='modern 9',
+                   use_border=False,
+                   **kw)
 
         self.primitives.append(lb)
         return lb
-#         self._text.append((t, ox, oy))
+
+    #         self._text.append((t, ox, oy))
 
     def _render_(self, gc):
         super(LoadIndicator, self)._render_(gc)
-#         Circle._render_(self, gc)
+        #         Circle._render_(self, gc)
 
         x, y = self.get_xy()
         r = self.map_dimension(self.radius)
@@ -595,6 +604,7 @@ class LoadIndicator(Circle):
         for pm in self.primitives:
             pm.x, pm.y = self.x, self.y
             pm.render(gc)
+
 #         if self._text:
 #             for ti, _, oy in self._text:
 #                 w, _h, _a, _b = gc.get_full_text_extent(ti)
@@ -613,6 +623,7 @@ class CalibrationObject(HasTraits):
     _rotation = Float
     center = Property(depends_on='cx,cy')
     scale = Float(1)
+
     def _set_rotation(self, rot):
         self._rotation = rot
 
@@ -647,6 +658,7 @@ class Label(QPrimitive):
     ox = Float
     oy = Float
     hjustify = 'left'
+
     def _text_changed(self):
         self.request_redraw()
 
@@ -690,10 +702,13 @@ class Label(QPrimitive):
         g = Item('text', style='custom')
         return g
 
+
 class ValueLabel(Label):
     value = Either(Float, Int, Str)
+
     def _get_text(self):
         return self.text.format(self.value)
+
 
 class Indicator(QPrimitive):
     hline_length = 0.5
@@ -702,6 +717,7 @@ class Indicator(QPrimitive):
     use_simple_render = Bool(True)
     spot_size = Int(8)
     spot_color = Color('yellow')
+
     def __init__(self, x, y, *args, **kw):
         super(Indicator, self).__init__(x, y, *args, **kw)
         w = self.hline_length
@@ -741,7 +757,7 @@ class Indicator(QPrimitive):
 
 class PointIndicator(Indicator):
     radius = 10
-#    active = Bool(False)
+    #    active = Bool(False)
     label_item = Any
     show_label = Bool(True)
 
@@ -751,17 +767,17 @@ class PointIndicator(Indicator):
         self.primitives.append(self.circle)
         if self.identifier:
             self.label_item = Label(self.x, self.y,
-                               text=self.identifier,
-                               visible=self.identifier_visible,
-#                               text=str(int(self.identifier[5:]) + 1),
-                                *args, **kw)
+                                    text=self.identifier,
+                                    visible=self.identifier_visible,
+                                    #                               text=str(int(self.identifier[5:]) + 1),
+                                    *args, **kw)
             self.primitives.append(self.label_item)
 
     def set_canvas(self, canvas):
         super(PointIndicator, self).set_canvas(canvas)
-#        for pi in self.primitives:
-#            pi.set_canvas(canvas)
-#
+        #        for pi in self.primitives:
+        #            pi.set_canvas(canvas)
+        #
         self.circle.set_canvas(canvas)
         if self.label_item:
             self.label_item.set_canvas(canvas)
@@ -800,7 +816,8 @@ class PointIndicator(Indicator):
                         y - self.radius - 1,
                         2 * self.radius + 1,
                         2 * self.radius + 1
-                        )
+                )
+
     def _show_label_changed(self):
         self.request_redraw()
 
@@ -808,22 +825,25 @@ class PointIndicator(Indicator):
         g = Group(Item('show_label', label='Display label'))
         return g
 
+
 class Dot(QPrimitive):
     radius = 5
+
     def _render_(self, gc):
         x, y = self.get_xy()
         gc.arc(x, y, self.radius, 0, 360)
         gc.fill_path()
+
 
 class PolyLine(QPrimitive):
     points = List
     lines = List
     identifier = Str
     point_klass = PointIndicator
-#    start_point=None
+    #    start_point=None
     def __init__(self, x, y, z=0, identifier='', **kw):
         super(PolyLine, self).__init__(x, y, **kw)
-#        self.start_point=PointIndicator(x,y, **kw)
+        #        self.start_point=PointIndicator(x,y, **kw)
         self.identifier = identifier
         p = self.point_klass(x, y, z=z, identifier=identifier, **kw)
         self.points.append(p)
@@ -839,20 +859,22 @@ class PolyLine(QPrimitive):
         self.primitives.append(p2)
 
     def add_point(self, x, y, z=0, point_color=(1, 0, 0), line_color=(1, 0, 0),
-                   **ptargs):
+                  **ptargs):
         p2 = Dot(x, y, z=z, default_color=point_color, **ptargs)
         self._add_point(p2, line_color)
-#        p1 = self.points[-1]
-#        l = Line(p1, p2, default_color=line_color)
-#        self.primitives.append(l)
-#        self.lines.append(l)
-#
-#        self.points.append(p2)
-#        self.primitives.append(p2)
+
+    #        p1 = self.points[-1]
+    #        l = Line(p1, p2, default_color=line_color)
+    #        self.primitives.append(l)
+    #        self.lines.append(l)
+    #
+    #        self.points.append(p2)
+    #        self.primitives.append(p2)
 
     def _render_(self, gc):
         for pi in self.primitives:
             pi.render(gc)
+
 #        self.start_point.render(gc)
 #        for pt in self.points:
 #            pt.render(gc)
@@ -872,17 +894,17 @@ class PolyLine(QPrimitive):
 
 class BorderLine(Line, Bordered):
     border_width = 10
-#     border_color = (0, 0, 0.15)
+    #     border_color = (0, 0, 0.15)
 
 
     def _render_(self, gc):
         gc.save_state()
         gc.set_line_width(self.width + self.border_width)
-#         if self.name in ('C_Bone', 'Bone_C'):
-#             print self.state, self._get_border_color()
+        #         if self.name in ('C_Bone', 'Bone_C'):
+        #             print self.state, self._get_border_color()
         gc.set_stroke_color(self._get_border_color())
-#         gc.set_fill_color(self._get_border_color())
-#             print self.state, self.name, self.default_color, self.active_color
+        #         gc.set_fill_color(self._get_border_color())
+        #             print self.state, self.name, self.default_color, self.active_color
         x, y = self.start_point.get_xy()
         x1, y1 = self.end_point.get_xy()
         # draw border
@@ -892,16 +914,16 @@ class BorderLine(Line, Bordered):
         gc.draw_path()
         gc.restore_state()
 
-#        self.set_stroke_color(gc)
-#        self.set_fill_color(gc)
-#        gc.set_line_width(self.line_width)
+        #        self.set_stroke_color(gc)
+        #        self.set_fill_color(gc)
+        #        gc.set_line_width(self.line_width)
         # draw main line
         super(BorderLine, self)._render_(gc)
 
 
 class Polygon(QPrimitive):
     points = List
-#    lines = List
+    #    lines = List
 
     identifier = Str
     indicator = None
@@ -918,7 +940,7 @@ class Polygon(QPrimitive):
 
         self.indicator = PointIndicator(x, y,
                                         radius=2,
-#                                        canvas=self.canvas,
+                                        #                                        canvas=self.canvas,
                                         identifier=self.identifier)
         self.primitives.append(self.indicator)
 
@@ -932,26 +954,26 @@ class Polygon(QPrimitive):
 
     def add_point(self, pt, **kw):
         if isinstance(pt, (tuple, list)):
-#            kw['canvas'] = self.canvas
+        #            kw['canvas'] = self.canvas
             pt = Point(*pt, **kw)
 
         self.points.append(pt)
         self.primitives.append(pt)
 
-#        # sort points clockwise
-#        xy = array([pi.get_xy() for pi in self.points])
-#        xs, ys = xy.T
-#        cx = xs.mean()
-#        cy = ys.mean()
-#
-#
-#        angles = [(math.atan2(y - cy, x - cx), pi) for pi, x, y in zip(self.points, xs, ys)]
-#        angles = sorted(angles, key=lambda x: x[0])
-#        _, pts = zip(*angles)
-#        self.points = list(pts)
+    #        # sort points clockwise
+    #        xy = array([pi.get_xy() for pi in self.points])
+    #        xs, ys = xy.T
+    #        cx = xs.mean()
+    #        cy = ys.mean()
+    #
+    #
+    #        angles = [(math.atan2(y - cy, x - cx), pi) for pi, x, y in zip(self.points, xs, ys)]
+    #        angles = sorted(angles, key=lambda x: x[0])
+    #        _, pts = zip(*angles)
+    #        self.points = list(pts)
 
-#        if len(xy) > 2:
-#            self.convex_hull_pts = convex_hull(xy)
+    #        if len(xy) > 2:
+    #            self.convex_hull_pts = convex_hull(xy)
 
 
     def _render_(self, gc):
@@ -986,11 +1008,13 @@ class Polygon(QPrimitive):
 
             gc.stroke_path()
 
+
 class Image(QPrimitive):
     search_path = Str
     _cached_image = None
     _image_cache_valid = False
     scale = (1, 1)
+
     def _render_(self, gc):
         if not self._image_cache_valid:
             self._compute_cached_image()
@@ -1000,9 +1024,9 @@ class Image(QPrimitive):
             gc.translate_ctm(x, y)
             gc.scale_ctm(*self.scale)
             gc.draw_image(self._cached_image,
-#                           rect=(other_component.x, other_component.y,
-#                                 other_component.width, other_component.height)
-                          )
+                          #                           rect=(other_component.x, other_component.y,
+                          #                                 other_component.width, other_component.height)
+            )
 
     def _compute_cached_image(self):
         pic = PImage.open(self.path)
@@ -1020,6 +1044,7 @@ class Image(QPrimitive):
 
         self._cached_image = GraphicsContextArray(data, pix_format=kiva_depth)
         self._image_cache_valid = True
+
 #============= EOF ====================================
 # class CalibrationItem(QPrimitive, CalibrationObject):
 #    center = None
