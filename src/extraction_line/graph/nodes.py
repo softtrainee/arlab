@@ -15,11 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Str, Bool, Instance
-from traitsui.api import View, Item
-import weakref
+from traits.api import HasTraits, List, Str, Instance, Float, Property
+
 #============= standard library imports ========================
+import weakref
 #============= local library imports  ==========================
+
+
 def flatten(nested):
 #     print nested
     if isinstance(nested, str):
@@ -33,16 +35,20 @@ def flatten(nested):
         except TypeError:
             yield nested
 
+
 class Edge(HasTraits):
     name = Str
-    anode = Instance('src.extraction_line.graph.nodes.Node')
-    bnode = Instance('src.extraction_line.graph.nodes.Node')
+    a_node = Instance('src.extraction_line.graph.nodes.Node')
+    b_node = Instance('src.extraction_line.graph.nodes.Node')
     visited = False
+    volume = Float(1)
+
     def nodes(self):
-        return self.anode, self.bnode
+        return self.a_node, self.b_node
 
     def get_node(self, n):
-        return self.bnode if self.anode == n else self.anode
+        return self.b_node if self.a_node == n else self.a_node
+
 
 class Node(HasTraits):
     edges = List
@@ -50,7 +56,8 @@ class Node(HasTraits):
     name = Str
     state = Str
     visited = False
-    fvisited = False
+    f_visited = False
+    volume = Float
 
     def add_edge(self, n):
         self.edges.append(weakref.ref(n)())
@@ -60,30 +67,55 @@ class Node(HasTraits):
             n = ei.get_node(self)
             yield n
 
+
 class ValveNode(Node):
-    pass
+    state = 'closed'
+    volume = Property
+    _closed_volume = Float(5)
+
+    '''
+        the additional volume when a valve is open
+    '''
+    _open_volume = Float(10)
+
+    def _set_volume(self, v):
+        o_vol, c_vol = v
+        self._open_volume = o_vol
+        self._closed_volume = c_vol
+
+    def _get_volume(self):
+        v = self._closed_volume
+        if self.state != 'closed':
+            v += self._open_volume
+        return v
+
 
 class RootNode(Node):
     state = True
 
+
 class GaugeNode(RootNode):
     pass
+
 
 class PumpNode(RootNode):
     pass
 
+
 class SpectrometerNode(RootNode):
     pass
+
 
 class TankNode(RootNode):
     pass
 
+
 class PipetteNode(RootNode):
     pass
 
+
 class LaserNode(RootNode):
     pass
-
 
 
 #============= EOF =============================================

@@ -27,14 +27,16 @@ from src.experiment.queue.experiment_queue import ExperimentQueue
 from src.experiment.factory import ExperimentFactory
 from src.constants import ALPHAS, NULL_STR
 from src.experiment.stats import StatsGroup
-from src.experiment.executor_new import ExperimentExecutor
+from src.experiment.experiment_executor import ExperimentExecutor
 # from src.experiment.executor import ExperimentExecutor
 from src.experiment.utilities.file_listener import FileListener
 from src.experiment.utilities.identifier import convert_identifier, \
     ANALYSIS_MAPPING
 from src.deprecate import deprecated
 from src.database.isotope_database_manager import IsotopeDatabaseManager
+
 LAlphas = list(ALPHAS)
+
 
 class Experimentor(IsotopeDatabaseManager):
     experiment_factory = Instance(ExperimentFactory)
@@ -51,10 +53,10 @@ class Experimentor(IsotopeDatabaseManager):
     #===========================================================================
     # permissions
     #===========================================================================
-#    max_allowable_runs = 10000
-#    can_edit_scripts = True
-#    _last_ver_time = None
-#    _ver_timeout = 10
+    #    max_allowable_runs = 10000
+    #    can_edit_scripts = True
+    #    _last_ver_time = None
+    #    _ver_timeout = 10
 
     #===========================================================================
     # task events
@@ -63,11 +65,11 @@ class Experimentor(IsotopeDatabaseManager):
 
     activate_editor_event = Event
     save_event = Event
-#    clear_display_event = Event
+    #    clear_display_event = Event
     def reset_run_generator(self):
         if self.executor.isAlive():
             self.debug('Queue modified. Reset run generator')
-#             self.executor.queue_modified = True
+            #             self.executor.queue_modified = True
             self.executor.set_queue_modified()
 
     def refresh_executable(self, qs=None):
@@ -93,17 +95,17 @@ class Experimentor(IsotopeDatabaseManager):
     def update_info(self):
         self._update()
 
-#===============================================================================
-# info update
-#===============================================================================
+    #===============================================================================
+    # info update
+    #===============================================================================
     def _get_all_automated_runs(self, queues=None):
         if queues is None:
             queues = self.experiment_queues
 
         return [ai for ei in self.experiment_queues
-                    for ai in ei.executed_runs + ei.automated_runs
-                        if ai.executable
-                        ]
+                for ai in ei.executed_runs + ei.automated_runs
+                if ai.executable
+        ]
 
     def _update(self, queues=None):
         if queues is None:
@@ -118,9 +120,9 @@ class Experimentor(IsotopeDatabaseManager):
         self.stats.calculate()
 
         ans = self._get_all_automated_runs(queues)
-#         print len([i for i in ans])
+        #         print len([i for i in ans])
         exclude = ('dg', 'pa')
-#        timethis(self._modify_aliquots_steps, args=(ans,), kwargs=dict(exclude=exclude))
+        #        timethis(self._modify_aliquots_steps, args=(ans,), kwargs=dict(exclude=exclude))
         self._modify_aliquots_steps(ans, exclude=exclude)
 
         self.debug('info updated')
@@ -147,7 +149,7 @@ class Experimentor(IsotopeDatabaseManager):
         key = lambda x: x.labnumber
 
         return ((ln, group) for ln, group in groupby(sorted(ans, key=key), key)
-                                if ln not in exclude)
+                if ln not in exclude)
 
     def _get_analysis_info(self, li):
         dbln = self.db.get_labnumber(li)
@@ -156,7 +158,6 @@ class Experimentor(IsotopeDatabaseManager):
             sample = dbln.sample
             if sample:
                 sample = sample.name
-
 
             dbpos = dbln.irradiation_position
             if dbpos:
@@ -171,7 +172,7 @@ class Experimentor(IsotopeDatabaseManager):
             aliquot = dban.aliquot
             step = dban.step
 
-#            self.debug('{} {} {}'.format(li, analysis, sample))
+        #            self.debug('{} {} {}'.format(li, analysis, sample))
         return sample, irradiationpos, aliquot, step
 
     def _modify_aliquots_steps(self, ans, exclude=None):
@@ -185,10 +186,10 @@ class Experimentor(IsotopeDatabaseManager):
                 if not ln in cache:
                     sample, irrad, aliquot, step = self._get_analysis_info(ln)
                     cache[ln] = dict(sample=sample,
-                                 irradiation=irrad,
-                                 aliquot=aliquot,
-                                 step=step,
-                                 egrp=-1)
+                                     irradiation=irrad,
+                                     aliquot=aliquot,
+                                     step=step,
+                                     egrp=-1)
 
                 last = cache[ln]
 
@@ -205,17 +206,17 @@ class Experimentor(IsotopeDatabaseManager):
                         ecache[en] = dict(egrp=-1,
                                           step=-1,
                                           aliquot=last['aliquot']
-                                          )
+                        )
 
                     s = -1
                     if not ai.assigned_aliquot:
                         egrp = ai.extract_group
                         elast = ecache[en]
                         aq = elast['aliquot']
-#                         print ln, egrp, elast['egrp'], elast['aliquot']
+                        #                         print ln, egrp, elast['egrp'], elast['aliquot']
                         if egrp == elast['egrp']:
-#                         print egrp, last['egrp']
-#                         if egrp == last['egrp']:
+                        #                         print egrp, last['egrp']
+                        #                         if egrp == last['egrp']:
                             s = elast['step']
                         else:
                             aq += 1
@@ -223,7 +224,7 @@ class Experimentor(IsotopeDatabaseManager):
                     else:
                         dban = db.get_last_analysis(ln, aliquot=aq)
                         aq = dban.aliquot + 1
-#                         last['aliquot'] = aq
+                        #                         last['aliquot'] = aq
                         if dban.step:
                             s = LAlphas.index(dban)
 
@@ -235,7 +236,7 @@ class Experimentor(IsotopeDatabaseManager):
                     last['aliquot'] = max(aq, last['aliquot'])
 
                     ecache[en] = elast
-#                     last['step'] = st
+                #                     last['step'] = st
 
                 else:
                     if not ai.assigned_aliquot:
@@ -250,10 +251,10 @@ class Experimentor(IsotopeDatabaseManager):
                              sample=last['sample'] or '',
                              irradiation=last['irradiation'] or '',
                              step=st
-                             )
-#                 last.update(aliquot=aq, step=st,
-#                             egrp=egrp
-#                             )
+                )
+                #                 last.update(aliquot=aq, step=st,
+                #                             egrp=egrp
+                #                             )
                 cache[ln] = last
 
     def _is_special(self, ln):
@@ -275,22 +276,21 @@ class Experimentor(IsotopeDatabaseManager):
         def get_analysis_info(li):
             sample, irradiationpos = '', ''
 
-#            analysis = db.get_last_analysis(li)
-#            if analysis:
-#                dbln = analysis.labnumber
+            #            analysis = db.get_last_analysis(li)
+            #            if analysis:
+            #                dbln = analysis.labnumber
             dbln = db.get_labnumber(li)
             if dbln:
                 sample = dbln.sample
                 if sample:
                     sample = sample.name
 
-
                 dbpos = dbln.irradiation_position
                 if dbpos:
                     level = dbpos.level
                     irradiationpos = '{}{}'.format(level.irradiation.name,
                                                    level.name)
-#            self.debug('{} {} {}'.format(li, analysis, sample))
+                    #            self.debug('{} {} {}'.format(li, analysis, sample))
             return sample, irradiationpos
 
         db = self.db
@@ -312,11 +312,11 @@ class Experimentor(IsotopeDatabaseManager):
 
                         for egroup, ais in groupby(aa, key=egroup_key):
                             ast = self._set_aliquot_step(ais, special, cln,
-                                                        aliquot,
-                                                        aliquot_start,
-                                                        egroup,
-                                                        sample,
-                                                        irradiationpos)
+                                                         aliquot,
+                                                         aliquot_start,
+                                                         egroup,
+                                                         sample,
+                                                         irradiationpos)
                             aliquot_start = ast + 1
 
                 else:
@@ -336,20 +336,20 @@ class Experimentor(IsotopeDatabaseManager):
                           sample, irradiationpos):
         db = self.db
 
-#         step_start = 0
+        #         step_start = 0
         an = db.get_last_analysis(cln, aliquot=aliquot)
         if aliquot_start is None:
             aliquot_start = 0
             if an:
                 aliquot_start = an.aliquot
-#                 print an.aliquot, aliquot
-#                 if an.step and an.aliquot == aliquot:
-#                     step_start = LAlphas.index(an.step) + 1
+                #                 print an.aliquot, aliquot
+                #                 if an.step and an.aliquot == aliquot:
+                #                     step_start = LAlphas.index(an.step) + 1
 
         step_cnt = 0
         aliquot_cnt = 0
         for arun in ais:
-#             for arun in aruns:
+        #             for arun in aruns:
             arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
             if arun.skip:
                 arun.aliquot = 0
@@ -360,41 +360,41 @@ class Experimentor(IsotopeDatabaseManager):
 
             if not arun.user_defined_aliquot:
                 if arun.state in ('not run', 'extraction', 'measurement'):
-#                     print arun.runid, egroup, aliquot_start, aliquot_cnt
+                #                     print arun.runid, egroup, aliquot_start, aliquot_cnt
                     arun.assigned_aliquot = int(aliquot_start + aliquot_cnt + 1)
                     if special or not egroup:
                         aliquot_cnt += 1
 
             if not special and egroup:
                 step_start = 0
-#                 an = db.get_last_analysis(cln, aliquot=aliquot)
+                #                 an = db.get_last_analysis(cln, aliquot=aliquot)
                 if an and an.step and an.aliquot == arun.aliquot:
                     step_start = LAlphas.index(an.step) + 1
 
                 arun.step = int(step_start + step_cnt)
-#                 print arun.aliquot, arun.step, step_start, step_cnt
+                #                 print arun.aliquot, arun.step, step_start, step_cnt
                 step_cnt += 1
 
         return aliquot_start
 
-#     def execute_queues(self, queues, path, text, text_hash):
+    #     def execute_queues(self, queues, path, text, text_hash):
     def execute_queues(self, queues):
         self.debug('setup executor')
 
         self.executor.trait_set(
-                                experiment_queues=queues,
-                                experiment_queue=queues[0],
-#                                 path=path,
-                                stats=self.stats,
-#                                 text=text,
-#                                 text_hash=text_hash,
-                                )
+            experiment_queues=queues,
+            experiment_queue=queues[0],
+            #                                 path=path,
+            stats=self.stats,
+            #                                 text=text,
+            #                                 text_hash=text_hash,
+        )
 
         return self.executor.execute()
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
     @on_trait_change('executor:experiment_queue')
     def _activate_editor(self, eq):
         self.activate_editor_event = id(eq)
@@ -418,7 +418,7 @@ class Experimentor(IsotopeDatabaseManager):
         '''
         self.debug('%%%%%%%%%%%%%%%%%% Start fired')
         if not self.executor.isAlive():
-#             self.update_info()
+        #             self.update_info()
 
             self.debug('%%%%%%%%%%%%%%%%%% Execute event true')
             self.execute_event = True
@@ -435,13 +435,14 @@ class Experimentor(IsotopeDatabaseManager):
     @on_trait_change('experiment_factory:run_factory:changed')
     def _queue_dirty(self):
         self.experiment_queue.changed = True
-#         executor = self.executor
-#         executor.executable = False
 
-#         if executor.isAlive():
-#             executor.prev_end_at_run_completion = executor.end_at_run_completion
-#             executor.end_at_run_completion = True
-#             executor.changed_flag = True
+    #         executor = self.executor
+    #         executor.executable = False
+
+    #         if executor.isAlive():
+    #             executor.prev_end_at_run_completion = executor.end_at_run_completion
+    #             executor.end_at_run_completion = True
+    #             executor.changed_flag = True
 
     @on_trait_change('experiment_queue:dclicked')
     def _dclicked_changed(self, new):
@@ -457,7 +458,8 @@ class Experimentor(IsotopeDatabaseManager):
     def _refresh3(self):
         self.debug('update info needed fired')
         self.update_info()
-#         self.executor.clear_run_states()
+
+    #         self.executor.clear_run_states()
 
     @on_trait_change('executor:queue_modified')
     def _refresh5(self, new):
@@ -481,7 +483,7 @@ class Experimentor(IsotopeDatabaseManager):
             for a in ('username', 'mass_spectrometer', 'extract_device',
                       'load_name',
                       'delay_before_analyses', 'delay_between_analyses'
-                      ):
+            ):
                 v = getattr(eq, a)
                 if v is not None:
                     if isinstance(v, str):
@@ -511,18 +513,19 @@ class Experimentor(IsotopeDatabaseManager):
         rf.special_labnumber = 'Special Labnumber'
         rf._labnumber = NULL_STR
         rf.labnumber = ''
-#         rf.edit_mode = True
+        #         rf.edit_mode = True
 
         rf.suppress_update = True
         rf.set_selected_runs(new)
-#        rf.suppress_update = True
 
-#===============================================================================
-# property get/set
-#===============================================================================
-#     def _get_title(self):
-#         if self.experiment_queue:
-#             return 'Experiment {}'.format(self.experiment_queue.name)
+    #        rf.suppress_update = True
+
+    #===============================================================================
+    # property get/set
+    #===============================================================================
+    #     def _get_title(self):
+    #         if self.experiment_queue:
+    #             return 'Experiment {}'.format(self.experiment_queue.name)
 
     def _executor_factory(self):
         p1 = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
@@ -532,36 +535,36 @@ class Experimentor(IsotopeDatabaseManager):
         if self.application:
             kw = dict(extraction_line_manager=self.application.get_service(p1),
                       spectrometer_manager=self.application.get_service(p2),
-                      ion_optics_manager=self.application.get_service(p3),)
+                      ion_optics_manager=self.application.get_service(p3), )
 
         if not self.unique_executor_db:
             kw['db'] = self.db
             kw['connect'] = False
 
         e = ExperimentExecutor(
-                               mode=self.mode,
-                               application=self.application,
-                               **kw
-                               )
+            mode=self.mode,
+            application=self.application,
+            **kw
+        )
         return e
 
-#===============================================================================
-# defaults
-#===============================================================================
+    #===============================================================================
+    # defaults
+    #===============================================================================
     def _executor_default(self):
         return self._executor_factory()
 
     def _experiment_factory_default(self):
         e = ExperimentFactory(db=self.db,
                               application=self.application,
-#                              max_allowable_runs=self.max_allowable_runs,
-#                              can_edit_scripts=self.can_edit_scripts
-                              )
+                              #                              max_allowable_runs=self.max_allowable_runs,
+                              #                              can_edit_scripts=self.can_edit_scripts
+        )
 
-#        from src.globals import globalv
-#        if globalv.experiment_debug:
-#            e.queue_factory.mass_spectrometer = 'Jan'
-#            e.queue_factory.extract_device = 'Fusions Diode'
+        #        from src.globals import globalv
+        #        if globalv.experiment_debug:
+        #            e.queue_factory.mass_spectrometer = 'Jan'
+        #            e.queue_factory.extract_device = 'Fusions Diode'
 
         return e
 

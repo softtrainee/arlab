@@ -30,10 +30,34 @@ from src.extraction_line.graph.traverse import BFT
 
 #@todo: add volume calculation
 
+
+def get_volume(elem, tag='volume', default=0):
+    vol = elem.find(tag)
+    if vol is not None:
+        vol = float(vol.text.strip())
+    else:
+        vol = default
+    return vol
+
+
+def split_graph(n):
+    """
+        valves only have binary connections
+        so can only split in half
+    """
+
+    if len(n.edges) == 2:
+        e1, e2 = n.edges
+        return e1.get_node(n), e2.get_node(n)
+    else:
+        return n.edges[0].get_node(n),
+
+
 class ExtractionLineGraph(HasTraits):
     nodes = Dict
     suppress_changes = False
     inherit_state = Bool
+
     def load(self, p):
 
         cp = CanvasParser(p)
@@ -47,19 +71,27 @@ class ExtractionLineGraph(HasTraits):
         #=======================================================================
         # load roots
         for t, klass in (('stage', RootNode),
-                        ('spectrometer', SpectrometerNode),
-                        ('valve', ValveNode),
-                        ('rough_valve', ValveNode),
-                        ('turbo', PumpNode),
-                        ('ionpump', PumpNode),
-                        ('laser', LaserNode),
-                        ('tank', TankNode),
-                        ('pipette', PipetteNode),
-                        ('gauge', GaugeNode),
-                        ):
+                         ('spectrometer', SpectrometerNode),
+                         ('valve', ValveNode),
+                         ('rough_valve', ValveNode),
+                         ('turbo', PumpNode),
+                         ('ionpump', PumpNode),
+                         ('laser', LaserNode),
+                         ('tank', TankNode),
+                         ('pipette', PipetteNode),
+                         ('gauge', GaugeNode),
+        ):
             for si in cp.get_elements(t):
                 n = si.text.strip()
-                nodes[n] = klass(name=n)
+                if t in ('valve', 'rough_valve'):
+                    o_vol = get_volume(si, tag='open_volume', default=10)
+                    c_vol = get_volume(si, tag='closed_volume', default=5)
+                    vol = (o_vol, c_vol)
+                else:
+                    vol = get_volume(si)
+
+                node = klass(name=n, volume=vol)
+                nodes[n] = node
 
         #=======================================================================
         # load edges
@@ -67,23 +99,23 @@ class ExtractionLineGraph(HasTraits):
         for ei in cp.get_elements('connection'):
             sa = ei.find('start')
             ea = ei.find('end')
-
-            edge = Edge()
-            sname = ''
+            vol = get_volume(ei)
+            edge = Edge(volume=vol)
+            s_name = ''
             if sa.text in nodes:
-                sname = sa.text
-                sa = nodes[sname]
-                edge.anode = sa
+                s_name = sa.text
+                sa = nodes[s_name]
+                edge.a_node = sa
                 sa.add_edge(edge)
 
-            ename = ''
+            e_name = ''
             if ea.text in nodes:
-                ename = ea.text
-                ea = nodes[ename]
-                edge.bnode = ea
+                e_name = ea.text
+                ea = nodes[e_name]
+                edge.b_node = ea
                 ea.add_edge(edge)
 
-            edge.name = '{}_{}'.format(sname, ename)
+            edge.name = '{}_{}'.format(s_name, e_name)
 
         self.nodes = nodes
 
@@ -118,64 +150,96 @@ class ExtractionLineGraph(HasTraits):
     def _set_state(self, scene, n):
         if n.state == 'closed' and not n.visited:
             n.visited = True
-            for ni in self._split_graph(n):
+            for ni in split_graph(n):
                 self._set_state(scene, ni)
         else:
             state, term = self._find_max_state(n)
             self._clear_fvisited()
-#             print n.name, state, term
+            #             print n.name, state, term
             self.fill(scene, n, state, term)
 
-    def _split_graph(self, n):
-        '''
-            valves only have binary connections 
-            so can only split in half
-        '''
-        if len(n.edges) == 2:
-            e1, e2 = n.edges
-            return e1.get_node(n), e2.get_node(n)
-        else:
-            return (n.edges[0].get_node(n),)
+    def calculate_volumes(self, node):
+        if isinstance(node, str):
+            node = self.nodes[node]
 
-    def _find_max_state(self, n):
-        '''
+        if node.state == 'closed':
+            nodes = split_graph(node)
+        else:
+            nodes = (node, )
+
+        return [(ni.name, self._calculate_volume(ni)) for ni in nodes]
+
+    def _calculate_volume(self, node, k=0):
+        """
+            use a Depth-first Traverse
+            accumulate volume
+        """
+        debug = True
+
+        vol = node.volume
+        if debug:
+            print '=' * (k + 1), node.name, node.volume, vol
+
+        for i, ei in enumerate(node.edges):
+            n = ei.get_node(node)
+            if n is None:
+                continue
+
+            vol += ei.volume
+            if debug:
+                print '-' * (k + i + 1), ei.name, ei.volume, vol
+
+            if not n.f_visited:
+                n.f_visited = True
+                if n.state == 'closed':
+                    vol += n.volume
+                    if debug:
+                        print '-' * (k + i + 1), n.name, n.volume, vol
+
+                else:
+                    vol += self._calculate_volume(n, k=k + 1)
+
+        return vol
+
+
+    def _find_max_state(self, node):
+        """
             use a Breadth-First Traverse
-            acumulate the max state at each node
-        '''
-        state, term = False, ''
-        for ni in BFT(self, n):
-#            print '-----', n.name, ni.name
+            accumulate the max state at each node
+        """
+        m_state, term = False, ''
+        for ni in BFT(self, node):
+
             if isinstance(ni, PumpNode):
                 return 'pump', ni.name
 
             if isinstance(ni, LaserNode):
-                state, term = 'laser', ni.name
+                m_state, term = 'laser', ni.name
             elif isinstance(ni, PipetteNode):
-                state, term = 'pipette', ni.name
+                m_state, term = 'pipette', ni.name
             elif isinstance(ni, GaugeNode):
-                state, term = 'gauge', ni.name
+                m_state, term = 'gauge', ni.name
 
-
-            if state not in ('laser', 'pipette'):
+            if m_state not in ('laser', 'pipette'):
                 if isinstance(ni, SpectrometerNode):
-                    state, term = 'spectrometer', ni.name
+                    m_state, term = 'spectrometer', ni.name
                 elif isinstance(ni, TankNode):
-                    state, term = 'tank', ni.name
-#                 elif isinstance(ni, GaugeNode):
-#                     state, term = 'gauge', ni.name
+                    m_state, term = 'tank', ni.name
+                    #                 elif isinstance(ni, GaugeNode):
+                    #                     state, term = 'gauge', ni.name
 
-#             elif isinstance(ni, SpectrometerNode):
-#                 if state not in ('laser', 'pipette'):
-#                     state, term = 'spectrometer', ni.name
-#             elif isinstance(ni, TankNode):
-#                 if state not in ('laser', 'pipette'):
-#                     state, term = 'tank', ni.name
+                    #             elif isinstance(ni, SpectrometerNode):
+                    #                 if state not in ('laser', 'pipette'):
+                    #                     state, term = 'spectrometer', ni.name
+                    #             elif isinstance(ni, TankNode):
+                    #                 if state not in ('laser', 'pipette'):
+                    #                     state, term = 'tank', ni.name
 
         else:
-            return state, term
+            return m_state, term
 
     def fill(self, scene, root, state, term):
-#         print 'fill', root.name, state, term
+    #         print 'fill', root.name, state, term
         self._set_item_state(scene, root.name, state, term)
         for ei in root.edges:
             n = ei.get_node(root)
@@ -194,7 +258,7 @@ class ExtractionLineGraph(HasTraits):
         obj = scene.get_item(name)
 
         if obj is None \
-                or obj.type_tag in ('turbo', 'tank', 'ionpump'):
+            or obj.type_tag in ('turbo', 'tank', 'ionpump'):
             return
 
         if not color and state:
@@ -212,7 +276,7 @@ class ExtractionLineGraph(HasTraits):
                         obj.active_color = color
                     else:
                         obj.active_color = obj.oactive_color
-#                         obj.active_color = 0, 255, 0
+                        #                         obj.active_color = 0, 255, 0
             return
 
         if state:
@@ -224,8 +288,8 @@ class ExtractionLineGraph(HasTraits):
     def _clear_visited(self):
         for ni in self.nodes.itervalues():
             ni.visited = False
-#             for ei in ni.edges:
-#                 ei.visited = False
+            #             for ei in ni.edges:
+            #                 ei.visited = False
 
     def _clear_fvisited(self):
         for ni in self.nodes.itervalues():
@@ -238,16 +302,18 @@ class ExtractionLineGraph(HasTraits):
         if key in self.nodes:
             return self.nodes[key]
 
+
 if __name__ == '__main__':
     elg = ExtractionLineGraph()
     elg.load('/Users/ross/Pychrondata_dev/setupfiles/canvas2D/canvas.xml')
 
-    elg.set_valve_state('C', False)
-    state, root = elg.set_valve_state('H', True)
-    state, root = elg.set_valve_state('H', False)
+    print elg.calculate_volumes('H')
+    #elg.set_valve_state('C', False)
+    #state, root = elg.set_valve_state('H', True)
+    #state, root = elg.set_valve_state('H', False)
 
-    print '-------------------------------'
-    print state, root
+    #print '-------------------------------'
+    #print state, root
 
 #============= EOF =============================================
 
