@@ -87,6 +87,10 @@ class ExtractionLineScene(Scene):
                                 type_tag=type_tag,
                                 fill=fill,
         )
+        font = elem.find('font')
+        if font is not None:
+            rect.font = font.text.strip()
+
         self.add_item(rect, layer=1)
         return rect
 
