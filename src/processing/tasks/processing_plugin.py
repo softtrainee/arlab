@@ -224,8 +224,8 @@ Install to enable MS Excel export''')
         return AutoFigureTask(manager=self._processor_factory())
 
     def _repository_task_factory(self):
-        from src.processing.tasks.repository.respository_task import RespositoryTask
-        return RespositoryTask(manager=self._processor_factory())
+        from src.processing.tasks.repository.respository_task import RepositoryTask
+        return RepositoryTask(manager=self._processor_factory())
 
 #     def _publisher_task_factory(self):
 #         from src.processing.tasks.publisher.publisher_task import PublisherTask

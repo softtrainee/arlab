@@ -5,10 +5,11 @@ from src.helpers.logger_setup import logging_setup
 ETSConfig.toolkit = 'qt4'
 
 
-paths.build('_diode')
+paths.build('_dev')
 logging_setup('unittests')
 
-from .analysis import AnalysisTest
+from .flat_file import FlatFileTest
+# from .analysis import AnalysisTest
 # from .magnet import MagnetTest
 # from .motor import MotionProfilerTest
 # from .pyscript import PyscriptDurationTest

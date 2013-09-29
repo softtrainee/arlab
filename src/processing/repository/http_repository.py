@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str
+from traits.api import HasTraits, Str, Password, Button, on_trait_change, Bool
 
 from src.loggable import Loggable
 import urllib
@@ -24,8 +24,17 @@ import urllib2
 #============= local library imports  ==========================
 class HTTPRepository(Loggable):
     username = Str
-    password = Str
+    password = Password
     url = Str
+    upload_button = Button('upload')
+    enabled = Bool(False)
+
+    def _upload_button_fired(self):
+        self.upload()
+
+    def upload(self):
+        pass
+
     def post(self, path, body):
         if isinstance(body, dict):
             body = urllib.urlencode(body)
@@ -39,14 +48,17 @@ class HTTPRepository(Loggable):
 
         url = '{}/{}'.format(host, path)
         try:
-            with urllib2.urlopen(url, body) as f:
-                resp = f.read()
-                self._handle_post(resp)
+            f = urllib2.urlopen(url, body)
         except urllib2.URLError:
             self.warning_dialog('Connection refused to {}'.format(url))
+            return
+
+        resp = f.read()
+        self.debug('POST response len={}, {}'.format(len(resp), resp))
+        self._handle_post(resp)
 
     def _handle_post(self, resp):
-        print resp
+        pass
 
     def _new_form(self, authenication=True):
         form = dict()
@@ -54,4 +66,13 @@ class HTTPRepository(Loggable):
             form['username'] = self.username
             form['password'] = self.password
         return form
+
+#===============================================================================
+# handlers
+#===============================================================================
+    @on_trait_change('username, password')
+    def _update_enabled(self):
+        self.enabled = all([getattr(self, a)
+                                 for a in ('username', 'password')])
+
 #============= EOF =============================================
