@@ -51,7 +51,7 @@ class InfoInspector(BaseTool):
         self.metadata_changed = True
 
 class InfoOverlay(AbstractOverlay):
-    tool = Instance(InfoInspector)
+    tool = Instance(BaseTool)
     visible = False
 
     '''
@@ -75,9 +75,13 @@ class InfoOverlay(AbstractOverlay):
             if lines:
                 lines = [li for li in lines if li and li.strip()]
                 self._draw_info(gc, lines)
+
         self.visible = False
 
     def _draw_info(self, gc, lines):
+        if not self.tool.current_screen:
+            return
+
         x, y = self.tool.current_screen
 
         gc.set_font(Font('Arial'))

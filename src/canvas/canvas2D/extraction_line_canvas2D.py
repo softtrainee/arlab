@@ -21,6 +21,7 @@ from traitsui.menu import Action
 #============= standard library imports ========================`
 import os
 #============= local library imports  ==========================
+from src.canvas.canvas2D.overlays.extraction_line_overlay import ExtractionLineInfoTool, ExtractionLineInfoOverlay
 from src.canvas.scene_viewer import SceneCanvas
 from src.canvas.canvas2D.scene.extraction_line_scene import ExtractionLineScene
 from src.canvas.canvas2D.scene.primitives.valves import Valve, RoughValve, \
@@ -54,6 +55,16 @@ class ExtractionLineCanvas2D(SceneCanvas):
 
     y_range = (-10, 25)
 
+    def __init__(self, *args, **kw):
+        super(ExtractionLineCanvas2D, self).__init__(*args, **kw)
+
+        tool = ExtractionLineInfoTool(scene=self.scene,
+                                      manager=self.manager
+        )
+        overlay = ExtractionLineInfoOverlay(tool=tool,
+                                            component=self)
+        self.tools.append(tool)
+        self.overlays.append(overlay)
 
     def toggle_item_identify(self, name):
         v = self._get_valve_by_name(name)
@@ -121,24 +132,26 @@ class ExtractionLineCanvas2D(SceneCanvas):
         pass
 
     def normal_mouse_move(self, event):
-        '''
-
-        '''
         item = self._over_item(event)
+        #redraw=False
         if item is not None:
-            self.active_item = item
-            self.event_state = 'select'
-            event.window.set_pointer(self.select_pointer)
-            self.manager.set_selected_explanation_item(item)
+            #print self.active_item, item
+            if item != self.active_item:
+                self.active_item = item
+                self.event_state = 'select'
+                event.window.set_pointer(self.select_pointer)
+                self.manager.set_selected_explanation_item(item)
         else:
-            del self.active_item
-#             self.active_item = None
+            #redraw=False
+            self.active_item = None
             self.event_state = 'normal'
             event.window.set_pointer(self.normal_pointer)
             self.manager.set_selected_explanation_item(None)
 
-        event.handled = True
-#         self.invalidate_and_redraw()
+            #if redraw:
+            #    self.request_redraw()
+            #event.handled = True
+            # self.invalidate_and_redraw()
 
     def select_mouse_move(self, event):
         '''

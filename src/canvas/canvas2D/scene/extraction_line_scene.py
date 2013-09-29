@@ -34,6 +34,20 @@ class ExtractionLineScene(Scene):
 
     valves = Dict
 
+    def get_is_in(self, px, py):
+        for c in self.iteritems(exclude=[Valve, RoughValve,
+                                         Image, Label,
+                                         ValueLabel,
+                                         BorderLine,
+        ]):
+            x, y = c.get_xy()
+            w, h = c.get_wh()
+            if c.identifier in ('bounds_rect', 'legend'):
+                continue
+
+            if x <= px <= x + w and y <= py <= y + h:
+                return c
+
     def _get_floats(self, elem, name):
         return map(float, elem.find(name).text.split(','))
 
@@ -367,9 +381,11 @@ class ExtractionLineScene(Scene):
                                     width=width + 1 + 2 * pad,
                                     height=height + 1 + 2 * pad,
                                     fill=False,
+                                    identifier='legend',
                                     border_width=5,
                                     default_color=self._make_color((0, 0, 0))
             )
+
             self.add_item(rect)
 
     def _load_config(self, p):

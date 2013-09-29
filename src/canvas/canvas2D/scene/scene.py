@@ -23,9 +23,11 @@ from src.canvas.canvas2D.scene.primitives.primitives import Primitive
 from src.canvas.canvas2D.scene.layer import Layer
 from canvas_parser import CanvasParser
 
+
 class PrimitiveNode(TreeNode):
     add = List([Primitive])
     move = List([Primitive])
+
 #    def can_insert(self, obj):
 #        print obj, 'asdf'
 
@@ -35,11 +37,12 @@ class PrimitiveNode(TreeNode):
 class Scene(HasTraits):
     layers = List
     parser = None
-#     parser = Instance(CanvasParser)
-#     scene_browser = Instance(SceneBrowser)
+    #     parser = Instance(CanvasParser)
+    #     scene_browser = Instance(SceneBrowser)
     selected = Any
     layout_needed = Event
     font = None
+
     @on_trait_change('layers:visible')
     def _refresh(self):
         self.layout_needed = True
@@ -63,8 +66,6 @@ class Scene(HasTraits):
         pass
 
     def render_components(self, gc, canvas):
-
-
         for li in self.layers:
             if li.visible:
                 for ci in li.components:
@@ -87,20 +88,21 @@ class Scene(HasTraits):
         if klass:
             def btest(cc):
                 return isinstance(cc, klass) and test(cc)
+
             test = btest
 
         return (ci for li in self.layers
-                    for ci in li.components
-                        if test(ci))
+                for ci in li.components
+                if test(ci))
 
 
     def get_items(self, klass=None):
-#         return [ci for li in self.layers
-#                 for ci in li.components
-#                     if isinstance(ci, klass)]
-#
+    #         return [ci for li in self.layers
+    #                 for ci in li.components
+    #                     if isinstance(ci, klass)]
+    #
         comps = (ci for li in self.layers
-                    for ci in li.components)
+                 for ci in li.components)
         if klass:
             return [ci for ci in comps if isinstance(ci, klass)]
         else:
@@ -159,10 +161,11 @@ class Scene(HasTraits):
         for li in layers:
             li.pop_item(v, klass=klass)
 
-#        layer[key] = v
-#===============================================================================
-# handlers
-#===============================================================================
+        #        layer[key] = v
+        #===============================================================================
+        # handlers
+        #===============================================================================
+
     def _selected_changed(self, name, old, new):
         if issubclass(type(new), Primitive):
             if issubclass(type(old), Primitive):
@@ -183,7 +186,7 @@ class Scene(HasTraits):
     def _get_canvas_view_range(self, cp):
         xv = (-25, 25)
         yv = (-25, 25)
-#         cp = self._get_canvas_parser()
+        #         cp = self._get_canvas_parser()
         tree = cp.get_tree()
         if tree:
             elm = tree.find('xview')

@@ -79,6 +79,13 @@ class ExtractionLineManager(Manager):
     check_master_owner = Bool
     use_network = Bool
 
+    def get_volume(self, node_name):
+        v = 0
+        if self.use_network:
+            v = self.network.calculate_volumes(node_name)[0][1]
+
+        return v
+
     def test_connection(self):
         return self.get_valve_states() is not None
 

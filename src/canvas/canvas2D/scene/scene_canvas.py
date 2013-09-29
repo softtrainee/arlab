@@ -24,10 +24,12 @@ import weakref
 class SceneCanvas(BaseDataCanvas):
     scene = Instance(Scene)
     _frozen = False
+
     def _scene_changed(self):
         self.scene.on_trait_change(self.request_redraw,
                                    'layout_needed'
-                                   )
+        )
+
     def freeze(self):
         self._frozen = True
 
@@ -50,8 +52,9 @@ class SceneCanvas(BaseDataCanvas):
             self.request_redraw()
 
     def _draw_hook(self, gc, *args, **kw):
+
         if self.scene:
-#             self.scene.render_components(gc, weakref.ref(self)())
+        #             self.scene.render_components(gc, weakref.ref(self)())
             self.scene.render_components(gc, self)
 
 #============= EOF =============================================
