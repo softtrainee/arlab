@@ -57,7 +57,9 @@ class ExtractionLineScene(Scene):
             c = '({})'.format(c)
         return c
 
-    def _new_rectangle(self, elem, c, bw=3, origin=None, type_tag=''):
+    def _new_rectangle(self, elem, c, bw=3,
+                       layer=1,
+                       origin=None, type_tag=''):
         if origin is None:
             ox, oy = 0, 0
         else:
@@ -91,7 +93,7 @@ class ExtractionLineScene(Scene):
         if font is not None:
             rect.font = font.text.strip()
 
-        self.add_item(rect, layer=1)
+        self.add_item(rect, layer=layer)
         return rect
 
     def _new_connection(self, conn, key, start, end):
@@ -144,7 +146,9 @@ class ExtractionLineScene(Scene):
 
 
     def _new_line(self, line, name,
-                  color=(0, 0, 0), width=2, origin=None):
+                  color=(0, 0, 0), width=2,
+                  layer=0,
+                  origin=None):
         if origin is None:
             ox, oy = 0, 0
         else:
@@ -161,9 +165,11 @@ class ExtractionLineScene(Scene):
                          default_color=color,
                          name=name,
                          width=width)
-                self.add_item(l, layer=0)
+                self.add_item(l, layer=layer)
 
-    def _new_label(self, label, name, c, origin=None, klass=None, **kw):
+    def _new_label(self, label, name, c,
+                   layer=1,
+                   origin=None, klass=None, **kw):
         if origin is None:
             ox, oy = 0, 0
         else:
@@ -187,7 +193,7 @@ class ExtractionLineScene(Scene):
         if font is not None:
             l.font = font.text.strip()
 
-        self.add_item(l, layer=1)
+        self.add_item(l, layer=layer)
         return l
 
     def _new_image(self, image):
@@ -359,7 +365,9 @@ class ExtractionLineScene(Scene):
             for b in legend.findall('rect'):
             #                 print b
                 rect = self._new_rectangle(b, c, bw=5, origin=(ox + lox, oy + loy),
-                                           type_tag='rect')
+                                           type_tag='rect',
+                                           layer='legend'
+                )
 
                 maxx = max(maxx, rect.x)
                 maxy = max(maxy, rect.y)
@@ -368,7 +376,9 @@ class ExtractionLineScene(Scene):
 
             for i, label in enumerate(legend.findall('llabel')):
                 name = '{:03n}label'.format(i)
-                ll = self._new_label(label, name, c, origin=(ox + lox, oy + loy))
+                ll = self._new_label(label, name, c,
+                                     layer='legend',
+                                     origin=(ox + lox, oy + loy))
                 maxx = max(maxx, ll.x)
                 maxy = max(maxy, ll.y)
                 minx = min(minx, ll.x)
@@ -376,7 +386,9 @@ class ExtractionLineScene(Scene):
 
             for i, line in enumerate(legend.findall('lline')):
                 name = '{:03n}line'.format(i)
-                self._new_line(line, name, origin=(ox + lox, oy + loy))
+                self._new_line(line, name,
+                               layer='legend',
+                               origin=(ox + lox, oy + loy))
 
             width, height = maxx - minx, maxy - miny
             pad = 0.5
@@ -390,7 +402,7 @@ class ExtractionLineScene(Scene):
                                     default_color=self._make_color((0, 0, 0))
             )
 
-            self.add_item(rect)
+            self.add_item(rect, layer='legend')
 
     def _load_config(self, p):
         color_dict = dict()

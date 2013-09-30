@@ -57,6 +57,7 @@ class ExtractionLineCanvas2D(SceneCanvas):
 
     display_volume = Bool
     volume_key = Str
+    active = Bool(True)
 
     def __init__(self, *args, **kw):
         super(ExtractionLineCanvas2D, self).__init__(*args, **kw)
@@ -141,6 +142,9 @@ class ExtractionLineCanvas2D(SceneCanvas):
         pass
 
     def normal_mouse_move(self, event):
+        if not self.active:
+            return
+
         item = self._over_item(event)
         #redraw=False
         if item is not None:
@@ -149,15 +153,17 @@ class ExtractionLineCanvas2D(SceneCanvas):
                 self.active_item = item
                 self.event_state = 'select'
                 event.window.set_pointer(self.select_pointer)
-                self.manager.set_selected_explanation_item(item)
+                if self.manager:
+                    self.manager.set_selected_explanation_item(item)
         else:
             #redraw=False
             self.active_item = None
             self.event_state = 'normal'
             event.window.set_pointer(self.normal_pointer)
-            self.manager.set_selected_explanation_item(None)
+            if self.manager:
+                self.manager.set_selected_explanation_item(None)
 
-            #if redraw:
+                #if redraw:
             #    self.request_redraw()
             #event.handled = True
             # self.invalidate_and_redraw()
@@ -307,6 +313,7 @@ class ExtractionLineCanvas2D(SceneCanvas):
 
         state = not state
 
+        change = False
         ok = False
         if self.manager is not None:
             if state:

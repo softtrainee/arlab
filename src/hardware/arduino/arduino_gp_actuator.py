@@ -20,26 +20,26 @@ import time
 #========== local library imports =============
 from src.hardware.actuators.gp_actuator import GPActuator
 
-'''
-
-             
+"""
 disable DTR
 1. place 110ohm btw 5V and Reset
 2. Cut trace on board RESET-EN
 
 DTR will reset arduino when opening an closing a serial connection
     software init reset allows seamless uploading of sketches 
-'''
+"""
 
 OPEN = 1
 CLOSE = 0
 
 
 class ArduinoGPActuator(GPActuator):
-    '''
+    """
     Abstract module for Arduino GP Actuator
-    
-    '''
+
+    @todo: first command to arduino consistently times out
+    """
+
     def open(self, **kw):
         super(ArduinoGPActuator, self).open(**kw)
 
@@ -53,7 +53,7 @@ class ArduinoGPActuator(GPActuator):
             return resp
 
     def _build_command(self, cmd, pin, state):
-#        delimiter = ','
+    #        delimiter = ','
         eol = '\r\n'
         if state is None:
             r = '{} {}{}'.format(cmd, pin, eol)
@@ -81,12 +81,13 @@ class ArduinoGPActuator(GPActuator):
                                      ntries=3, check_type=int)
 
         closed = self.repeat_command(('r', indicator_close_pin, None),
-                                      ntries=3, check_type=int)
+                                     ntries=3, check_type=int)
 
-        err_msg = '{}-{} not functioning properly\nIc (pin={} state={}) does not agree with Io (pin={} state={})'.format(obj.name,
-                                                                                           obj.description,
-                                                                                          indicator_close_pin, closed,
-                                                                          indicator_open_pin, opened)
+        err_msg = '{}-{} not functioning properly\nIc (pin={} state={}) does not agree with Io (pin={} state={})'.format(
+            obj.name,
+            obj.description,
+            indicator_close_pin, closed,
+            indicator_open_pin, opened)
         try:
             s = closed + opened
         except (TypeError, ValueError, AttributeError):
@@ -111,8 +112,7 @@ class ArduinoGPActuator(GPActuator):
         while state is None and i < ntries:
             time.sleep(0.25)
             state = self.repeat_command((cmd, pin, None), ntries=3,
-                                        check_type=int,
-                                        )
+                                        check_type=int)
             i += 1
             if bool(state):
                 break
