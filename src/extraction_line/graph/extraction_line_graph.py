@@ -28,8 +28,6 @@ from src.canvas.canvas2D.scene.primitives.valves import Valve
 from src.canvas.canvas2D.scene.canvas_parser import CanvasParser
 from src.extraction_line.graph.traverse import bft, bfs
 
-#@todo: add volume calculation
-
 
 def get_volume(elem, tag='volume', default=0):
     """

@@ -22,13 +22,14 @@ from envisage.ui.tasks.tasks_plugin import TasksPlugin
 
 
 class myTasksPlugin(TasksPlugin):
-    def _create_preferences_dialog_service(self):
-        from preferences_dialog import myPreferencesDialog
-
-        dialog = myPreferencesDialog(application=self.application)
-        dialog.trait_set(categories=self.preferences_categories,
-                         panes=[factory(dialog=dialog)
-                                for factory in self.preferences_panes])
-        return dialog
+    pass
+    #def _create_preferences_dialog_service(self):
+    #    from preferences_dialog import myPreferencesDialog
+    #
+    #    dialog = myPreferencesDialog(application=self.application)
+    #    dialog.trait_set(categories=self.preferences_categories,
+    #                     panes=[factory(dialog=dialog)
+    #                            for factory in self.preferences_panes])
+    #    return dialog
 
 #============= EOF =============================================
