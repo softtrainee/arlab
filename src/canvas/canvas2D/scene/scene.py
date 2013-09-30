@@ -24,9 +24,9 @@ from src.canvas.canvas2D.scene.layer import Layer
 from canvas_parser import CanvasParser
 
 
-class PrimitiveNode(TreeNode):
-    add = List([Primitive])
-    move = List([Primitive])
+#class PrimitiveNode(TreeNode):
+#    add = List([Primitive])
+#    move = List([Primitive])
 
 #    def can_insert(self, obj):
 #        print obj, 'asdf'
@@ -127,16 +127,24 @@ class Scene(HasTraits):
             if nn is not None:
                 return nn
 
-
     def add_item(self, v, layer=None):
         if layer is None:
             layer = -1
+        if isinstance(layer, str):
+            olayer = next((li for li in self.layers if li.name == layer), None)
+            if olayer is None:
+                layer = Layer(name=layer)
+                self.layers.append(layer)
+            else:
+                layer = olayer
+        else:
 
-        n = len(self.layers)
-        if layer > n - 1:
-            self.layers.append(Layer(name='{}'.format(n)))
+            n = len(self.layers)
+            if layer > n - 1:
+                self.layers.append(Layer(name='{}'.format(n)))
 
-        layer = self.layers[layer]
+            layer = self.layers[layer]
+
         layer.add_item(v)
 
     def remove_item(self, v, layer=None):
