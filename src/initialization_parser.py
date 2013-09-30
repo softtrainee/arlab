@@ -26,23 +26,25 @@ from src.paths import paths
 
 lower = lambda x: x.lower() if x else None
 
+
 def handle_uncaught_exception(func):
     def _handle(*args, **kw):
         try:
             return func(*args, **kw)
         except Exception, e:
             import traceback
+
             traceback.print_exc()
             warning(None, 'There is a problem in your initialization file {}'.format(e))
             sys.exit()
 
     return _handle
 
+
 def decorate_all(cls):
     '''
          adds the handle_uncaught_exception decorator to all methods of the class 
     '''
-
 
     for name, m in inspect.getmembers(cls, inspect.ismethod):
         setattr(cls, name, handle_uncaught_exception(m))
@@ -51,10 +53,13 @@ def decorate_all(cls):
 
 @decorate_all
 class InitializationParser(XMLParser):
-    '''
-    '''
+    """
+    """
+
     def __init__(self, *args, **kw):
-        p = os.path.join(paths.setup_dir, 'initialization.xml')
+        ver = '_proc'
+        ver = '_exp'
+        p = os.path.join(paths.setup_dir, 'initialization{}.xml'.format(ver))
         if os.path.isfile(p):
             super(InitializationParser, self).__init__(p, *args, **kw)
         else:
@@ -83,11 +88,11 @@ class InitializationParser(XMLParser):
         return [p if element else p.text.strip()
                 for p in plugins if all_ or p.get('enabled').lower() == 'true']
 
-#    def get_plugins_as_elements(self, category):
-#        tree = self._tree.find('plugins')
-#        cat = tree.find(category)
-#        if cat is not None:
-#            return cat.findall('plugin')
+    #    def get_plugins_as_elements(self, category):
+    #        tree = self._tree.find('plugins')
+    #        cat = tree.find(category)
+    #        if cat is not None:
+    #            return cat.findall('plugin')
     def get_global(self, tag):
         root = self.get_root()
         elem = root.find('globals')
@@ -103,12 +108,12 @@ class InitializationParser(XMLParser):
     def get_plugin_group(self, name):
         return next((p for p in self.get_plugin_groups(elem=True)
                      if p.tag == name
-                     ), None)
+                    ), None)
 
 
     def get_groups(self):
         tree = self.get_root()
-#        root = tree.getroot()
+        #        root = tree.getroot()
         return [t.tag for t in list(tree)]
 
     def get_parameters(self, *args, **kw):
@@ -164,7 +169,7 @@ class InitializationParser(XMLParser):
         if isinstance(manager, tuple):
             manager = self.get_manager(*manager)
 
-        text = lambda x : x.text.strip() if x is not None else None
+        text = lambda x: x.text.strip() if x is not None else None
         try:
             rpc = manager.find('rpc')
             mode = rpc.get('mode')
@@ -200,14 +205,14 @@ class InitializationParser(XMLParser):
             return p[0]
 
     def get_processors(self):
-#        ps = []
-#        for p in self.get_plugins('Hardware'):
-#            pp = self.get_processor(p)
-#            if pp:
-#                ps.append(pp)
+    #        ps = []
+    #        for p in self.get_plugins('Hardware'):
+    #            pp = self.get_processor(p)
+    #            if pp:
+    #                ps.append(pp)
         pl = self.get_plugin_group('hardware')
         ps = [pi for pi in [self.get_processor(p)
-                    for p in self.get_plugins('hardware', element=True)] if pi]
+                            for p in self.get_plugins('hardware', element=True)] if pi]
         nps = self._get_parameters(pl, 'processor')
         if nps:
             ps += nps
@@ -220,7 +225,7 @@ class InitializationParser(XMLParser):
 
     def get_servers(self):
         servers = [pi for pi in [self.get_server(p)
-                    for p in self.get_plugins('hardware', element=True)] if pi]
+                                 for p in self.get_plugins('hardware', element=True)] if pi]
         h = self.get_plugin_group('hardware')
         if h is not None:
             hs = self._get_parameters(h, 'server')
@@ -232,13 +237,13 @@ class InitializationParser(XMLParser):
 
         return [d if element else d.text.strip()
                 for d in subtree.findall(tag)
-                    if all_ or lower(d.get('enabled')) == 'true']
+                if all_ or lower(d.get('enabled')) == 'true']
 
     def get_managers(self, elem, all_=False, element=False):
         lower = lambda x: x.lower() if x else None
         return [m if element else m.text.strip()
                 for m in elem.findall('manager')
-                               if all_ or lower(m.get('enabled')) == 'true']
+                if all_ or lower(m.get('enabled')) == 'true']
 
     def get_plugin(self, name, category=None):
         if '_' in name:
@@ -275,20 +280,20 @@ class InitializationParser(XMLParser):
         tree = root.find('plugins')
 
         if category is None:
-            iterator = lambda:tree.iter(tag=tag)
-#            return next((p for p in tree.iter(tag=tag) if p.text.strip() == name), None)
-#            for p in tree.iter(tag=tag):
-#                if p.text.strip() == name:
-#                    return p
+            iterator = lambda: tree.iter(tag=tag)
+        #            return next((p for p in tree.iter(tag=tag) if p.text.strip() == name), None)
+        #            for p in tree.iter(tag=tag):
+        #                if p.text.strip() == name:
+        #                    return p
         else:
             cat = tree.find(category)
             if cat is not None:
                 iterator = lambda: cat.findall(tag)
             else:
                 iterator = lambda: ''
-#            for plugin in cat.findall(tag):
-#                if plugin.text.strip() == name:
-#                    return plugin
+            #            for plugin in cat.findall(tag):
+            #                if plugin.text.strip() == name:
+            #                    return plugin
         return next((p for p in iterator() if p.text.strip() == name), None)
 
     def get_systems(self):
@@ -296,7 +301,8 @@ class InitializationParser(XMLParser):
         if p is not None:
             return [(s.text.strip(), s.get('master_host')) for s in p.findall('system')]
         return []
-#    def get_processors(self):
+
+    #    def get_processors(self):
 #
 #        cat = self._tree.find('remotehardware')
 #        pi = None

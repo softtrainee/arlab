@@ -26,13 +26,12 @@ class HardwareTask(BaseHardwareTask):
     id = 'pychron.hardware'
     name = 'Hardware'
 
-
     def _default_layout_default(self):
         l = TaskLayout(left=VSplitter(
-                                      PaneItem('hardware.devices'),
-                                      PaneItem('hardware.info')
-                          )
-                       )
+            PaneItem('hardware.devices'),
+            PaneItem('hardware.info')
+        )
+        )
         return l
 
     def create_central_pane(self):
@@ -42,5 +41,6 @@ class HardwareTask(BaseHardwareTask):
     def create_dock_panes(self):
         return [DevicesPane(model=self.manager),
                 InfoPane(model=self.manager)
-                ]
-#============= EOF =============================================
+        ]
+
+    #============= EOF =============================================

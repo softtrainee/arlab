@@ -20,15 +20,14 @@ from envisage.ui.tasks.preferences_dialog import PreferencesDialog, PreferencesT
 from pyface.tasks.topological_sort import before_after_sort
 from traitsui.api import View, ListStrEditor, \
     UItem, HSplit
-from traits.api import on_trait_change, List, Instance, Any
+from traits.api import on_trait_change, List, Str
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 
 class myPreferencesDialog(PreferencesDialog):
     names = List
-    _tab = Instance(PreferencesTab)
-    selected = Any
+    selected = Str
 
     def traits_view(self):
         buttons = ['OK', 'Cancel']
@@ -44,7 +43,7 @@ class myPreferencesDialog(PreferencesDialog):
                       ),
                       width=0.25
                 ),
-                UItem('_tab',
+                UItem('_selected',
                       style='custom',
                       width=0.75
                 )
@@ -53,14 +52,30 @@ class myPreferencesDialog(PreferencesDialog):
             height=400,
             resizable=True,
             buttons=buttons,
-            title='Preferences'
+            title='Preferences',
+            kind='livemodal'
         )
         return v
+
+    def apply(self, info=None):
+        """ Handles the Apply button being clicked.
+        """
+        for tab in self._tabs:
+            for pane in tab.panes:
+                try:
+                    pane.apply()
+                except BaseException:
+                    print pane
+
+                    #self.names=[]
+                    #self._update_tabs()
+                    #info.dispose()
+
 
     def _selected_changed(self):
         name = self.selected
         t = next((tab for tab in self._tabs if tab.name == name))
-        self._tab = t
+        self._selected = t
 
     @on_trait_change('categories, panes')
     def _update_tabs(self):
@@ -84,5 +99,6 @@ class myPreferencesDialog(PreferencesDialog):
 
         self._tabs = tabs
         self.names = names
+
 
 #============= EOF =============================================

@@ -36,7 +36,7 @@ class GraphEditor(BaseTraitsEditor):
     graph = Any
     processor = Any
     unknowns = List
-#     _unknowns = List
+    #     _unknowns = List
     component = Property
     _component = Any
 
@@ -53,7 +53,7 @@ class GraphEditor(BaseTraitsEditor):
         xs -= start
 
         # scale to hours
-        xs = xs / (60.*60.)
+        xs = xs / (60. * 60.)
         return xs
 
     @on_trait_change('unknowns[]')
@@ -64,11 +64,11 @@ class GraphEditor(BaseTraitsEditor):
         '''
         self.unknowns = self._gather_unknowns(True)
 
-#         self._make_unknowns()
+        #         self._make_unknowns()
         self.rebuild_graph()
 
         keys = set([ki for ui in self.unknowns
-                            for ki in ui.isotope_keys])
+                    for ki in ui.isotope_keys])
         keys = sort_isotopes(keys)
 
         if self.unknowns:
@@ -76,7 +76,7 @@ class GraphEditor(BaseTraitsEditor):
 
             self.tool.load_fits(refiso.isotope_keys,
                                 refiso.isotope_fits
-                                )
+            )
 
             self._set_name()
             self._update_unknowns_hook()
@@ -104,17 +104,17 @@ class GraphEditor(BaseTraitsEditor):
         graph = self.graph
         graph.clear()
         self._rebuild_graph()
-#         graph.refresh()
+        #         graph.refresh()
 
         self.component_changed = True
 
     def _rebuild_graph(self):
         pass
 
-#     def _make_unknowns(self):
-#         if self.unknowns:
-#             self._unknowns = self.processor.make_analyses(self.unknowns)
-# #             self.processor.load_analyses(self._unknowns)
+    #     def _make_unknowns(self):
+    #         if self.unknowns:
+    #             self._unknowns = self.processor.make_analyses(self.unknowns)
+    # #             self.processor.load_analyses(self._unknowns)
 
     def traits_view(self):
         v = View(UItem('graph',
@@ -153,19 +153,21 @@ class GraphEditor(BaseTraitsEditor):
         _, tail = os.path.splitext(path)
         if tail == '.pdf':
             from chaco.pdf_graphics_context import PdfPlotGraphicsContext
+
             gc = PdfPlotGraphicsContext(filename=path,
-#                                         pagesize='letter'
-                                        )
+                                        #                                         pagesize='letter'
+            )
             gc.render_component(c, valign='center')
             gc.save()
         else:
             from chaco.plot_graphics_context import PlotGraphicsContext
+
             gc = PlotGraphicsContext((int(c.outer_width), int(c.outer_height)))
             gc.render_component(c)
             gc.save(path)
 
-#         with gc:
-#         self.rebuild_graph()
+        #         with gc:
+        #         self.rebuild_graph()
 
     def _gather_unknowns(self, refresh_data,
                          exclude='invalid',
@@ -207,6 +209,9 @@ class GraphEditor(BaseTraitsEditor):
         return ans
 
     def _compress_unknowns(self, ans):
+        if not ans:
+            return
+
         key = lambda x: x.group_id
         ans = sorted(ans, key=key)
         groups = groupby(ans, key)
@@ -218,4 +223,5 @@ class GraphEditor(BaseTraitsEditor):
         for gid, analyses in groups:
             for ai in analyses:
                 ai.group_id = gid - mgid
+
 #============= EOF =============================================
