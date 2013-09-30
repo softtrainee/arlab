@@ -215,9 +215,9 @@ class Primitive(HasTraits):
 
     def request_redraw(self):
         if self.canvas:
-            self.canvas._layout_needed = True
+            #self.canvas._layout_needed = True
             self.canvas.request_redraw()
-            self.canvas._layout_needed = False
+            #self.canvas._layout_needed = False
 
     def _get_klass_name(self):
         return self.__class__.__name__.split('.')[-1]
@@ -226,8 +226,12 @@ class Primitive(HasTraits):
         g = VGroup(Item('name'), Item('klass_name', label='Type'),
                    Item('default_color'),
                    Item('active_color'),
-                   HGroup(Item('x', format_str='%0.3f', width=-50),
-                          Item('y', format_str='%0.3f', width=-50))
+                   HGroup(Item('x', format_str='%0.3f',
+                               #            width=-50
+                   ),
+                          Item('y', format_str='%0.3f',
+                               #     width=-50
+                          ))
         )
         cg = self._get_group()
         if cg is not None:
@@ -256,12 +260,25 @@ class QPrimitive(Primitive):
             return True
 
 
+class Connectable(QPrimitive):
+    connections = List
+
+    @on_trait_change('x,y')
+    def _update_xy(self):
+        for t, c in self.connections:
+            c.clear_orientation = True
+            func = getattr(c, 'set_{}point'.format(t))
+            w, h = self.width, self.height
+            func((self.x + w / 2., self.y + h / 2.))
+        self.request_redraw()
+
+
 class Point(QPrimitive):
     radius = Float(1)
 
     def _get_group(self):
         g = VGroup('radius')
-        return g
+        return gs
 
     def _radius_changed(self):
         if self.canvas:
@@ -333,7 +350,7 @@ class Bordered(Primitive):
         return c
 
 
-class RoundedRectangle(Rectangle, Bordered):
+class RoundedRectangle(Rectangle, Connectable, Bordered):
     corner_radius = 8.0
     display_name = None
     fill = True
@@ -895,7 +912,7 @@ class PolyLine(QPrimitive):
 class BorderLine(Line, Bordered):
     border_width = 10
     #     border_color = (0, 0, 0.15)
-
+    clear_orientation = False
 
     def _render_(self, gc):
         gc.save_state()

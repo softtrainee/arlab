@@ -69,8 +69,8 @@ class CanvasDesignerTask(BaseTask):
     def create_central_pane(self):
         return CanvasDesignerPane(model=self.designer)
 
-    def create_dock_panes(self):
-        panes = []
-        return panes
+        #def create_dock_panes(self):
+        #    panes = []
+        #    return panes
 
 #============= EOF =============================================

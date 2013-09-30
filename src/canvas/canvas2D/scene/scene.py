@@ -82,19 +82,20 @@ class Scene(HasTraits):
         if not isinstance(exclude, (list, tuple)):
             exclude = (exclude,)
 
-        def test(cc):
+        def _test(cc):
             return type(cc) not in exclude
 
         if klass:
             def btest(cc):
-                return isinstance(cc, klass) and test(cc)
+                return isinstance(cc, klass) and _test(cc)
 
             test = btest
+        else:
+            test = _test
 
         return (ci for li in self.layers
                 for ci in li.components
                 if test(ci))
-
 
     def get_items(self, klass=None):
     #         return [ci for li in self.layers

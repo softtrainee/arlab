@@ -20,6 +20,7 @@ from traits.api import HasTraits, Instance
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.canvas.canvas2D.designer_extraction_line_canvas2D import DesignerExtractionLineCanvas2D
 from src.canvas.canvas2D.extraction_line_canvas2D import ExtractionLineCanvas2D
 from src.canvas.canvas2D.scene.canvas_parser import CanvasParser
 from src.canvas.canvas2D.scene.extraction_line_scene import ExtractionLineScene
@@ -31,7 +32,7 @@ class Designer(HasTraits):
     canvas = Instance(ExtractionLineCanvas2D)
 
     def _canvas_default(self):
-        canvas = ExtractionLineCanvas2D(active=False)
+        canvas = DesignerExtractionLineCanvas2D()
         return canvas
 
     def save_xml(self, p):
@@ -45,24 +46,45 @@ class Designer(HasTraits):
 
     def _save_xml(self, p):
         cp = CanvasParser(p)
-        scene = self.scene
+
         for tag in ('laser', 'stage', 'spectrometer'):
             for ei in cp.get_elements(tag):
-                name = ei.text.strip()
-                obj = scene.get_item(name)
-                if obj is not None:
-                    color = ei.find('color')
-                    if color is not None:
-                        c = ','.join(map(lambda x: str(x),
-                                         obj.default_color.toTuple()
-                        ))
-                        color.text = c
-                    trans = ei.find('translation')
-                    if trans is not None:
-                        trans.text = '{},{}'.format(obj.x, obj.y)
+                self._set_element_color(ei)
+                self._set_element_translation(ei)
+
+        for ei in cp.get_elements('valve'):
+            self._set_element_translation(ei)
+
+        for ei in cp.get_elements('connection'):
+            name = ei.text.strip()
+            obj = self.scene.get_item(name)
+            if obj.clear_orientation:
+                ei.set('orientation', '')
 
         p = os.path.join(os.path.dirname(p, ), 'test.xml')
-        cp.save(p)
+        cp.save()
+
+    def _set_element_translation(self, elem):
+        def func(obj, trans):
+            trans.text = '{},{}'.format(obj.x, obj.y)
+
+        self._set_element_attr(func, elem, 'translation')
+
+    def _set_element_color(self, elem):
+        def func(obj, color):
+            if color is not None:
+                c = ','.join(map(lambda x: str(x),
+                                 obj.default_color.toTuple()
+                ))
+                color.text = c
+
+        self._set_element_attr(func, elem, 'color')
+
+    def _set_element_attr(self, func, elem, tag):
+        name = elem.text.strip()
+        obj = self.scene.get_item(name)
+        if obj is not None:
+            func(obj, elem.find(tag))
 
     def _construct_xml(self):
         tags = {Valve: 'valve'}
@@ -85,4 +107,4 @@ class Designer(HasTraits):
 
         self.scene = scene
 
-    #============= EOF =============================================
+        #============= EOF =============================================

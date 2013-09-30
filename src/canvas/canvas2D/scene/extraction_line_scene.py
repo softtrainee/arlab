@@ -17,16 +17,17 @@
 #============= enthought library imports =======================
 from traits.api import Instance, Dict
 #============= standard library imports ========================
+import weakref
+import os
+from numpy.core.numeric import Inf
 #============= local library imports  ==========================
 from src.canvas.canvas2D.scene.scene import Scene
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
 from src.canvas.canvas2D.scene.primitives.primitives import RoundedRectangle, \
     Label, BorderLine, Rectangle, Line, Image, ValueLabel
-import os
 from src.helpers.filetools import str_to_bool
 from src.canvas.canvas2D.scene.primitives.valves import RoughValve, Valve
 from src.paths import paths
-from numpy.core.numeric import Inf
 
 
 class ExtractionLineScene(Scene):
@@ -142,6 +143,11 @@ class ExtractionLineScene(Scene):
                   default_color=(204, 204, 204),
                   name=key,
                   width=10)
+
+        ref = weakref.ref(l)
+        sanchor.connections.append(('start', ref()))
+        eanchor.connections.append(('end', ref()))
+
         self.add_item(l, layer=0)
 
 
@@ -287,9 +293,9 @@ class ExtractionLineScene(Scene):
         self._load_legend(cp, origin, color_dict)
 
     def _load_markup(self, cp, origin, color_dict):
-        '''
+        """
             labels,images, and lines
-        '''
+        """
         for i, l in enumerate(cp.get_elements('label')):
             if 'label' in color_dict:
                 c = color_dict['label']
@@ -347,7 +353,6 @@ class ExtractionLineScene(Scene):
                                 klass=ValueLabel,
                                 value=0
                 )
-
 
     def _load_legend(self, cp, origin, color_dict):
         ox, oy = origin
@@ -427,7 +432,6 @@ class ExtractionLineScene(Scene):
                     k = c.get('tag')
 
                     t = map(float, t.split(',')) if ',' in t else t
-                    #            co = self._make_color(t)
 
                     if k == 'bgcolor':
                         self.canvas.bgcolor = t
