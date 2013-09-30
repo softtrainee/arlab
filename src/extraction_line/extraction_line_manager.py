@@ -447,7 +447,7 @@ class ExtractionLineManager(Manager):
         return result, change
 
     def _check_ownership(self, name, requestor):
-        '''
+        """
             check if this valve is owned by
             another client 
             
@@ -455,7 +455,7 @@ class ExtractionLineManager(Manager):
             respect valve ownership 
             set check_master_owner=True
             
-        '''
+        """
         if self.mode == 'client' or self.check_master_owner:
             if requestor is None:
                 requestor = gethostbyname(gethostname())

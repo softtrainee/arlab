@@ -222,7 +222,6 @@ class ValveManager(Manager):
 
                 else:
                     rs = [('', groups[0].split(',')), ]
-
             return rs
 
     def get_state_word(self):
