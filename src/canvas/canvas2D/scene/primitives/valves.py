@@ -15,30 +15,35 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-# from traits.api import HasTraits
+from traits.api import List, on_trait_change
 
 from src.canvas.canvas2D.scene.primitives.primitives import rounded_rect, \
-    RoundedRectangle, QPrimitive, Bordered
+    RoundedRectangle, QPrimitive, Bordered, Connectable
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class BaseValve(QPrimitive):
+
+
+class BaseValve(Connectable):
     soft_lock = False
     owned = False
     oactive_color = (0, 255, 0)
+
     def is_in(self, x, y):
         mx, my = self.get_xy()
         w, h = self.get_wh()
         if mx <= x <= (mx + w) and my <= y <= (my + h):
             return True
 
+
 class Valve(RoundedRectangle, BaseValve):
     width = 2
     height = 2
     corner_radius = 4
+
     def _render_(self, gc):
 
         super(Valve, self)._render_(gc)
-#
+        #
         x, y = self.get_xy()
         w, h = self.get_wh()
 
@@ -90,6 +95,7 @@ class Valve(RoundedRectangle, BaseValve):
             gc.line_to(x - o + w - l, y + o + l)
             gc.draw_path()
 
+
 def rounded_triangle(gc, cx, cy, width, height, cr):
     w2 = width / 2.
     gc.translate_ctm(cx + cr / 3, cy)
@@ -107,20 +113,21 @@ class RoughValve(BaseValve, Bordered):
     width = 3
     height = 2
     border_width = 3
+
     def _render_(self, gc):
         cx, cy = self.get_xy()
-#         cx, cy = 200, 50
+        #         cx, cy = 200, 50
         width, height = self.get_wh()
-#         width += 10
+        #         width += 10
         cr = 4
-        func = lambda:rounded_triangle(gc, cx, cy, width, height, cr)
+        func = lambda: rounded_triangle(gc, cx, cy, width, height, cr)
         if self.use_border:
             with gc:
                 gc.set_line_width(self.border_width)
                 c = self._get_border_color()
                 gc.set_stroke_color(c)
                 func()
-#                 rounded_triangle(gc, cx, cy, width, height, cr)
+                #                 rounded_triangle(gc, cx, cy, width, height, cr)
         else:
             func()
 
@@ -170,6 +177,7 @@ class RoughValve(BaseValve, Bordered):
                 gc.line_to(x + w - cr - w3, y + l)
                 gc.draw_path()
 
+
 class RoughValve2(BaseValve):
     def _render_(self, gc):
         cx, cy = self.get_xy()
@@ -187,16 +195,16 @@ class RoughValve2(BaseValve):
         gc.lines([(x1, y1), (x2, y2), (x3, y3), (x1, y1)])
         gc.fill_path()
 
-#         gc.set_stroke_color((0, 0, 0))
-#         gc.lines([(x1, y1), (x2, y2), (x3, y3), (x1, y1)])
+        #         gc.set_stroke_color((0, 0, 0))
+        #         gc.lines([(x1, y1), (x2, y2), (x3, y3), (x1, y1)])
 
 
-#         func = gc.lines
-#         args = (([(x1, y1), (x2, y2), (x3, y3), (x1, y1), (x2, y2)]),)
-#        args = (x - 2, y - 2, width + 4, height + 4)
+        #         func = gc.lines
+        #         args = (([(x1, y1), (x2, y2), (x3, y3), (x1, y1), (x2, y2)]),)
+        #        args = (x - 2, y - 2, width + 4, height + 4)
 
-#         self._draw_soft_lock(gc, func, args)
-#         self._draw_owned(gc, func, args)
+        #         self._draw_soft_lock(gc, func, args)
+        #         self._draw_owned(gc, func, args)
         self._draw_state_indicator(gc, cx, cy, width, height)
         self._render_name(gc, cx, cy, width, height)
 
@@ -236,4 +244,5 @@ class RoughValve2(BaseValve):
             gc.move_to(x + w, y)
             gc.line_to(x + w - w3, y + l)
             gc.draw_path()
+
 #============= EOF =============================================

@@ -27,11 +27,11 @@ class BaseDataCanvas(DataView):
     '''
     '''
     fill_padding = True
-#    bgcolor = (0.9, 0.9, 1.0)
-#    bgcolor = (0, 1.0, 0)
-#    border_visible = True
-#    use_backbuffer = True
-#    bgcolor = 'lightblue'
+    #    bgcolor = (0.9, 0.9, 1.0)
+    #    bgcolor = (0, 1.0, 0)
+    #    border_visible = True
+    #    use_backbuffer = True
+    #    bgcolor = 'lightblue'
     x_range = Tuple
     y_range = Tuple
     view_x_range = Tuple
@@ -39,6 +39,7 @@ class BaseDataCanvas(DataView):
     select_pointer = Pointer('hand')
     normal_pointer = Pointer('arrow')
     cross_pointer = Pointer('cross')
+
     show_axes = Bool(True)
     show_grids = Bool(True)
     use_zoom = Bool(True)
@@ -53,6 +54,7 @@ class BaseDataCanvas(DataView):
         from chaco.array_plot_data import ArrayPlotData
         from chaco.plot import Plot
         from chaco.default_colormaps import color_map_name_dict
+
         pd = ArrayPlotData()
         pd.set_data('cmapdata', z)
 
@@ -61,7 +63,7 @@ class BaseDataCanvas(DataView):
                    xbounds=(-25, 25),
                    ybounds=(-25, 25),
                    colormap=color_map_name_dict['hot']
-                   )
+        )
         self.add(p)
         return pd
 
@@ -74,12 +76,12 @@ class BaseDataCanvas(DataView):
                 y = [y]
 
             self.plot = LinePlot(
-                 index=ArrayDataSource(x),
-                 value=ArrayDataSource(y),
-                 index_mapper=LinearMapper(range=self.index_range),
-                 value_mapper=LinearMapper(range=self.value_range)
+                index=ArrayDataSource(x),
+                value=ArrayDataSource(y),
+                index_mapper=LinearMapper(range=self.index_range),
+                value_mapper=LinearMapper(range=self.value_range)
 
-                 )
+            )
 
             self.add(self.plot)
         else:
@@ -120,8 +122,8 @@ class BaseDataCanvas(DataView):
 
         sp = plot(index=ArrayDataSource(self.y_range),
                   value=ArrayDataSource(self.x_range),
-                       index_mapper=LinearMapper(range=self.index_range),
-                       value_mapper=LinearMapper(range=self.value_range))
+                  index_mapper=LinearMapper(range=self.index_range),
+                  value_mapper=LinearMapper(range=self.value_range))
 
         self.index_range.sources.append(sp.index)
         self.value_range.sources.append(sp.value)
@@ -141,9 +143,9 @@ class BaseDataCanvas(DataView):
         self.set_mapper_limits('x', self.view_x_range)
         self.set_mapper_limits('y', self.view_y_range)
 
-#        if not self.show_axes:
-#            self.value_axis.visible = False
-#            self.index_axis.visible = False
+        #        if not self.show_axes:
+        #            self.value_axis.visible = False
+        #            self.index_axis.visible = False
 
         self.value_axis.visible = self.show_axes
         self.index_axis.visible = self.show_axes
@@ -153,6 +155,7 @@ class BaseDataCanvas(DataView):
     @on_trait_change('view_x_range')
     def _update_xrange(self):
         self.set_mapper_limits('x', self.view_x_range)
+
     @on_trait_change('view_y_range')
     def _update_yrange(self):
         self.set_mapper_limits('y', self.view_y_range)
@@ -195,8 +198,8 @@ class BaseDataCanvas(DataView):
         '''
         '''
         z = ZoomTool(component=self, always_on=False, tool_mode='box',
-                   max_zoom_out_factor=1,
-                   max_zoom_in_factor=10000)
+                     max_zoom_out_factor=1,
+                     max_zoom_in_factor=10000)
 
         # b=BroadcasterTool()
         # b.tools.append(z)
@@ -249,7 +252,7 @@ class BaseDataCanvas(DataView):
         '''
 
         '''
-#        with gc:
+        #        with gc:
         #        DataView._draw(self, gc, *args, **kw)
         #        gc.clip_to_rect(self.x, self.y, self.width, self.height)
 

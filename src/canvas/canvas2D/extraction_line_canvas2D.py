@@ -57,7 +57,6 @@ class ExtractionLineCanvas2D(SceneCanvas):
 
     display_volume = Bool
     volume_key = Str
-    active = Bool(True)
 
     def __init__(self, *args, **kw):
         super(ExtractionLineCanvas2D, self).__init__(*args, **kw)
@@ -142,8 +141,6 @@ class ExtractionLineCanvas2D(SceneCanvas):
         pass
 
     def normal_mouse_move(self, event):
-        if not self.active:
-            return
 
         item = self._over_item(event)
         #redraw=False
@@ -164,9 +161,9 @@ class ExtractionLineCanvas2D(SceneCanvas):
                 self.manager.set_selected_explanation_item(None)
 
                 #if redraw:
-            #    self.request_redraw()
-            #event.handled = True
-            # self.invalidate_and_redraw()
+                #    self.request_redraw()
+                #event.handled = True
+                # self.invalidate_and_redraw()
 
     def select_mouse_move(self, event):
         '''
@@ -224,51 +221,6 @@ class ExtractionLineCanvas2D(SceneCanvas):
             self._active_item = self.active_item
             menu = menu_manager.create_menu(event.window.control, None)
             menu.show()
-
-            #    def _show_menu_wx(self, event, obj):
-            #        enabled = True
-            #        import wx
-            #
-            # #        n = self.active_item.name
-            # #        obj = self.manager.get_valve_by_name()
-            #        if obj is None:
-            #            enabled = False
-            #
-            # #        self._selected = obj
-            #        self._popup_menu = wx.Menu()
-            #
-            #        panel = event.window.control  # GetEventObject()
-            #        if self.manager.mode != 'client':
-            #            t = 'Lock'
-            #            lfunc = self.OnLock
-            #            if obj.soft_lock:
-            #                t = 'Unlock'
-            #
-            #            item = self._popup_menu.Append(-1, t)
-            #            item.Enable(enabled)
-            #            panel.Bind(wx.EVT_MENU, lfunc, item)
-            #
-            #        en = not obj.state
-            #        try:
-            #            en = en and not obj.soft_lock
-            #        except AttributeError:
-            #            pass
-            #
-            #        for t, enable in [('Sample', en),
-            #                           ('Cycle', en),
-            #                           ('Properties...', True)]:
-            #            item = self._popup_menu.Append(-1, t)
-            #            item.Enable(enable and enabled)
-            #            if t.endswith('...'):
-            #                t = t[:-3]
-            #
-            #            panel.Bind(wx.EVT_MENU, getattr(self, 'On{}'.format(t)), item)
-            #
-            #        pos = event.x, panel.Size[1] - event.y
-            #
-            #        panel.PopupMenu(self._popup_menu, pos)
-            #        self._popup_menu.Destroy()
-            #        self.invalidate_and_redraw()
 
     def select_right_down(self, event):
         item = self.active_item
@@ -341,171 +293,5 @@ class ExtractionLineCanvas2D(SceneCanvas):
         s = ExtractionLineScene(canvas=weakref.ref(self)())
         return s
 
+
 #============= EOF ====================================
-#        cp = self._get_canvas_parser(p)
-#
-#        xv, yv = self._get_canvas_view_range()
-#        self.view_x_range = xv
-#        self.view_y_range = yv
-# #        cp = self._get_canvas_parser(p)
-#        tree = cp.get_tree()
-#
-#        if tree is None:
-#            return
-# #        def get_translation(elem):
-# #            return map(float, elem.find('translation').text.split(','))
-# #
-# #        def get_dimensions(elem):
-# #            return
-#
-#        def get_floats(elem, name):
-#            return map(float, elem.find(name).text.split(','))
-#
-#        def new_rectangle(elem, c, bw=3):
-#            key = elem.text.strip()
-#            x, y = get_floats(elem, 'translation')
-#            w, h = get_floats(elem, 'dimension')
-# #            self.markupcontainer[key] = Rectangle(x + ox, y + oy, width=w, height=h,
-#            self.markupcontainer[key] = RoundedRectangle(x + ox, y + oy, width=w, height=h,
-#                                                canvas=self,
-#                                                name=key,
-# #                                                line_width=lw,
-#                                                border_width=bw,
-#                                                default_color=c)
-#        color_dict = dict()
-#        # get default colors
-#        for c in tree.findall('color'):
-#            t = c.text.strip()
-#            k = c.get('tag')
-#            co = map(float, t.split(',')) if ',' in t else t
-#
-#            if k == 'bgcolor':
-#                self.bgcolor = co
-#            else:
-#                color_dict[k] = co
-#
-#        # get an origin offset
-#        ox = 0
-#        oy = 0
-#        o = tree.find('origin')
-#        if o is not None:
-#            ox, oy = map(float, o.text.split(','))
-#
-#        self.markupcontainer.clear()
-#        ndict = dict()
-#        for v in cp.get_elements('valve'):
-#            key = v.text.strip()
-#            x, y = get_floats(v, 'translation')
-#            v = Valve(x + ox, y + oy, name=key,
-#                                    canvas=self,
-#                                    border_width=3
-#                                    )
-#            # sync the states
-#            if key in self.valves:
-#                vv = self.valves[key]
-#                v.state = vv.state
-#                v.soft_lock = vv.soft_lock
-#
-#            self.markupcontainer[key] = v
-#            ndict[key] = v
-#
-#        for rv in cp.get_elements('rough_valve'):
-#            key = rv.text.strip()
-#            x, y = get_floats(rv, 'translation')
-#            v = RoughValve(x + ox, y + oy, name=key,
-#                                    canvas=self)
-#            self.markupcontainer[key] = v
-#            ndict[key] = v
-#
-#        self.valves = ndict
-#        for key in ('stage', 'laser', 'spectrometer', 'turbo', 'getter'):
-#            for b in cp.get_elements(key):
-#                if key in color_dict:
-#                    c = color_dict[key]
-#                else:
-#                    c = (0.8, 0.8, 0.8)
-#                new_rectangle(b, c, bw=5)
-#
-#        for i, l in enumerate(cp.get_elements('label')):
-#            x, y = map(float, l.find('translation').text.split(','))
-#            l = Label(x + ox, y + oy,
-#                      text=l.text.strip(),
-#                      canvas=self,
-#
-#                      )
-#            self.markupcontainer['{:03}'.format(i)] = l
-#
-# #        for g in cp.get_elements('getter'):
-# #            v = self.markupcontainer[g.get('valve')]
-# #            w, h = 5, 2
-# #            key = g.text.strip()
-# #            self.markupcontainer[key] = Rectangle(v.x, v.y + 2.5, width=w, height=h,
-# #                                                canvas=self,
-# #                                                name=key,
-# #                                                line_width=2,
-# #                                                default_color=(0, 0.5, 0))
-#        for g in cp.get_elements('gauge'):
-#            if 'gauge' in color_dict:
-#                c = color_dict['gauge']
-#            else:
-#                c = (0.8, 0.8, 0.8)
-#            new_rectangle(g, c)
-#
-#        for i, c in enumerate(cp.get_elements('connection')):
-#            start = c.find('start')
-#            end = c.find('end')
-#            skey = start.text.strip()
-#            ekey = end.text.strip()
-#            try:
-#                orient = c.get('orientation')
-#            except:
-#                orient = None
-#
-#            sanchor = self.markupcontainer[skey]
-#            x, y = sanchor.x, sanchor.y
-# #            x = self.markupcontainer[skey].x
-# #            y = self.markupcontainer[skey].y
-#            try:
-#                ox, oy = map(float, start.get('offset').split(','))
-#            except:
-#                ox = 1
-#                oy = sanchor.height / 2.0
-#
-#            x += ox
-#            y += oy
-#
-#            eanchor = self.markupcontainer[ekey]
-#            x1, y1 = eanchor.x, eanchor.y
-# #            x1 = self.markupcontainer[ekey].x
-# #            y1 = self.markupcontainer[ekey].y
-# #            ox, oy = map(float, end.get('offset').split(','))
-#
-#            try:
-#                ox, oy = map(float, end.get('offset').split(','))
-#            except:
-#                ox = 1
-#                oy = eanchor.height / 2.0
-#
-#            x1 += ox
-#            y1 += oy
-#            if orient == 'vertical':
-#                x1 = x
-#            elif orient == 'horizontal':
-#                y1 = y
-#
-#            klass = BorderLine
-#            l = klass((x, y), (x1, y1), default_color=(0.29, 0.29, 0.43),
-#                     canvas=self, width=10)
-#            self.markupcontainer[('con{:03}'.format(i), 0)] = l
-#
-#        xv, yv = self._get_canvas_view_range()
-#
-#        x, y = xv[0], yv[0]
-#        w = xv[1] - xv[0]
-#        h = yv[1] - yv[0]
-#
-#        brect = Rectangle(x, y, width=w, height=h, canvas=self,
-#                          fill=False, line_width=20, default_color=(0, 0, 0.4))
-#        self.markupcontainer[('brect', 0)] = brect
-#
-#        self.invalidate_and_redraw()
