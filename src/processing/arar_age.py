@@ -31,6 +31,7 @@ from src.loggable import Loggable
 from src.helpers.isotope_utils import sort_isotopes
 import time
 
+
 def AgeProperty():
     return Property(depends_on='age_dirty')
 
@@ -67,26 +68,25 @@ class ArArAge(Loggable):
     Ar37_39 = AgeProperty()
     Ar36_39 = AgeProperty()
 
-
     sensitivity = Property
     sensitivity_multiplier = Property
     _sensitivity_multiplier = Float
 
-#     labnumber_record = Any
+    #     labnumber_record = Any
 
 
 
-#     irradiation_info = Property
-#     irradiation_level = Property
-#     irradiation_position = Property
-#     production_ratios = Property
+    #     irradiation_info = Property
+    #     irradiation_level = Property
+    #     irradiation_position = Property
+    #     production_ratios = Property
 
-#    signals = AgeProperty()
-#    _signals = Dict
+    #    signals = AgeProperty()
+    #    _signals = Dict
     isotopes = Dict
     isotope_keys = Property(depends='isotopes')
 
-#     age = Property(depends_on='include_decay_error, include_j_error, include_irradiation_error, age_dirty')
+    #     age = Property(depends_on='include_decay_error, include_j_error, include_irradiation_error, age_dirty')
 
     age = None
     R = AgeProperty()
@@ -109,11 +109,10 @@ class ArArAge(Loggable):
     moles_Ar40 = AgeProperty()
     moles_K39 = AgeProperty()
 
-
     ic_factor = Property(depends_on='arar_constants:[ic_factor_v, ic_factor_e]')
 
-
     arar_constants = Instance(ArArConstants, ())
+
     def __init__(self, *args, **kw):
         super(ArArAge, self).__init__(*args, **kw)
         try:
@@ -137,8 +136,8 @@ class ArArAge(Loggable):
             bind_preference(self.arar_constants, 'k3739_v', 'pychron.experiment.constants.Ar37_Ar39')
             bind_preference(self.arar_constants, 'k3739_e', 'pychron.experiment.constants.Ar37_Ar39_error')
 
-    #        bind_preference(self, 'abundance_sensitivity', 'pychron.spectrometer.abundance_sensitivity')
-#             wr = weakref.ref(self)()
+            #        bind_preference(self, 'abundance_sensitivity', 'pychron.spectrometer.abundance_sensitivity')
+            #             wr = weakref.ref(self)()
             wr = self.arar_constants
             bind_preference(wr, 'age_units', 'pychron.experiment.general_age.age_units')
             bind_preference(wr, 'abundance_sensitivity', 'pychron.experiment.constants.abundance_sensitivity')
@@ -148,9 +147,11 @@ class ArArAge(Loggable):
         except AttributeError, e:
             print 'arar init', e
 
+        self.age = ufloat(0, 0)
+
     def get_error_component(self, key):
         v = next((error for (var, error) in self.age.error_components().items()
-                                if var.tag == key), 0)
+                  if var.tag == key), 0)
         ae = self.age_error
         if ae:
             return v ** 2 / self.age_error ** 2 * 100
@@ -200,9 +201,9 @@ class ArArAge(Loggable):
 
             k_ca_pr = 1
             if prs:
-#                k_ca_pr = 1
-#                 cak = prs['Ca_K']
-#                 cak = cak if cak else 1
+            #                k_ca_pr = 1
+            #                 cak = prs['Ca_K']
+            #                 cak = cak if cak else 1
                 cak = prs.get('Ca_K', 1)
                 k_ca_pr = 1 / cak
 
@@ -221,9 +222,9 @@ class ArArAge(Loggable):
             k_cl_pr = 1
             if prs:
 
-#                 if 'Cl_K' in prs:
+            #                 if 'Cl_K' in prs:
                 clk = prs.get('Cl_K', 1)
-#                 clk = clk if clk else 1
+                #                 clk = clk if clk else 1
                 k_cl_pr = 1 / clk
 
             try:
@@ -237,15 +238,16 @@ class ArArAge(Loggable):
             self.age = self._calculate_age(**kw)
             self.age_dirty = True
 
-#         if not self.age_dirty:
+        #         if not self.age_dirty:
 
-#             if self.age:
-#                 return self.age
-#         a = self._calculate_age(**kw)
-#         self.age = a
+        #             if self.age:
+        #                 return self.age
+        #         a = self._calculate_age(**kw)
+        #         self.age = a
         return self.age
-#         self.age_dirty = True
-#         return self.age
+
+    #         self.age_dirty = True
+    #         return self.age
 
     def _calculate_age(self, include_j_error=None, include_decay_error=None, include_irradiation_error=None):
         if include_decay_error is None:
@@ -268,7 +270,7 @@ class ArArAge(Loggable):
         blsignals = self._make_signals(kind='blank')
         bksignals = self._make_signals(kind='background')
 
-#         print self.labnumber_record
+        #         print self.labnumber_record
         irrad = self.irradiation_info
 
         if not include_irradiation_error:
@@ -281,29 +283,30 @@ class ArArAge(Loggable):
         ab = self.arar_constants.abundance_sensitivity
 
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
-                                self.j, irrad, abundance_sensitivity=ab,
-                                ic=self.ic_factor,
-                                include_decay_error=include_decay_error,
-                                arar_constants=self.arar_constants
-                                )
+                                    self.j, irrad, abundance_sensitivity=ab,
+                                    ic=self.ic_factor,
+                                    include_decay_error=include_decay_error,
+                                    arar_constants=self.arar_constants
+        )
 
         if result:
             self.arar_result = result
             ai = result['age']
             ai = ai / self.arar_constants.age_scalar
             return ai
-#            age = ai.nominal_value
-#            err = ai.std_dev()
-#            return age, err
+        #            age = ai.nominal_value
+        #            err = ai.std_dev()
+        #            return age, err
+
     def _make_signals(self, kind=None):
         isos = self.isotopes
-#        print isos
+        #        print isos
         def func(k):
             tag = k if kind is None else '{}_{}'.format(k, kind)
-#             if kind is None:
-#                 tag = k
-#             else:
-#                 tag = '{}_{}'.format(k, kind)
+            #             if kind is None:
+            #                 tag = k
+            #             else:
+            #                 tag = '{}_{}'.format(k, kind)
             if k in isos:
                 iso = isos[k]
                 if kind:
@@ -315,19 +318,20 @@ class ArArAge(Loggable):
         return (func(ki)
                 for ki in ('Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'))
 
-#===============================================================================
-# property get/set
-#===============================================================================
-#     @cached_property
+    #===============================================================================
+    # property get/set
+    #===============================================================================
+    #     @cached_property
     def _get_production_ratios(self):
         return dict(Ca_K=1, Cl_K=1)
-#        try:
-#            lev = self.irradiation_level
-#            ir = lev.irradiation
-#            pr = ir.production
-#            return pr
-#        except AttributeError:
-#            pass
+
+    #        try:
+    #            lev = self.irradiation_level
+    #            ir = lev.irradiation
+    #            pr = ir.production
+    #            return pr
+    #        except AttributeError:
+    #            pass
 
     @cached_property
     def _get_kca(self):
@@ -351,128 +355,130 @@ class ArArAge(Loggable):
         except ZeroDivisionError:
             return ufloat(0, 0)
 
-#    @cached_property
-#    def _get_signals(self):
-# #        if not self._signals:
-# #        self._load_signals()
-#
-#        return self._signals
+        #    @cached_property
+        #    def _get_signals(self):
+        # #        if not self._signals:
+        # #        self._load_signals()
+        #
+        #        return self._signals
 
-#     @cached_property
-#     def _get_age(self):
-#         print 'ggggg'
-#         r = self._calculate_age()
-#         return r
+        #     @cached_property
+        #     def _get_age(self):
+        #         print 'ggggg'
+        #         r = self._calculate_age()
+        #         return r
 
-#     @cached_property
+        #     @cached_property
+
     def _get_age_error(self):
         return self.age.std_dev
 
-#     @cached_property
+    #     @cached_property
     def _get_age_error_wo_j(self):
         return float(self.arar_result['age_err_wo_jerr'] / self.arar_constants.age_scalar)
 
-#     @cached_property
-#     def _get_timestamp(self):
-#         return datetime.now()
+    #     @cached_property
+    #     def _get_timestamp(self):
+    #         return datetime.now()
 
-#     @cached_property
-#     def _get_irradiation_level(self, ln):
-#         if ln:
-#             if ln.irradiation_position:
-#                 l = ln.irradiation_position.level
-#                 return l
-#         try:
-#             if self.irradiation_position:
-#                 return self.irradiation_position.level
-#         except AttributeError, e:
-#             print 'level', e
-#
-# #     @cached_property
-#     def _get_irradiation_position(self):
-#         try:
-#             return self.labnumber_record.irradiation_position
-#         except AttributeError, e:
-#             print 'pos', e
+    #     @cached_property
+    #     def _get_irradiation_level(self, ln):
+    #         if ln:
+    #             if ln.irradiation_position:
+    #                 l = ln.irradiation_position.level
+    #                 return l
+    #         try:
+    #             if self.irradiation_position:
+    #                 return self.irradiation_position.level
+    #         except AttributeError, e:
+    #             print 'level', e
+    #
+    # #     @cached_property
+    #     def _get_irradiation_position(self):
+    #         try:
+    #             return self.labnumber_record.irradiation_position
+    #         except AttributeError, e:
+    #             print 'pos', e
 
-#     @cached_property
+    #     @cached_property
     def _get_irradiation_info(self, ln):
-#         '''
-#             return k4039, k3839,k3739, ca3937, ca3837, ca3637, cl3638, chronsegments, decay_time
-#         '''
+    #         '''
+    #             return k4039, k3839,k3739, ca3937, ca3837, ca3637, cl3638, chronsegments, decay_time
+    #         '''
         prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), [], 1
         return prs
-# #        analysis = self.dbrecord
-#
-# #        self.labnumber_record
-# #         self._get_irradiation_level()
-# #         irradiation_level = self.irradiation_level
-#         irradiation_level = self._get_irradiation_level(ln)
-#         if irradiation_level:
-#             irradiation = irradiation_level.irradiation
-#             if irradiation:
-#                 pr = irradiation.production
-#                 if pr:
-#                     prs = []
-#                     for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']:
-#                         v, e = getattr(pr, pi), getattr(pr, '{}_err'.format(pi))
-#                         prs.append((v if v is not None else 1, e if e is not None else 0))
-#
-# #                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
-# #                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
-#
-#                 chron = irradiation.chronology
-# #                def convert_datetime(x):
-# #                    try:
-# #                        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-# #                    except ValueError:
-# #                        pass
-# #                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-#
-#                 convert_days = lambda x: x.total_seconds() / (60. * 60 * 24)
-#                 if chron:
-#                     doses = chron.get_doses()
-# #                    chronblob = chron.chronology
-# #
-# #                    doses = chronblob.split('$')
-# #                    doses = [di.strip().split('%') for di in doses]
-# #
-# #                    doses = [map(convert_datetime, d) for d in doses if d]
-#
-#                     analts = self.timestamp
-#                     if isinstance(analts, float):
-#                         analts = datetime.fromtimestamp(analts)
-#
-#                     segments = []
-#                     for st, en in doses:
-#                         if st is not None and en is not None:
-#                             dur = en - st
-#                             dt = analts - st
-#                             segments.append((1, convert_days(dur), convert_days(dt)))
-#
-#                     decay_time = 0
-#                     d_o = doses[0][0]
-#                     if d_o is not None:
-#                         decay_time = convert_days(analts - doses[0][0])
-#
-# #                    segments = [(1, convert_days(ti)) for ti in durs]
-#                     prs.append(segments)
-#                     prs.append(decay_time)
-#
-#         return prs
 
-#    @cached_property
-#    def _get_abundance_sensitivity(self):
-#        return 3e-6
+    # #        analysis = self.dbrecord
+    #
+    # #        self.labnumber_record
+    # #         self._get_irradiation_level()
+    # #         irradiation_level = self.irradiation_level
+    #         irradiation_level = self._get_irradiation_level(ln)
+    #         if irradiation_level:
+    #             irradiation = irradiation_level.irradiation
+    #             if irradiation:
+    #                 pr = irradiation.production
+    #                 if pr:
+    #                     prs = []
+    #                     for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']:
+    #                         v, e = getattr(pr, pi), getattr(pr, '{}_err'.format(pi))
+    #                         prs.append((v if v is not None else 1, e if e is not None else 0))
+    #
+    # #                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
+    # #                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
+    #
+    #                 chron = irradiation.chronology
+    # #                def convert_datetime(x):
+    # #                    try:
+    # #                        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+    # #                    except ValueError:
+    # #                        pass
+    # #                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+    #
+    #                 convert_days = lambda x: x.total_seconds() / (60. * 60 * 24)
+    #                 if chron:
+    #                     doses = chron.get_doses()
+    # #                    chronblob = chron.chronology
+    # #
+    # #                    doses = chronblob.split('$')
+    # #                    doses = [di.strip().split('%') for di in doses]
+    # #
+    # #                    doses = [map(convert_datetime, d) for d in doses if d]
+    #
+    #                     analts = self.timestamp
+    #                     if isinstance(analts, float):
+    #                         analts = datetime.fromtimestamp(analts)
+    #
+    #                     segments = []
+    #                     for st, en in doses:
+    #                         if st is not None and en is not None:
+    #                             dur = en - st
+    #                             dt = analts - st
+    #                             segments.append((1, convert_days(dur), convert_days(dt)))
+    #
+    #                     decay_time = 0
+    #                     d_o = doses[0][0]
+    #                     if d_o is not None:
+    #                         decay_time = convert_days(analts - doses[0][0])
+    #
+    # #                    segments = [(1, convert_days(ti)) for ti in durs]
+    #                     prs.append(segments)
+    #                     prs.append(decay_time)
+    #
+    #         return prs
 
-#     def _set_labnumber_record(self, v):
-#         self._labnumber_record = v
+    #    @cached_property
+    #    def _get_abundance_sensitivity(self):
+    #        return 3e-6
 
-#     @cached_property
-#     def _get_labnumber_record(self):
-#         return self._labnumber_record
+    #     def _set_labnumber_record(self, v):
+    #         self._labnumber_record = v
 
-#     @cached_property
+    #     @cached_property
+    #     def _get_labnumber_record(self):
+    #         return self._labnumber_record
+
+    #     @cached_property
     def _get_j(self):
         s = 1.e-4
         e = 1e-6
@@ -508,81 +514,91 @@ class ArArAge(Loggable):
             return self.rad40 / self.Ar40 * 100
         except (ZeroDivisionError, TypeError):
             return ufloat(0, 1e-20)
-#        return self.arar_result['rad40'] / self.arar_result['tot40'] * 100
+        #        return self.arar_result['rad40'] / self.arar_result['tot40'] * 100
 
-#     @cached_property
+        #     @cached_property
+
     def _get_Ar40(self):
         return self._get_arar_result_attr('40')
 
-#        return self.arar_result['s40']
+    #        return self.arar_result['s40']
 
-#     @cached_property
+    #     @cached_property
     def _get_Ar39(self):
         return self._get_arar_result_attr('39')
-#        return self.arar_result['s39']
 
-#     @cached_property
+    #        return self.arar_result['s39']
+
+    #     @cached_property
     def _get_Ar38(self):
         return self._get_arar_result_attr('38')
-#        return self.arar_result['s38']
 
-#     @cached_property
+    #        return self.arar_result['s38']
+
+    #     @cached_property
     def _get_Ar37(self):
         return self._get_arar_result_attr('37')
-#        return self.arar_result['s37']
 
-#     @cached_property
+    #        return self.arar_result['s37']
+
+    #     @cached_property
     def _get_Ar36(self):
         return self._get_arar_result_attr('36')
-#        return self.arar_result['s36']
 
-#     @cached_property
+    #        return self.arar_result['s36']
+
+    #     @cached_property
     def _get_Ar40_error(self):
         r = self._get_arar_result_attr('40')
         if r:
             return r.std_dev
-#        return self.arar_result['s40'].std_dev()
+        #        return self.arar_result['s40'].std_dev()
 
-#     @cached_property
+        #     @cached_property
+
     def _get_Ar39_error(self):
         r = self._get_arar_result_attr('39')
         if r:
             return r.std_dev
 
-#        return self.arar_result['s39'].std_dev()
+        #        return self.arar_result['s39'].std_dev()
 
-#     @cached_property
+        #     @cached_property
+
     def _get_Ar38_error(self):
         r = self._get_arar_result_attr('38')
         if r:
             return r.std_dev
 
-#        return self._get_arar_result_attr('38').std_dev()
-#        return self.arar_result['s38'].std_dev()
+        #        return self._get_arar_result_attr('38').std_dev()
+        #        return self.arar_result['s38'].std_dev()
 
-#     @cached_property
+        #     @cached_property
+
     def _get_Ar37_error(self):
         r = self._get_arar_result_attr('37')
         if r:
             return r.std_dev
 
-#        return self._get_arar_result_attr('37').std_dev()
-#        return self.arar_result['s37'].std_dev()
+        #        return self._get_arar_result_attr('37').std_dev()
+        #        return self.arar_result['s37'].std_dev()
 
-#     @cached_property
+        #     @cached_property
+
     def _get_Ar36_error(self):
         r = self._get_arar_result_attr('36')
         if r:
             return r.std_dev
 
-#        return self._get_arar_result_attr('36').std_dev()
-#        return self.arar_result['s36'].std_dev()
+        #        return self._get_arar_result_attr('36').std_dev()
+        #        return self.arar_result['s36'].std_dev()
 
-#     @cached_property
+        #     @cached_property
+
     def _get_moles_Ar40(self):
         return 0.001
 
-#     @cached_property
+    #     @cached_property
     def _get_moles_K39(self):
         return self.k39 * self.sensitivity * self.sensitivity_multiplier
 
@@ -590,21 +606,23 @@ class ArArAge(Loggable):
         return ufloat(self.arar_constants.ic_factor_v,
                       self.arar_constants.ic_factor_e, 'ic_factor')
 
-#     @cached_property
+    #     @cached_property
     def _get_Ar40_39(self):
         try:
             return self.rad40 / self.k39
         except ZeroDivisionError:
             return ufloat(0, 0)
 
-#     @cached_property
+        #     @cached_property
+
     def _get_Ar37_39(self):
         try:
             return self.Ar37 / self.Ar39
         except ZeroDivisionError:
             return ufloat(0, 0)
 
-#     @cached_property
+        #     @cached_property
+
     def _get_Ar36_39(self):
         try:
             return self.Ar36 / self.Ar39
@@ -648,12 +666,13 @@ class ArArAge(Loggable):
 
     def _get_irradiation_label(self):
         return '{}{} {}'.format(self.irradiation,
-                             self.irradiation_level,
-                             self.irradiation_pos
-                             )
-#===============================================================================
-#
-#===============================================================================
+                                self.irradiation_level,
+                                self.irradiation_pos
+        )
+
+    #===============================================================================
+    #
+    #===============================================================================
     def load_irradiation(self, ln):
         self.timestamp = self._get_timestamp(ln)
 

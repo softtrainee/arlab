@@ -15,86 +15,75 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Float, Array
+from traits.api import Array
 #============= standard library imports ========================
-from numpy import hstack, array
-# from chaco.array_data_source import ArrayDataSource
+from numpy import array
 #============= local library imports  ==========================
-
 from src.processing.plotters.arar_figure import BaseArArFigure
-from chaco.data_label import DataLabel
 
-# from numpy.core.numeric import Inf
-# from src.processing.plotters.point_move_tool import PointMoveTool
-from src.helpers.formatting import floatfmt
-from chaco.tools.data_label_tool import DataLabelTool
-
-# from src.processing.plotters.plotter import mDataLabelTool
-# from chaco.scatterplot import render_markers
 N = 500
 
 
-
-
 class Series(BaseArArFigure):
-#     xmi = Float
-#     xma = Float
-
     xs = Array
 
-
-#     index_key = 'age'
-#     ytitle = 'Relative Probability'
     def build(self, plots):
         graph = self.graph
-
         for po in plots:
             if po.use:
                 p = graph.new_plot(padding=self.padding,
-                                   ytitle=po.name
-                                   )
+                                   ytitle=po.name,
+                )
+                #p.value_scale=po.scale
                 p.padding_left = 75
-#                 p.value_range.tight_bounds = False
-#             if po.use:
-#                 p = graph.new_plot(padding=self.padding,
-#                                    ytitle=po.name
-#                                    )
-#                 p.value_range.tight_bounds = False
+                p.value_range.tight_bounds = False
 
     def plot(self, plots):
-        '''
+        """
             plot data on plots
-        '''
+        """
         graph = self.graph
         self.xs = array([ai.timestamp for ai in self.sorted_analyses]) / 3600.
         self.xs -= self.xs[0]
+        with graph.no_regression(refresh=True):
+            plots = [po for po in plots if po.use]
+            for i, po in enumerate(plots):
+                self._plot_series(po, i)
 
-        plots = (po for po in plots if po.use)
-        for i, po in enumerate(plots):
-            self._plot_series(po, i)
-
-#         self._plot_age_spectrum(graph.plots[0], 0)
-#
-#         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
-#             getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1)
+            if plots:
+                graph.set_x_limits(min_=0, max_=max(self.xs), pad='0.1',
+                                   plotid=0)
 
     def _plot_series(self, po, pid):
         graph = self.graph
+
         ys = [ai.nominal_value for ai in self._unpack_attr(po.name)]
+        yerr = [ai.std_dev for ai in self._unpack_attr(po.name)]
 
-        graph.new_series(x=self.xs,
-                         y=ys,
-                         fit=po.fit,
-                         plotid=pid,
-                         type='scatter'
-                        )
-#         p.visible = fi.use
+        scatter, p = graph.new_series(x=self.xs,
+                                      y=ys,
+                                      yerror=yerr,
+                                      fit=po.fit,
+                                      plotid=pid,
+                                      type='scatter'
+        )
+        p.value_scale = po.scale
+        self._add_error_bars(scatter, yerr, 'y', 1,
+                             visible=po.y_error)
 
-    def max_x(self, attr):
-        return max([ai.nominal_value for ai in self._unpack_attr(attr)])
-
-    def min_x(self, attr):
-        return min([ai.nominal_value for ai in self._unpack_attr(attr)])
+    def _unpack_attr(self, attr):
+        if attr.endswith('bs'):
+            return (ai.isotopes[attr[:-2]].baseline.uvalue
+                    for ai in self.sorted_analyses)
+        elif '/' in attr:
+            n, d = attr.split('/')
+            return (getattr(ai, n) / getattr(ai, d)
+                    for ai in self.sorted_analyses)
+        elif attr == 'PC':
+            return (getattr(ai, 'peak_center')
+                    for ai in self.sorted_analyses)
+        else:
+            return super(Series, self)._unpack_attr(attr)
 
 #===============================================================================
 # plotters

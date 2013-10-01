@@ -57,11 +57,11 @@ class IsotopeDatabaseManager(Loggable):
             except AttributeError, e:
                 self.debug('bind exception. {}'.format(e))
 
-#         if connect and not self.db.connect(warn=warn):
+            #         if connect and not self.db.connect(warn=warn):
         if connect:
             self.db.connect(warn=warn)
 
-#             self.db = None
+        #             self.db = None
 
     def isConnected(self):
         if self.db:
@@ -77,6 +77,7 @@ class IsotopeDatabaseManager(Loggable):
         if self.db:
             if db.connect(force=False):
                 from src.database.defaults import load_isotopedb_defaults
+
                 load_isotopedb_defaults(db)
                 self.debug('defaults finished')
                 return True
@@ -85,8 +86,8 @@ class IsotopeDatabaseManager(Loggable):
         if self.db is not None:
             if self.db.connect(force=True):
                 return True
-#                 self.db.flush()
-#                 self.db.reset()
+            #                 self.db.flush()
+            #                 self.db.reset()
         elif inform:
             self.warning_dialog('Not Database available')
 
@@ -97,13 +98,13 @@ class IsotopeDatabaseManager(Loggable):
         prefid = 'pychron.database'
         try:
             bind_preference(self, 'username', '{}.username'.format(prefid))
-    #        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
+            #        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
 
-    #        if self.repo_kind == 'FTP':
-    #            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
-    #            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
-    #            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
-    #            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
+            #        if self.repo_kind == 'FTP':
+            #            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
+            #            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
+            #            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
+            #            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
 
             bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
             if self.db.kind == 'mysql':
@@ -144,7 +145,7 @@ class IsotopeDatabaseManager(Loggable):
                         progress.on_trait_change(self._progress_closed, 'closed')
 
                     rs = [self._record_factory(ai, progress=progress, **kw)
-                                for ai in ans]
+                          for ai in ans]
                     rs = [ri for ri in rs if ri is not None]
 
                     dbans.extend(rs)
@@ -155,15 +156,15 @@ class IsotopeDatabaseManager(Loggable):
 
                 return dbans
 
-#     def load_analyses(self, ans, show_progress=True, **kw):
-#         progress = None
-#
-# #         ans = [ai for ai in ans if not ai.loaded]
-#
-#         n = len(ans)
-#         if show_progress and n > 1:
-#             progress = self._open_progress(n)
-#         self._load_analyses(ans, progress=progress, **kw)
+            #     def load_analyses(self, ans, show_progress=True, **kw):
+            #         progress = None
+            #
+            # #         ans = [ai for ai in ans if not ai.loaded]
+            #
+            #         n = len(ans)
+            #         if show_progress and n > 1:
+            #             progress = self._open_progress(n)
+            #         self._load_analyses(ans, progress=progress, **kw)
 
     def get_level(self, level, irradiation=None):
         if irradiation is None:
@@ -174,18 +175,18 @@ class IsotopeDatabaseManager(Loggable):
     def open_progress(self, n=2):
         return self._open_progress(n)
 
-#===============================================================================
-# private
-#===============================================================================
+    #===============================================================================
+    # private
+    #===============================================================================
     def _load_analyses(self, ans, func=None, progress=None, unpack=True):
 
         if not ans:
             return
 
         if func is None:
-#             @simple_timer('load')
+        #             @simple_timer('load')
             def func(x):
-#                 x.load_isotopes(unpack=unpack)
+            #                 x.load_isotopes(unpack=unpack)
                 x.calculate_age()
 
         if len(ans) == 1:
@@ -203,7 +204,7 @@ class IsotopeDatabaseManager(Loggable):
 
             for ai in ans:
                 msg = 'loading {}'.format(ai.record_id)
-#                 self.debug(msg)
+                #                 self.debug(msg)
                 f(ai, msg)
 
     def _open_progress(self, n):
@@ -234,14 +235,15 @@ class IsotopeDatabaseManager(Loggable):
 
             def func(r):
                 meas_analysis = self.db.get_analysis_uuid(r.uuid)
-                a = DBAnalysis()
-                a.sync(meas_analysis)
-                if calculate_age:
-                    a.calculate_age()
-                return a
+                ai = DBAnalysis()
+                ai.sync(meas_analysis)
+                if calculate_age and ai.analysis_type in ('unknown', 'cocktail'):
+                    ai.calculate_age()
+                return ai
 
             if progress:
-                m = 'calculate age' if calculate_age else ''
+                show_age = calculate_age and rec.analysis_type in ('unknown', 'cocktail')
+                m = 'calculating age' if show_age else ''
                 msg = 'loading {}. {}'.format(rid, m)
                 progress.change_message(msg)
                 a = func(rec)
@@ -255,19 +257,20 @@ class IsotopeDatabaseManager(Loggable):
 
         db = IsotopeAdapter(application=self.application)
         return db
-#===============================================================================
-# property get/set
-#===============================================================================
+
+    #===============================================================================
+    # property get/set
+    #===============================================================================
     @cached_property
     def _get_irradiations(self):
-#         self.irradiation = NULL_STR
-#        r = ['NM-Test', 'NM-100', 'NM-200']
-#         r = [NULL_STR] +
+    #         self.irradiation = NULL_STR
+    #        r = ['NM-Test', 'NM-100', 'NM-200']
+    #         r = [NULL_STR] +
         r = []
         if self.db and self.db.connected:
-#             with self.db.session_() as sess:
+        #             with self.db.session_() as sess:
             r = [str(ri.name) for ri in self.db.get_irradiations()
-                            if ri.name]
+                 if ri.name]
 
             if r and not self.irradiation:
                 self.irradiation = r[0]
@@ -277,7 +280,7 @@ class IsotopeDatabaseManager(Loggable):
     @cached_property
     def _get_levels(self):
 
-#         self.level = NULL_STR
+    #         self.level = NULL_STR
         r = []
         if self.db and self.db.connected:
 
@@ -285,21 +288,21 @@ class IsotopeDatabaseManager(Loggable):
                 irrad = self.db.get_irradiation(self.irradiation)
                 if irrad:
                     r = sorted([str(ri.name) for ri in irrad.levels
-                                                if ri.name])
+                                if ri.name])
                     if r and not self.level:
                         self.level = r[0]
 
         return r
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
     def _irradiation_changed(self):
         self.level = ''
 
-#===============================================================================
-# defaults
-#===============================================================================
+    #===============================================================================
+    # defaults
+    #===============================================================================
     def _db_default(self):
         return self._db_factory()
 

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Callable
+from traits.api import Callable
 #============= standard library imports ========================
 from numpy import where, abs
 #============= local library imports  ==========================
@@ -25,10 +25,10 @@ from src.constants import PLUSMINUS
 
 class PointInspector(InfoInspector):
     convert_index = Callable
-#    def _build_metadata(self, xy):
-#        point = self.component.hittest(xy)
-#        md = dict(point=point)
-#        return md
+    #    def _build_metadata(self, xy):
+    #        point = self.component.hittest(xy)
+    #        md = dict(point=point)
+    #        return md
     def get_selected_index(self):
         xxyy = self.component.hittest(self.current_position)
 
@@ -45,7 +45,7 @@ class PointInspector(InfoInspector):
             v = abs(e / s) * 100
         except ZeroDivisionError:
             pass
-        return  v
+        return v
 
     def assemble_lines(self):
         pt = self.current_position
@@ -65,20 +65,22 @@ class PointInspector(InfoInspector):
 
                 fmt = '{:0.3e}' if abs(y) < 10e-6 else '{:0.6f}'
                 y = fmt.format(y)
-                y = u'{} {}{}({:0.2f}%)'.format(y, PLUSMINUS, ye, pe)
+                y = u'{} {}{}({:0.2f}%)'.format(y, '+/-', ye, pe)
 
-
-            lines = ['x= {:0.5f}'.format(x), 'y= {}'.format(y)]
+            lines = [u'x= {:0.5f}'.format(x), u'y= {}'.format(y),
+            ]
 
             if ind is not None and hasattr(self.component, 'display_index'):
                 x = self.component.display_index.get_data()[ind][0]
-                lines = ['{}'.format(x)] + lines
+                lines = [u'{}'.format(x)] + lines
 
             return lines
         else:
             return []
 
+
 class PointInspectorOverlay(InfoOverlay):
     pass
+
 #            print comp
 #============= EOF =============================================

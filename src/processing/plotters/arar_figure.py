@@ -15,12 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from chaco.array_data_source import ArrayDataSource
 from traits.api import HasTraits, Any, Int, Str, Tuple, Property, \
     Event
 from traitsui.api import View, Item
 from chaco.tools.data_label_tool import DataLabelTool
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.graph.error_bar_overlay import ErrorBarOverlay
 from src.stats.core import calculate_mswd, validate_mswd
 from src.helpers.formatting import floatfmt
 from src.processing.plotters.flow_label import FlowDataLabel
@@ -29,6 +31,7 @@ from src.graph.tools.rect_selection_tool import RectSelectionOverlay, \
     RectSelectionTool
 from src.graph.tools.analysis_inspector import AnalysisPointInspector
 from src.graph.tools.point_inspector import PointInspectorOverlay
+
 
 class BaseArArFigure(HasTraits):
     analyses = Any
@@ -49,20 +52,19 @@ class BaseArArFigure(HasTraits):
         '''
         graph = self.graph
         p = graph.new_plot(ytitle=self.ytitle,
-                       padding=self.padding
-                       )
+                           padding=self.padding
+        )
         p.value_range.tight_bounds = False
 
         for po in plots:
             p = graph.new_plot(padding=self.padding,
-                           bounds=[50, po.height],
-                           ytitle=po.name)
+                               bounds=[50, po.height],
+                               ytitle=po.name)
             p.value_range.tight_bounds = False
 
 
     def plot(self, *args, **kw):
         pass
-
 
     def _get_mswd(self, ages, errors):
         mswd = calculate_mswd(ages, errors)
@@ -77,7 +79,7 @@ class BaseArArFigure(HasTraits):
         return (getattr(ai, attr) for ai in self.sorted_analyses)
 
     def _set_y_limits(self, a, b, min_=None, max_=None,
-                        pid=0, pad=None):
+                      pid=0, pad=None):
         mi, ma = self.graph.get_y_limits(plotid=pid)
         mi = min(mi, a)
         ma = max(ma, b)
@@ -87,9 +89,9 @@ class BaseArArFigure(HasTraits):
             ma = max_
         self.graph.set_y_limits(min_=mi, max_=ma, pad=pad)
 
-#===========================================================================
-# aux plots
-#===========================================================================
+    #===========================================================================
+    # aux plots
+    #===========================================================================
     def _plot_radiogenic_yield(self, po, plot, pid):
 
         ys, es = zip(*[(ai.nominal_value, ai.std_dev)
@@ -111,9 +113,21 @@ class BaseArArFigure(HasTraits):
                        for ai in self._unpack_attr('k39')])
 
         return self._plot_aux('K39(fA)', 'k39', ys, po, plot, pid, es)
-#===============================================================================
-#
-#===============================================================================
+
+    #===============================================================================
+    #
+    #===============================================================================
+    def _add_error_bars(self, scatter, errors, axis, nsigma,
+                        visible=True):
+        ebo = ErrorBarOverlay(component=scatter,
+                              orientation=axis,
+                              nsigma=nsigma,
+                              visible=visible)
+
+        scatter.underlays.append(ebo)
+        setattr(scatter, '{}error'.format(axis), ArrayDataSource(errors))
+        return ebo
+
     def _add_scatter_inspector(self,
                                # container,
                                # plot,
@@ -121,7 +135,7 @@ class BaseArArFigure(HasTraits):
                                add_tool=True,
                                value_format=None,
                                additional_info=None
-                               ):
+    ):
         if add_tool:
             broadcaster = BroadcasterTool()
             scatter.tools.append(broadcaster)
@@ -133,46 +147,47 @@ class BaseArArFigure(HasTraits):
             broadcaster.tools.append(rect_tool)
 
             if value_format is None:
-                value_format = lambda x:'{:0.5f}'.format(x)
+                value_format = lambda x: '{:0.5f}'.format(x)
             point_inspector = AnalysisPointInspector(scatter,
                                                      analyses=self.sorted_analyses,
                                                      convert_index=lambda x: '{:0.3f}'.format(x),
                                                      value_format=value_format,
                                                      additional_info=additional_info
-                                                     )
+            )
 
             pinspector_overlay = PointInspectorOverlay(component=scatter,
                                                        tool=point_inspector,
-                                                       )
-#
+            )
+            #
             scatter.overlays.append(pinspector_overlay)
             broadcaster.tools.append(point_inspector)
 
             u = lambda a, b, c, d: self.update_graph_metadata(a, b, c, d)
             scatter.index.on_trait_change(u, 'metadata_changed')
 
-#===============================================================================
-# labels
-#===============================================================================
+        #===============================================================================
+        # labels
+        #===============================================================================
+
     def _add_data_label(self, s, text, point, bgcolor='transparent',
                         label_position='top right', color=None, append=True, **kw):
         if color is None:
             color = s.color
 
         label = FlowDataLabel(component=s, data_point=point,
-                          label_position=label_position,
-                          label_text=text,
-                          border_visible=False,
-                          bgcolor=bgcolor,
-                          show_label_coords=False,
-                          marker_visible=False,
-                          text_color=color,
+                              label_position=label_position,
+                              label_text=text,
+                              border_visible=False,
+                              bgcolor=bgcolor,
+                              show_label_coords=False,
+                              marker_visible=False,
+                              text_color=color,
 
-                          # setting the arrow to visible causes an error when reading with illustrator
-                          # if the arrow is not drawn
-                          arrow_visible=False,
-                          **kw
-                          )
+                              # setting the arrow to visible causes an error when reading with illustrator
+                              # if the arrow is not drawn
+                              arrow_visible=False,
+                              **kw
+        )
         s.overlays.append(label)
         tool = DataLabelTool(label)
         if append:
@@ -201,12 +216,13 @@ class BaseArArFigure(HasTraits):
 
         return u'{} {}{} {} {}'.format(x, pm, we, mswd, n)
 
-#===============================================================================
-# property get/set
-#===============================================================================
+    #===============================================================================
+    # property get/set
+    #===============================================================================
     def _get_sorted_analyses(self):
         return sorted([a for a in self.analyses],
                       key=self._cmp_analyses,
                       reverse=self._reverse_sorted_analyses
-                      )
-#============= EOF =============================================
+        )
+
+    #============= EOF =============================================

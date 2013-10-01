@@ -47,34 +47,35 @@ from .editors.ideogram_editor import IdeogramEditor
 from src.processing.tasks.figures.figure_editor import FigureEditor
 from src.processing.tasks.figures.editors.series_editor import SeriesEditor
 
+
 class FigureTask(AnalysisEditTask, BaseBrowserTask):
     name = 'Figure'
     id = 'pychron.processing.figures'
     plotter_options_pane = Instance(PlotterOptionsPane)
     tool_bars = [
-                 SToolBar(
-                          SaveFigureAction(),
-                          OpenFigureAction(),
-                          name='Figure',
-                          image_size=(16, 16)),
-                 SToolBar(
-                        NewIdeogramAction(),
-                         AppendIdeogramAction(),
-                         name='Ideogram',
-                         image_size=(16, 16)),
-                SToolBar(
-                         NewSpectrumAction(),
-                         AppendSpectrumAction(),
-                         name='Spectrum',
-                         image_size=(16, 16)),
-                ]
+        SToolBar(
+            SaveFigureAction(),
+            OpenFigureAction(),
+            name='Figure',
+            image_size=(16, 16)),
+        SToolBar(
+            NewIdeogramAction(),
+            AppendIdeogramAction(),
+            name='Ideogram',
+            image_size=(16, 16)),
+        SToolBar(
+            NewSpectrumAction(),
+            AppendSpectrumAction(),
+            name='Spectrum',
+            image_size=(16, 16)),
+    ]
 
     auto_select_analysis = False
 
 
-#===============================================================================
-# task protocol
-#===============================================================================
+    #===============================================================================
+    # task protocol
+    #===============================================================================
     def prepare_destroy(self):
         for ed in self.editor_area.editors:
             if isinstance(ed, FigureEditor):
@@ -95,14 +96,14 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
         return panes + [self.plotter_options_pane,
                         self.figure_selector_pane,
                         MultiSelectAnalysisBrowser(model=self)
-                        ]
+        ]
 
     def _create_control_pane(self):
         pass
 
-#===============================================================================
-# grouping
-#===============================================================================
+    #===============================================================================
+    # grouping
+    #===============================================================================
     def group_by_aliquot(self):
         key = lambda x: x.aliquot
         self._group_by(key)
@@ -114,8 +115,8 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
     def group_selected(self):
         if self.unknowns_pane.selected:
             self.active_editor.set_group(
-                                         self._get_selected_indices(),
-                                         self._get_unique_group_id())
+                self._get_selected_indices(),
+                self._get_unique_group_id())
 
     def clear_grouping(self):
         '''
@@ -130,21 +131,22 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
                 idx = range(len(self.unknowns_pane.items))
 
             self.active_editor.set_group(idx, 0)
-#             self.unknowns_pane.update_needed = True
+            #             self.unknowns_pane.update_needed = True
             self.unknowns_pane.refresh_needed = True
-#===============================================================================
-# figures
-#===============================================================================
+        #===============================================================================
+        # figures
+        #===============================================================================
+
     def tb_new_ideogram(self):
         if isinstance(self.active_editor, IdeogramEditor) and \
-            not self.unknowns_pane.items:
+                not self.unknowns_pane.items:
             self.append_ideogram()
         else:
             self.new_ideogram()
 
     def tb_new_spectrum(self):
         if isinstance(self.active_editor, SpectrumEditor) and \
-            not self.unknowns_pane.items:
+                not self.unknowns_pane.items:
             self.append_spectrum()
         else:
             self.new_spectrum()
@@ -192,7 +194,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
                                    add_iso=False)
 
     def new_series(self, ans=None, name='Series',
-                             klass=None, tklass=None, plotter_kw=None):
+                   klass=None, tklass=None, plotter_kw=None):
         if klass is None:
             klass = SeriesEditor
 
@@ -204,41 +206,42 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
                                    add_iso=False)
 
 
-#         func = self.manager.new_inverse_isochron
-#         from src.processing.tasks.figures.figure_editor import InverseIsochronEditor
-#         klass = InverseIsochronEditor
-#         self._new_figure(ans, name, func, klass, plotter_kw)
+    #         func = self.manager.new_inverse_isochron
+    #         from src.processing.tasks.figures.figure_editor import InverseIsochronEditor
+    #         klass = InverseIsochronEditor
+    #         self._new_figure(ans, name, func, klass, plotter_kw)
 
-#     def new_series(self, ans, klass=None, name='Series',
-#                    plotter_kw=None
-#                   ):
-#         if klass is None:
-#             from src.processing.tasks.figures.figure_editor import SeriesEditor as klass
-#         func = self.manager.new_series
-#
-#         self._new_figure(ans, name, func, klass, plotter_kw)
-#
-#         editor = self.active_editor
-#         refiso = ans[0]
-# #         editor._unknowns = ans
-#         editor.trait_set(_unknowns=ans,
-#                          unknowns=ans,
-#                          trait_change_notify=False)
-# #         editor.unknowns = ans
-#         editor.tool.load_fits(refiso.isotope_keys,
-#                               refiso.isotope_fits
-#                               )
-#===============================================================================
-# actions
-#===============================================================================
+    #     def new_series(self, ans, klass=None, name='Series',
+    #                    plotter_kw=None
+    #                   ):
+    #         if klass is None:
+    #             from src.processing.tasks.figures.figure_editor import SeriesEditor as klass
+    #         func = self.manager.new_series
+    #
+    #         self._new_figure(ans, name, func, klass, plotter_kw)
+    #
+    #         editor = self.active_editor
+    #         refiso = ans[0]
+    # #         editor._unknowns = ans
+    #         editor.trait_set(_unknowns=ans,
+    #                          unknowns=ans,
+    #                          trait_change_notify=False)
+    # #         editor.unknowns = ans
+    #         editor.tool.load_fits(refiso.isotope_keys,
+    #                               refiso.isotope_fits
+    #                               )
+    #===============================================================================
+    # actions
+    #===============================================================================
     def save_figure(self):
         self._save_figure()
 
     def open_figure(self):
         self._open_figure()
-#===============================================================================
-# db persistence
-#===============================================================================
+
+    #===============================================================================
+    # db persistence
+    #===============================================================================
     def _open_figure(self, name=None):
         if name is None:
             name = self.figure_selector_pane.figure
@@ -252,7 +255,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
         fig = db.get_figure(name)
         if not fig:
             return
-        # load options
+            # load options
 
         # load analyses
         items = [self._record_view_factory(ai.analysis) for ai in fig.analyses]
@@ -274,14 +277,14 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
                                            status=ai.temp_status and ai.status,
                                            graph=ai.graph_id,
                                            group=ai.group_id,
-                                           )
+                    )
                     self.debug('adding analysis {} to figure'.format(aid))
                 else:
                     self.debug('{} not in database'.format(aid))
 
             po = self.active_editor.plotter_options_manager.plotter_options
 
-#             refg = self.active_editor.graphs[0]
+            #             refg = self.active_editor.graphs[0]
 
             panel = self.active_editor._model.panels[0]
             refg = panel.graph
@@ -301,9 +304,10 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
                                      ybounds=ybounds,
                                      options_pickle=blob)
 
-#===============================================================================
-#
-#===============================================================================
+        #===============================================================================
+        #
+        #===============================================================================
+
     def _append_figure(self, klass):
         '''
             if selected_sample append all analyses
@@ -316,7 +320,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
                 ts = self.manager.make_analyses(self.selected_analysis)
             else:
                 ts = [ai for si in self.selected_sample
-                            for ai in self._get_sample_analyses(si)]
+                      for ai in self._get_sample_analyses(si)]
 
             ans = self.manager.make_analyses(ts)
             if ans:
@@ -338,9 +342,9 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
     def _new_figure(self, ans, name, klass, tklass=None, add_iso=True):
         # new figure editor
         editor = klass(
-                       name=name,
-                       processor=self.manager,
-                       )
+            name=name,
+            processor=self.manager,
+        )
 
         if not ans:
             ans = self.unknowns_pane.items
@@ -348,7 +352,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
         if ans:
             editor.unknowns = ans
             self.unknowns_pane.items = ans
-#
+        #
         self._open_editor(editor)
 
         if tklass:
@@ -371,7 +375,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
         name = '{}-isochron'.format(name)
         editor = InverseIsochronEditor(name=name,
                                        processor=self.manager
-                                       )
+        )
         return self._add_editor(editor, ans)
 
     def _new_table(self, ans, name, klass):
@@ -388,7 +392,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
                 editor.items = ans
 
             ed = next((e for e in self.editor_area.editors
-                        if e.name == editor.name), None)
+                       if e.name == editor.name), None)
 
         if not ed:
             self.editor_area.add_editor(editor)
@@ -413,32 +417,34 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
                 idxs = [items.index(ai) for ai in analyses]
                 self.active_editor.set_group(idxs, i, refresh=False)
 
-#             self.unknowns_pane.update_needed = True
+            #             self.unknowns_pane.update_needed = True
             self.unknowns_pane.refresh_needed = True
-#             print 'asdfsdfsadfsd'
+            #             print 'asdfsdfsadfsd'
             self.active_editor.rebuild(refresh_data=False)
 
 
-#===============================================================================
-# handlers
-#===============================================================================
-#     @on_trait_change('plotter_options_pane:pom:plotter_options:aux_plots:x_error')
-#     def _update_x_error(self):
+        #===============================================================================
+        # handlers
+        #===============================================================================
+        #     @on_trait_change('plotter_options_pane:pom:plotter_options:aux_plots:x_error')
+        #     def _update_x_error(self):
 
 
     @on_trait_change('plotter_options_pane:pom:plotter_options:[+, aux_plots:+]')
     def _options_update(self, name, new):
         if name == 'initialized':
             return
-#         print 'asdfsdf'
+        #         print 'asdfsdf'
         self.active_editor.rebuild(refresh_data=False)
-#         do_later(self.active_editor.rebuild, refresh_data=False)
-#         self.active_editor.rebuild()
-        self.active_editor.dirty = True
+
+    #         do_later(self.active_editor.rebuild, refresh_data=False)
+    #         self.active_editor.rebuild()
+
+    #        self.active_editor.dirty = True
 
     def _active_editor_changed(self):
         if self.active_editor:
-#             if hasattr(self.active_editor, 'plotter_options_manager'):
+        #             if hasattr(self.active_editor, 'plotter_options_manager'):
             if isinstance(self.active_editor, FigureEditor):
                 self.plotter_options_pane.pom = self.active_editor.plotter_options_manager
 
@@ -454,45 +460,45 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
     #===========================================================================
     def _dclicked_sample_changed(self, new):
         for sa in self.selected_sample:
-
             ans = self._get_sample_analyses(sa)
-#             ans = man.make_analyses(ans)
+            #             ans = man.make_analyses(ans)
             self.unknowns_pane.items = ans
 
-#             sam = next((si
-#                         for si in self.active_editor.items
-#                             if si.sample == sa.name), None)
-#             if sam is None:
-#                 man = self.manager
-#                 ans = self._get_sample_analyses(sa)
-#                 ans = man.make_analyses(ans)
+        #             sam = next((si
+        #                         for si in self.active_editor.items
+        #                             if si.sample == sa.name), None)
+        #             if sam is None:
+        #                 man = self.manager
+        #                 ans = self._get_sample_analyses(sa)
+        #                 ans = man.make_analyses(ans)
 
-#===============================================================================
-# defaults
-#===============================================================================
+        #===============================================================================
+        # defaults
+        #===============================================================================
+
     def _default_layout_default(self):
         return TaskLayout(
-                          id='pychron.analysis_edit',
-                          left=HSplitter(
-                                    PaneItem('pychron.browser'),
-                                    Splitter(
-                                         Tabbed(
-                                                PaneItem('pychron.analysis_edit.unknowns'),
-                                                PaneItem('pychron.processing.figures.plotter_options')
-                                                ),
-                                         Tabbed(
-                                                PaneItem('pychron.analysis_edit.controls'),
-                                                PaneItem('pychron.processing.editor'),
-                                                ),
-                                         orientation='vertical'
-                                         )
-                                    ),
+            id='pychron.analysis_edit',
+            left=HSplitter(
+                PaneItem('pychron.browser'),
+                Splitter(
+                    Tabbed(
+                        PaneItem('pychron.analysis_edit.unknowns'),
+                        PaneItem('pychron.processing.figures.plotter_options')
+                    ),
+                    Tabbed(
+                        PaneItem('pychron.analysis_edit.controls'),
+                        PaneItem('pychron.processing.editor'),
+                    ),
+                    orientation='vertical'
+                )
+            ),
 
-#                           right=Splitter(
-#                                          PaneItem('pychron.search.results'),
-#                                          PaneItem('pychron.search.query'),
-#                                          orientation='vertical'
-#                                          )
-                          )
+            #                           right=Splitter(
+            #                                          PaneItem('pychron.search.results'),
+            #                                          PaneItem('pychron.search.query'),
+            #                                          orientation='vertical'
+            #                                          )
+        )
 
 #============= EOF =============================================

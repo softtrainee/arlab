@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Event, Instance, on_trait_change
+from traits.api import Event, Instance, on_trait_change
 from chaco.abstract_overlay import AbstractOverlay
 from enable.base_tool import BaseTool
 from kiva.fonttools import Font
@@ -50,6 +50,7 @@ class InfoInspector(BaseTool):
         self.current_position = None
         self.metadata_changed = True
 
+
 class InfoOverlay(AbstractOverlay):
     tool = Instance(BaseTool)
     visible = False
@@ -70,7 +71,7 @@ class InfoOverlay(AbstractOverlay):
 
     def overlay(self, plot, gc, *args, **kw):
         with gc:
-#            if self.visible:
+        #            if self.visible:
             lines = self.tool.assemble_lines()
             if lines:
                 lines = [li for li in lines if li and li.strip()]
@@ -89,7 +90,7 @@ class InfoOverlay(AbstractOverlay):
         lws, lhs = zip(*[gc.get_full_text_extent(mi)[:2] for mi in lines])
 
         lw = max(lws)
-        lh = sum(lhs) + 2 * len(lhs)
+        lh = sum(lhs) * 1.25 + 2 * len(lhs)
 
         xoffset = 12
         yoffset = 10
@@ -106,13 +107,12 @@ class InfoOverlay(AbstractOverlay):
         gc.rect(x, y - lh + 2, lw + 4, lh)
         gc.draw_path()
         gc.set_fill_color((0, 0, 0))
-        h = lhs[0]
-
+        h = lhs[0] * 1.25
 
         for i, mi in enumerate(lines):
             gc.set_text_position(x + 2,
                                  y - h * (i + 1)
-                                 )
+            )
             gc.show_text(mi)
 
 #============= EOF =============================================
