@@ -41,6 +41,10 @@ class ExperimentQueue(BaseExperimentQueue):
 
     executed = Bool(False)
 
+    def select_run_idx(self, idx):
+        if self.automated_runs:
+            self.selected = self.automated_runs[idx:idx + 1]
+
     def reset(self):
         ans = self.automated_runs
         ens = self.executed_runs
