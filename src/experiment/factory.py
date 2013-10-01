@@ -30,13 +30,14 @@ import time
 from src.consumer_mixin import ConsumerMixin
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 
+
 class ExperimentFactory(Loggable, ConsumerMixin):
     db = Any
     run_factory = Instance(AutomatedRunFactory)
     queue_factory = Instance(ExperimentQueueFactory)
 
-#     templates = DelegatesTo('run_factory')
-#     template = DelegatesTo('run_factory')
+    #     templates = DelegatesTo('run_factory')
+    #     template = DelegatesTo('run_factory')
 
     add_button = Button('Add')
     clear_button = Button('Clear')
@@ -49,7 +50,7 @@ class ExperimentFactory(Loggable, ConsumerMixin):
 
     queue = Instance(ExperimentQueue, ())
 
-#    ok_run = Property(depends_on='_mass_spectrometer, _extract_device')
+    #    ok_run = Property(depends_on='_mass_spectrometer, _extract_device')
     ok_add = Property(depends_on='_mass_spectrometer, _extract_device, _labnumber, _username')
 
     _username = String
@@ -59,13 +60,13 @@ class ExperimentFactory(Loggable, ConsumerMixin):
 
     selected_positions = List
 
-#     help_label = String('Select Irradiation/Level or Project')
+    #     help_label = String('Select Irradiation/Level or Project')
 
     #===========================================================================
     # permisions
     #===========================================================================
-#    max_allowable_runs = Int(10000)
-#    can_edit_scripts = Bool(True)
+    #    max_allowable_runs = Int(10000)
+    #    can_edit_scripts = Bool(True)
     def __init__(self, *args, **kw):
         super(ExperimentFactory, self).__init__(*args, **kw)
         self.setup_consumer(self._add_run)
@@ -77,19 +78,18 @@ class ExperimentFactory(Loggable, ConsumerMixin):
         self.run_factory.set_selected_runs(runs)
 
 
-#     _prev_add_time = None
+    #     _prev_add_time = None
     def _add_run(self, *args, **kw):
 
-#         if self._prev_add_time:
-#             if abs(time.time() - self._prev_add_time) < 0.5:
-#                 self.debug('skipping')
-#                 return
-#
-#         self._prev_add_time = time.time()
+    #         if self._prev_add_time:
+    #             if abs(time.time() - self._prev_add_time) < 0.5:
+    #                 self.debug('skipping')
+    #                 return
+    #
+    #         self._prev_add_time = time.time()
 
         egs = list(set([ai.extract_group for ai in self.queue.automated_runs]))
         eg = max(egs) if egs else 0
-
 
         positions = [str(pi.positions[0]) for pi in self.selected_positions]
 
@@ -98,21 +98,30 @@ class ExperimentFactory(Loggable, ConsumerMixin):
                                                    auto_increment_position=self.auto_increment_position,
                                                    auto_increment_id=self.auto_increment_id,
                                                    extract_group_cnt=eg
-                                                   )
-#         if self.run_factory.check_run_addition(new_runs, load_name):
+        )
+        #         if self.run_factory.check_run_addition(new_runs, load_name):
+
+        q = self.queue
+        if q.selected:
+            idx = q.automated_runs.index(q.selected[-1])
+        else:
+            idx = len(q.automated_runs) - 1
+
         self.queue.add_runs(new_runs, freq)
 
-            # trigger dirty event
-#===============================================================================
-# handlers
-#===============================================================================
+        idx += len(new_runs)
+        self.queue.select_run_idx(idx)
+
+    #===============================================================================
+    # handlers
+    #===============================================================================
     def _clear_button_fired(self):
         self.queue.clear_frequency_runs()
 
     def _add_button_fired(self):
         '''
             only allow add button to be fired every 0.5s
-            
+
             use consumermixin.add_consumable instead of frequency limiting
         '''
         self.add_consumable(1)
@@ -120,14 +129,19 @@ class ExperimentFactory(Loggable, ConsumerMixin):
     def _edit_mode_button_fired(self):
         self.run_factory.edit_mode = not self.run_factory.edit_mode
 
-    @on_trait_change('run_factory:clear_end_after')
-    def _clear_end_after(self):
-        for ai in self.queue.automated_runs:
-            ai.end_after = False
+        #@on_trait_change('run_factory:clear_end_after')
+        #def _clear_end_after(self, new):
+        #    print 'enadfas', new
 
-        self.run_factory.set_end_after()
+    def _update_end_after(self, new):
+        if new:
+            for ai in self.queue.automated_runs:
+                ai.end_after = False
 
-    @on_trait_change('''queue_factory:[mass_spectrometer, 
+        self.run_factory.set_end_after(new)
+
+
+    @on_trait_change('''queue_factory:[mass_spectrometer,
 extract_device, delay_+, tray, username, load_name]''')
     def _update_queue(self, name, new):
         if name == 'mass_spectrometer':
@@ -138,20 +152,20 @@ extract_device, delay_+, tray, username, load_name]''')
             self._set_extract_device(new)
         elif name == 'username':
             self._username = new
-#            self.queue.username = new
+            #            self.queue.username = new
 
         if self.queue:
-            self.queue.trait_set(**{name:new})
+            self.queue.trait_set(**{name: new})
 
         self.queue.changed = True
 
-#===============================================================================
-# private
-#===============================================================================
+    #===============================================================================
+    # private
+    #===============================================================================
     def _set_extract_device(self, ed):
         self._extract_device = ed
         self.run_factory = self._run_factory_factory()
-#         self.run_factory.update_templates_needed = True
+        #         self.run_factory.update_templates_needed = True
         self.run_factory.load_templates()
         self.run_factory.load_patterns(self._get_patterns(ed))
         if self.queue:
@@ -164,20 +178,21 @@ extract_device, delay_+, tray, username, load_name]''')
         if man:
             ps = man.get_pattern_names()
         return ps
-#===============================================================================
-# property get/set
-#===============================================================================
+
+    #===============================================================================
+    # property get/set
+    #===============================================================================
     def _get_ok_add(self):
         '''
             tol should be a user permission
         '''
         return self._username and \
-                not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR) and \
-                self._labnumber
+               not self._mass_spectrometer in ('', 'Spectrometer', LINE_STR) and \
+               self._labnumber
 
-#===============================================================================
-#
-#===============================================================================
+    #===============================================================================
+    #
+    #===============================================================================
     def _run_factory_factory(self):
         if self._extract_device == 'Fusions UV':
             klass = UVAutomatedRunFactory
@@ -188,29 +203,29 @@ extract_device, delay_+, tray, username, load_name]''')
                    application=self.application,
                    extract_device=self._extract_device,
                    mass_spectrometer=self._mass_spectrometer,
-#                   can_edit=self.can_edit_scripts
-                   )
+                   #                   can_edit=self.can_edit_scripts
+        )
         rf.load_truncations()
         rf.on_trait_change(lambda x: self.trait_set(_labnumber=x), 'labnumber')
-
+        rf.on_trait_change(self._update_end_after, 'end_after')
         return rf
 
-#    def _can_edit_scripts_changed(self):
-#        self.run_factory.can_edit = self.can_edit_scripts
+    #    def _can_edit_scripts_changed(self):
+    #        self.run_factory.can_edit = self.can_edit_scripts
 
-#===============================================================================
-# defaults
-#===============================================================================
+    #===============================================================================
+    # defaults
+    #===============================================================================
     def _run_factory_default(self):
         return self._run_factory_factory()
 
     def _queue_factory_default(self):
         eq = ExperimentQueueFactory(db=self.db,
-#                                    application=self.application
-                                    )
+                                    #                                    application=self.application
+        )
         return eq
 
     def _db_changed(self):
         self.queue_factory.db = self.db
         self.run_factory.db = self.db
-#============= EOF =============================================
+        #============= EOF =============================================

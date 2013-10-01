@@ -80,7 +80,9 @@ class AutomatedRunFactory(Loggable):
 #    _flux_error=Float
 
     skip = Bool(False)
-    end_after = Bool(False)
+    end_after = Property(Bool, depends_on='_end_after')
+    _end_after = Bool(False)
+
     weight = Float
     comment = Str
 
@@ -161,7 +163,7 @@ class AutomatedRunFactory(Loggable):
     update_info_needed = Event
     refresh_table_needed = Event
     changed = Event
-    clear_end_after = Event
+    #clear_end_after = Event
     suppress_update = False
 #    clear_selection = Event
 
@@ -225,13 +227,13 @@ class AutomatedRunFactory(Loggable):
 #                ri.user_defined_aliquot = False
 
     def set_selected_runs(self, runs):
+        run = None
         if runs:
             run = runs[0]
             self._clone_run(run)
 
         self._selected_runs = runs
         self.suppress_update = False
-        self.end_after = False
 
         self.debug('len selected runs {}'.format(len(runs)))
         if not runs:
@@ -242,6 +244,9 @@ class AutomatedRunFactory(Loggable):
         else:
             self.edit_enabled = False
             self.edit_mode = True
+
+        if run and self.edit_mode:
+            self._end_after = run.end_after
 
     def new_runs(self, positions=None, auto_increment_position=False,
                     auto_increment_id=False,
@@ -945,7 +950,14 @@ class AutomatedRunFactory(Loggable):
         if self.labnumber and a is not None:
             self._flux_error = a
 
-#===============================================================================
+    def _get_end_after(self):
+        return self._end_after
+
+    def _set_end_after(self, v):
+        self.set_end_after(v)
+        self._end_after = v
+
+    #===============================================================================
 # handlers
 #===============================================================================
     def _extract_group_button_fired(self):
@@ -983,11 +995,14 @@ weight, comment, skip, extract_group''')
         self._update_run_values(name, new)
 
     def _end_after_changed(self, new):
-        if new:
-            self.clear_end_after = True
+        print new
+        self.clear_end_after = new
 
-    def set_end_after(self):
-        self._update_run_values('end_after', True)
+        #    if new:
+    #        self.clear_end_after = True
+
+    def set_end_after(self, v):
+        self._update_run_values('end_after', v)
 
     @on_trait_change('''measurement_script:name, 
 extraction_script:name, 
@@ -1207,6 +1222,8 @@ post_equilibration_script:name
         if self.mass_spectrometer:
             name = name.replace('{}_'.format(self.mass_spectrometer), '')
         return name
+
+
 #============= EOF =============================================
 
 
