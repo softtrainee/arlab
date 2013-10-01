@@ -459,22 +459,31 @@ class InverseIsochronOptions(AgeOptions):
 
 class SeriesOptions(BasePlotterOptions):
     def load_aux_plots(self, ref):
-        def f(ki):
-            ff = FitPlotterOption(name=ki)
+        def f(kii):
+            ff = FitPlotterOption(name=kii)
             ff.trait_set(use=False, fit='')
             return ff
 
-        ap = [f(k) for k in ref.isotope_keys]
-        self.trait_set(
-            aux_plots=ap,
-        )
+        keys = ref.isotope_keys
+        keys.extend(['{}bs'.format(ki) for ki in keys])
+        if 'Ar40' in keys:
+            if 'Ar39' in keys:
+                keys.append('Ar40/Ar39')
+            if 'Ar36' in keys:
+                keys.append('Ar40/Ar36')
+
+            keys.append('PC')
+            ap = [f(k) for k in keys]
+            self.trait_set(
+                aux_plots=ap,
+            )
 
     def traits_view(self):
         cols = [
             CheckboxColumn(name='use'),
             ObjectColumn(name='name'),
             ObjectColumn(name='fit', width=135),
-            ObjectColumn(name='scale'),
+            ObjectColumn(name='scale', label='Y Scale'),
             #               ObjectColumn(name='height'),
             #               CheckboxColumn(name='x_error', label='X Error'),
             CheckboxColumn(name='y_error', label='Y Error'),

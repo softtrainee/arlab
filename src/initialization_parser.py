@@ -58,7 +58,7 @@ class InitializationParser(XMLParser):
 
     def __init__(self, *args, **kw):
         ver = '_proc'
-        ver = '_exp'
+        #ver = '_exp'
         p = os.path.join(paths.setup_dir, 'initialization{}.xml'.format(ver))
         if os.path.isfile(p):
             super(InitializationParser, self).__init__(p, *args, **kw)
@@ -291,9 +291,9 @@ class InitializationParser(XMLParser):
                 iterator = lambda: cat.findall(tag)
             else:
                 iterator = lambda: ''
-            #            for plugin in cat.findall(tag):
-            #                if plugin.text.strip() == name:
-            #                    return plugin
+                #            for plugin in cat.findall(tag):
+                #                if plugin.text.strip() == name:
+                #                    return plugin
         return next((p for p in iterator() if p.text.strip() == name), None)
 
     def get_systems(self):
@@ -302,7 +302,8 @@ class InitializationParser(XMLParser):
             return [(s.text.strip(), s.get('master_host')) for s in p.findall('system')]
         return []
 
-    #    def get_processors(self):
+        #    def get_processors(self):
+
 #
 #        cat = self._tree.find('remotehardware')
 #        pi = None

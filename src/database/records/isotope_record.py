@@ -15,75 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Property, cached_property, \
-    Event, Any
-# from traitsui.api import View, UItem, Item, HGroup, ListStrEditor, HSplit, VSplit
+from traits.api import HasTraits
 
 #============= standard library imports ========================
-from uncertainties import ufloat
 # import re
-import struct
 #============= local library imports  ==========================
-# from src.database.isotope_analysis.blanks_summary import BlanksSummary
-from src.graph.graph import Graph
-# from src.database.isotope_analysis.fit_selector import FitSelector
-from src.graph.regression_graph import StackedRegressionGraph
-from src.graph.stacked_graph import StackedGraph
-from src.database.records.database_record import DatabaseRecord
-# from src.database.isotope_analysis.analysis_summary import AnalysisSummary
-from src.experiment.utilities.identifier import convert_shortname, convert_labnumber, \
-    make_runid
-# from src.database.isotope_analysis.detector_intercalibration_summary import DetectorIntercalibrationSummary
-# from src.database.isotope_analysis.irradiation_summary import IrradiationSummary
-# from src.deprecate import deprecated
-from src.constants import NULL_STR
-# from src.database.isotope_analysis.supplemental_summary import SupplementalSummary
-
-import time
-# from src.database.isotope_analysis.script_summary import MeasurementSummary, \
-#    ExtractionSummary, ExperimentSummary
-# from src.database.isotope_analysis.backgrounds_summary import BackgroundsSummary
-# from src.database.isotope_analysis.notes_summary import NotesSummary
-from src.processing.arar_age import ArArAge
-from src.processing.isotope import Isotope, Blank, Background, Baseline, Sniff
-# from src.database.isotope_analysis.error_component_summary import ErrorComponentSummary
-# from pyface.timer.do_later import do_later
-# from src.database.records.ui.analysis_summary import AnalysisSummary
-# from src.database.records.ui.fit_selector import FitSelector
-from src.helpers.isotope_utils import sort_isotopes
-from collections import namedtuple
-from src.codetools.simple_timeit import simple_timer
-from sqlalchemy.orm.session import object_session
-# from src.codetools.simple_timeit import timethis, timer
-# from src.codetools.profile import profile2
-# from src.database.records.isotope import Isotope, Baseline, Blank, Background
-# Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_outlier_std_devs')
-
-# class EditableGraph(HasTraits):
-#     graph = Instance(Graph)
-#     fit_selector = Instance(FitSelector)
-#
-#     def __getattr__(self, attr):
-#         try:
-#             return getattr(self.graph, attr)
-#         except KeyError:
-#             pass
-#
-#     def traits_view(self):
-#         v = View(
-#                  VSplit(
-#                         UItem('graph',
-#                               style='custom',
-#                              height=0.75
-#                              ),
-#                          UItem('fit_selector',
-#                                style='custom',
-#                               height=0.25)
-#                     )
-#                  )
-#
-#         return v
-
+from src.experiment.utilities.identifier import make_runid
 
 
 class IsotopeRecordView(HasTraits):
@@ -92,6 +29,7 @@ class IsotopeRecordView(HasTraits):
     mass_spectrometer = ''
     analysis_type = ''
     uuid = ''
+    sample = ''
 
     iso_fit_status = False
     blank_fit_status = False
@@ -105,15 +43,18 @@ class IsotopeRecordView(HasTraits):
         try:
             if dbrecord is None or not dbrecord.labnumber:
                 return
-
-            self.labnumber = str(dbrecord.labnumber.identifier)
+            ln = dbrecord.labnumber
+            self.labnumber = str(ln.identifier)
             self.aliquot = dbrecord.aliquot
             self.step = dbrecord.step
             self.uuid = dbrecord.uuid
             self.tag = dbrecord.tag or ''
             self.timestamp = dbrecord.analysis_timestamp
 
-            irp = dbrecord.labnumber.irradiation_position
+            if ln.sample:
+                self.sample = ln.sample.name
+
+            irp = ln.irradiation_position
             if irp is not None:
                 irl = irp.level
                 ir = irl.irradiation
@@ -121,14 +62,12 @@ class IsotopeRecordView(HasTraits):
 
             else:
                 self.irradiation_info = ''
-    #        self.mass_spectrometer = ''
-    #        self.analysis_type = ''
+
             meas = dbrecord.measurement
             if meas is not None:
                 self.mass_spectrometer = meas.mass_spectrometer.name.lower()
                 if meas.analysis_type:
                     self.analysis_type = meas.analysis_type.name
-
 
             self.uuid = dbrecord.uuid
             self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
@@ -141,6 +80,7 @@ class IsotopeRecordView(HasTraits):
             return True
         except Exception, e:
             import traceback
+
             traceback.print_exc()
             print e
 
@@ -154,6 +94,8 @@ class IsotopeRecordView(HasTraits):
     def _get_selected_history_item(self, item, key):
         sh = item.selected_histories
         return ('X' if getattr(sh, key) else '') if sh else ''
+
+    #============= EOF =============================================
 
 #
 # def DBProperty():

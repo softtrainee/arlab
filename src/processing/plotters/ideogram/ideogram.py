@@ -39,14 +39,13 @@ N = 500
 
 
 class Ideogram(BaseArArFigure):
-
     xmi = Float
     xma = Float
     xs = Array
     xes = Array
     index_key = 'age'
     ytitle = 'Relative Probability'
-#     _reverse_sorted_analyses = True
+    #     _reverse_sorted_analyses = True
     _analysis_number_cnt = 0
 
     def plot(self, plots):
@@ -57,16 +56,16 @@ class Ideogram(BaseArArFigure):
         self._analysis_number_cnt = 0
 
         self.xs, self.xes = array([[ai.nominal_value, ai.std_dev]
-                         for ai in self._get_xs(key=self.index_key)]).T
+                                   for ai in self._get_xs(key=self.index_key)]).T
 
         self._plot_relative_probability(graph.plots[0], 0)
 
         omit = [i for i, ai in enumerate(self.sorted_analyses)
-                        if ai.temp_status]
+                if ai.temp_status]
 
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
             scatter = getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1,
-                                                      )
+            )
             if omit:
                 scatter.index.metadata['selections'] = omit
 
@@ -83,9 +82,9 @@ class Ideogram(BaseArArFigure):
     def min_x(self, attr):
         return min([ai.nominal_value for ai in self._unpack_attr(attr)])
 
-#===============================================================================
-# plotters
-#===============================================================================
+    #===============================================================================
+    # plotters
+    #===============================================================================
 
     def _plot_aux(self, title, vk, ys, po, plot, pid, es=None):
         scatter = self._add_aux_plot(ys,
@@ -95,7 +94,7 @@ class Ideogram(BaseArArFigure):
                              visible=po.x_error)
         if es:
             self._add_error_bars(scatter, es, 'y', 1,
-                             visible=po.y_error)
+                                 visible=po.y_error)
 
         self._add_scatter_inspector(scatter)
         return scatter
@@ -108,7 +107,7 @@ class Ideogram(BaseArArFigure):
         for p in self.graph.plots:
             if p.y_axis.title == 'Analysis #':
                 startidx += p.default_index.get_size()
-#                 print 'asdfasfsa', p.index.data.get_size()
+            #                 print 'asdfasfsa', p.index.data.get_size()
 
         ys = arange(startidx, startidx + n)
 
@@ -121,9 +120,9 @@ class Ideogram(BaseArArFigure):
         self._add_scatter_inspector(scatter,
                                     value_format=lambda x: '{:d}'.format(int(x)),
                                     additional_info=lambda x: u'Age= {}'.format(x.age_string),
-                                    )
+        )
 
-#         self._analysis_number_cnt += n
+        #         self._analysis_number_cnt += n
         self.graph.set_y_limits(min_=0,
                                 max_=max(ys) + 1,
                                 plotid=pid)
@@ -137,11 +136,11 @@ class Ideogram(BaseArArFigure):
 
         # add the dashed original line
         graph.new_series(x=bins, y=probs,
-                              plotid=pid,
-                              visible=False,
-                              color=scatter.color,
-                              line_style='dash',
-                              )
+                         plotid=pid,
+                         visible=False,
+                         color=scatter.color,
+                         line_style='dash',
+        )
 
         self._add_central_tendency(graph, scatter, bins, probs)
         mi, ma = min(probs), max(probs)
@@ -149,9 +148,10 @@ class Ideogram(BaseArArFigure):
 
         d = lambda a, b, c, d: self.update_index_mapper(a, b, c, d)
         plot.index_mapper.on_trait_change(d, 'updated')
-#===============================================================================
-# overlays
-#===============================================================================
+
+    #===============================================================================
+    # overlays
+    #===============================================================================
     def _add_central_tendency(self, g, scatter, bins, probs):
         offset = 0
         percentH = 1 - 0.954  # 2sigma
@@ -162,42 +162,30 @@ class Ideogram(BaseArArFigure):
         ym = maxp * percentH + offset
 
         s, p = g.new_series([wm], [ym],
-                             type='scatter',
-                             marker='circle',
-                             marker_size=3,
-                             color=scatter.color,
-                             plotid=0
-                             )
+                            type='scatter',
+                            marker='circle',
+                            marker_size=3,
+                            color=scatter.color,
+                            plotid=0
+        )
 
         self._add_error_bars(s, [we], 'x', self.options.nsigma)
-#         display_mean_indicator = self._get_plot_option(self.options, 'display_mean_indicator', default=True)
+        #         display_mean_indicator = self._get_plot_option(self.options, 'display_mean_indicator', default=True)
         if not self.options.display_mean_indicator:
             s.visible = False
 
         label = None
-#         display_mean = self._get_plot_option(self.options, 'display_mean_text', default=True)
+        #         display_mean = self._get_plot_option(self.options, 'display_mean_text', default=True)
         if self.options.display_mean:
             text = self._build_label_text(wm, we, mswd, valid_mswd, len(self.xs))
-#             font = self._get_plot_option(self.options, 'data_label_font', default='modern 12')
+            #             font = self._get_plot_option(self.options, 'data_label_font', default='modern 12')
             self._add_data_label(s, text, (wm, ym),
-#                                 font=font
-                                 )
-        # add a tool to move the mean age point
+                                 #                                 font=font
+            )
+            # add a tool to move the mean age point
         s.tools.append(PointMoveTool(component=s,
                                      label=label,
                                      constrain='y'))
-
-    def _add_error_bars(self, scatter, errors, axis, nsigma,
-                        visible=True):
-        ebo = ErrorBarOverlay(component=scatter,
-                              orientation=axis,
-                              nsigma=nsigma,
-                              visible=visible)
-
-        scatter.underlays.append(ebo)
-        setattr(scatter, '{}error'.format(axis), ArrayDataSource(errors))
-        return ebo
-
 
     def update_index_mapper(self, obj, name, old, new):
         if new:
@@ -234,7 +222,7 @@ class Ideogram(BaseArArFigure):
                 a.temp_status = 1 if i in sel else 0
         else:
             sel = [i for i, a in enumerate(sorted_ans)
-                    if a.temp_status]
+                   if a.temp_status]
 
             self._rebuild_ideo(sel)
 
@@ -286,9 +274,10 @@ class Ideogram(BaseArArFigure):
         else:
             dp.visible = False
 
-#===============================================================================
-# utils
-#===============================================================================
+        #===============================================================================
+        # utils
+        #===============================================================================
+
     def _get_xs(self, key='age'):
         xs = array([ai for ai in self._unpack_attr(key)])
         return xs
@@ -298,13 +287,12 @@ class Ideogram(BaseArArFigure):
         graph.set_y_title(title,
                           plotid=pid)
         s, p = graph.new_series(
-                         x=self.xs, y=ys,
-                         type='scatter',
-                         marker='circle',
-                         marker_size=2,
-                         plotid=pid, **kw
-                         )
-
+            x=self.xs, y=ys,
+            type='scatter',
+            marker='circle',
+            marker_size=2,
+            plotid=pid, **kw
+        )
 
         graph.set_y_limits()
 
@@ -316,7 +304,7 @@ class Ideogram(BaseArArFigure):
         if xmi == -Inf or xma == Inf:
             xmi, xma = self.xmi, self.xma
 
-#        print self.probability_curve_kind
+        #        print self.probability_curve_kind
         if self.options.probability_curve_kind == 'kernel':
             return self._kernel_density(ages, errors, xmi, xma)
 
@@ -325,6 +313,7 @@ class Ideogram(BaseArArFigure):
 
     def _kernel_density(self, ages, errors, xmi, xma):
         from scipy.stats.kde import gaussian_kde
+
         pdf = gaussian_kde(ages)
         x = linspace(xmi, xma, N)
         y = pdf(x)
@@ -358,10 +347,10 @@ class Ideogram(BaseArArFigure):
 
     def _calculate_stats(self, ages, errors, xs, ys):
         mswd, valid_mswd, n = self._get_mswd(ages, errors)
-#         mswd = calculate_mswd(ages, errors)
-#         valid_mswd = validate_mswd(mswd, len(ages))
+        #         mswd = calculate_mswd(ages, errors)
+        #         valid_mswd = validate_mswd(mswd, len(ages))
         if self.options.mean_calculation_kind == 'kernel':
-            wm , we = 0, 0
+            wm, we = 0, 0
             delta = 1
             maxs, _mins = find_peaks(ys, delta, xs)
             wm = max(maxs, axis=1)[0]
