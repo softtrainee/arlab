@@ -102,6 +102,9 @@ class BaseBrowserTask(BaseEditorTask):
             self.projects = ad
             self.oprojects = ad
 
+    def _create_browser_pane(self, **kw):
+        return BrowserPane(model=self, **kw)
+
     def _selected_project_changed(self, new):
         if new:
             db = self.manager.db
@@ -148,7 +151,7 @@ class BaseBrowserTask(BaseEditorTask):
         return func
 
     def _omit_invalid_filter(self, x):
-        return x.status == 0
+        return x.tag == 'invalid'
 
     def _project_filter_changed(self, new):
         self.projects = filter(self._filter_func(new, 'name'), self.oprojects)
@@ -190,7 +193,7 @@ class BrowserTask(BaseBrowserTask):
             self.active_editor.analysis_summary = an.analysis_summary
 
     def create_dock_panes(self):
-        return [BrowserPane(model=self)]
+        return [self._create_browser_pane(multi_select=False)]
 
 #===============================================================================
 # handlers

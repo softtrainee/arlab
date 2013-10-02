@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from chaco.axis import DEFAULT_TICK_FORMATTER
 from traits.api import HasTraits, Any, Float, Int, on_trait_change, Bool
 from traitsui.api import View, Item, Group, VGroup
 # from pyface.timer.do_later import do_later
@@ -26,9 +27,12 @@ from traitsui.api import View, Item, Group, VGroup
 class EFloat(Float):
     enter_set = True
     auto_set = False
+
+
 class EInt(Int):
     enter_set = True
     auto_set = False
+
 
 class PlotEditor(HasTraits):
     xmin = EFloat
@@ -44,11 +48,39 @@ class PlotEditor(HasTraits):
     padding_top = EInt
     padding_bottom = EInt
 
+    title_spacing = EFloat
+    tick_visible = Bool
+    x_grid = Bool
+    y_grid = Bool
+
     @on_trait_change('padding+')
     def _update_padding(self, name, new):
-        self.plot.trait_set(**{name:new})
+        self.plot.trait_set(**{name: new})
         self.plot._layout_needed = True
         self.plot.invalidate_and_redraw()
+
+    @on_trait_change('title_spacing')
+    def _update_value_axis(self, name, new):
+        self.plot.value_axis.title_spacing = new
+        self.plot.invalidate_and_redraw()
+
+    @on_trait_change('tick_visible')
+    def _update_tick_visible(self, name, new):
+        if new:
+            fmt = DEFAULT_TICK_FORMATTER
+        else:
+            fmt = lambda x: ''
+        self.plot.value_axis.tick_visible = new
+        self.plot.value_axis.trait_set(**{'tick_visible': new,
+                                          'tick_label_formatter': fmt
+        })
+        self.plot.invalidate_and_redraw()
+
+        #
+
+    @on_trait_change('x_grid, y_grid')
+    def _update_grids(self, name, new):
+        getattr(self.plot, name).visible = new
 
     def _plot_changed(self):
         self.xmin = self.plot.index_range.low
@@ -60,6 +92,12 @@ class PlotEditor(HasTraits):
         for attr in ('left', 'right', 'top', 'bottom'):
             attr = 'padding_{}'.format(attr)
             setattr(self, attr, getattr(self.plot, attr))
+
+        self.title_spacing = self.plot.value_axis.title_spacing
+        self.tick_visible = self.plot.value_axis.tick_visible
+
+        self.x_grid = self.plot.x_grid.visible
+        self.y_grid = self.plot.y_grid.visible
 
     def _xmin_changed(self):
         p = self.plot
@@ -99,37 +137,51 @@ class PlotEditor(HasTraits):
             p.value_range.high_setting = self.ymax
             self.yauto = False
 
-#    def _xauto_changed(self):
-#        if self.xauto:
-#            p = self.plot
-#            p.index_range.low_setting = 'auto'
-#            p.index_range.high_setting = 'auto'
-#            p.index_range.refresh()
-#            p.invalidate_and_redraw()
-#            print p.index_range.high, p.index_range.low
+            #    def _xauto_changed(self):
+            #        if self.xauto:
+            #            p = self.plot
+            #            p.index_range.low_setting = 'auto'
+            #            p.index_range.high_setting = 'auto'
+            #            p.index_range.refresh()
+            #            p.invalidate_and_redraw()
+            #            print p.index_range.high, p.index_range.low
 
 
     def traits_view(self):
+        y_grp = Group(
+            Item('title_spacing'),
+            Item('tick_visible'),
+            label='Y Axis',
+        )
+
+        grids_grp = Group(
+            Item('x_grid'),
+            Item('y_grid'),
+            label='Grids'
+        )
+
         v = View(
-                 VGroup(
-                     Group(
-#                           Item('xauto', label='Autoscale'),
-                           Item('xmin'),
-                           Item('xmax'),
-                           ),
-                     Group(
-#                           Item('yauto', label='Autoscale'),
-                           Item('ymin'),
-                           Item('ymax'),
-                           ),
-                     Group(
-                           Item('padding_left', label='Left'),
-                           Item('padding_right', label='Right'),
-                           Item('padding_top', label='Top'),
-                           Item('padding_bottom', label='Bottom'),
-                           label='Padding'
-                           ),
-                        )
-                 )
+            VGroup(
+                Group(
+                    #                           Item('xauto', label='Autoscale'),
+                    Item('xmin'),
+                    Item('xmax'),
+                ),
+                Group(
+                    #                           Item('yauto', label='Autoscale'),
+                    Item('ymin'),
+                    Item('ymax'),
+                ),
+                Group(
+                    Item('padding_left', label='Left'),
+                    Item('padding_right', label='Right'),
+                    Item('padding_top', label='Top'),
+                    Item('padding_bottom', label='Bottom'),
+                    label='Padding'
+                ),
+                y_grp,
+                grids_grp
+            )
+        )
         return v
-#============= EOF =============================================
+        #============= EOF =============================================

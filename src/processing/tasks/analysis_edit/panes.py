@@ -34,14 +34,14 @@ from src.column_sorter_mixin import ColumnSorterMixin
 
 
 def new_button_editor(trait, name, **kw):
-
     name = '{}.png'.format(name)
     return UItem(trait, style='custom',
                  editor=ButtonEditor(image=ImageResource(name=name,
-                                                  search_path=paths.icon_search_path
-                                                  )),
+                                                         search_path=paths.icon_search_path
+                 )),
                  **kw
-                 )
+    )
+
 
 class TablePane(TraitsDockPane):
     append_button = Button
@@ -57,28 +57,27 @@ class TablePane(TraitsDockPane):
 
     def load(self):
         pass
+
     def dump(self):
         pass
 
 
     def traits_view(self):
         v = View(VGroup(
-                      UItem('items', editor=myTabularEditor(adapter=self.adapter_klass(),
-                                                            operations=['move', 'delete'],
-                                                            editable=True,
-                                                            drag_external=True,
-                                                            selected='selected',
-                                                            dclicked='dclicked',
-                                                            update='update_needed',
-                                                            refresh='refresh_needed'
-#                                                            auto_resize_rows=True
-                                                            ),
-                            )
-                      )
-               )
+            UItem('items', editor=myTabularEditor(adapter=self.adapter_klass(),
+                                                  operations=['move', 'delete'],
+                                                  editable=True,
+                                                  drag_external=True,
+                                                  selected='selected',
+                                                  dclicked='dclicked',
+                                                  update='update_needed',
+                                                  refresh='refresh_needed'
+                                                  #                                                            auto_resize_rows=True
+            ),
+            )
+        )
+        )
         return v
-
-
 
 
 class HistoryTablePane(TablePane, ColumnSorterMixin):
@@ -90,11 +89,13 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
 
     def load(self):
         self.load_previous_selections()
+
     def dump(self):
         self.dump_selection()
-#===============================================================================
-# previous selections
-#===============================================================================
+
+    #===============================================================================
+    # previous selections
+    #===============================================================================
     def load_previous_selections(self):
         d = self._open_shelve()
         keys = sorted(d.keys(), reverse=True)
@@ -131,6 +132,7 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
             d = self._open_shelve()
         except Exception:
             import traceback
+
             traceback.print_exc()
             return
 
@@ -144,7 +146,7 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
             if keys:
                 next_key = '{:03n}'.format(int(keys[-1]) + 1)
 
-            records = filter(lambda ri:not isinstance(ri, Marker), records)
+            records = filter(lambda ri: not isinstance(ri, Marker), records)
 
             name_exists = next((True for pi in d.itervalues() if pi.name == name), False)
             if name_exists:
@@ -165,37 +167,38 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
 
     def traits_view(self):
         v = View(VGroup(
-                      HGroup(new_button_editor('append_button', 'add',
-                                               tooltip=self._add_tooltip
-                                               ),
-                             new_button_editor('replace_button', 'arrow_refresh',
-                                               tooltip=self._replace_tooltip
-                                               ),
+            HGroup(new_button_editor('append_button', 'add',
+                                     tooltip=self._add_tooltip
+            ),
+                   new_button_editor('replace_button', 'arrow_refresh',
+                                     tooltip=self._replace_tooltip
+                   ),
 
-                             ),
-                      UItem('previous_selection', editor=EnumEditor(name='previous_selections')),
-                      UItem('items', editor=myTabularEditor(adapter=self.adapter_klass(),
-                                                            operations=['move', 'delete'],
-                                                            editable=True,
-                                                            drag_external=True,
-                                                            selected='selected',
-                                                            dclicked='dclicked',
-                                                            multi_select=True,
-                                                            auto_update=True,
-                                                            column_clicked='column_clicked'
-#                                                             refresh='refresh_needed',
-#                                                             update='update_needed'
-#                                                            auto_resize_rows=True
-                                                            )
-                            )
-                      )
-               )
+            ),
+            UItem('previous_selection', editor=EnumEditor(name='previous_selections')),
+            UItem('items', editor=myTabularEditor(adapter=self.adapter_klass(),
+                                                  operations=['move', 'delete'],
+                                                  editable=True,
+                                                  drag_external=True,
+                                                  selected='selected',
+                                                  dclicked='dclicked',
+                                                  multi_select=True,
+                                                  auto_update=True,
+                                                  column_clicked='column_clicked'
+                                                  #                                                             refresh='refresh_needed',
+                                                  #                                                             update='update_needed'
+                                                  #                                                            auto_resize_rows=True
+            )
+            )
+        )
+        )
         return v
 
 
 class UnknownsPane(HistoryTablePane):
     id = 'pychron.analysis_edit.unknowns'
     name = 'Unknowns'
+
 
 class ReferencesPane(HistoryTablePane):
     name = 'References'
@@ -204,21 +207,22 @@ class ReferencesPane(HistoryTablePane):
     _add_tooltip = '''(r) Append references'''
     _replace_tooltip = ''' (Shift+r) Replace references'''
 
+
 class ControlsPane(TraitsDockPane):
-    dry_run = Bool(True)
-    save_button = Button('Save')
+    #dry_run = Bool(True)
+    #save_button = Button('Save')
     tool = Instance(IAnalysisEditTool)
     id = 'pychron.analysis_edit.controls'
     name = 'Controls'
+
     def traits_view(self):
         v = View(
-                 VGroup(
-                        UItem('tool', style='custom'),
-                        HGroup(spring, UItem('save_button'), Item('dry_run'))
-                        )
-                 )
+            VGroup(
+                UItem('tool', style='custom'),
+                #HGroup(spring, UItem('save_button'), Item('dry_run'))
+            )
+        )
         return v
-
 
 
 #============= EOF =============================================

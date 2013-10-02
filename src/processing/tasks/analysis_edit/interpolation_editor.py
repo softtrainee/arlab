@@ -31,23 +31,23 @@ from src.helpers.datetime_tools import convert_timestamp
 class InterpolationEditor(GraphEditor):
     tool = Instance(InterpolationFitSelector, ())
     references = List
-#     _references = List
+    #     _references = List
 
     auto_find = Bool(True)
     show_current = Bool(True)
 
     @on_trait_change('references[]')
     def _update_references(self):
-#         self.make_references()
+    #         self.make_references()
         self.rebuild_graph()
 
-#     def make_references(self):
-#         self._references = self.processor.make_analyses(self.references)
-# #         self.processor.load_analyses(self._references)
-#         self._make_references()
-#
-#     def _make_references(self):
-#         pass
+    #     def make_references(self):
+    #         self._references = self.processor.make_analyses(self.references)
+    # #         self.processor.load_analyses(self._references)
+    #         self._make_references()
+    #
+    #     def _make_references(self):
+    #         pass
 
     def _get_start_end(self, rxs, uxs):
         mrxs = min(rxs) if rxs else Inf
@@ -65,8 +65,8 @@ class InterpolationEditor(GraphEditor):
             self._find_references()
 
     def _find_references(self):
-#         ans = set([ai for ui in self._unknowns
-#                 for ai in self.processor.find_associated_analyses(ui)])
+    #         ans = set([ai for ui in self._unknowns
+    #                 for ai in self.processor.find_associated_analyses(ui)])
         ans = []
         proc = self.processor
         uuids = []
@@ -113,7 +113,6 @@ class InterpolationEditor(GraphEditor):
         c_uxs = self.normalize(uxs, start)
         r_xs = self.normalize(rxs, start)
 
-
         '''
             c_... current value
             r... reference value
@@ -132,25 +131,25 @@ class InterpolationEditor(GraphEditor):
                 c_uys, c_ues = self._get_current_values(iso)
 
             r_ys, r_es = None, None
-            if self._references:
+            if self.references:
                 r_ys, r_es = self._get_reference_values(iso)
 
             p = graph.new_plot(
-                               ytitle=iso,
-                               xtitle='Time (hrs)',
-                               padding=[80, 5, 5, 40],
-#                                show_legend='ur' if i == 0 else False
-                               )
+                ytitle=iso,
+                xtitle='Time (hrs)',
+                padding=[80, 5, 5, 40],
+                #                                show_legend='ur' if i == 0 else False
+            )
             p.value_range.tight_bounds = False
 
             if c_ues and c_uys:
                 # plot unknowns
                 s, _p = graph.new_series(c_uxs, c_uys,
-                                 yerror=c_ues,
-                                 fit=False,
-                                 type='scatter',
-                                 plotid=i
-                                 )
+                                         yerror=c_ues,
+                                         fit=False,
+                                         type='scatter',
+                                         plotid=i
+                )
 
                 self._add_error_bars(s, c_ues)
 
@@ -165,19 +164,19 @@ class InterpolationEditor(GraphEditor):
                                                  yserr=r_es,
                                                  kind=fit)
                     s, _p = graph.new_series(r_xs, r_ys,
-                                 yerror=r_es,
-                                 type='scatter',
-                                 plotid=i,
-                                 fit=False
-                                 )
+                                             yerror=r_es,
+                                             type='scatter',
+                                             plotid=i,
+                                             fit=False
+                    )
                     self._add_error_bars(s, r_es)
 
                 else:
                     _p, s, l = graph.new_series(r_xs, r_ys,
-                                       display_index=ArrayDataSource(data=display_xs),
-                                       yerror=ArrayDataSource(data=r_es),
-                                       fit=fit,
-                                       plotid=i)
+                                                display_index=ArrayDataSource(data=display_xs),
+                                                yerror=ArrayDataSource(data=r_es),
+                                                fit=fit,
+                                                plotid=i)
                     if hasattr(l, 'regressor'):
                         reg = l.regressor
 
@@ -193,7 +192,7 @@ class InterpolationEditor(GraphEditor):
                                              fit=False,
                                              type='scatter',
                                              plotid=i,
-                                             )
+                    )
                     graph.set_series_label('Unknowns-predicted', plotid=i)
                     self._add_error_bars(s, p_ues)
 
@@ -207,6 +206,7 @@ class InterpolationEditor(GraphEditor):
     def _add_error_bars(self, scatter, errors,
                         orientation='y', visible=True, nsigma=1):
         from src.graph.error_bar_overlay import ErrorBarOverlay
+
         ebo = ErrorBarOverlay(component=scatter,
                               orientation=orientation,
                               nsigma=nsigma,
@@ -215,4 +215,5 @@ class InterpolationEditor(GraphEditor):
         scatter.underlays.append(ebo)
         setattr(scatter, '{}error'.format(orientation), ArrayDataSource(errors))
         return ebo
-#============= EOF =============================================
+
+        #============= EOF =============================================

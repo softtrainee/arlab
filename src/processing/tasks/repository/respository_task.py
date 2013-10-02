@@ -26,7 +26,7 @@ from src.processing.repository.igsn import IGSN
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class RepositoryTask(AnalysisEditTask, BaseBrowserTask):
+class RepositoryTask(AnalysisEditTask):
     name = 'Repository'
     repository = Any
     igsn = Any
@@ -59,7 +59,8 @@ class RepositoryTask(AnalysisEditTask, BaseBrowserTask):
 
     def create_dock_panes(self):
         ps = AnalysisEditTask.create_dock_panes(self)
-        ps.extend([BrowserPane(model=self)])
+        #ps.extend([BrowserPane(model=self)])
+        ps.append(self._create_browser_pane())
         return ps
 
     def _save_to_db(self):
@@ -82,9 +83,9 @@ class RepositoryTask(AnalysisEditTask, BaseBrowserTask):
                                                                    p.name,
                                                                    s.igsn))
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
     @on_trait_change('igsn:new_igsn')
     def _new_igsn(self, new):
         '''
@@ -98,38 +99,39 @@ class RepositoryTask(AnalysisEditTask, BaseBrowserTask):
         self.selected_sample.igsn = new
         self._save_to_db()
 
-#     @on_trait_change('igsn:[sample, username, password]')
-#     def _update_igsn(self):
-#         self.igsn_enabled = all([getattr(self.igsn, a)
-#                                  for a in ('sample', 'username', 'password')])
-#
-#     @on_trait_change('repository:enabl')
-#     def _update_repo(self):
-#         self.repo_enabled = all([getattr(self.repository, a)
-#                                  for a in ('username', 'password')])
-#===============================================================================
-# defaults
-#===============================================================================
+    #     @on_trait_change('igsn:[sample, username, password]')
+    #     def _update_igsn(self):
+    #         self.igsn_enabled = all([getattr(self.igsn, a)
+    #                                  for a in ('sample', 'username', 'password')])
+    #
+    #     @on_trait_change('repository:enabl')
+    #     def _update_repo(self):
+    #         self.repo_enabled = all([getattr(self.repository, a)
+    #                                  for a in ('username', 'password')])
+    #===============================================================================
+    # defaults
+    #===============================================================================
     def _default_layout_default(self):
         return TaskLayout(id='pychron.repository',
                           left=HSplitter(
-                                         PaneItem('pychron.browser'),
-                                         )
-#                           left=HSplitter(
-
-#                                     PaneItem('pychron.browser'),
-#                                     Splitter(
-#                                          Tabbed(
-#                                                 PaneItem('pychron.analysis_edit.unknowns'),
-# #                                                 PaneItem('pychron.processing.figures.plotter_options')
-#                                                 ),
-# #                                          Tabbed(
-# #                                                 PaneItem('pychron.analysis_edit.controls'),
-# #                                                 PaneItem('pychron.processing.editor'),
-# #                                                 ),
-#                                          orientation='vertical'
-#                                          )
-#                                     ),
-
+                              PaneItem('pychron.browser'),
                           )
-#============= EOF =============================================
+                          #                           left=HSplitter(
+
+                          #                                     PaneItem('pychron.browser'),
+                          #                                     Splitter(
+                          #                                          Tabbed(
+                          #                                                 PaneItem('pychron.analysis_edit.unknowns'),
+                          # #                                                 PaneItem('pychron.processing.figures.plotter_options')
+                          #                                                 ),
+                          # #                                          Tabbed(
+                          # #                                                 PaneItem('pychron.analysis_edit.controls'),
+                          # #                                                 PaneItem('pychron.processing.editor'),
+                          # #                                                 ),
+                          #                                          orientation='vertical'
+                          #                                          )
+                          #                                     ),
+
+        )
+
+        #============= EOF =============================================

@@ -28,6 +28,7 @@ from chaco.plot import Plot
 class SelectorTool(BaseTool):
     editor = Any
     editor_event = Event
+
     def normal_key_pressed(self, event):
         if event.character == 's':
             self._toggle_state()
@@ -56,6 +57,7 @@ class SelectorTool(BaseTool):
 class SelectorOverlay(AbstractOverlay):
     tool = Any
     color = ColorTrait('green')
+
     def overlay(self, other_component, gc, view_bounds=None, mode="normal"):
         if self.tool.event_state == 'select':
             with gc:
@@ -67,12 +69,14 @@ class SelectorOverlay(AbstractOverlay):
                 gc.rect(x, y, w, h)
                 gc.stroke_path()
 
+
 def flatten_container(container):
     '''
         input a nested container and 
         return a list of Plots
     '''
     return list(flatten(container))
+
 
 def flatten(nested):
     try:
@@ -86,13 +90,13 @@ def flatten(nested):
     except TypeError:
         yield nested
 
+
 class PlotEditorPane(TraitsDockPane):
     component = Any
     name = 'Plot Editor'
     id = 'pychron.processing.editor'
     current_editor = Instance(PlotEditor)
     selectors = List
-
 
     def _component_changed(self):
         if self.component:
@@ -121,9 +125,9 @@ class PlotEditorPane(TraitsDockPane):
 
     def traits_view(self):
         v = View(
-                 UItem('current_editor',
-                       style='custom')
-                 )
+            UItem('current_editor',
+                  style='custom')
+        )
         return v
 
 #============= EOF =============================================

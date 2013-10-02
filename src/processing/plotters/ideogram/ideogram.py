@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from chaco.plot_label import PlotLabel
 from traits.api import Float, Array
 from chaco.array_data_source import ArrayDataSource
 from chaco.tools.broadcaster import BroadcasterTool
@@ -48,6 +49,9 @@ class Ideogram(BaseArArFigure):
     #     _reverse_sorted_analyses = True
     _analysis_number_cnt = 0
 
+    x_grid_visible = False
+    y_grid_visible = False
+
     def plot(self, plots):
         '''
             plot data on plots
@@ -71,6 +75,15 @@ class Ideogram(BaseArArFigure):
 
         graph.set_x_limits(min_=self.xmi, max_=self.xma,
                            pad='0.1')
+
+        ref = self.analyses[0]
+        age_units = ref.arar_constants.age_units
+        graph.set_x_title('Age ({})'.format(age_units))
+
+        #turn off ticks for prob plot by default
+        plot = graph.plots[0]
+        plot.value_axis.tick_label_formatter = lambda x: ''
+        plot.value_axis.tick_visible = False
 
         if omit:
             self._rebuild_ideo(omit)
@@ -142,6 +155,7 @@ class Ideogram(BaseArArFigure):
                          line_style='dash',
         )
 
+        self._add_info(graph, plot)
         self._add_central_tendency(graph, scatter, bins, probs)
         mi, ma = min(probs), max(probs)
         self._set_y_limits(mi, ma, min_=0)
@@ -152,6 +166,16 @@ class Ideogram(BaseArArFigure):
     #===============================================================================
     # overlays
     #===============================================================================
+    def _add_info(self, g, plot):
+        m = self.options.mean_calculation_kind
+        e = self.options.error_calc_method
+        pl = PlotLabel(text='Mean: {}\nError: {}'.format(m, e),
+                       overlay_position='inside top',
+                       hjustify='left',
+                       component=plot
+        )
+        plot.overlays.append(pl)
+
     def _add_central_tendency(self, g, scatter, bins, probs):
         offset = 0
         percentH = 1 - 0.954  # 2sigma

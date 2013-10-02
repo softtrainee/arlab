@@ -27,24 +27,29 @@ from traitsui.tabular_adapter import TabularAdapter
 #============= local library imports  ==========================
 from src.ui.tabular_editor import myTabularEditor
 
+
 class BrowserAdapter(TabularAdapter):
     font = 'arial 10'
+
 
 class ProjectAdapter(BrowserAdapter):
     columns = [('Name', 'name')]
 
+
 class AnalysisAdapter(BrowserAdapter):
     columns = [('RunID', 'record_id'),
-                ('Iso Fits', 'iso_fit_status'),
-                ('Blank', 'blank_fit_status'),
-                ('IC', 'ic_fit_status'),
-                ('Flux', 'flux_fit_status'),
-               ]
-#     record_id_text = Property
-#     blank_fit_status_text = Property
-#     flux_fit_status_text = Property
-#     iso_fit_status_text = Property
-#     ic_fit_status_text = Property
+               ('Tag', 'tag'),
+               ('Iso Fits', 'iso_fit_status'),
+               ('Blank', 'blank_fit_status'),
+               ('IC', 'ic_fit_status'),
+               ('Flux', 'flux_fit_status'),
+
+    ]
+    #     record_id_text = Property
+    #     blank_fit_status_text = Property
+    #     flux_fit_status_text = Property
+    #     iso_fit_status_text = Property
+    #     ic_fit_status_text = Property
 
     record_id_width = Int(65)
     odd_bg_color = 'lightgray'
@@ -52,9 +57,8 @@ class AnalysisAdapter(BrowserAdapter):
 
 
 class SampleAdapter(BrowserAdapter):
-
     columns = [('Sample', 'name'), ('Material', 'material')]
-#     material_text = Property
+    #     material_text = Property
     odd_bg_color = 'lightgray'
 
 #     def _get_material_text(self):
@@ -65,72 +69,70 @@ class SampleAdapter(BrowserAdapter):
 class BrowserPane(TraitsDockPane):
     name = 'Browser'
     id = 'pychron.browser'
-    multi_select = False
+    multi_select = True
     analyses_defined = Str('1')
 
     def traits_view(self):
         projectgrp = VGroup(
-                            HGroup(Label('Filter'),
-                                   UItem('project_filter',
-                                         width=75
-                                         )),
-                            UItem('projects',
-                                editor=TabularEditor(editable=False,
-                                          selected='selected_project',
-                                          adapter=ProjectAdapter()
-                                          ),
-                                width=75
-                                )
-                          )
+            HGroup(Label('Filter'),
+                   UItem('project_filter',
+                         width=75
+                   )),
+            UItem('projects',
+                  editor=TabularEditor(editable=False,
+                                       selected='selected_project',
+                                       adapter=ProjectAdapter()
+                  ),
+                  width=75
+            )
+        )
         samplegrp = VGroup(
-                           HGroup(Label('Filter'),
-                                  UItem('sample_filter',
-                                        width=75)),
-                           UItem('samples',
-                                editor=TabularEditor(
-                                                     adapter=SampleAdapter(),
-                                                     editable=False,
-                                                     selected='selected_sample',
-                                                     multi_select=True,
-                                                     dclicked='dclicked_sample',
-                                                     ),
-                                 width=75
-                                )
-                          )
+            HGroup(Label('Filter'),
+                   UItem('sample_filter',
+                         width=75)),
+            UItem('samples',
+                  editor=TabularEditor(
+                      adapter=SampleAdapter(),
+                      editable=False,
+                      selected='selected_sample',
+                      multi_select=True,
+                      dclicked='dclicked_sample',
+                  ),
+                  width=75
+            )
+        )
         analysisgrp = VGroup(
-                           HGroup(Label('Filter'),
-                                  UItem('analysis_filter',
-                                        width=75)),
-                           UItem('analyses',
-                                 editor=myTabularEditor(
-                                                      adapter=AnalysisAdapter(),
-#                                                       editable=False,
-                                                      operations=['move'],
-                                                      selected='selected_analysis',
-                                                      multi_select=self.multi_select,
-                                                      drag_external=True
+            HGroup(Label('Filter'),
+                   UItem('analysis_filter',
+                         width=75)),
+            UItem('analyses',
+                  editor=myTabularEditor(
+                      adapter=AnalysisAdapter(),
+                      #                                                       editable=False,
+                      operations=['move'],
+                      selected='selected_analysis',
+                      multi_select=self.multi_select,
+                      drag_external=True
 
-                                                      ),
-#                                  editor=ListStrEditor(editable=False,
-#                                           selected='selected_analysis'
-#                                           )
-                                width=300
-                                 ),
-                            HGroup(spring, Item('omit_invalid')),
-                            defined_when=self.analyses_defined,
-                           )
+                  ),
+                  #                                  editor=ListStrEditor(editable=False,
+                  #                                           selected='selected_analysis'
+                  #                                           )
+                  width=300
+            ),
+            HGroup(spring, Item('omit_invalid')),
+            defined_when=self.analyses_defined,
+        )
 
         v = View(
-                VSplit(
-                        projectgrp,
-                        samplegrp,
-                        analysisgrp
-#                         ),
-                        )
-                )
+            VSplit(
+                projectgrp,
+                samplegrp,
+                analysisgrp
+            )
+        )
 
         return v
-
 
 
 #============= EOF =============================================

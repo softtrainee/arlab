@@ -39,14 +39,16 @@ from src.ui.led_editor import LEDEditor
 from src.paths import paths
 from threading import Thread
 
+#@todo: don't save mask and attenuator when programming points, only xyz
+
 class FusionsUVManager(FusionsLaserManager):
-    '''
-    '''
+    """
+    """
     name = 'fusions_uv'
-#    attenuation = DelegatesTo('laser_controller')
-#    attenuationmin = DelegatesTo('laser_controller')
-#    attenuationmax = DelegatesTo('laser_controller')
-#    update_attenuation = DelegatesTo('laser_controller')
+    #    attenuation = DelegatesTo('laser_controller')
+    #    attenuationmin = DelegatesTo('laser_controller')
+    #    attenuationmax = DelegatesTo('laser_controller')
+    #    update_attenuation = DelegatesTo('laser_controller')
     monitor_name = 'uv_laser_monitor'
     monitor_klass = FusionsUVLaserMonitor
 
@@ -59,18 +61,18 @@ class FusionsUVManager(FusionsLaserManager):
     fire_label = Property(depends_on='firing')
     firing = Bool
     mode = Enum('Burst', 'Continuous', 'Single')
-#    single_shot = Bool
+    #    single_shot = Bool
 
     gas_handler = Instance(UVGasHandlerManager)
-#    laseronoff = Event
-#    laseronoff_label = Property(depends_on='_enabled')
-#    _enabled = DelegatesTo('atl_controller')
-#    fire_label = Property(depends_on='triggered')
-#    triggered = DelegatesTo('atl_controller')
+    #    laseronoff = Event
+    #    laseronoff_label = Property(depends_on='_enabled')
+    #    _enabled = DelegatesTo('atl_controller')
+    #    fire_label = Property(depends_on='triggered')
+    #    triggered = DelegatesTo('atl_controller')
 
-#    energy = DelegatesTo('atl_controller')
-#    energymin = DelegatesTo('atl_controller')
-#    energymax = DelegatesTo('atl_controller')
+    #    energy = DelegatesTo('atl_controller')
+    #    energymin = DelegatesTo('atl_controller')
+    #    energymax = DelegatesTo('atl_controller')
     energy_readback = DelegatesTo('atl_controller')
     pressure_readback = DelegatesTo('atl_controller')
     burst_readback = DelegatesTo('atl_controller')
@@ -103,24 +105,25 @@ class FusionsUVManager(FusionsLaserManager):
         # is atl on and warmed up
         ac = atl.is_enabled()
         return lc and ac
-#
-#    def goto_named_position(self, pos):
-#        sm = self.stage_manager
-# #        smap = sm._stage_map
-#        pos = pos.lower()
-# #        if pos.startswith('p'):
-# #            pt = smap.get_point(pos)
-# #            sm.set_z(pt['z'])
-# #            sm.linear_move(pt['xy'][0], pt['xy'][1], block=False)
-# #        elif pos.startswith('l'):
-# #            lines = smap.get_line(pos)
-# #            sm.move_polyline(lines)
-# #        elif pos.startswith('d'):
-# #            pt = smap.get_point(pos)
-#
-#        if pos.startswith('d'):
-#            sm.canvas.get_
-#        return 'OK'
+
+    #
+    #    def goto_named_position(self, pos):
+    #        sm = self.stage_manager
+    # #        smap = sm._stage_map
+    #        pos = pos.lower()
+    # #        if pos.startswith('p'):
+    # #            pt = smap.get_point(pos)
+    # #            sm.set_z(pt['z'])
+    # #            sm.linear_move(pt['xy'][0], pt['xy'][1], block=False)
+    # #        elif pos.startswith('l'):
+    # #            lines = smap.get_line(pos)
+    # #            sm.move_polyline(lines)
+    # #        elif pos.startswith('d'):
+    # #            pt = smap.get_point(pos)
+    #
+    #        if pos.startswith('d'):
+    #            sm.canvas.get_
+    #        return 'OK'
 
     def set_motors_for_point(self, pt):
         for motor in ('mask', 'attenuator'):
@@ -130,15 +133,15 @@ class FusionsUVManager(FusionsLaserManager):
     def goto_point(self, pos):
         sm = self.stage_manager
         pt = sm.canvas.get_point(pos)
-#        sm = self.stage_manager._stage_map
-#        pt = sm.get_point(pos)
+        #        sm = self.stage_manager._stage_map
+        #        pt = sm.get_point(pos)
         if pt:
             self.set_motors_for_point(pt)
             self.stage_manager.move_to_point(pt)
-#            x,y=pt.x,pt.y
-#            x, y = pt['xy']
-#            self.info('goto point {}'.format(pos, x, y))
-#            self.stage_manager.linear_move(x, y, block=False)
+            #            x,y=pt.x,pt.y
+            #            x, y = pt['xy']
+            #            self.info('goto point {}'.format(pos, x, y))
+            #            self.stage_manager.linear_move(x, y, block=False)
             result = True
         else:
             result = 'Invalid point'
@@ -164,12 +167,12 @@ class FusionsUVManager(FusionsLaserManager):
         else:
             if kind == 'continuous':
                 func = self._continuous_trace_path
-    #            self._continuous_trace_path(value, pathname)
+                #            self._continuous_trace_path(value, pathname)
             else:
                 func = self._step_trace_path
-    #            self._step_trace_path(value, pathname)
-#            self._is_tracing = True
-#            self._cancel_tracing = False
+                #            self._step_trace_path(value, pathname)
+            #            self._is_tracing = True
+            #            self._cancel_tracing = False
 
             t = Thread(target=func, args=(value, pathname))
             t.start()
@@ -192,13 +195,16 @@ class FusionsUVManager(FusionsLaserManager):
                          scan_size=poly['scan_size'],
                          start_callback=atl.laser_run,
                          end_callback=atl.laser_stop
-                         )
+        )
 
     def _continuous_trace_path(self, value, path, mode='smooth'):
+        atl = self.atl_controller
+        sm = self.stage_manager
+
         if mode == 'smooth':
-            atl = self.atl_controller
+
             atl.set_burst_mode(False)
-            sm = self.stage_manager
+
             sc = sm.stage_controller
 
             smap = sm._stage_map
@@ -211,7 +217,7 @@ class FusionsUVManager(FusionsLaserManager):
             sm._move_polyline(line,
                               start_callback=atl.laser_run,
                               end_callback=atl.laser_stop,
-                              )
+            )
 
             # turn off smooth transitions
             sc.set_smooth_transitions(False)
@@ -233,9 +239,9 @@ class FusionsUVManager(FusionsLaserManager):
                 v = si['velocity']
                 sm.set_z(z, block=False)
                 sm.linear_move(x, y, velocity=v,
-                                   update_hole=False,
-                                   use_calibration=False,
-                                   block=True)
+                               update_hole=False,
+                               use_calibration=False,
+                               block=True)
             atl.laser_stop()
 
         self._is_tracing = False
@@ -256,8 +262,8 @@ class FusionsUVManager(FusionsLaserManager):
         x1, y1 = pt.x, pt.y
         # move to first point
         step_func(x1, y1)
-#        self._is_tracing = True
-#        self._cancel_tracing = False
+        #        self._is_tracing = True
+        #        self._cancel_tracing = False
         for pi in points[1:]:
             x2, y2 = pi.x, pi.y
             # step along line until cp >=pi
@@ -310,9 +316,9 @@ class FusionsUVManager(FusionsLaserManager):
         time.sleep(delay)
         atl.laser_stop()
 
-#===============================================================================
-# private
-#===============================================================================
+    #===============================================================================
+    # private
+    #===============================================================================
     def _enable_hook(self):
         resp = self.laser_controller._enable_laser()
         if self.laser_controller.simulation:
@@ -337,9 +343,9 @@ class FusionsUVManager(FusionsLaserManager):
         self.firing = False
         return resp
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
 
     def _fire_button_fired(self):
         if self.firing:
@@ -350,9 +356,9 @@ class FusionsUVManager(FusionsLaserManager):
             self.info('firing laser')
             if self.mode == 'Single':
                 self.atl_controller.laser_single_shot()
-#            elif self.mode=='Burst':
-#                self.atl_controller.laser_burst()
-#                self.firing = True
+            #            elif self.mode=='Burst':
+            #                self.atl_controller.laser_burst()
+            #                self.firing = True
             else:
                 self.atl_controller.laser_run()
                 self.firing = True
@@ -370,74 +376,76 @@ class FusionsUVManager(FusionsLaserManager):
             self.atl_controller.set_burst_mode(True)
         else:
             self.atl_controller.set_burst_mode(False)
-#===============================================================================
-# property get/set
-#===============================================================================
+            #===============================================================================
+            # property get/set
+            #===============================================================================
+
     def _get_fire_label(self):
         return 'Fire' if not self.firing else 'Stop'
-#===============================================================================
-# views
-#===============================================================================
+
+    #===============================================================================
+    # views
+    #===============================================================================
     def get_control_group(self):
         cg = VGroup(
-                      HGroup(
-                             Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
-                             self._button_factory('enable', 'enable_label'),
-                             self._button_factory('execute_button', 'execute_label'),
-                             Item('names', show_label=False),
-                             spring
-                             ),
-#                      Item('execute_button', show_label=False, editor=ButtonEditor(label_value='execute_label')),
-                      HGroup(
-                             Item('action_readback', width=100, style='readonly', label='Action'),
-                             Item('status_readback', style='readonly', label='Status'),
-                             ),
-                      HGroup(self._button_factory('fire_button', 'fire_label'),
-                             Item('mode', show_label=False),
-                             enabled_when='object.enabled and object.status_readback=="Laser On"'
-                             ),
-                      HGroup(
-                             Item('burst_shot', label='N Burst', enabled_when='mode=="Burst"'),
-                             Item('reprate', label='Rep. Rate')
-                             ),
-                      HGroup(
-                             Item('burst_readback', label='Burst Rem.', width=50, style='readonly'),
-                             Item('energy_readback', label='Energy (mJ)',
-                                  style='readonly', format_str='%0.2f'),
-                             Item('pressure_readback', label='Pressure (mbar)',
-                                  style='readonly', width=100, format_str='%0.1f'),
-                             spring,
-                             enabled_when='object.enabled'
-                             ),
-                      show_border=True,
-                      label='Power')
+            HGroup(
+                Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
+                self._button_factory('enable', 'enable_label'),
+                self._button_factory('execute_button', 'execute_label'),
+                Item('names', show_label=False),
+                spring
+            ),
+            #                      Item('execute_button', show_label=False, editor=ButtonEditor(label_value='execute_label')),
+            HGroup(
+                Item('action_readback', width=100, style='readonly', label='Action'),
+                Item('status_readback', style='readonly', label='Status'),
+            ),
+            HGroup(self._button_factory('fire_button', 'fire_label'),
+                   Item('mode', show_label=False),
+                   enabled_when='object.enabled and object.status_readback=="Laser On"'
+            ),
+            HGroup(
+                Item('burst_shot', label='N Burst', enabled_when='mode=="Burst"'),
+                Item('reprate', label='Rep. Rate')
+            ),
+            HGroup(
+                Item('burst_readback', label='Burst Rem.', width=50, style='readonly'),
+                Item('energy_readback', label='Energy (mJ)',
+                     style='readonly', format_str='%0.2f'),
+                Item('pressure_readback', label='Pressure (mbar)',
+                     style='readonly', width=100, format_str='%0.1f'),
+                spring,
+                enabled_when='object.enabled'
+            ),
+            show_border=True,
+            label='Power')
 
         ac = self.get_additional_group()
         return HGroup(cg, ac)
 
 
-#===============================================================================
-# defaults
-#===============================================================================
+    #===============================================================================
+    # defaults
+    #===============================================================================
 
     def _stage_manager_default(self):
         '''
         '''
         args = dict(name='stage',
-                            configuration_dir_name='uv',
-                             stage_controller_class='Aerotech',
-                             stage_map_klass=UVStageMap,
-                             use_modified=False
-                             )
+                    configuration_dir_name='uv',
+                    stage_controller_class='Aerotech',
+                    stage_map_klass=UVStageMap,
+                    use_modified=False
+        )
 
-#        if self.video_manager.__class__.__name__ == 'VideoManager' and self._video_stage:
-#        if self.use_video:
-#            from src.lasers.stage_managers.video_stage_manager import VideoStageManager
-#            factory = VideoStageManager
-#            args['video_manager'] = self.video_manager
-#        else:
-#            from src.lasers.stage_managers.stage_manager import StageManager
-#            factory = StageManager
+        #        if self.video_manager.__class__.__name__ == 'VideoManager' and self._video_stage:
+        #        if self.use_video:
+        #            from src.lasers.stage_managers.video_stage_manager import VideoStageManager
+        #            factory = VideoStageManager
+        #            args['video_manager'] = self.video_manager
+        #        else:
+        #            from src.lasers.stage_managers.stage_manager import StageManager
+        #            factory = StageManager
 
         return self._stage_manager_factory(args)
 
@@ -452,17 +460,19 @@ class FusionsUVManager(FusionsLaserManager):
         '''
         return ATLLaserControlUnit(name='atl_controller',
                                    configuration_dir_name='uv',
-                                   )
+        )
 
     def _gas_handler_default(self):
         uv = UVGasHandlerManager(controller=self.atl_controller)
-#        uv.bootstrap()
+        #        uv.bootstrap()
         return uv
+
     def _mode_default(self):
         return 'Burst'
 
     def _laser_script_executor_default(self):
         return UVLaserScriptExecutor(laser_manager=self)
+
 #    def _shot_history_default(self):
 #        '''
 #        '''

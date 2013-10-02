@@ -57,11 +57,11 @@ class IsotopeDatabaseManager(Loggable):
             except AttributeError, e:
                 self.debug('bind exception. {}'.format(e))
 
-            #         if connect and not self.db.connect(warn=warn):
+                #         if connect and not self.db.connect(warn=warn):
         if connect:
             self.db.connect(warn=warn)
 
-        #             self.db = None
+            #             self.db = None
 
     def isConnected(self):
         if self.db:
@@ -86,8 +86,8 @@ class IsotopeDatabaseManager(Loggable):
         if self.db is not None:
             if self.db.connect(force=True):
                 return True
-            #                 self.db.flush()
-            #                 self.db.reset()
+                #                 self.db.flush()
+                #                 self.db.reset()
         elif inform:
             self.warning_dialog('Not Database available')
 
@@ -144,9 +144,14 @@ class IsotopeDatabaseManager(Loggable):
                     if progress:
                         progress.on_trait_change(self._progress_closed, 'closed')
 
-                    rs = [self._record_factory(ai, progress=progress, **kw)
-                          for ai in ans]
-                    rs = [ri for ri in rs if ri is not None]
+                    #rs = [self._record_factory(ai, progress=progress, **kw)
+                    #      for ai in ans]
+                    #rs = [ri for ri in rs if ri is not None]
+                    rs = []
+                    for ai in ans:
+                        r = self._record_factory(ai, progress=progress, **kw)
+                        if r is not None:
+                            rs.append(r)
 
                     dbans.extend(rs)
 
@@ -156,15 +161,15 @@ class IsotopeDatabaseManager(Loggable):
 
                 return dbans
 
-            #     def load_analyses(self, ans, show_progress=True, **kw):
-            #         progress = None
-            #
-            # #         ans = [ai for ai in ans if not ai.loaded]
-            #
-            #         n = len(ans)
-            #         if show_progress and n > 1:
-            #             progress = self._open_progress(n)
-            #         self._load_analyses(ans, progress=progress, **kw)
+                #     def load_analyses(self, ans, show_progress=True, **kw):
+                #         progress = None
+                #
+                # #         ans = [ai for ai in ans if not ai.loaded]
+                #
+                #         n = len(ans)
+                #         if show_progress and n > 1:
+                #             progress = self._open_progress(n)
+                #         self._load_analyses(ans, progress=progress, **kw)
 
     def get_level(self, level, irradiation=None):
         if irradiation is None:
@@ -226,12 +231,18 @@ class IsotopeDatabaseManager(Loggable):
             return rec
 
         else:
+            atype = None
             if isinstance(rec, meas_AnalysisTable):
                 rid = make_runid(rec.labnumber.identifier, rec.aliquot, rec.step)
+                atype = rec.measurement.analysis_type.name
+
             elif hasattr(rec, 'record_id'):
                 rid = rec.record_id
             else:
                 rid = id(rec)
+
+            if atype is None:
+                atype = rec.analysis_type
 
             def func(r):
                 meas_analysis = self.db.get_analysis_uuid(r.uuid)
@@ -242,7 +253,7 @@ class IsotopeDatabaseManager(Loggable):
                 return ai
 
             if progress:
-                show_age = calculate_age and rec.analysis_type in ('unknown', 'cocktail')
+                show_age = calculate_age and atype in ('unknown', 'cocktail')
                 m = 'calculating age' if show_age else ''
                 msg = 'loading {}. {}'.format(rid, m)
                 progress.change_message(msg)
