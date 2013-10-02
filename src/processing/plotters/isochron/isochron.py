@@ -15,11 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from chaco.plot_label import PlotLabel
+from chaco.tools.data_label_tool import DataLabelTool
 from traits.api import Float, Array
 #============= standard library imports ========================
 from numpy import hstack, array, linspace
 # from chaco.array_data_source import ArrayDataSource
 #============= local library imports  ==========================
+from src.graph.tools.plot_label_tool import PlotLabelTool
+from src.helpers.formatting import calc_percent_error
 
 from src.processing.plotters.arar_figure import BaseArArFigure
 # from src.graph.error_bar_overlay import ErrorBarOverlay
@@ -39,7 +43,7 @@ from src.stats.core import calculate_weighted_mean
 from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
 from chaco.array_data_source import ArrayDataSource
 from src.graph.error_ellipse_overlay import ErrorEllipseOverlay
-from src.regression.new_york_regressor import NewYorkRegressor
+from src.regression.new_york_regressor import NewYorkRegressor, ReedYorkRegressor
 # from src.processing.plotters.spectrum.tools import SpectrumTool, \
 #     SpectrumErrorOverlay, PlateauTool, PlateauOverlay
 # from src.processing.argon_calculations import find_plateaus, age_equation
@@ -51,6 +55,7 @@ N = 500
 class Isochron(BaseArArFigure):
     pass
 
+
 class InverseIsochron(Isochron):
 #     xmi = Float
 #     xma = Float
@@ -58,13 +63,13 @@ class InverseIsochron(Isochron):
     xs = Array
 
 
-#     index_key = 'age'
-#     ytitle = 'Relative Probability'
+    #     index_key = 'age'
+    #     ytitle = 'Relative Probability'
 
     def plot(self, plots):
-        '''
+        """
             plot data on plots
-        '''
+        """
         graph = self.graph
 
         self._plot_inverse_isochron(graph.plots[0], 0)
@@ -78,17 +83,17 @@ class InverseIsochron(Isochron):
     def min_x(self, attr):
         return min([ai.nominal_value for ai in self._unpack_attr(attr)])
 
-#===============================================================================
-# plotters
-#===============================================================================
+    #===============================================================================
+    # plotters
+    #===============================================================================
     def _plot_aux(self, title, vk, ys, po, plot, pid, es=None):
         scatter = self._add_aux_plot(ys, title, vk, pid)
 
-#         self._add_error_bars(scatter, self.xes, 'x', 1,
-#                              visible=po.x_error)
-#         if es:
-#             self._add_error_bars(scatter, es, 'y', 1,
-#                              visible=po.y_error)
+    #         self._add_error_bars(scatter, self.xes, 'x', 1,
+    #                              visible=po.x_error)
+    #         if es:
+    #             self._add_error_bars(scatter, es, 'y', 1,
+    #                              visible=po.y_error)
 
     def _add_plot(self, xs, ys, es, plotid, value_scale='linear'):
         pass
@@ -125,7 +130,7 @@ class InverseIsochron(Isochron):
 
         graph.set_x_limits(min_=min(xs), max_=max(xs), pad='0.1')
 
-        reg = NewYorkRegressor(xs=xs, ys=ys, xserr=xerrs, yserr=yerrs)
+        reg = ReedYorkRegressor(xs=xs, ys=ys, xserr=xerrs, yserr=yerrs)
         reg.calculate()
 
         mi, ma = graph.get_x_limits()
@@ -139,11 +144,27 @@ class InverseIsochron(Isochron):
                                     # add_tool,
                                     # value_format,
                                     # additional_info
-                                    )
+        )
 
-#===============================================================================
-# overlays
-#===============================================================================
+        self._add_info(plot, reg)
+
+    #===============================================================================
+    # overlays
+    #===============================================================================
+    def _add_info(self, plot, reg):
+        intercept = reg.predict(0)
+        err = reg.get_intercept_error()
+        inv_intercept = intercept ** -1
+        print err
+
+        p = calc_percent_error(inv_intercept, err)
+        l = PlotLabel(text=u'''Ar40/Ar36= {:0.2f}
+               +/-{:0.3f} ({}%)\n\n'''.format(inv_intercept, err, p),
+                      component=plot,
+                      overlay_position='inside bottom',
+                      hjustify='left',
+        )
+        plot.overlays.append(l)
 
     def update_index_mapper(self, obj, name, old, new):
         if new is True:
@@ -152,14 +173,13 @@ class InverseIsochron(Isochron):
     def update_graph_metadata(self, obj, name, old, new):
         pass
 
-
-#===============================================================================
-# utils
-#===============================================================================
+    #===============================================================================
+    # utils
+    #===============================================================================
     def _get_age_errors(self, ans):
         ages, errors = zip(*[(ai.age.nominal_value,
-                                ai.age.std_dev)
-                                for ai in self.sorted_analyses])
+                              ai.age.std_dev)
+                             for ai in self.sorted_analyses])
         return array(ages), array(errors)
 
     def _add_aux_plot(self, ys, title, vk, pid, **kw):
@@ -173,10 +193,10 @@ class InverseIsochron(Isochron):
 
     def _calculate_stats(self, ages, errors, xs, ys):
         mswd, valid_mswd, n = self._get_mswd(ages, errors)
-#         mswd = calculate_mswd(ages, errors)
-#         valid_mswd = validate_mswd(mswd, len(ages))
+        #         mswd = calculate_mswd(ages, errors)
+        #         valid_mswd = validate_mswd(mswd, len(ages))
         if self.options.mean_calculation_kind == 'kernel':
-            wm , we = 0, 0
+            wm, we = 0, 0
             delta = 1
             maxs, _mins = find_peaks(ys, delta, xs)
             wm = max(maxs, axis=1)[0]

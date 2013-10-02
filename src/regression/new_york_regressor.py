@@ -13,17 +13,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-from traits.etsconfig.etsconfig import ETSConfig
-from src.stats.core import kronecker
-ETSConfig.toolkit = 'qt4'
-from traits.api import Array
+from traits.api import Array, Property, Float
 #============= enthought library imports =======================
-from numpy import linspace, apply_along_axis, sign, roll, \
-     where, Inf, vectorize, zeros, ones_like, identity
+from numpy import linspace, Inf, identity
 from scipy.optimize import fsolve
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.regression.ols_regressor import OLSRegressor
+
+
 class YorkRegressor(OLSRegressor):
     xns = Array
     xds = Array
@@ -36,6 +34,13 @@ class YorkRegressor(OLSRegressor):
 
     ynes = Array
     ydes = Array
+
+    slope = Property
+    _slope = Float
+
+    intercept = Property
+    _intercept = Float
+
 
     def calculate(self, *args, **kw):
         super(YorkRegressor, self).calculate(*args, **kw)
@@ -206,6 +211,13 @@ class NewYorkRegressor(YorkRegressor):
     def predict(self, x):
         m, b = self._slope, self._intercept
         return m * x + b
+
+    def _get_slope(self):
+        return self._slope
+
+    def _get_intercept(self):
+        return self._intercept
+
 
 class ReedYorkRegressor(YorkRegressor):
     '''

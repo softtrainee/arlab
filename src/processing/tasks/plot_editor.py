@@ -16,8 +16,14 @@
 
 #============= enthought library imports =======================
 from chaco.axis import DEFAULT_TICK_FORMATTER
-from traits.api import HasTraits, Any, Float, Int, on_trait_change, Bool
-from traitsui.api import View, Item, Group, VGroup
+from chaco.base_xy_plot import BaseXYPlot
+from chaco.scatterplot import ScatterPlot
+from enable.enable_traits import LineStyle
+from enable.markers import MarkerTrait
+from traits.api import HasTraits, Any, Float, Int, on_trait_change, Bool, \
+    Instance, List, Range, Color
+from traitsui.api import View, Item, Group, VGroup, UItem, ListEditor, \
+    InstanceEditor, Heading, RangeEditor, HGroup
 # from pyface.timer.do_later import do_later
 # from traitsui.editors.range_editor import RangeEditor
 # from numpy.core.numeric import Inf
@@ -52,6 +58,9 @@ class PlotEditor(HasTraits):
     tick_visible = Bool
     x_grid = Bool
     y_grid = Bool
+
+    renderers = List
+
 
     @on_trait_change('padding+')
     def _update_padding(self, name, new):
@@ -98,6 +107,24 @@ class PlotEditor(HasTraits):
 
         self.x_grid = self.plot.x_grid.visible
         self.y_grid = self.plot.y_grid.visible
+
+        rs = []
+        for k, ps in self.plot.plots.iteritems():
+            r = ps[0]
+            editable = True
+            if hasattr(r, 'editable'):
+                editable = r.editable
+
+            if editable:
+                if isinstance(r, ScatterPlot):
+                    klass = ScatterRendererEditor
+                else:
+                    klass = LineRendererEditor
+
+                rs.append(klass(name=k,
+                                renderer=r))
+
+        self.renderers = rs
 
     def _xmin_changed(self):
         p = self.plot
@@ -159,20 +186,26 @@ class PlotEditor(HasTraits):
             Item('y_grid'),
             label='Grids'
         )
+        renderers_grp = Group(
+            UItem('renderers', editor=ListEditor(mutable=False,
+                                                 style='custom',
+                                                 editor=InstanceEditor())
+            ),
+            label='Plots'
+        )
 
-        v = View(
-            VGroup(
-                Group(
+        general_grp = VGroup(
+            Group(
                     #                           Item('xauto', label='Autoscale'),
                     Item('xmin'),
                     Item('xmax'),
-                ),
-                Group(
+            ),
+            Group(
                     #                           Item('yauto', label='Autoscale'),
                     Item('ymin'),
                     Item('ymax'),
-                ),
-                Group(
+            ),
+            Group(
                     Item('padding_left', label='Left'),
                     Item('padding_right', label='Right'),
                     Item('padding_top', label='Top'),
@@ -180,8 +213,90 @@ class PlotEditor(HasTraits):
                     label='Padding'
                 ),
                 y_grp,
-                grids_grp
+                grids_grp,
+                label='General'
+        )
+
+        v = View(
+            renderers_grp,
+            general_grp
+        )
+        return v
+
+
+class RendererEditor(HasTraits):
+    renderer = Instance(BaseXYPlot)
+    visible = Bool
+    color = Color
+
+    @on_trait_change('visible, color')
+    def _update_value(self, name, new):
+        #print name,new
+        self._set_value(name, new)
+
+    def _set_value(self, name, new):
+        self.renderer.trait_set(**{name: new})
+        self.renderer.request_redraw()
+
+    def _renderer_changed(self):
+        self.line_width = self.renderer.line_width
+        self.visible = self.renderer.visible
+        self.color = self.renderer.color
+        self._sync()
+
+    def _sync(self):
+        pass
+
+    def traits_view(self):
+        v = View(
+            VGroup(
+                HGroup(Heading(self.name),
+                       UItem('visible')),
+                self._get_group()
             )
         )
         return v
-        #============= EOF =============================================
+
+
+class LineRendererEditor(RendererEditor):
+    line_width = Range(0.0, 10.0)
+    line_style = LineStyle
+
+    @on_trait_change('line+')
+    def _update_values2(self, name, new):
+        self._set_value(name, new)
+
+    def _get_group(self):
+        g = VGroup(
+            Item('color'),
+            Item('line_width', label='Width'),
+            Item('line_style', label='Style'),
+            enabled_when='visible'
+        )
+        return g
+
+
+class ScatterRendererEditor(RendererEditor):
+    marker_size = Range(0.0, 10.0)
+    outline_color = Color
+    marker = MarkerTrait
+
+    @on_trait_change('marker+, outline_color')
+    def _update_values2(self, name, new):
+        self._set_value(name, new)
+
+    def _sync(self):
+        self.outline_color = self.renderer.outline_color
+        self.marker = self.renderer.marker
+
+    def _get_group(self):
+        g = VGroup(
+            Item('color'),
+            Item('outline_color'),
+            Item('marker'),
+            Item('marker_size', label='Size'),
+            enabled_when='visible'
+        )
+        return g
+
+    #============= EOF =============================================

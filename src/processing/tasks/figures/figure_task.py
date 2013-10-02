@@ -15,29 +15,20 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Instance, List
-from traitsui.api import View, Item
-from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed, \
+from traits.api import on_trait_change, Instance
+from pyface.tasks.task_layout import TaskLayout, PaneItem, Tabbed, \
     HSplitter
-from pyface.timer.do_later import do_later
 from pyface.tasks.action.schema import SToolBar
-# from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
 #============= standard library imports ========================
 from itertools import groupby
 import cPickle as pickle
 #============= local library imports  ==========================
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.processing.tasks.figures.panes import PlotterOptionsPane, \
-    FigureSelectorPane, MultiSelectAnalysisBrowser
-# from src.ui.gui import invoke_in_main_thread
-# from src.processing.plotters.ideogram import Ideogram
-# from src.processing.plotter_options_manager import IdeogramOptionsManager
+    FigureSelectorPane
 from src.processing.tasks.figures.actions import SaveFigureAction, \
     OpenFigureAction, NewIdeogramAction, AppendIdeogramAction, NewSpectrumAction, \
     AppendSpectrumAction
-from src.processing.tasks.browser.browser_task import BaseBrowserTask
-# from src.processing.tasks.browser.panes import BrowserPane
-from src.codetools.simple_timeit import timethis
 
 import weakref
 
@@ -75,7 +66,6 @@ class FigureTask(AnalysisEditTask):
 
     auto_select_analysis = False
 
-
     #===============================================================================
     # task protocol
     #===============================================================================
@@ -97,7 +87,8 @@ class FigureTask(AnalysisEditTask):
 
         return panes + [self.plotter_options_pane,
                         self.figure_selector_pane,
-                        MultiSelectAnalysisBrowser(model=self)]
+                        #MultiSelectAnalysisBrowser(model=self)
+        ]
 
     def _create_control_pane(self):
         pass
@@ -499,7 +490,8 @@ class FigureTask(AnalysisEditTask):
                 Tabbed(
                     PaneItem('pychron.analysis_edit.unknowns'),
                     PaneItem('pychron.processing.figures.plotter_options'),
-                    PaneItem('pychron.analysis_edit.controls'),
+                    PaneItem('pychron.processing.editor')
+                    #PaneItem('pychron.analysis_edit.controls'),
                 ),
             ),
         )
