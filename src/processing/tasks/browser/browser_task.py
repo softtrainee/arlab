@@ -82,7 +82,7 @@ class BaseBrowserTask(BaseEditorTask):
     selected_analysis = Any
     dclicked_sample = Any
 
-    omit_invalid = Bool(False)
+    omit_invalid = Bool(True)
 
     tool_bars = [SToolBar(NewBrowserEditorAction(),
                           image_size=(16, 16)
@@ -151,7 +151,7 @@ class BaseBrowserTask(BaseEditorTask):
         return func
 
     def _omit_invalid_filter(self, x):
-        return x.tag == 'invalid'
+        return x.tag != 'invalid'
 
     def _project_filter_changed(self, new):
         self.projects = filter(self._filter_func(new, 'name'), self.oprojects)
@@ -171,6 +171,8 @@ class BaseBrowserTask(BaseEditorTask):
 
 class BrowserTask(BaseBrowserTask):
     name = 'Analysis Browser'
+
+
     def activated(self):
         editor = RecallEditor()
         self._open_editor(editor)

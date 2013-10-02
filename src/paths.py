@@ -151,7 +151,7 @@ class Paths():
         join = path.join
 
         self.root = root = join(HOME, home)
-#        self.resources = join('..', '..', '..', 'resources',)
+        #        self.resources = join('..', '..', '..', 'resources',)
 
         self.resources = join(path.dirname(path.dirname(__file__)), 'resources')
         self.icons = join(self.resources, 'icons')
@@ -160,12 +160,12 @@ class Paths():
         self.abouts = join(self.resources, 'abouts')
         self.sounds = join(self.resources, 'sounds')
         self.bullets = join(self.resources, 'bullets')
-#        src_repo_name = 'pychron{}'.format(version)
-#        self.pychron_src_root = pychron_src_root = join('.', 'pychron.app', 'Contents', 'Resources')
-#        self.pychron_dev_src_root = join(HOME, 'Programming', 'mercurial',
-#                                             'pychron{}'.format(version),
-#                                             'resources'
-#                                            )
+        #        src_repo_name = 'pychron{}'.format(version)
+        #        self.pychron_src_root = pychron_src_root = join('.', 'pychron.app', 'Contents', 'Resources')
+        #        self.pychron_dev_src_root = join(HOME, 'Programming', 'mercurial',
+        #                                             'pychron{}'.format(version),
+        #                                             'resources'
+        #                                            )
         # _dir suffix ensures the path is checked for existence
         self.root_dir = root
         stable_root = join(HOME, 'Pychrondata')
@@ -174,7 +174,7 @@ class Paths():
         #==============================================================================
         # #database
         #==============================================================================
-#        db_path = '/usr/local/pychron
+        #        db_path = '/usr/local/pychron
         db_path = stable_root
         self.device_scan_root = device_scan_root = join(db_path, 'device_scans')
         self.device_scan_db = join(device_scan_root, 'device_scans.sqlite')
@@ -198,7 +198,7 @@ class Paths():
         # root
         #==============================================================================
         self.scripts_dir = scripts_dir = join(root, 'scripts')
-#        self.procedures_dir = join(scripts_dir, 'procedures')
+        #        self.procedures_dir = join(scripts_dir, 'procedures')
         self.measurement_dir = join(scripts_dir, 'measurement')
         self.post_measurement_dir = join(scripts_dir, 'post_measurement')
         self.extraction_dir = join(scripts_dir, 'extraction')
@@ -261,7 +261,7 @@ class Paths():
         #==============================================================================
         # lovera exectuables
         #==============================================================================
-#        self.clovera_root = join(pychron_src_root, 'src', 'modeling', 'lovera', 'bin')
+        #        self.clovera_root = join(pychron_src_root, 'src', 'modeling', 'lovera', 'bin')
 
 
         #=======================================================================
@@ -269,13 +269,13 @@ class Paths():
         #=======================================================================
         self.backup_recovery_file = join(self.hidden_dir, 'backup_recovery')
 
-
-        self.icon_search_path = [self.icons, 
+        self.icon_search_path = [self.icons,
                                  self.app_resources]
-        
+
 
 paths = Paths()
 paths.build('_beta')
+
 
 def rec_make(pi):
     if pi and not path.exists(pi):
@@ -285,141 +285,13 @@ def rec_make(pi):
             rec_make(path.split(pi)[0])
             mkdir(pi)
 
+
 def build_directories(paths):
 #    global paths
-    # verify paths
+# verify paths
 #    import copy
     for l in dir(paths):
         if l.endswith('_dir'):
             rec_make(getattr(paths, l))
-
-
-# def build_initialization_file(root):
-#    p = join(root, 'initialization.xml')
-#    if os.path.isfile(p):
-#        from src.helpers.initialization_parser import InitializationParser
-#        parser = InitializationParser()
-#
-#        DEFAULT_GENERAL_PLUGINS = ['Database', 'SVN']
-#        DEFAULT_HARDWARE_PLUGINS = ['ExtractionLine',
-#                                    'FusionsCO2', 'FusionsDiode',
-#                                    'SynradCO2',
-#                                    'Spectrometer',
-#                                    ]
-#        DEFAULT_DATA_PLUGINS = ['Graph', 'MDDModeler']
-#        DEFAULT_SOCIAL_PLUGINS = ['Twitter', 'Email']
-#
-#        DEFAULT_PLUGINS = (DEFAULT_GENERAL_PLUGINS +
-#                            DEFAULT_HARDWARE_PLUGINS +
-#                            DEFAULT_DATA_PLUGINS +
-#                            DEFAULT_SOCIAL_PLUGINS
-#                            )
-#
-#        DEFAULT_PLUGINS.sort()
-#        plugins = parser.get_plugins(all=True)
-#        plugins.sort()
-#
-#        #add any default plugin not defined already
-#        uptodate = DEFAULT_PLUGINS == plugins
-#        if not uptodate:
-#            diff = list(set(DEFAULT_PLUGINS) - set(plugins))
-#            for grp, plist in [('general', DEFAULT_GENERAL_PLUGINS),
-#                          ('hardware', DEFAULT_HARDWARE_PLUGINS),
-#                          ('data', DEFAULT_DATA_PLUGINS),
-#                          ('social', DEFAULT_SOCIAL_PLUGINS)
-#                          ]:
-#                for di in diff:
-#                    if di in plist:
-#                        parser.add_plugin(grp, di)
-#                        #@todo add child elements such as managers and devices to this plugin
-#    else:
-#        with open(p, 'w') as f:
-#            f.write('''
-# <!--
-# This is the initialization file. It defines the plugins and the associated managers and devices
-# that should be bootstrapped (load, open, initialize) on startup.
-#
-# load means read configuration values
-# open means create and error check communication handles
-# initialize is a hook for object specific tasks directly after communications is established
-#
-# plugins
-# general
-#  database
-#  svn @depecretated
-#  script
-# hardware
-#  extractionline
-#  bakeout
-#  fusionsCO2
-#  fusionsDiode
-#  synradCO2
-#  spectrometer
-# data
-#  graph
-# social
-#  email
-#  twitter
-# -->
-#
-# <root>
-#  <general>
-#    <plugin enabled="false">Database</plugin>
-#    <plugin enabled="false">SVN</plugin>
-#  </general>
-#  <hardware>
-#    <plugin enabled="false">ExtractionLine
-#      <manager enabled="true">valve_manager
-#        <device enabled="true">valve_controller</device>
-#        <device enabled="true" klass="ValveController">argus_valve_controller</device>
-#      </manager>
-#      <manager enabled="false">gauge_manager</manager>
-#      <manager enabled="false">bakeout_manager</manager>
-#    </plugin>
-#    <plugin enabled="false">FusionsCO2
-#      <manager enabled="true">stage_manager
-#       <device enabled="true">stage_controller</device>
-#      </manager>
-#      <device enabled="true">logic_board</device>
-#    </plugin>
-#    <plugin enabled="false">FusionsDiode
-#      <manager enabled="true">stage_manager
-#        <device enabled="true">stage_controller</device>
-#      </manager>
-#      <manager enabled="true">control_module
-#        <device enabled="true">control</device>
-#      </manager>
-#      <device enabled="true">logic_board</device>
-#      <device enabled="true">temperature_controller</device>
-#      <device enabled="true">pyrometer</device>
-#      <device enabled="true">subsystem</device>
-#    </plugin>
-#    <plugin enabled="false">SynradCO2</plugin>
-#    <plugin enabled="false">Spectrometer
-#      <device enabled="true" klass="ArgusController">spectrometer_microcontroller</device>
-#    </plugin>
-#  </hardware>
-#  <data>
-#    <plugin enabled="false">Graph</plugin>
-#    <plugin enabled="false">MDDModeler</plugin>
-#  </data>
-#  <social>
-#      <plugin enabled="false">Twitter</plugin>
-#      <plugin enabled="false">Email</plugin>
-#  </social>
-# </root>
-# ''')
-
-
-
-#            #ensure plugins dir is a valid python package
-#            if l == 'plugins_dir':
-#                p = join(pi, '__init__.py')
-#                if not os.path.isfile(p):
-#                    with open(p, 'w') as _f:
-#                        pass
-#            elif l == 'setup_dir':
-#                #build initialization file
-#                build_initialization_file(pi)
 
 #============= EOF ==============================================

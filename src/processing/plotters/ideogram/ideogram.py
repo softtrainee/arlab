@@ -145,7 +145,9 @@ class Ideogram(BaseArArFigure):
         graph = self.graph
         bins, probs = self._calculate_probability_curve(self.xs, self.xes)
 
+        gid = self.group_id
         scatter, _p = graph.new_series(x=bins, y=probs, plotid=pid)
+        graph.set_series_label('Current-{:03n}'.format(gid), series=0, plotid=pid)
 
         # add the dashed original line
         graph.new_series(x=bins, y=probs,
@@ -154,9 +156,10 @@ class Ideogram(BaseArArFigure):
                          color=scatter.color,
                          line_style='dash',
         )
+        graph.set_series_label('Original-{:03n}'.format(gid), series=1, plotid=pid)
 
         self._add_info(graph, plot)
-        self._add_central_tendency(graph, scatter, bins, probs)
+        self._add_mean_indicator(graph, scatter, bins, probs, pid)
         mi, ma = min(probs), max(probs)
         self._set_y_limits(mi, ma, min_=0)
 
@@ -172,11 +175,11 @@ class Ideogram(BaseArArFigure):
         pl = PlotLabel(text='Mean: {}\nError: {}'.format(m, e),
                        overlay_position='inside top',
                        hjustify='left',
-                       component=plot
+                       component=plot,
         )
         plot.overlays.append(pl)
 
-    def _add_central_tendency(self, g, scatter, bins, probs):
+    def _add_mean_indicator(self, g, scatter, bins, probs, pid):
         offset = 0
         percentH = 1 - 0.954  # 2sigma
 
@@ -192,6 +195,8 @@ class Ideogram(BaseArArFigure):
                             color=scatter.color,
                             plotid=0
         )
+        gid = self.group_id
+        g.set_series_label('Mean-{:03n}'.format(gid), series=2, plotid=pid)
 
         self._add_error_bars(s, [we], 'x', self.options.nsigma)
         #         display_mean_indicator = self._get_plot_option(self.options, 'display_mean_indicator', default=True)
@@ -254,10 +259,10 @@ class Ideogram(BaseArArFigure):
         graph = self.graph
         plot = graph.plots[0]
 
-        gid = 3 * self.group_id
-        lp = plot.plots['plot{}'.format(gid)][0]
-        dp = plot.plots['plot{}'.format(gid + 1)][0]
-        sp = plot.plots['plot{}'.format(gid + 2)][0]
+        gid = self.group_id
+        lp = plot.plots['Current-{:03n}'.format(gid)][0]
+        dp = plot.plots['Original-{:03n}'.format(gid)][0]
+        sp = plot.plots['Mean-{:03n}'.format(gid)][0]
 
         def f(a):
             i, _ = a

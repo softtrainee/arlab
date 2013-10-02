@@ -25,10 +25,12 @@ class FigureSelectorPane(TraitsDockPane):
     name = 'Saved Figures'
     figure = Str
     figures = List
+
     def traits_view(self):
         v = View(Item('figure',
                       editor=EnumEditor(name='figures')))
         return v
+
 
 class PlotterOptionsPane(TraitsDockPane):
     '''
@@ -38,32 +40,31 @@ class PlotterOptionsPane(TraitsDockPane):
 
     name = 'Plot Options'
     pom = Any
+
     def traits_view(self):
         v = View(
-                 UItem('pom',
-                       editor=InstanceEditor(),
-                       style='custom',
-                       width=-400
-                       )
-#                 HGroup(
-#                    UItem('plotter_options',
-#                         editor=EnumEditor(name='plotter_options_list'),
-#                         tooltip='List of available plot options'
-#                         ),
-#                    UItem('add_options', tooltip='Add new plot options',
-#
-#                         ),
-#                    UItem('delete_options',
-#                         tooltip='Delete current plot options',
-#                         enabled_when='object.plotter_options.name!="Default"',
-# #                         show_label=False
-#                         ),
-#                        ),
-#                   UItem('plotter_options',
-#                        style='custom'),
-                 )
+            UItem('pom',
+                  editor=InstanceEditor(),
+                  style='custom',
+                  width=-400
+            )
+            #                 HGroup(
+            #                    UItem('plotter_options',
+            #                         editor=EnumEditor(name='plotter_options_list'),
+            #                         tooltip='List of available plot options'
+            #                         ),
+            #                    UItem('add_options', tooltip='Add new plot options',
+            #
+            #                         ),
+            #                    UItem('delete_options',
+            #                         tooltip='Delete current plot options',
+            #                         enabled_when='object.plotter_options.name!="Default"',
+            # #                         show_label=False
+            #                         ),
+            #                        ),
+            #                   UItem('plotter_options',
+            #                        style='custom'),
+        )
         return v
 
-class MultiSelectAnalysisBrowser(BrowserPane):
-    multi_select = True
 #============= EOF =============================================
