@@ -47,8 +47,11 @@ from .editors.ideogram_editor import IdeogramEditor
 from src.processing.tasks.figures.figure_editor import FigureEditor
 from src.processing.tasks.figures.editors.series_editor import SeriesEditor
 
+#@todo: add layout editing.
+#@todo: add vertical stack. link x-axes
 
-class FigureTask(AnalysisEditTask, BaseBrowserTask):
+
+class FigureTask(AnalysisEditTask):
     name = 'Figure'
     id = 'pychron.processing.figures'
     plotter_options_pane = Instance(PlotterOptionsPane)
@@ -86,7 +89,6 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
     def create_dock_panes(self):
         panes = super(FigureTask, self).create_dock_panes()
         self.plotter_options_pane = PlotterOptionsPane()
-
         self.figure_selector_pane = FigureSelectorPane()
 
         fs = [fi.name for fi in self.manager.db.get_figures()]
@@ -95,8 +97,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 
         return panes + [self.plotter_options_pane,
                         self.figure_selector_pane,
-                        MultiSelectAnalysisBrowser(model=self)
-        ]
+                        MultiSelectAnalysisBrowser(model=self)]
 
     def _create_control_pane(self):
         pass
@@ -158,7 +159,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
         self._append_figure(IdeogramEditor)
 
     def new_ideogram(self, ans=None, klass=None, tklass=None,
-                     name='Ideo', plotter_kw=None):
+                     name='Ideo', plotter_kw=None, set_ans=True):
 
         if klass is None:
             klass = IdeogramEditor
@@ -167,7 +168,7 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
             from src.processing.tasks.tables.editors.laser_table_editor \
                 import LaserTableEditor as tklass
 
-        self._new_figure(ans, name, klass, tklass)
+        self._new_figure(ans, name, klass, tklass, set_ans=set_ans)
 
     def new_spectrum(self, ans=None, klass=None,
                      tklass=None,
@@ -309,11 +310,11 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
         #===============================================================================
 
     def _append_figure(self, klass):
-        '''
+        """
             if selected_sample append all analyses
             else append selected analyses
-            
-        '''
+
+        """
 
         if isinstance(self.active_editor, klass):
             if self.selected_analysis:
@@ -339,7 +340,10 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 
             self.active_editor.rebuild(compress_groups=False)
 
-    def _new_figure(self, ans, name, klass, tklass=None, add_iso=True):
+    def _new_figure(self, ans, name, klass, tklass=None,
+                    add_iso=True,
+                    set_ans=True
+    ):
         # new figure editor
         editor = klass(
             name=name,
@@ -351,8 +355,9 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
 
         if ans:
             editor.unknowns = ans
-            self.unknowns_pane.items = ans
-        #
+            if set_ans:
+                self.unknowns_pane.items = ans
+
         self._open_editor(editor)
 
         if tklass:
@@ -459,9 +464,19 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
     # browser protocol
     #===========================================================================
     def _dclicked_sample_changed(self, new):
-        for sa in self.selected_sample:
-            ans = self._get_sample_analyses(sa)
-            #             ans = man.make_analyses(ans)
+        if self.unknowns_pane.items:
+
+            editor = IdeogramEditor(processor=self.manager)
+
+            for sa in self.selected_sample:
+                ans = self._get_sample_analyses(sa)
+                ans = self.manager.make_analyses(ans)
+                self.new_ideogram(ans, set_ans=False)
+
+                #self.unknowns_pane.items=ans
+                #print sa, ans
+        else:
+            ans = self._get_sample_analyses(self.selected_sample[-1])
             self.unknowns_pane.items = ans
 
         #             sam = next((si
@@ -481,24 +496,12 @@ class FigureTask(AnalysisEditTask, BaseBrowserTask):
             id='pychron.analysis_edit',
             left=HSplitter(
                 PaneItem('pychron.browser'),
-                Splitter(
-                    Tabbed(
-                        PaneItem('pychron.analysis_edit.unknowns'),
-                        PaneItem('pychron.processing.figures.plotter_options')
-                    ),
-                    Tabbed(
-                        PaneItem('pychron.analysis_edit.controls'),
-                        PaneItem('pychron.processing.editor'),
-                    ),
-                    orientation='vertical'
-                )
+                Tabbed(
+                    PaneItem('pychron.analysis_edit.unknowns'),
+                    PaneItem('pychron.processing.figures.plotter_options'),
+                    PaneItem('pychron.analysis_edit.controls'),
+                ),
             ),
-
-            #                           right=Splitter(
-            #                                          PaneItem('pychron.search.results'),
-            #                                          PaneItem('pychron.search.query'),
-            #                                          orientation='vertical'
-            #                                          )
         )
 
 #============= EOF =============================================

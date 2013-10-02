@@ -38,7 +38,6 @@ from src.regex import ISOREGEX
 Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_outlier_std_devs')
 
 
-
 class Analysis(ArArAge):
     analysis_summary_klass = AnalysisSummary
     analysis_summary = Instance(AnalysisSummary)
@@ -68,14 +67,16 @@ class Analysis(ArArAge):
         '''
         '''
         return
-#
+
+    #
     def _analysis_summary_default(self):
-#         print 'asdfsad'
+    #         print 'asdfsad'
         return self.analysis_summary_klass(model=self)
+
 
 class DBAnalysis(Analysis):
     analysis_summary_klass = DBAnalysisSummary
-#     status = Int
+    #     status = Int
     temp_status = Int
     record_id = Str
     uuid = Str
@@ -94,6 +95,8 @@ class DBAnalysis(Analysis):
     analysis_type = Str
     tag = Str
     timestamp = Float
+
+    peak_center = Float
 
     ic_factors = Dict
 
@@ -117,18 +120,18 @@ class DBAnalysis(Analysis):
         
         '''
         r = 'OK'
-#         if self.status != 0:
-#             r = 'Invalid'
+        #         if self.status != 0:
+        #             r = 'Invalid'
 
         if self.temp_status != 0:
             r = 'Omitted'
 
         return r
 
-#         if self.temp_status == 0:
-#             return 'OK'
-#         else:
-#             return 'Omitted'
+    #         if self.temp_status == 0:
+    #             return 'OK'
+    #         else:
+    #             return 'Omitted'
 
     def set_temporary_blank(self, k, v, e):
         if self.isotopes.has_key(k):
@@ -154,7 +157,6 @@ class DBAnalysis(Analysis):
 
         return d
 
-
     def get_ic_factor(self, det):
         if det in self.ic_factors:
             r = self.ic_factors[det]
@@ -170,16 +172,17 @@ class DBAnalysis(Analysis):
                 for ic in hist.detector_intercalibrations:
                     icfs[ic.detector.name] = (ic.user_value, ic.user_error)
 
-#                 icf = next((ic for ic in hist.detector_intercalibrations
-#                             if ic.detector.name == det), None)
-#                 if icf:
-#                     r = icf.user_value, icf.user_error
+                    #                 icf = next((ic for ic in hist.detector_intercalibrations
+                    #                             if ic.detector.name == det), None)
+                    #                 if icf:
+                    #                     r = icf.user_value, icf.user_error
 
         return icfs
 
     def flush(self):
         '''
         '''
+
     def commit(self, sess):
         '''
             use the provided db adapter to 
@@ -190,8 +193,8 @@ class DBAnalysis(Analysis):
         r = ''
         pos = extraction.positions
 
-#         pos = self._get_extraction_value('positions')
-#         if pos != NULL_STR:
+        #         pos = self._get_extraction_value('positions')
+        #         if pos != NULL_STR:
         pp = []
         for pi in pos:
             pii = pi.position
@@ -215,7 +218,6 @@ class DBAnalysis(Analysis):
 
         return r
 
-
     def _sync_extraction(self, meas_analysis):
         extraction = meas_analysis.extraction
         if extraction:
@@ -223,8 +225,8 @@ class DBAnalysis(Analysis):
             self.extract_value = extraction.extract_value
 
             # add extract units to meas_ExtractionTable
-#             eu = extraction.extract_units or 'W'
-#             self.extract_units = eu
+            #             eu = extraction.extract_units or 'W'
+            #             self.extract_units = eu
             self.extract_units = 'W'
 
             self.cleanup = extraction.cleanup_duration
@@ -239,16 +241,16 @@ class DBAnalysis(Analysis):
         # copy meas_analysis attrs
         nocast = lambda x: x
         attrs = [
-                 ('labnumber', 'labnumber', lambda x: x.identifier),
-                 ('aliquot', 'aliquot', int),
-                 ('step', 'step', str),
-#                  ('status', 'status', int),
-                 ('comment', 'comment', str),
-                 ('uuid', 'uuid', str),
-                 ('timestamp', 'analysis_timestamp',
-                    lambda x: time.mktime(x.timetuple())
-                ),
-               ]
+            ('labnumber', 'labnumber', lambda x: x.identifier),
+            ('aliquot', 'aliquot', int),
+            ('step', 'step', str),
+            #                  ('status', 'status', int),
+            ('comment', 'comment', str),
+            ('uuid', 'uuid', str),
+            ('timestamp', 'analysis_timestamp',
+             lambda x: time.mktime(x.timetuple())
+            ),
+        ]
         for key, attr, cast in attrs:
             v = getattr(meas_analysis, attr)
             setattr(self, key, cast(v))
@@ -256,12 +258,12 @@ class DBAnalysis(Analysis):
         tag = meas_analysis.tag
         self.tag = tag or ''
         if self.tag:
-#             print 'sdfasf', self.tag
+        #             print 'sdfasf', self.tag
             self.temp_status = 1
 
-#         print 'ffff', id(self), self.record_id, self.temp_status
-#         analts = analysis.analysis_timestamp
-#         return time.mktime(analts.timetuple())
+        #         print 'ffff', id(self), self.record_id, self.temp_status
+        #         analts = analysis.analysis_timestamp
+        #         return time.mktime(analts.timetuple())
         # copy related table attrs
         self._sync_irradiation(meas_analysis)
         self._sync_isotopes(meas_analysis)
@@ -302,12 +304,13 @@ class DBAnalysis(Analysis):
     def _sync_isotopes(self, meas_analysis):
         self.isotopes = self._get_isotopes(meas_analysis, unpack=True)
         self.isotope_fits = self._get_isotope_fits()
-#         self._load_blanks(meas_analysis)
-#         self._load_sniffs(meas_analysis)
 
-#         self._load_peak_center(meas_analysis)
+    #         self._load_blanks(meas_analysis)
+    #         self._load_sniffs(meas_analysis)
 
-#     def _load_signals(self, meas_analysis, unpack=True):
+    #         self._load_peak_center(meas_analysis)
+
+    #     def _load_signals(self, meas_analysis, unpack=True):
 
 
     def _get_baselines(self, isotopes, meas_analysis, unpack):
@@ -321,8 +324,8 @@ class DBAnalysis(Analysis):
             iso = isotopes[name]
 
             kw = dict(
-                      dbrecord=dbiso,
-                      name=name, detector=det)
+                dbrecord=dbiso,
+                name=name, detector=det)
             if dbiso.kind == 'baseline':
                 result = None
                 if dbiso.results:
@@ -330,7 +333,7 @@ class DBAnalysis(Analysis):
 
                 r = Baseline(dbresult=result,
                              **kw)
-                fit = self._get_db_fit(meas_analysis, name, 'baseline')
+                fit = self.get_db_fit(meas_analysis, name, 'baseline')
                 if fit is None:
                     fit = Fit(fit='average_sem', filter_outliers=True,
                               filter_outlier_iterations=1,
@@ -342,58 +345,59 @@ class DBAnalysis(Analysis):
                 r = Sniff(**kw)
                 iso.sniff = r
 
-#
-#     def _get_blanks(self, isotopes, meas_analysis):
-# #         blanks = self._get_blanks()
-#
-#
-#         keys = isotopes.keys()
-#         if blanks:
-#             for bi in blanks:
-#                 for ba in bi.blanks:
-#                     isok = ba.isotope
-#                     if isok in keys and isotopes.has_key(isok):
-#                         r = Blank(dbrecord=ba, name=isok)
-#                         isotopes[isok].blank = r
-#                         keys.remove(isok)
-#                         if not keys:
-#                             break
-#
-#                 if not keys:
-#                     break
+                #
+                #     def _get_blanks(self, isotopes, meas_analysis):
+                # #         blanks = self._get_blanks()
+                #
+                #
+                #         keys = isotopes.keys()
+                #         if blanks:
+                #             for bi in blanks:
+                #                 for ba in bi.blanks:
+                #                     isok = ba.isotope
+                #                     if isok in keys and isotopes.has_key(isok):
+                #                         r = Blank(dbrecord=ba, name=isok)
+                #                         isotopes[isok].blank = r
+                #                         keys.remove(isok)
+                #                         if not keys:
+                #                             break
+                #
+                #                 if not keys:
+                #                     break
+
     def _get_isotope_fits(self):
         keys = self.isotope_keys
         fs = [self.isotopes[ki].fit
-                    for ki in keys]
+              for ki in keys]
         return fs
-# #         fits = [iso.fit for iso in self.isotopes.itervalues()]
-# #         z = zip(keys, fits)
-# #         zs = sort_isotopes(z)
-# #         _ks, fs = zip(*zs)
-#         return fs
+
+    # #         fits = [iso.fit for iso in self.isotopes.itervalues()]
+    # #         z = zip(keys, fits)
+    # #         zs = sort_isotopes(z)
+    # #         _ks, fs = zip(*zs)
+    #         return fs
     def _get_isotopes(self, meas_analysis, unpack):
         isotopes = dict()
         self._get_signals(isotopes, meas_analysis, unpack)
         self._get_baselines(isotopes, meas_analysis, unpack)
-#         self._get_blanks(isotopes, meas_analysis)
+        #         self._get_blanks(isotopes, meas_analysis)
 
         return isotopes
 
 
-    def _get_db_fit(self, meas_analysis, name, kind):
+    def get_db_fit(self, meas_analysis, name, kind):
         try:
             selhist = meas_analysis.selected_histories
             selfithist = selhist.selected_fits
             fits = selfithist.fits
             return next((fi for fi in fits
-                                if fi.isotope.kind == kind and \
-                                    fi.isotope.molecular_weight.name == name
-                                    ), None)
+                         if fi.isotope.kind == kind and \
+                            fi.isotope.molecular_weight.name == name
+                        ), None)
 
 
         except AttributeError:
             pass
-
 
     def _get_signals(self, isodict, meas_analysis, unpack):
         for iso in meas_analysis.isotopes:
@@ -409,17 +413,17 @@ class DBAnalysis(Analysis):
                 det = iso.detector.name
 
                 r = Isotope(
-                            dbrecord=iso,
-                            dbresult=result,
+                    dbrecord=iso,
+                    dbresult=result,
 
-                            name=name,
-                            detector=det,
-#                             refit=refit
-                            unpack=unpack
-                            )
+                    name=name,
+                    detector=det,
+                    #                             refit=refit
+                    unpack=unpack
+                )
 
                 fit = None
-                fit = self._get_db_fit(meas_analysis, name, 'signal')
+                fit = self.get_db_fit(meas_analysis, name, 'signal')
                 if fit is None:
                     fit = Fit(fit='linear', filter_outliers=True,
                               filter_outlier_iterations=1,
@@ -428,10 +432,11 @@ class DBAnalysis(Analysis):
                 isodict[name] = r
 
 
-#     def _load_blanks(self, meas_analysis):
-#         pass
-#     def _load_sniffs(self, meas_analysis):
-#         pass
+                #     def _load_blanks(self, meas_analysis):
+                #         pass
+                #     def _load_sniffs(self, meas_analysis):
+                #         pass
+
     def _load_peak_center(self, meas_analysis):
         pass
 
@@ -440,9 +445,10 @@ class DBAnalysis(Analysis):
         if extraction.extraction_device:
             r = extraction.extraction_device.name
         return r
-#===============================================================================
-#
-#===============================================================================
+
+    #===============================================================================
+    #
+    #===============================================================================
     def _get_analysis_type(self, meas_analysis):
         r = ''
         if meas_analysis:
@@ -486,9 +492,10 @@ class DBAnalysis(Analysis):
         if meas_analysis.analysis_timestamp:
             ti = meas_analysis.analysis_timestamp.time()
             return ti.strftime('%H:%M:%S')
-#===============================================================================
-# irradiation
-#===============================================================================
+            #===============================================================================
+            # irradiation
+            #===============================================================================
+
     def _get_timestamp(self, ln):
         ts = self.timestamp
         if not ts:
@@ -542,29 +549,29 @@ class DBAnalysis(Analysis):
                         v, e = getattr(pr, pi), getattr(pr, '{}_err'.format(pi))
                         prs.append((v if v is not None else 1, e if e is not None else 0))
 
-#                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
-#                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
+                        #                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
+                        #                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
 
                 chron = irradiation.chronology
-#                def convert_datetime(x):
-#                    try:
-#                        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-#                    except ValueError:
-#                        pass
-#                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+                #                def convert_datetime(x):
+                #                    try:
+                #                        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+                #                    except ValueError:
+                #                        pass
+                #                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
 
                 convert_days = lambda x: x.total_seconds() / (60. * 60 * 24)
                 if chron:
                     doses = chron.get_doses()
-#                    chronblob = chron.chronology
-#
-#                    doses = chronblob.split('$')
-#                    doses = [di.strip().split('%') for di in doses]
-#
-#                    doses = [map(convert_datetime, d) for d in doses if d]
+                    #                    chronblob = chron.chronology
+                    #
+                    #                    doses = chronblob.split('$')
+                    #                    doses = [di.strip().split('%') for di in doses]
+                    #
+                    #                    doses = [map(convert_datetime, d) for d in doses if d]
 
                     analts = self.timestamp
-#                     print analts
+                    #                     print analts
                     if isinstance(analts, float):
                         analts = datetime.fromtimestamp(analts)
 
@@ -573,28 +580,28 @@ class DBAnalysis(Analysis):
                         if st is not None and en is not None:
                             dur = en - st
                             dt = analts - st
-#                             dt = 45
+                            #                             dt = 45
                             segments.append((1, convert_days(dur), convert_days(dt)))
-#                             segments.append((1, convert_days(dur), dt))
+                            #                             segments.append((1, convert_days(dur), dt))
 
                     decay_time = 0
                     d_o = doses[0][0]
                     if d_o is not None:
                         decay_time = convert_days(analts - d_o)
 
-#                    segments = [(1, convert_days(ti)) for ti in durs]
+                    #                    segments = [(1, convert_days(ti)) for ti in durs]
                     prs.append(segments)
                     prs.append(decay_time)
-#                     prs.append(45)
+                    #                     prs.append(45)
 
-#         print 'aasfaf', ln, prs
+                    #         print 'aasfaf', ln, prs
 
         return prs
 
     def __getattr__(self, attr):
         lattr = attr.lower()
-#         print attr, ISOREGEX.match(attr)
-#         if ISOREGEX.match(attr):
+        #         print attr, ISOREGEX.match(attr)
+        #         if ISOREGEX.match(attr):
         if lattr in ('ar40', 'ar39', 'ar38', 'ar37', 'ar36'):
             return getattr(self, attr.capitalize())
 
@@ -604,6 +611,7 @@ class DBAnalysis(Analysis):
 
         print attr
         raise AttributeError
+
 
 if __name__ == '__main__':
     pass

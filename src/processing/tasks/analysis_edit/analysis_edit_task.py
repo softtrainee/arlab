@@ -19,6 +19,8 @@ from traits.api import Instance, on_trait_change, Any, List
 from src.envisage.tasks.editor_task import BaseEditorTask
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane, \
     TablePane
+from src.processing.tasks.browser.browser_task import BaseBrowserTask
+from src.processing.tasks.browser.panes import BrowserPane
 from src.processing.tasks.search_panes import QueryPane
 from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
 # from pyface.tasks.task_window_layout import TaskWindowLayout
@@ -30,18 +32,21 @@ from src.processing.selection.data_selector import DataSelector
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class AnalysisEditTask(BaseEditorTask):
+class AnalysisEditTask(BaseBrowserTask):
     unknowns_pane = Instance(TablePane)
     controls_pane = Instance(ControlsPane)
-#    results_pane = Instance(ResultsPane)
+    #    results_pane = Instance(ResultsPane)
     plot_editor_pane = Instance(PlotEditorPane)
     unknowns_adapter = UnknownsAdapter
     unknowns_pane_klass = UnknownsPane
 
     data_selector = Instance(DataSelector)
     _analysis_cache = List
+
+
     def _get_tagname(self):
         from src.processing.tasks.analysis_edit.tags import TagTableView
+
         db = self.manager.db
         with db.session_ctx():
             v = TagTableView()
@@ -52,6 +57,12 @@ class AnalysisEditTask(BaseEditorTask):
         if info.result:
             tag = v.selected
             return tag.name
+
+    def save_to_db(self):
+        db = self.manager.db
+        with db.session_ctx():
+            self._save_to_db()
+        self.information_dialog('Changes save to the database')
 
     def set_tag(self):
         '''
@@ -65,23 +76,23 @@ class AnalysisEditTask(BaseEditorTask):
             if tag is valid or invalid  set the status instead
         '''
         items = self.unknowns_pane.selected
-#         items = self.active_editor._unknowns
+        #         items = self.active_editor._unknowns
         if items:
-#             selection = [ai for ai in items if ai.temp_status]
-#             if not selection:
-#                 name = 'valid'
-#                 selection = items
-#             else:
+        #             selection = [ai for ai in items if ai.temp_status]
+        #             if not selection:
+        #                 name = 'valid'
+        #                 selection = items
+        #             else:
             name = self._get_tagname()
 
             db = self.manager.db
             with db.session_ctx():
-#                 if name in ('valid', 'invalid'):
-#                     def func(it, x):
-#                         self.debug('setting {} status= {}'.format(it.record_id, name))
-#                         x.status = 0 if name == 'valid' else 1
-#                         x.tag = ''
-#                 else:
+            #                 if name in ('valid', 'invalid'):
+            #                     def func(it, x):
+            #                         self.debug('setting {} status= {}'.format(it.record_id, name))
+            #                         x.status = 0 if name == 'valid' else 1
+            #                         x.tag = ''
+            #                 else:
                 def func(it, x):
                     self.debug('setting {} tag= {}'.format(it.record_id, name))
                     x.tag = name
@@ -98,21 +109,22 @@ class AnalysisEditTask(BaseEditorTask):
         if self.unknowns_pane:
             self.unknowns_pane.dump()
 
-#         if self.manager:
-#             self.manager.db.close()
+            #         if self.manager:
+            #             self.manager.db.close()
 
     def create_dock_panes(self):
 
         self.unknowns_pane = self._create_unknowns_pane()
 
-#         self.controls_pane = ControlsPane()
+        #         self.controls_pane = ControlsPane()
         self.plot_editor_pane = PlotEditorPane()
         panes = [
-                self.unknowns_pane,
-#                 self.controls_pane,
-                self.plot_editor_pane,
-#                self.results_pane,
-                ]
+            self.unknowns_pane,
+            #                 self.controls_pane,
+            self.plot_editor_pane,
+            #                self.results_pane,
+            self._create_browser_pane()
+        ]
         cp = self._create_control_pane()
         if cp:
             self.controls_pane = cp
@@ -133,12 +145,12 @@ class AnalysisEditTask(BaseEditorTask):
                 selector = self.manager.db.selector
                 selector._search_fired()
 
-    #             from src.processing.selection.data_selector import DataSelector
-    #             from src.processing.tasks.search_panes import ResultsPane
+                #             from src.processing.selection.data_selector import DataSelector
+                #             from src.processing.tasks.search_panes import ResultsPane
 
                 ds = DataSelector(database_selector=selector)
                 self.data_selector = ds
-    #             return (QueryPane(model=ds), ResultsPane(model=ds))
+                #             return (QueryPane(model=ds), ResultsPane(model=ds))
                 return QueryPane(model=ds),
 
     def _create_unknowns_pane(self):
@@ -179,7 +191,7 @@ class AnalysisEditTask(BaseEditorTask):
             with db.session_ctx():
                 func = self._record_view_factory
                 ps = [func(si, graph_id=si.graph_id,
-                                group_id=si.group_id) for si in new.analysis_ids]
+                           group_id=si.group_id) for si in new.analysis_ids]
                 ps = [pi for pi in ps if pi]
 
                 pane.items = self.manager.make_analyses(ps)
@@ -189,9 +201,10 @@ class AnalysisEditTask(BaseEditorTask):
             self.active_editor.save_file(path)
             return True
 
-#===============================================================================
-# handlers
-#===============================================================================
+            #===============================================================================
+            # handlers
+            #===============================================================================
+
     def _active_editor_changed(self):
         if self.active_editor:
             if self.controls_pane:
@@ -217,7 +230,7 @@ class AnalysisEditTask(BaseEditorTask):
     def _update_unknowns_runs(self, obj, name, old, new):
         if not obj._no_update:
             if self.active_editor:
-#                 self.active_editor._unknowns = self.unknowns_pane.items
+            #                 self.active_editor._unknowns = self.unknowns_pane.items
                 self.active_editor.unknowns = self.unknowns_pane.items
                 self._append_cache(self.active_editor)
 
@@ -238,17 +251,17 @@ class AnalysisEditTask(BaseEditorTask):
             if isinstance(new.item, (IsotopeRecordView, Analysis)):
                 self._open_recall_editor(new.item)
 
-    @on_trait_change('controls_pane:save_button')
-    def _save_fired(self):
-        db = self.manager.db
-        commit = not self.controls_pane.dry_run
-        with db.session_ctx(commit=commit):
-            self._save_to_db()
-
-        if commit:
-            self.info('committing changes')
-        else:
-            self.info('dry run- not committing changes')
+    #@on_trait_change('controls_pane:save_button')
+    #def _save_fired(self):
+    #    db = self.manager.db
+    #    commit = not self.controls_pane.dry_run
+    #    with db.session_ctx(commit=commit):
+    #        self._save_to_db()
+    #
+    #    if commit:
+    #        self.info('committing changes')
+    #    else:
+    #        self.info('dry run- not committing changes')
 
     @on_trait_change('unknowns_pane:previous_selection')
     def _update_up_previous_selection(self, obj, name, old, new):
@@ -274,7 +287,7 @@ class AnalysisEditTask(BaseEditorTask):
 
         if new and s:
             c = new.text
-#             shift = new.shift
+            #             shift = new.shift
             if c == 'u':
                 self.unknowns_pane.items.extend(s)
             elif c == 'U':
@@ -284,7 +297,9 @@ class AnalysisEditTask(BaseEditorTask):
 
     def _handle_key_pressed(self, c):
         pass
-#===============================================================================
+
+        #===============================================================================
+
 #
 #===============================================================================
 #    @on_trait_change('unknowns_pane:[+button]')

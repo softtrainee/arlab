@@ -71,7 +71,7 @@ class Processor(IsotopeDatabaseManager):
         if ed:
             q = q.join(meas_ExtractionTable)
             q = q.join(gen_ExtractionDeviceTable)
-#         q = q.join(gen_LabTable)
+            #         q = q.join(gen_LabTable)
 
         d = datetime.datetime.today()
         today = datetime.datetime.today()  # .date()#.datetime()
@@ -82,8 +82,8 @@ class Processor(IsotopeDatabaseManager):
         q = q.filter(gen_MassSpectrometerTable.name == ms)
 
         if ed:
-#             ed = ed.capitalize()
-#             print ed
+        #             ed = ed.capitalize()
+        #             print ed
             q = q.filter(gen_ExtractionDeviceTable.name == ed)
 
         self.debug(compile_query(q))
@@ -104,7 +104,7 @@ class Processor(IsotopeDatabaseManager):
         if sample == 'FC-2':
             q = q.filter(gen_LabTable.identifier == labnumber)
 
-#        q = q.limit(10)
+        #        q = q.limit(10)
         return self._make_analyses_from_query(q)
 
     def _make_analyses_from_query(self, q):
@@ -114,52 +114,53 @@ class Processor(IsotopeDatabaseManager):
             self.debug('{}'.format(ans))
         except Exception, e:
             import traceback
+
             traceback.print_exc()
 
         if ans:
             ans = self.make_analyses(ans)
             return ans
 
-#     def auto_blank_fit(self, irradiation, level, kind):
-#         if kind == 'preceeding':
-#             '''
-#             1. supply a list of labnumbers/ supply level and extract labnumbers (with project minnabluff)
-#             2. get all analyses for the labnumbers
-#             3. sort analyses by run date
-#             4. calculate blank
-#                 1. preceeding/bracketing
-#                     get max 2 predictors
-#
-#                 2. fit
-#                     a. group analyses by run date
-#                     b. get n predictors based on group date
-#             5. save blank
-#             '''
-#             db = self.db
-#             level = db.get_irradiation_level(irradiation, level)
-#
-#             labnumbers = [pi.labnumber for pi in level.positions
-#                             if pi.labnumber.sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff')]
-#             ans = [ai
-#                     for ln in labnumbers
-#                         for ai in ln.analyses
-#                         ]
-#             pd = self.open_progress(n=len(ans))
-#             for ai in ans:
-#                 self.preceeding_blank_correct(ai, pd=pd)
-#             db.commit()
+            #     def auto_blank_fit(self, irradiation, level, kind):
+            #         if kind == 'preceeding':
+            #             '''
+            #             1. supply a list of labnumbers/ supply level and extract labnumbers (with project minnabluff)
+            #             2. get all analyses for the labnumbers
+            #             3. sort analyses by run date
+            #             4. calculate blank
+            #                 1. preceeding/bracketing
+            #                     get max 2 predictors
+            #
+            #                 2. fit
+            #                     a. group analyses by run date
+            #                     b. get n predictors based on group date
+            #             5. save blank
+            #             '''
+            #             db = self.db
+            #             level = db.get_irradiation_level(irradiation, level)
+            #
+            #             labnumbers = [pi.labnumber for pi in level.positions
+            #                             if pi.labnumber.sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff')]
+            #             ans = [ai
+            #                     for ln in labnumbers
+            #                         for ai in ln.analyses
+            #                         ]
+            #             pd = self.open_progress(n=len(ans))
+            #             for ai in ans:
+            #                 self.preceeding_blank_correct(ai, pd=pd)
+            #             db.commit()
 
     def refit_isotopes(self, meas_analysis, pd=None, fits=None, keys=None, verbose=False):
 
-#         if not isinstance(analysis, Analysis):
+    #         if not isinstance(analysis, Analysis):
         analysis = self.make_analyses([meas_analysis])[0]
 
-#         analysis.load_isotopes()
+        #         analysis.load_isotopes()
         dbr = meas_analysis
-#         dbr = analysis.dbrecord
+        #         dbr = analysis.dbrecord
         if keys is None:
             keys = [iso.molecular_weight.name for iso in dbr.isotopes
-                                if iso.kind == 'signal']
+                    if iso.kind == 'signal']
 
         '''
             if spectrometer is map use all linear
@@ -195,7 +196,7 @@ class Processor(IsotopeDatabaseManager):
         dbhist = db.add_fit_history(dbr)
         for key, fit in zip(keys, fits):
             dbiso_baseline = next((iso for iso in dbr.isotopes
-                          if iso.molecular_weight.name == key and iso.kind == 'baseline'), None)
+                                   if iso.molecular_weight.name == key and iso.kind == 'baseline'), None)
             if dbiso_baseline:
                 if verbose:
                     self.debug('{} {}'.format(key, fit))
@@ -211,7 +212,7 @@ class Processor(IsotopeDatabaseManager):
                 db.add_isotope_result(dbiso_baseline, dbhist, signal_=float(v), signal_err=float(e))
 
                 dbiso = next((iso for iso in dbr.isotopes
-                          if iso.molecular_weight.name == key and iso.kind == 'signal'), None)
+                              if iso.molecular_weight.name == key and iso.kind == 'signal'), None)
                 if dbiso:
                     vv = analysis.isotopes[key]
                     v, e = vv.value, vv.error
@@ -264,11 +265,11 @@ class Processor(IsotopeDatabaseManager):
             a, b = post, dt
 
         q = q.filter(and_(
-                          gen_AnalysisTypeTable.name == at,
-                          meas_AnalysisTable.analysis_timestamp >= a,
-                          meas_AnalysisTable.analysis_timestamp <= b,
-                          gen_MassSpectrometerTable.name == ms
-                          ))
+            gen_AnalysisTypeTable.name == at,
+            meas_AnalysisTable.analysis_timestamp >= a,
+            meas_AnalysisTable.analysis_timestamp <= b,
+            gen_MassSpectrometerTable.name == ms
+        ))
 
         if filter_hook:
             q = filter_hook(q)
@@ -292,11 +293,11 @@ class Processor(IsotopeDatabaseManager):
         q = q.join(gen_MassSpectrometerTable)
 
         q = q.filter(and_(
-                          gen_AnalysisTypeTable.name == atype,
-                          gen_MassSpectrometerTable.name == ms,
-                          meas_AnalysisTable.analysis_timestamp < post,
-                          )
-                     )
+            gen_AnalysisTypeTable.name == atype,
+            gen_MassSpectrometerTable.name == ms,
+            meas_AnalysisTable.analysis_timestamp < post,
+        )
+        )
 
         q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
         try:
@@ -307,37 +308,38 @@ class Processor(IsotopeDatabaseManager):
     def find_associated_analyses(self, analysis, delta=2, **kw):
         if not isinstance(analysis, Analysis):
             analysis = self.make_analyses([analysis])[0]
-#             analysis.load_isotopes()
+            #             analysis.load_isotopes()
 
         ms = analysis.mass_spectrometer
         post = analysis.timestamp
 
-#         delta = -2
+        #         delta = -2
         atype = 'blank_{}'.format(analysis.analysis_type)
         br = self._find_analyses(ms, post, -delta, atype, **kw)
 
-#         delta = 2
+        #         delta = 2
         ar = self._find_analyses(ms, post, delta, atype, **kw)
 
         return br + ar
 
     def preceeding_blank_correct(self, analysis, keys=None, pd=None):
         from src.regression.interpolation_regressor import InterpolationRegressor
+
         if not isinstance(analysis, Analysis):
             analysis = self.make_analyses([analysis])[0]
-#             analysis.load_isotopes()
+            #             analysis.load_isotopes()
 
         msg = 'applying preceeding blank for {}'.format(analysis.record_id)
         if pd is not None:
             pd.change_message(msg)
             pd.increment()
 
-#         self.info(msg)
+        #         self.info(msg)
         ms = analysis.mass_spectrometer
 
         post = analysis.timestamp
 
-#         delta = -5
+        #         delta = -5
         atype = 'blank_{}'.format(analysis.analysis_type)
 
         an = self._get_preceeding_analysis(ms, post, atype)
@@ -347,7 +349,7 @@ class Processor(IsotopeDatabaseManager):
             return
 
         ai = self.make_analyses([an])[0]
-#         ai.load_isotopes()
+        #         ai.load_isotopes()
 
         if keys is None:
             keys = analysis.isotope_keys
@@ -359,20 +361,19 @@ class Processor(IsotopeDatabaseManager):
 
         reg = InterpolationRegressor(kind=fit)
         for key in keys:
-#             predictors = [ai for ai in br if key in ai.isotopes]
+        #             predictors = [ai for ai in br if key in ai.isotopes]
             if key in ai.isotopes:
-
                 r_xs, r_y = (ai.timestamp,), (ai.isotopes[key].baseline_corrected_value(),)
-#             if predictors:
-#                 r_xs, r_y = zip(*[(ai.timestamp, ai.isotopes[key].baseline_corrected_value()
-#                                           )
-#                                         for ai in predictors])
+                #             if predictors:
+                #                 r_xs, r_y = zip(*[(ai.timestamp, ai.isotopes[key].baseline_corrected_value()
+                #                                           )
+                #                                         for ai in predictors])
                 r_ys, r_es = zip(*[(yi.nominal_value, yi.std_dev) for yi in r_y])
 
                 reg.trait_set(xs=r_xs,
-                                 ys=r_ys,
-                                 yserr=r_es,
-                                 )
+                              ys=r_ys,
+                              yserr=r_es,
+                )
 
                 fit_obj = Fit(name=key, fit=fit)
                 v, e = reg.predict(post), reg.predict_error(post)
@@ -382,28 +383,29 @@ class Processor(IsotopeDatabaseManager):
 
     def recall(self):
         pass
-#===============================================================================
-# figures
-#===============================================================================
 
-#===============================================================================
-# corrections
-#===============================================================================
+    #===============================================================================
+    # figures
+    #===============================================================================
+
+    #===============================================================================
+    # corrections
+    #===============================================================================
     def add_history(self, dbrecord, kind):
-#         dbrecord = analysis.dbrecord
+    #         dbrecord = analysis.dbrecord
         db = self.db
 
         # new history
         func = getattr(db, 'add_{}_history'.format(kind))
         history = func(dbrecord, user=db.save_username)
-#        history = db.add_blanks_history(dbrecord, user=db.save_username)
+        #        history = db.add_blanks_history(dbrecord, user=db.save_username)
 
         # set analysis' selected history
         sh = db.add_selected_histories(dbrecord)
         setattr(sh, 'selected_{}'.format(kind), history)
         db.sess.flush()
 
-#        sh.selected_blanks = history
+        #        sh.selected_blanks = history
         return history
 
     def apply_fixed_correction(self, history, isotope, value, error, correction_name):
@@ -422,19 +424,20 @@ class Processor(IsotopeDatabaseManager):
                 ue = prev.user_error
                 func = getattr(db, 'add_{}'.format(correction_name))
                 func(history,
-                      isotope=prev.isotope,
-                      fit=prev.fit,
-                      user_value=uv,
-                      user_error=ue
-                      )
+                     isotope=prev.isotope,
+                     fit=prev.fit,
+                     user_value=uv,
+                     user_error=ue
+                )
 
     def apply_correction(self, history, analysis, fit_obj, predictors, kind):
+        meas_analysis = self.db.get_analysis_uuid(analysis.uuid)
+
         func = getattr(self, '_apply_{}_correction'.format(kind))
-        func(history, analysis, fit_obj, predictors)
+        func(history, meas_analysis, fit_obj, predictors)
 
     def _apply_blanks_correction(self, history, analysis, fit_obj, predictors):
         ss = analysis.isotopes[fit_obj.name]
-
 
         '''
             the blanks_editor may have set a temporary blank
@@ -446,17 +449,17 @@ class Processor(IsotopeDatabaseManager):
             blank = ss.blank
 
         item = self.db.add_blanks(history,
-                    isotope=fit_obj.name,
-                    user_value=float(blank.value),
-                    user_error=float(blank.error),
-                    fit=fit_obj.fit)
+                                  isotope=fit_obj.name,
+                                  user_value=float(blank.value),
+                                  user_error=float(blank.error),
+                                  fit=fit_obj.fit)
 
-#        ps = self.interpolation_correction.predictors
+        #        ps = self.interpolation_correction.predictors
         if predictors:
             db = self.db
             for pi in predictors:
                 dbr = db.get_analysis_uuid(pi.uuid)
-#                 self.db.add_blanks_set(item, pi.dbrecord)
+                #                 self.db.add_blanks_set(item, pi.dbrecord)
                 db.add_blanks_set(item, dbr)
 
 #============= EOF =============================================

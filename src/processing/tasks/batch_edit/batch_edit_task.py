@@ -31,7 +31,7 @@ from src.processing.tasks.figures.panes import MultiSelectAnalysisBrowser
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class BatchEditTask(AnalysisEditTask, BaseBrowserTask):
+class BatchEditTask(AnalysisEditTask):
     name = 'Batch Edit'
     id = 'pychron.analysis_edit.batch'
     batch_edit_pane = Instance(BatchEditPane)
@@ -49,11 +49,11 @@ class BatchEditTask(AnalysisEditTask, BaseBrowserTask):
     def prepare_destroy(self):
         p = os.path.join(paths.hidden_dir, 'batch_edit')
         d = shelve.open(p)
-#
-#         d['values'] = [(bi.use, bi.name, bi.nominal_value, bi.std_dev)
-#                        for bi in self.batch_edit_pane.values]
-#         d['blanks'] = [(bi.use, bi.name, bi.nominal_value, bi.std_dev)
-#                        for bi in self.batch_edit_pane.blanks]
+        #
+        #         d['values'] = [(bi.use, bi.name, bi.nominal_value, bi.std_dev)
+        #                        for bi in self.batch_edit_pane.values]
+        #         d['blanks'] = [(bi.use, bi.name, bi.nominal_value, bi.std_dev)
+        #                        for bi in self.batch_edit_pane.blanks]
 
 
         d['values'] = self.batch_edit_pane.values
@@ -66,21 +66,22 @@ class BatchEditTask(AnalysisEditTask, BaseBrowserTask):
         if os.path.isfile(p):
             d = shelve.open(p)
 
-#             self.batch_edit_pane.values = [UValue(use=use, name=name,
-#                     nominal_value=v, std_dev=e)
-#                     for use, name, v, e in d['values']]
-#             self.batch_edit_pane.blanks = [UValue(use=use, name=name,
-#                     nominal_value=v, std_dev=e)
-#                     for use, name, v, e in d['blanks']]
+            #             self.batch_edit_pane.values = [UValue(use=use, name=name,
+            #                     nominal_value=v, std_dev=e)
+            #                     for use, name, v, e in d['values']]
+            #             self.batch_edit_pane.blanks = [UValue(use=use, name=name,
+            #                     nominal_value=v, std_dev=e)
+            #                     for use, name, v, e in d['blanks']]
 
 
             self.batch_edit_pane.values = d['values']
             self.batch_edit_pane.blanks = d['blanks']
 
         BaseBrowserTask.activated(self)
-#             d.close()
-#             for bin in self.batch_edit_pane.blanks:
-#                 print bin.use
+
+    #             d.close()
+    #             for bin in self.batch_edit_pane.blanks:
+    #                 print bin.use
 
     def _prompt_for_save(self):
         return True
@@ -98,8 +99,8 @@ class BatchEditTask(AnalysisEditTask, BaseBrowserTask):
                 if bi.use:
                     self.debug('applying blank correction {} {}'.format(ui.record_id, bi.name))
                     proc.apply_fixed_correction(history, bi.name,
-                                                     bi.nominal_value, bi.std_dev,
-                                                     cname)
+                                                bi.nominal_value, bi.std_dev,
+                                                cname)
 
             # disc/ic factors
             ics = []
@@ -128,7 +129,7 @@ class BatchEditTask(AnalysisEditTask, BaseBrowserTask):
         db = self.manager.db
 
         history = db.add_detector_intercalibration_history(analysis)
-#         db.flush()
+        #         db.flush()
         dbdet = db.get_detector(det)
         if dbdet is None:
             self.warning_dialog('Could not find Detector database entry for {}'.format(det))
@@ -144,17 +145,17 @@ class BatchEditTask(AnalysisEditTask, BaseBrowserTask):
                                                      user_error=ics.user_error,
                                                      sets=ics.sets,
                                                      fit=ics.fit
-                                                     )
+                    )
 
         db.add_detector_intercalibration(history, dbdet,
                                          user_value=v, user_error=e
-                                         )
+        )
         analysis.selected_histories.selected_detector_intercalibration = history
 
     def _add_discrimination(self, analysis, v, e):
         db = self.manager.db
         hist = db.add_detector_parameter_history(analysis)
-#         db.flush()  # FLUSH NECESSARY
+        #         db.flush()  # FLUSH NECESSARY
 
         db.add_detector_parameter(hist, disc=v, disc_error=e)
         analysis.dbrecord.selected_histories.selected_detector_param = hist
@@ -164,15 +165,15 @@ class BatchEditTask(AnalysisEditTask, BaseBrowserTask):
         AnalysisEditTask._update_unknowns_runs(self, obj, name, old, new)
         self.batch_edit_pane.populate(self.unknowns)
 
-#===============================================================================
-# handlers
-#===============================================================================
-#     @on_trait_change('unknowns_pane:items')
-#     def _update_unknowns_runs(self, obj, name, old, new):
-#         if not obj._no_update:
-#             self.unknowns = unks = self.manager.make_analyses(self.unknowns_pane.items)
-# #             self.manager.load_analyses(unks)
-#             self.batch_edit_pane.unknowns = unks
+    #===============================================================================
+    # handlers
+    #===============================================================================
+    #     @on_trait_change('unknowns_pane:items')
+    #     def _update_unknowns_runs(self, obj, name, old, new):
+    #         if not obj._no_update:
+    #             self.unknowns = unks = self.manager.make_analyses(self.unknowns_pane.items)
+    # #             self.manager.load_analyses(unks)
+    #             self.batch_edit_pane.unknowns = unks
 
     @on_trait_change('batch_edit_pane:db_sens_button')
     def _update_db_sens_button(self):
@@ -185,24 +186,25 @@ class BatchEditTask(AnalysisEditTask, BaseBrowserTask):
             s = se.selected
             self.batch_edit_pane.sens_value = s.sensitivity
 
-#===============================================================================
-# defaults
-#===============================================================================
+            #===============================================================================
+            # defaults
+            #===============================================================================
+
     def _default_layout_default(self):
         return TaskLayout(
-                          id='pychron.analysis_edit.batch',
-                          left=Splitter(
-                                        Tabbed(
-                                               PaneItem('pychron.search.query'),
-                                               PaneItem('pychron.browser')
-                                               ),
-                                         Splitter(
-                                                  PaneItem('pychron.analysis_edit.unknowns'),
-                                                  PaneItem('pychron.analysis_edit.controls'),
-                                                  orientation='vertical'
-                                                  ),
-                                        orientation='horizontal'
-                                        )
-                            )
+            id='pychron.analysis_edit.batch',
+            left=Splitter(
+                Tabbed(
+                    PaneItem('pychron.search.query'),
+                    PaneItem('pychron.browser')
+                ),
+                Splitter(
+                    PaneItem('pychron.analysis_edit.unknowns'),
+                    PaneItem('pychron.analysis_edit.controls'),
+                    orientation='vertical'
+                ),
+                orientation='horizontal'
+            )
+        )
 
 #============= EOF =============================================

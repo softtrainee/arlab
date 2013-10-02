@@ -16,13 +16,15 @@
 
 #============= enthought library imports =======================
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
-from pyface.tasks.task_layout import PaneItem, Splitter, TaskLayout, Tabbed
+from pyface.tasks.task_layout import PaneItem, Splitter, TaskLayout, Tabbed, HSplitter
 from src.processing.tasks.analysis_edit.panes import ControlsPane
-from src.constants import MINNA_BLUFF_IRRADIATIONS
+#from src.constants import MINNA_BLUFF_IRRADIATIONS
 import time
 from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.processing.tasks.browser.browser_task import BaseBrowserTask
+from src.processing.tasks.browser.panes import BrowserPane
 
 
 class IsotopeEvolutionTask(AnalysisEditTask):
@@ -31,77 +33,86 @@ class IsotopeEvolutionTask(AnalysisEditTask):
 
     def _default_layout_default(self):
         return TaskLayout(
-                          id='pychron.analysis_edit.isotope_evolution',
-                          left=Splitter(
-                                        Tabbed(
-                                               PaneItem('pychron.processing.editor'),
-                                               PaneItem('pychron.analysis_edit.unknowns'),
-                                               ),
-                                        PaneItem('pychron.analysis_edit.controls'),
-                                        orientation='vertical'
-                                      ),
-                          right=Splitter(
-                                         PaneItem('pychron.search.query'),
-                                         orientation='vertical'
-                                         )
-                          )
+            id='pychron.analysis_edit.isotope_evolution',
+            left=HSplitter(
+                Tabbed(PaneItem('pychron.browser'),
+                       PaneItem('pychron.search.query')
+                ),
+                Tabbed(
+                    PaneItem('pychron.processing.editor'),
+                    PaneItem('pychron.analysis_edit.unknowns'),
+                    PaneItem('pychron.processing.controls')
+                ),
+            ),
+        )
 
     def create_dock_panes(self):
-        self._create_unknowns_pane()
+        self.unknowns_pane = self._create_unknowns_pane()
         self.controls_pane = ControlsPane()
         self.plot_editor_pane = PlotEditorPane()
-        return [
 
-                self.unknowns_pane,
-                self.controls_pane,
-                self.plot_editor_pane,
-                self._create_query_pane()
-                ]
+        panes = [
+
+            self.unknowns_pane,
+            self.controls_pane,
+            self.plot_editor_pane,
+            self._create_browser_pane()
+        ]
+        ps = self._create_db_panes()
+        if ps:
+            panes.extend(ps)
+
+        return panes
 
     def new_isotope_evolution(self):
         from src.processing.tasks.isotope_evolution.isotope_evolution_editor import IsotopeEvolutionEditor
+
         editor = IsotopeEvolutionEditor(name='Iso Evo {:03n}'.format(self.iso_evo_editor_count),
-                              processor=self.manager
-                              )
+                                        processor=self.manager
+        )
         selector = self.manager.db.selector
 
-#        selector.queries[0].criterion = 'NM-251'
-#        selector._search_fired()
-#         selector = self.manager.db.selector
-#         self.unknowns_pane.items = selector.records[150:160]
-#
-#         editor.unknowns = self.unknowns_pane.items
+        #        selector.queries[0].criterion = 'NM-251'
+        #        selector._search_fired()
+        #         selector = self.manager.db.selector
+        #         self.unknowns_pane.items = selector.records[150:160]
+        #
+        #         editor.unknowns = self.unknowns_pane.items
         self._open_editor(editor)
         self.iso_evo_editor_count += 1
 
-    _refit_thread = None
-    def refit_isotopes(self, dry_run=False):
-        self.debug('refit disabled')
-        return
+    #_refit_thread = None
 
-        from src.ui.thread import Thread
-        if not self._refit_thread or not self._refit_thread.isRunning():
-            pd = self.manager.open_progress()
-            t = Thread(target=self._do_refit,
-                       name='refit_isotopes',
-                       args=(self._refit_isotopes_date_range, dry_run, pd))
-            t.start()
-            self._refit_thread = t
+    def refit_isotopes(self, dry_run=False):
+        self.new_isotope_evolution()
+
+        #self.debug('refit disabled')
+        #return
+        #
+        #from src.ui.thread import Thread
+        #
+        #if not self._refit_thread or not self._refit_thread.isRunning():
+        #    pd = self.manager.open_progress()
+        #    t = Thread(target=self._do_refit,
+        #               name='refit_isotopes',
+        #               args=(self._refit_isotopes_date_range, dry_run, pd))
+        #    t.start()
+        #    self._refit_thread = t
 
     def _gather_analyses(self, imports):
         db = self.manager.db
 
-        levels = (db.get_irradiation_level(irrad, level)
-                    for irrad, levels in imports
-                        for level in levels)
+        levels = (db.get_irradiation_level(irrad, level) \
+                  for irrad, levels in imports \
+                  for level in levels)
 
-        lns = (pi.labnumber for level in levels
-                            for pi in level.positions
-                            if pi.labnumber.sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff')
-                            )
+        lns = (pi.labnumber for level in levels \
+               for pi in level.positions \
+               if pi.labnumber.sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff') \
+            )
         ans = [ai for ln in lns
-                    for ai in ln.analyses
-                        if ai.status == 0]
+               for ai in ln.analyses
+               if ai.status == 0]
         return ans
 
     def _do_refit(self, fit_func, *args, **kw):
@@ -119,6 +130,7 @@ class IsotopeEvolutionTask(AnalysisEditTask):
                     self.manager.refit_isotopes(ai, pd=pd)
                 except Exception:
                     import traceback
+
                     traceback.print_exc()
                     ai.status = 10
 
@@ -144,31 +156,42 @@ class IsotopeEvolutionTask(AnalysisEditTask):
         pd.max = len([ai for ai in ans if ai.status == 0]) - 1
         self._refit_analyses(ans, dry_run, pd)
 
-#     def _refit_isotopes_levels(self, dry_run, pd):
-#         imports = MINNA_BLUFF_IRRADIATIONS
-#         imports = [('NM-205', ['E', 'F' ]),
-#                    ('NM-256', ['F', ])]
-#         ans = self._gather_analyses(imports)
-#         pd.max = len(ans)
-#
-#         db = self.manager.db
-#
-#         for irrad, levels in imports:
-#             for level in levels:
-#                 self.info('extracting positions from {} {}'.format(irrad, level))
-#                 level = db.get_irradiation_level(irrad, level)
-#                 for pi in level.positions:
-#                     ln = pi.labnumber
-#                     sample = ln.sample
-#                     if sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff'):
-#                         self.info('extracting analyses from {}'.format(ln.identifier))
-#                         self._refit_analyses(ln.analyses, dry_run, pd)
+    #     def _refit_isotopes_levels(self, dry_run, pd):
+    #         imports = MINNA_BLUFF_IRRADIATIONS
+    #         imports = [('NM-205', ['E', 'F' ]),
+    #                    ('NM-256', ['F', ])]
+    #         ans = self._gather_analyses(imports)
+    #         pd.max = len(ans)
+    #
+    #         db = self.manager.db
+    #
+    #         for irrad, levels in imports:
+    #             for level in levels:
+    #                 self.info('extracting positions from {} {}'.format(irrad, level))
+    #                 level = db.get_irradiation_level(irrad, level)
+    #                 for pi in level.positions:
+    #                     ln = pi.labnumber
+    #                     sample = ln.sample
+    #                     if sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff'):
+    #                         self.info('extracting analyses from {}'.format(ln.identifier))
+    #                         self._refit_analyses(ln.analyses, dry_run, pd)
 
 
-#===============================================================================
-# equilibration tools
-#===============================================================================
+    #===============================================================================
+    # equilibration tools
+    #===============================================================================
     def calculate_optimal_eqtime(self):
         if self.active_editor:
             self.active_editor.calculate_optimal_eqtime()
+
+            #===============================================================================
+            # handlers
+            #===============================================================================
+
+    def _dclicked_sample_changed(self, new):
+        for sa in self.selected_sample:
+            ans = self._get_sample_analyses(sa)
+            #             ans = man.make_analyses(ans)
+            self.unknowns_pane.items = ans
+
 #============= EOF =============================================

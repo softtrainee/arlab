@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from chaco.array_data_source import ArrayDataSource
 from traits.api import HasTraits, Any, Int, Str, Tuple, Property, \
-    Event
+    Event, Bool
 from traitsui.api import View, Item
 from chaco.tools.data_label_tool import DataLabelTool
 #============= standard library imports ========================
@@ -46,21 +46,32 @@ class BaseArArFigure(HasTraits):
 
     options = Any
 
+    x_grid_visible = Bool(True)
+    y_grid_visible = Bool(True)
+
     def build(self, plots):
-        '''
+        """
             make plots
-        '''
+        """
+
+        def _setup_plot(pp):
+            pp.value_range.tight_bounds = False
+            pp.x_grid.visible = self.x_grid_visible
+            pp.y_grid.visible = self.y_grid_visible
+
         graph = self.graph
         p = graph.new_plot(ytitle=self.ytitle,
-                           padding=self.padding
+                           padding=self.padding,
         )
-        p.value_range.tight_bounds = False
+        _setup_plot(p)
 
         for po in plots:
             p = graph.new_plot(padding=self.padding,
                                bounds=[50, po.height],
-                               ytitle=po.name)
-            p.value_range.tight_bounds = False
+                               ytitle=po.name,
+
+            )
+            _setup_plot(p)
 
 
     def plot(self, *args, **kw):
@@ -165,9 +176,9 @@ class BaseArArFigure(HasTraits):
             u = lambda a, b, c, d: self.update_graph_metadata(a, b, c, d)
             scatter.index.on_trait_change(u, 'metadata_changed')
 
-        #===============================================================================
-        # labels
-        #===============================================================================
+            #===============================================================================
+            # labels
+            #===============================================================================
 
     def _add_data_label(self, s, text, point, bgcolor='transparent',
                         label_position='top right', color=None, append=True, **kw):
@@ -225,4 +236,4 @@ class BaseArArFigure(HasTraits):
                       reverse=self._reverse_sorted_analyses
         )
 
-    #============= EOF =============================================
+        #============= EOF =============================================

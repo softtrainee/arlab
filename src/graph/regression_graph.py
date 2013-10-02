@@ -31,7 +31,6 @@ from src.graph.stacked_graph import StackedGraph
 from src.regression.ols_regressor import PolynomialRegressor
 from src.regression.mean_regressor import MeanRegressor
 from src.graph.context_menu_mixin import RegressionContextMenuMixin
-# from src.displays.rich_text_display import RichTextDisplay
 from src.graph.tools.regression_inspector import RegressionInspectorTool, \
     RegressionInspectorOverlay
 from src.graph.tools.point_inspector import PointInspector, \
@@ -213,7 +212,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 fls = (ps[kk][0] for kk in ks if kk == 'fit{}'.format(idx))
                 for si, fl in zip(scatters, fls):
                     self._plot_regression(plot, si, fl)
-                #
+                    #
             except ValueError, e:
                 break
         else:
@@ -454,15 +453,15 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                     f = 'averageSEM'
                 else:
                     f = 'averageSD'
-                #                if not (f.endswith('sd') or f.endswith('sem')):
-                #                    f = 'averageSD'
-                #            elif f in ['preceeding', 'bracketing interpolate', 'bracketing average']:
-                #                f = f
+                    #                if not (f.endswith('sd') or f.endswith('sem')):
+                    #                    f = 'averageSD'
+                    #            elif f in ['preceeding', 'bracketing interpolate', 'bracketing average']:
+                    #                f = f
             else:
                 f = None
-            #        elif isinstance(f, tuple):
-            #            #f == fitfunc, errfunc
-            #            return f
+                #        elif isinstance(f, tuple):
+                #            #f == fitfunc, errfunc
+                #            return f
         return f
 
     #    def _apply_filter(self, filt, xs, ys):
@@ -512,7 +511,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             #            remainder_block = None
             if dev:
                 ys = ys[:-dev]
-            #                remainder_block = ys[-dev:]
+                #                remainder_block = ys[-dev:]
             #            remainder_
 
             blocks = ys.reshape(r, c)
@@ -585,9 +584,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         si = len([p for p in plot.plots.keys() if p.startswith('data')])
 
         rd['selection_color'] = 'white'
+        rd['selection_outline_color'] = rd['color']
+
         rd['selection_marker'] = marker
         rd['selection_marker_size'] = marker_size + 1
-        rd['selection_outline_color'] = 'red'
 
         scatter = plot.plot(names, **rd)[0]
         self.set_series_label('data{}'.format(si), plotid=plotid)
@@ -624,11 +624,11 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             if not self.suppress_regression:
                 self._regress(plot, scatter, line)
 
-            #         if r is not None:
-            #             line.regressor = r
-            #             if hasattr(line, 'error_envelope'):
-            #                 line.error_envelope.lower = ly
-            #                 line.error_envelope.upper = uy
+                #         if r is not None:
+                #             line.regressor = r
+                #             if hasattr(line, 'error_envelope'):
+                #                 line.error_envelope.lower = ly
+                #                 line.error_envelope.upper = uy
 
         line.index.sort_order = 'ascending'
         self.set_series_label('fit{}'.format(si), plotid=plotid)
@@ -650,74 +650,11 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
     #         self.indices.append(index)
 
-
     def _add_error_envelope_overlay(self, line):
 
         o = ErrorEnvelopeOverlay(component=weakref.ref(line)())
         line.overlays.append(o)
         line.error_envelope = o
-
-    #        if self.use_inspector_tool:
-    #            u = lambda **kw:self._update_info(scatter, **kw)
-    #            scatter.value.on_trait_change(u, 'metadata_changed')
-
-    #    def _update_info(self, scatter):
-    #        hover = scatter.value.metadata.get('hover', None)
-    #        if hover:
-    #            hover = hover[0]
-    #            from src.canvas.popup_window import PopupWindow
-    #            if not self.popup:
-    #                self.popup = PopupWindow(None)
-    #
-    #            mouse_xy = scatter.index.metadata.get('mouse_xy')
-    #            if mouse_xy:
-    #                x = scatter.index.get_data()[hover]
-    #                y = scatter.value.get_data()[hover]
-    #                self._show_pop_up(self.popup, x, y, mouse_xy)
-    #        else:
-    #            if self.popup:
-    #                self.popup.Freeze()
-    #                self.popup.Show(False)
-    #                self.popup.Thaw()
-
-    #    def _convert_index(self, ind):
-    #        print 'ffff'
-    #        return '{:0.1f}'.format(ind)
-
-    #    def _show_pop_up(self, popup, index, value, mxmy):
-    #        x, y = mxmy
-    #        lines = [
-    #                 'x={}'.format(self._convert_index(index)),
-    #                 'y={:0.5f}'.format(value)
-    #               ]
-    #        t = '\n'.join(lines)
-    #        gc = font_metrics_provider()
-    #        with gc:
-    #            font = popup.GetFont()
-    #            from kiva.fonttools import Font
-    #            gc.set_font(Font(face_name=font.GetFaceName(),
-    #                             size=font.GetPointSize(),
-    #                             family=font.GetFamily(),
-    # #                             weight=font.GetWeight(),
-    # #                             style=font.GetStyle(),
-    # #                             underline=0,
-    # #                             encoding=DEFAULT
-    #                             ))
-    #            linewidths, lineheights = zip(*[gc.get_full_text_extent(line)[:2]  for line in lines])
-    # #            print linewidths, lineheights
-    #            ml = max(linewidths)
-    #            mh = max(lineheights)
-    #
-    # #        ch = popup.GetCharWidth()
-    #        mh = mh * len(lines)
-    # #        print ml, mh
-    #        popup.Freeze()
-    #        popup.set_size(ml, mh)
-    #        popup.SetText(t)
-    #        popup.SetPosition((x + 55, y + 25))
-    #        popup.Show(True)
-    #        popup.Thaw()
-
 
     def add_tools(self, plot, scatter, line=None, convert_index=None):
 
@@ -756,12 +693,12 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter.overlays.append(rect_overlay)
         broadcaster.tools.append(rect_tool)
 
-    #
+        #
 
-    #            print container
+        #            print container
 
-    #        print scatter.tools
-    # add a broadcaster so scatterinspector and rect selection will received events
+        #        print scatter.tools
+        # add a broadcaster so scatterinspector and rect selection will received events
 
 #        scatter.overlays.append(rect_overlay)
 #        data_tool = DataTool(
@@ -786,6 +723,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 #        super(RegressionGraph, self).set_x_limits(*args, **kw)
 #        self._update_graph()
 
+
 class RegressionTimeSeriesGraph(RegressionGraph, TimeSeriesGraph):
     pass
 
@@ -796,7 +734,8 @@ class StackedRegressionGraph(RegressionGraph, StackedGraph):
     def _bind_index(self, scatter, bind_selection=True, **kw):
         super(StackedRegressionGraph, self)._bind_index(scatter)
 
-    #        if bind_selection:
+        #        if bind_selection:
+
 #            scatter.index.on_trait_change(self._update_metadata, 'metadata_changed')
 #
 #    def _update_metadata(self, obj, name, old, new):
@@ -834,6 +773,7 @@ class StackedRegressionGraph(RegressionGraph, StackedGraph):
 #                    si.value.trait_set(metadata=obj.metadata)
 
 #        self.suppress_regression = False
+
 
 class StackedRegressionTimeSeriesGraph(StackedRegressionGraph, TimeSeriesGraph):
     pass

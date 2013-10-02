@@ -21,7 +21,8 @@ from numpy import array, average, ones
 #============= local library imports  ==========================
 from uncertainties import ufloat
 from src.processing.analysis import Marker
-from src.stats.core import calculate_mswd
+from src.stats.core import calculate_mswd, calculate_weighted_mean
+
 
 class Mean(HasTraits):
     sample = Str
@@ -89,15 +90,22 @@ class Mean(HasTraits):
         if args:
             vs, es = args
             if use_weights:
-                weights = 1 / es ** 2
+                av, werr = calculate_weighted_mean(vs, es)
             else:
-                weights = ones(vs.shape)
-
-            av, sum_weights = average(vs, weights=weights, returned=True)
-            if use_weights:
-                werr = sum_weights ** -0.5
-            else:
+                av = vs.mean()
                 werr = vs.std(ddof=1)
+
+
+                #if use_weights:
+                #    weights = 1 / es ** 2
+                #else:
+                #    weights = ones(vs.shape)
+
+                #av, sum_weights = average(vs, weights=weights, returned=True)
+                #if use_weights:
+                #    werr = sum_weights ** -0.5
+                #else:
+                #    werr = vs.std(ddof=1)
         else:
             av, werr = 0, 0
 

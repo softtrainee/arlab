@@ -1,33 +1,3 @@
-
-
-# from pyface.ui.qt4.tasks.editor import Editor
-# from PySide.QtWebKit import QWebView, QWebSettings
-# from PySide.QtCore import QUrl
-# # class myQWebView(QWebView):
-# #    pass
-# #
-#
-# class IsotopeEvolutionEditor(Editor):
-#    def create(self, parent):
-#        self.control = QWebView(parent)
-#    #        self.control.setUrl(QUrl('http://www.google.com'))
-#    #        self.control.setUrl(QUrl('file:///Users/ross/Sandbox/publish.pdf'))
-# #        self.control.settings().setAttribute(QWebSettings.PluginsEnabled, True)
-#    #        self.control.show()
-# #        url = QUrl().fromLocalFile('/Users/ross/Sandbox/publish.pdf')
-# #        print url
-# #        self.control.load(url)
-# #        self.control.load(QUrl('http://www.google.com'))
-#        html = '''<html>
-#    <body>
-#    foasdfas
-#    <embed src='file:///Users/ross/Sandbox/publish.pdf'></embed>
-#    </body>
-#    </html>
-#    '''
-#        self.control.setHtml(html)
-# # <object type="application/x-pdf" data="file:///Users/ross/Sandbox/publish.pdf" width="500" height="400"></object>
-
 #===============================================================================
 # Copyright 2013 Jake Ross
 #
@@ -58,11 +28,13 @@ from src.processing.tasks.analysis_edit.fits import IsoEvoFitSelector
 # from src.processing.equilibration_utils import calc_optimal_eqtime
 #============= local library imports  ==========================
 
+
 class IsotopeEvolutionEditor(GraphEditor):
     component = Instance(GridPlotContainer)
     graphs = Dict
     _suppress_update = Bool
     tool = Instance(IsoEvoFitSelector, ())
+
     def calculate_optimal_eqtime(self):
         # get x,y data
         self.info('========================================')
@@ -70,6 +42,7 @@ class IsotopeEvolutionEditor(GraphEditor):
         self.info('========================================')
 
         from src.processing.utils.equilibration_utils import calc_optimal_eqtime
+
         for unk in self.unknowns:
 
             for fit in self.tool.fits:
@@ -83,7 +56,9 @@ class IsotopeEvolutionEditor(GraphEditor):
 
                         xs, ys = iso.xs, iso.ys
                         m, b = polyfit(xs[:50], ys[:50], 1)
-                        self.info('{:<12s} {}  t={:0.1f}  initial static pump={:0.2e} (fA/s)'.format(unk.record_id, isok, ti, m))
+                        self.info(
+                            '{:<12s} {}  t={:0.1f}  initial static pump={:0.2e} (fA/s)'.format(unk.record_id, isok, ti,
+                                                                                               m))
                         g = self.graphs[unk.record_id]
                         if ti:
                             for plot in g.plots:
@@ -98,21 +73,32 @@ class IsotopeEvolutionEditor(GraphEditor):
 
     def _save_fit(self, unk):
         fit_hist = None
-
         db = self.processor.db
+
+        #ai=self.processor.make_analyses([unk])[0]
+        meas_analysis = db.get_analysis_uuid(unk.uuid)
+
         for fi in self.tool.fits:
+            if not fi.use:
+                continue
+
             # get database fit
-            dbfit = unk._get_db_fit(fi.name)
+            if fi.name.endswith('bs'):
+                dbfit = unk.get_db_fit(fi.name[:-2], meas_analysis, 'baseline')
+            else:
+                dbfit = unk.get_db_fit(fi.name, meas_analysis, 'signal')
+
             if dbfit != fi.fit:
                 if fit_hist is None:
-                    fit_hist = db.add_fit_history(self.dbrecord, user=db.save_username)
+                    fit_hist = db.add_fit_history(meas_analysis, user=db.save_username)
 
-                dbiso = next((iso for iso in self.dbrecord.isotopes
+                dbiso = next((iso for iso in meas_analysis.isotopes
                               if iso.molecular_weight.name == fi.name), None)
 
                 db.add_fit(fit_hist, dbiso, fit=fi.fit)
-#     def _rebuild_graph(self):
-#         timethis(self._rebuild_graph2, msg='total')
+                self.debug('adding fit {} - {}'.format(fi.name, fi.fit))
+                #     def _rebuild_graph(self):
+                #         timethis(self._rebuild_graph2, msg='total')
 
     def _rebuild_graph(self):
         unk = self.unknowns
@@ -137,53 +123,53 @@ class IsotopeEvolutionEditor(GraphEditor):
             set_ytitle = j % c == 0
             set_xtitle = j >= (n / r)
             g = self._graph_factory()
-            ma = -Inf
-            set_x_flag = False
-            i = 0
-            for fit in self.tool.fits:
-                if fit.fit and fit.show:
-                    set_x_flag = True
-                    isok = fit.name
-                    kw = dict(padding=[50, 1, 1, 1],
-                              title=unk.record_id
-                              )
-                    if set_ytitle:
-    #                        kw = dict(padding=[50, 1, 1, 1])
-                        kw['ytitle'] = '{} (fA)'.format(isok)
+            with g.no_regression(refresh=False):
+                ma = -Inf
+                set_x_flag = False
+                i = 0
+                for fit in self.tool.fits:
+                    if fit.fit and fit.show:
+                        set_x_flag = True
+                        isok = fit.name
+                        kw = dict(padding=[50, 1, 1, 1],
+                                  title=unk.record_id
+                        )
+                        if set_ytitle:
+                        #                        kw = dict(padding=[50, 1, 1, 1])
+                            kw['ytitle'] = '{} (fA)'.format(isok)
 
-                    if set_xtitle:
-                        kw['xtitle'] = 'Time (s)'
+                        if set_xtitle:
+                            kw['xtitle'] = 'Time (s)'
 
-                    g.new_plot(**kw)
+                        g.new_plot(**kw)
 
-                    if isok.endswith('bs'):
-                        isok = isok[:-2]
-                        iso = unk.isotopes[isok]
-                        iso.baseline.fit = fit.fit
-                        xs, ys = iso.baseline.xs, iso.baseline.ys
-                        g.new_series(xs, ys,
-                                     fit=fit.fit,
-#                                      add_tools=False,
-                                     plotid=i)
-                    else:
-#                     if isok in unk.isotopes:
-                        iso = unk.isotopes[isok]
-                        if display_sniff:
-                            sniff = iso.sniff
-                            if sniff:
-                                g.new_series(sniff.xs, sniff.ys,
-                                             plotid=i,
-                                             type='scatter',
-                                             fit=False)
-                        iso.fit = fit.fit
-                        xs, ys = iso.xs, iso.ys
-                        g.new_series(xs, ys,
-                                     fit=fit.fit,
-#                                      add_tools=False,
-                                     plotid=i)
+                        if isok.endswith('bs'):
+                            isok = isok[:-2]
+                            iso = unk.isotopes[isok]
+                            iso.baseline.fit = fit.fit
+                            xs, ys = iso.baseline.xs, iso.baseline.ys
+                            g.new_series(xs, ys,
+                                         fit=fit.fit,
+                                         #                                      add_tools=False,
+                                         plotid=i)
+                        else:
+                        #                     if isok in unk.isotopes:
+                            iso = unk.isotopes[isok]
+                            if display_sniff:
+                                sniff = iso.sniff
+                                if sniff:
+                                    g.new_series(sniff.xs, sniff.ys,
+                                                 plotid=i,
+                                                 type='scatter',
+                                                 fit=False)
+                            iso.fit = fit.fit
+                            xs, ys = iso.xs, iso.ys
+                            g.new_series(xs, ys,
+                                         fit=fit.fit,
+                                         plotid=i)
 
-                    ma = max(max(xs), ma)
-                    i += 1
+                        ma = max(max(xs), ma)
+                        i += 1
 
             if set_x_flag:
                 g.set_x_limits(0, ma * 1.1)
@@ -195,7 +181,7 @@ class IsotopeEvolutionEditor(GraphEditor):
     def refresh_unknowns(self):
         if not self._suppress_update:
             for ui in self.unknowns:
-#                 ui.load_age()
+            #                 ui.load_age()
                 ui.analysis_summary.update_needed = True
 
     def traits_view(self):
@@ -210,7 +196,7 @@ class IsotopeEvolutionEditor(GraphEditor):
     def _container_factory(self, shape):
         return GridPlotContainer(shape=shape,
                                  spacing=(1, 1),
-#                                 bgcolor='lightgray',
-                                 )
+                                 #                                 bgcolor='lightgray',
+        )
 
 #============= EOF =============================================

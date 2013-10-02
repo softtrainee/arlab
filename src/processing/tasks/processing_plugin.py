@@ -33,7 +33,7 @@ from src.processing.tasks.processing_actions import IdeogramAction, \
 
 from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     FluxAction, IsotopeEvolutionAction, ICFactorAction, \
-    BatchEditAction, RefitIsotopeEvolutionAction, SCLFTableAction, TagAction
+    BatchEditAction, RefitIsotopeEvolutionAction, SCLFTableAction, TagAction, DatabaseSaveAction
 from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
 from src.processing.tasks.figures.auto_figure_preferences import AutoFigurePreferencesPane
 from src.processing.tasks.smart_project.smart_project_task import SmartProjectTask
@@ -46,10 +46,10 @@ from pyface.message_dialog import warning
 class ProcessingPlugin(BaseTaskPlugin):
     def _service_offers_default(self):
         process_so = self.service_offer_factory(
-                                              protocol=Processor,
-#                                              factory=Processor
-                                              factory=self._processor_factory
-                                              )
+            protocol=Processor,
+            #                                              factory=Processor
+            factory=self._processor_factory
+        )
 
         return [process_so]
 
@@ -69,20 +69,23 @@ Install to enable MS Excel export''')
             else:
                 i, f, p, mkw = args
             return SchemaAddition(id=i, factory=f, path=p, **mkw)
+
         return TaskExtension(actions=[make_schema(args)
                                       for args in actions], **kw)
-#         return TaskExtension(actions=[SchemaAddition(id=i, factory=f, path=p)
-#                                       for i, f, p in actions])
+
+    #         return TaskExtension(actions=[SchemaAddition(id=i, factory=f, path=p)
+    #                                       for i, f, p in actions])
 
 
     def _my_task_extensions_default(self):
         def figure_group():
             return Group(
-                          SpectrumAction(),
-                          IdeogramAction(),
-                          InverseIsochronAction(),
-                          SeriesAction()
-                          )
+                SpectrumAction(),
+                IdeogramAction(),
+                InverseIsochronAction(),
+                SeriesAction()
+            )
+
         def data_menu():
             return SMenu(id='Data', name='Data')
 
@@ -91,40 +94,41 @@ Install to enable MS Excel export''')
                          GroupbyAliquotAction(),
                          GroupbyLabnumberAction(),
                          ClearGroupAction()
-                         )
+            )
 
         return [
-                self._make_task_extension([
-                   ('recall_action', RecallAction, 'MenuBar/File'),
-                   ('labnumber_entry', LabnumberEntryAction, 'MenuBar/Edit'),
-                   ('sensitivity_entry', SensitivityEntryAction, 'MenuBar/Edit'),
+            self._make_task_extension([
+                ('recall_action', RecallAction, 'MenuBar/File'),
+                ('labnumber_entry', LabnumberEntryAction, 'MenuBar/Edit'),
+                ('sensitivity_entry', SensitivityEntryAction, 'MenuBar/Edit'),
 
-                   ('blank_edit', BlankEditAction, 'MenuBar/Edit'),
-                   ('flux_edit', FluxAction, 'MenuBar/Edit'),
-#                    ('series', SeriesAction, 'MenuBar/Edit'),
-                   ('iso_evo', IsotopeEvolutionAction, 'MenuBar/Edit'),
-                   ('ic_factor', ICFactorAction, 'MenuBar/Edit'),
-                   ('batch_edit', BatchEditAction, 'MenuBar/Edit'),
-                   ('refit', RefitIsotopeEvolutionAction, 'MenuBar/Edit'),
-                   # ('sclf_table', SCLFTableAction, 'MenuBar/Edit'),
+                ('blank_edit', BlankEditAction, 'MenuBar/Edit'),
+                ('flux_edit', FluxAction, 'MenuBar/Edit'),
+                #                    ('series', SeriesAction, 'MenuBar/Edit'),
+                ('iso_evo', IsotopeEvolutionAction, 'MenuBar/Edit'),
+                ('ic_factor', ICFactorAction, 'MenuBar/Edit'),
+                ('batch_edit', BatchEditAction, 'MenuBar/Edit'),
+                ('refit', RefitIsotopeEvolutionAction, 'MenuBar/Edit'),
+                # ('sclf_table', SCLFTableAction, 'MenuBar/Edit'),
 
-                   ('figure_group', figure_group, 'MenuBar/Edit'),
+                ('figure_group', figure_group, 'MenuBar/Edit'),
 
-                   ('equil_inspector', EquilibrationInspectorAction, 'MenuBar/Tools'),
+                ('equil_inspector', EquilibrationInspectorAction, 'MenuBar/Tools'),
 
-                   ('data', data_menu, 'MenuBar',
-                    {'before':'Tools', 'after':'View'}),
+                ('data', data_menu, 'MenuBar',
+                 {'before': 'Tools', 'after': 'View'}),
 
-                   ('tag', TagAction, 'MenuBar/Data'),
-                   ('grouping_group', grouping_group, 'MenuBar/Data'),
-                   ('smart_project', SmartProjectAction, 'MenuBar/File')
-                   ]),
-                self._make_task_extension([
-                   ('optimal_equilibration', CalcOptimalEquilibrationAction, 'MenuBar/Tools')
-                   ],
-                   task_id='pychron.analysis_edit.isotope_evolution'),
+                ('tag', TagAction, 'MenuBar/Data'),
+                ('database_save', DatabaseSaveAction, 'MenuBar/Data'),
+                ('grouping_group', grouping_group, 'MenuBar/Data'),
+                ('smart_project', SmartProjectAction, 'MenuBar/File')
+            ]),
+            self._make_task_extension([
+                                          ('optimal_equilibration', CalcOptimalEquilibrationAction, 'MenuBar/Tools')
+                                      ],
+                                      task_id='pychron.analysis_edit.isotope_evolution'),
 
-                ]
+        ]
 
 
     def _meta_task_factory(self, i, f, n, task_group=None,
@@ -134,104 +138,116 @@ Install to enable MS Excel export''')
                            task_group=task_group,
                            accelerator=accelerator,
                            include_view_menu=include_view_menu or accelerator
-                           )
+        )
 
 
     def _tasks_default(self):
         tasks = [('pychron.entry.labnumber',
-                            self._labnumber_task_factory,
-                                'Labnumber', 'experiment'),
-                ('pychron.entry.sensitivity',
-                    self._sensitivity_entry_task_factory,
-                        'Sensitivity', 'experiment'),
-                ('pychron.recall',
-                    self._recall_task_factory, 'Recall'),
-                ('pychron.analysis_edit.blanks',
-                    self._blanks_edit_task_factory, 'Blanks'),
-                ('pychron.analysis_edit.flux',
-                    self._flux_task_factory, 'Flux'),
-                ('pychron.analysis_edit.isotope_evolution',
-                    self._iso_evo_task_factory, 'Isotope Evolution'),
-                ('pychron.analysis_edit.ic_factor',
-                    self._ic_factor_task_factory, 'IC Factor'),
-                ('pychron.analysis_edit.batch',
-                    self._batch_edit_task_factory, 'Batch Edit'),
-                ('pychron.processing.figures',
-                    self._figure_task_factory, 'Figures'),
-                # ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher'),
-                ('pychron.processing.publisher',
-                    self._table_task_factory, 'Table', '', 'Ctrl+t'),
-                ('pychron.processing.auto_figure',
-                    self._auto_figure_task_factory, 'AutoFigure'),
-                ('pychron.processing.smart_project',
-                    self._smart_project_task_factory, 'SmartProject'),
-                ('pychron.processing.browser',
-                    self._browser_task_factory, 'Analysis Browser', '', 'Ctrl+Shift+B'),
-                ('pychron.processing.respository',
-                    self._repository_task_factory, 'Repository', '', 'Ctrl+Shift+R')
-               ]
+                  self._labnumber_task_factory,
+                  'Labnumber', 'experiment'),
+                 ('pychron.entry.sensitivity',
+                  self._sensitivity_entry_task_factory,
+                  'Sensitivity', 'experiment'),
+                 ('pychron.recall',
+                  self._recall_task_factory, 'Recall'),
+                 ('pychron.analysis_edit.blanks',
+                  self._blanks_edit_task_factory, 'Blanks'),
+                 ('pychron.analysis_edit.flux',
+                  self._flux_task_factory, 'Flux'),
+                 ('pychron.analysis_edit.isotope_evolution',
+                  self._iso_evo_task_factory, 'Isotope Evolution'),
+                 ('pychron.analysis_edit.ic_factor',
+                  self._ic_factor_task_factory, 'IC Factor'),
+                 ('pychron.analysis_edit.batch',
+                  self._batch_edit_task_factory, 'Batch Edit'),
+                 ('pychron.processing.figures',
+                  self._figure_task_factory, 'Figures'),
+                 # ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher'),
+                 ('pychron.processing.publisher',
+                  self._table_task_factory, 'Table', '', 'Ctrl+t'),
+                 ('pychron.processing.auto_figure',
+                  self._auto_figure_task_factory, 'AutoFigure'),
+                 ('pychron.processing.smart_project',
+                  self._smart_project_task_factory, 'SmartProject'),
+                 ('pychron.processing.browser',
+                  self._browser_task_factory, 'Analysis Browser', '', 'Ctrl+Shift+B'),
+                 ('pychron.processing.respository',
+                  self._repository_task_factory, 'Repository', '', 'Ctrl+Shift+R')
+        ]
 
         return [
-                self._meta_task_factory(*args)
-                    for args in tasks
-                ]
+            self._meta_task_factory(*args)
+            for args in tasks
+        ]
 
     def _processor_factory(self):
         return Processor(application=self.application)
 
     def _labnumber_task_factory(self):
         from src.processing.tasks.entry.labnumber_entry_task import LabnumberEntryTask
+
         return LabnumberEntryTask()
 
     def _sensitivity_entry_task_factory(self):
         from src.processing.tasks.entry.sensitivity_entry_task import SensitivityEntryTask
+
         return SensitivityEntryTask()
 
     def _blanks_edit_task_factory(self):
         from src.processing.tasks.blanks.blanks_task import BlanksTask
+
         return BlanksTask(manager=self._processor_factory())
 
     def _flux_task_factory(self):
         from src.processing.tasks.flux.flux_task import FluxTask
+
         return FluxTask(manager=self._processor_factory())
 
     def _recall_task_factory(self):
         from src.processing.tasks.recall.recall_task import RecallTask
+
         return RecallTask(manager=self._processor_factory())
 
-#     def _series_task_factory(self):
-#         from src.processing.tasks.series.series_task import SeriesTask
-#         return SeriesTask(manager=self._processor_factory())
+    #     def _series_task_factory(self):
+    #         from src.processing.tasks.series.series_task import SeriesTask
+    #         return SeriesTask(manager=self._processor_factory())
 
     def _iso_evo_task_factory(self):
         from src.processing.tasks.isotope_evolution.isotope_evolution_task import IsotopeEvolutionTask
+
         return IsotopeEvolutionTask(manager=self._processor_factory())
 
     def _ic_factor_task_factory(self):
         from src.processing.tasks.detector_calibration.intercalibration_factor_task import IntercalibrationFactorTask
+
         return IntercalibrationFactorTask(manager=self._processor_factory())
 
     def _batch_edit_task_factory(self):
         from src.processing.tasks.batch_edit.batch_edit_task import BatchEditTask
+
         return BatchEditTask(manager=self._processor_factory())
 
     def _figure_task_factory(self):
         from src.processing.tasks.figures.figure_task import FigureTask
+
         return FigureTask(manager=self._processor_factory())
 
     def _auto_figure_task_factory(self):
         from src.processing.tasks.figures.auto_figure_task import AutoFigureTask
+
         return AutoFigureTask(manager=self._processor_factory())
 
     def _repository_task_factory(self):
         from src.processing.tasks.repository.respository_task import RepositoryTask
+
         return RepositoryTask(manager=self._processor_factory())
 
-#     def _publisher_task_factory(self):
-#         from src.processing.tasks.publisher.publisher_task import PublisherTask
-#         return PublisherTask(manager=self._processor_factory())
+    #     def _publisher_task_factory(self):
+    #         from src.processing.tasks.publisher.publisher_task import PublisherTask
+    #         return PublisherTask(manager=self._processor_factory())
     def _table_task_factory(self):
         from src.processing.tasks.tables.table_task import TableTask
+
         return TableTask(manager=self._processor_factory())
 
     def _smart_project_task_factory(self):
@@ -239,11 +255,13 @@ Install to enable MS Excel export''')
 
     def _browser_task_factory(self):
         return BrowserTask(manager=self._processor_factory())
-#    def _task_factory(self):
-# #        processor = self.application.get_service(Processor)
-#        return ProcessingTask(manager=self._processor_factory())
+
+    #    def _task_factory(self):
+    # #        processor = self.application.get_service(Processor)
+    #        return ProcessingTask(manager=self._processor_factory())
 
     def _preferences_panes_default(self):
         return [AutoFigurePreferencesPane,
-                ]
-#============= EOF =============================================
+        ]
+
+        #============= EOF =============================================

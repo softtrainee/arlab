@@ -232,35 +232,55 @@ class LaserTableMeanAdapter(BaseAdapter):
                ('N', 'nanalyses'),
                ('Wtd. Age', 'weighted_age'),
                ('S.E', 'age_se'),
-               ('Arith. Age', 'arith_age'),
-               ('S.D', 'age_sd'),
+               ('MSWD', 'mswd'),
+               ('Wtd. K/Ca', 'weighted_kca_error'),
+               ('S.E', 'weighted_kca'),
+               #('Arith. Age', 'arith_age'),
+               #('S.D', 'age_sd'),
                ('', 'blank_column')
                ]
 
     nanalyses_width = Int(40)
     sample_width = Int(75)
+    mswd_width = Int(75)
     weighted_age_width = Int(75)
+    weighted_kca_width = Int(75)
+    weighted_kca_error_width = Int(75)
+
     arith_age_width = Int(75)
     age_se_width = Int(75)
-    age_sd_width = Int(75)
 
     weighted_age_text = Property
-    arith_age_text = Property
     age_se_text = Property
-    age_sd_text = Property
+    mswd_text = Property
+    weighted_kca_text = Property
+    weighted_kca_error_text = Property
+
     font = 'Arial 9'
+    #age_sd_width = Int(75)
+    #arith_age_text = Property
+    #age_sd_text = Property
 
     def _get_weighted_age_text(self):
         return self._get_value('weighted_age')
 
-    def _get_arith_age_text(self):
-        return self._get_value('arith_age')
-
     def _get_age_se_text(self):
         return self._get_error('weighted_age')
 
-    def _get_age_sd_text(self):
-        return self._get_error('arith_age')
+    def _get_weighted_kca_text(self):
+        return self._get_value('weighted_kca')
+
+    def _get_weighted_kca_error_text(self):
+        return self._get_error('weighted_kca')
+
+    def _get_mswd_text(self):
+        return floatfmt(self.item.mswd, 2)
+        #def _get_arith_age_text(self):
+        #    return self._get_value('arith_age')
+        #
+        #def _get_age_sd_text(self):
+        #    return self._get_error('arith_age')
+
 #============= EOF =============================================
 # class LaserTableBlankAdapter(LaserTableAdapter):
 #     columns = [

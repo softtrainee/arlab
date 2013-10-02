@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 # from traits.api import HasTraits
-from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, HSplitter
+from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, HSplitter, Tabbed
 
 from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
 from src.processing.tasks.analysis_edit.panes import ControlsPane
@@ -30,42 +30,37 @@ class BlanksTask(InterpolationTask):
 
     def _default_layout_default(self):
         return TaskLayout(
-                          id='pychron.analysis_edit.blanks',
-                          left=Splitter(
-                                    Splitter(
-                                         PaneItem('pychron.search.query'),
-                                         orientation='vertical'
-                                         ),
-                                Splitter(
-                                     PaneItem('pychron.analysis_edit.unknowns'),
-                                     PaneItem('pychron.analysis_edit.references'),
-                                     PaneItem('pychron.analysis_edit.controls'),
-                                     orientation='vertical'
-                                     ),
-                                     orientation='horizontal'
-                                ),
-#                           right=Splitter(
-#                                          PaneItem('pychron.search.results'),
-#                                          PaneItem('pychron.search.query'),
-#                                          orientation='vertical'
-#                                          )
-                          )
-    def new_blank(self):
-#         self.manager.auto_blank_fit('NM-205', 'E', 'preceeding')
+            id='pychron.analysis_edit.blanks',
+            left=HSplitter(
+                Tabbed(
+                    PaneItem('pychron.browser'),
+                    PaneItem('pychron.search.query'),
+                ),
+                Tabbed(
+                    PaneItem('pychron.analysis_edit.unknowns'),
+                    PaneItem('pychron.analysis_edit.references'),
+                    PaneItem('pychron.analysis_edit.controls')
+                ),
+            ),
+        )
 
-#        for pi in level.positions:
-#            ln = pi.labnumber
-#            sample = ln.sample
-#            if sample.project.name in ('j', 'Minna Bluff'):
-#                for ai in ln.analyses:
-#                    self.manager.preceeding_blank_correct(ai)
-#         return
+    def new_blank(self):
+    #         self.manager.auto_blank_fit('NM-205', 'E', 'preceeding')
+
+    #        for pi in level.positions:
+    #            ln = pi.labnumber
+    #            sample = ln.sample
+    #            if sample.project.name in ('j', 'Minna Bluff'):
+    #                for ai in ln.analyses:
+    #                    self.manager.preceeding_blank_correct(ai)
+    #         return
 
         from src.processing.tasks.blanks.blanks_editor import BlanksEditor
+
         editor = BlanksEditor(name='Blanks {:03n}'.format(self.blank_editor_count),
                               processor=self.manager,
                               task=self
-                              )
+        )
 
         self._open_editor(editor)
         self.blank_editor_count += 1
