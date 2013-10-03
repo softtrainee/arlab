@@ -29,6 +29,8 @@ class InterpolationTask(AnalysisEditTask):
     references_adapter = ReferencesAdapter
     references_pane_klass = ReferencesPane
 
+    auto_select_references = True
+
     def create_dock_panes(self):
         panes = super(InterpolationTask, self).create_dock_panes()
         self._create_references_pane()

@@ -15,14 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, HasTraits, Any, Enum
+from traits.api import Instance
 from pyface.tasks.action.schema import SToolBar, SGroup
 # from pyface.action.action import Action
 # from pyface.tasks.action.task_action import TaskAction
 # from pyface.tasks.task_layout import TaskLayout, PaneItem
 # from pyface.timer.do_later import do_later
-import time
-import subprocess
 # from pyface.tasks.action.schema import SToolBar
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -30,20 +28,17 @@ from src.processing.tasks.tables.table_actions import ToggleStatusAction, \
     SummaryTableAction, AppendSummaryTableAction, MakePDFTableAction, \
     AppendLaserTableAction, MakeXLSTableAction, MakeCSVTableAction
 # from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
-from src.processing.tasks.browser.panes import BrowserPane
 from src.processing.tasks.tables.panes import TableEditorPane
 from src.processing.tasks.browser.browser_task import BrowserTask
 from src.processing.tasks.tables.editors.laser_table_editor import LaserTableEditor
 from src.processing.tasks.tables.table_task_editor import TableTaskEditor
-from src.processing.tasks.tables.editors.adapters import TableBlank, \
-    TableSeparator
+from src.processing.tasks.tables.editors.adapters import TableSeparator
 from src.processing.tasks.tables.editors.summary_table_editor import SummaryTableEditor
 
-from traits.api import Str, Float, List
+from traits.api import Str, List
 from pyface.timer.do_later import do_later
 from src.processing.analysis_means import Mean
 from traits.has_traits import on_trait_change
-from envisage.ui.action.group import Group
 
 
 class Summary(Mean):

@@ -80,6 +80,37 @@ class IsotopeAdapter(DatabaseAdapter):
 
     selector_klass = IsotopeAnalysisSelector
 
+    def get_analyses_data_range(self, mi, ma,
+                                analysis_type=None,
+                                mass_spectrometer=None, extract_device=None):
+        ed = extract_device
+        ms = mass_spectrometer
+        at = analysis_type
+        with self.session_ctx() as sess:
+            q = sess.query(meas_AnalysisTable)
+            q = q.join(gen_LabTable)
+            q = q.join(meas_MeasurementTable)
+
+            if ms:
+                q = q.join(gen_MassSpectrometerTable)
+
+            if ed:
+                q = q.join(meas_ExtractionTable)
+                q = q.join(gen_ExtractionDeviceTable)
+            if at:
+                q = q.join(gen_AnalysisTypeTable)
+
+            if ms:
+                q = q.filter(gen_MassSpectrometerTable.name == ms)
+            if ed:
+                q = q.filter(gen_ExtractionDeviceTable.name == ed)
+            if at:
+                q = q.filter(gen_AnalysisTypeTable.name == at)
+
+            q = q.filter(and_(meas_AnalysisTable.analysis_timestamp >= mi,
+                              meas_AnalysisTable.analysis_timestamp <= ma))
+            return q.all()
+
     def add_load(self, name, **kw):
         l = loading_LoadTable(name=name, **kw)
         self._add_item(l)
