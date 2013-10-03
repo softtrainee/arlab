@@ -27,6 +27,8 @@ from src.processing.plotter_options_manager import IdeogramOptionsManager, \
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 from src.codetools.simple_timeit import timethis
 from src.processing.plotters.figure_container import FigureContainer
+from src.processing.tasks.analysis_edit.plot_editor_pane import flatten_container
+from src.processing.tasks.figures.annotation import AnnotationTool, AnnotationOverlay
 
 
 class FigureEditor(GraphEditor):
@@ -43,12 +45,33 @@ class FigureEditor(GraphEditor):
 #     _cached_unknowns = List
 #     _suppress_rebuild = False
 
+    annotation_tool = Any
+
     def traits_view(self):
         v = View(UItem('component',
                        style='custom',
                        width=650,
                        editor=EnableComponentEditor()))
         return v
+
+    def add_text_box(self):
+        if self.annotation_tool is None:
+            an = AnnotationOverlay(component=self.component)
+            at = AnnotationTool(an, components=[an])
+            an.tools.append(at)
+            self.annotation_tool = at
+            self.component.overlays.append(an)
+
+        elif not self.annotation_tool.active:
+            an = AnnotationOverlay(component=self.component)
+            self.annotation_tool.components.append(an)
+            self.annotation_tool.component = an
+            an.tools.append(self.annotation_tool)
+            self.component.overlays.append(an)
+
+        else:
+            self.annotation_tool = None
+
 
     def set_group(self, idxs, gid, refresh=True):
 

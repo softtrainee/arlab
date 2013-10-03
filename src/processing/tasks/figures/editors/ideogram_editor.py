@@ -28,17 +28,30 @@ from src.processing.tasks.figures.editors.auto_controls import AutoIdeogramContr
 class IdeogramEditor(FigureEditor):
     plotter_options_manager = Instance(IdeogramOptionsManager, ())
     basename = 'ideo'
+    _model = None
+
     def get_component(self, ans, plotter_options):
+        meta = None
+        if self._model:
+            meta = self._model.dump_metadata()
+
         if plotter_options is None:
             pom = IdeogramOptionsManager()
             plotter_options = pom.plotter_options
 
         from src.processing.plotters.ideogram.ideogram_model import IdeogramModel
+
         model = IdeogramModel(plot_options=plotter_options)
         model.analyses = ans
         iv = FigureContainer(model=model)
+
+        if meta:
+            model.load_metadata(meta)
+
         self._model = model
+
         return iv.component
+
 
 class AutoIdeogramEditor(IdeogramEditor):
     auto_figure_control = Instance(AutoIdeogramControl, ())

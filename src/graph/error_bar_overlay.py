@@ -60,24 +60,24 @@ class ErrorBarOverlay(AbstractOverlay):
                 ylow, yhigh = y - err, y + err
                 ylow = comp.value_mapper.map_screen(ylow)
                 yhigh = comp.value_mapper.map_screen(yhigh)
-#                 idx = arange(len(x))
+                #                 idx = arange(len(x))
                 start, end = column_stack((x, ylow)), column_stack((x, yhigh))
 
 
-#            sels = (a for i, a in enumerate(zip(args1, args2)) if i in sel)
-#            nonsels = (a for i, a in enumerate(zip(args1, args2)) if i not in sel)
-            sel = comp.index.metadata.get('selections', [])
-            if sel:
-                nonsel = arange(len(x))
-                nonsel = delete(nonsel, sel)
-                sel_start, sel_end = start[sel], end[sel]
-                start, end = start[nonsel], end[nonsel]
-                color = (1, 0, 0)
-                # draw selected
-                gc.set_stroke_color(color)
-                gc.set_fill_color(color)
-                gc.line_set(sel_start, sel_end)
-                gc.draw_path()
+            #            sels = (a for i, a in enumerate(zip(args1, args2)) if i in sel)
+            #            nonsels = (a for i, a in enumerate(zip(args1, args2)) if i not in sel)
+            #            sel = comp.index.metadata.get('selections', [])
+            #            if sel:
+            #                nonsel = arange(len(x))
+            #                nonsel = delete(nonsel, sel)
+            #                sel_start, sel_end = start[sel], end[sel]
+            #                start, end = start[nonsel], end[nonsel]
+            #                color = (1, 0, 0)
+            #                # draw selected
+            #                gc.set_stroke_color(color)
+            #                gc.set_fill_color(color)
+            #                gc.line_set(sel_start, sel_end)
+            #                gc.draw_path()
 
 
             # draw normal
@@ -88,7 +88,6 @@ class ErrorBarOverlay(AbstractOverlay):
             gc.set_fill_color(color)
             gc.line_set(start, end)
             gc.draw_path()
-
 
 
 #============= EOF =====================================

@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property, Int, Bool, Str
 from traitsui.api import View, Item, UItem, VGroup, HGroup, Label, spring, \
-    VSplit, TabularEditor
+    VSplit, TabularEditor, EnumEditor, Group
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from traitsui.tabular_adapter import TabularAdapter
 # from src.experiment.utilities.identifier import make_runid
@@ -25,6 +25,7 @@ from traitsui.tabular_adapter import TabularAdapter
 # from traitsui.list_str_adapter import ListStrAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.processing.tasks.analysis_edit.panes import new_button_editor
 from src.ui.tabular_editor import myTabularEditor
 
 
@@ -66,30 +67,43 @@ class SampleAdapter(BrowserAdapter):
 #         n = self.item.material
 #         return n
 
+
 class BrowserPane(TraitsDockPane):
     name = 'Browser'
     id = 'pychron.browser'
     multi_select = True
     analyses_defined = Str('1')
 
-    def traits_view(self):
+    def _get_browser_group(self):
         projectgrp = VGroup(
             HGroup(Label('Filter'),
                    UItem('project_filter',
                          width=75
-                   )),
+                   ),
+                   new_button_editor('clear_selection_button',
+                                     'cross',
+                                     tooltip='Clear selected'),
+            ),
             UItem('projects',
                   editor=TabularEditor(editable=False,
                                        selected='selected_project',
-                                       adapter=ProjectAdapter()
+                                       adapter=ProjectAdapter(),
+                                       multi_select=True
                   ),
                   width=75
             )
         )
         samplegrp = VGroup(
-            HGroup(Label('Filter'),
-                   UItem('sample_filter',
-                         width=75)),
+            HGroup(
+                #Label('Filter'),
+                UItem('sample_filter_parameter',
+                      editor=EnumEditor(name='sample_filter_parameters')),
+                UItem('sample_filter',
+                      width=75),
+                UItem('sample_filter',
+                      editor=EnumEditor(name='sample_filter_values'),
+                      width=-25),
+            ),
             UItem('samples',
                   editor=TabularEditor(
                       adapter=SampleAdapter(),
@@ -101,10 +115,48 @@ class BrowserPane(TraitsDockPane):
                   width=75
             )
         )
+
+        grp = Group(VSplit(
+            projectgrp,
+            samplegrp,
+            #analysisgrp,
+        ),
+                    label='Projects')
+
+        return grp
+
+    def _get_date_group(self):
+        grp = Group(
+            Item('analysis_type',
+                 editor=EnumEditor(name='analysis_types')),
+            Item('mass_spectrometer',
+                 editor=EnumEditor(name='mass_spectrometers')),
+            Item('extraction_device',
+                 editor=EnumEditor(name='extraction_devices')),
+
+            Item('start_date'),
+            Item('end_date'),
+            label='Date',
+
+        )
+        return grp
+
+    def _get_analysis_group(self):
         analysisgrp = VGroup(
-            HGroup(Label('Filter'),
-                   UItem('analysis_filter',
-                         width=75)),
+            HGroup(
+                #Label('Filter'),
+                UItem('analysis_filter_parameter',
+                      editor=EnumEditor(name='analysis_filter_parameters')),
+                UItem('analysis_filter_comparator'),
+                UItem('analysis_filter',
+                      width=75),
+                UItem('analysis_filter',
+                      editor=EnumEditor(name='analysis_filter_values'),
+                      width=-25),
+                new_button_editor('configure_analysis_filter', 'cog',
+                                  tooltip='Configure/Advanced query'
+                ),
+            ),
             UItem('analyses',
                   editor=myTabularEditor(
                       adapter=AnalysisAdapter(),
@@ -123,13 +175,18 @@ class BrowserPane(TraitsDockPane):
             HGroup(spring, Item('omit_invalid')),
             defined_when=self.analyses_defined,
         )
+        return analysisgrp
 
+    def traits_view(self):
         v = View(
-            VSplit(
-                projectgrp,
-                samplegrp,
-                analysisgrp
+            VSplit(Group(
+                self._get_browser_group(),
+                self._get_date_group(),
+                layout='tabbed'
+            ),
+                   self._get_analysis_group()
             )
+
         )
 
         return v

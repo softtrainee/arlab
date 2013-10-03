@@ -31,6 +31,7 @@ class FigurePanel(HasTraits):
     _index_attr = None
     equi_stack = False
     graph_klass = StackedGraph
+    meta = Any
 
     @on_trait_change('analyses[]')
     def _analyses_items_changed(self):
@@ -40,13 +41,20 @@ class FigurePanel(HasTraits):
         key = lambda x: x.group_id
         ans = sorted(self.analyses, key=key)
         gs = [self._figure_klass(analyses=list(ais), group_id=gid)
-                for gid, ais in groupby(ans, key=key)]
+              for gid, ais in groupby(ans, key=key)]
         return gs
 
+    def dump_metadata(self):
+        return self.graph.dump_metadata()
+
+    def load_metadata(self, md):
+        self.graph.load_metadata(md)
+
     def make_graph(self):
+
         g = self.graph_klass(panel_height=200,
-                         equi_stack=self.equi_stack,
-                         container_dict=dict(padding=0),)
+                             equi_stack=self.equi_stack,
+                             container_dict=dict(padding=0), )
 
         po = self.plot_options
         attr = self._index_attr
@@ -56,19 +64,26 @@ class FigurePanel(HasTraits):
                                for i in self.figures])
             mi, ma = min(xmis), max(xmas)
 
-
         for i, fig in enumerate(self.figures):
             fig.trait_set(xma=ma, xmi=mi,
-                           options=po,
-                           graph=g,
-                           )
+                          options=po,
+                          graph=g,
+            )
 
             plots = list(po.get_aux_plots())
+
             if i == 0:
                 fig.build(plots)
 
             fig.plot(plots)
 
+        #meta=self.meta
+        #print 'meta',meta
+        #if meta:
+        #    g.load_metadata(meta)
+
         self.graph = g
+        #print self.graph
         return g.plotcontainer
-#============= EOF =============================================
+
+    #============= EOF =============================================

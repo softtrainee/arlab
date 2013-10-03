@@ -96,19 +96,28 @@ Install to enable MS Excel export''')
                          ClearGroupAction()
             )
 
+        def reduction_group():
+            return Group(IsotopeEvolutionAction(),
+                         BlankEditAction(),
+                         ICFactorAction(),
+                         FluxAction())
+
         return [
             self._make_task_extension([
+
                 ('recall_action', RecallAction, 'MenuBar/File'),
                 ('labnumber_entry', LabnumberEntryAction, 'MenuBar/Edit'),
                 ('sensitivity_entry', SensitivityEntryAction, 'MenuBar/Edit'),
-
-                ('blank_edit', BlankEditAction, 'MenuBar/Edit'),
-                ('flux_edit', FluxAction, 'MenuBar/Edit'),
-                #                    ('series', SeriesAction, 'MenuBar/Edit'),
-                ('iso_evo', IsotopeEvolutionAction, 'MenuBar/Edit'),
-                ('ic_factor', ICFactorAction, 'MenuBar/Edit'),
                 ('batch_edit', BatchEditAction, 'MenuBar/Edit'),
-                ('refit', RefitIsotopeEvolutionAction, 'MenuBar/Edit'),
+                ('reduction_group', reduction_group, 'MenuBar/Edit'),
+
+                #('blank_edit', BlankEditAction, 'MenuBar/Edit'),
+                #('flux_edit', FluxAction, 'MenuBar/Edit'),
+
+
+                #('ic_factor', ICFactorAction, 'MenuBar/Edit'),
+                #('batch_edit', BatchEditAction, 'MenuBar/Edit'),
+                # ('refit', RefitIsotopeEvolutionAction, 'MenuBar/Edit'),
                 # ('sclf_table', SCLFTableAction, 'MenuBar/Edit'),
 
                 ('figure_group', figure_group, 'MenuBar/Edit'),
@@ -129,7 +138,6 @@ Install to enable MS Excel export''')
                                       task_id='pychron.analysis_edit.isotope_evolution'),
 
         ]
-
 
     def _meta_task_factory(self, i, f, n, task_group=None,
                            accelerator='', include_view_menu=False):

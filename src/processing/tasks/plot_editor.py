@@ -18,10 +18,12 @@
 from chaco.axis import DEFAULT_TICK_FORMATTER
 from chaco.base_xy_plot import BaseXYPlot
 from chaco.scatterplot import ScatterPlot
+from enable.colors import transparent_color
 from enable.enable_traits import LineStyle
 from enable.markers import MarkerTrait
+from kiva.trait_defs.kiva_font_trait import KivaFont
 from traits.api import HasTraits, Any, Float, Int, on_trait_change, Bool, \
-    Instance, List, Range, Color
+    Instance, List, Range, Color, Str, Font
 from traitsui.api import View, Item, Group, VGroup, UItem, ListEditor, \
     InstanceEditor, Heading, RangeEditor, HGroup
 # from pyface.timer.do_later import do_later
@@ -60,7 +62,6 @@ class PlotEditor(HasTraits):
     y_grid = Bool
 
     renderers = List
-
 
     @on_trait_change('padding+')
     def _update_padding(self, name, new):
@@ -196,25 +197,25 @@ class PlotEditor(HasTraits):
 
         general_grp = VGroup(
             Group(
-                    #                           Item('xauto', label='Autoscale'),
-                    Item('xmin'),
-                    Item('xmax'),
+                #                           Item('xauto', label='Autoscale'),
+                Item('xmin'),
+                Item('xmax'),
             ),
             Group(
-                    #                           Item('yauto', label='Autoscale'),
-                    Item('ymin'),
-                    Item('ymax'),
+                #                           Item('yauto', label='Autoscale'),
+                Item('ymin'),
+                Item('ymax'),
             ),
             Group(
-                    Item('padding_left', label='Left'),
-                    Item('padding_right', label='Right'),
-                    Item('padding_top', label='Top'),
-                    Item('padding_bottom', label='Bottom'),
-                    label='Padding'
-                ),
-                y_grp,
-                grids_grp,
-                label='General'
+                Item('padding_left', label='Left'),
+                Item('padding_right', label='Right'),
+                Item('padding_top', label='Top'),
+                Item('padding_bottom', label='Bottom'),
+                label='Padding'
+            ),
+            y_grp,
+            grids_grp,
+            label='General'
         )
 
         v = View(
@@ -284,19 +285,102 @@ class ScatterRendererEditor(RendererEditor):
     @on_trait_change('marker+, outline_color')
     def _update_values2(self, name, new):
         self._set_value(name, new)
+        if name.startswith('marker'):
+            self._set_value('selection_{}'.format(name), new)
 
     def _sync(self):
         self.outline_color = self.renderer.outline_color
         self.marker = self.renderer.marker
+        self.marker_size = self.renderer.marker_size
 
     def _get_group(self):
         g = VGroup(
             Item('color'),
-            Item('outline_color'),
+            Item('outline_color', label='Outline'),
             Item('marker'),
             Item('marker_size', label='Size'),
             enabled_when='visible'
         )
         return g
 
-    #============= EOF =============================================
+
+class AnnotationEditor(HasTraits):
+    component = Any
+
+    border_visible = Bool(True)
+    border_width = Range(0, 10)
+    border_color = Color
+
+    font = Font('modern 12')
+    text_color = Color
+    bgcolor = Color
+    text = Str
+    bg_visible = Bool(True)
+
+    @on_trait_change('component:text')
+    def _component_text_changed(self):
+        self.text = self.component.text
+
+    def _component_changed(self):
+        if self.component:
+            traits = ('border_visible',
+                      'border_width',
+                      'text')
+
+            d = self.component.trait_get(traits)
+            self.trait_set(self, **d)
+            for c in ('border_color', 'text_color', 'bgcolor'):
+                v = getattr(self.component, c)
+                if not isinstance(v, str):
+                    v = v[0] * 255, v[1] * 255, v[2] * 255
+
+                self.trait_set(**{c: v})
+
+    def _bg_visible_changed(self):
+        if self.component:
+            if self.bg_visible:
+                self.component.bgcolor = self.bgcolor
+            else:
+                self.component.bgcolor = transparent_color
+            self.component.request_redraw()
+
+    @on_trait_change('border_+, text_color, bgcolor, text')
+    def _update(self, name, new):
+        if self.component:
+            self.component.trait_set(**{name: new})
+            self.component.request_redraw()
+
+    @on_trait_change('font')
+    def _update_font(self):
+        if self.component:
+            self.component.font = str(self.font)
+            self.component.request_redraw()
+
+    def traits_view(self):
+        v = View(
+            VGroup(
+                Item('font',
+                     width=75, ),
+                Item('text_color', label='Text'),
+                HGroup(
+                    UItem('bg_visible',
+                          tooltip='Is the background transparent'
+                    ),
+                    Item('bgcolor', label='Background',
+                         enabled_when='bg_visible'
+                    ),
+                ),
+                UItem('text', style='custom'),
+                Group(
+                    Item('border_visible'),
+                    Item('border_width', enabled_when='border_visible'),
+                    Item('border_color', enabled_when='border_visible'),
+                    label='Border'
+
+                ),
+                visible_when='component'
+            )
+        )
+        return v
+
+        #============= EOF =============================================

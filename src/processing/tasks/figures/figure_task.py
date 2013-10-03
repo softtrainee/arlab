@@ -28,7 +28,7 @@ from src.processing.tasks.figures.panes import PlotterOptionsPane, \
     FigureSelectorPane
 from src.processing.tasks.figures.actions import SaveFigureAction, \
     OpenFigureAction, NewIdeogramAction, AppendIdeogramAction, NewSpectrumAction, \
-    AppendSpectrumAction
+    AppendSpectrumAction, AddTextBoxAction
 
 import weakref
 
@@ -62,6 +62,9 @@ class FigureTask(AnalysisEditTask):
             AppendSpectrumAction(),
             name='Spectrum',
             image_size=(16, 16)),
+        SToolBar(AddTextBoxAction(),
+                 image_size=(16, 16)
+        )
     ]
 
     auto_select_analysis = False
@@ -75,6 +78,17 @@ class FigureTask(AnalysisEditTask):
                 pom = ed.plotter_options_manager
                 pom.close()
         super(FigureTask, self).prepare_destroy()
+
+    def activated(self):
+        super(FigureTask, self).activated()
+
+        #uk=self.unknowns_pane
+        #uk.previous_selection=uk.previous_selections[0]
+
+        #comp=self.active_editor.component
+        #print 'comp', comp
+        #self.plot_editor_pane.component=comp
+        #self.plot_editor_pane._component_changed()
 
     def create_dock_panes(self):
         panes = super(FigureTask, self).create_dock_panes()
@@ -129,6 +143,18 @@ class FigureTask(AnalysisEditTask):
         # figures
         #===============================================================================
 
+    def add_text_box(self):
+        ac = self.active_editor
+        if ac and hasattr(ac, 'add_text_box'):
+            self.active_editor.add_text_box()
+
+            at = self.active_editor.annotation_tool
+            if at:
+                at.on_trait_change(self.plot_editor_pane.set_annotation_component,
+                                   'component')
+
+                self.plot_editor_pane.set_annotation_tool(at)
+
     def tb_new_ideogram(self):
         if isinstance(self.active_editor, IdeogramEditor) and \
                 not self.unknowns_pane.items:
@@ -160,6 +186,10 @@ class FigureTask(AnalysisEditTask):
                 import LaserTableEditor as tklass
 
         self._new_figure(ans, name, klass, tklass, set_ans=set_ans)
+
+        #auto load the first prev selection for debugging
+        uk = self.unknowns_pane
+        uk.previous_selection = uk.previous_selections[0]
 
     def new_spectrum(self, ans=None, klass=None,
                      tklass=None,
@@ -430,7 +460,7 @@ class FigureTask(AnalysisEditTask):
     def _options_update(self, name, new):
         if name == 'initialized':
             return
-        #         print 'asdfsdf'
+
         self.active_editor.rebuild(refresh_data=False)
 
     #         do_later(self.active_editor.rebuild, refresh_data=False)
