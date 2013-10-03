@@ -27,6 +27,7 @@ class IsotopeRecordView(HasTraits):
     group_id = 0
     graph_id = 0
     mass_spectrometer = ''
+    extract_device = ''
     analysis_type = ''
     uuid = ''
     sample = ''
@@ -71,6 +72,10 @@ class IsotopeRecordView(HasTraits):
                 self.mass_spectrometer = meas.mass_spectrometer.name.lower()
                 if meas.analysis_type:
                     self.analysis_type = meas.analysis_type.name
+            ext = dbrecord.extraction
+            if ext:
+                if ext.extraction_device:
+                    self.extract_device = ext.extraction_device.name
 
             self.uuid = dbrecord.uuid
             self.flux_fit_status = self._get_flux_fit_status(dbrecord)

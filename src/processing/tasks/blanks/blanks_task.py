@@ -27,6 +27,7 @@ class BlanksTask(InterpolationTask):
     id = 'pychron.analysis_edit.blanks'
     blank_editor_count = 1
     name = 'Blanks'
+    default_reference_analysis_type = 'blank_unknown'
 
     def _default_layout_default(self):
         return TaskLayout(

@@ -164,7 +164,7 @@ class Processor(IsotopeDatabaseManager):
 
         '''
             if spectrometer is map use all linear
-            
+
             if spectrometer is Jan or Obama
                 if counts >150 use parabolic
                 else use linear
@@ -234,6 +234,7 @@ class Processor(IsotopeDatabaseManager):
                 return rs
         else:
             return []
+
 
     def _filter_analyses(self, ms, post, delta, lim, at, filter_hook=None):
         '''

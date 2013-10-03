@@ -16,13 +16,14 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, on_trait_change, DelegatesTo
-from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from pyface.tasks.task_layout import TaskLayout, PaneItem, HSplitter
+
+from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.processing.tasks.browser.browser_task import BaseBrowserTask
-from src.processing.tasks.browser.panes import BrowserPane
 from src.processing.tasks.repository.panes import RepositoryPane
 from src.processing.repository.geochron_repo import GeochronRepository
 from src.processing.repository.igsn import IGSN
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

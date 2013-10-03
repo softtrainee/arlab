@@ -15,56 +15,39 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Str, Bool, Any, Enum, String, \
-    Button, on_trait_change, Date
-from traitsui.api import View, Item
+from datetime import timedelta
+from traits.api import List, Str, Bool, Any, Enum, String, \
+    Button, on_trait_change, Date, Int, Time, Instance
 from pyface.tasks.task_layout import TaskLayout, PaneItem
 from pyface.tasks.action.schema import SToolBar
-from pyface.tasks.action.task_action import TaskAction
-from pyface.image_resource import ImageResource
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.database.orms.isotope.gen import gen_MassSpectrometerTable, gen_LabTable, gen_ExtractionDeviceTable, gen_AnalysisTypeTable
+from src.database.orms.isotope.gen import gen_MassSpectrometerTable, gen_LabTable, gen_ExtractionDeviceTable, \
+    gen_AnalysisTypeTable
 from src.database.orms.isotope.meas import meas_MeasurementTable, meas_AnalysisTable, meas_ExtractionTable
 from src.envisage.tasks.editor_task import BaseEditorTask
+from src.processing.tasks.browser.actions import NewBrowserEditorAction
+from src.processing.tasks.browser.analysis_table import AnalysisTable
 from src.processing.tasks.browser.panes import BrowserPane
+from src.processing.tasks.browser.record_views import ProjectRecordView, SampleRecordView
 from src.processing.tasks.recall.recall_editor import RecallEditor
-from src.paths import paths
-# from src.database.orms.isotope.gen import gen_SampleTable, gen_ProjectTable
-# from src.database.orms.isotope_orm import gen_SampleTable, gen_ProjectTable
-# from sqlalchemy.orm import subqueryload
 from src.database.records.isotope_record import IsotopeRecordView
-from src.processing.analyses.analysis import DBAnalysis
+
 '''
 add toolbar action to open another editor tab
 
 
 '''
-class NewBrowserEditorAction(TaskAction):
-    method = 'new_editor'
-    image = ImageResource(name='add.png',
-                         search_path=paths.icon_search_path
-                         )
 
-class RecordView(HasTraits):
-    def __init__(self, dbrecord):
-        self._create(dbrecord)
-    def _create(self, *args, **kw):
-        pass
+"""
+@todo: how to fit cocktail/air blanks. make special project called references.
+added sample to air, cocktail. added samples to references project
+"""
 
-class SampleRecordView(RecordView):
-    name = Str
-    material = Str
+DEFAULT_SPEC = 'Spectrometer'
+DEFAULT_AT = 'Analysis Type'
+DEFAULT_ED = 'Extraction Device'
 
-    def _create(self, dbrecord):
-        self.name = dbrecord.name
-        if dbrecord.material:
-            self.material = dbrecord.material.name
-
-class ProjectRecordView(RecordView):
-    name = Str
-    def _create(self, dbrecord):
-        self.name = dbrecord.name
 
 class BaseBrowserTask(BaseEditorTask):
     projects = List
@@ -73,23 +56,23 @@ class BaseBrowserTask(BaseEditorTask):
     samples = List  # Property(depends_on='selected_project')
     osamples = List
 
-    analyses = List  # Property(depends_on='selected_sample')
-    oanalyses = List
+    #analyses = List
+    #oanalyses = List
+
+    analysis_table = Instance(AnalysisTable, ())
+    danalysis_table = Instance(AnalysisTable, ())
 
     project_filter = Str
-    sample_filter = Str#(enter_set=True, auto_set=False)
+    sample_filter = Str
     analysis_filter = String(enter_set=True, auto_set=False)
 
     selected_project = Any
     selected_sample = Any
-    selected_analysis = Any
+
     dclicked_sample = Any
 
-    omit_invalid = Bool(True)
-
     tool_bars = [SToolBar(NewBrowserEditorAction(),
-                          image_size=(16, 16)
-    )]
+                          image_size=(16, 16))]
 
     auto_select_analysis = Bool(True)
 
@@ -98,23 +81,24 @@ class BaseBrowserTask(BaseEditorTask):
     sample_filter_comparator = Enum('=', 'not =')
     sample_filter_parameters = List(['Sample', 'Material'])
 
-    analysis_filter_values = List
-    analysis_filter_comparator = Enum('=', '<', '>', '>=', '<=', 'not =', 'startswith')
-    analysis_filter_parameter = Str('Record_id')
-    analysis_filter_parameters = List(['Record_id', 'Tag',
-                                       'Age', 'Labnumber', 'Aliquot', 'Step'])
-
-    mass_spectrometer = Str
+    mass_spectrometer = Str(DEFAULT_SPEC)
     mass_spectrometers = List
-    analysis_type = Str
+    analysis_type = Str(DEFAULT_AT)
     analysis_types = List
-    extraction_device = Str
+    extraction_device = Str(DEFAULT_ED)
     extraction_devices = List
     start_date = Date
-    end_date = Date
+    start_time = Time
 
-    configure_analysis_filter = Button
+    end_date = Date
+    end_time = Time
+    days_pad = Int(0)
+    hours_pad = Int(18)
+
     clear_selection_button = Button
+
+    default_reference_analysis_type = 'blank_unknown'
+    auto_select_references = Bool(False)
 
     def activated(self):
         self.load_projects()
@@ -128,17 +112,17 @@ class BaseBrowserTask(BaseEditorTask):
     def _load_mass_spectrometers(self):
         db = self.manager.db
         ms = [mi.name for mi in db.get_mass_spectrometers()]
-        self.mass_spectrometers = ms
+        self.mass_spectrometers = ['Spectrometer', 'None'] + ms
 
     def _load_analysis_types(self):
         db = self.manager.db
         ms = [mi.name for mi in db.get_analysis_types()]
-        self.analysis_types = ms
+        self.analysis_types = ['Analysis Type', 'None'] + ms
 
     def _load_extraction_devices(self):
         db = self.manager.db
         ms = [mi.name for mi in db.get_extraction_devices()]
-        self.extraction_devices = ms
+        self.extraction_devices = ['Extraction Device', 'None'] + ms
 
     def load_projects(self):
         db = self.manager.db
@@ -188,12 +172,9 @@ class BaseBrowserTask(BaseEditorTask):
                     for a in ln.analyses]
 
     def _record_view_factory(self, ai):
-        print ai
-        #iso = IsotopeRecordView()
-        #print ai, iso
-        #iso.create(ai)
-        #return iso
-        return 'asf'
+        iso = IsotopeRecordView()
+        iso.create(ai)
+        return iso
 
     def _selected_sample_changed(self, new):
         if new:
@@ -203,12 +184,8 @@ class BaseBrowserTask(BaseEditorTask):
                 #print 'aa', new, ans
                 ans.extend(aa)
 
-            self.oanalyses = ans
+            ans = self.analysis_table.set_analyses(ans)
 
-            if self.omit_invalid:
-                ans = filter(self._omit_invalid_filter, ans)
-
-            self.analyses = ans
             if ans and self.auto_select_analysis:
                 self.selected_analysis = ans[0]
 
@@ -226,7 +203,6 @@ class BaseBrowserTask(BaseEditorTask):
             else:
                 comp_key = comp
 
-
         def func(x):
             if attr:
                 x = getattr(x, attr.lower())
@@ -238,9 +214,6 @@ class BaseBrowserTask(BaseEditorTask):
 
         return func
 
-    def _omit_invalid_filter(self, x):
-        return x.tag != 'invalid'
-
     def _project_filter_changed(self, new):
         self.projects = filter(self._filter_func(new, 'name'), self.oprojects)
 
@@ -249,22 +222,6 @@ class BaseBrowserTask(BaseEditorTask):
         #comp=self.sample_filter_comparator
         self.samples = filter(self._filter_func(new, name), self.osamples)
 
-    def _analysis_filter_changed(self, new):
-        if new:
-            name = self.analysis_filter_parameter
-            comp = self.analysis_filter_comparator
-            if name == 'Step':
-                new = new.upper()
-
-            self.analyses = filter(self._filter_func(new, name, comp), self.oanalyses)
-        else:
-            self.analyses = self.oanalyses
-
-    def _omit_invalid_changed(self, new):
-        if new:
-            self.analyses = filter(self._omit_invalid_filter, self.oanalyses)
-        else:
-            self.analyses = self.oanalyses
 
     def _get_sample_filter_parameter(self):
         p = self.sample_filter_parameter
@@ -284,36 +241,24 @@ class BaseBrowserTask(BaseEditorTask):
 
             self.sample_filter_values = vs
 
-    def _get_analysis_filter_parameter(self):
-        p = self.analysis_filter_parameter
-        return p.lower()
-
-    def _analysis_filter_comparator_changed(self):
-        self._analysis_filter_changed(self.analysis_filter)
-
-    def _analysis_filter_parameter_changed(self, new):
-        if new:
-            vs = []
-            p = self._get_analysis_filter_parameter()
-            for si in self.oanalyses:
-                v = getattr(si, p)
-                if not v in vs:
-                    vs.append(v)
-
-            self.analysis_filter_values = vs
-
     def _clear_selection_button_fired(self):
         self.selected_project = []
         self.selected_sample = []
-        self.selected_analysis = []
+        #self.selected_analysis = []
 
-    def _configure_analysis_filter_fired(self):
-        print 'fooo'
+    def _ok_query(self):
+        ms = self.mass_spectrometer not in (DEFAULT_SPEC, 'None')
+        at = self.analysis_type not in (DEFAULT_AT, 'None')
 
+        return ms and at
 
-    @on_trait_change('mass_spectrometer, anaylsis_type, extraction_device')
+    def _ok_ed(self):
+        return self.extraction_device not in (DEFAULT_ED, 'None')
+
+    @on_trait_change('mass_spectrometer, analysis_type, extraction_device')
     def _query(self):
-        if self.mass_spectrometer and self.analysis_type:
+        if self._ok_query():
+
             db = self.manager.db
             with db.session_ctx() as sess:
                 q = sess.query(meas_AnalysisTable)
@@ -322,26 +267,75 @@ class BaseBrowserTask(BaseEditorTask):
                 q = q.join(gen_MassSpectrometerTable)
                 q = q.join(gen_AnalysisTypeTable)
 
-                if self.extraction_device:
+                if self._ok_ed():
                     q = q.join(meas_ExtractionTable)
                     q = q.join(gen_ExtractionDeviceTable)
 
                 name = self.mass_spectrometer
                 q = q.filter(gen_MassSpectrometerTable.name == name)
-                if self.extraction_device:
+                if self._ok_ed():
                     q = q.filter(gen_ExtractionDeviceTable.name == self.extraction_device)
 
                 q = q.filter(gen_AnalysisTypeTable.name == self.analysis_type)
                 q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+                q = q.limit(200)
+
                 ans = q.all()
 
                 aa = [self._record_view_factory(ai) for ai in ans]
 
-                self.analyses = aa
-                self.oanalyses = aa
+                self.danalysis_table.analyses = aa
+                self.danalysis_table.oanalyses = aa
+        else:
+            if self.mass_spectrometer == 'None':
+                self.mass_spectrometer = DEFAULT_SPEC
+            if self.extraction_device == 'None':
+                self.extraction_device = DEFAULT_ED
+            if self.analysis_type == 'None':
+                self.analysis_type = DEFAULT_AT
 
-    def _extraction_device_changed(self):
-        pass
+    @on_trait_change('analysis_table:selected_analysis')
+    def _selected_analysis_changed(self, new):
+        if not new:
+            return
+
+        if not self.auto_select_references:
+            return
+
+        if not hasattr(new, '__iter__'):
+            new = (new, )
+
+        ds = [ai.timestamp for ai in new]
+        dt = timedelta(days=self.days_pad, hours=self.hours_pad)
+
+        sd = min(ds) - dt
+        ed = max(ds) + dt
+
+        self.start_date = sd.date()
+        self.end_date = ed.date()
+        self.start_time = sd.time()
+        self.end_time = ed.time()
+
+        at = self.analysis_type
+
+        if self.analysis_type == DEFAULT_AT:
+            self.analysis_type = at = self.default_reference_analysis_type
+
+        ref = new[-1]
+        exd = ref.extract_device
+        ms = ref.mass_spectrometer
+        self.extraction_device = exd or 'Extraction Device'
+        self.mass_spectrometer = ms or 'Mass Spectrometer'
+
+        db = self.manager.db
+        with db.session_ctx():
+            ans = db.get_analyses_data_range(sd, ed,
+                                             analysis_type=at,
+                                             mass_spectrometer=ms,
+                                             extract_device=exd
+            )
+            ans = [self._record_view_factory(ai) for ai in ans]
+            self.danalysis_table.set_analyses(ans)
 
 
 class BrowserTask(BaseBrowserTask):
@@ -363,10 +357,10 @@ class BrowserTask(BaseBrowserTask):
     def _selected_analysis_changed(self):
         an = self.selected_analysis
         if an and isinstance(self.active_editor, RecallEditor):
-#             l, a, s = strip_runid(s)
-#             an = self.manager.db.get_unique_analysis(l, a, s)
+        #             l, a, s = strip_runid(s)
+        #             an = self.manager.db.get_unique_analysis(l, a, s)
             an = self.manager.make_analyses([an])[0]
-#             an.load_isotopes(refit=False)
+            #             an.load_isotopes(refit=False)
             self.active_editor.analysis_summary = an.analysis_summary
 
     def create_dock_panes(self):

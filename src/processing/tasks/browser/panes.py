@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Property, Int, Bool, Str
 from traitsui.api import View, Item, UItem, VGroup, HGroup, Label, spring, \
-    VSplit, TabularEditor, EnumEditor, Group
+    VSplit, TabularEditor, EnumEditor, Group, DateEditor, StyledDateEditor, Heading
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from traitsui.tabular_adapter import TabularAdapter
 # from src.experiment.utilities.identifier import make_runid
@@ -75,7 +75,7 @@ class BrowserPane(TraitsDockPane):
     analyses_defined = Str('1')
 
     def _get_browser_group(self):
-        projectgrp = VGroup(
+        project_grp = VGroup(
             HGroup(Label('Filter'),
                    UItem('project_filter',
                          width=75
@@ -93,7 +93,7 @@ class BrowserPane(TraitsDockPane):
                   width=75
             )
         )
-        samplegrp = VGroup(
+        sample_grp = VGroup(
             HGroup(
                 #Label('Filter'),
                 UItem('sample_filter_parameter',
@@ -116,53 +116,69 @@ class BrowserPane(TraitsDockPane):
             )
         )
 
-        grp = Group(VSplit(
-            projectgrp,
-            samplegrp,
-            #analysisgrp,
-        ),
-                    label='Projects')
+        grp = VSplit(
+            project_grp,
+            sample_grp,
+            self._get_analysis_group(),
+            label='Project/Sample'
+        )
 
         return grp
 
     def _get_date_group(self):
-        grp = Group(
-            Item('analysis_type',
-                 editor=EnumEditor(name='analysis_types')),
-            Item('mass_spectrometer',
-                 editor=EnumEditor(name='mass_spectrometers')),
-            Item('extraction_device',
-                 editor=EnumEditor(name='extraction_devices')),
-
-            Item('start_date'),
-            Item('end_date'),
-            label='Date',
-
+        f_grp = HGroup(
+            UItem('analysis_type',
+                  editor=EnumEditor(name='analysis_types')),
+            UItem('mass_spectrometer',
+                  editor=EnumEditor(name='mass_spectrometers')),
+            UItem('extraction_device',
+                  editor=EnumEditor(name='extraction_devices')),
         )
-        return grp
 
-    def _get_analysis_group(self):
-        analysisgrp = VGroup(
+        grp = VGroup(
+            f_grp,
+            Heading('Start'),
+            UItem('start_date',
+                  editor=DateEditor(allow_future=False),
+                  style='custom'),
+            UItem('start_time', ),
+            Item('_'),
+            Heading('End'),
+            UItem('end_date',
+                  editor=DateEditor(allow_future=False),
+                  style='custom'),
+            UItem('end_time', ),
+        )
+        return VSplit(grp,
+                      self._get_analysis_group(base='danalysis'),
+                      label='Date'
+        )
+
+    def _get_analysis_group(self, base='analysis'):
+        def make_name(name):
+            return 'object.{}_table.{}'.format(base, name)
+
+        analysis_grp = VGroup(
             HGroup(
                 #Label('Filter'),
-                UItem('analysis_filter_parameter',
-                      editor=EnumEditor(name='analysis_filter_parameters')),
-                UItem('analysis_filter_comparator'),
-                UItem('analysis_filter',
+                UItem(make_name('analysis_filter_parameter'),
+                      editor=EnumEditor(name=make_name('analysis_filter_parameters'))),
+                UItem(make_name('analysis_filter_comparator')),
+                UItem(make_name('analysis_filter'),
                       width=75),
-                UItem('analysis_filter',
-                      editor=EnumEditor(name='analysis_filter_values'),
+                UItem(make_name('analysis_filter'),
+                      editor=EnumEditor(name=make_name('analysis_filter_values')),
                       width=-25),
-                new_button_editor('configure_analysis_filter', 'cog',
+                new_button_editor(make_name('configure_analysis_filter'), 'cog',
                                   tooltip='Configure/Advanced query'
                 ),
             ),
-            UItem('analyses',
+            UItem(make_name('analyses'),
                   editor=myTabularEditor(
                       adapter=AnalysisAdapter(),
                       #                                                       editable=False,
                       operations=['move'],
-                      selected='selected_analysis',
+                      selected=make_name('selected_analysis'),
                       multi_select=self.multi_select,
                       drag_external=True
 
@@ -172,19 +188,17 @@ class BrowserPane(TraitsDockPane):
                   #                                           )
                   width=300
             ),
-            HGroup(spring, Item('omit_invalid')),
+            HGroup(spring, Item(make_name('omit_invalid'))),
             defined_when=self.analyses_defined,
         )
-        return analysisgrp
+        return analysis_grp
 
     def traits_view(self):
         v = View(
-            VSplit(Group(
+            Group(
                 self._get_browser_group(),
                 self._get_date_group(),
                 layout='tabbed'
-            ),
-                   self._get_analysis_group()
             )
 
         )
