@@ -100,6 +100,8 @@ class BaseBrowserTask(BaseEditorTask):
     default_reference_analysis_type = 'blank_unknown'
     auto_select_references = Bool(False)
 
+    filter_non_run_samples = Bool(True)
+
     def activated(self):
         self.load_projects()
 
@@ -141,21 +143,36 @@ class BaseBrowserTask(BaseEditorTask):
         if new:
             db = self.manager.db
             with db.session_ctx():
-                sams = []
-                for pp in new:
-                    ss = db.get_samples(project=pp.name)
-                    ss = [SampleRecordView(s) for s in ss]
-                    sams.extend(ss)
-
-                self.samples = sams
-                self.osamples = sams
-
+                self._set_samples()
+                sams = self.samples
                 if sams:
                     #print sams[:1]
                     self.selected_sample = sams[:1]
 
                 p = self._get_sample_filter_parameter()
                 self.sample_filter_values = [getattr(si, p) for si in sams]
+
+    def _filter_non_run_samples_changed(self):
+        self._set_samples()
+
+    def _set_samples(self):
+        db = self.manager.db
+        with db.session_ctx():
+            sams = []
+            for pp in self.selected_project:
+                ss = db.get_samples(project=pp.name)
+
+                test = lambda x: True
+                if self.filter_non_run_samples:
+                    def test(sa):
+                        return all([len(li.analyses) for li in sa.labnumbers])
+
+                ss = [SampleRecordView(s) for s in ss if test(s)]
+                sams.extend(ss)
+
+            self.samples = sams
+            self.osamples = sams
+
 
     def _get_sample_analyses(self, srv):
         db = self.manager.db
