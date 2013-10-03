@@ -42,6 +42,7 @@ from pyface.timer.do_later import do_later
 class WindowGroup(Group):
     items = List
     manager = Any
+
     def _manager_default(self):
         manager = self
         while isinstance(manager, Group):
@@ -49,10 +50,10 @@ class WindowGroup(Group):
 
 
 
-#         application = self.manager.controller.task.window.application
+        #         application = self.manager.controller.task.window.application
 
-#         t = 'active_window, window_opened, window_closed, windows, uis[]'
-#         application.on_trait_change(self._rebuild, t)
+        #         t = 'active_window, window_opened, window_closed, windows, uis[]'
+        #         application.on_trait_change(self._rebuild, t)
         return manager
 
     def _items_default(self):
@@ -60,8 +61,8 @@ class WindowGroup(Group):
 
         t = 'active_window, window_opened, window_closed, windows, uis[]'
         application.on_trait_change(self._rebuild, t)
-#         application = self.manager.controller.task.window.application
-#         application.on_trait_change(self._rebuild, 'window_opened, window_closed, uis[]')
+        #         application = self.manager.controller.task.window.application
+        #         application.on_trait_change(self._rebuild, 'window_opened, window_closed, uis[]')
         return []
 
     def _make_actions(self, vs):
@@ -77,14 +78,14 @@ class WindowGroup(Group):
                             items.append(ActionItem(action=RaiseAction(window=vi,
                                                                        checked=checked,
                                                                        name=vi.active_task.name
-                                                                   )))
+                            )))
                             added.append(vi.active_task.id)
                 else:
                     items.append(ActionItem(action=RaiseUIAction(
-                                                                 name=vi.title or vi.id,
-                                                                 ui=vi,
-                                                                 checked=checked,
-                                                           )))
+                        name=vi.title or vi.id,
+                        ui=vi,
+                        checked=checked,
+                    )))
 
         return items
 
@@ -113,6 +114,7 @@ class myTaskWindowLaunchAction(TaskWindowLaunchAction):
     '''
 
     style = 'toggle'
+
     def perform(self, event):
         application = event.task.window.application
         application.open_task(self.task_id)
@@ -205,26 +207,32 @@ class myTaskWindowLaunchAction(TaskWindowLaunchAction):
 class TaskGroup(Group):
     items = List
 
+
 class BaseTask(Task, Loggable):
+    def _show_pane(self, p):
+        ctrl = p.control
+        if not p.visible:
+            ctrl.show()
+        ctrl.raise_()
 
     def _menu_bar_factory(self, menus=None):
         if not menus:
             menus = []
 
         mb = SMenuBar(
-                      self._file_menu(),
-                      self._edit_menu(),
-                      self._view_menu(),
-                      self._tools_menu(),
-                      self._window_menu(),
-                      self._help_menu(),
-#                       SMenu(
-#                             ViewMenuManager(),
-#                             id='Window', name='&Window'),
+            self._file_menu(),
+            self._edit_menu(),
+            self._view_menu(),
+            self._tools_menu(),
+            self._window_menu(),
+            self._help_menu(),
+            #                       SMenu(
+            #                             ViewMenuManager(),
+            #                             id='Window', name='&Window'),
 
 
-#                       *menus
-                      )
+            #                       *menus
+        )
         if menus:
             for mi in reversed(menus):
                 mb.items.insert(4, mi)
@@ -278,41 +286,41 @@ class BaseTask(Task, Loggable):
     def _view_menu(self):
         grps = self._view_groups()
         view_menu = SMenu(
-                        *grps,
-                          id='View', name='&View')
+            *grps,
+            id='View', name='&View')
         return view_menu
 
     def _edit_menu(self):
         edit_menu = SMenu(
-                          GenericFindAction(),
-                          id='Edit',
-                          name='Edit')
+            GenericFindAction(),
+            id='Edit',
+            name='Edit')
         return edit_menu
 
     def _file_menu(self):
         file_menu = SMenu(
-                          SGroup(id='Open'),
-                          SGroup(id='New'),
-                          SGroup(
-                               GenericSaveAsAction(),
-                               GenericSaveAction(),
-                               id='Save'
-                             ),
-                          SGroup(),
-#                         SMenu(id='Open', name='Open',),
-#                         SMenu(id='New', name='New'),
+            SGroup(id='Open'),
+            SGroup(id='New'),
+            SGroup(
+                GenericSaveAsAction(),
+                GenericSaveAction(),
+                id='Save'
+            ),
+            SGroup(),
+            #                         SMenu(id='Open', name='Open',),
+            #                         SMenu(id='New', name='New'),
 
-#                         Group(
-#                                GenericSaveAsAction(),
-#                                GenericSaveAction(),
-#                                id='Save'
-#                                ),
-#
-#                           SGroup(),
-#
-#                                 ),
+            #                         Group(
+            #                                GenericSaveAsAction(),
+            #                                GenericSaveAction(),
+            #                                id='Save'
+            #                                ),
+            #
+            #                           SGroup(),
+            #
+            #                                 ),
 
-                          id='File', name='File')
+            id='File', name='File')
         return file_menu
 
     def _tools_menu(self):
@@ -321,26 +329,26 @@ class BaseTask(Task, Loggable):
 
     def _window_menu(self):
         window_menu = SMenu(
-                            Group(
-                               CloseAction(),
-                               CloseOthersAction(),
-                              id='Close'
-                              ),
-                          Group(MinimizeAction(),
-                                ResetLayoutAction(),
-                                PositionAction(),
-                                ),
-                          WindowGroup(),
-                          id='Window',
-                          name='Window')
+            Group(
+                CloseAction(),
+                CloseOthersAction(),
+                id='Close'
+            ),
+            Group(MinimizeAction(),
+                  ResetLayoutAction(),
+                  PositionAction(),
+            ),
+            WindowGroup(),
+            id='Window',
+            name='Window')
 
         return window_menu
 
     def _help_menu(self):
         menu = SMenu(
-                     IssueAction(),
-                     id='help.menu',
-                     name='Help')
+            IssueAction(),
+            id='help.menu',
+            name='Help')
         return menu
 
     def _confirmation(self, message=''):
@@ -377,7 +385,7 @@ class BaseManagerTask(BaseTask):
             kw['default_directory'] = self.default_directory
         dialog = FileDialog(parent=self.window.control, action='save as',
                             **kw
-                            )
+        )
         if dialog.open() == OK:
             return dialog.path
 
@@ -393,16 +401,17 @@ class BaseExtractionLineTask(BaseManagerTask):
         if man:
             man.deactivate()
 
-#     def activated(self):
-#         man = self._get_el_manager()
-#         if man:
-#             man.activate()
+        #     def activated(self):
+        #         man = self._get_el_manager()
+        #         if man:
+        #             man.activate()
 
     def _add_canvas_pane(self, panes):
         app = self.window.application
         man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
         if man:
             from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
+
             panes.append(CanvasDockPane(canvas=man.new_canvas(name='alt_config')))
 
         return panes
@@ -411,12 +420,14 @@ class BaseExtractionLineTask(BaseManagerTask):
     def _window_opened(self):
         man = self._get_el_manager()
         if man:
-#            do_later(man.activate)
+        #            do_later(man.activate)
             man.activate()
+
 #            man.canvas.refresh()
 
 class BaseHardwareTask(BaseManagerTask):
     pass
+
 #     def _menu_bar_factory(self, menus=None):
 #         extraction_menu = SMenu(id='Extraction', name='&Extraction')
 #         measure_menu = SMenu(

@@ -102,9 +102,9 @@ class GraphEditor(BaseTraitsEditor):
 
     def rebuild_graph(self):
         graph = self.graph
+
         graph.clear()
         self._rebuild_graph()
-        #         graph.refresh()
 
         self.component_changed = True
 
@@ -166,8 +166,8 @@ class GraphEditor(BaseTraitsEditor):
             gc.render_component(c)
             gc.save(path)
 
-        #         with gc:
-        #         self.rebuild_graph()
+            #         with gc:
+            #         self.rebuild_graph()
 
     def _gather_unknowns(self, refresh_data,
                          exclude='invalid',

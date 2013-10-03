@@ -16,12 +16,12 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Event, Instance, List, on_trait_change
-from traitsui.api import View, Item, UItem
+from traitsui.api import View, Item, UItem, Group
 from enable.base_tool import BaseTool
 from chaco.abstract_overlay import AbstractOverlay
 from enable.colors import ColorTrait
 from pyface.tasks.traits_dock_pane import TraitsDockPane
-from src.processing.tasks.plot_editor import PlotEditor
+from src.processing.tasks.plot_editor import PlotEditor, AnnotationEditor
 from chaco.plot import Plot
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -98,6 +98,14 @@ class PlotEditorPane(TraitsDockPane):
     current_editor = Instance(PlotEditor)
     selectors = List
 
+    annotation_editor = Instance(AnnotationEditor, ())
+
+    def set_annotation_tool(self, tool):
+        self.set_annotation_component(tool.component)
+
+    def set_annotation_component(self, comp):
+        self.annotation_editor.component = comp
+
     def _component_changed(self):
         if self.component:
             ncomps = flatten_container(self.component)
@@ -124,10 +132,17 @@ class PlotEditorPane(TraitsDockPane):
         self.component.invalidate_and_redraw()
 
     def traits_view(self):
-        v = View(
+        annotation_grp = Group(
+            UItem('annotation_editor',
+                  style='custom'),
+            label='Annotations')
+        plot_grp = Group(
             UItem('current_editor',
-                  style='custom')
+                  style='custom'),
+            label='Plot'
         )
+
+        v = View(plot_grp, annotation_grp)
         return v
 
 #============= EOF =============================================

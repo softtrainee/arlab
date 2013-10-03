@@ -15,6 +15,7 @@
 #===============================================================================
 
 #=============enthought library imports=======================
+from chaco.scatterplot import ScatterPlot
 from traits.api import Instance, Any, Bool, \
     List, Str, Property, Dict, Callable
 from traitsui.api import View, Item, Handler
@@ -158,6 +159,63 @@ class Graph(Viewable, ContextMenuMixin):
 
         pc.tools.append(menu)
 
+    def _assemble_plot_metadata(self, plot):
+
+        meta = dict()
+        pmeta = dict()
+        if isinstance(plot, ScatterPlot):
+            attrs = ['color', 'marker_size', 'marker']
+        else:
+            attrs = ['color', 'line_width', 'line_style']
+
+        for ai in attrs:
+            v = getattr(plot, ai)
+            if ai == 'color':
+                v = v[0] * 255, v[1] * 255, v[2] * 255
+
+            meta[ai] = v
+
+        meta['plot'] = pmeta
+
+        return meta
+
+    def _assemble_value_axis_metadata(self, v):
+        vmeta = dict()
+        vattrs = ['title_spacing', 'tick_visible', 'tick_label_formatter']
+
+        for ai in vattrs:
+            vmeta[ai] = getattr(v, ai)
+        return vmeta
+
+    def dump_metadata(self):
+        ps = []
+
+        for p in self.plots:
+            d = dict()
+            d['value_axis'] = self._assemble_value_axis_metadata(p.value_axis)
+            for k, pp in p.plots.iteritems():
+                pp = pp[0]
+                d[k] = self._assemble_plot_metadata(pp)
+
+            ps.append(d)
+
+        return ps
+
+    def load_metadata(self, metas):
+        for i, meta in enumerate(metas):
+            if not meta:
+                continue
+            plot = self.plots[i]
+            for k, d in meta.iteritems():
+                if k == 'value_axis':
+                    obj = plot.value_axis
+                else:
+                    obj = plot.plots[k][0]
+
+                obj.trait_set(**d)
+
+        self.redraw()
+
     def add_point_inspector(self, scatter, convert_index=None):
         point_inspector = PointInspector(scatter,
                                          convert_index=convert_index)
@@ -296,7 +354,7 @@ class Graph(Viewable, ContextMenuMixin):
                         print 'failed removing {}'.format(renderer)
 
                 pi.plots.pop(k)
-            #             print 'len psss.renderers {}'.format(len(pi.plots.keys()))
+                #             print 'len psss.renderers {}'.format(len(pi.plots.keys()))
 
         self.clear_data()
 
@@ -737,9 +795,9 @@ class Graph(Viewable, ContextMenuMixin):
             if title in kw:
                 self._set_title('{}_axis'.format(t), kw[title], plotid)
 
-            #        broadcaster = BroadcasterTool(tools=tools
-            #                                      )
-            #        p.tools.insert(0, broadcaster)
+                #        broadcaster = BroadcasterTool(tools=tools
+                #                                      )
+                #        p.tools.insert(0, broadcaster)
         p.tools = tools
         return p
 
@@ -792,7 +850,7 @@ class Graph(Viewable, ContextMenuMixin):
 
             elif rd['type'] == 'scatter':
                 rd['outline_color'] = rd['color']
-                rd['selection_color'] = 'white'
+                rd['selection_color'] = rd['selection_color']
                 rd['selection_outline_color'] = rd['color']
 
             if rd['type'] == 'cmap_scatter':
@@ -897,8 +955,8 @@ class Graph(Viewable, ContextMenuMixin):
                            plotid=pi,
                            **kw)
 
-        #     def add_datum(self, *args, **kw):
-        #         invoke_in_main_thread(self._add_datum, *args, **kw)
+            #     def add_datum(self, *args, **kw):
+            #         invoke_in_main_thread(self._add_datum, *args, **kw)
 
     def add_datum(self, datum, plotid=0, series=0,
                   update_y_limits=False,
@@ -944,10 +1002,10 @@ class Graph(Viewable, ContextMenuMixin):
                               max_=ma + ypad,
                               plotid=plotid)
 
-        #         if do_after:
-        #             do_after_timer(do_after, add, datum)
-        #         else:
-        #             add(datum)
+            #         if do_after:
+            #             do_after_timer(do_after, add, datum)
+            #         else:
+            #             add(datum)
 
     def show_crosshairs(self, color='black'):
         '''
@@ -1285,7 +1343,8 @@ class Graph(Viewable, ContextMenuMixin):
 
         for k, v in [
             ('render_style', 'connectedpoints'),
-            (colorkey, c)
+            (colorkey, c),
+            ('selection_color', 'white')
         ]:
             if k not in kw.keys():
                 kw[k] = v
@@ -1320,10 +1379,10 @@ class Graph(Viewable, ContextMenuMixin):
                 if not saved:
                     self._render_to_pic(path + DEFAULT_IMAGE_EXT)
 
-                #                base, ext = os.path.splitext(path)
-                #
-                #                if not ext in IMAGE_EXTENSIONS:
-                #                    path = ''.join((base, DEFAULT_IMAGE_EXT))
+                    #                base, ext = os.path.splitext(path)
+                    #
+                    #                if not ext in IMAGE_EXTENSIONS:
+                    #                    path = ''.join((base, DEFAULT_IMAGE_EXT))
 
     def render_to_pdf(self, canvas=None):
         '''
@@ -1341,8 +1400,8 @@ class Graph(Viewable, ContextMenuMixin):
         if filename:
             if not filename.endswith('.pdf'):
                 filename += '.pdf'
-            #        if dest_box is None:
-            #            dest_box = [0.5, 0.5, 0.5, 0.5]
+                #        if dest_box is None:
+                #            dest_box = [0.5, 0.5, 0.5, 0.5]
         gc = PdfPlotGraphicsContext(filename=filename,
                                     pdf_canvas=canvas
                                     #                                  pd/f_canvas=canvas,
@@ -1452,7 +1511,7 @@ class Graph(Viewable, ContextMenuMixin):
         except AttributeError, e:
             print 'get_limits', e
 
-        #    def _set_limits(self, mi, ma, axis, plotid, auto, track, pad):
+            #    def _set_limits(self, mi, ma, axis, plotid, auto, track, pad):
 
     def _set_limits(self, mi, ma, axis, plotid, pad, force=False):
         '''
@@ -1571,4 +1630,4 @@ class Graph(Viewable, ContextMenuMixin):
             v.id = self.view_identifier
         return v
 
-    #============= EOF ====================================
+        #============= EOF ====================================

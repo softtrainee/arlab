@@ -23,6 +23,7 @@ from chaco.tools.data_label_tool import DataLabelTool
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.graph.error_bar_overlay import ErrorBarOverlay
+from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
 from src.stats.core import calculate_mswd, validate_mswd
 from src.helpers.formatting import floatfmt
 from src.processing.plotters.flow_label import FlowDataLabel
@@ -48,6 +49,7 @@ class BaseArArFigure(HasTraits):
 
     x_grid_visible = Bool(True)
     y_grid_visible = Bool(True)
+    use_sparse_ticks = Bool(True)
 
     def build(self, plots):
         """
@@ -59,20 +61,28 @@ class BaseArArFigure(HasTraits):
             pp.x_grid.visible = self.x_grid_visible
             pp.y_grid.visible = self.y_grid_visible
 
+            if self.use_sparse_ticks:
+                if pp.value_scale == 'log':
+                    pp.value_axis.tick_generator = SparseLogTicks()
+                else:
+                    pp.value_axis.tick_generator = SparseTicks()
+
         graph = self.graph
+
+        #meta=graph.dump_metadata()
+
         p = graph.new_plot(ytitle=self.ytitle,
-                           padding=self.padding,
-        )
+                           padding=self.padding)
         _setup_plot(p)
 
         for po in plots:
             p = graph.new_plot(padding=self.padding,
                                bounds=[50, po.height],
-                               ytitle=po.name,
-
-            )
+                               ytitle=po.name)
             _setup_plot(p)
 
+            #print meta
+            #graph.load_metadata(meta)
 
     def plot(self, *args, **kw):
         pass

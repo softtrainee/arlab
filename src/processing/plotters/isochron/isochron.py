@@ -15,40 +15,21 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import Array
 from chaco.plot_label import PlotLabel
-from chaco.tools.data_label_tool import DataLabelTool
-from traits.api import Float, Array
+from chaco.array_data_source import ArrayDataSource
 #============= standard library imports ========================
-from numpy import hstack, array, linspace
-# from chaco.array_data_source import ArrayDataSource
+from numpy import array, linspace
 #============= local library imports  ==========================
-from src.graph.tools.plot_label_tool import PlotLabelTool
+
 from src.helpers.formatting import calc_percent_error
-
 from src.processing.plotters.arar_figure import BaseArArFigure
-# from src.graph.error_bar_overlay import ErrorBarOverlay
-# from chaco.tools.broadcaster import BroadcasterTool
 
-# from src.graph.tools.rect_selection_tool import RectSelectionOverlay, \
-#     RectSelectionTool
-# from src.graph.tools.analysis_inspector import AnalysisPointInspector
-# from src.graph.tools.point_inspector import PointInspectorOverlay
-from chaco.data_label import DataLabel
 from src.stats.peak_detection import find_peaks
 from src.stats.core import calculate_weighted_mean
-# from numpy.core.numeric import Inf
-# from src.processing.plotters.point_move_tool import PointMoveTool
-# from src.helpers.formatting import floatfmt
-# from chaco.tools.data_label_tool import DataLabelTool
-from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
-from chaco.array_data_source import ArrayDataSource
 from src.graph.error_ellipse_overlay import ErrorEllipseOverlay
-from src.regression.new_york_regressor import NewYorkRegressor, ReedYorkRegressor
-# from src.processing.plotters.spectrum.tools import SpectrumTool, \
-#     SpectrumErrorOverlay, PlateauTool, PlateauOverlay
-# from src.processing.argon_calculations import find_plateaus, age_equation
-# from src.processing.plotters.plotter import mDataLabelTool
-# from chaco.scatterplot import render_markers
+from src.regression.new_york_regressor import ReedYorkRegressor
+
 N = 500
 
 
@@ -61,10 +42,6 @@ class InverseIsochron(Isochron):
 #     xma = Float
 
     xs = Array
-
-
-    #     index_key = 'age'
-    #     ytitle = 'Relative Probability'
 
     def plot(self, plots):
         """

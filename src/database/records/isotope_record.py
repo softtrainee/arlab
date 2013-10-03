@@ -39,6 +39,8 @@ class IsotopeRecordView(HasTraits):
     tag = ''
     temp_status = 0
 
+    record_id = ''
+
     def create(self, dbrecord):
         try:
             if dbrecord is None or not dbrecord.labnumber:
@@ -50,6 +52,7 @@ class IsotopeRecordView(HasTraits):
             self.uuid = dbrecord.uuid
             self.tag = dbrecord.tag or ''
             self.timestamp = dbrecord.analysis_timestamp
+            self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
 
             if ln.sample:
                 self.sample = ln.sample.name
@@ -70,8 +73,6 @@ class IsotopeRecordView(HasTraits):
                     self.analysis_type = meas.analysis_type.name
 
             self.uuid = dbrecord.uuid
-            self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
-
             self.flux_fit_status = self._get_flux_fit_status(dbrecord)
             self.blank_fit_status = self._get_selected_history_item(dbrecord, 'selected_blanks_id')
             self.ic_fit_status = self._get_selected_history_item(dbrecord, 'selected_det_intercal_id')
@@ -95,7 +96,7 @@ class IsotopeRecordView(HasTraits):
         sh = item.selected_histories
         return ('X' if getattr(sh, key) else '') if sh else ''
 
-    #============= EOF =============================================
+        #============= EOF =============================================
 
 #
 # def DBProperty():

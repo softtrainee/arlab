@@ -85,7 +85,8 @@ class BasePlotterOptions(HasTraits):
 
     def get_aux_plots(self):
         return reversed([pi
-                         for pi in self.aux_plots if pi.name != NULL_STR])
+                         for pi in self.aux_plots
+                         if pi.name != NULL_STR and pi.use])
 
     def traits_view(self):
         v = View()

@@ -53,10 +53,14 @@ class Ideogram(BaseArArFigure):
     y_grid_visible = False
 
     def plot(self, plots):
-        '''
+        """
             plot data on plots
-        '''
+        """
+
         graph = self.graph
+
+        #dump previous metadata
+
         self._analysis_number_cnt = 0
 
         self.xs, self.xes = array([[ai.nominal_value, ai.std_dev]
@@ -87,7 +91,6 @@ class Ideogram(BaseArArFigure):
 
         if omit:
             self._rebuild_ideo(omit)
-
 
     def max_x(self, attr):
         return max([ai.nominal_value for ai in self._unpack_attr(attr)])
@@ -120,7 +123,7 @@ class Ideogram(BaseArArFigure):
         for p in self.graph.plots:
             if p.y_axis.title == 'Analysis #':
                 startidx += p.default_index.get_size()
-            #                 print 'asdfasfsa', p.index.data.get_size()
+                #                 print 'asdfasfsa', p.index.data.get_size()
 
         ys = arange(startidx, startidx + n)
 
@@ -145,9 +148,9 @@ class Ideogram(BaseArArFigure):
         graph = self.graph
         bins, probs = self._calculate_probability_curve(self.xs, self.xes)
 
-        gid = self.group_id
+        gid = self.group_id + 1
         scatter, _p = graph.new_series(x=bins, y=probs, plotid=pid)
-        graph.set_series_label('Current-{:03n}'.format(gid), series=0, plotid=pid)
+        graph.set_series_label('Current-{}'.format(gid), series=0, plotid=pid)
 
         # add the dashed original line
         graph.new_series(x=bins, y=probs,
@@ -156,7 +159,7 @@ class Ideogram(BaseArArFigure):
                          color=scatter.color,
                          line_style='dash',
         )
-        graph.set_series_label('Original-{:03n}'.format(gid), series=1, plotid=pid)
+        graph.set_series_label('Original-{}'.format(gid), series=1, plotid=pid)
 
         self._add_info(graph, plot)
         self._add_mean_indicator(graph, scatter, bins, probs, pid)
@@ -191,12 +194,16 @@ class Ideogram(BaseArArFigure):
         s, p = g.new_series([wm], [ym],
                             type='scatter',
                             marker='circle',
+                            selection_marker_size=3,
                             marker_size=3,
+                            selection_marker='circle',
+                            selection_color=scatter.color,
+                            selection_outline_color=scatter.color,
                             color=scatter.color,
                             plotid=0
         )
-        gid = self.group_id
-        g.set_series_label('Mean-{:03n}'.format(gid), series=2, plotid=pid)
+        gid = self.group_id + 1
+        g.set_series_label('Mean-{}'.format(gid), series=2, plotid=pid)
 
         self._add_error_bars(s, [we], 'x', self.options.nsigma)
         #         display_mean_indicator = self._get_plot_option(self.options, 'display_mean_indicator', default=True)
@@ -221,6 +228,7 @@ class Ideogram(BaseArArFigure):
             self.update_graph_metadata(None, name, old, new)
 
     def update_graph_metadata(self, obj, name, old, new):
+        #print obj, name, old,new
         sorted_ans = self.sorted_analyses
         if obj:
             hover = obj.metadata.get('hover')
@@ -256,13 +264,14 @@ class Ideogram(BaseArArFigure):
             self._rebuild_ideo(sel)
 
     def _rebuild_ideo(self, sel):
+        #print 'rebuild'
         graph = self.graph
         plot = graph.plots[0]
 
-        gid = self.group_id
-        lp = plot.plots['Current-{:03n}'.format(gid)][0]
-        dp = plot.plots['Original-{:03n}'.format(gid)][0]
-        sp = plot.plots['Mean-{:03n}'.format(gid)][0]
+        gid = self.group_id + 1
+        lp = plot.plots['Current-{}'.format(gid)][0]
+        dp = plot.plots['Original-{}'.format(gid)][0]
+        sp = plot.plots['Mean-{}'.format(gid)][0]
 
         def f(a):
             i, _ = a
@@ -303,9 +312,9 @@ class Ideogram(BaseArArFigure):
         else:
             dp.visible = False
 
-        #===============================================================================
-        # utils
-        #===============================================================================
+            #===============================================================================
+            # utils
+            #===============================================================================
 
     def _get_xs(self, key='age'):
         xs = array([ai for ai in self._unpack_attr(key)])
@@ -319,12 +328,11 @@ class Ideogram(BaseArArFigure):
             x=self.xs, y=ys,
             type='scatter',
             marker='circle',
-            marker_size=2,
-            plotid=pid, **kw
-        )
-
-        graph.set_y_limits()
-
+            marker_size=3,
+            selection_marker_size=3,
+            plotid=pid, **kw)
+        graph.set_series_label('{}-{}'.format(title, self.group_id + 1),
+                               plotid=pid)
         return s
 
     def _calculate_probability_curve(self, ages, errors):

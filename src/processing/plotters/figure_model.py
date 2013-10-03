@@ -28,18 +28,29 @@ class FigureModel(HasTraits):
     plot_options = Any
     _panel_klass = Instance('src.processing.plotters.figure_panel.FigurePanel')
 
+    def dump_metadata(self):
+        ps = []
+        for pp in self.panels:
+            ps.append(pp.dump_metadata())
+        return ps
+
+    def load_metadata(self, metadata):
+        for pp, meta in zip(self.panels, metadata):
+            pp.load_metadata(meta)
+
     @on_trait_change('analyses[]')
     def _analyses_items_changed(self):
-        self.panels = self._make_panels()
+        ps = self._make_panels()
+        self.panels = ps
         self.panel_gen = (gi for gi in self.panels)
 
     def _make_panels(self):
         key = lambda x: x.graph_id
         ans = sorted(self.analyses, key=key)
         gs = [self._panel_klass(analyses=list(ais),
-                            plot_options=self.plot_options,
-                            group_id=gid)
-                for gid, ais in groupby(ans, key=key)]
+                                plot_options=self.plot_options,
+                                group_id=gid)
+              for gid, ais in groupby(ans, key=key)]
 
         return gs
 
@@ -48,4 +59,5 @@ class FigureModel(HasTraits):
 
     def next_panel(self):
         return self.panel_gen.next()
-#============= EOF =============================================
+
+    #============= EOF =============================================
