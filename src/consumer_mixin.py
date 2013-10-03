@@ -83,19 +83,22 @@ class ConsumerMixin(object):
         cfunc = self._consume_func
 
         while self._should_consume:
-            v = get_func()
-            if v:
-                if cfunc:
-                    if self._main:
-                        invoke_in_main_thread(cfunc, v)
-                    else:
-                        cfunc(v)
-                elif isinstance(v, tuple):
-                    func, a = v
-                    if self._main:
-                        invoke_in_main_thread(func, a)
-                    else:
-                        func(a)
+            try:
+                v = get_func()
+                if v:
+                    if cfunc:
+                        if self._main:
+                            invoke_in_main_thread(cfunc, v)
+                        else:
+                            cfunc(v)
+                    elif isinstance(v, tuple):
+                        func, a = v
+                        if self._main:
+                            invoke_in_main_thread(func, a)
+                        else:
+                            func(a)
+            except Exception:
+                pass
 
 #             if not self._should_consume:
 #                 break

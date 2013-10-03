@@ -103,6 +103,9 @@ class BrowserPane(TraitsDockPane):
                 UItem('sample_filter',
                       editor=EnumEditor(name='sample_filter_values'),
                       width=-25),
+                UItem('filter_non_run_samples',
+                      tooltip='Omit non-analyzed samples'
+                ),
             ),
             UItem('samples',
                   editor=TabularEditor(
