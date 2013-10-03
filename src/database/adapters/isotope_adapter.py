@@ -453,6 +453,7 @@ class IsotopeAdapter(DatabaseAdapter):
                 dbpos = irrad_PositionTable(position=pos,
                                             labnumber=labnumber, **kw)
                 dbpos.level_id = level.id
+                self._add_item(dbpos)
                 #                 level.positions.append(dbpos)
 
         return dbpos
