@@ -188,8 +188,8 @@ class FigureTask(AnalysisEditTask):
         self._new_figure(ans, name, klass, tklass, set_ans=set_ans)
 
         #auto load the first prev selection for debugging
-        uk = self.unknowns_pane
-        uk.previous_selection = uk.previous_selections[0]
+#        uk = self.unknowns_pane
+#        uk.previous_selection = uk.previous_selections[0]
 
     def new_spectrum(self, ans=None, klass=None,
                      tklass=None,

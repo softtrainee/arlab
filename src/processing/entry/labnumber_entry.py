@@ -357,12 +357,13 @@ class LabnumberEntry(IsotopeDatabaseManager):
                     if pos is None:
                         pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
                     else:
-
                         lev = pos.level
                         irrad = lev.irradiation
                         if self.irradiation != irrad.name:
                             self.warning_dialog('Labnumber {} already exists in Irradiation {}'.format(ln, irrad.name))
                             return
+                        if irs.hole!=pos.position:
+                            pos=db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
 
                     dbln.sample = db.get_sample(sam)
                     dbln.note = irs.note
