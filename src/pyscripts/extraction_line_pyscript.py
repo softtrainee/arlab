@@ -437,7 +437,8 @@ class ExtractionPyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def acquire(self, name=None, clear=False):
-        if self.runner is None:
+        if self.runnner is None:
+            self.debug('+++++++++++++++++++++++ Runner is None')
             return
 
         self.info('acquire {}'.format(name))
@@ -463,6 +464,10 @@ class ExtractionPyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def wait(self, name=None, criterion=0):
+        if self.runnner is None:
+            self.debug('+++++++++++++++++++++++ Runner is None')
+            return
+
         self.info('waiting for {} = {}'.format(name, criterion))
         r = self.runner.get_resource(name)
 
@@ -487,6 +492,9 @@ class ExtractionPyScript(ValvePyScript):
     @command_register
     def release(self, name=None):
         self.info('release {}'.format(name))
+        if self.runnner is None:
+            self.debug('+++++++++++++++++++++++ Runner is None')
+            return
 
         r = self.runner.get_resource(name)
         if r is not None:
@@ -497,6 +505,10 @@ class ExtractionPyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def set_resource(self, name=None, value=1):
+        if self.runnner is None:
+            self.debug('+++++++++++++++++++++++ Runner is None')
+            return
+
         r = self.runner.get_resource(name)
         if r is not None:
             r.set(value)
@@ -506,6 +518,10 @@ class ExtractionPyScript(ValvePyScript):
     @verbose_skip
     @command_register
     def get_resource_value(self, name=None):
+        if self.runnner is None:
+            self.debug('+++++++++++++++++++++++ Runner is None')
+            return
+
         r = self.runner.get_resource(name)
         resp = None
         if r is not None:
