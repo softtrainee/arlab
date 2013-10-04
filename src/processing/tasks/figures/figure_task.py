@@ -139,13 +139,14 @@ class FigureTask(AnalysisEditTask):
             self.active_editor.set_group(idx, 0)
             #             self.unknowns_pane.update_needed = True
             self.unknowns_pane.refresh_needed = True
-        #===============================================================================
-        # figures
-        #===============================================================================
+            #===============================================================================
+            # figures
+            #===============================================================================
 
     def add_text_box(self):
         ac = self.active_editor
-        if ac and hasattr(ac, 'add_text_box'):
+        if ac and ac.component and hasattr(ac, 'add_text_box'):
+
             self.active_editor.add_text_box()
 
             at = self.active_editor.annotation_tool
@@ -188,8 +189,9 @@ class FigureTask(AnalysisEditTask):
         self._new_figure(ans, name, klass, tklass, set_ans=set_ans)
 
         #auto load the first prev selection for debugging
-#        uk = self.unknowns_pane
-#        uk.previous_selection = uk.previous_selections[0]
+
+    #        uk = self.unknowns_pane
+    #        uk.previous_selection = uk.previous_selections[0]
 
     def new_spectrum(self, ans=None, klass=None,
                      tklass=None,
@@ -326,9 +328,9 @@ class FigureTask(AnalysisEditTask):
                                      ybounds=ybounds,
                                      options_pickle=blob)
 
-        #===============================================================================
-        #
-        #===============================================================================
+            #===============================================================================
+            #
+            #===============================================================================
 
     def _append_figure(self, klass):
         """
@@ -449,11 +451,11 @@ class FigureTask(AnalysisEditTask):
             self.active_editor.rebuild(refresh_data=False)
 
 
-        #===============================================================================
-        # handlers
-        #===============================================================================
-        #     @on_trait_change('plotter_options_pane:pom:plotter_options:aux_plots:x_error')
-        #     def _update_x_error(self):
+            #===============================================================================
+            # handlers
+            #===============================================================================
+            #     @on_trait_change('plotter_options_pane:pom:plotter_options:aux_plots:x_error')
+            #     def _update_x_error(self):
 
 
     @on_trait_change('plotter_options_pane:pom:plotter_options:[+, aux_plots:+]')
@@ -500,17 +502,17 @@ class FigureTask(AnalysisEditTask):
             ans = self._get_sample_analyses(self.selected_sample[-1])
             self.unknowns_pane.items = ans
 
-        #             sam = next((si
-        #                         for si in self.active_editor.items
-        #                             if si.sample == sa.name), None)
-        #             if sam is None:
-        #                 man = self.manager
-        #                 ans = self._get_sample_analyses(sa)
-        #                 ans = man.make_analyses(ans)
+            #             sam = next((si
+            #                         for si in self.active_editor.items
+            #                             if si.sample == sa.name), None)
+            #             if sam is None:
+            #                 man = self.manager
+            #                 ans = self._get_sample_analyses(sa)
+            #                 ans = man.make_analyses(ans)
 
-        #===============================================================================
-        # defaults
-        #===============================================================================
+            #===============================================================================
+            # defaults
+            #===============================================================================
 
     def _default_layout_default(self):
         return TaskLayout(

@@ -36,10 +36,26 @@ class InterpolationEditor(GraphEditor):
     auto_find = Bool(True)
     show_current = Bool(True)
 
+    default_reference_analysis_type = 'air'
+
     @on_trait_change('references[]')
     def _update_references(self):
+
     #         self.make_references()
+    #    if self.unknowns:
+    #        ref_ans=self.unknowns[0]
+    #        self._load_ref_fits(ref_ans)
+        self._update_references_hook()
+
         self.rebuild_graph()
+
+    def _update_references_hook(self):
+        pass
+
+        #def _load_ref_fits(self, ref_ans):
+        #    pass
+        #keys=ref_ans.isotope_keys
+        #fits=[ref_ans.isotopes[ki]]
 
     #     def make_references(self):
     #         self._references = self.processor.make_analyses(self.references)
@@ -61,6 +77,7 @@ class InterpolationEditor(GraphEditor):
         return start, end
 
     def _update_unknowns_hook(self):
+        print 'fin refasfdasdf'
         if self.auto_find:
             self._find_references()
 
@@ -72,14 +89,16 @@ class InterpolationEditor(GraphEditor):
         uuids = []
         with proc.db.session_ctx():
             for ui in self.unknowns:
-                for ai in proc.find_associated_analyses(ui):
+                for ai in proc.find_associated_analyses(ui,
+                                                        atype=self.default_reference_analysis_type):
                     if not ai.uuid in uuids:
                         uuids.append(ai.uuid)
                         ans.append(ai)
 
             ans = sorted(list(ans), key=lambda x: x.analysis_timestamp)
             ans = self.processor.make_analyses(ans)
-            self.task.references_pane.items = ans
+
+            #self.task.references_pane.items = ans
 
     def _get_current_values(self, *args, **kw):
         pass

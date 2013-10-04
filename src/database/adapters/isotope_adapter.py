@@ -66,7 +66,7 @@ from src.database.orms.isotope.proc import proc_DetectorIntercalibrationHistoryT
     proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable, \
     proc_DetectorParamHistoryTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
     proc_FitTable, proc_DetectorParamTable, proc_NotesTable, proc_FigureTable, proc_FigureAnalysisTable, \
-    proc_FigurePrefTable, proc_TagTable
+    proc_FigurePrefTable, proc_TagTable, proc_ArArTable
 
 # @todo: change rundate and runtime to DateTime columns
 
@@ -79,6 +79,27 @@ class IsotopeAdapter(DatabaseAdapter):
     '''
 
     selector_klass = IsotopeAnalysisSelector
+
+    def count_sample_analyses(self, *args, **kw):
+        return self._get_sample_analyses('count', *args, **kw)
+
+    def get_sample_analyses(self, *args, **kw):
+        return self._get_sample_analyses('all', *args, **kw)
+
+    def _get_sample_analyses(self, func, sample, limit=None, offset=None):
+        with self.session_ctx() as sess:
+            q = sess.query(meas_AnalysisTable)
+            q = q.join(gen_LabTable)
+            q = q.join(gen_SampleTable)
+            q = q.filter(gen_SampleTable.name == sample)
+            q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+
+            if limit:
+                q = q.limit(limit)
+            if offset:
+                q = q.offset(offset)
+
+            return getattr(q, func)()
 
     def get_analyses_data_range(self, mi, ma,
                                 analysis_type=None,
@@ -110,6 +131,23 @@ class IsotopeAdapter(DatabaseAdapter):
             q = q.filter(and_(meas_AnalysisTable.analysis_timestamp >= mi,
                               meas_AnalysisTable.analysis_timestamp <= ma))
             return q.all()
+
+    def add_arar_history(self, analysis, **kw):
+        hist = self._add_history('ArAr', analysis, **kw)
+        return hist
+
+    def add_arar(self, hist, **kw):
+
+        hkw = kw.copy()
+        hkw['history_id'] = hist.id
+
+        h = self._make_hash(hkw)
+        a = self.get_arar(h)
+        if a is None:
+            a = proc_ArArTable(h, **kw)
+            a.history_id = hist.id
+            self._add_item(a)
+        return a
 
     def add_load(self, name, **kw):
         l = loading_LoadTable(name=name, **kw)
@@ -162,7 +200,12 @@ class IsotopeAdapter(DatabaseAdapter):
     #===========================================================================
 
     def _add_history(self, name, analysis, **kw):
-        table = globals()['proc_{}HistoryTable'.format(name)]
+        name = 'proc_{}HistoryTable'.format(name)
+        mod_path = 'src.database.orms.isotope.proc'
+        mod = __import__(mod_path, fromlist=[name])
+        table = getattr(mod, name)
+
+        #table = globals()['proc_{}HistoryTable'.format(name)]
         analysis = self.get_analysis(analysis, )
         h = table(analysis=analysis, **kw)
         self._add_item(h, )
@@ -596,23 +639,34 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def add_sample(self, name, project=None, material=None, **kw):
         with self.session_ctx() as sess:
-            project = self.get_project(project)
-            material = self.get_material(material)
+
 
             #         sess = self.get_session()
             q = sess.query(gen_SampleTable)
-            q = q.filter(and_(gen_SampleTable.name == name,
-                              getattr(gen_SampleTable, 'material') == material,
-                              getattr(gen_SampleTable, 'project') == project,
-            ))
+            if project:
+                project = self.get_project(project)
+                q = q.filter(gen_SampleTable.project == project)
+                #q=q.join(gen_ProjectTable)
+
+            if material:
+                material = self.get_material(material)
+                q = q.filter(gen_SampleTable.material == material)
+                #q=q.join(gen_MaterialTable)
+            q = q.filter(gen_SampleTable.name == name)
+            #if project:
+            #    q=q.filter()
+
+            #q = q.filter(and_(gen_SampleTable.name == name,
+            #                  getattr(gen_SampleTable, 'material') == material,
+            #                  getattr(gen_SampleTable, 'project') == project,
+            #))
 
             try:
                 sample = q.one()
             except Exception, e:
-                print e
+                print e, name, project, material
                 sample = None
 
-                #        print sample
             if sample is None:
                 sample = self._add_sample(name, project, material)
             else:
@@ -750,6 +804,9 @@ class IsotopeAdapter(DatabaseAdapter):
     #===========================================================================
     # getters single
     #===========================================================================
+    def get_arar(self, k):
+        return self._retrieve_item(k, key='hash')
+
     def get_last_labnumber(self):
         with self.session_ctx() as s:
         #         sess = self.get_session()
@@ -1121,33 +1178,35 @@ class IsotopeAdapter(DatabaseAdapter):
     def _hash_factory(self, text):
         return hashlib.md5(text)
 
-    def _build_query_and(self, table, name, jtable, attr, q=None):
-        '''
-            joins table and jtable 
-            filters using an andclause
-            
-            e.g.
-            q=sess.query(Table).join(JTable).filter(and_(Table.name==name, JTable.name==attr.name))
-             
-        '''
 
-        sess = self.get_session()
-        andclause = tuple()
-        if q is None:
-            q = sess.query(table)
-            andclause = (table.name == name,)
 
-        if attr:
-            q = q.join(jtable)
-            andclause += (jtable.name == attr.name,)
-
-        if len(andclause) > 1:
-            q = q.filter(and_(*andclause))
-
-        elif len(andclause) == 1:
-            q = q.filter(andclause[0])
-
-        return q
+        #def _build_query_and(self, table, name, jtable, attr, q=None):
+        #    '''
+        #        joins table and jtable
+        #        filters using an andclause
+        #
+        #        e.g.
+        #        q=sess.query(Table).join(JTable).filter(and_(Table.name==name, JTable.name==attr.name))
+        #
+        #    '''
+        #
+        #    sess = self.get_session()
+        #    andclause = tuple()
+        #    if q is None:
+        #        q = sess.query(table)
+        #        andclause = (table.name == name,)
+        #
+        #    if attr:
+        #        q = q.join(jtable)
+        #        andclause += (jtable.name == attr.name,)
+        #
+        #    if len(andclause) > 1:
+        #        q = q.filter(and_(*andclause))
+        #
+        #    elif len(andclause) == 1:
+        #        q = q.filter(andclause[0])
+        #
+        #    return q
 
 
 if __name__ == '__main__':

@@ -35,15 +35,15 @@ class FigureEditor(GraphEditor):
 #     path = File
     table_editor = Any
     component = Any
-#     plotter = Any
-#     tool = Any
+    #     plotter = Any
+    #     tool = Any
     plotter_options_manager = Any
     associated_editors = List
-#     processor = Any
-#     unknowns = List
-#     _unknowns = List
-#     _cached_unknowns = List
-#     _suppress_rebuild = False
+    #     processor = Any
+    #     unknowns = List
+    #     _unknowns = List
+    #     _cached_unknowns = List
+    #     _suppress_rebuild = False
 
     annotation_tool = Any
 
@@ -72,13 +72,12 @@ class FigureEditor(GraphEditor):
         else:
             self.annotation_tool = None
 
-
     def set_group(self, idxs, gid, refresh=True):
 
         for i, uu in enumerate(self.unknowns):
-#         for i, (ui, uu) in enumerate(zip(self._unknowns, self.unknowns)):
+        #         for i, (ui, uu) in enumerate(zip(self._unknowns, self.unknowns)):
             if i in idxs:
-#                 ui.group_id = gid
+            #                 ui.group_id = gid
                 uu.group_id = gid
 
         if refresh:
@@ -88,9 +87,10 @@ class FigureEditor(GraphEditor):
         self.rebuild(refresh_data=False)
 
     def rebuild(self, refresh_data=True, compress_groups=True):
+        #ans=self.unknowns
         ans = self._gather_unknowns(refresh_data, compress_groups=compress_groups)
-        if ans:
 
+        if ans:
             for e in self.associated_editors:
                 if isinstance(e, FigureEditor):
                     e.analysis_cache = self.analysis_cache
@@ -98,18 +98,18 @@ class FigureEditor(GraphEditor):
                 else:
                     e.items = ans
 
-
             po = self.plotter_options_manager.plotter_options
 
             comp = timethis(self.get_component, args=(ans, po), msg='get_component')
-    #         comp = self._get_component(ans, po)
+            #         comp = self._get_component(ans, po)
 
             self.component = comp
             self.component_changed = True
 
     def get_component(self, ans, po):
         pass
-#         return self._get_component()
+
+    #         return self._get_component()
 #         func = getattr(self.processor, self.func)
 #         return func(ans=ans, plotter_options=po)
 

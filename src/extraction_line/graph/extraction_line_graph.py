@@ -216,9 +216,9 @@ class ExtractionLineGraph(HasTraits):
             use a Breadth-First Traverse
             acumulate the max state at each node
         """
-        state, term = False, ''
-        for ni in BFT(self, n):
-#             print '-----', n.name, ni.name
+        m_state, term = False, ''
+        for ni in bft(self, node):
+        #             print '-----', n.name, ni.name
             if isinstance(ni, PumpNode):
                 return 'pump', ni.name
 

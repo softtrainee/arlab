@@ -16,7 +16,8 @@
 
 #============= enthought library imports =======================
 from pyface.message_dialog import information, warning
-from traits.api import HasTraits, List, Any, Str, Enum, Bool, Button
+from traits.api import HasTraits, List, Any, Str, Enum, Bool, Button, \
+    Int
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -35,6 +36,20 @@ class AnalysisTable(HasTraits):
 
     omit_invalid = Bool(True)
     configure_analysis_filter = Button
+
+    forward = Button
+    backward = Button
+    limit = Int
+    page = Int
+
+    db = Any
+
+    def _forward_fired(self):
+        db = self.db
+        print db
+
+    def _backward_fired(self):
+        pass
 
     def set_analyses(self, ans):
         ans = self.filter_invalid(ans)

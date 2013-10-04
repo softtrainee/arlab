@@ -131,16 +131,20 @@ class InverseIsochron(Isochron):
     def _add_info(self, plot, reg):
         intercept = reg.predict(0)
         err = reg.get_intercept_error()
-        inv_intercept = intercept ** -1
-        print err
+        try:
+            inv_intercept = intercept ** -1
+            p = calc_percent_error(inv_intercept, err)
+            v = '{:0.2f}'.format(inv_intercept)
+            e = '{:0.3f}'.format(err)
 
-        p = calc_percent_error(inv_intercept, err)
-        l = PlotLabel(text=u'''Ar40/Ar36= {:0.2f}
-               +/-{:0.3f} ({}%)\n\n'''.format(inv_intercept, err, p),
+        except ZeroDivisionError:
+            v, e, p = 'NaN', 'NaN', 'NaN'
+
+        l = PlotLabel(text=u'''Ar40/Ar36= {}
+               +/-{} ({}%)\n\n'''.format(v, e, p),
                       component=plot,
                       overlay_position='inside bottom',
-                      hjustify='left',
-        )
+                      hjustify='left')
         plot.overlays.append(l)
 
     def update_index_mapper(self, obj, name, old, new):

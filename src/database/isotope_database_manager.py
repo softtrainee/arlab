@@ -26,7 +26,7 @@ from src.ui.progress_dialog import myProgressDialog
 # from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
 from src.database.records.isotope_record import IsotopeRecordView
 # from src.processing.analysis import Analysis, NonDBAnalysis
-from src.codetools.simple_timeit import simple_timer
+from src.codetools.simple_timeit import simple_timer, timethis
 from src.processing.analyses.analysis import DBAnalysis, Analysis
 from src.loggable import Loggable
 from src.database.orms.isotope.meas import meas_AnalysisTable
@@ -144,9 +144,6 @@ class IsotopeDatabaseManager(Loggable):
                     if progress:
                         progress.on_trait_change(self._progress_closed, 'closed')
 
-                    #rs = [self._record_factory(ai, progress=progress, **kw)
-                    #      for ai in ans]
-                    #rs = [ri for ri in rs if ri is not None]
                     rs = []
                     for ai in ans:
                         r = self._record_factory(ai, progress=progress, **kw)
@@ -160,16 +157,6 @@ class IsotopeDatabaseManager(Loggable):
                                                  'closed', remove=True)
 
                 return dbans
-
-                #     def load_analyses(self, ans, show_progress=True, **kw):
-                #         progress = None
-                #
-                # #         ans = [ai for ai in ans if not ai.loaded]
-                #
-                #         n = len(ans)
-                #         if show_progress and n > 1:
-                #             progress = self._open_progress(n)
-                #         self._load_analyses(ans, progress=progress, **kw)
 
     def get_level(self, level, irradiation=None):
         if irradiation is None:
@@ -223,6 +210,27 @@ class IsotopeDatabaseManager(Loggable):
         win = self.application.windows[-1]
         win.activate()
 
+    def _add_arar(self, meas_analysis, analysis):
+        db = self.db
+        hist = db.add_arar_history(meas_analysis)
+        #a, e=age.nominal_value, age.std_dev
+        d = dict()
+        attrs = ['age', 'k39', 'ca37', 'cl36',
+                 'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
+
+        for a in attrs:
+            v = getattr(analysis, a)
+            ek = '{}_err'.format(a)
+            d[a] = float(v.nominal_value)
+            d[ek] = float(v.std_dev)
+
+        db.add_arar(hist, **d)
+
+        meas_analysis.selected_histories.selected_arar = hist
+
+        #hist.selected=analysis.selected_histories
+        #analysis.selected_histories.selected_arar=hist
+
     def _record_factory(self, rec, progress=None, calculate_age=True, exclude=None, **kw):
         if isinstance(rec, (Analysis, DBAnalysis)):
             if progress:
@@ -246,10 +254,21 @@ class IsotopeDatabaseManager(Loggable):
 
             def func(r):
                 meas_analysis = self.db.get_analysis_uuid(r.uuid)
+
                 ai = DBAnalysis()
-                ai.sync(meas_analysis)
-                if calculate_age and ai.analysis_type in ('unknown', 'cocktail'):
-                    ai.calculate_age()
+
+                if calculate_age and atype in ('unknown', 'cocktail'):
+                    ai.sync_arar(meas_analysis)
+                    if not ai.persisted_age:
+                        ai.sync(meas_analysis, unpack=True)
+                        ai.calculate_age()
+                        self._add_arar(meas_analysis, ai)
+                    else:
+                        ai.sync(meas_analysis)
+
+                else:
+                    ai.sync(meas_analysis)
+
                 return ai
 
             if progress:
@@ -257,7 +276,8 @@ class IsotopeDatabaseManager(Loggable):
                 m = 'calculating age' if show_age else ''
                 msg = 'loading {}. {}'.format(rid, m)
                 progress.change_message(msg)
-                a = func(rec)
+                a = timethis(func, args=(rec,), msg='make analysis')
+                #a = func(rec)
                 progress.increment()
             else:
                 a = func(rec)

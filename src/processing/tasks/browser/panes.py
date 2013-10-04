@@ -104,8 +104,7 @@ class BrowserPane(TraitsDockPane):
                       editor=EnumEditor(name='sample_filter_values'),
                       width=-25),
                 UItem('filter_non_run_samples',
-                      tooltip='Omit non-analyzed samples'
-                ),
+                      tooltip='Omit non-analyzed samples'),
             ),
             UItem('samples',
                   editor=TabularEditor(
@@ -191,7 +190,18 @@ class BrowserPane(TraitsDockPane):
                   #                                           )
                   width=300
             ),
-            HGroup(spring, Item(make_name('omit_invalid'))),
+            HGroup(
+                new_button_editor(make_name('backward'),
+                                  'control_rewind'
+                ),
+                spring,
+                UItem(make_name('limit')),
+                spring,
+                new_button_editor(make_name('forward'),
+                                  'control_fastforward'),
+                UItem(make_name('page')),
+                Item(make_name('omit_invalid'))
+            ),
             defined_when=self.analyses_defined,
         )
         return analysis_grp

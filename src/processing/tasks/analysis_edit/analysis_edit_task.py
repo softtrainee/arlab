@@ -143,7 +143,7 @@ class AnalysisEditTask(BaseBrowserTask):
         if self.manager.db:
             if self.manager.db.connected:
                 selector = self.manager.db.selector
-                selector._search_fired()
+                #selector._search_fired()
 
                 #             from src.processing.selection.data_selector import DataSelector
                 #             from src.processing.tasks.search_panes import ResultsPane
@@ -288,18 +288,20 @@ class AnalysisEditTask(BaseBrowserTask):
         '''
             use 'u' to add selected analyses to unknowns pane
         '''
-        s = self.data_selector.selector.selected
-        s = self.manager.make_analyses(s)
 
-        if new and s:
-            c = new.text
-            #             shift = new.shift
-            if c == 'u':
-                self.unknowns_pane.items.extend(s)
-            elif c == 'U':
-                self.unknowns_pane.items = s
-            else:
-                self._handle_key_pressed(c)
+        if new:
+            s = self.data_selector.selector.selected
+            if s is not None:
+                s = self.manager.make_analyses(s)
+
+                c = new.text
+                #             shift = new.shift
+                if c == 'u':
+                    self.unknowns_pane.items.extend(s)
+                elif c == 'U':
+                    self.unknowns_pane.items = s
+                else:
+                    self._handle_key_pressed(c)
 
     def _handle_key_pressed(self, c):
         pass

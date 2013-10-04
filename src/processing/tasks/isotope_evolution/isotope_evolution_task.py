@@ -189,9 +189,13 @@ class IsotopeEvolutionTask(AnalysisEditTask):
             #===============================================================================
 
     def _dclicked_sample_changed(self, new):
-        for sa in self.selected_sample:
-            ans = self._get_sample_analyses(sa)
-            #             ans = man.make_analyses(ans)
-            self.unknowns_pane.items = ans
+        if self.active_editor:
+            sa = self.selected_sample[0]
+            self.active_editor.unknowns = self._get_sample_analyses(sa)
+
+            #for sa in self.selected_sample:
+            #    ans = self._get_sample_analyses(sa)
+            #                 ans = man.make_analyses(ans)
+            #self.unknowns_pane.items = ans
 
 #============= EOF =============================================
