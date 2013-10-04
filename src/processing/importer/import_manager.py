@@ -20,6 +20,7 @@ from traits.api import HasTraits, Enum, Instance, Str, Password, \
 #============= standard library imports ========================
 from collections import namedtuple
 import time
+
 #============= local library imports  ==========================
 from src.processing.importer.mass_spec_extractor import Extractor, \
     MassSpecExtractor
@@ -190,7 +191,6 @@ class ImportManager(IsotopeDatabaseManager):
                     else:
                         self._do_import(selected, pd)
                         return True
-#                     self._import_thread = t
 
     def _data_source_changed(self):
         if self.data_source == 'MassSpec':

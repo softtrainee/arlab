@@ -228,8 +228,6 @@ class AutomatedRun(Loggable):
         #             p.clear_displays()
             p.isotope_graph.clear_plots()
 
-        p.isotope_graph.set_x_limits(0, 1)
-
         p.show_isotope_graph()
 
         for iso in self.arar_age.isotopes:
@@ -367,10 +365,11 @@ class AutomatedRun(Loggable):
         mem_log('pre sniff')
         if not self._alive:
             return
-
-        if self.plot_panel:
-            self.plot_panel._ncounts = ncounts
-            self.plot_panel.isbaseline = False
+        p=self.plot_panel
+        if p:
+            p._ncounts = ncounts
+            p.isbaseline = False
+            p.isotope_graph.set_x_limits(min_=0, max_=1, plotid=0)
 
         fits = [(None, ['', ] * len(self._active_detectors))]
         gn = 'sniff'
@@ -812,6 +811,7 @@ class AutomatedRun(Loggable):
         if not self.measurement_script:
             return True
 
+        self.measurement_script.runner=self.runner
         self.measurement_script.manager = self.experiment_manager
 
         # use a measurement_script to explicitly define
@@ -860,7 +860,8 @@ class AutomatedRun(Loggable):
             return
         msg = 'Post Measurement Started {}'.format(self.post_measurement_script.name)
         self.info('======== {} ========'.format(msg))
-        self.state = 'extraction'
+#        self.state = 'extraction'
+        self.post_measurement_script.runner=self.runner
         self.post_measurement_script.manager = self.experiment_manager
 
         if self.post_measurement_script.execute():
@@ -883,6 +884,7 @@ class AutomatedRun(Loggable):
             return
         msg = 'Post Equilibration Started {}'.format(self.post_equilibration_script.name)
         self.info('======== {} ========'.format(msg))
+        self.post_equilibration_script.runner=self.runner
         self.post_equilibration_script.manager = self.experiment_manager
 
         #         self.post_equilibration_script.syntax_checked = True
@@ -1022,13 +1024,14 @@ anaylsis_type={}
         return self._get_yaml_parameter(self.extraction_script, key, default)
 
     def _use_arar_age(self):
-        return True
-
+#        return True
         ln = self.spec.labnumber
-        if '-' in ln:
-            ln = ln.split('-')[0]
-
-        return self.spec.analysis_type == 'unknown' or ln in ('c',)
+        return ln!='dg'
+    
+#        if '-' in ln:
+#            ln = ln.split('-')[0]
+#
+#        return self.spec.analysis_type == 'unknown' or ln in ('c',)
 
     def _new_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
 

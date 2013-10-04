@@ -261,8 +261,18 @@ class AutomatedRunSpec(Loggable):
     measurment_script, post_measurment_script,
     post_equilibration_script, extraction_script,extract_+, position, duration, cleanup
     ''')
-    def _script_changed(self):
+    def _script_changed(self, name, new):
+        if new =='None':
+#            self.trait_set(trait_change_notify=False, **{name: ''})
+            self.trait_set(**{name: ''})
+        else:
+            self._changed = True
+
+    @on_trait_change('''extract_+, position, duration, cleanup
+    ''')
+    def _extract_changed(self):
         self._changed = True
+            
 #===============================================================================
 # property get/set
 #===============================================================================

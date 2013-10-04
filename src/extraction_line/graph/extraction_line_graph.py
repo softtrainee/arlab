@@ -218,7 +218,7 @@ class ExtractionLineGraph(HasTraits):
         """
         m_state, term = False, ''
         for ni in bft(self, node):
-        #             print '-----', n.name, ni.name
+#             print '-----', n.name, ni.name
             if isinstance(ni, PumpNode):
                 return 'pump', ni.name
 

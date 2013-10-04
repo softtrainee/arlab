@@ -730,15 +730,16 @@ class AutomatedRunFactory(Loggable):
 
                     new_script_name = self._remove_file_extension(new_script_name)
                     if labnumber in ('u', 'bu') and self.extract_device != NULL_STR:
-
+                            
+#                        print defaults
                         # the default value trumps pychron's
                         if self.extract_device:
                             e = self.extract_device.split(' ')[1].lower()
                             if skey == 'extraction':
                                 new_script_name = e
                             elif skey == 'post_equilibration':
-                                new_script_name = 'pump_{}'.format(e)
-
+                                new_script_name=default_scripts.get(skey, 'pump_{}'.format(e))
+                                
                     elif labnumber == 'dg':
                         e = self.extract_device.split(' ')[1].lower()
                         new_script_name = '{}_{}'.format(e, new_script_name)
