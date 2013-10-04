@@ -69,10 +69,10 @@ class Script(Loggable):
                            Label(self.label),
                            spring,
                            UItem('name',
-                                width=-125,
+                                width=-200,
                                 editor=EnumEditor(name='names')),
                            UItem('edit',
-                                enabled_when='name and name!="---"',
+                                enabled_when='name and name!="---" and name is not "None"',
                                 ),
                            )
                     )
@@ -110,12 +110,11 @@ class Script(Loggable):
 
     @cached_property
     def _get_names(self):
-        names = ['']
+        names = ['None']
         ms = self._load_script_names()
         if ms:
             msn = '{}_'.format(self.mass_spectrometer.lower())
             names.extend([self._clean_script_name(ei) for ei in ms if ei.startswith(msn)])
-
         return names
 
 #============= EOF =============================================

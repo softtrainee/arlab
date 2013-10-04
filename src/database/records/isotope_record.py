@@ -31,7 +31,8 @@ class IsotopeRecordView(HasTraits):
     analysis_type = ''
     uuid = ''
     sample = ''
-
+    sample=''
+    
     iso_fit_status = False
     blank_fit_status = False
     ic_fit_status = False
@@ -57,7 +58,9 @@ class IsotopeRecordView(HasTraits):
 
             if ln.sample:
                 self.sample = ln.sample.name
-
+            if dbrecord.labnumber.sample:
+                self.sample=dbrecord.labnumber.sample.name
+            
             irp = ln.irradiation_position
             if irp is not None:
                 irl = irp.level
