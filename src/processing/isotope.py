@@ -32,6 +32,7 @@ class BaseMeasurement(HasTraits):
     name = Str
     mass = Float
     detector = Str
+
     def __init__(self, dbrecord=None, unpack=True, *args, **kw):
         super(BaseMeasurement, self).__init__(*args, **kw)
 
@@ -70,12 +71,14 @@ class IsotopicMeasurement(BaseMeasurement):
     refit = Bool(True)
 
     regressor = Property(depends_on='xs,ys,fit')
+
     def __init__(self, dbresult=None, *args, **kw):
+
         if dbresult:
-#             self.dbresult = dbresult
             self._value = dbresult.signal_
             self._error = dbresult.signal_err
-#             kw['unpack'] = False
+        else:
+            kw['unpack'] = True
 
         super(IsotopicMeasurement, self).__init__(*args, **kw)
 
@@ -84,16 +87,18 @@ class IsotopicMeasurement(BaseMeasurement):
             self.fit = fit.fit
             self.filter_outliers = bool(fit.filter_outliers)
             try:
-                self.filter_outlier_iterations = int(fit.filter_outlier_iterations)  # if fit.filter_outliers_iterations else 0
+                self.filter_outlier_iterations = int(
+                    fit.filter_outlier_iterations)  # if fit.filter_outliers_iterations else 0
             except TypeError, e:
                 pass
-#                print '{}. fit.filter_outlier_iterations'.format(e)
+            #                print '{}. fit.filter_outlier_iterations'.format(e)
 
             try:
-                self.filter_outlier_std_devs = int(fit.filter_outlier_std_devs)  # if fit.filter_outliers_std_devs else 0
+                self.filter_outlier_std_devs = int(
+                    fit.filter_outlier_std_devs)  # if fit.filter_outliers_std_devs else 0
             except TypeError, e:
                 pass
-#                print '{}. fit.filter_outlier_std_devs'.format(e)
+            #                print '{}. fit.filter_outlier_std_devs'.format(e)
 
     def set_uvalue(self, v):
         if isinstance(v, tuple):
@@ -115,10 +120,10 @@ class IsotopicMeasurement(BaseMeasurement):
     # @cached_property
     def _get_value(self):
         if self.refit and self.xs is not None and len(self.xs) > 1:  # and self.ys is not None:
-#            if len(self.xs) > 2 and len(self.ys) > 2:
-#            print self.xs
-#            print self._get_regression_param('coefficients')
-#            return self._get_regression_param('coefficients')
+        #            if len(self.xs) > 2 and len(self.ys) > 2:
+        #            print self.xs
+        #            print self._get_regression_param('coefficients')
+        #            return self._get_regression_param('coefficients')
             return self.regressor.predict(0)
         else:
             return self._value
@@ -126,9 +131,9 @@ class IsotopicMeasurement(BaseMeasurement):
     # @cached_property
     def _get_error(self):
         if self.refit and self.xs is not None and len(self.xs) > 1:
-#            if len(self.xs) > 2 and len(self.ys) > 2:
+        #            if len(self.xs) > 2 and len(self.ys) > 2:
             return self.regressor.predict_error(0)
-#            return self._get_regression_param('coefficient_errors')
+        #            return self._get_regression_param('coefficient_errors')
         else:
             return self._error
 
@@ -137,10 +142,10 @@ class IsotopicMeasurement(BaseMeasurement):
         try:
             if 'average' in self.fit.lower():
                 reg = self._mean_regressor_factory()
-#                if self.es:
-#                    reg = WeightedMeanRegressor(xs=self.xs, ys=self.ys, errors=self.es)
-#                else:
-#                    reg = MeanRegressor(xs=self.xs, ys=self.ys)
+            #                if self.es:
+            #                    reg = WeightedMeanRegressor(xs=self.xs, ys=self.ys, errors=self.es)
+            #                else:
+            #                    reg = MeanRegressor(xs=self.xs, ys=self.ys)
             else:
                 reg = PolynomialRegressor(xs=self.xs, ys=self.ys, degree=self.fit)
 
@@ -160,54 +165,65 @@ class IsotopicMeasurement(BaseMeasurement):
     def _get_uvalue(self):
         return ufloat(self.value, self.error)
 
-#===============================================================================
-# arthmetic
-#===============================================================================
+    #===============================================================================
+    # arthmetic
+    #===============================================================================
     def __add__(self, a):
         return self.uvalue + a
+
     def __radd__(self, a):
         return self.__add__(a)
 
     def __mul__(self, a):
         return self.uvalue * a
+
     def __rmul__(self, a):
         return self.__mul__(a)
 
     def __sub__(self, a):
         return self.uvalue - a
+
     def __rsub__(self, a):
-#        return self.uvalue - a
+    #        return self.uvalue - a
         return a - self.uvalue
 
     def __div__(self, a):
         return self.uvalue / a
+
     def __rdiv__(self, a):
-#        return self.uvalue / a
+    #        return self.uvalue / a
         return a / self.uvalue
+
 
 class CorrectionIsotopicMeasurement(IsotopicMeasurement):
     pass
+
     def __init__(self, dbrecord=None, *args, **kw):
         if dbrecord:
             self._value = dbrecord.user_value if dbrecord.user_value is not None else 0
             self._error = dbrecord.user_error if dbrecord.user_value is not None else 0
 
         super(IsotopicMeasurement, self).__init__(*args, **kw)
-#        if self.dbrecord:
+
+    #        if self.dbrecord:
 #            self._value = self.dbrecord.user_value
 #            self._error = self.dbrecord.user_error
 
 class Background(CorrectionIsotopicMeasurement):
     pass
 
+
 class Blank(CorrectionIsotopicMeasurement):
     pass
+
 
 class Baseline(IsotopicMeasurement):
     _kind = 'baseline'
 
+
 class Sniff(BaseMeasurement):
     pass
+
 
 class Isotope(IsotopicMeasurement):
     _kind = 'signal'
@@ -225,8 +241,11 @@ class Isotope(IsotopicMeasurement):
 
     def _baseline_default(self):
         return Baseline()
+
     def _blank_default(self):
         return Blank()
+
     def _background_default(self):
         return Background()
-#============= EOF =============================================
+
+    #============= EOF =============================================

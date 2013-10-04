@@ -23,6 +23,7 @@ from datetime import datetime
 from uncertainties import ufloat
 
 #============= local library imports  ==========================
+from src.codetools.simple_timeit import timethis
 from src.processing.argon_calculations import calculate_arar_age
 from src.processing.arar_constants import ArArConstants
 from src.processing.isotope import Isotope
@@ -56,6 +57,8 @@ class ArArAge(Loggable):
 
     rad40 = AgeProperty()
     k39 = AgeProperty()
+    ca37 = AgeProperty()
+    cl36 = AgeProperty()
     rad40_percent = AgeProperty()
 
     kca = AgeProperty()
@@ -194,6 +197,7 @@ class ArArAge(Loggable):
 
     def _calculate_kca(self):
         result = self.arar_result
+        ret = ufloat(0, 0)
         if result:
             k = result['k39']
             ca = result['ca37']
@@ -208,12 +212,14 @@ class ArArAge(Loggable):
                 k_ca_pr = 1 / cak
 
             try:
-                return k / ca * k_ca_pr
+                ret = k / ca * k_ca_pr
             except ZeroDivisionError:
-                return ufloat(0, 0)
+                pass
+        return ret
 
     def _calculate_kcl(self):
         result = self.arar_result
+        ret = ufloat(0, 0)
         if result:
             k = result['k39']
             cl = result['cl36']
@@ -228,26 +234,20 @@ class ArArAge(Loggable):
                 k_cl_pr = 1 / clk
 
             try:
-                return k / cl * k_cl_pr
+                ret = k / cl * k_cl_pr
             except ZeroDivisionError:
-                return ufloat(0, 0)
+                pass
 
+        return ret
 
     def calculate_age(self, **kw):
         if not self.age:
+            #self.age=timethis(self._calculate_age, kwargs=kw, msg='calculate_age')
             self.age = self._calculate_age(**kw)
             self.age_dirty = True
 
-        #         if not self.age_dirty:
-
-        #             if self.age:
-        #                 return self.age
-        #         a = self._calculate_age(**kw)
-        #         self.age = a
         return self.age
 
-    #         self.age_dirty = True
-    #         return self.age
 
     def _calculate_age(self, include_j_error=None, include_decay_error=None, include_irradiation_error=None):
         if include_decay_error is None:
@@ -294,9 +294,9 @@ class ArArAge(Loggable):
             ai = result['age']
             ai = ai / self.arar_constants.age_scalar
             return ai
-        #            age = ai.nominal_value
-        #            err = ai.std_dev()
-        #            return age, err
+            #            age = ai.nominal_value
+            #            err = ai.std_dev()
+            #            return age, err
 
     def _make_signals(self, kind=None):
         isos = self.isotopes
@@ -355,20 +355,20 @@ class ArArAge(Loggable):
         except ZeroDivisionError:
             return ufloat(0, 0)
 
-        #    @cached_property
-        #    def _get_signals(self):
-        # #        if not self._signals:
-        # #        self._load_signals()
-        #
-        #        return self._signals
+            #    @cached_property
+            #    def _get_signals(self):
+            # #        if not self._signals:
+            # #        self._load_signals()
+            #
+            #        return self._signals
 
-        #     @cached_property
-        #     def _get_age(self):
-        #         print 'ggggg'
-        #         r = self._calculate_age()
-        #         return r
+            #     @cached_property
+            #     def _get_age(self):
+            #         print 'ggggg'
+            #         r = self._calculate_age()
+            #         return r
 
-        #     @cached_property
+            #     @cached_property
 
     def _get_age_error(self):
         return self.age.std_dev
@@ -381,26 +381,6 @@ class ArArAge(Loggable):
     #     def _get_timestamp(self):
     #         return datetime.now()
 
-    #     @cached_property
-    #     def _get_irradiation_level(self, ln):
-    #         if ln:
-    #             if ln.irradiation_position:
-    #                 l = ln.irradiation_position.level
-    #                 return l
-    #         try:
-    #             if self.irradiation_position:
-    #                 return self.irradiation_position.level
-    #         except AttributeError, e:
-    #             print 'level', e
-    #
-    # #     @cached_property
-    #     def _get_irradiation_position(self):
-    #         try:
-    #             return self.labnumber_record.irradiation_position
-    #         except AttributeError, e:
-    #             print 'pos', e
-
-    #     @cached_property
     def _get_irradiation_info(self, ln):
     #         '''
     #             return k4039, k3839,k3739, ca3937, ca3837, ca3637, cl3638, chronsegments, decay_time
@@ -408,197 +388,79 @@ class ArArAge(Loggable):
         prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), [], 1
         return prs
 
-    # #        analysis = self.dbrecord
-    #
-    # #        self.labnumber_record
-    # #         self._get_irradiation_level()
-    # #         irradiation_level = self.irradiation_level
-    #         irradiation_level = self._get_irradiation_level(ln)
-    #         if irradiation_level:
-    #             irradiation = irradiation_level.irradiation
-    #             if irradiation:
-    #                 pr = irradiation.production
-    #                 if pr:
-    #                     prs = []
-    #                     for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']:
-    #                         v, e = getattr(pr, pi), getattr(pr, '{}_err'.format(pi))
-    #                         prs.append((v if v is not None else 1, e if e is not None else 0))
-    #
-    # #                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
-    # #                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
-    #
-    #                 chron = irradiation.chronology
-    # #                def convert_datetime(x):
-    # #                    try:
-    # #                        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-    # #                    except ValueError:
-    # #                        pass
-    # #                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-    #
-    #                 convert_days = lambda x: x.total_seconds() / (60. * 60 * 24)
-    #                 if chron:
-    #                     doses = chron.get_doses()
-    # #                    chronblob = chron.chronology
-    # #
-    # #                    doses = chronblob.split('$')
-    # #                    doses = [di.strip().split('%') for di in doses]
-    # #
-    # #                    doses = [map(convert_datetime, d) for d in doses if d]
-    #
-    #                     analts = self.timestamp
-    #                     if isinstance(analts, float):
-    #                         analts = datetime.fromtimestamp(analts)
-    #
-    #                     segments = []
-    #                     for st, en in doses:
-    #                         if st is not None and en is not None:
-    #                             dur = en - st
-    #                             dt = analts - st
-    #                             segments.append((1, convert_days(dur), convert_days(dt)))
-    #
-    #                     decay_time = 0
-    #                     d_o = doses[0][0]
-    #                     if d_o is not None:
-    #                         decay_time = convert_days(analts - doses[0][0])
-    #
-    # #                    segments = [(1, convert_days(ti)) for ti in durs]
-    #                     prs.append(segments)
-    #                     prs.append(decay_time)
-    #
-    #         return prs
-
-    #    @cached_property
-    #    def _get_abundance_sensitivity(self):
-    #        return 3e-6
-
-    #     def _set_labnumber_record(self, v):
-    #         self._labnumber_record = v
-
-    #     @cached_property
-    #     def _get_labnumber_record(self):
-    #         return self._labnumber_record
-
-    #     @cached_property
     def _get_j(self):
         s = 1.e-4
         e = 1e-6
 
         return ufloat(s, e, 'j')
 
-    @cached_property
     def _get_rad40(self):
-        a = self._get_arar_result_attr('rad40')
-        if a is not None:
-            return a
-        else:
-            return ufloat(0, 1e-20)
+        return self._get_arar_result_attr('rad40')
 
-    @cached_property
     def _get_k39(self):
-        a = self._get_arar_result_attr('k39')
-        if a is not None:
-            return a
-        else:
-            return ufloat(0, 1e-20)
+        return self._get_arar_result_attr('k39')
 
-    @cached_property
+    def _get_ca37(self):
+        return self._get_arar_result_attr('ca37')
+
+    def _get_cl36(self):
+        return self._get_arar_result_attr('ca37')
+
     def _get_R(self):
         try:
             return self.rad40 / self.k39
         except (ZeroDivisionError, TypeError):
             return ufloat(0, 1e-20)
 
-    @cached_property
     def _get_rad40_percent(self):
         try:
             return self.rad40 / self.Ar40 * 100
         except (ZeroDivisionError, TypeError):
             return ufloat(0, 1e-20)
-        #        return self.arar_result['rad40'] / self.arar_result['tot40'] * 100
-
-        #     @cached_property
 
     def _get_Ar40(self):
         return self._get_arar_result_attr('40')
 
-    #        return self.arar_result['s40']
-
-    #     @cached_property
     def _get_Ar39(self):
         return self._get_arar_result_attr('39')
 
-    #        return self.arar_result['s39']
-
-    #     @cached_property
     def _get_Ar38(self):
         return self._get_arar_result_attr('38')
 
-    #        return self.arar_result['s38']
-
-    #     @cached_property
     def _get_Ar37(self):
         return self._get_arar_result_attr('37')
 
-    #        return self.arar_result['s37']
-
-    #     @cached_property
     def _get_Ar36(self):
         return self._get_arar_result_attr('36')
 
-    #        return self.arar_result['s36']
-
-    #     @cached_property
     def _get_Ar40_error(self):
         r = self._get_arar_result_attr('40')
         if r:
             return r.std_dev
-        #        return self.arar_result['s40'].std_dev()
-
-        #     @cached_property
 
     def _get_Ar39_error(self):
         r = self._get_arar_result_attr('39')
         if r:
             return r.std_dev
 
-        #        return self.arar_result['s39'].std_dev()
-
-        #     @cached_property
-
     def _get_Ar38_error(self):
         r = self._get_arar_result_attr('38')
         if r:
             return r.std_dev
-
-        #        return self._get_arar_result_attr('38').std_dev()
-        #        return self.arar_result['s38'].std_dev()
-
-        #     @cached_property
 
     def _get_Ar37_error(self):
         r = self._get_arar_result_attr('37')
         if r:
             return r.std_dev
 
-        #        return self._get_arar_result_attr('37').std_dev()
-        #        return self.arar_result['s37'].std_dev()
-
-        #     @cached_property
-
     def _get_Ar36_error(self):
         r = self._get_arar_result_attr('36')
         if r:
             return r.std_dev
 
-        #        return self._get_arar_result_attr('36').std_dev()
-        #        return self.arar_result['s36'].std_dev()
-
-        #     @cached_property
-
     def _get_moles_Ar40(self):
         return 0.001
 
-    #     @cached_property
     def _get_moles_K39(self):
         return self.k39 * self.sensitivity * self.sensitivity_multiplier
 
@@ -613,7 +475,7 @@ class ArArAge(Loggable):
         except ZeroDivisionError:
             return ufloat(0, 0)
 
-        #     @cached_property
+            #     @cached_property
 
     def _get_Ar37_39(self):
         try:
@@ -621,7 +483,7 @@ class ArArAge(Loggable):
         except ZeroDivisionError:
             return ufloat(0, 0)
 
-        #     @cached_property
+            #     @cached_property
 
     def _get_Ar36_39(self):
         try:
@@ -654,6 +516,8 @@ class ArArAge(Loggable):
             iso_attr = 'Ar{}'.format(key)
             if self.isotopes.has_key(iso_attr):
                 return self.isotopes[iso_attr].get_corrected_value()
+
+        return ufloat(0, 1e-20)
 
     @cached_property
     def _get_isotope_keys(self):

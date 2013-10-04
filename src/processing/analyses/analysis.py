@@ -23,6 +23,7 @@ from datetime import datetime
 from uncertainties import ufloat
 from collections import namedtuple
 #============= local library imports  ==========================
+from src.codetools.simple_timeit import timethis
 from src.processing.arar_age import ArArAge
 from src.processing.analyses.summary import AnalysisSummary
 from src.processing.analyses.db_summary import DBAnalysisSummary
@@ -59,8 +60,8 @@ class Analysis(ArArAge):
         '''
         return
 
-    def sync(self, obj):
-        self._sync(obj)
+    def sync(self, obj, **kw):
+        self._sync(obj, **kw)
         self.aliquot_step_str = make_aliquot_step(self.aliquot, self.step)
 
     def _sync(self, *args, **kw):
@@ -80,6 +81,8 @@ class DBAnalysis(Analysis):
     temp_status = Int
     record_id = Str
     uuid = Str
+
+    persisted_age = None
 
     sample = Str
     material = Str
@@ -233,7 +236,10 @@ class DBAnalysis(Analysis):
             self.duration = extraction.extract_duration
             self.position = self._get_position(extraction)
 
-    def _sync(self, meas_analysis):
+    def init(self, meas_analysis):
+        pass
+
+    def _sync(self, meas_analysis, unpack=False):
         '''
             copy values from meas_AnalysisTable
             and other associated tables
@@ -255,24 +261,37 @@ class DBAnalysis(Analysis):
             v = getattr(meas_analysis, attr)
             setattr(self, key, cast(v))
 
+        self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
+
         tag = meas_analysis.tag
         self.tag = tag or ''
         if self.tag:
-        #             print 'sdfasf', self.tag
             self.temp_status = 1
 
-        #         print 'ffff', id(self), self.record_id, self.temp_status
-        #         analts = analysis.analysis_timestamp
-        #         return time.mktime(analts.timetuple())
         # copy related table attrs
         self._sync_irradiation(meas_analysis)
-        self._sync_isotopes(meas_analysis)
+        self._sync_isotopes(meas_analysis, unpack)
         self._sync_detector_info(meas_analysis)
         self._sync_extraction(meas_analysis)
         self._sync_analysis_info(meas_analysis)
 
-        self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
+        self.analysis_type = self._get_analysis_type(meas_analysis)
 
+    def sync_arar(self, meas_analysis):
+        hist = meas_analysis.selected_histories.selected_arar
+        if hist:
+            result = hist.arar_result
+            self.persisted_age = ufloat(result.age, result.age_err)
+            self.age = self.persisted_age
+
+            attrs = ['k39', 'ca37', 'cl36',
+                     'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
+            d = dict()
+            f = lambda k: getattr(result, k)
+            for ai in attrs:
+                vs = map(f, (ai, '{}_err'.format(ai)))
+                d[ai] = ufloat(*vs)
+            self.arar_result.update(d)
 
     def _sync_analysis_info(self, meas_analysis):
         self.sample = self._get_sample(meas_analysis)
@@ -281,7 +300,6 @@ class DBAnalysis(Analysis):
         self.rundate = self._get_rundate(meas_analysis)
         self.runtime = self._get_runtime(meas_analysis)
         self.mass_spectrometer = self._get_mass_spectrometer(meas_analysis)
-        self.analysis_type = self._get_analysis_type(meas_analysis)
 
     def _sync_detector_info(self, meas_analysis):
         self.discrimination = self._get_discrimination(meas_analysis)
@@ -301,17 +319,13 @@ class DBAnalysis(Analysis):
         self.j = self._get_j(ln)
         self.production_ratios = self._get_production_ratios(ln)
 
-    def _sync_isotopes(self, meas_analysis):
-        self.isotopes = self._get_isotopes(meas_analysis, unpack=True)
+    def _sync_isotopes(self, meas_analysis, unpack):
+
+    #self.isotopes=timethis(self._get_isotopes, args=(meas_analysis,),
+    #kwargs={'unpack':True},msg='sync-isotopes')
+        self.isotopes = self._get_isotopes(meas_analysis,
+                                           unpack=unpack)
         self.isotope_fits = self._get_isotope_fits()
-
-    #         self._load_blanks(meas_analysis)
-    #         self._load_sniffs(meas_analysis)
-
-    #         self._load_peak_center(meas_analysis)
-
-    #     def _load_signals(self, meas_analysis, unpack=True):
-
 
     def _get_baselines(self, isotopes, meas_analysis, unpack):
         for dbiso in meas_analysis.isotopes:
@@ -325,7 +339,10 @@ class DBAnalysis(Analysis):
 
             kw = dict(
                 dbrecord=dbiso,
-                name=name, detector=det)
+                name=name,
+                detector=det,
+                unpack=unpack)
+
             if dbiso.kind == 'baseline':
                 result = None
                 if dbiso.results:
@@ -345,45 +362,19 @@ class DBAnalysis(Analysis):
                 r = Sniff(**kw)
                 iso.sniff = r
 
-                #
-                #     def _get_blanks(self, isotopes, meas_analysis):
-                # #         blanks = self._get_blanks()
-                #
-                #
-                #         keys = isotopes.keys()
-                #         if blanks:
-                #             for bi in blanks:
-                #                 for ba in bi.blanks:
-                #                     isok = ba.isotope
-                #                     if isok in keys and isotopes.has_key(isok):
-                #                         r = Blank(dbrecord=ba, name=isok)
-                #                         isotopes[isok].blank = r
-                #                         keys.remove(isok)
-                #                         if not keys:
-                #                             break
-                #
-                #                 if not keys:
-                #                     break
-
     def _get_isotope_fits(self):
         keys = self.isotope_keys
         fs = [self.isotopes[ki].fit
               for ki in keys]
         return fs
 
-    # #         fits = [iso.fit for iso in self.isotopes.itervalues()]
-    # #         z = zip(keys, fits)
-    # #         zs = sort_isotopes(z)
-    # #         _ks, fs = zip(*zs)
-    #         return fs
     def _get_isotopes(self, meas_analysis, unpack):
         isotopes = dict()
         self._get_signals(isotopes, meas_analysis, unpack)
         self._get_baselines(isotopes, meas_analysis, unpack)
-        #         self._get_blanks(isotopes, meas_analysis)
+        self._get_blanks(isotopes, meas_analysis)
 
         return isotopes
-
 
     def get_db_fit(self, meas_analysis, name, kind):
         try:
@@ -395,22 +386,37 @@ class DBAnalysis(Analysis):
                             fi.isotope.molecular_weight.name == name
                         ), None)
 
-
         except AttributeError:
             pass
+
+    def _get_blanks(self, isodict, meas_analysis):
+        history = meas_analysis.selected_histories.selected_blanks
+        keys = isodict.keys()
+        if history:
+            for ba in history.blanks:
+                isok = ba.isotope
+                if isok in keys:
+                    blank = isodict[isok].blank
+                    blank.set_uvalue((ba.user_value,
+                                      ba.user_error))
+                    blank.fit = ba.fit
+                    keys.remove(isok)
+                    if not keys:
+                        break
+
 
     def _get_signals(self, isodict, meas_analysis, unpack):
         for iso in meas_analysis.isotopes:
             if not iso.kind == 'signal' or not iso.molecular_weight:
                 continue
 
-            result = None
-            if iso.results:
-                result = iso.results[-1]
-
             name = iso.molecular_weight.name
             if name not in isodict:
                 det = iso.detector.name
+                result = None
+
+                if iso.results:
+                    result = iso.results[-1]
 
                 r = Isotope(
                     dbrecord=iso,
@@ -418,12 +424,11 @@ class DBAnalysis(Analysis):
 
                     name=name,
                     detector=det,
-                    #                             refit=refit
                     unpack=unpack
                 )
 
-                fit = None
                 fit = self.get_db_fit(meas_analysis, name, 'signal')
+
                 if fit is None:
                     fit = Fit(fit='linear', filter_outliers=True,
                               filter_outlier_iterations=1,
@@ -431,11 +436,6 @@ class DBAnalysis(Analysis):
                 r.set_fit(fit)
                 isodict[name] = r
 
-
-                #     def _load_blanks(self, meas_analysis):
-                #         pass
-                #     def _load_sniffs(self, meas_analysis):
-                #         pass
 
     def _load_peak_center(self, meas_analysis):
         pass

@@ -31,8 +31,7 @@ def iterdir(d):
 #
 
 def load_isotopedb_defaults(db):
-#     from src.database.core.database_adapter import session
-    with db.session_ctx():
+    with db.session_ctx() as sess:
         for name, mass in MOLECULAR_WEIGHTS.iteritems():
             db.add_molecular_weight(name, mass)
 
@@ -46,12 +45,19 @@ def load_isotopedb_defaults(db):
         for mi in ['obama', 'jan', 'nmgrl map']:
             db.add_mass_spectrometer(mi)
 
+        project = db.add_project('references')
+        #print project
         for i, di in enumerate(['blank_air',
                    'blank_cocktail',
                    'blank_unknown',
                    'background', 'air', 'cocktail']):
             samp = db.add_sample(di)
+            #print samp.id, samp, project.id
+            samp.project = project
+            #samp.project_id=project.id
+            #print samp.project_id
             db.add_labnumber(i + 1, sample=samp)
+        sess.commit()
 
         for hi, kind, make in [('Fusions CO2', '10.6um co2', 'photon machines'),
                               ('Fusions Diode', '810nm diode', 'photon machines'),

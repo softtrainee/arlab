@@ -25,7 +25,8 @@ from src.paths import paths
 
 class NewBrowserEditorAction(TaskAction):
     method = 'new_editor'
-    image = ImageResource(name='add.png',
+    name = 'New Tab'
+    image = ImageResource(name='page_white_add.png',
                           search_path=paths.icon_search_path)
 
 #============= EOF =============================================

@@ -74,12 +74,15 @@ class SessionCTX(object):
             if not self._parent._sess_stack:
                 self._parent.sess = None
 
+        #print 'exit',self._commit, self._close_at_exit, self._parent._sess_stack
         self._sess.flush()
         if self._close_at_exit:
             try:
                 if self._commit:
+                    #print 'scommint'
                     self._sess.commit()
             except Exception, e:
+                print 'exception commiting session: {}'.format(e)
                 if self._parent:
                     self._parent.debug('$%$%$%$%$%$%$%$ commiting changes error:\n{}'.format(e))
                 self._sess.rollback()
@@ -147,9 +150,6 @@ class DatabaseAdapter(Loggable):
 
 
     def connect(self, test=True, force=False, warn=True):
-        '''
-        '''
-
         if force:
             self.debug('forcing database connection')
 #             self.reset()
@@ -325,7 +325,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
                     connected = True
 
             except Exception, e:
-                print e
+                print 'exception', e
 
                 self.warning('connection failed to {}'.format(self.url))
                 connected = False
@@ -362,7 +362,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             sess.add(obj)
             try:
                 sess.flush()
-            except:
+            except SQLAlchemyError:
                 sess.rollback()
 
 

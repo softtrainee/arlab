@@ -306,7 +306,11 @@ class Processor(IsotopeDatabaseManager):
         except NoResultFound:
             pass
 
-    def find_associated_analyses(self, analysis, delta=2, **kw):
+    def find_associated_analyses(self, analysis, delta=12, atype=None, **kw):
+        """
+            find atype analyses +/- delta hours (12 hours default)
+            if atype is None use "blank_{analysis.analysis_type}"
+        """
         if not isinstance(analysis, Analysis):
             analysis = self.make_analyses([analysis])[0]
             #             analysis.load_isotopes()
@@ -315,7 +319,8 @@ class Processor(IsotopeDatabaseManager):
         post = analysis.timestamp
 
         #         delta = -2
-        atype = 'blank_{}'.format(analysis.analysis_type)
+        if atype is None:
+            atype = 'blank_{}'.format(analysis.analysis_type)
         br = self._find_analyses(ms, post, -delta, atype, **kw)
 
         #         delta = 2
@@ -432,13 +437,16 @@ class Processor(IsotopeDatabaseManager):
                 )
 
     def apply_correction(self, history, analysis, fit_obj, predictors, kind):
-        meas_analysis = self.db.get_analysis_uuid(analysis.uuid)
+        #meas_analysis = self.db.get_analysis_uuid(analysis.uuid)
 
         func = getattr(self, '_apply_{}_correction'.format(kind))
-        func(history, meas_analysis, fit_obj, predictors)
+        func(history, analysis, fit_obj, predictors)
 
     def _apply_blanks_correction(self, history, analysis, fit_obj, predictors):
         ss = analysis.isotopes[fit_obj.name]
+
+        #ss=next((iso for iso in analysis.isotopes
+        #        if iso.kind=='signal' and iso.molecular_weight.name==fit_obj.name), None)
 
         '''
             the blanks_editor may have set a temporary blank

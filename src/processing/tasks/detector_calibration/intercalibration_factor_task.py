@@ -15,34 +15,34 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
+from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, HSplitter, Tabbed
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
 
+
 class IntercalibrationFactorTask(InterpolationTask):
     id = 'pychron.analysis_edit.ic_factor'
     ic_factor_editor_count = 1
-
+    name = 'Detector Intercalibration'
+    #
     def _default_layout_default(self):
         return TaskLayout(
-                          id='pychron.analysis_edit.ic_factor',
-                          left=Splitter(
-                                     PaneItem('pychron.analysis_edit.unknowns'),
-                                     PaneItem('pychron.analysis_edit.references'),
-                                     PaneItem('pychron.analysis_edit.controls'),
-                                     orientation='vertical'
-                                     ),
-                          right=Splitter(
-                                         PaneItem('pychron.search.query'),
-                                         orientation='vertical'
-                                         )
-                          )
+            id='pychron.analysis_edit.ic_factor',
+            left=HSplitter(
+                PaneItem('pychron.browser'),
+                Tabbed(PaneItem('pychron.analysis_edit.unknowns'),
+                       PaneItem('pychron.analysis_edit.references')
+                )
+            )
+        )
+
     def new_ic_factor(self):
         from src.processing.tasks.detector_calibration.intercalibration_factor_editor import IntercalibrationFactorEditor
+
         editor = IntercalibrationFactorEditor(name='ICFactor {:03n}'.format(self.ic_factor_editor_count),
                                               processor=self.manager
-                                              )
+        )
         self._open_editor(editor)
         self.ic_factor_editor_count += 1
 

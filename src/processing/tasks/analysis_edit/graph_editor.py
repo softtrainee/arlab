@@ -17,6 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Any, List, on_trait_change, Instance, Property, Event, File
 from traitsui.api import View, UItem, InstanceEditor
+from src.codetools.simple_timeit import timethis
 from src.envisage.tasks.base_editor import BaseTraitsEditor
 #============= standard library imports ========================
 from numpy import asarray
@@ -57,29 +58,21 @@ class GraphEditor(BaseTraitsEditor):
         return xs
 
     @on_trait_change('unknowns[]')
-    def _update_unknowns(self):
+    def _update_unknowns(self, obj, name, old, new):
 
-        '''
-            TODO: find reference analyses using the current _unknowns
-        '''
-        self.unknowns = self._gather_unknowns(True)
+        self._gather_unknowns(True)
 
-        #         self._make_unknowns()
         self.rebuild_graph()
-
-        keys = set([ki for ui in self.unknowns
-                    for ki in ui.isotope_keys])
-        keys = sort_isotopes(keys)
 
         if self.unknowns:
             refiso = self.unknowns[0]
-
-            self.tool.load_fits(refiso.isotope_keys,
-                                refiso.isotope_fits
-            )
-
+            self.load_fits(refiso)
             self._set_name()
             self._update_unknowns_hook()
+
+    def load_fits(self, refiso):
+        self.tool.load_fits(refiso.isotope_keys,
+                            refiso.isotope_fits)
 
     def _set_name(self):
         na = set([ni.sample for ni in self.unknowns])
@@ -189,8 +182,11 @@ class GraphEditor(BaseTraitsEditor):
             bb = [next((ai for ai in self.analysis_cache if ai.uuid == i)) for i in nids]
             aa = list(aa)
             if aa:
-                unks = self.processor.make_analyses(list(aa),
-                                                    exclude=exclude)
+                unks = timethis(self.processor.make_analyses, args=(list(aa),),
+                                kwargs={'exclude': exclude},
+                                msg='MAKE ANALYSES TOTAL')
+                #unks = self.processor.make_analyses(list(aa),
+                #                                    exclude=exclude)
                 ans = unks
                 if bb:
                     ans.extend(bb)
@@ -201,7 +197,8 @@ class GraphEditor(BaseTraitsEditor):
                 # compress groups
                 self._compress_unknowns(ans)
 
-            self.unknowns = ans
+            self.trait_set(unknowns=ans, trait_change_notify=False)
+            #self.unknowns = ans
         else:
             if exclude:
                 ans = self.processor.filter_analysis_tag(ans, exclude)

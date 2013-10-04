@@ -19,6 +19,7 @@ import string
 from chaco.plot_component import PlotComponent
 from chaco.tools.data_label_tool import DataLabelTool
 from chaco.tooltip import ToolTip
+from enable.colors import transparent_color
 from enable.tools.drag_tool import DragTool
 from traits.api import HasTraits, Str, List
 from traitsui.api import View, Item
@@ -32,32 +33,9 @@ KEY_MAP = {'Enter': '\n', ' ': ' '}
 
 class AnnotationTool(DataLabelTool):
     active = True
-    _temp_border = None
     components = List
 
-    def clear_selection(self):
-        if self.component:
-            if self._temp_border:
-                self.component.trait_set(**self._temp_border)
-                self._temp_border = None
-
-    def select_component(self, event):
-        x, y = event.x, event.y
-        if self.is_draggable(x, y):
-            self._temp_border = self.component.trait_get(
-                'border_color',
-                'border_width')
-
-            self.component.trait_set(
-                #border_visible=True,
-                border_color='red',
-                border_width=2)
-            self.active = True
-
-        self.component.request_redraw()
-
     def normal_key_pressed(self, event):
-
         if self.active:
             c = event.character
             label = self.component
@@ -65,10 +43,15 @@ class AnnotationTool(DataLabelTool):
                 label.x, label.y = self.current_mouse_pos
 
             if c == 'Backspace':
-                if self.component:
+                if self.component and self.component.selected:
                     pcomp = self.component.component
                     pcomp.overlays.remove(self.component)
-                    self.components.remove(self.component)
+                    if len(self.components) > 1:
+                        self.components.remove(self.component)
+                        self.component = self.components[0]
+                    else:
+                        self.component.text = ''
+                    pcomp.request_redraw()
                 else:
                     label.text = label.text[:-1]
 
@@ -81,12 +64,21 @@ class AnnotationTool(DataLabelTool):
 
     def normal_left_down(self, event):
         x, y = event.x, event.y
-        self.active = not self.component.visible
 
-        self.clear_selection()
-        self.select_component(event)
-        #if self.is_draggable(x, y):
-        #    self.active = True
+        if not self.component.text:
+            self.active = True
+        elif not self.is_draggable(x, y):
+            self.active = False
+
+    def normal_left_dclick(self, event):
+        x, y = event.x, event.y
+        if not self.is_draggable(x, y):
+            self.component.selected = False
+        else:
+            self.component.selected = True
+            self.active = True
+
+        self.component.request_redraw()
 
     def is_draggable(self, x, y):
         """ Returns whether the (x,y) position is in a region that is OK to
@@ -164,25 +156,45 @@ def rounded_rect(gc, x, y, width, height, corner_radius):
 class AnnotationOverlay(ToolTip):
     text = Str('')
     visible = False
+    selected = False
 
     def _text_changed(self):
         self.visible = bool(self.text)
         self.lines = self.text.split('\n')
         self.component.invalidate_and_redraw()
 
-    def _draw_border(self, gc, view_bounds=None, mode="default",
-                     force_draw=False):
+    def overlay(self, component, gc, view_bounds=None, mode='normal'):
+        super(AnnotationOverlay, self).overlay(component, gc, view_bounds=None, mode='normal')
 
-        if not self.border_visible:
-            return
+        if self.selected:
+            dash = [10, 0]
+            inset = 0
+            color = (1, 0, 0)
+            bgcolor = transparent_color
+            marker_size = 0
+            x, y = self.x, self.y
+            w, h = self.width, self.height
 
-        if self.overlay_border or force_draw:
-            border_width = self.border_width
-            with gc:
-                gc.set_line_width(border_width)
-                gc.set_line_dash(self.border_dash_)
-                gc.set_stroke_color(self.border_color_)
-                rounded_rect(gc, self.x, self.y, self.width, self.height, 4)
+            self.draw_select_box(gc, (x, y), (w, h),
+                                 2,
+                                 dash, inset, color, bgcolor,
+                                 marker_size
+            )
+
+            #def _draw_selection(self, gc, view_bounds=None, mode="normal"):
+            #    (self, gc, view_bounds=None, mode="default",
+            #                 force_draw=False):
+            #
+            #    if not self.border_visible:
+            #        return
+            #
+            #    if self.overlay_border or force_draw:
+            #        border_width = self.border_width
+            #        with gc:
+            #            gc.set_line_width(border_width)
+            #            gc.set_line_dash(self.border_dash_)
+            #            gc.set_stroke_color(self.border_color_)
+            #            rounded_rect(gc, self.x, self.y, self.width, self.height, 4)
 
 
 #============= EOF =============================================

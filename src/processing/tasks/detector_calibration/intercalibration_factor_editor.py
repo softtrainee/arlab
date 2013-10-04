@@ -26,21 +26,25 @@ from src.helpers.isotope_utils import sort_isotopes
 class IntercalibrationFactorEditor(InterpolationEditor):
     standard = 1.0
 
-    @on_trait_change('unknowns[]')
-    def _update_unknowns(self):
+    def _update_references_hook(self):
+        pass
 
-        '''
-            TODO: find reference analyses using the current _unknowns
-        '''
-        self._make_unknowns()
-        self.rebuild_graph()
-
-    def _make_references(self):
-        keys = set([ki  for ui in self._references
-                        for ki in ui.isotope_keys])
-        keys = sort_isotopes(keys)
+    def load_fits(self, refiso):
+        keys = refiso.isotope_keys
+        #def _make_references(self):
+        #    keys = set([ki  for ui in self._references
+        #                    for ki in ui.isotope_keys])
+        #    keys = sort_isotopes(keys)
+        ks = []
+        fs = []
         if 'Ar40' in keys and 'Ar36' in keys:
-            self.tool.load_fits(['Ar40/Ar36'])
+            ks.append('Ar40/Ar36')
+            fs.append('linear')
+            if 'Ar39' in keys:
+                ks.append('Ar40/Ar39')
+                fs.append('linear')
+
+        self.tool.load_fits(ks, fs)
 
     def _set_interpolated_values(self, iso, reg, xs):
         p_uys = reg.predict(xs)
@@ -53,7 +57,7 @@ class IntercalibrationFactorEditor(InterpolationEditor):
         dys = array([ri.isotopes[d].uvalue for ri in self._references])
         rys = nys / (dys * self.standard)
 
-
         rys = [ri.nominal_value for ri in rys]
         return rys, None
-#============= EOF =============================================
+
+    #============= EOF =============================================

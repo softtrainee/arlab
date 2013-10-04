@@ -84,21 +84,32 @@ class IsotopeEvolutionEditor(GraphEditor):
 
             # get database fit
             if fi.name.endswith('bs'):
-                dbfit = unk.get_db_fit(fi.name[:-2], meas_analysis, 'baseline')
+                n = fi.name[:-2]
+                dbfit = unk.get_db_fit(n, meas_analysis, 'baseline')
+                kind = 'baseline'
+                v = unk.isotopes[n].baseline
             else:
                 dbfit = unk.get_db_fit(fi.name, meas_analysis, 'signal')
+                kind = 'signal'
+                v = unk.isotopes[n]
 
             if dbfit != fi.fit:
                 if fit_hist is None:
                     fit_hist = db.add_fit_history(meas_analysis, user=db.save_username)
 
                 dbiso = next((iso for iso in meas_analysis.isotopes
-                              if iso.molecular_weight.name == fi.name), None)
+                              if iso.molecular_weight.name == fi.name and
+                                 iso.kind == kind), None)
 
                 db.add_fit(fit_hist, dbiso, fit=fi.fit)
+
+                #update isotoperesults
+                v, e = float(v.nominal_value), float(v.std_dev)
+                db.add_isotope_result(dbiso, fit_hist,
+                                      signal_=v, signal_err=e)
+                #update arar table
+
                 self.debug('adding fit {} - {}'.format(fi.name, fi.fit))
-                #     def _rebuild_graph(self):
-                #         timethis(self._rebuild_graph2, msg='total')
 
     def _rebuild_graph(self):
         unk = self.unknowns

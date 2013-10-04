@@ -31,7 +31,7 @@ class Fit(HasTraits):
     use = Bool
     show = Bool
     fit_types = Property
-#     fit = Enum(FIT_TYPES)
+    #     fit = Enum(FIT_TYPES)
     fit = Str
     valid = Property(depends_on=('fit, use, show'))
 
@@ -49,20 +49,20 @@ class Fit(HasTraits):
 
     def traits_view(self):
         v = View(HGroup(
-                        UItem('name', style='readonly'),
-                        UItem('show'),
-                        UItem('fit',
-                              editor=EnumEditor(name='fit_types'),
-                              enabled_when='show',
-                              width=-50,
-                             ),
-                        UItem('use'),
-                        )
-                 )
+            UItem('name', style='readonly'),
+            UItem('show'),
+            UItem('fit',
+                  editor=EnumEditor(name='fit_types'),
+                  enabled_when='show',
+                  width=-50,
+            ),
+            UItem('use'),
+        )
+        )
         return v
 
-class FitSelector(HasTraits):
 
+class FitSelector(HasTraits):
     fits = List(Fit)
     update_needed = Event
     suppress_refresh_unknowns = Bool
@@ -80,37 +80,38 @@ class FitSelector(HasTraits):
                 CheckboxColumn(name='show'),
                 ObjectColumn(name='fit',
                              editor=EnumEditor(name='fit_types',
-                                               ),
                              ),
+                ),
                 CheckboxColumn(name='use')
-                ]
+        ]
 
-#         def factory(editor=None):
-#             return myTableView(editor=editor)
+        #         def factory(editor=None):
+        #             return myTableView(editor=editor)
 
         editor = myTableEditor(columns=cols,
-                             sortable=False,
-                             on_command_key=self._update_command_key
-#                              table_view_factory=factory
-                             )
+                               sortable=False,
+                               on_command_key=self._update_command_key
+                               #                              table_view_factory=factory
+        )
 
         v = View(UItem('fits',
                        style='custom',
                        editor=editor
-                       ))
+        ))
         return v
 
     @on_trait_change('fits:[show, fit]')
     def _fit_changed(self, obj, name, old, new):
-#         self.suppress_refresh_unknowns = True
+    #         self.suppress_refresh_unknowns = True
         if self.command_key:
             for fi in self.fits:
                 fi.trait_set(trait_change_notify=False,
-                               **{name:new}
-                               )
+                             **{name: new}
+                )
 
         self.update_needed = True
-#         self.suppress_refresh_unknowns = False
+
+    #         self.suppress_refresh_unknowns = False
 
     def load_fits(self, keys, fits):
 
@@ -119,14 +120,16 @@ class FitSelector(HasTraits):
             pf = next((fi for fi in self.fits if fi.name == ki), None)
             if pf is None:
                 pf = self.fit_klass(name=ki, fit=fi)
-
+            else:
+                pf.fit = fi
             nfs.append(pf)
 
         self.fits = nfs
-#         self.fits = [
-#                      self.fit_klass(name=ki, fit=fi)
-#                      for ki, fi in zip(ks, fs)
-#                     ]
+
+    #         self.fits = [
+    #                      self.fit_klass(name=ki, fit=fi)
+    #                      for ki, fi in zip(ks, fs)
+    #                     ]
 
     def load_baseline_fits(self, keys):
         fits = self.fits
@@ -134,9 +137,9 @@ class FitSelector(HasTraits):
             fits = []
 
         fs = [
-              self.fit_klass(name='{}bs'.format(ki), fit='average_sem')
-                    for ki in keys
-             ]
+            self.fit_klass(name='{}bs'.format(ki), fit='average_sem')
+            for ki in keys
+        ]
 
         fits.extend(fs)
         self.fits = fits
@@ -157,30 +160,30 @@ class FitSelector(HasTraits):
             fits = []
 
         fs = [
-              self.fit_klass(name='{}E'.format(ki), fit='average_sem')
-                    for ki in keys
-             ]
+            self.fit_klass(name='{}E'.format(ki), fit='average_sem')
+            for ki in keys
+        ]
 
         fits.extend(fs)
         self.fits = fits
-
-
 
 
 class InterpolationFit(Fit):
     def _get_fit_types(self):
         return FIT_TYPES_INTERPOLATE
 
+
 class InterpolationFitSelector(FitSelector):
     fit_klass = InterpolationFit
+
 
 class IsoEvoFitSelector(FitSelector):
     def load_fits(self, keys, fits):
         bs = [
             '{}bs'.format(ki) for ki in keys
-             ]
+        ]
         bfs = ['average_SEM' for fi in fits]
-#         for ki in keys:
+        #         for ki in keys:
         super(IsoEvoFitSelector, self).load_fits(keys + bs, fits + bfs)
 
 #============= EOF =============================================

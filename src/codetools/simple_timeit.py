@@ -20,6 +20,7 @@
 #============= local library imports  ==========================
 import time
 
+
 def timethis(func, msg=None, log=None, args=None, kwargs=None, decorate='$'):
     if args is None:
         args = tuple()
@@ -38,7 +39,7 @@ def timethis(func, msg=None, log=None, args=None, kwargs=None, decorate='$'):
     if log:
         log(s)
     else:
-        print s
+        print 'timethis', s
 
     return r
 
@@ -54,8 +55,11 @@ def simple_timer(msg=None):
         def dec(*args, **kw):
             with TimerCTX(msg, func.func_name):
                 return func(*args, **kw)
+
         return dec
+
     return _timer
+
 
 class TimerCTX(object):
     def __init__(self, msg, funcname):

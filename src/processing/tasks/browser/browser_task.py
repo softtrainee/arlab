@@ -110,6 +110,11 @@ class BaseBrowserTask(BaseEditorTask):
             self._load_mass_spectrometers()
             self._load_analysis_types()
             self._load_extraction_devices()
+        self._set_db()
+
+    def _set_db(self):
+        self.analysis_table.db = self.manager.db
+        self.danalysis_table.db = self.manager.db
 
     def _load_mass_spectrometers(self):
         db = self.manager.db
@@ -165,7 +170,7 @@ class BaseBrowserTask(BaseEditorTask):
                 test = lambda x: True
                 if self.filter_non_run_samples:
                     def test(sa):
-                        return all([len(li.analyses) for li in sa.labnumbers])
+                        return any([len(li.analyses) for li in sa.labnumbers])
 
                 ss = [SampleRecordView(s) for s in ss if test(s)]
                 sams.extend(ss)
@@ -173,8 +178,7 @@ class BaseBrowserTask(BaseEditorTask):
             self.samples = sams
             self.osamples = sams
 
-
-    def _get_sample_analyses(self, srv):
+    def _get_sample_analyses(self, srv, limit=50):
         db = self.manager.db
         with db.session_ctx():
             for project in self.selected_project:
@@ -185,8 +189,8 @@ class BaseBrowserTask(BaseEditorTask):
             else:
                 return []
 
-            return [self._record_view_factory(a) for ln in sample.labnumbers
-                    for a in ln.analyses]
+            ans = db.get_sample_analyses(sample, limit=limit)
+            return [self._record_view_factory(a) for a in ans]
 
     def _record_view_factory(self, ai):
         iso = IsotopeRecordView()
@@ -204,7 +208,7 @@ class BaseBrowserTask(BaseEditorTask):
             ans = self.analysis_table.set_analyses(ans)
 
             if ans and self.auto_select_analysis:
-                self.selected_analysis = ans[0]
+                self.analysis_table.selected_analysis = ans[0]
 
     def _filter_func(self, new, attr=None, comp=None):
         comp_keys = {'=': '__eq__',
@@ -261,7 +265,7 @@ class BaseBrowserTask(BaseEditorTask):
     def _clear_selection_button_fired(self):
         self.selected_project = []
         self.selected_sample = []
-        #self.selected_analysis = []
+        self.analysis_table.selected_analysis = []
 
     def _ok_query(self):
         ms = self.mass_spectrometer not in (DEFAULT_SPEC, 'None')
@@ -313,6 +317,9 @@ class BaseBrowserTask(BaseEditorTask):
 
     @on_trait_change('analysis_table:selected_analysis')
     def _selected_analysis_changed(self, new):
+        self._set_selected_analysis(new)
+
+    def _set_selected_analysis(self, new):
         if not new:
             return
 
@@ -354,6 +361,13 @@ class BaseBrowserTask(BaseEditorTask):
             ans = [self._record_view_factory(ai) for ai in ans]
             self.danalysis_table.set_analyses(ans)
 
+    def _dclicked_sample_changed(self):
+        ans = self._get_sample_analyses(self.selected_sample[-1])
+        #print self.active_editor
+        if self.active_editor:
+            self.active_editor.unknowns = ans
+            self.unknowns_pane.items = self.active_editor.unknowns
+
 
 class BrowserTask(BaseBrowserTask):
     name = 'Analysis Browser'
@@ -371,8 +385,7 @@ class BrowserTask(BaseBrowserTask):
     def _default_layout_default(self):
         return TaskLayout(left=PaneItem('pychron.browser'))
 
-    def _selected_analysis_changed(self):
-        an = self.selected_analysis
+    def _set_selected_analysis(self, an):
         if an and isinstance(self.active_editor, RecallEditor):
         #             l, a, s = strip_runid(s)
         #             an = self.manager.db.get_unique_analysis(l, a, s)
@@ -383,7 +396,16 @@ class BrowserTask(BaseBrowserTask):
     def create_dock_panes(self):
         return [self._create_browser_pane(multi_select=False)]
 
-#===============================================================================
+    def _analysis_table_default(self):
+        print 'asdfsdf'
+        at = AnalysisTable(db=self.manager.db)
+        return at
+
+    def _danalysis_table_default(self):
+        at = AnalysisTable(db=self.manager.db)
+        return at
+
+    #===============================================================================
 # handlers
 #===============================================================================
 
