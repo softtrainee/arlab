@@ -527,7 +527,7 @@ class IsotopeEvolutionPane(TraitsDockPane):
                       style='custom',
                       height=0.68),
                 VGroup(
-                    UItem('object.plot_panel.ncounts', label='Counts',
+                    Item('object.plot_panel.ncounts', label='Counts',
                           tooltip='Set the number of measurement points'),
                     UItem('object.plot_panel.analysis_view',
                           style='custom',

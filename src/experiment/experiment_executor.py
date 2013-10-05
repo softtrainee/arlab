@@ -870,7 +870,17 @@ If "No" select from database
         an = next((a for a in aruns if a.analysis_type in types), None)
 
         if an:
-            if aruns.index(an) == 0:
+            anidx=aruns.index(an)
+            #find first blank_
+            #if idx > than an idx need a blank
+            nopreceeding=True
+            ban=next((a for a in aruns if a.analysis_type=='blank_{}'.format(an.analysis_type)), None)
+
+            if ban:
+                print aruns.index(ban), anidx, ban.runid
+                nopreceeding=aruns.index(ban)>anidx
+            
+            if anidx == 0 or nopreceeding:
                 pdbr = self._get_blank(an.analysis_type, exp.mass_spectrometer,
                                        exp.extract_device,
                                        last=True)
