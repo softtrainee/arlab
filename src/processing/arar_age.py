@@ -172,7 +172,16 @@ class ArArAge(Loggable):
     def clear_blanks(self):
         for k in self.isotopes:
             self.set_blank(k, (0, 0))
-
+            
+    def set_isotope_detector(self, det):
+        name,det=det.isotope, det.name
+        if name in self.isotopes:
+            iso=self.isotopes[name]
+        else:
+            iso=Isotope(name=name)
+            self.isotopes[name]=iso
+        iso.detector=det
+        
     def get_isotope(self, name=None, detector=None):
         if name is None and detector is None:
             raise NotImplementedError('name or detector required')
@@ -563,5 +572,13 @@ class ArArAge(Loggable):
         self.j = self._get_j(ln)
 
         self.production_ratios = self._get_production_ratios(ln)
-
+    
+    def __getattr__(self, attr):
+        if '/' in attr:
+            #treat as ratio
+            n, d = attr.split('/')
+            try:
+                return getattr(self, n) / getattr(self, d)
+            except ZeroDivisionError:
+                return ufloat(0,1e-20)
 #============= EOF =============================================

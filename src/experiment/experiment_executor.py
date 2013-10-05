@@ -942,7 +942,7 @@ If "No" select from database
                     dbr = sel.selected
 
             if dbr:
-                print dbr.aliquot
+#                print dbr.aliquot
                 dbr = self.make_analyses([dbr])[0]
                 #                dbr = sel._record_factory(dbr)
                 return dbr
