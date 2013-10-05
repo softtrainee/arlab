@@ -140,7 +140,6 @@ class IsotopicMeasurement(BaseMeasurement):
 
     # @cached_property
     def _get_regressor(self):
-        print 'getting regressor'
         try:
             if 'average' in self.fit.lower():
                 reg = self._mean_regressor_factory()

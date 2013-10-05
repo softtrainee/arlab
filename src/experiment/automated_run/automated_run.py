@@ -246,6 +246,7 @@ class AutomatedRun(Loggable):
                 blanks = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
 
             for iso, v in blanks.iteritems():
+                print iso, v
                 self.arar_age.set_blank(iso, v)
 
         for d in self._active_detectors:
@@ -1106,10 +1107,7 @@ anaylsis_type={}
                     if i < n:
                         plots[i].y_axis.title = '{} {}'.format(det.name, det.isotope)
 
-                    iso = self.arar_age.get_isotope(detector=det.name)
-                    iso.detector = det.name
-                    iso.name = det.isotope
-                    self.arar_age.isotopes[iso.name] = iso
+                    self.arar_age.set_isotope_detector(det)
 
                 #remove non active isotopes
                 
@@ -1117,6 +1115,8 @@ anaylsis_type={}
                     det = next((di for di in self._active_detectors if di.isotope == iso), None)
                     if det is None:
                         self.arar_age.isotopes.pop(iso)
+                
+                self.plot_panel.analysis_view.load(self)
                 self.plot_panel.analysis_view.refresh_needed=True
 #                except Exception, e:
 #                    print 'set_position exception', e

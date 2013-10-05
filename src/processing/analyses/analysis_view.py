@@ -226,9 +226,10 @@ class AnalysisView(HasTraits):
                      ('40Ar*/39ArK', 'R'),
             )
         elif self.analysis_type == 'cocktail':
-            attrs = (('40Ar/39Ar', 'Ar40/Ar39'))
+            attrs = (('40Ar/39Ar', 'Ar40/Ar39'),)
         elif self.analysis_type == 'air':
-            attrs = (('40Ar/36Ar', 'Ar40/Ar36'))
+            attrs = (('40Ar/36Ar', 'Ar40/Ar36'),
+                     ('40Ar/38Ar', 'Ar40/Ar38'))
 
         if attrs:
             if newlist:
