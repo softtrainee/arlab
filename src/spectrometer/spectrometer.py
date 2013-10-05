@@ -402,7 +402,8 @@ class Spectrometer(SpectrometerDevice):
                     if v is not None:
 
                         if section == 'Deflections':
-                            cmd = 'SetDeflection {},{}'.format(attr.upper(), v)
+                            cmd = 'SetDeflection'
+                            v='{},{}'.format(attr.upper(), v)
                         else:
                             cmd = 'Set{}'.format(COMMAND_MAP[attr])
 
