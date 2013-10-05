@@ -877,7 +877,6 @@ If "No" select from database
             ban=next((a for a in aruns if a.analysis_type=='blank_{}'.format(an.analysis_type)), None)
 
             if ban:
-                print aruns.index(ban), anidx, ban.runid
                 nopreceeding=aruns.index(ban)>anidx
             
             if anidx == 0 or nopreceeding:
