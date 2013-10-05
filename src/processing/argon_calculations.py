@@ -40,7 +40,7 @@ def calculate_plateau_age(ages, errors, k39, kind='inverse_variance'):
 
     k39 = asarray(k39)
     pidx = find_plateaus(ages, errors, k39,
-                       overlap_sigma=2)
+                         overlap_sigma=2)
 
     plateau_ages = ages[pidx]
     if kind == 'vol_fraction':
@@ -51,7 +51,6 @@ def calculate_plateau_age(ages, errors, k39, kind='inverse_variance'):
         wm, we = calculate_weighted_mean(plateau_ages, plateau_errors)
 
     return wm, we, pidx
-
 
 
 def calculate_flux(rad40, k39, age, arar_constants=None):
@@ -68,7 +67,7 @@ def calculate_flux(rad40, k39, age, arar_constants=None):
         k39 = ufloat(*k39)
     if isinstance(age, (list, tuple)):
         age = ufloat(*age)
-#    age = (1 / constants.lambdak) * umath.log(1 + JR)
+    #    age = (1 / constants.lambdak) * umath.log(1 + JR)
     try:
         r = rad40 / k39
         if arar_constants is None:
@@ -77,6 +76,7 @@ def calculate_flux(rad40, k39, age, arar_constants=None):
         return j.nominal_value, j.std_dev
     except ZeroDivisionError:
         return 1, 0
+
 #    return j
 def calculate_decay_time(dc, f):
     print dc, f
@@ -95,13 +95,13 @@ def calculate_decay_factor(dc, segments):
         using start seems more appropriate
     '''
 
-
     a = sum([pi * ti for pi, ti, _ in segments])
 
     b = sum([pi * ((1 - math.exp(-dc * ti)) / (dc * math.exp(dc * dti)))
-                                                    for pi, ti, dti in segments])
+             for pi, ti, dti in segments])
 
     return a / b
+
 
 def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        j, irradinfo,
@@ -112,7 +112,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        a39decayfactor=None,
                        include_decay_error=False,
                        arar_constants=None
-                       ):
+):
     '''
         signals: measured uncorrected isotope intensities, tuple of value,error pairs
             value==intensity, error==error in regression coefficient
@@ -133,7 +133,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         return:
             returns a results dictionary with computed values
             result keys
-                age_err_wo_jerr,
+                age_err_wo_j,
                 rad40,
                 tot40,
                 k39,
@@ -150,6 +150,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                 ar37decayfactor
             
     '''
+
     def to_ufloat(v):
         if isinstance(v, tuple):
             v = ufloat(*v)
@@ -159,19 +160,19 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         # lazy load constants
         arar_constants = ArArConstants()
 
-#    if isinstance(signals[0], tuple):
+    #    if isinstance(signals[0], tuple):
     s40, s39, s38, s37, s36 = map(to_ufloat, signals)
 
-#    if isinstance(baselines[0], tuple):
+    #    if isinstance(baselines[0], tuple):
     s40bs, s39bs, s38bs, s37bs, s36bs = map(to_ufloat, baselines)
 
-#    if isinstance(blanks[0], tuple):
+    #    if isinstance(blanks[0], tuple):
     s40bl, s39bl, s38bl, s37bl, s36bl = map(to_ufloat, blanks)
 
-#    if isinstance(backgrounds[0], tuple):
+    #    if isinstance(backgrounds[0], tuple):
     s40bk, s39bk, s38bk, s37bk, s36bk = map(to_ufloat, backgrounds)
 
-    k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638, chronology_segments , decay_time = irradinfo
+    k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638, chronology_segments, decay_time = irradinfo
 
     ca3637 = to_ufloat(ca3637)
     ca3937 = to_ufloat(ca3937)
@@ -182,11 +183,11 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k3739 = to_ufloat(k3739)
     ic = to_ufloat(ic)
     j = to_ufloat(j)
-#    temp_ic = ufloat(ic)
-#    print j, ic, arar_constants.atm4036
-#===============================================================================
-#
-#===============================================================================
+    #    temp_ic = ufloat(ic)
+    #    print j, ic, arar_constants.atm4036
+    #===============================================================================
+    #
+    #===============================================================================
     # correct for abundance sensitivity
     # assumes symmetric and equal abundant sens for all peaks
     n40 = s40 - abundance_sensitivity * (s39 + s39)
@@ -236,9 +237,9 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
             a39decayfactor = 1
 
 
-#     print a39decayfactor, a37decayfactor
-#    print type(s37), type(a37decayfactor)
-    # calculate interference corrections
+        #     print a39decayfactor, a37decayfactor
+        #    print type(s37), type(a37decayfactor)
+        # calculate interference corrections
     s37dec_cor = s37 * a37decayfactor
     s39dec_cor = s39 * a39decayfactor
 
@@ -294,62 +295,62 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k40 = k39 * k4039
 
     ar40rad = s40 - atm40 - k40
-#     print map(lambda x: x.nominal_value, (ar40rad, s40, atm40, s36, ca36, cl36, atm36))
+    #     print map(lambda x: x.nominal_value, (ar40rad, s40, atm40, s36, ca36, cl36, atm36))
 
-#    age_with_jerr = ufloat(0, 0)
-#    age_wo_jerr = ufloat(0, 0)
+    #    age_with_jerr = ufloat(0, 0)
+    #    age_wo_jerr = ufloat(0, 0)
     try:
         R = ar40rad / k39
         # dont include error in decay constant
         age = age_equation(j, R, include_decay_error=include_decay_error,
                            arar_constants=arar_constants)
-#        age = age_equation(j, R)
+        #        age = age_equation(j, R)
 
-#        age_with_jerr = deepcopy(age)
-#        print 'j', age
+        #        age_with_jerr = deepcopy(age)
+        #        print 'j', age
         # dont include error in decay constant
         pe = j.std_dev
         j.std_dev = 0
-#        j.set_std_dev(0)
+        #        j.set_std_dev(0)
         wo_jerr = age.std_dev
-#        print 'jo', age
+        #        print 'jo', age
         j.std_dev = pe
-#        j.set_std_dev(pe)
+    #        j.set_std_dev(pe)
 
-#        age = age_equation(j, R, include_decay_error=include_decay_error,
-#                           arar_constants=arar_constants)
-#        age = age_equation(j, R)
-#        age_wo_jerr = deepcopy(age)
+    #        age = age_equation(j, R, include_decay_error=include_decay_error,
+    #                           arar_constants=arar_constants)
+    #        age = age_equation(j, R)
+    #        age_wo_jerr = deepcopy(age)
 
     except (ZeroDivisionError, ValueError), e:
         age = ufloat(0, 0)
         wo_jerr = 0
 
-#    print s40 / s36
+    #    print s40 / s36
     result = dict(
-                  age=age,
-#                 age=age_wo_jerr,
-                  age_err_wo_jerr=wo_jerr,
-                  rad40=ar40rad,
+        age=age,
+        age_err_wo_j=wo_jerr,
+        rad40=ar40rad,
 
-                  k39=k39,
-                  ca37=ca37,
-                  atm36=atm36,
-                  cl36=cl36,
+        k39=k39,
+        ca37=ca37,
+        atm36=atm36,
+        cl36=cl36,
 
-                  s40=s40,
-                  s39=s39,
-                  s38=s38,
-                  s37=s37,
-                  s36=s36,
+        s40=s40,
+        s39=s39,
+        s38=s38,
+        s37=s37,
+        s36=s36,
 
-                  s37decay_cor=s37dec_cor,
-                  s39decay_cor=s39dec_cor,
+        s37decay_cor=s37dec_cor,
+        s39decay_cor=s39dec_cor,
 
-                  ar39decayfactor=a39decayfactor,
-                  ar37decayfactor=a37decayfactor
-                  )
+        ar39decayfactor=a39decayfactor,
+        ar37decayfactor=a37decayfactor
+    )
     return result
+
 
 def age_equation(j, R, scalar=1, include_decay_error=False,
                  arar_constants=None):
@@ -359,12 +360,13 @@ def age_equation(j, R, scalar=1, include_decay_error=False,
         R = ufloat(R)
     if arar_constants is None:
         arar_constants = ArArConstants()
-#    print constants.lambda_k, 'dec'
+    #    print constants.lambda_k, 'dec'
     if include_decay_error:
         age = (1 / arar_constants.lambda_k) * umath.log(1 + j * R) / float(scalar)
     else:
         age = (1 / arar_constants.lambda_k.nominal_value) * umath.log(1 + j * R) / float(scalar)
     return age
+
 # def calculate_arar_age(signals, baselines, blanks, backgrounds,
 #                       j, irradinfo,
 #                       ic=(1.0, 0),
@@ -488,7 +490,8 @@ def age_equation(j, R, scalar=1, include_decay_error=False,
 # #from data_adapter import new_unknown
 #
 # plateau definition
-plateau_criteria = {'number_steps':3}
+plateau_criteria = {'number_steps': 3}
+
 
 def overlap(a1, a2, e1, e2, overlap_sigma):
     e1 *= overlap_sigma
@@ -517,12 +520,13 @@ def find_plateaus(ages, errors, signals, overlap_sigma=1, exclude=None):
             plats.append(end - start)
             platids.append((start, end))
 
-#    print plats, platids
+        #    print plats, platids
     if plats:
         plats = asarray(plats)
         platids = asarray(platids)
 
         return platids[argmax(plats)]
+
 
 def _find_plateau(ages, errors, signals, start, overlap_sigma, exclude):
     plats = []
@@ -538,6 +542,7 @@ def _find_plateau(ages, errors, signals, start, overlap_sigma, exclude):
         platids = asarray(platids)
         return platids[argmax(plats)]
 
+
 def check_plateau(ages, errors, signals, start, end, overlap_sigma, exclude):
     for i in range(start, min(len(ages), end + 1)):
         if i in exclude:
@@ -551,23 +556,26 @@ def check_plateau(ages, errors, signals, start, end, overlap_sigma, exclude):
                 percent_releasedbit = not check_percent_released(signals, start, end)
                 n_steps_bit = (end - start) + 1 < 3
                 if (obit or
-                    mswdbit or
-                    percent_releasedbit or
-                    n_steps_bit):
+                        mswdbit or
+                        percent_releasedbit or
+                        n_steps_bit):
                     return False
 
     return True
+
 
 def check_percent_released(signals, start, end):
     tot = sum(signals)
     s = sum(signals[start:end + 1])
     return s / tot >= 0.5
 
+
 def check_mswd(ages, errors, start, end):
 #    a_s = ages[start:end + 1]
 #    e_s = errors[start:end + 1]
 #    print calculate_mswd(a_s, e_s)
     return True
+
 #===============================================================================
 # recursive
 # from timeit testing recursive method is not any faster
@@ -593,6 +601,7 @@ def find_plateaus_r(ages, errors, start=0, end=1, plats=None, platids=None):
         else:
             return find_plateaus_r(ages, errors, start + 1, end + 1, plats, platids)
 
+
 def check_plateau_r(ages, errors, start, end, isplat=True):
     if end < len(ages):
         return isplat and check_plateau_r(ages, errors, start, end + 1, isplat)
@@ -603,6 +612,8 @@ def check_plateau_r(ages, errors, start, end, isplat=True):
                     if not overlap(ages[i], ages[j], errors[i], errors[j]):
                         return False
         return True
+
+
 def calculate_error_F(signals, F, k4039, ca3937, ca3637):
     '''
         McDougall and Harrison
@@ -629,6 +640,7 @@ def calculate_error_F(signals, F, k4039, ca3937, ca3637):
     ssF = ssG + C1 ** 2 * ssB + ssD * (C4 * G - C1 * C4 * B + C1 * C2) ** 2
     return ssF ** 0.5
 
+
 def calculate_error_t(F, ssF, j, ssJ):
     '''
         McDougall and Harrison
@@ -641,17 +653,21 @@ def calculate_error_t(F, ssF, j, ssJ):
     sst = (JJ * ssF + FF * ssJ) / (ll * (1 + F * j) ** 2)
     return sst ** 0.5
 
+
 ages = [10] * 50
 errors = [1] * 1
+
 
 def time_recursive():
     find_plateaus_r(ages, errors)
 
+
 def time_non_recursive():
     find_plateaus(ages, errors)
 
+
 if __name__ == '__main__':
-    # 21055-02
+# 21055-02
 #    signals = ((8.681775, 0.004059),
 #                   (9.557604, 0.003301),
 #                   (0.128056, 0.000320),
@@ -671,7 +687,7 @@ if __name__ == '__main__':
                (4.999, 0.012),
                (0.0853, 0.014),
                (0.013245, 0.00055)
-               )
+    )
     baselines = ((0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
     blanks = ((1.5578, 0.023),
               (0.0043, 0.024),
@@ -681,18 +697,18 @@ if __name__ == '__main__':
     backgrounds = ((0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
     j = (2.2408e-3, 1.7795e-6)
     irradinfo = ((1e-2, 2e-3),
-                     (1.3e-2, 0),
+                 (1.3e-2, 0),
 
-                     (7e-4, 2e-6),
-                     (0, 0),
-                     (2.8e-4, 2e-5),
-                     (2.5e2, 0), 0.50429815306)
+                 (7e-4, 2e-6),
+                 (0, 0),
+                 (2.8e-4, 2e-5),
+                 (2.5e2, 0), 0.50429815306)
     calculate_arar_age(signals, baselines, blanks, backgrounds, j, irradinfo,
 
-#                       a37decayfactor=1.956,
-#                       a39decayfactor=1.0
-#                       a37decayfactor=3.801e1, a39decayfactor=1.001
-                       )
+                       #                       a37decayfactor=1.956,
+                       #                       a39decayfactor=1.0
+                       #                       a37decayfactor=3.801e1, a39decayfactor=1.001
+    )
 #    from timeit import Timer
 #    t = Timer('time_recursive', 'from __main__ import time_recursive')
 #

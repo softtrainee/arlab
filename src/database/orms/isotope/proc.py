@@ -65,6 +65,8 @@ class proc_ArArTable(Base, BaseMixin):
     history_id = foreignkey('proc_ArArHistoryTable')
     age = Column(Float)
     age_err = Column(Float)
+    age_err_wo_j = Column(Float)
+
     k39 = Column(Float)
     k39_err = Column(Float)
     ca37 = Column(Float)
@@ -82,6 +84,9 @@ class proc_ArArTable(Base, BaseMixin):
     Ar37_err = Column(Float)
     Ar36 = Column(Float)
     Ar36_err = Column(Float)
+
+    rad40 = Column(Float)
+    rad40_err = Column(Float)
 
 
 class proc_BlanksSetTable(Base, BaseMixin):

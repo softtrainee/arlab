@@ -53,11 +53,22 @@ class IntercalibrationFactorEditor(InterpolationEditor):
 
     def _get_reference_values(self, iso):
         n, d = iso.split('/')
-        nys = array([ri.isotopes[n].uvalue for ri in self._references])
-        dys = array([ri.isotopes[d].uvalue for ri in self._references])
+        nys = array([ri.isotopes[n].uvalue for ri in self.references])
+        dys = array([ri.isotopes[d].uvalue for ri in self.references])
         rys = nys / (dys * self.standard)
 
-        rys = [ri.nominal_value for ri in rys]
-        return rys, None
+        return zip(*[(ri.nominal_value, ri.std_dev) for ri in rys])
+        #rys = [ri.nominal_value for ri in rys]
+        #return rys, None
 
-    #============= EOF =============================================
+    def _get_current_values(self, iso):
+        n, d = iso.split('/')
+        nys = array([ri.isotopes[n].uvalue for ri in self.unknowns])
+        dys = array([ri.isotopes[d].uvalue for ri in self.unknowns])
+        rys = nys / (dys * self.standard)
+
+        return zip(*[(ri.nominal_value, ri.std_dev) for ri in rys])
+
+
+
+        #============= EOF =============================================

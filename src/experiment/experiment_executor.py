@@ -406,7 +406,6 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             if not f(run):
                 break
         else:
-
             self.debug('$$$$$$$$$$$$$$$$$$$$ state at run end {}'.format(run.state))
             if not run.state in ('truncated', 'canceled', 'failed'):
                 run.state = 'success'
@@ -537,6 +536,12 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         if not run.start():
             self._alive = False
             ret = False
+            run.state = 'failed'
+
+            msg = 'Run {} did not start properly'.format(run.runid)
+            self._err_message = msg
+            self._canceled = True
+            self.information_dialog(msg)
         else:
             self.experiment_queue.set_run_inprogress(run.runid)
 

@@ -22,36 +22,39 @@ from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
 from src.processing.tasks.analysis_edit.adapters import ReferencesAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
 
-class IntercalibrationFactorTask(AnalysisEditTask):
-    id = 'pychron.analysis_edit.ic_factor'
+
+class DiscrimintationTask(InterpolationTask):
+    id = 'pychron.analysis_edit.discrimination'
     ic_factor_editor_count = 1
     references_adapter = ReferencesAdapter
 
-    def _default_layout_default(self):
-        return TaskLayout(
-                          id='pychron.analysis_edit.ic_factor',
-                          left=Splitter(
-                                     PaneItem('pychron.analysis_edit.unknowns'),
-                                     PaneItem('pychron.analysis_edit.references'),
-                                     PaneItem('pychron.analysis_edit.controls'),
-                                     orientation='vertical'
-                                     ),
-                          right=Splitter(
-                                         PaneItem('pychron.search.query'),
-                                         orientation='vertical'
-                                         )
-                          )
-    def new_ic_factor(self):
-        from src.processing.tasks.detector_calibration.intercalibration_factor_editor import IntercalibrationFactorEditor
-        editor = IntercalibrationFactorEditor(name='ICFactor {:03n}'.format(self.ic_factor_editor_count),
-                                              processor=self.manager
-                                              )
-        self._open_editor(editor)
-        self.ic_factor_editor_count += 1
+    #def _default_layout_default(self):
+    #    return TaskLayout(
+    #id='pychron.analysis_edit.ic_factor',
+    #left=Splitter(
+    #           PaneItem('pychron.analysis_edit.unknowns'),
+    #           PaneItem('pychron.analysis_edit.references'),
+    #           PaneItem('pychron.analysis_edit.controls'),
+    #           orientation='vertical'
+    #           ),
+    #right=Splitter(
+    #               PaneItem('pychron.search.query'),
+    #               orientation='vertical'
+    #               )
+    #)
 
-        selector = self.manager.db.selector
-        self.unknowns_pane.items = selector.records[156:159]
-        self.references_pane.items = selector.records[150:155]
+    #def new_ic_factor(self):
+    #    from src.processing.tasks.detector_calibration.intercalibration_factor_editor import IntercalibrationFactorEditor
+    #    editor = IntercalibrationFactorEditor(name='ICFactor {:03n}'.format(self.ic_factor_editor_count),
+    #                                          processor=self.manager
+    #                                          )
+    #    self._open_editor(editor)
+    #    self.ic_factor_editor_count += 1
+    #
+    #    selector = self.manager.db.selector
+    #    self.unknowns_pane.items = selector.records[156:159]
+    #    self.references_pane.items = selector.records[150:155]
 
 #============= EOF =============================================

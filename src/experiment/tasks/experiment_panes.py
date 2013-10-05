@@ -525,10 +525,15 @@ class IsotopeEvolutionPane(TraitsDockPane):
             VSplit(
                 UItem('object.plot_panel.graph_container',
                       style='custom',
-                      height=0.75),
-                UItem('object.plot_panel.display_container',
-                      style='custom',
-                      height=0.25),
+                      height=0.68),
+                VGroup(
+                    UItem('object.plot_panel.ncounts', label='Counts',
+                          tooltip='Set the number of measurement points'),
+                    UItem('object.plot_panel.analysis_view',
+                          style='custom',
+                          #editor=InstanceEditor(view='plot_panel_view'),
+                          height=0.32),
+                )
             )
 
             #                  UItem('plot_panel',

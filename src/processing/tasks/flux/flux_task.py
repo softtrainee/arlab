@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import on_trait_change, Property
 from traitsui.tabular_adapter import TabularAdapter
-from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
+from pyface.tasks.task_layout import TaskLayout, HSplitter, VSplitter, PaneItem, Tabbed
 #============= standard library imports ========================
 from numpy import asarray, average
 #============= local library imports  ==========================
@@ -30,25 +30,34 @@ from src.envisage.tasks.editor_task import BaseEditorTask
 from pyface.tasks.advanced_editor_area_pane import AdvancedEditorAreaPane
 
 
-class LevelAdatper(TabularAdapter):
-    columns = [('Run ID', 'name')]
-    name_text = Property
+class LevelAdapter(TabularAdapter):
+    columns = [('Run ID', 'identifier'), ('Pos.', ('position'))]
+    #identifier_text = Property
     font = 'helvetica 10'
-    def _get_name_text(self):
-        return self.item.labnumber.identifier
 
-class UnknownsAdapter(LevelAdatper):
+    #def _get_identifier_text(self):
+    #print self.item
+    #return self.item
+    #return self.item.labnumber.identifier
+
+
+class UnknownsAdapter(LevelAdapter):
     pass
-class ReferencesAdapter(LevelAdatper):
+
+
+class ReferencesAdapter(LevelAdapter):
     pass
+
 
 class UnknownsPane(TablePane):
     id = 'pychron.analysis_edit.unknowns'
     name = 'Unknowns'
 
+
 class ReferencesPane(TablePane):
     name = 'References'
     id = 'pychron.analysis_edit.references'
+
 
 class FluxTask(InterpolationTask):
     name = 'Flux'
@@ -61,37 +70,36 @@ class FluxTask(InterpolationTask):
 
     def _default_layout_default(self):
         return TaskLayout(
-                          id='pychron.analysis_edit',
-                          left=Splitter(
-                                     PaneItem('pychron.analysis_edit.unknowns'),
-                                     PaneItem('pychron.analysis_edit.references'),
-                                     PaneItem('pychron.analysis_edit.controls'),
-                                     orientation='vertical'
-                                     ),
-                          right=Splitter(
-                                         PaneItem('pychron.analysis_edit.irradiation'),
-                                         PaneItem('pychron.search.query'),
-                                         orientation='vertical'
-                                         )
-                          )
+            id='pychron.analysis_edit',
+            left=HSplitter(
+                VSplitter(
+                    PaneItem('pychron.analysis_edit.irradiation'),
+                    Tabbed(
+                        PaneItem('pychron.analysis_edit.unknowns'),
+                        PaneItem('pychron.analysis_edit.references')),
+                    PaneItem('pychron.analysis_edit.controls'))
+            ),
+        )
 
     def create_dock_panes(self):
         panes = super(FluxTask, self).create_dock_panes()
         return panes + [
-                        IrradiationPane(model=self.manager)
-                        ]
+            IrradiationPane(model=self.manager)
+        ]
 
     def new_flux(self):
         from src.processing.tasks.flux.flux_editor import FluxEditor
+
         editor = FluxEditor(name='Flux {:03n}'.format(self.flux_editor_count),
-                              processor=self.manager
-                              )
+                            processor=self.manager
+        )
 
         self._open_editor(editor)
         self.flux_editor_count += 1
 
-        self.manager.irradiation = 'NM-251'
-#         self.manager.level = 'H'
+        #self.manager.irradiation = 'NM-251'
+
+    #         self.manager.level = 'H'
 
     @on_trait_change('manager:level')
     def _level_changed(self, new):
@@ -102,11 +110,16 @@ class FluxTask(InterpolationTask):
 
             if level:
                 refs, unks = self.manager.group_level(level)
-                self.unknowns_pane.items = list(unks)
-                self.references_pane.items = list(refs)
+                r, u = list(refs), list(unks)
+                self.unknowns_pane.items = u
+                self.references_pane.items = r
+
+                #self.active_editor.unknowns=u
+                #self.active_editor.references= r
 
     @on_trait_change('active_editor:tool:calculate_button')
     def _calculate_flux(self):
+
         monitor_age = self.active_editor.tool.monitor_age
         if not monitor_age:
             monitor_age = 28.02e6
@@ -125,23 +138,37 @@ class FluxTask(InterpolationTask):
             return m, ss ** -0.5
 
         proc = self.manager
-        def func(ai):
-            ai.load_age()
+        #def func(ai):
+        #ai.load_age()
 
-        analyses = []
-        for i, ri in enumerate(self.active_editor._references[:1]):
-            ans = [ri for ri in ri.labnumber.analyses
-                        if ri.status == 0 and ri.step == '']
-            ans = proc.make_analyses(ans, group_id=i)
-            proc.load_analyses(ans, func=func)
+        #analyses = []
+        #for i, ri in enumerate(self.active_editor.references[:1]):
+        #    #ans = [ri for ri in ri.labnumber.analyses
+        #    #            if ri.status == 0 and ri.step == '']
+        #    #ans = proc.make_analyses(ans, group_id=i)
+        #    #proc.load_analyses(ans, func=func)
+        #
+        #    analyses.extend(ans)
+        #    me, sd = mean_j(ans)
+        db = proc.db
+        with db.session_ctx():
+            refs = self.references_pane.items
+            #ans=[]
+            #for i, ri in enumerate(refs):
+            #    a=db.get_labnumber_analyses(ri.identifier)
+            for ri in refs:
+                print ri.identifier
+                print db.get_labnumber_analyses(ri.identifier)
 
-            analyses.extend(ans)
-            me, sd = mean_j(ans)
+            ans = [ai for ri in refs
+                   for ai in db.get_labnumber_analyses(ri.identifier)]
+            if ans:
+                ans = proc.make_analyses(ans)
+                irrad = proc.irradiation
+                level = proc.level
+                self._open_ideogram_editor(ans,
+                                           name='Ideo - {}'.format(irrad, level))
 
-
-        irrad = self.manager.irradiation
-        level = self.manager.level
-        self._open_ideogram_editor(ans, name='Ideo - {}'.format(irrad, level))
 #        ideo = proc.new_ideogram(ans=analyses)
 #
 #        from src.processing.tasks.analysis_edit.graph_editor import ComponentEditor

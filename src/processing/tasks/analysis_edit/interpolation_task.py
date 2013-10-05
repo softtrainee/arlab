@@ -58,11 +58,17 @@ class InterpolationTask(AnalysisEditTask):
         else:
             self.references_pane.items = s
 
+    @on_trait_change('active_editor:references')
+    def _update_references(self):
+        if self.references_pane:
+            self.references_pane.items = self.active_editor.references
+
     def _handle_key_pressed(self, c):
         s = self.data_selector.selector.selected
         if c == 'r':
             self.references_pane.items.extend(s)
         elif c == 'R':
             self.references_pane.items = s
+
 
 #============= EOF =============================================

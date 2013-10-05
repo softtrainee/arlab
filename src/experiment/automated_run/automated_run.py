@@ -35,13 +35,14 @@ from itertools import groupby
 #============= local library imports  ==========================
 from src.globals import globalv
 from src.loggable import Loggable
+from src.processing.analyses.analysis_view import AutomatedRunAnalysisView
 from src.pyscripts.measurement_pyscript import MeasurementPyScript
 from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 from src.helpers.datetime_tools import get_datetime
 from src.experiment.plot_panel import PlotPanel
 from src.experiment.utilities.identifier import convert_identifier, \
-    make_runid
+    make_runid, get_analysis_type
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.managers.data_managers.data_manager import DataManager
@@ -164,6 +165,7 @@ class AutomatedRun(Loggable):
 
     fits = List
     runid = Property
+    analysis_type = Property
 
     info_color = None
     _equilibration_done = False
@@ -233,28 +235,23 @@ class AutomatedRun(Loggable):
         for iso in self.arar_age.isotopes:
             self.arar_age.set_isotope(iso, (0, 0))
 
-            # set plot_panels, baselines, backgrounds
-
-        #         p.baselines = baselines = self.experiment_manager._prev_baselines
-        #         p.blanks = blanks = self.experiment_manager.
-
-        #         p.baselines = baselines = self.experiment_manager.get_prev_baselines()
-        #         p.blanks = blanks = self.experiment_manager.get_prev_blanks()
-        # sync the arar_age object's signals
-        #         if self._use_arar_age():
-
-        p.correct_for_blank = False
-
+        cb = False
         self.arar_age.clear_blanks()
         if (not self.spec.analysis_type.startswith('blank') \
                 and not self.spec.analysis_type.startswith('background')):
-            p.correct_for_blank = True
+
+            cb = True
             blanks = self.experiment_manager.get_prev_blanks()
             if not blanks:
                 blanks = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
 
             for iso, v in blanks.iteritems():
                 self.arar_age.set_blank(iso, v)
+
+        for d in self._active_detectors:
+            self.arar_age.set_isotope(d.isotope, (0, 0),
+                                      detector=d.name,
+                                      correct_for_blank=cb)
 
         self.arar_age.clear_baselines()
         baselines = self.experiment_manager.get_prev_baselines()
@@ -264,7 +261,8 @@ class AutomatedRun(Loggable):
         for iso, v in baselines.iteritems():
             self.arar_age.set_baseline(iso, v)
 
-        p.clear_displays()
+        p.analysis_view.load(self)
+        #p.clear_displays()
 
     def py_set_regress_fits(self, fits, series=0):
         '''
@@ -294,9 +292,9 @@ class AutomatedRun(Loggable):
         else:
 
             fits = make_fits(fits)
-            if self.plot_panel:
-                self.plot_panel.fits = fits
+            #if self.plot_panel:
 
+            #self.plot_panel.fits = fits
             self.fits = [(None, fits)]
 
         self.debug('=============== Fit Blocks =============')
@@ -696,7 +694,10 @@ class AutomatedRun(Loggable):
         elif self.monitor.check():
             # immediately check the monitor conditions
             if self.monitor.monitor():
-                return self._start()
+                try:
+                    return self._start()
+                except AttributeError, e:
+                    self.warning('failed starting run: {}'.format(e))
 
     def wait_for_overlap(self):
         '''
@@ -1049,9 +1050,15 @@ anaylsis_type={}
                 arar_age=self.arar_age,
             )
 
+        an = AutomatedRunAnalysisView(analysis_type=self.analysis_type,
+                                      analysis_id=self.runid)
+        an.load(self)
+
         plot_panel.trait_set(
             plot_title=title,
+            analysis_view=an
         )
+
         return plot_panel
 
     def _equilibrate(self, evt, eqtime=15, inlet=None, outlet=None,
@@ -1088,15 +1095,28 @@ anaylsis_type={}
 
     def _set_magnet_position(self, pos, detector, dac=False, update_labels=True):
         ion = self.ion_optics_manager
-
         if ion is not None:
             ion.position(pos, detector, dac)
             if update_labels:
                 try:
                     # update the plot_panel labels
-                    for det, pi in zip(self._active_detectors,
-                                       self.plot_panel.isotope_graph.plots):
-                        pi.y_axis.title = '{} {} (fA)'.format(det.name, det.isotope)
+                    plots = self.plot_panel.isotope_graph.plots
+                    n = len(plots)
+                    for i, det in enumerate(self._active_detectors):
+                        if i < n:
+                            plots[i].y_axis.title = '{} {} (fA)'
+
+                        iso = self.arar_age.get_isotope(detector=det.name)
+                        iso.detector = det.name
+                        iso.name = det.isotope
+                        self.arar_age.isotopes[iso.name] = iso
+
+                    #remove non active isotopes
+                    for iso in self.arar_age.isotopes:
+                        det = next((di for di in self._active_detectors if di.isotope == iso))
+                        if det is None:
+                            self.arar_age.isotopes.pop(iso)
+
                 except Exception, e:
                     print 'set_position exception', e
 
@@ -1239,6 +1259,7 @@ anaylsis_type={}
         m = self.data_collector
         m.trait_set(
             plot_panel=self.plot_panel,
+            arar_age=self.arar_age,
             measurement_script=self.measurement_script,
             detectors=self._active_detectors,
             truncation_conditions=self.truncation_conditions,
@@ -1300,7 +1321,9 @@ anaylsis_type={}
             graph.new_series(marker='circle', type='scatter',
                              marker_size=1.25,
                              fit=fi,
-                             plotid=pi
+                             plotid=pi,
+                             add_inspector=False,
+                             add_tools=False
             )
             #===============================================================================
             # save
@@ -2157,6 +2180,9 @@ anaylsis_type={}
         return make_runid(self.spec.labnumber,
                           self.spec.aliquot,
                           self.spec.step)
+
+    def _get_analysis_type(self):
+        return get_analysis_type(self.spec.labnumber)
 
     #===============================================================================
     # handlers
