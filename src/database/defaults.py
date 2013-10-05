@@ -51,9 +51,9 @@ def load_isotopedb_defaults(db):
                    'blank_cocktail',
                    'blank_unknown',
                    'background', 'air', 'cocktail']):
-            samp = db.add_sample(di)
+            samp = db.add_sample(di, project=project)
             #print samp.id, samp, project.id
-            samp.project = project
+#            samp.project = project
             #samp.project_id=project.id
             #print samp.project_id
             db.add_labnumber(i + 1, sample=samp)

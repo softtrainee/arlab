@@ -38,6 +38,7 @@ from src.globals import globalv
 from src.wait.wait_control import WaitControl
 from src.pyscripts.error import PyscriptError, IntervalError, GosubError, \
     KlassError
+from src.ui.gui import invoke_in_main_thread
 
 
 
@@ -684,6 +685,7 @@ class PyScript(Loggable):
             time.sleep(v)
 
     def _block(self, timeout, message=None, dialog=False):
+        self.debug('starting _block')
         st = time.time()
         if dialog:
             if message is None:
@@ -701,16 +703,20 @@ class PyScript(Loggable):
 
             self._wait_dialog = wd
             if self.manager:
+#                invoke_in_main_thread(self.manager.wait_group.trait_set, active_control=wd)
                 self.manager.wait_group.active_control = wd
 #                 self.manager.wait_dialog = wd
-
-            wd.trait_set(wtime=timeout,
-                         # parent=weakref.ref(self)(),
-                         message='Waiting for {:0.1f}  {}'.format(timeout, message),
-                         )
-
+            
+#            wd.trait_set(wtime=timeout,
+#                         # parent=weakref.ref(self)(),
+#                         message='Waiting for {:0.1f}  {}'.format(timeout, message),
+#                         )
+            invoke_in_main_thread(wd.trait_set, wtime=timeout, 
+                                  message='Waiting for {:0.1f}  {}'.format(timeout, message),)
+            time.sleep(0.05)
             wd.reset()
             wd.start(block=True)
+#            time.sleep(100)
             if self.manager:
                 self.manager.wait_group.pop()
 

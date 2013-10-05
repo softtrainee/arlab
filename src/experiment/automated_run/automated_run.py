@@ -1027,7 +1027,7 @@ anaylsis_type={}
     def _use_arar_age(self):
 #        return True
         ln = self.spec.labnumber
-        return ln!='dg'
+        return ln not in ('dg', 'pa')
     
 #        if '-' in ln:
 #            ln = ln.split('-')[0]
@@ -1098,27 +1098,28 @@ anaylsis_type={}
         if ion is not None:
             ion.position(pos, detector, dac)
             if update_labels:
-                try:
-                    # update the plot_panel labels
-                    plots = self.plot_panel.isotope_graph.plots
-                    n = len(plots)
-                    for i, det in enumerate(self._active_detectors):
-                        if i < n:
-                            plots[i].y_axis.title = '{} {} (fA)'
+#                try:
+                # update the plot_panel labels
+                plots = self.plot_panel.isotope_graph.plots
+                n = len(plots)
+                for i, det in enumerate(self._active_detectors):
+                    if i < n:
+                        plots[i].y_axis.title = '{} {}'.format(det.name, det.isotope)
 
-                        iso = self.arar_age.get_isotope(detector=det.name)
-                        iso.detector = det.name
-                        iso.name = det.isotope
-                        self.arar_age.isotopes[iso.name] = iso
+                    iso = self.arar_age.get_isotope(detector=det.name)
+                    iso.detector = det.name
+                    iso.name = det.isotope
+                    self.arar_age.isotopes[iso.name] = iso
 
-                    #remove non active isotopes
-                    for iso in self.arar_age.isotopes:
-                        det = next((di for di in self._active_detectors if di.isotope == iso))
-                        if det is None:
-                            self.arar_age.isotopes.pop(iso)
-
-                except Exception, e:
-                    print 'set_position exception', e
+                #remove non active isotopes
+                
+                for iso in self.arar_age.isotopes.keys():
+                    det = next((di for di in self._active_detectors if di.isotope == iso), None)
+                    if det is None:
+                        self.arar_age.isotopes.pop(iso)
+                self.plot_panel.analysis_view.refresh_needed=True
+#                except Exception, e:
+#                    print 'set_position exception', e
 
                     #===============================================================================
                     # measurement
