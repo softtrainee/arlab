@@ -153,10 +153,12 @@ class Experimentor(IsotopeDatabaseManager):
 
     def _get_analysis_info(self, li):
         dbln = self.db.get_labnumber(li)
-        sample, irradiationpos = '', ''
+        sample, material, irradiationpos = '', '', ''
         if dbln:
             sample = dbln.sample
             if sample:
+                if sample.material:
+                    material = sample.material.name
                 sample = sample.name
 
             dbpos = dbln.irradiation_position
@@ -173,7 +175,7 @@ class Experimentor(IsotopeDatabaseManager):
             step = dban.step
 
         #            self.debug('{} {} {}'.format(li, analysis, sample))
-        return sample, irradiationpos, aliquot, step
+        return sample, material, irradiationpos, aliquot, step
 
     def _modify_aliquots_steps(self, ans, exclude=None):
         cache = dict()
@@ -184,8 +186,9 @@ class Experimentor(IsotopeDatabaseManager):
                 ln = ai.labnumber
                 # is run in cache
                 if not ln in cache:
-                    sample, irrad, aliquot, step = self._get_analysis_info(ln)
+                    sample, irrad, material, aliquot, step = self._get_analysis_info(ln)
                     cache[ln] = dict(sample=sample,
+                                     material=material,
                                      irradiation=irrad,
                                      aliquot=aliquot,
                                      step=step,
@@ -250,6 +253,7 @@ class Experimentor(IsotopeDatabaseManager):
                 ai.trait_set(aliquot=int(aq),
                              sample=last['sample'] or '',
                              irradiation=last['irradiation'] or '',
+                             material=last['material'] or '',
                              step=st
                 )
                 #                 last.update(aliquot=aq, step=st,

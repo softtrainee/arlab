@@ -21,14 +21,14 @@ from src.constants import LINE_STR
 from src.deprecate import deprecated
 
 ANALYSIS_MAPPING = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
-                      bg='Background', u='Unknown', c='Cocktail', a='Air',
-                      pa='Pause'
-                      )
+                        bg='Background', u='Unknown', c='Cocktail', a='Air',
+                        pa='Pause'
+)
 
 # "labnumbers" where extract group is disabled
 NON_EXTRACTABLE = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
-                      bg='Background', c='Cocktail', a='Air'
-                      )
+                       bg='Background', c='Cocktail', a='Air'
+)
 
 SPECIAL_NAMES = ['Special Labnumber', LINE_STR, 'Air', 'Cocktail', 'Blank Unknown',
                  'Blank Air', 'Blank Cocktail', 'Background', 'Pause', 'Degas']
@@ -39,7 +39,7 @@ SPECIAL_MAPPING = dict(background='bg', air='a', cocktail='c',
                        blank_unknown='bu',
                        pause='pa',
                        degas='dg'
-                       )
+)
 #        sn = ['Blank_air', 'Blank_cocktail', 'Blank_unknown',
 #              'Background', 'Air', 'Cocktail']
 # SPECIAL_IDS = {1:'Blank Air', 2:'Blank Cocktail', 3:'Blank Unknown',
@@ -49,6 +49,7 @@ SPECIAL_MAPPING = dict(background='bg', air='a', cocktail='c',
 from ConfigParser import ConfigParser
 import os
 from src.paths import paths
+
 cp = ConfigParser()
 p = os.path.join(paths.setup_dir, 'identifiers.cfg')
 if os.path.isfile(p):
@@ -105,22 +106,22 @@ def convert_identifier(identifier):
         except ValueError:
             return identifier
 
-#        identifier=identifier.split('-')[0]
+        #        identifier=identifier.split('-')[0]
 
 
-#    if identifier in ANALYSIS_MAPPING:
-#        sname = ANALYSIS_MAPPING[identifier]
-#        identifier = next((k for k, v in SPECIAL_IDS.iteritems() if v == sname), identifier)
+        #    if identifier in ANALYSIS_MAPPING:
+        #        sname = ANALYSIS_MAPPING[identifier]
+        #        identifier = next((k for k, v in SPECIAL_IDS.iteritems() if v == sname), identifier)
 
     return identifier
 
-def get_analysis_type(idn):
 
+def get_analysis_type(idn):
     idn = idn.lower()
 
-#     if '-' in idn:
-#         idn=idn.split('-')[0]
-#
+    #     if '-' in idn:
+    #         idn=idn.split('-')[0]
+    #
     # check for Bg before B
     if idn.startswith('bg'):
         return 'background'
@@ -141,9 +142,11 @@ def get_analysis_type(idn):
     else:
         return 'unknown'
 
+
 def make_runid(ln, a, s):
     _as = make_aliquot_step(a, s)
     return '{}-{}'.format(ln, _as)
+
 
 def strip_runid(r):
     l, x = r.split('-')
@@ -170,12 +173,14 @@ def make_aliquot_step(a, s):
 
     return '{}{}'.format(a, s)
 
+
 def make_identifier(ln, ed, ms):
     try:
         _ = int(ln)
         return ln
     except ValueError:
         return make_special_identifier(ln, ed, ms)
+
 
 def make_standard_identifier(ln, modifier, ms, aliquot=None):
     '''
@@ -195,6 +200,7 @@ def make_standard_identifier(ln, modifier, ms, aliquot=None):
     if aliquot:
         d = '{}-{:02n}'.format(d, aliquot)
     return d
+
 
 def make_special_identifier(ln, ed, ms, aliquot=None):
     '''
@@ -216,6 +222,7 @@ def make_special_identifier(ln, ed, ms, aliquot=None):
         d = '{}-{}'.format(d, aliquot)
     return d
 
+
 def make_rid(ln, a, step=''):
     '''
         if ln can be converted to integer return runid
@@ -233,9 +240,9 @@ def make_rid(ln, a, step=''):
 #===============================================================================
 # deprecated
 #===============================================================================
-SPECIAL_IDS = {1:'Blank Air', 2:'Blank Cocktail', 3:'Blank Unknown',
-               4:'Background', 5:'Air', 6:'Cocktail'
-               }
+SPECIAL_IDS = {1: 'Blank Air', 2: 'Blank Cocktail', 3: 'Blank Unknown',
+               4: 'Background', 5: 'Air', 6: 'Cocktail'
+}
 # @deprecated
 def convert_labnumber(ln):
     '''
@@ -250,7 +257,6 @@ def convert_labnumber(ln):
             ln = SPECIAL_IDS[ln]
     except ValueError:
         pass
-
 
     return ln
 

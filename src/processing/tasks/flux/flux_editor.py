@@ -34,14 +34,16 @@ from src.processing.argon_calculations import calculate_flux
 class FluxTool(HasTraits):
     calculate_button = Button('Calculate')
     monitor_age = Float
+
     def traits_view(self):
         v = View(
-                 UItem('calculate_button')
-                 )
+            UItem('calculate_button')
+        )
         return v
 
 
 Position = namedtuple('Positon', 'position x y')
+
 
 class FluxEditor(InterpolationEditor):
     level = Any
@@ -49,18 +51,18 @@ class FluxEditor(InterpolationEditor):
 
     def _rebuild_graph(self):
         g = self.graph
-        if self._references:
+        if self.references:
             p = g.new_plot(xtitle='Hole Position (radians)',
-                       ytitle='Flux',
-                       padding=[70, 10, 10, 60]
-                       )
+                           ytitle='Flux',
+                           padding=[70, 10, 10, 60]
+            )
             p.index_range.tight_bounds = False
             reg2D = self._model_flux()
 
             xs = reg2D.xs
             skw = dict(type='scatter', marker='circle', marker_size=2)
             scatter, _ = g.new_series(xs, reg2D.ys, yerror=reg2D.yserr,
-                                 **skw)
+                                      **skw)
             ebo = ErrorBarOverlay(component=scatter, orientation='y')
             scatter.overlays.append(ebo)
             self._add_inspector(scatter)
@@ -76,7 +78,7 @@ class FluxEditor(InterpolationEditor):
             g.new_series(xs, ys + es, color='red')
             g.new_series(xs, ys - es, color='red')
 
-#            # plot predicted unknowns
+            #            # plot predicted unknowns
             uxs = self._get_xs(self.unknowns)
             ys = reg2D.predict(uxs)
             es = reg2D.predict_error(uxs, ys)
@@ -89,39 +91,40 @@ class FluxEditor(InterpolationEditor):
     def _add_inspector(self, scatter):
         from src.graph.tools.point_inspector import PointInspector
         from src.graph.tools.point_inspector import PointInspectorOverlay
+
         point_inspector = PointInspector(scatter)
         pinspector_overlay = PointInspectorOverlay(component=scatter,
                                                    tool=point_inspector
-                                                   )
-#
+        )
+        #
         scatter.overlays.append(pinspector_overlay)
         scatter.tools.append(point_inspector)
 
     def _model_flux(self):
-        fitfunc = lambda p, x : p[0] * cos(p[1] * x + p[2]) + p[3] * x + p[4]
+        fitfunc = lambda p, x: p[0] * cos(p[1] * x + p[2]) + p[3] * x + p[4]
 
         x = self._get_xs(self._references)
-#        x, y, e = zip(*[(ri.position, ri.labnumber.selected_flux_history.flux.j,
-#                      ri.labnumber.selected_flux_history.flux.j_err)
-#                      for ri in self._references])
+        #        x, y, e = zip(*[(ri.position, ri.labnumber.selected_flux_history.flux.j,
+        #                      ri.labnumber.selected_flux_history.flux.j_err)
+        #                      for ri in self._references])
         y, e = self._get_flux(self._references)
         reg2D = LeastSquaresRegressor(
-                                    fitfunc=fitfunc,
-                                    xs=x, ys=y, yserr=e,
-                                    initial_guess=[1, 1, 1, 1, 1],
-                                    )
+            fitfunc=fitfunc,
+            xs=x, ys=y, yserr=e,
+            initial_guess=[1, 1, 1, 1, 1],
+        )
         reg2D.calculate()
         return reg2D
 
     def _get_flux(self, ans):
         y, e = zip(*[(ri.labnumber.selected_flux_history.flux.j,
-                         ri.labnumber.selected_flux_history.flux.j_err)
-                         for ri in ans])
+                      ri.labnumber.selected_flux_history.flux.j_err)
+                     for ri in ans])
         return y, e
 
     def _get_xs(self, ans):
         xy = self._get_xy(ans)
-        return [math.atan2(x, y) for x, y in xy ]
+        return [math.atan2(x, y) for x, y in xy]
 
     def _get_xy(self, ans):
         xx = []
@@ -129,13 +132,13 @@ class FluxEditor(InterpolationEditor):
             geom = self.level.holder.geometry
 
             positions = [
-                       Position(i, x, y)
-                       for i, (x, y) in enumerate([struct.unpack('>ff', geom[i:i + 8]) for i in xrange(0, len(geom), 8)])
-                       ]
+                Position(i, x, y)
+                for i, (x, y) in enumerate([struct.unpack('>ff', geom[i:i + 8]) for i in xrange(0, len(geom), 8)])
+            ]
             for ri in ans:
                 pos = next((pi for pi in positions if pi.position + 1 == ri.position), None)
                 if pos:
-#                    print ri.position, pos.x, pos.y, math.atan2(pos.x, pos.y)
+                #                    print ri.position, pos.x, pos.y, math.atan2(pos.x, pos.y)
                     xx.append((pos.x, pos.y))
         return xx
 
@@ -146,14 +149,14 @@ class FluxEditor(InterpolationEditor):
         '''
             TODO: find reference analyses using the current _unknowns
         '''
-#         self._make_unknowns()
+        #         self._make_unknowns()
         self.rebuild_graph()
 
-#     def _make_unknowns(self):
-#         self._unknowns = self.unknowns
+    #     def _make_unknowns(self):
+    #         self._unknowns = self.unknowns
 
-#     def make_references(self):
-#         self._references = self.references
+    #     def make_references(self):
+    #         self._references = self.references
 
     def _graph_default(self):
         g = Graph()

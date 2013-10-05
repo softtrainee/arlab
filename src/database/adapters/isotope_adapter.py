@@ -91,8 +91,8 @@ class IsotopeAdapter(DatabaseAdapter):
             q = sess.query(meas_AnalysisTable)
             q = q.join(gen_LabTable)
             q = q.join(gen_SampleTable)
-            q = q.filter(gen_SampleTable.name == sample)
-            q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+            q = q.filter(gen_SampleTable.name == sample.name)
+            q = q.order_by(meas_AnalysisTable.analysis_timestamp.asc())
 
             if limit:
                 q = q.limit(limit)
@@ -137,16 +137,10 @@ class IsotopeAdapter(DatabaseAdapter):
         return hist
 
     def add_arar(self, hist, **kw):
+        a = proc_ArArTable(**kw)
+        self._add_item(a)
+        hist.arar_result = a
 
-        hkw = kw.copy()
-        hkw['history_id'] = hist.id
-
-        h = self._make_hash(hkw)
-        a = self.get_arar(h)
-        if a is None:
-            a = proc_ArArTable(h, **kw)
-            a.history_id = hist.id
-            self._add_item(a)
         return a
 
     def add_load(self, name, **kw):
@@ -805,7 +799,7 @@ class IsotopeAdapter(DatabaseAdapter):
     # getters single
     #===========================================================================
     def get_arar(self, k):
-        return self._retrieve_item(k, key='hash')
+        return self._retrieve_item(proc_ArArTable, k, key='hash')
 
     def get_last_labnumber(self):
         with self.session_ctx() as s:
@@ -869,6 +863,13 @@ class IsotopeAdapter(DatabaseAdapter):
     #         return self.get_analysis(value, key)
     # #        return meas_AnalysisTable, 'uuid'
         return self._retrieve_item(meas_AnalysisTable, value, key='uuid')
+
+    def get_labnumber_analyses(self, ln):
+        with self.session_ctx() as sess:
+            q = sess.query(meas_AnalysisTable)
+            q = q.join(gen_LabTable)
+            q = q.filter(gen_LabTable.identifier == ln)
+            return q.all()
 
     def get_analysis_record(self, value):
         return self._retrieve_item(meas_AnalysisTable, value, key='id')

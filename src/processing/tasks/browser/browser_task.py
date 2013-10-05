@@ -23,7 +23,7 @@ from pyface.tasks.action.schema import SToolBar
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.orms.isotope.gen import gen_MassSpectrometerTable, gen_LabTable, gen_ExtractionDeviceTable, \
-    gen_AnalysisTypeTable
+    gen_AnalysisTypeTable, gen_ProjectTable
 from src.database.orms.isotope.meas import meas_MeasurementTable, meas_AnalysisTable, meas_ExtractionTable
 from src.envisage.tasks.editor_task import BaseEditorTask
 from src.processing.tasks.browser.actions import NewBrowserEditorAction
@@ -134,7 +134,7 @@ class BaseBrowserTask(BaseEditorTask):
     def load_projects(self):
         db = self.manager.db
         with db.session_ctx():
-            ps = db.get_projects()
+            ps = db.get_projects(order=gen_ProjectTable.name.asc())
 
             ad = [ProjectRecordView(p) for p in ps]
             self.projects = ad
@@ -391,13 +391,13 @@ class BrowserTask(BaseBrowserTask):
         #             an = self.manager.db.get_unique_analysis(l, a, s)
             an = self.manager.make_analyses([an])[0]
             #             an.load_isotopes(refit=False)
-            self.active_editor.analysis_summary = an.analysis_summary
+            #self.active_editor.analysis_summary = an.analysis_summary
+            self.active_editor.analysis_view = an.analysis_view
 
     def create_dock_panes(self):
         return [self._create_browser_pane(multi_select=False)]
 
     def _analysis_table_default(self):
-        print 'asdfsdf'
         at = AnalysisTable(db=self.manager.db)
         return at
 
@@ -405,7 +405,10 @@ class BrowserTask(BaseBrowserTask):
         at = AnalysisTable(db=self.manager.db)
         return at
 
-    #===============================================================================
+    def _dclicked_sample_changed(self):
+        pass
+
+#===============================================================================
 # handlers
 #===============================================================================
 

@@ -21,16 +21,18 @@ import math
 from functools import partial
 #============= local library imports  ==========================
 def calc_percent_error(v, e, n=2):
-        try:
+    try:
 
-            sigpee = '{{:0.{}f}}'.format(n).format(abs(e / v * 100))
-        except ZeroDivisionError:
-            sigpee = 'NaN'
-        return sigpee
+        sigpee = '{{:0.{}f}}'.format(n).format(abs(e / v * 100))
+    except ZeroDivisionError:
+        sigpee = 'NaN'
+    return sigpee
+
 
 def errorfmt(v, e):
-        pe = calc_percent_error(v, e)
-        return '{} ({}%)'.format(floatfmt(e), pe)
+    pe = calc_percent_error(v, e)
+    return '{} ({}%)'.format(floatfmt(e), pe)
+
 
 def floatfmt(f, n=4, s=2, max_width=None):
     '''
@@ -63,6 +65,7 @@ def floatfmt(f, n=4, s=2, max_width=None):
                 v = v[:max_width]
 
     return v
+
 
 def pfloatfmt(**kw):
     return partial(floatfmt, **kw)

@@ -1,63 +1,67 @@
 from migrate.versioning.api import test, version_control, upgrade, version
 from migrate.exceptions import DatabaseAlreadyControlledError, KnownError, \
-	InvalidRepositoryError
+    InvalidRepositoryError
 import os
 
+
 def manage_version(url, base_repo):
-	repo = os.path.join(os.path.dirname(__file__), base_repo)
-	try:
-		version_control(url, repo)
-	except InvalidRepositoryError:
-		from src.paths import paths
-		repo = os.path.join(paths.app_resources, 'migrate_repositories', base_repo)
-		try:
-			version_control(url, repo)
-		except InvalidRepositoryError:
-			pass
-		except DatabaseAlreadyControlledError:
-			pass
+    repo = os.path.join(os.path.dirname(__file__), base_repo)
+    try:
+        version_control(url, repo)
+    except InvalidRepositoryError:
+        from src.paths import paths
 
-	except DatabaseAlreadyControlledError:
-		pass
+        repo = os.path.join(paths.app_resources, 'migrate_repositories', base_repo)
+        try:
+            version_control(url, repo)
+        except InvalidRepositoryError:
+            pass
+        except DatabaseAlreadyControlledError:
+            pass
 
-	return repo
+    except DatabaseAlreadyControlledError:
+        pass
+
+    return repo
+
 
 def manage_database(url, repo, logger=None, progress=None):
 
 # 	url = url.format(root)
 # 	url = 'sqlite:///{}'.format(name)
 
-	kind, path = url.split('://')
-	if logger:
-		logger.debug('sadfa {} {}'.format(url, repo))
-	if kind == 'sqlite':
-		b = os.path.split(path[1:])[0]
-		if not os.path.isdir(b):
-			os.mkdir(b)
+    kind, path = url.split('://')
+    if logger:
+        logger.debug('sadfa {} {}'.format(url, repo))
+    if kind == 'sqlite':
+        b = os.path.split(path[1:])[0]
+        if not os.path.isdir(b):
+            os.mkdir(b)
 
-	repo = manage_version(url, repo)
-	n = version(repo)
+    repo = manage_version(url, repo)
+    n = version(repo)
 
-	if progress:
-		progress.max = int(n)
+    if progress:
+        progress.max = int(n)
 
-	for i in range(n + 1):
-		try:
-			msg = 'upgrading {} to {}'.format(repo, i)
-			upgrade(url, repo, version=i)
+    for i in range(n + 1):
+        try:
+            msg = 'upgrading {} to {}'.format(repo, i)
+            upgrade(url, repo, version=i)
 
-		except KnownError:
-			msg = 'skipping version {}'.format(i)
+        except KnownError:
+            msg = 'skipping version {}'.format(i)
 
-		finally:
-			if progress:
-				progress.change_message(msg)
-				progress.increment()
-			if logger:
-				logger.info(msg)
+        finally:
+            if progress:
+                progress.change_message(msg)
+                progress.increment()
+            if logger:
+                logger.info(msg)
 
-	if logger:
-		logger.info('Upgrade complete')
+    if logger:
+        logger.info('Upgrade complete')
+
 # if __name__ == '__main__':
 #
 # 	root = '/usr/local/pychron'

@@ -58,6 +58,12 @@ class AnalysisEditTask(BaseBrowserTask):
             tag = v.selected
             return tag.name
 
+    def save_as(self):
+        self.save()
+
+    def save(self):
+        self.warning_dialog('Please use "Data -> Database Save" to save changes to the database')
+
     def save_to_db(self):
         db = self.manager.db
         with db.session_ctx():

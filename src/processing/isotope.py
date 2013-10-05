@@ -65,6 +65,7 @@ class IsotopicMeasurement(BaseMeasurement):
     _error = Float
 
     fit = String
+    fit_abbreviation = Property(depends_on='fit')
     filter_outliers = Bool
     filter_outlier_iterations = Int
     filter_outlier_std_devs = Int
@@ -91,14 +92,14 @@ class IsotopicMeasurement(BaseMeasurement):
                     fit.filter_outlier_iterations)  # if fit.filter_outliers_iterations else 0
             except TypeError, e:
                 pass
-            #                print '{}. fit.filter_outlier_iterations'.format(e)
+                #                print '{}. fit.filter_outlier_iterations'.format(e)
 
             try:
                 self.filter_outlier_std_devs = int(
                     fit.filter_outlier_std_devs)  # if fit.filter_outliers_std_devs else 0
             except TypeError, e:
                 pass
-            #                print '{}. fit.filter_outlier_std_devs'.format(e)
+                #                print '{}. fit.filter_outlier_std_devs'.format(e)
 
     def set_uvalue(self, v):
         if isinstance(v, tuple):
@@ -139,6 +140,7 @@ class IsotopicMeasurement(BaseMeasurement):
 
     # @cached_property
     def _get_regressor(self):
+        print 'getting regressor'
         try:
             if 'average' in self.fit.lower():
                 reg = self._mean_regressor_factory()
@@ -164,6 +166,13 @@ class IsotopicMeasurement(BaseMeasurement):
     # @cached_property
     def _get_uvalue(self):
         return ufloat(self.value, self.error)
+
+    def _get_fit_abbreviation(self):
+        f = ''
+        if self.fit:
+            f = self.fit[0].upper()
+
+        return f
 
     #===============================================================================
     # arthmetic
@@ -205,7 +214,8 @@ class CorrectionIsotopicMeasurement(IsotopicMeasurement):
 
         super(IsotopicMeasurement, self).__init__(*args, **kw)
 
-    #        if self.dbrecord:
+        #        if self.dbrecord:
+
 #            self._value = self.dbrecord.user_value
 #            self._error = self.dbrecord.user_error
 
@@ -233,11 +243,17 @@ class Isotope(IsotopicMeasurement):
     background = Instance(Background)
     sniff = Instance(Sniff)
 
+    correct_for_blank = True
+
     def baseline_corrected_value(self):
         return self.uvalue - self.baseline.uvalue
 
     def get_corrected_value(self):
-        return self.uvalue - self.baseline.uvalue - self.blank.uvalue - self.background.uvalue
+        v = self.baseline_corrected_value()
+        if self.correct_for_blank:
+            v = v - self.blank.uvalue
+
+        return v - self.background.uvalue
 
     def _baseline_default(self):
         return Baseline()
@@ -248,4 +264,4 @@ class Isotope(IsotopicMeasurement):
     def _background_default(self):
         return Background()
 
-    #============= EOF =============================================
+        #============= EOF =============================================

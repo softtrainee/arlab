@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Enum, Instance, Str, Password, \
-     Button, List, Any, Bool, Property, Event, cached_property, Int
+    Button, List, Any, Bool, Property, Event, cached_property, Int
 #============= standard library imports ========================
 from collections import namedtuple
 import time
@@ -31,6 +31,7 @@ from src.ui.gui import invoke_in_main_thread
 
 
 records = namedtuple('Record', 'name')
+
 
 class ImportManager(IsotopeDatabaseManager):
     data_source = Enum('MassSpec', 'File')
@@ -53,17 +54,19 @@ class ImportManager(IsotopeDatabaseManager):
     include_blanks = Bool(False)
     include_airs = Bool(False)
     include_cocktails = Bool(False)
-#    include_analyses = Bool(True)
-#    include_blanks = Bool(True)
-#    include_airs = Bool(True)
-#    include_cocktails = Bool(True)
+    #    include_analyses = Bool(True)
+    #    include_blanks = Bool(True)
+    #    include_airs = Bool(True)
+    #    include_cocktails = Bool(True)
     include_list = List
     update_irradiations_needed = Event
     dry_run = Bool(True)
+
     def _progress_message(self, pd, m):
         def d():
             pd.change_message(m)
             pd.increment()
+
         invoke_in_main_thread(d)
 
     def _do_import(self, selected, pd):
@@ -73,12 +76,12 @@ class ImportManager(IsotopeDatabaseManager):
         with db.session_ctx(commit=not self.dry_run):
             for si, inc in selected:
 
-#                 pd.change_message('Importing {} {}'.format(si, inc))
-#                 pd.increment()
+            #                 pd.change_message('Importing {} {}'.format(si, inc))
+            #                 pd.increment()
                 self._progress_message(pd, 'Importing {} {}'.format(si, inc))
-    #            for i in range(10):
-    #                time.sleep(0.1)
-    #            r = False
+                #            for i in range(10):
+                #                time.sleep(0.1)
+                #            r = False
                 r = func(db,
                          si,
                          include_analyses=self.include_analyses,
@@ -87,26 +90,19 @@ class ImportManager(IsotopeDatabaseManager):
                          include_cocktails=self.include_cocktails,
                          dry_run=self.dry_run,
                          include_list=inc
-                         )
+                )
                 if r:
                     self.imported_names.append(r)
                     self._progress_message(pd,
                                            'Imported {} {} successfully'.format(si, inc)
-                                           )
-#                     pd.change_message('Imported {} {} successfully'.format(si, inc))
-#                     pd.increment()
+                    )
                 else:
                     self._progress_message(pd,
                                            'Import {} {} failed'.format(si, inc))
-#                     pd.change_message('Import {} {} failed'.format(si, inc))
-#                     pd.increment()
 
-            if self.imported_names:
-                self.update_irradiations_needed = True
-
-            self.info('====== Import Finished elapsed_time= {}s======'.format(int(time.time() - st)))
-    #         pd.close()
-    #        self.db.close()
+        self.info('====== Import Finished elapsed_time= {}s======'.format(int(time.time() - st)))
+        if self.imported_names:
+            self.update_irradiations_needed = True
 
     @cached_property
     def _get_readable_names(self):
@@ -156,24 +152,25 @@ class ImportManager(IsotopeDatabaseManager):
                 self.names = rids
 
     _import_thread = None
+
     def _import_button_fired(self):
         self.do_import()
 
     def do_import(self, new_thread=True):
-#        self.import_kind = 'irradiation'
+    #        self.import_kind = 'irradiation'
         if self.import_kind != NULL_STR:
             selected = self.selected
-#             if selected:
+            #             if selected:
             if selected:
                 if not isinstance(selected[0], tuple):
                     selected = [(si.name, tuple()) for si in selected]
-#                if self._import_thread and self._import_thread.isRunning():
-#                    return
+                #                if self._import_thread and self._import_thread.isRunning():
+                #                    return
 
                 if self.db.connect():
                     # clear imported
                     self.imported_names = []
-#                    self.db.reset()
+                    #                    self.db.reset()
 
                     self.db.save_username = 'jake({})'.format(self.db.username)
                     self.info('====== Import Started  ======')

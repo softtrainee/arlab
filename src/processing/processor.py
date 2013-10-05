@@ -20,6 +20,7 @@
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import and_, not_
 import datetime
+from traits.api import HasTraits, Int, Str
 #============= local library imports  ==========================
 from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.processing.plotter_options_manager import IdeogramOptionsManager, \
@@ -40,13 +41,25 @@ from src.helpers.iterfuncs import partition
 from src.processing.plotters.figure_container import FigureContainer
 
 
+class IrradiationPositionRecord(HasTraits):
+    position = Int
+    identifier = Str
+    sample = Str
+
+    def create(self, rec):
+        self.position = int(rec.position)
+        if rec.labnumber:
+            self.identifier = rec.labnumber.identifier
+            if rec.labnumber.sample:
+                self.sample = rec.labnumber.sample.name
+
+
 class Processor(IsotopeDatabaseManager):
     def group_level(self, level, irradiation=None, monitor_filter=None):
         if monitor_filter is None:
             def monitor_filter(pos):
-                if pos.labnumber.sample:
-                    if pos.labnumber.sample.name == 'FC-2':
-                        return True
+                if pos.sample == 'FC-2':
+                    return True
 
         if isinstance(level, str):
             level = self.db.get_level(level, irradiation)
@@ -55,7 +68,14 @@ class Processor(IsotopeDatabaseManager):
         unks = []
         if level:
             positions = level.positions
+
             if positions:
+                def pos_factory(px):
+                    ip = IrradiationPositionRecord()
+                    ip.create(px)
+                    return ip
+
+                positions = [pos_factory(pp) for pp in positions]
                 refs, unks = partition(positions, monitor_filter)
 
         return refs, unks

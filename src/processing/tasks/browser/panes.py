@@ -61,6 +61,8 @@ class SampleAdapter(BrowserAdapter):
     columns = [('Sample', 'name'), ('Material', 'material')]
     #     material_text = Property
     odd_bg_color = 'lightgray'
+    name_width = Int(75)
+    material_width = Int(75)
 
 #     def _get_material_text(self):
 #         n = ''

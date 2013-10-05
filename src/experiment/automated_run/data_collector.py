@@ -32,6 +32,8 @@ from src.consumer_mixin import consumable
 class DataCollector(Loggable):
     measurement_script = Any
     plot_panel = Any
+    arar_age = Any
+
     detectors = List
     truncation_conditions = List
     terminations_conditions = List
@@ -150,6 +152,9 @@ class DataCollector(Loggable):
             self.plot_panel.fits = nfs
 
         for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+
+            self.arar_age.isotopes[dn.isotope].fit = fi
+
             signal = signals[keys.index(dn.name)]
             graph.add_datum((x, signal),
                             series=self.series_idx,

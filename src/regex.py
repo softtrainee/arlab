@@ -52,7 +52,6 @@ POSITION_REGEX = re.compile('[pPlLrRdD\d]?[\d]$|[\d]$')
 '''
 XY_REGEX = re.compile('[-,\d+].*\d*,[-,\d+].*\d*')
 
-
 '''
     e.g d1
         d2    
@@ -70,6 +69,7 @@ SLICE_REGEX = re.compile('[\d]+-{1}[\d]+$')
 SSLICE_REGEX = re.compile('\d+:{1}\d+:{1}\d+$')
 PSLICE_REGEX = re.compile('\d+:{1}\d+$')
 
+
 def make_image_regex(ext):
     if ext is None:
         ext = ('png', 'tif', 'gif', 'jpeg', 'jpg', 'pct')
@@ -78,5 +78,5 @@ def make_image_regex(ext):
 
 
 ISOREGEX = re.compile('[A-Za-z]{1,2}\d+$')
-
+ALT_ISOREGEX = re.compile('\d+[A-Za-z]{1,2}$')
 #============= EOF =============================================

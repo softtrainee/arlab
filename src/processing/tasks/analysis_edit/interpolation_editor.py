@@ -15,8 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, on_trait_change, Instance, Bool
+from traits.api import HasTraits, List, on_trait_change, Instance, Bool, \
+    Property, cached_property
 from traitsui.api import View, Item
+from src.graph.tools.analysis_inspector import AnalysisPointInspector
+from src.graph.tools.point_inspector import PointInspectorOverlay
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 
 #============= standard library imports ========================
@@ -37,6 +40,7 @@ class InterpolationEditor(GraphEditor):
     show_current = Bool(True)
 
     default_reference_analysis_type = 'air'
+    sorted_unknowns = Property(depends_on='unknowns[]')
 
     @on_trait_change('references[]')
     def _update_references(self):
@@ -97,7 +101,7 @@ class InterpolationEditor(GraphEditor):
 
             ans = sorted(list(ans), key=lambda x: x.analysis_timestamp)
             ans = self.processor.make_analyses(ans)
-
+            self.references = ans
             #self.task.references_pane.items = ans
 
     def _get_current_values(self, *args, **kw):
@@ -167,9 +171,10 @@ class InterpolationEditor(GraphEditor):
                                          yerror=c_ues,
                                          fit=False,
                                          type='scatter',
-                                         plotid=i
+                                         plotid=i,
+                                         add_inspector=False
                 )
-
+                self._add_inspector(s)
                 self._add_error_bars(s, c_ues)
 
                 graph.set_series_label('Unknowns-Current', plotid=i)
@@ -235,4 +240,33 @@ class InterpolationEditor(GraphEditor):
         setattr(scatter, '{}error'.format(orientation), ArrayDataSource(errors))
         return ebo
 
-        #============= EOF =============================================
+    def _add_inspector(self, scatter):
+        ans = self.sorted_unknowns
+
+        point_inspector = AnalysisPointInspector(scatter,
+                                                 analyses=ans,
+                                                 convert_index=lambda x: '{:0.3f}'.format(x),
+                                                 #value_format=value_format,
+                                                 #additional_info=additional_info
+        )
+
+        pinspector_overlay = PointInspectorOverlay(component=scatter,
+                                                   tool=point_inspector,
+        )
+        #
+        scatter.overlays.append(pinspector_overlay)
+        scatter.tools.append(point_inspector)
+        scatter.index.on_trait_change(self._update_metadata, 'metadata_changed')
+
+    def _update_metadata(self, obj, name, old, new):
+        meta = obj.metadata
+        selections = meta.get('selections', [])
+        ans = self.sorted_unknowns
+        for i, ai in enumerate(ans):
+            ai.temp_status = i in selections
+
+    @cached_property
+    def _get_sorted_unknowns(self):
+        return sorted(self.unknowns, key=lambda x: x.timestamp)
+
+    #============= EOF =============================================

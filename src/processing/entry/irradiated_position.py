@@ -37,6 +37,7 @@ class BaseIrradiatedPosition(HasTraits):
 
     use = Bool
     save = Bool
+
     def __init__(self, pos=None, *args, **kw):
         super(BaseIrradiatedPosition, self).__init__(*args, **kw)
         if pos is not None:
@@ -61,6 +62,7 @@ class IrradiatedPosition(BaseIrradiatedPosition):
     size = Str
     weight = Str
     note = Str
+
 #    j = Float
 #    j_err = Float
 
@@ -74,36 +76,37 @@ class IrradiatedPosition(BaseIrradiatedPosition):
 
 class BaseIrradiatedPositionAdapter(TabularAdapter):
     columns = [
-               ('Hole', 'hole'),
-               ('Alt. Hole', 'alt_hole'),
-               ('Labnumber', 'labnumber'),
-               ('Sample', 'sample'),
-               ('Project', 'project'),
-               ('J', 'j'),
-               (u'{}J'.format(PLUSMINUS), 'j_err'),
-               ('Note', 'note')
-             ]
+        ('Hole', 'hole'),
+        ('Alt. Hole', 'alt_hole'),
+        ('Labnumber', 'labnumber'),
+        ('Sample', 'sample'),
+        ('Project', 'project'),
+        ('J', 'j'),
+        (u'{}J'.format(PLUSMINUS), 'j_err'),
+        ('Note', 'note')
+    ]
 
     hole_width = Int(45)
 
+
 class IrradiatedPositionAdapter(TabularAdapter):
     columns = [
-               ('Hole', 'hole'),
-               ('Labnumber', 'labnumber'),
-               ('Sample', 'sample'),
-               ('Project', 'project'),
-               ('Material', 'material'),
-#               ('Size', 'size'),
-               ('Weight', 'weight'),
-               ('J', 'j'),
-               (u'{}J'.format(PLUSMINUS), 'j_err'),
-               ('Note', 'note')
-             ]
+        ('Hole', 'hole'),
+        ('Labnumber', 'labnumber'),
+        ('Sample', 'sample'),
+        ('Project', 'project'),
+        ('Material', 'material'),
+        #               ('Size', 'size'),
+        ('Weight', 'weight'),
+        ('J', 'j'),
+        (u'{}J'.format(PLUSMINUS), 'j_err'),
+        ('Note', 'note')
+    ]
 
     labnumber_width = Int(80)
     hole_width = Int(50)
-    sample_width = Int(50)
-    project_width = Int(50)
+    sample_width = Int(100)
+    project_width = Int(75)
     material_width = Int(50)
     size_width = Int(50)
     weight_width = Int(50)

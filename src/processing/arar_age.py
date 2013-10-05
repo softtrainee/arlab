@@ -87,7 +87,7 @@ class ArArAge(Loggable):
     #    signals = AgeProperty()
     #    _signals = Dict
     isotopes = Dict
-    isotope_keys = Property(depends='isotopes')
+    isotope_keys = Property
 
     #     age = Property(depends_on='include_decay_error, include_j_error, include_irradiation_error, age_dirty')
 
@@ -115,6 +115,7 @@ class ArArAge(Loggable):
     ic_factor = Property(depends_on='arar_constants:[ic_factor_v, ic_factor_e]')
 
     arar_constants = Instance(ArArConstants, ())
+
 
     def __init__(self, *args, **kw):
         super(ArArAge, self).__init__(*args, **kw)
@@ -172,7 +173,20 @@ class ArArAge(Loggable):
         for k in self.isotopes:
             self.set_blank(k, (0, 0))
 
-    def set_isotope(self, iso, v):
+    def get_isotope(self, name=None, detector=None):
+        if name is None and detector is None:
+            raise NotImplementedError('name or detector required')
+
+        if name:
+            attr = 'name'
+        else:
+            attr = 'detector'
+
+        value = detector or name
+
+        return next((iso for iso in self.isotopes.itervalues() if getattr(iso, attr) == value), None)
+
+    def set_isotope(self, iso, v, **kw):
         if not self.isotopes.has_key(iso):
             niso = Isotope(name=iso)
             self.isotopes[iso] = niso
@@ -180,6 +194,9 @@ class ArArAge(Loggable):
             niso = self.isotopes[iso]
 
         niso.set_uvalue(v)
+        niso.trait_set(**kw)
+
+        return niso
 
     def set_blank(self, iso, v):
         if not self.isotopes.has_key(iso):
@@ -375,7 +392,10 @@ class ArArAge(Loggable):
 
     #     @cached_property
     def _get_age_error_wo_j(self):
-        return float(self.arar_result['age_err_wo_jerr'] / self.arar_constants.age_scalar)
+        try:
+            return float(self.arar_result['age_err_wo_j'] / self.arar_constants.age_scalar)
+        except KeyError:
+            return 1e-20
 
     #     @cached_property
     #     def _get_timestamp(self):
@@ -519,7 +539,6 @@ class ArArAge(Loggable):
 
         return ufloat(0, 1e-20)
 
-    @cached_property
     def _get_isotope_keys(self):
         keys = self.isotopes.keys()
         return sort_isotopes(keys)

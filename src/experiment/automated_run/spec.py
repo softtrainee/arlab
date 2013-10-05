@@ -15,8 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from datetime import datetime
 from traits.api import Str, CInt, Int, Bool, Float, Property, \
-     Enum, on_trait_change, CStr
+    Enum, on_trait_change, CStr
 #============= standard library imports ========================
 import uuid
 #============= local library imports  ==========================
@@ -27,18 +28,19 @@ from src.constants import SCRIPT_KEYS, SCRIPT_NAMES, ALPHAS
 from src.loggable import Loggable
 import weakref
 
+
 class AutomatedRunSpec(Loggable):
     '''
         this class is used to as a simple container and factory for 
         an AutomatedRun. the AutomatedRun does the actual work. ie extraction and measurement
     '''
-#     automated_run = Instance(AutomatedRun)
-#    state = Property(depends_on='_state')
+    #     automated_run = Instance(AutomatedRun)
+    #    state = Property(depends_on='_state')
     state = Enum('not run', 'extraction',
                  'measurement', 'success',
                  'failed', 'truncated', 'canceled',
                  'invalid', 'test'
-                 )
+    )
 
     skip = Bool(False)
     end_after = Bool(False)
@@ -96,6 +98,7 @@ class AutomatedRunSpec(Loggable):
     #===========================================================================
     sample = Str
     irradiation = Str
+    material = Str
 
     analysis_type = Property(depends_on='labnumber')
     run_klass = AutomatedRun
@@ -107,14 +110,16 @@ class AutomatedRunSpec(Loggable):
     _estimated_duration = 0
     _changed = False
 
+    rundate = Property
+
     def to_string(self):
         attrs = ['labnumber', 'aliquot', 'step',
-                   'extract_value', 'extract_units', 'ramp_duration',
-                   'position', 'duration', 'cleanup', 'beam_diameter',
-                   'mass_spectrometer', 'extract_device',
-                   'extraction_script', 'measurement_script',
-                   'post_equilibration_script', 'post_measurement_script'
-                   ]
+                 'extract_value', 'extract_units', 'ramp_duration',
+                 'position', 'duration', 'cleanup', 'beam_diameter',
+                 'mass_spectrometer', 'extract_device',
+                 'extraction_script', 'measurement_script',
+                 'post_equilibration_script', 'post_measurement_script'
+        ]
         return ','.join(map(str, self.to_string_attrs(attrs)))
 
     def get_estimated_duration(self, script_context, warned):
@@ -161,7 +166,7 @@ class AutomatedRunSpec(Loggable):
                         script_oks.append(False)
             if arun:
                 arun.spec = None
-            # set executable. if all scripts have OK syntax executable is True
+                # set executable. if all scripts have OK syntax executable is True
             self.executable = all(script_oks)
 
             db_save_time = 1
@@ -174,9 +179,9 @@ class AutomatedRunSpec(Loggable):
         if run is None:
             run = self.run_klass()
 
-#         attrs = self._get_run_attrs()
-#         for ai in attrs:
-#             setattr(run, ai, getattr(self, ai))
+        #         attrs = self._get_run_attrs()
+        #         for ai in attrs:
+        #             setattr(run, ai, getattr(self, ai))
 
         for si in SCRIPT_KEYS:
             setattr(run.script_info, '{}_script_name'.format(si),
@@ -185,7 +190,7 @@ class AutomatedRunSpec(Loggable):
         if new_uuid:
             run.uuid = str(uuid.uuid4())
 
-#         run.spec = self
+        #         run.spec = self
         run.spec = weakref.ref(self)()
 
         return run
@@ -195,7 +200,7 @@ class AutomatedRunSpec(Loggable):
             setattr(self, '{}_script'.format(k), v)
 
         for k, v in params.iteritems():
-#            print 'param', k, v
+        #            print 'param', k, v
             if hasattr(self, k):
                 setattr(self, k, v)
 
@@ -236,34 +241,34 @@ class AutomatedRunSpec(Loggable):
 
     def _get_run_attrs(self):
         return ('labnumber', 'aliquot', 'step',
-                   'extract_value', 'extract_units', 'ramp_duration',
-                   'position', 'duration', 'cleanup',
-                   'pattern',
-                   'beam_diameter',
-                   'truncate_condition',
-                   'mass_spectrometer', 'extract_device',
-                   'analysis_type',
-                   'sample', 'irradiation', 'username', 'comment', 'skip', 'end_after'
-                   )
+                'extract_value', 'extract_units', 'ramp_duration',
+                'position', 'duration', 'cleanup',
+                'pattern',
+                'beam_diameter',
+                'truncate_condition',
+                'mass_spectrometer', 'extract_device',
+                'analysis_type',
+                'sample', 'irradiation', 'username', 'comment', 'skip', 'end_after'
+        )
 
-#===============================================================================
-# handlers
-#===============================================================================
-#     @on_trait_change('automated_run:state')
-#     def _update_state(self, new):
-#         self.state = new
+    #===============================================================================
+    # handlers
+    #===============================================================================
+    #     @on_trait_change('automated_run:state')
+    #     def _update_state(self, new):
+    #         self.state = new
 
-#     def _update_aliquot(self, new):
-#         print 'upda', new
-#         self.aliquot = new
+    #     def _update_aliquot(self, new):
+    #         print 'upda', new
+    #         self.aliquot = new
 
     @on_trait_change(''' 
     measurment_script, post_measurment_script,
     post_equilibration_script, extraction_script,extract_+, position, duration, cleanup
     ''')
     def _script_changed(self, name, new):
-        if new =='None':
-#            self.trait_set(trait_change_notify=False, **{name: ''})
+        if new == 'None':
+        #            self.trait_set(trait_change_notify=False, **{name: ''})
             self.trait_set(**{name: ''})
         else:
             self._changed = True
@@ -272,19 +277,20 @@ class AutomatedRunSpec(Loggable):
     ''')
     def _extract_changed(self):
         self._changed = True
-            
-#===============================================================================
-# property get/set
-#===============================================================================
-#    def _get_state(self):
-#        return self._state
-#
-#    def _set_state(self, s):
-#        if self._state != 'truncate':
-#            self._state = s
+
+    #===============================================================================
+    # property get/set
+    #===============================================================================
+    #    def _get_state(self):
+    #        return self._state
+    #
+    #    def _set_state(self, s):
+    #        if self._state != 'truncate':
+    #            self._state = s
     def _set_aliquot(self, v):
         self._aliquot = v
-#
+
+    #
     def _get_aliquot(self):
         a = self.assigned_aliquot
         if not a:
@@ -310,4 +316,8 @@ class AutomatedRunSpec(Loggable):
 
     def _get_runid(self):
         return make_runid(self.labnumber, self.aliquot, self.step)
-#============= EOF =============================================
+
+    def _get_rundate(self):
+        return datetime.now()
+
+    #============= EOF =============================================

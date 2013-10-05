@@ -563,6 +563,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                    marker='circle',
                    marker_size=2,
                    add_tools=True,
+                   add_inspector=True,
                    convert_index=None,
                    plotid=0, *args,
                    **kw):
@@ -575,8 +576,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             s, p = super(RegressionGraph, self).new_series(x, y,
                                                            plotid=plotid,
                                                            *args, **kw)
-            if add_tools and self.use_inspector_tool:
-                self.add_tools(p, s, None, convert_index)
+            if add_tools:
+                self.add_tools(p, s, None, convert_index, add_inspector)
             return s, p
 
         kw['type'] = 'scatter'
@@ -656,7 +657,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         line.overlays.append(o)
         line.error_envelope = o
 
-    def add_tools(self, plot, scatter, line=None, convert_index=None):
+    def add_tools(self, plot, scatter, line=None,
+                  convert_index=None, add_inspector=True):
 
         # add a regression inspector tool to the line
         if line:
@@ -669,7 +671,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         broadcaster = BroadcasterTool()
         scatter.tools.append(broadcaster)
 
-        if self.use_point_inspector:
+        if add_inspector:
             point_inspector = PointInspector(scatter,
                                              convert_index=convert_index)
             pinspector_overlay = PointInspectorOverlay(component=scatter,

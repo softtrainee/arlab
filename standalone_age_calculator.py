@@ -7,6 +7,7 @@ from copy import deepcopy
 
 from traitsui.tabular_adapter import TabularAdapter
 
+
 def calculate_decay_factor(dc, segments):
     '''
         McDougall and Harrison 
@@ -19,13 +20,13 @@ def calculate_decay_factor(dc, segments):
         using start seems more appropriate
     '''
 
-
     a = sum([pi * ti for pi, ti, _ in segments])
 
     b = sum([pi * ((1 - math.exp(-dc * ti)) / (dc * math.exp(dc * dti)))
-                                                    for pi, ti, dti in segments])
+             for pi, ti, dti in segments])
 
     return a / b
+
 
 def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        j, irradinfo,
@@ -35,7 +36,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        a39decayfactor=None,
                        include_decay_error=False,
                        constants=None
-                       ):
+):
     '''
         signals: measured uncorrected isotope intensities, tuple of value,error pairs
             value==intensity, error==error in regression coefficient
@@ -56,7 +57,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         return:
             returns a results dictionary with computed values
             result keys
-                age_err_wo_jerr,
+                age_err_wo_j,
                 rad40,
                 tot40,
                 k39,
@@ -73,6 +74,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
                 ar37decayfactor
             
     '''
+
     def to_ufloat(v):
         if isinstance(v, tuple):
             v = ufloat(v)
@@ -81,21 +83,22 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     if constants is None:
         # lazy load constants
         from src.processing.constants import Constants
+
         constants = Constants()
 
-#    if isinstance(signals[0], tuple):
+    #    if isinstance(signals[0], tuple):
     s40, s39, s38, s37, s36 = map(to_ufloat, signals)
 
-#    if isinstance(baselines[0], tuple):
+    #    if isinstance(baselines[0], tuple):
     s40bs, s39bs, s38bs, s37bs, s36bs = map(to_ufloat, baselines)
 
-#    if isinstance(blanks[0], tuple):
+    #    if isinstance(blanks[0], tuple):
     s40bl, s39bl, s38bl, s37bl, s36bl = map(to_ufloat, blanks)
 
-#    if isinstance(backgrounds[0], tuple):
+    #    if isinstance(backgrounds[0], tuple):
     s40bk, s39bk, s38bk, s37bk, s36bk = map(to_ufloat, backgrounds)
 
-    k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638, chronology_segments , decay_time = irradinfo
+    k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638, chronology_segments, decay_time = irradinfo
 
     ca3637 = ufloat(ca3637)
     ca3937 = ufloat(ca3937)
@@ -106,11 +109,11 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k3739 = ufloat(k3739)
     ic = ufloat(ic)
     j = ufloat(j)
-#    temp_ic = ufloat(ic)
+    #    temp_ic = ufloat(ic)
 
-#===============================================================================
-#
-#===============================================================================
+    #===============================================================================
+    #
+    #===============================================================================
 
     # subtract blanks and baselines (and backgrounds)
     s40 -= (s40bl + s40bs + s40bk)
@@ -180,13 +183,13 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         cl36 = cl38 * m
         atm36 = s36 - ca36 - cl36
 
-    # calculate rodiogenic
-    # dont include error in 40/36
+        # calculate rodiogenic
+        # dont include error in 40/36
 
-#    pc = sc.node('pychron').node('experiment')
-#    print pc
-#    print pc.get('constants')
-#    print pc.node_names()
+    #    pc = sc.node('pychron').node('experiment')
+    #    print pc
+    #    print pc.get('constants')
+    #    print pc.node_names()
     atm40 = atm36 * constants.atm4036.nominal_value
     k40 = k39 * k4039
     ar40rad = s40 - atm40 - k40
@@ -197,13 +200,13 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         R = ar40rad / k39
         # dont include error in decay constant
         age = age_equation(j, R, include_decay_error=include_decay_error, constants=constants)
-#        age = age_equation(j, R)
+        #        age = age_equation(j, R)
         age_with_jerr = deepcopy(age)
 
         # dont include error in decay constant
         j.set_std_dev(0)
         age = age_equation(j, R, include_decay_error=include_decay_error, constants=constants)
-#        age = age_equation(j, R)
+        #        age = age_equation(j, R)
         age_wo_jerr = deepcopy(age)
 
     except (ZeroDivisionError, ValueError), e:
@@ -211,31 +214,31 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         age = ufloat(0, 0)
         age_wo_jerr = ufloat(0, 0)
 
-#    print s40 / s36
+    #    print s40 / s36
     result = dict(
-                  age=age_with_jerr,
-#                 age=age_wo_jerr,
-                  age_err_wo_jerr=age_wo_jerr.std_dev,
-                  rad40=ar40rad,
+        age=age_with_jerr,
+        age_err_wo_j=age_wo_jerr.std_dev,
+        rad40=ar40rad,
 
-                  k39=k39,
-                  ca37=ca37,
-                  atm36=atm36,
-                  cl36=cl36,
+        k39=k39,
+        ca37=ca37,
+        atm36=atm36,
+        cl36=cl36,
 
-                  s40=s40,
-                  s39=s39,
-                  s38=s38,
-                  s37=s37,
-                  s36=s36,
+        s40=s40,
+        s39=s39,
+        s38=s38,
+        s37=s37,
+        s36=s36,
 
-                  s37decay_cor=s37dec_cor,
-                  s39decay_cor=s39dec_cor,
+        s37decay_cor=s37dec_cor,
+        s39decay_cor=s39dec_cor,
 
-                  ar39decayfactor=a39decayfactor,
-                  ar37decayfactor=a37decayfactor
-                  )
+        ar39decayfactor=a39decayfactor,
+        ar37decayfactor=a37decayfactor
+    )
     return result
+
 
 def age_equation(j, R, scalar=1, include_decay_error=False, constants=None):
     if isinstance(j, (tuple, str)):
@@ -244,20 +247,24 @@ def age_equation(j, R, scalar=1, include_decay_error=False, constants=None):
         R = ufloat(R)
     if constants is None:
         from src.processing.constants import Constants
+
         constants = Constants()
-#    print constants.lambda_k, 'dec'
+    #    print constants.lambda_k, 'dec'
     if include_decay_error:
         age = (1 / constants.lambda_k) * umath.log(1 + j * R) / float(scalar)
     else:
         age = (1 / constants.lambda_k.nominal_value) * umath.log(1 + j * R) / float(scalar)
     return age
 
+
 class ExcelMixin(object):
     def _make_row(self, sheet, ri, cast=str):
         return [cast(sheet.cell(ri, ci).value) for ci in range(sheet.ncols)]
 
+
 class Constants(ExcelMixin):
     age_units = 'Ma'
+
     def __init__(self, sheet):
         self.sheet = sheet
         # lambda_epsilon = ufloat((5.81e-11,
@@ -265,15 +272,15 @@ class Constants(ExcelMixin):
         # lambda_beta = ufloat((4.962e-10,
         #                                 0))
 
-#        lambda_e = ufloat((5.755e-11,
-#                                            1.6e-13))
-#        lambda_b = ufloat((4.9737e-10,
-#                                         9.3e-13))
+        #        lambda_e = ufloat((5.755e-11,
+        #                                            1.6e-13))
+        #        lambda_b = ufloat((4.9737e-10,
+        #                                         9.3e-13))
 
         lambda_e = self._get_constant('lambda_e', 5.81e-11, 1.6e-13)
-#        lambda_e = get_constant('lambda_e', 5.81e-11, 0)
+        #        lambda_e = get_constant('lambda_e', 5.81e-11, 0)
         lambda_b = self._get_constant('lambda_b', 4.962e-10, 9.3e-13)
-#        lambda_b = get_constant('lambda_b', 4.962e-10, 0)
+        #        lambda_b = get_constant('lambda_b', 4.962e-10, 0)
 
         self.lambda_k = lambda_e + lambda_b
         # lambda_k = get_constant('lambda_K', 5.81e-11 + 4.962e-10, 0)
@@ -308,7 +315,7 @@ class Constants(ExcelMixin):
         except Exception, e:
             print e
 
-#        print type(value)
+        #        print type(value)
         return ufloat(value, error)
 
 
@@ -329,12 +336,13 @@ class Result(HasTraits):
     age = Any
     identifier = Str
 
+
 class ResultAdapter(TabularAdapter):
     columns = [
-             ('Identifier', 'identifier'),
-             ('Age', 'age'),
-             ('Error', 'age_error'),
-             ]
+        ('Identifier', 'identifier'),
+        ('Age', 'age'),
+        ('Error', 'age_error'),
+    ]
     age_text = Property
     age_error_text = Property
 
@@ -355,10 +363,12 @@ class ResultAdapter(TabularAdapter):
     def _get_age_error_text(self):
         return self._get_error('age')
 
+
 class AgeCalculator(HasTraits, ExcelMixin):
     calc_button = Button
     results = List
     path = File
+
     def _load_irrad_info_from_file(self, sheet):
         ir_header = self._make_row(sheet, 0)
 
@@ -381,13 +391,13 @@ class AgeCalculator(HasTraits, ExcelMixin):
 
         row = self._make_row(sheet, 1, cast=float)
         irrad_info = [(row[idx_k4039], row[idx_k4039err]),
-                               (row[idx_k3839], row[idx_k3839err]),
-                               (row[idx_k3739], row[idx_k3739err]),
-                               (row[idx_ca3937], row[idx_ca3937err]),
-                               (row[idx_ca3837], row[idx_ca3837err]),
-                               (row[idx_ca3637], row[idx_ca3637err]),
-                               (row[idx_cl3638], row[idx_cl3638err])
-                               ]
+                      (row[idx_k3839], row[idx_k3839err]),
+                      (row[idx_k3739], row[idx_k3739err]),
+                      (row[idx_ca3937], row[idx_ca3937err]),
+                      (row[idx_ca3837], row[idx_ca3837err]),
+                      (row[idx_ca3637], row[idx_ca3637err]),
+                      (row[idx_cl3638], row[idx_cl3638err])
+        ]
 
         return irrad_info + [[], 1]
 
@@ -440,9 +450,9 @@ class AgeCalculator(HasTraits, ExcelMixin):
             j = map(float, (row[idx_j], row[idx_jerr]))
             ic = map(float, (row[idx_ic], row[idx_ic_err]))
             arar_result = calculate_arar_age(signals, baselines, blanks, backgrounds, j, irrad_info,
-                                           a37decayfactor=1, a39decayfactor=1,
-                                           ic=ic,
-                                           constants=constants_obj)
+                                             a37decayfactor=1, a39decayfactor=1,
+                                             ic=ic,
+                                             constants=constants_obj)
 
             self.results.append(Result(identifier=idn,
                                        age=arar_result['age'] / 1e6))
@@ -464,10 +474,10 @@ class AgeCalculator(HasTraits, ExcelMixin):
             idx_36 = header.index('Ar36')
             idx_36err = header.index('Ar36_err')
             signals = [(row[idx_40], row[idx_40err]),
-                     (row[idx_39], row[idx_39err]),
-                     (row[idx_38], row[idx_38err]),
-                     (row[idx_37], row[idx_37err]),
-                     (row[idx_36], row[idx_36err])]
+                       (row[idx_39], row[idx_39err]),
+                       (row[idx_38], row[idx_38err]),
+                       (row[idx_37], row[idx_37err]),
+                       (row[idx_36], row[idx_36err])]
 
         else:
             signals = [(0, 0), (0, 0), (0, 0), (0, 0), (0, 0)]
@@ -479,25 +489,25 @@ class AgeCalculator(HasTraits, ExcelMixin):
 
     def traits_view(self):
         v = View(
-               HGroup(Item('path', springy=True, show_label=False),
-                      Item('calc_button', enabled_when='path', show_label=False)),
-               Item('results', editor=TabularEditor(adapter=ResultAdapter(),
-                                                    editable=False
-                                                    ),
+            HGroup(Item('path', springy=True, show_label=False),
+                   Item('calc_button', enabled_when='path', show_label=False)),
+            Item('results', editor=TabularEditor(adapter=ResultAdapter(),
+                                                 editable=False
+            ),
 
-                    show_label=False, style='custom'),
-               title='Age Calculator',
-               width=500,
-               height=300,
-               )
+                 show_label=False, style='custom'),
+            title='Age Calculator',
+            width=500,
+            height=300,
+        )
         return v
-
 
 
 if __name__ == '__main__':
     ag = AgeCalculator()
     import os
+
     p = os.path.join(os.path.dirname(__file__), 'src', 'processing', 'data', 'age_calculator_template.xls')
-#    ag.path = '/Users/ross/Sandbox/age_calculator_template.xls'
+    #    ag.path = '/Users/ross/Sandbox/age_calculator_template.xls'
     ag.path = p
     ag.configure_traits()

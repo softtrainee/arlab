@@ -37,7 +37,8 @@ class ExperimentAction(Action):
     def _open_editor(self, event):
         application = event.task.window.application
         application.open_task(self.task_id)
-#         for wi in application.windows:
+
+    #         for wi in application.windows:
 #             if wi.active_task.id == self.task_id:
 #                 wi.activate()
 #                 break
@@ -47,6 +48,7 @@ class ExperimentAction(Action):
 
 class BasePatternAction(TaskAction):
     _enabled = None
+
     def _task_changed(self):
         if self.task:
             if hasattr(self.task, 'open_pattern'):
@@ -54,7 +56,7 @@ class BasePatternAction(TaskAction):
                 if self.enabled_name:
                     if self.object:
                         enabled = bool(self._get_attr(self.object,
-                                                   self.enabled_name, False))
+                                                      self.enabled_name, False))
                 if enabled:
                     self._enabled = True
             else:
@@ -74,6 +76,7 @@ class BasePatternAction(TaskAction):
             self.enabled = self._enabled
         else:
             self.enabled = bool(self.object)
+
 
 class OpenPatternAction(BasePatternAction):
     name = 'Open Pattern...'
@@ -96,7 +99,6 @@ class DeselectAction(TaskAction):
     method = 'deselect'
     accelerator = 'Ctrl+Shift+D'
     tooltip = 'Deselect the selected run(s)'
-
 
 
 class QueueAction(ExperimentAction):
@@ -122,6 +124,7 @@ class NewExperimentQueueAction(QueueAction):
             task = win.active_task
             task.new()
             win.open()
+
 #            manager = self._get_experimentor(event)
 #            if manager.verify_database_connection(inform=True):
 #    #        if manager.verify_credentials():
@@ -158,38 +161,38 @@ class OpenExperimentQueueAction(QueueAction):
 
 class SaveExperimentQueueAction(ExperimentAction):
     name = 'Save Experiment'
-#     manager = Any
+    #     manager = Any
     enabled = False
     accelerator = 'Ctrl+s'
-#     def __init__(self, manager, *args, **kw):
-#         super(SaveExperimentQueueAction, self).__init__(*args, **kw)
-#
-#         manager.on_trait_change(self._update_state, 'save_enabled')
-#         if manager.save_enabled:
-#             self.enabled = True
-#
-#         self.manager = manager
+    #     def __init__(self, manager, *args, **kw):
+    #         super(SaveExperimentQueueAction, self).__init__(*args, **kw)
+    #
+    #         manager.on_trait_change(self._update_state, 'save_enabled')
+    #         if manager.save_enabled:
+    #             self.enabled = True
+    #
+    #         self.manager = manager
 
     def perform(self, event):
         manager = self._get_experimentor(event)
         manager.save_experiment_queues()
 
     def _update_state(self, v):
-
         self.enabled = v
+
 
 class SaveAsExperimentQueueAction(ExperimentAction):
     name = 'Save As Experiment...'
     enabled = False
     accelerator = 'Ctrl+Shift+s'
-#     def __init__(self, manager, *args, **kw):
-#         super(SaveAsExperimentQueueAction, self).__init__(*args, **kw)
-#         application = manager.application
-#         application.on_trait_change(self._update_state, 'active_window')
+    #     def __init__(self, manager, *args, **kw):
+    #         super(SaveAsExperimentQueueAction, self).__init__(*args, **kw)
+    #         application = manager.application
+    #         application.on_trait_change(self._update_state, 'active_window')
 
-#     def _update_state(self, win):
-#         if win.active_task:
-#             self.enabled = win.active_task.id == self.task_id
+    #     def _update_state(self, win):
+    #         if win.active_task:
+    #             self.enabled = win.active_task.id == self.task_id
 
     def perform(self, event):
         manager = self._get_experimentor(event)
@@ -225,28 +228,29 @@ class SaveAsExperimentQueueAction(ExperimentAction):
 #===============================================================================
 class SignalCalculatorAction(ExperimentAction):
     name = 'Signal Calculator'
+
     def perform(self, event):
         obj = self._get_service(event, 'src.experiment.signal_calculator.SignalCalculator')
         app = event.task.window.application
         app.open_view(obj)
 
-class UpdateDatabaseAction(ExperimentAction):
-    name = 'Update Database'
-    def perform(self, event):
-        app = event.task.window.application
-        man = app.get_service('src.experiment.isotope_database_manager.IsotopeDatabaseManager')
-
-        url = man.db.url
-
-        repo = 'isotopedb'
-        from src.database.migrate.manage_database import manage_database
-        progress = man.open_progress()
-        manage_database(url, repo,
-                        logger=man.logger,
-                        progress=progress
-                        )
-
-        man.populate_default_tables()
+#class UpdateDatabaseAction(ExperimentAction):
+#    name = 'Update Database'
+#    def perform(self, event):
+#        app = event.task.window.application
+#        man = app.get_service('src.experiment.isotope_database_manager.IsotopeDatabaseManager')
+#
+#        url = man.db.url
+#
+#        repo = 'isotopedb'
+#        from src.database.migrate.manage_database import manage_database
+#        progress = man.open_progress()
+#        manage_database(url, repo,
+#                        logger=man.logger,
+#                        progress=progress
+#                        )
+#
+#        man.populate_default_tables()
 
 class ResetQueuesAction(TaskAction):
     method = 'reset_queues'

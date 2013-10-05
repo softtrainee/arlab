@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from pyface.tasks.task_layout import PaneItem, TaskLayout, Tabbed, HSplitter
-
+from pyface.tasks.task_layout import PaneItem, TaskLayout, Tabbed, HSplitter, \
+    VSplitter
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.processing.tasks.analysis_edit.panes import ControlsPane
 
@@ -28,6 +28,7 @@ from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
 
 
 class IsotopeEvolutionTask(AnalysisEditTask):
+    name = 'Isotope Evolutions'
     iso_evo_editor_count = 1
     id = 'pychron.analysis_edit.isotope_evolution',
 
@@ -38,10 +39,11 @@ class IsotopeEvolutionTask(AnalysisEditTask):
                 Tabbed(PaneItem('pychron.browser'),
                        PaneItem('pychron.search.query')
                 ),
-                Tabbed(
-                    PaneItem('pychron.processing.editor'),
-                    PaneItem('pychron.analysis_edit.unknowns'),
-                    PaneItem('pychron.processing.controls')
+                VSplitter(
+                    Tabbed(
+                        PaneItem('pychron.processing.editor'),
+                        PaneItem('pychron.analysis_edit.unknowns')),
+                    PaneItem('pychron.analysis_edit.controls')
                 ),
             ),
         )
@@ -191,7 +193,8 @@ class IsotopeEvolutionTask(AnalysisEditTask):
     def _dclicked_sample_changed(self, new):
         if self.active_editor:
             sa = self.selected_sample[0]
-            self.active_editor.unknowns = self._get_sample_analyses(sa)
+            ans = self._get_sample_analyses(sa)
+            self.unknowns_pane.items = ans
 
             #for sa in self.selected_sample:
             #    ans = self._get_sample_analyses(sa)

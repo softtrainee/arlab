@@ -70,7 +70,7 @@ class IsotopeDatabaseManager(Loggable):
     def load(self):
         self.populate_default_tables()
         return True
-    
+
     def populate_default_tables(self):
         self.debug('populating default tables')
         db = self.db
@@ -215,7 +215,7 @@ class IsotopeDatabaseManager(Loggable):
         hist = db.add_arar_history(meas_analysis)
         #a, e=age.nominal_value, age.std_dev
         d = dict()
-        attrs = ['age', 'k39', 'ca37', 'cl36',
+        attrs = ['k39', 'ca37', 'cl36', 'rad40',
                  'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
 
         for a in attrs:
@@ -223,6 +223,13 @@ class IsotopeDatabaseManager(Loggable):
             ek = '{}_err'.format(a)
             d[a] = float(v.nominal_value)
             d[ek] = float(v.std_dev)
+
+        age_scalar = analysis.arar_constants.age_scalar
+        d['age_err_wo_j'] = analysis.age_error_wo_j * age_scalar
+
+        age = analysis.age
+        d['age'] = age.nominal_value * age_scalar
+        d['age_err'] = age.std_dev * age_scalar
 
         db.add_arar(hist, **d)
 
@@ -262,6 +269,7 @@ class IsotopeDatabaseManager(Loggable):
                     if not ai.persisted_age:
                         ai.sync(meas_analysis, unpack=True)
                         ai.calculate_age()
+
                         self._add_arar(meas_analysis, ai)
                     else:
                         ai.sync(meas_analysis)
@@ -276,8 +284,8 @@ class IsotopeDatabaseManager(Loggable):
                 m = 'calculating age' if show_age else ''
                 msg = 'loading {}. {}'.format(rid, m)
                 progress.change_message(msg)
-                a = timethis(func, args=(rec,), msg='make analysis')
-                #a = func(rec)
+                #a = timethis(func, args=(rec,), msg='make analysis')
+                a = func(rec)
                 progress.increment()
             else:
                 a = func(rec)
@@ -298,10 +306,12 @@ class IsotopeDatabaseManager(Loggable):
     #        r = ['NM-Test', 'NM-100', 'NM-200']
     #         r = [NULL_STR] +
         r = []
-        if self.db and self.db.connected:
-        #             with self.db.session_() as sess:
-            r = [str(ri.name) for ri in self.db.get_irradiations()
-                 if ri.name]
+        db = self.db
+        if db and db.connected:
+            with db.session_ctx():
+            #             with self.db.session_() as sess:
+                r = [str(ri.name) for ri in db.get_irradiations()
+                     if ri.name]
 
             if r and not self.irradiation:
                 self.irradiation = r[0]

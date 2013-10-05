@@ -15,31 +15,33 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, Instance, Any
-from traitsui.api import View, UItem, InstanceEditor
+from pyface.action.action import Action
+from pyface.tasks.action.task_action import TaskAction
+from traits.api import HasTraits
+from traitsui.api import View, Item
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.envisage.tasks.base_editor import BaseTraitsEditor
 
 
-class RecallEditor(BaseTraitsEditor):
-    #model = Any
-    analysis_view = Instance('src.processing.analyses.analysis_view.AnalysisView')
-    analysis_summary = Any
+class UpdateDatabaseAction(Action):
+    name = 'Update Database'
 
-    name = Property(depends_on='analysis_view.analysis_id')
+    def perform(self, event):
+        app = event.task.window.application
+        man = app.get_service('src.database.isotope_database_manager.IsotopeDatabaseManager')
 
-    def traits_view(self):
-        v = View(UItem('analysis_view',
-                       style='custom',
-                       editor=InstanceEditor()
-        ))
-        return v
+        url = man.db.url
 
-    def _get_name(self):
-        if self.analysis_view:
-            return self.analysis_view.analysis_id
-        else:
-            return 'None'
+        repo = 'isotopedb'
+        from src.database.migrate.manage_database import manage_database
 
-#============= EOF =============================================
+        progress = man.open_progress()
+        manage_database(url, repo,
+                        logger=man.logger,
+                        progress=progress
+        )
+
+        man.populate_default_tables()
+
+    #============= EOF =============================================

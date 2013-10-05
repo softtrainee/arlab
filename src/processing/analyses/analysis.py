@@ -15,7 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Int, Str, Float, Dict, Property
+from traits.api import HasTraits, Instance, Int, Str, Float, Dict, Property, \
+    Date
 # from traitsui.api import View, Item
 #============= standard library imports ========================
 import time
@@ -24,6 +25,7 @@ from uncertainties import ufloat
 from collections import namedtuple
 #============= local library imports  ==========================
 from src.codetools.simple_timeit import timethis
+from src.processing.analyses.analysis_view import DBAnalysisView, AnalysisView
 from src.processing.arar_age import ArArAge
 from src.processing.analyses.summary import AnalysisSummary
 from src.processing.analyses.db_summary import DBAnalysisSummary
@@ -42,6 +44,8 @@ Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_ou
 class Analysis(ArArAge):
     analysis_summary_klass = AnalysisSummary
     analysis_summary = Instance(AnalysisSummary)
+    analysis_view_klass = AnalysisView
+    analysis_view = Instance(AnalysisView)
 
     labnumber = Str
     aliquot = Int
@@ -69,14 +73,21 @@ class Analysis(ArArAge):
         '''
         return
 
-    #
     def _analysis_summary_default(self):
-    #         print 'asdfsad'
         return self.analysis_summary_klass(model=self)
+
+    def _analysis_view_default(self):
+        v = self.analysis_view_klass()
+        self._sync_view(v)
+        return v
+
+    def _sync_view(self, v):
+        pass
 
 
 class DBAnalysis(Analysis):
     analysis_summary_klass = DBAnalysisSummary
+    analysis_view_klass = DBAnalysisView
     #     status = Int
     temp_status = Int
     record_id = Str
@@ -98,6 +109,7 @@ class DBAnalysis(Analysis):
     analysis_type = Str
     tag = Str
     timestamp = Float
+    rundate = Date
 
     peak_center = Float
 
@@ -253,6 +265,7 @@ class DBAnalysis(Analysis):
             #                  ('status', 'status', int),
             ('comment', 'comment', str),
             ('uuid', 'uuid', str),
+            ('rundate', 'analysis_timestamp', nocast),
             ('timestamp', 'analysis_timestamp',
              lambda x: time.mktime(x.timetuple())
             ),
@@ -277,28 +290,46 @@ class DBAnalysis(Analysis):
 
         self.analysis_type = self._get_analysis_type(meas_analysis)
 
+        #self._sync_view()
+
+    def _sync_view(self, av=None):
+        if av is None:
+            av = self.analysis_view
+
+        av.analysis_type = self.analysis_type
+        av.analysis_id = self.record_id
+        av.load(self)
+        #av.isotopes=[self.isotopes[k] for k in self.isotope_keys]
+        #av.analysis_id=self.record_id
+        #
+        #av.load_computed(self)
+        #av.load_extraction(self)
+        #av.load_measurement(self)
+
     def sync_arar(self, meas_analysis):
         hist = meas_analysis.selected_histories.selected_arar
         if hist:
             result = hist.arar_result
             self.persisted_age = ufloat(result.age, result.age_err)
-            self.age = self.persisted_age
+            self.age = self.persisted_age / self.arar_constants.age_scalar
 
             attrs = ['k39', 'ca37', 'cl36',
-                     'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
+                     'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36', 'rad40']
             d = dict()
             f = lambda k: getattr(result, k)
             for ai in attrs:
                 vs = map(f, (ai, '{}_err'.format(ai)))
                 d[ai] = ufloat(*vs)
+
+            d['age_err_wo_j'] = result.age_err_wo_j
             self.arar_result.update(d)
 
     def _sync_analysis_info(self, meas_analysis):
         self.sample = self._get_sample(meas_analysis)
         self.material = self._get_material(meas_analysis)
         self.project = self._get_project(meas_analysis)
-        self.rundate = self._get_rundate(meas_analysis)
-        self.runtime = self._get_runtime(meas_analysis)
+        #self.rundate = self._get_rundate(meas_analysis)
+        #self.runtime = self._get_runtime(meas_analysis)
         self.mass_spectrometer = self._get_mass_spectrometer(meas_analysis)
 
     def _sync_detector_info(self, meas_analysis):
@@ -602,6 +633,12 @@ class DBAnalysis(Analysis):
         lattr = attr.lower()
         #         print attr, ISOREGEX.match(attr)
         #         if ISOREGEX.match(attr):
+        if '/' in attr:
+            #treat as ratio
+            n, d = attr.split('/')
+            print n, d
+            return getattr(self, n) / getattr(self, d)
+
         if lattr in ('ar40', 'ar39', 'ar38', 'ar37', 'ar36'):
             return getattr(self, attr.capitalize())
 
