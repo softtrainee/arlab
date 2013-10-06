@@ -67,7 +67,7 @@ def calculate_flux(rad40, k39, age, arar_constants=None):
         k39 = ufloat(*k39)
     if isinstance(age, (list, tuple)):
         age = ufloat(*age)
-    #    age = (1 / constants.lambdak) * umath.log(1 + JR)
+        #    age = (1 / constants.lambdak) * umath.log(1 + JR)
     try:
         r = rad40 / k39
         if arar_constants is None:
@@ -105,7 +105,7 @@ def calculate_decay_factor(dc, segments):
 
 def calculate_arar_age(signals, baselines, blanks, backgrounds,
                        j, irradinfo,
-                       ic=(1.0, 0),
+                       ic_factors=None,
                        discrimination=None,
                        abundance_sensitivity=0,
                        a37decayfactor=None,
@@ -126,8 +126,15 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         j: flux, tuple(value,error)
         irradinfo: tuple of production ratios + chronology + decay_time
             production_ratios = k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638
-        
-        ic: CDD correction factor
+
+        #changed: 10/13 use ic_factors
+        #ic: CDD correction factor
+
+        ic_factors= dict of detector intercalibration factors.
+                dictionary should contain a key for each Ar isotope
+                values are scalars. ideally one of the values is 1.0 i.e the ref
+                detector, !!but this is not strictly enforced!!
+
         disc: Multiplier 1amu discrimination
         
         return:
@@ -160,6 +167,9 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         # lazy load constants
         arar_constants = ArArConstants()
 
+    if ic_factors is None:
+        ic_factors = dict()
+
     #    if isinstance(signals[0], tuple):
     s40, s39, s38, s37, s36 = map(to_ufloat, signals)
 
@@ -181,7 +191,7 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     k3839 = to_ufloat(k3839)
     cl3638 = to_ufloat(cl3638)
     k3739 = to_ufloat(k3739)
-    ic = to_ufloat(ic)
+    #ic = to_ufloat(ic)
     j = to_ufloat(j)
     #    temp_ic = ufloat(ic)
     #    print j, ic, arar_constants.atm4036
@@ -212,9 +222,15 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         s38 = s38 * disc ** 2
         s37 = s37 * disc ** 1
     else:
-        # todo need more flexible way of defining ic factor
+        #@todo: need more flexible way of defining ic factor
         # apply intercalibration factor to corrected 36
-        s36 *= ic
+        #s36 *= ic
+
+        s40 *= ic_factors.get('Ar40', 1)
+        s39 *= ic_factors.get('Ar39', 1)
+        s38 *= ic_factors.get('Ar38', 1)
+        s37 *= ic_factors.get('Ar37', 1)
+        s36 *= ic_factors.get('Ar36', 1)
 
     if decay_time is None:
         decay_time = calculate_decay_time(arar_constants.lambda_Ar37.nominal_value,
@@ -237,9 +253,9 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
             a39decayfactor = 1
 
 
-        #     print a39decayfactor, a37decayfactor
-        #    print type(s37), type(a37decayfactor)
-        # calculate interference corrections
+            #     print a39decayfactor, a37decayfactor
+            #    print type(s37), type(a37decayfactor)
+            # calculate interference corrections
     s37dec_cor = s37 * a37decayfactor
     s39dec_cor = s39 * a39decayfactor
 
@@ -360,7 +376,7 @@ def age_equation(j, R, scalar=1, include_decay_error=False,
         R = ufloat(R)
     if arar_constants is None:
         arar_constants = ArArConstants()
-    #    print constants.lambda_k, 'dec'
+        #    print constants.lambda_k, 'dec'
     if include_decay_error:
         age = (1 / arar_constants.lambda_k) * umath.log(1 + j * R) / float(scalar)
     else:
@@ -520,7 +536,7 @@ def find_plateaus(ages, errors, signals, overlap_sigma=1, exclude=None):
             plats.append(end - start)
             platids.append((start, end))
 
-        #    print plats, platids
+            #    print plats, platids
     if plats:
         plats = asarray(plats)
         platids = asarray(platids)

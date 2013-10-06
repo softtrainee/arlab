@@ -52,6 +52,7 @@ class IsotopeTabularAdapter(BaseTabularAdapter):
                ('Blank', 'blank_value'),
                (SIGMA_1, 'blank_error'),
                ('%', 'blank_percent_error'),
+               ('IC', 'ic_factor')
     ]
 
     value_text = Property
@@ -66,7 +67,7 @@ class IsotopeTabularAdapter(BaseTabularAdapter):
     baseline_percent_error_text = Property
 
     name_width = Int(40)
-    fit_width = Int(40)
+    fit_abbreviation_width = Int(25)
     detector_width = Int(40)
 
     value_width = vwidth
@@ -114,14 +115,20 @@ class IsotopeTabularAdapter(BaseTabularAdapter):
         return calc_percent_error(cv.nominal_value, cv.std_dev)
 
 
+class CompuatedValueTabularAdapter(BaseTabularAdapter):
+    columns = [('Name', 'name'),
+               ('Value', 'value'),
+               (SIGMA_1, 'error'),
+    ]
+
+
 class DetectorRatioTabularAdapter(BaseTabularAdapter):
     columns = [('Name', 'name'),
                ('Value', 'value'),
                (SIGMA_1, 'error'),
-               ('Non Corrected Value', 'noncorrected_value'),
+               ('Non Corrected', 'noncorrected_value'),
                (SIGMA_1, 'noncorrected_error'),
-               ('ICFactor', 'ic_factor')
-    ]
+               ('ICFactor', 'ic_factor')]
 
 
 class ExtractionTabularAdapter(BaseTabularAdapter):
@@ -192,7 +199,7 @@ class AnalysisView(HasTraits):
             MeasurementValue(name='Spectrometer',
                              value=an.mass_spectrometer),
             MeasurementValue(name='Run Date',
-                             value=an.rundate.isoformat(' ')),
+                             value=an.rundate.strftime('%Y-%m-%d %H:%M:%S')),
             MeasurementValue(name='Irradiation',
                              value=self._get_irradiation(an)),
             MeasurementValue(name='J',
@@ -245,8 +252,6 @@ class AnalysisView(HasTraits):
         for name, nd in ratios:
             n, d = nd.split('/')
             r = self._get_non_corrected_ratio(nd)
-            #for iso in self.isotopes:
-            #    print iso.name, d
 
             iso = self._get_isotope(d)
             ic = '1.0'
@@ -261,9 +266,7 @@ class AnalysisView(HasTraits):
                                    noncorrected_value=floatfmt(r.nominal_value),
                                    noncorrected_error=floatfmt(r.std_dev),
                                    ic_factor=ic,
-                                   detectors=nd,
-                                   #tag=det
-                )
+                                   detectors=nd)
                 cv.append(dr)
 
         return cv
@@ -280,16 +283,12 @@ class AnalysisView(HasTraits):
     def _update_ratios(self, an):
         for ci in self.computed_values:
             nd = ci.detectors
-            det = ci.tag
             r = self._get_non_corrected_ratio(nd)
-            print nd, r
             if r:
                 ci.trait_set(value=floatfmt(getattr(an, nd).nominal_value),
                              error=floatfmt(getattr(an, nd).std_dev),
-                             #ic_factor=floatfmt(an.get_ic_factor(det).),
                              noncorrected_value=floatfmt(r.nominal_value),
-                             noncorrected_error=floatfmt(r.std_dev),
-                )
+                             noncorrected_error=floatfmt(r.std_dev))
 
     def _load_air_computed(self, an, new_list):
         if new_list:
@@ -341,7 +340,10 @@ class AnalysisView(HasTraits):
                                   editable=False,
                                   refresh='refresh_needed')
 
-        ceditor = myTabularEditor(adapter=DetectorRatioTabularAdapter(),
+        adapter = CompuatedValueTabularAdapter
+        if self.analysis_type in ('air', 'cocktail'):
+            adapter = DetectorRatioTabularAdapter
+        ceditor = myTabularEditor(adapter=adapter(),
                                   editable=False,
                                   refresh='refresh_needed')
 
@@ -385,6 +387,7 @@ class AutomatedRunAnalysisView(AnalysisView):
     def load(self, ar):
         an = ar.arar_age
         self.isotopes = [an.isotopes[k] for k in an.isotope_keys]
+
         #for iso in self.isotopes:
         #    print iso, iso.name, 'det', iso.detector
 
@@ -402,7 +405,9 @@ class AutomatedRunAnalysisView(AnalysisView):
         return self._j
 
     def traits_view(self):
-        teditor, ceditor, eeditor, meditor = self._get_editors()
+        teditor, ceditor, eeditor, meditor = es = self._get_editors()
+        for ei in es:
+            ei.adapter.font = 'arial 10'
 
         isotopes = UItem('isotopes', editor=teditor, label='Isotopes')
 
