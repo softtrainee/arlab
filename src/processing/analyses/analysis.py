@@ -172,12 +172,12 @@ class DBAnalysis(Analysis):
 
         return d
 
-    def get_ic_factor(self, det):
-        if det in self.ic_factors:
-            r = self.ic_factors[det]
-        else:
-            r = (1, 0)
-        return r
+    #def get_ic_factor(self, det):
+    #    if det in self.ic_factors:
+    #        r = self.ic_factors[det]
+    #    else:
+    #        r = ufloat(1, 0)
+    #    return r
 
     def _get_ic_factors(self, meas_analysis):
         icfs = dict()
@@ -636,7 +636,6 @@ class DBAnalysis(Analysis):
         if '/' in attr:
             #treat as ratio
             n, d = attr.split('/')
-            print n, d
             return getattr(self, n) / getattr(self, d)
 
         if lattr in ('ar40', 'ar39', 'ar38', 'ar37', 'ar36'):

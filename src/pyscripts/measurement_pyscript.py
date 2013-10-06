@@ -33,6 +33,7 @@ ESTIMATED_DURATION_FF = 1.045
 
 command_register = makeRegistry()
 
+
 class MeasurementPyScript(ValvePyScript):
     automated_run = None
     ncounts = 0
@@ -65,18 +66,18 @@ class MeasurementPyScript(ValvePyScript):
             self.abbreviated_count_ratio = 0.25
         super(MeasurementPyScript, self).truncate(style=style)
 
-#    def get_script_commands(self):
-#        cmds = super(MeasurementPyScript, self).get_script_commands()
-#
-#        cmds += []
-#        return cmds
+    #    def get_script_commands(self):
+    #        cmds = super(MeasurementPyScript, self).get_script_commands()
+    #
+    #        cmds += []
+    #        return cmds
 
     def get_variables(self):
         return ['truncated']
 
-#===============================================================================
-# commands
-#===============================================================================
+    #===============================================================================
+    # commands
+    #===============================================================================
     @verbose_skip
     @command_register
     def extraction_gosub(self, *args, **kw):
@@ -92,9 +93,8 @@ class MeasurementPyScript(ValvePyScript):
             return
         self.ncounts = ncounts
         if not self._automated_run_call('py_sniff', ncounts,
-                           self._time_zero, self._time_zero_offset,
-                           series=self._series_count):
-
+                                        self._time_zero, self._time_zero_offset,
+                                        series=self._series_count):
             self.cancel()
         self._series_count += 1
 
@@ -115,7 +115,7 @@ class MeasurementPyScript(ValvePyScript):
                                         series=self._series_count):
             self.cancel()
 
-#        self._regress_id = self._series_count
+        #        self._regress_id = self._series_count
         self._series_count += 2
 
     @count_verbose_skip
@@ -143,8 +143,8 @@ class MeasurementPyScript(ValvePyScript):
                                         detector,
                                         settling_time=settling_time,
                                         series=self._series_count,
-                                        ):
-#
+        ):
+        #
             self.cancel()
         self._series_count += 1
 
@@ -168,23 +168,23 @@ class MeasurementPyScript(ValvePyScript):
                                         self._time_zero,
                                         self._series_count,
                                         group=group
-                                        ):
+        ):
             self.cancel()
         self._series_count += 4
 
-#    @count_verbose_skip
-#    @command_register
-#    def peak_hop(self, detector=None, isotopes=None, cycles=5, integrations=5, calc_time=False):
-#        if calc_time:
-#            self._estimated_duration += (cycles * integrations * ESTIMATED_DURATION_FF)
-#            return
-#
-#        self._automated_run_call('py_peak_hop', detector, isotopes,
-#                                    cycles,
-#                                    integrations,
-#                                    self._time_zero,
-#                                    self._series_count)
-#        self._series_count += 3
+    #    @count_verbose_skip
+    #    @command_register
+    #    def peak_hop(self, detector=None, isotopes=None, cycles=5, integrations=5, calc_time=False):
+    #        if calc_time:
+    #            self._estimated_duration += (cycles * integrations * ESTIMATED_DURATION_FF)
+    #            return
+    #
+    #        self._automated_run_call('py_peak_hop', detector, isotopes,
+    #                                    cycles,
+    #                                    integrations,
+    #                                    self._time_zero,
+    #                                    self._series_count)
+    #        self._series_count += 3
 
     @count_verbose_skip
     @command_register
@@ -209,11 +209,11 @@ class MeasurementPyScript(ValvePyScript):
     @command_register
     def equilibrate(self, eqtime=20, inlet=None, outlet=None, do_post_equilibration=True, delay=3):
         evt = self._automated_run_call('py_equilibration', eqtime=eqtime,
-                                        inlet=inlet,
-                                        outlet=outlet,
-                                        do_post_equilibration=do_post_equilibration,
-                                        delay=delay
-                                        )
+                                       inlet=inlet,
+                                       outlet=outlet,
+                                       do_post_equilibration=do_post_equilibration,
+                                       delay=delay
+        )
         if not evt:
             self.cancel()
         else:
@@ -230,11 +230,12 @@ class MeasurementPyScript(ValvePyScript):
 
     @verbose_skip
     @command_register
-    def activate_detectors(self, *dets):
+    def activate_detectors(self, *dets, **kw):
+        peak_center = kw.get('peak_center', False)
 
         if dets:
             self._detectors = dict()
-            self._automated_run_call('py_activate_detectors', list(dets))
+            self._automated_run_call('py_activate_detectors', list(dets), peak_center=peak_center)
             for di in list(dets):
                 self._detectors[di] = 0
 
@@ -254,13 +255,13 @@ class MeasurementPyScript(ValvePyScript):
     def coincidence(self):
         self._automated_run_call('py_coincidence_scan')
 
-#===============================================================================
-#
-#===============================================================================
+    #===============================================================================
+    #
+    #===============================================================================
     def _automated_run_call(self, func, *args, **kw):
-#         return True
-#         if func not in ('py_activate_detectors',):
-#             return True
+    #         return True
+    #         if func not in ('py_activate_detectors',):
+    #             return True
 
         if self.automated_run is None:
             return
@@ -273,9 +274,9 @@ class MeasurementPyScript(ValvePyScript):
     def _set_spectrometer_parameter(self, *args, **kw):
         self._automated_run_call('py_set_spectrometer_parameter', *args, **kw)
 
-#===============================================================================
-# set commands
-#===============================================================================
+    #===============================================================================
+    # set commands
+    #===============================================================================
     @verbose_skip
     @command_register
     def clear_conditions(self):
@@ -302,34 +303,36 @@ class MeasurementPyScript(ValvePyScript):
         self._automated_run_call('py_add_termination', attr, comp, value,
                                  start_count=start_count,
                                  frequency=frequency
-                                 )
+        )
+
     @verbose_skip
     @command_register
     def add_truncation(self, attr, comp, value, start_count=0, frequency=10,
                        abbreviated_count_ratio=1.0
-                       ):
+    ):
         self._automated_run_call('py_add_truncation', attr, comp, value,
                                  start_count=start_count,
                                  frequency=frequency,
                                  abbreviated_count_ratio=abbreviated_count_ratio
-                                 )
+        )
+
     @verbose_skip
     @command_register
     def add_action(self, attr, comp, value, start_count=0, frequency=10,
                    action=None,
                    resume=False
-                   ):
+    ):
 
-#        if self._syntax_checking:
-#            if isinstance(action, str):
-#                self.execute_snippet(action)
+    #        if self._syntax_checking:
+    #            if isinstance(action, str):
+    #                self.execute_snippet(action)
 
         self._automated_run_call('py_add_action', attr, comp, value,
                                  start_count=start_count,
                                  frequency=frequency,
                                  action=action,
                                  resume=resume
-                                 )
+        )
 
     @verbose_skip
     @command_register
@@ -452,7 +455,7 @@ class MeasurementPyScript(ValvePyScript):
 
     @property
     def truncated(self):
-        return self._automated_run_call(lambda:self.automated_run.truncated)
+        return self._automated_run_call(lambda: self.automated_run.truncated)
 
 #===============================================================================
 # handler

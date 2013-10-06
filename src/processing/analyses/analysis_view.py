@@ -22,6 +22,7 @@ from traitsui.api import View, UItem, TabularEditor, HGroup, Group
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from traitsui.tabular_adapter import TabularAdapter
+from uncertainties import ufloat
 from src.helpers.formatting import floatfmt, calc_percent_error
 from src.ui.tabular_editor import myTabularEditor
 
@@ -113,10 +114,14 @@ class IsotopeTabularAdapter(BaseTabularAdapter):
         return calc_percent_error(cv.nominal_value, cv.std_dev)
 
 
-class ComputedValueTabularAdapter(BaseTabularAdapter):
+class DetectorRatioTabularAdapter(BaseTabularAdapter):
     columns = [('Name', 'name'),
                ('Value', 'value'),
-               (SIGMA_1, 'error')]
+               (SIGMA_1, 'error'),
+               ('Non Corrected Value', 'noncorrected_value'),
+               (SIGMA_1, 'noncorrected_error'),
+               ('ICFactor', 'ic_factor')
+    ]
 
 
 class ExtractionTabularAdapter(BaseTabularAdapter):
@@ -137,6 +142,14 @@ class NamedValue(HasTraits):
 
 class ComputedValue(NamedValue):
     error = Either(Str, Float, Int)
+    tag = Str
+
+
+class DetectorRatio(ComputedValue):
+    ic_factor = Either(Float, Str)
+    detectors = Str
+    noncorrected_value = Str
+    noncorrected_error = Str
 
 
 class ExtractionValue(NamedValue):
@@ -216,53 +229,119 @@ class AnalysisView(HasTraits):
 
         self.extraction_values = ev
 
-    def load_computed(self, an, newlist=True):
-        attrs = None
+    def load_computed(self, an, new_list=True):
         if self.analysis_type == 'unknown':
-            attrs = (('Age', 'age'),
-                     ('K/Ca', 'kca'),
-                     ('K/Cl', 'kcl'),
-                     ('40Ar*', 'rad40_percent'),
-                     ('40Ar*/39ArK', 'R'),
-            )
-        elif self.analysis_type == 'cocktail':
-            attrs = (('40Ar/39Ar', 'Ar40/Ar39'),)
+            self._load_unknown_computed(an, new_list)
         elif self.analysis_type == 'air':
-            attrs = (('40Ar/36Ar', 'Ar40/Ar36'),
-                     ('40Ar/38Ar', 'Ar40/Ar38'))
+            self._load_air_computed(an, new_list)
+        elif self.analysis_type == 'cocktail':
+            self._load_cocktail_computed(an, new_list)
 
-        if attrs:
-            if newlist:
-                cv = [ComputedValue(name=name,
-                                    tag=attr,
-                                    value=floatfmt(getattr(an, attr).nominal_value),
-                                    error=floatfmt(getattr(an, attr).std_dev),
+    def _get_isotope(self, name):
+        return next((iso for iso in self.isotopes if iso.name == name), None)
+
+    def _make_ratios(self, an, ratios):
+        cv = []
+        for name, nd in ratios:
+            n, d = nd.split('/')
+            r = self._get_non_corrected_ratio(nd)
+            #for iso in self.isotopes:
+            #    print iso.name, d
+
+            iso = self._get_isotope(d)
+            ic = '1.0'
+            if iso:
+                det = iso.detector
+                ic = floatfmt(an.get_ic_factor(det).nominal_value)
+
+            if r is not None:
+                dr = DetectorRatio(name=name,
+                                   value=floatfmt(getattr(an, nd).nominal_value),
+                                   error=floatfmt(getattr(an, nd).std_dev),
+                                   noncorrected_value=floatfmt(r.nominal_value),
+                                   noncorrected_error=floatfmt(r.std_dev),
+                                   ic_factor=ic,
+                                   detectors=nd,
+                                   #tag=det
                 )
-                      for name, attr in attrs]
+                cv.append(dr)
 
-                if self.analysis_type == 'unknown':
-                    #insert error w/o j
-                    cv.insert(1, ComputedValue(name='w/o J',
-                                               tag='wo_j',
-                                               value='',
-                                               error=an.age_error_wo_j
-                    ))
-                self.computed_values = cv
-            else:
-                for ci in self.computed_values:
-                    attr = ci.tag
-                    if attr == 'wo_j':
-                        ci.error = an.age_error_wo_j
-                    else:
-                        ci.value = floatfmt(getattr(an, attr).nominal_value)
-                        ci.error = floatfmt(getattr(an, attr).std_dev)
+        return cv
+
+    def _get_non_corrected_ratio(self, nd):
+        n, d = nd.split('/')
+        niso, diso = self._get_isotope(n), self._get_isotope(d)
+        if niso and diso:
+            try:
+                return niso / diso
+            except ZeroDivisionError:
+                return ufloat(0, 1e-20)
+
+    def _update_ratios(self, an):
+        for ci in self.computed_values:
+            nd = ci.detectors
+            det = ci.tag
+            r = self._get_non_corrected_ratio(nd)
+            print nd, r
+            if r:
+                ci.trait_set(value=floatfmt(getattr(an, nd).nominal_value),
+                             error=floatfmt(getattr(an, nd).std_dev),
+                             #ic_factor=floatfmt(an.get_ic_factor(det).),
+                             noncorrected_value=floatfmt(r.nominal_value),
+                             noncorrected_error=floatfmt(r.std_dev),
+                )
+
+    def _load_air_computed(self, an, new_list):
+        if new_list:
+            ratios = [('40Ar/36Ar', 'Ar40/Ar36'), ('40Ar/38Ar', 'Ar40/Ar38')]
+            cv = self._make_ratios(an, ratios)
+            self.computed_values = cv
+        else:
+            self._update_ratios(an)
+
+    def _load_cocktail_computed(self, an, new_list):
+        if new_list:
+            ratios = [('40Ar/36Ar', 'Ar40/Ar36'), ('40Ar/39Ar', 'Ar40/Ar39')]
+            cv = self._make_ratios(an, ratios)
+            self.computed_values = cv
+        else:
+            self._update_ratios(an)
+
+    def _load_unknown_computed(self, an, new_list):
+
+        attrs = (('Age', 'age'),
+                 ('K/Ca', 'kca'),
+                 ('K/Cl', 'kcl'),
+                 ('40Ar*', 'rad40_percent'),
+                 ('40Ar*/39ArK', 'R'))
+        if new_list:
+            cv = [ComputedValue(name=name,
+                                tag=attr,
+                                value=floatfmt(getattr(an, attr).nominal_value),
+                                error=floatfmt(getattr(an, attr).std_dev))
+                  for name, attr in attrs]
+
+            #insert error w/o j
+            cv.insert(1, ComputedValue(name='w/o J',
+                                       tag='wo_j',
+                                       value='',
+                                       error=an.age_error_wo_j))
+            self.computed_values = cv
+        else:
+            for ci in self.computed_values:
+                attr = ci.tag
+                if attr == 'wo_j':
+                    ci.error = an.age_error_wo_j
+                else:
+                    ci.value = floatfmt(getattr(an, attr).nominal_value)
+                    ci.error = floatfmt(getattr(an, attr).std_dev)
 
     def _get_editors(self):
         teditor = myTabularEditor(adapter=IsotopeTabularAdapter(),
                                   editable=False,
                                   refresh='refresh_needed')
 
-        ceditor = myTabularEditor(adapter=ComputedValueTabularAdapter(),
+        ceditor = myTabularEditor(adapter=DetectorRatioTabularAdapter(),
                                   editable=False,
                                   refresh='refresh_needed')
 
