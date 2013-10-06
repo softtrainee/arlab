@@ -19,6 +19,7 @@
 from traits.api import HasTraits, Dict, Property, cached_property, \
     Event, Bool, Instance, Float, Any, Str, Tuple
 from apptools.preferences.preference_binding import bind_preference, PreferenceBinding
+from src.constants import ARGON_KEYS
 from src.ui.preference_binding import bind_preference as mybind_preference
 #============= standard library imports ========================
 from datetime import datetime
@@ -178,10 +179,8 @@ class ArArAge(Loggable):
         self.age = ufloat(0, 0)
 
     def get_ic_factor(self, det):
-        #for ic in self.arar_constants.ic_factors:
-        #    print ic, ic.value, ic.detector, det
         ic = next((ic.value for ic in self.arar_constants.ic_factors
-                   if ic.detector.lower() == det.lower()), 1)
+                   if ic.detector.lower() == det.lower()), 1.0)
         r = ufloat(ic, 0)
         return r
 
@@ -212,8 +211,10 @@ class ArArAge(Loggable):
         else:
             iso=Isotope(name=name)
             self.isotopes[name]=iso
+
         iso.detector=det
-        
+        iso.ic_factor = self.get_ic_factor(det).nominal_value
+
     def get_isotope(self, name=None, detector=None):
         if name is None and detector is None:
             raise NotImplementedError('name or detector required')
@@ -306,6 +307,13 @@ class ArArAge(Loggable):
 
         return self.age
 
+    def _make_ic_factors_dict(self):
+        ic_factors = dict()
+        for ki in ARGON_KEYS:
+            iso = self.isotopes[ki]
+            ic_factors[ki] = self.get_ic_factor(iso.detector)
+
+        return ic_factors
 
     def _calculate_age(self, include_j_error=None, include_decay_error=None, include_irradiation_error=None):
         if include_decay_error is None:
@@ -328,10 +336,11 @@ class ArArAge(Loggable):
         blsignals = self._make_signals(kind='blank')
         bksignals = self._make_signals(kind='background')
 
-        #         print self.labnumber_record
-        irrad = self.irradiation_info
+        ic_factors = self._make_ic_factors_dict()
 
+        irrad = self.irradiation_info
         if not include_irradiation_error:
+            #set errors to zero
             nirrad = []
             for ir in irrad[:-2]:
                 nirrad.append((ir[0], 0))
@@ -340,10 +349,10 @@ class ArArAge(Loggable):
 
         ab = self.arar_constants.abundance_sensitivity
 
-        ic = self.get_ic_factor('CDD')
         result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
                                     self.j, irrad, abundance_sensitivity=ab,
-                                    ic=ic,
+                                    ic_factors=ic_factors,
+                                    #ic=ic,
                                     #ic=self.ic_factor,
                                     include_decay_error=include_decay_error,
                                     arar_constants=self.arar_constants
@@ -376,7 +385,7 @@ class ArArAge(Loggable):
                 return 0, 1e-20, tag
 
         return (func(ki)
-                for ki in ('Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'))
+                for ki in ARGON_KEYS)
 
     #===============================================================================
     # property get/set

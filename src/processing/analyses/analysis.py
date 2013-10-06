@@ -172,12 +172,12 @@ class DBAnalysis(Analysis):
 
         return d
 
-    #def get_ic_factor(self, det):
-    #    if det in self.ic_factors:
-    #        r = self.ic_factors[det]
-    #    else:
-    #        r = ufloat(1, 0)
-    #    return r
+    def get_ic_factor(self, det):
+        if det in self.ic_factors:
+            r = self.ic_factors[det]
+        else:
+            r = ufloat(1.0, 0)
+        return r
 
     def _get_ic_factors(self, meas_analysis):
         icfs = dict()
@@ -335,6 +335,8 @@ class DBAnalysis(Analysis):
     def _sync_detector_info(self, meas_analysis):
         self.discrimination = self._get_discrimination(meas_analysis)
         self.ic_factors = self._get_ic_factors(meas_analysis)
+        for iso in self.isotopes.itervalues():
+            iso.ic_factor = self.get_ic_factor(iso.detector).nominal_value
 
     def _sync_irradiation(self, meas_analysis):
         ln = meas_analysis.labnumber

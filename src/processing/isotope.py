@@ -243,6 +243,10 @@ class Isotope(IsotopicMeasurement):
     sniff = Instance(Sniff)
 
     correct_for_blank = True
+    ic_factor = Float(1.0)
+
+    def ic_corrected_value(self):
+        return self.get_corrected_value() * self.ic_factor
 
     def baseline_corrected_value(self):
         return self.uvalue - self.baseline.uvalue
