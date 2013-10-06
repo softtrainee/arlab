@@ -149,14 +149,14 @@ class meas_IsotopeTable(Base, BaseMixin):
     kind = stringcolumn()
 
     signals = relationship('meas_SignalTable',
-                           #                            lazy='subquery',
-                           backref='isotope')
+                           backref='isotope',
+                           uselist=False)
+
     fits = relationship('proc_FitTable',
-                        #                         lazy='subquery',
                         backref='isotope')
     results = relationship('proc_IsotopeResultsTable',
-                           #                            lazy='subquery',
-                           backref='isotope')
+                           backref='isotope',
+    )
 
 
 class meas_MeasurementTable(Base, BaseMixin):

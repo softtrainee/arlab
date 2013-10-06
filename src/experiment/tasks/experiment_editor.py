@@ -23,9 +23,9 @@ import os
 #============= local library imports  ==========================
 
 from src.ui.tabular_editor import myTabularEditor
-from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
+from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter, UVAutomatedRunSpecAdapter
 from src.experiment.queue.experiment_queue import ExperimentQueue
-from src.envisage.tasks.base_editor import  BaseTraitsEditor
+from src.envisage.tasks.base_editor import BaseTraitsEditor
 from src.helpers.filetools import add_extension
 from src.experiment.utilities.human_error_checker import HumanErrorChecker
 
@@ -38,14 +38,14 @@ class ExperimentEditor(BaseTraitsEditor):
     tooltip = Property(Unicode, depends_on='path')
 
     executed = DelegatesTo('queue')
+    tabular_adapter_klass = AutomatedRunSpecAdapter
+    #     merge_id = Int(0)
+    #     group = Int(0)
 
-#     merge_id = Int(0)
-#     group = Int(0)
+    #     dirty = Bool(False)
 
-#     dirty = Bool(False)
-
-#    def create(self, parent):
-#        self.control = self._create_control(parent)
+    #    def create(self, parent):
+    #        self.control = self._create_control(parent)
 
     def _dirty_changed(self):
         self.debug('dirty changed {}'.format(self.dirty))
@@ -53,44 +53,44 @@ class ExperimentEditor(BaseTraitsEditor):
     def traits_view(self):
 
         arun_grp = UItem('automated_runs',
-                         editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
-                                   operations=['delete',
-                                               'move',
-                                               ],
-                                   editable=True,
-                                   dclicked='dclicked',
-                                   selected='selected',
-                                   paste_function='paste_function',
-                                   refresh='refresh_table_needed',
-                                   scroll_to_row='automated_runs_scroll_to_row',
-                                   copy_cache='linked_copy_cache',
-                                   multi_select=True,
-                                   ),
+                         editor=myTabularEditor(adapter=self.tabular_adapter_klass(),
+                                                operations=['delete',
+                                                            'move',
+                                                ],
+                                                editable=True,
+                                                dclicked='dclicked',
+                                                selected='selected',
+                                                paste_function='paste_function',
+                                                refresh='refresh_table_needed',
+                                                scroll_to_row='automated_runs_scroll_to_row',
+                                                copy_cache='linked_copy_cache',
+                                                multi_select=True,
+                         ),
                          height=200
 
-                        )
+        )
 
         executed_grp = UItem('executed_runs',
-                            editor=myTabularEditor(adapter=AutomatedRunSpecAdapter(),
-                                            editable=False,
-                                            auto_update=True,
-                                            selectable=True,
-                                            copy_cache='linked_copy_cache',
-                                            selected='executed_selected',
-                                            multi_select=True,
-                                            scroll_to_row='executed_runs_scroll_to_row'
-                                            ),
-                            height=500,
-                            visible_when='executed'
-                            )
+                             editor=myTabularEditor(adapter=self.tabular_adapter_klass(),
+                                                    editable=False,
+                                                    auto_update=True,
+                                                    selectable=True,
+                                                    copy_cache='linked_copy_cache',
+                                                    selected='executed_selected',
+                                                    multi_select=True,
+                                                    scroll_to_row='executed_runs_scroll_to_row'
+                             ),
+                             height=500,
+                             visible_when='executed'
+        )
 
         v = View(
-#                 VGroup(
-                executed_grp,
-                arun_grp,
-#                     ),
-                 resizable=True
-                )
+            #                 VGroup(
+            executed_grp,
+            arun_grp,
+            #                     ),
+            resizable=True
+        )
         return v
 
 
@@ -98,12 +98,12 @@ class ExperimentEditor(BaseTraitsEditor):
         """ Use the model object for the Traits UI context, if appropriate.
         """
         if self.queue:
-            return { 'object': self.queue}
+            return {'object': self.queue}
         return super(ExperimentEditor, self).trait_context()
 
-#    @on_trait_change('queue:automated_runs[], queue:changed')
+    #    @on_trait_change('queue:automated_runs[], queue:changed')
     def _queue_changed(self):
-#        f = lambda: self.trait_set(dirty=True)
+    #        f = lambda: self.trait_set(dirty=True)
         f = self._set_queue_dirty
         self.queue.on_trait_change(f, 'automated_runs[]')
         self.queue.on_trait_change(f, 'changed')
@@ -113,15 +113,16 @@ class ExperimentEditor(BaseTraitsEditor):
         self.queue.path = self.path
 
     def _set_queue_dirty(self, obj, name, old, new):
-#         print 'ggg', obj, name, old, new
-#         print 'set qirty', self.queue._no_update, self.queue.initialized
+    #         print 'ggg', obj, name, old, new
+    #         print 'set qirty', self.queue._no_update, self.queue.initialized
 
         if not self.queue._no_update and self.queue.initialized:
             self.dirty = True
 
-#===========================================================================
-#
-#===========================================================================
+            #===========================================================================
+            #
+            #===========================================================================
+
     def new_queue(self, txt=None):
         queue = self.queue_factory()
         if txt:
@@ -133,9 +134,9 @@ class ExperimentEditor(BaseTraitsEditor):
     def queue_factory(self):
         return ExperimentQueue()
 
-#                             db=self.db,
-#                             application=self.application,
-#                             **kw)
+    #                             db=self.db,
+    #                             application=self.application,
+    #                             **kw)
 
     def save(self, path, queues=None):
         if queues is None:
@@ -179,7 +180,6 @@ class ExperimentEditor(BaseTraitsEditor):
 
         p = add_extension(p)
 
-
         self.info('saving experiment to {}'.format(p))
         with open(p, 'wb') as fp:
             n = len(queues)
@@ -193,25 +193,25 @@ class ExperimentEditor(BaseTraitsEditor):
         return p
 
 
-#===============================================================================
-# handlers
-#===============================================================================
-#    def _path_changed(self):
-#        '''
-#            parse the file at path
-#        '''
-#        if os.path.isfile(self.path):
-#            with open(self.path) as fp:
-#                txt = fp.read()
-#                queues = self._parse_text(txt)
-#                for qi in queues:
-#                    qu=self.new_queue()
-#                    exp.load(text):
+    #===============================================================================
+    # handlers
+    #===============================================================================
+    #    def _path_changed(self):
+    #        '''
+    #            parse the file at path
+    #        '''
+    #        if os.path.isfile(self.path):
+    #            with open(self.path) as fp:
+    #                txt = fp.read()
+    #                queues = self._parse_text(txt)
+    #                for qi in queues:
+    #                    qu=self.new_queue()
+    #                    exp.load(text):
 
 
-#===============================================================================
-# property get/set
-#===============================================================================
+    #===============================================================================
+    # property get/set
+    #===============================================================================
     def _get_tooltip(self):
         return self.path
 
@@ -219,12 +219,14 @@ class ExperimentEditor(BaseTraitsEditor):
         if self.path:
             name = os.path.basename(self.path)
             name, _ = os.path.splitext(name)
-#             if self.merge_id:
-#                 name = '{}-{:02n}'.format(name, self.merge_id)
+        #             if self.merge_id:
+        #                 name = '{}-{:02n}'.format(name, self.merge_id)
         else:
             name = 'Untitled'
         return name
 
 
+class UVExperimentEditor(ExperimentEditor):
+    tabular_adapter_klass = UVAutomatedRunSpecAdapter
 
 #============= EOF =============================================

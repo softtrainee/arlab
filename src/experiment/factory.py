@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Button, Bool, Property, \
-    on_trait_change, String, Int, Any, DelegatesTo, List
+    on_trait_change, String, Int, Any, DelegatesTo, List, Str
 from traitsui.api import View, Item, HGroup, VGroup, UItem, UCustom, spring
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -55,10 +55,11 @@ class ExperimentFactory(Loggable, ConsumerMixin):
 
     _username = String
     _mass_spectrometer = String
-    _extract_device = String
+    extract_device = String
     _labnumber = String
 
     selected_positions = List
+    default_mass_spectrometer = Str
 
     #     help_label = String('Select Irradiation/Level or Project')
 
@@ -163,7 +164,7 @@ extract_device, delay_+, tray, username, load_name]''')
     # private
     #===============================================================================
     def _set_extract_device(self, ed):
-        self._extract_device = ed
+        self.extract_device = ed
         self.run_factory = self._run_factory_factory()
         #         self.run_factory.update_templates_needed = True
         self.run_factory.load_templates()
@@ -194,17 +195,16 @@ extract_device, delay_+, tray, username, load_name]''')
     #
     #===============================================================================
     def _run_factory_factory(self):
-        if self._extract_device == 'Fusions UV':
+        if self.extract_device == 'Fusions UV':
             klass = UVAutomatedRunFactory
         else:
             klass = AutomatedRunFactory
 
         rf = klass(db=self.db,
                    application=self.application,
-                   extract_device=self._extract_device,
-                   mass_spectrometer=self._mass_spectrometer,
-                   #                   can_edit=self.can_edit_scripts
-        )
+                   extract_device=self.extract_device,
+                   mass_spectrometer=self.default_mass_spectrometer)
+
         rf.load_truncations()
         rf.on_trait_change(lambda x: self.trait_set(_labnumber=x), 'labnumber')
         rf.on_trait_change(self._update_end_after, 'end_after')
@@ -221,11 +221,15 @@ extract_device, delay_+, tray, username, load_name]''')
 
     def _queue_factory_default(self):
         eq = ExperimentQueueFactory(db=self.db,
-                                    #                                    application=self.application
-        )
+                                    mass_spectrometer=self.default_mass_spectrometer)
         return eq
 
     def _db_changed(self):
         self.queue_factory.db = self.db
         self.run_factory.db = self.db
+
+    def _default_mass_spectrometer_changed(self):
+        self.run_factory.set_mass_spectrometer(self.default_mass_spectrometer)
+        self.queue_factory.mass_spectrometer = self.default_mass_spectrometer
+        self._mass_spectrometer = self.default_mass_spectrometer
         #============= EOF =============================================

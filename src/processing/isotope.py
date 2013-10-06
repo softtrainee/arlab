@@ -21,10 +21,14 @@ from traits.api import HasTraits, Str, Float, Property, Any, Instance, \
 #============= standard library imports ========================
 from uncertainties import ufloat
 from numpy import array, delete
+from src.helpers.logger_setup import new_logger
 from src.regression.mean_regressor import MeanRegressor
 from src.regression.ols_regressor import PolynomialRegressor
 import struct
 #============= local library imports  ==========================
+logger = new_logger('isotopes')
+
+
 class BaseMeasurement(HasTraits):
     xs = Array
     ys = Array
@@ -38,9 +42,9 @@ class BaseMeasurement(HasTraits):
 
         if dbrecord and unpack:
             try:
-                xs, ys = self._unpack_blob(dbrecord.signals[-1].data)
+                xs, ys = self._unpack_blob(dbrecord.signals.data)
             except (ValueError, TypeError, IndexError), e:
-                print 'base measurment {} {}'.format(self, e)
+                logger.warning('base measurment {} {}'.format(self, e))
                 xs, ys = [], []
 
             self.xs = array(xs)
@@ -54,10 +58,6 @@ class BaseMeasurement(HasTraits):
 
 
 class IsotopicMeasurement(BaseMeasurement):
-#     dbrecord = Any
-#     dbresult = Any
-
-
     uvalue = Property(depends='value, error, _value, _error')
     value = Property(depends_on='_value,fit')
     error = Property(depends_on='_error,fit')
@@ -244,6 +244,7 @@ class Isotope(IsotopicMeasurement):
 
     correct_for_blank = True
     ic_factor = Float(1.0)
+    age_error_component = Float(0.0)
 
     def ic_corrected_value(self):
         return self.get_corrected_value() * self.ic_factor

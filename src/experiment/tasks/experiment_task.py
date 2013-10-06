@@ -31,7 +31,7 @@ from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPa
     SummaryPane
 # from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.envisage.tasks.editor_task import EditorTask
-from src.experiment.tasks.experiment_editor import ExperimentEditor
+from src.experiment.tasks.experiment_editor import ExperimentEditor, UVExperimentEditor
 from src.paths import paths
 from src.helpers.filetools import add_extension
 from src.ui.gui import invoke_in_main_thread
@@ -389,6 +389,25 @@ class ExperimentEditorTask(EditorTask):
             #             group_positions = False
             if group_positions:
                 rf.position = ','.join(ns)
+
+    @on_trait_change('manager.experiment_factory:extract_device')
+    def _handle_extract_device(self, new):
+        print new
+        if new == 'Fusions UV':
+            editor = UVExperimentEditor()
+            editor.new_queue()
+            editor.dirty = False
+            if self.active_editor:
+                #ask user to copy runs into the new editor
+                ans = self.active_editor.queue.cleaned_automated_runs
+                if ans:
+                    if self.confirmation_dialog('Copy runs to the new UV Editor?'):
+                        self.warning_dialog('Copying runs not yet implemented')
+                self.active_editor.close()
+
+            self._open_editor(editor)
+            self.manager.executor.executable = False
+
 
     @on_trait_change('manager.experiment_factory:queue_factory:load_name')
     def _update_load(self, new):

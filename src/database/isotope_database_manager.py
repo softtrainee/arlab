@@ -122,7 +122,7 @@ class IsotopeDatabaseManager(Loggable):
 
         return filter(lambda x: not x.tag in exclude, ans)
 
-    def make_analyses(self, ans, exclude=None, **kw):
+    def make_analyses(self, ans, calculate_age=False, exclude=None, **kw):
 
         if exclude:
             ans = self.filter_analysis_tag(ans, exclude)
@@ -146,7 +146,10 @@ class IsotopeDatabaseManager(Loggable):
 
                     rs = []
                     for ai in ans:
-                        r = self._record_factory(ai, progress=progress, **kw)
+                        r = self._record_factory(ai,
+                                                 progress=progress,
+                                                 calculate_age=calculate_age,
+                                                 **kw)
                         if r is not None:
                             rs.append(r)
 
@@ -238,7 +241,9 @@ class IsotopeDatabaseManager(Loggable):
         #hist.selected=analysis.selected_histories
         #analysis.selected_histories.selected_arar=hist
 
-    def _record_factory(self, rec, progress=None, calculate_age=True, exclude=None, **kw):
+    def _record_factory(self, rec, progress=None,
+                        calculate_age=False,
+                        exclude=None, **kw):
         if isinstance(rec, (Analysis, DBAnalysis)):
             if progress:
                 progress.increment()
@@ -264,13 +269,15 @@ class IsotopeDatabaseManager(Loggable):
 
                 ai = DBAnalysis()
 
-                if calculate_age and atype in ('unknown', 'cocktail'):
+                if atype in ('unknown', 'cocktail'):
                     ai.sync_arar(meas_analysis)
                     if not ai.persisted_age:
                         ai.sync(meas_analysis, unpack=True)
                         ai.calculate_age()
-
                         self._add_arar(meas_analysis, ai)
+                    elif calculate_age:
+                        ai.sync(meas_analysis, unpack=True)
+                        ai.calculate_age(force=True)
                     else:
                         ai.sync(meas_analysis)
 

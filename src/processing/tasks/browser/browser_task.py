@@ -389,7 +389,7 @@ class BrowserTask(BaseBrowserTask):
         if an and isinstance(self.active_editor, RecallEditor):
         #             l, a, s = strip_runid(s)
         #             an = self.manager.db.get_unique_analysis(l, a, s)
-            an = self.manager.make_analyses([an])[0]
+            an = self.manager.make_analyses([an], calculate_age=True)[0]
             #             an.load_isotopes(refit=False)
             #self.active_editor.analysis_summary = an.analysis_summary
             self.active_editor.analysis_view = an.analysis_view
