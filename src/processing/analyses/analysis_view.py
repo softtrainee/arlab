@@ -52,8 +52,8 @@ class IsotopeTabularAdapter(BaseTabularAdapter):
                ('Blank', 'blank_value'),
                (SIGMA_1, 'blank_error'),
                ('%', 'blank_percent_error'),
-               ('IC', 'ic_factor')
-    ]
+               ('IC', 'ic_factor'),
+               ('Error Comp.', 'age_error_component')]
 
     value_text = Property
     error_text = Property
@@ -65,6 +65,7 @@ class IsotopeTabularAdapter(BaseTabularAdapter):
     value_percent_error_text = Property
     blank_percent_error_text = Property
     baseline_percent_error_text = Property
+    age_error_component_text = Property
 
     name_width = Int(40)
     fit_abbreviation_width = Int(25)
@@ -113,6 +114,9 @@ class IsotopeTabularAdapter(BaseTabularAdapter):
     def _get_value_percent_error_text(self, *args):
         cv = self.item.get_corrected_value()
         return calc_percent_error(cv.nominal_value, cv.std_dev)
+
+    def _get_age_error_component_text(self):
+        return floatfmt(self.item.age_error_component)
 
 
 class CompuatedValueTabularAdapter(BaseTabularAdapter):
@@ -312,7 +316,7 @@ class AnalysisView(HasTraits):
                  ('K/Ca', 'kca'),
                  ('K/Cl', 'kcl'),
                  ('40Ar*', 'rad40_percent'),
-                 ('40Ar*/39ArK', 'R'))
+                 ('R', 'R'))
         if new_list:
             cv = [ComputedValue(name=name,
                                 tag=attr,
@@ -421,8 +425,7 @@ class AutomatedRunAnalysisView(AnalysisView):
                         label='Extraction')
 
         v = View(
-            Group(isotopes, ratios, extract, meas, layout='tabbed'),
-        )
+            Group(isotopes, ratios, extract, meas, layout='tabbed'))
         return v
 
 #============= EOF =============================================

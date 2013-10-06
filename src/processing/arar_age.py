@@ -17,7 +17,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Dict, Property, cached_property, \
-    Event, Bool, Instance, Float, Any, Str, Tuple
+    Event, Bool, Instance, Float, Any, Str, Tuple, on_trait_change
 from apptools.preferences.preference_binding import bind_preference, PreferenceBinding
 from src.constants import ARGON_KEYS
 from src.ui.preference_binding import bind_preference as mybind_preference
@@ -76,6 +76,7 @@ class ArArAge(Loggable):
     include_decay_error = Bool(False)
 
     arar_result = Dict
+    #arar_updated=Event
 
     rad40 = AgeProperty()
     k39 = AgeProperty()
@@ -203,16 +204,16 @@ class ArArAge(Loggable):
     def clear_blanks(self):
         for k in self.isotopes:
             self.set_blank(k, (0, 0))
-            
-    def set_isotope_detector(self, det):
-        name,det=det.isotope, det.name
-        if name in self.isotopes:
-            iso=self.isotopes[name]
-        else:
-            iso=Isotope(name=name)
-            self.isotopes[name]=iso
 
-        iso.detector=det
+    def set_isotope_detector(self, det):
+        name, det = det.isotope, det.name
+        if name in self.isotopes:
+            iso = self.isotopes[name]
+        else:
+            iso = Isotope(name=name)
+            self.isotopes[name] = iso
+
+        iso.detector = det
         iso.ic_factor = self.get_ic_factor(det).nominal_value
 
     def get_isotope(self, name=None, detector=None):
@@ -253,6 +254,39 @@ class ArArAge(Loggable):
             self.isotopes[iso] = niso
 
         self.isotopes[iso].baseline.set_uvalue(v)
+
+    def calculate_age(self, force=False, **kw):
+        """
+            force: force recalculation of age. necessarily if you want error components
+        """
+        self.debug('calculate age ={}'.format(self.age))
+        if not self.age or force:
+            #self.age=timethis(self._calculate_age, kwargs=kw, msg='calculate_age')
+            self.age = self._calculate_age(**kw)
+            self.age_dirty = True
+
+        return self.age
+
+    def load_irradiation(self, ln):
+        self.timestamp = self._get_timestamp(ln)
+
+        self.irradiation_info = self._get_irradiation_info(ln)
+        self.j = self._get_j(ln)
+
+        self.production_ratios = self._get_production_ratios(ln)
+
+
+    #================================================================================
+    # handlers
+    #================================================================================
+    @on_trait_change('age_dirty')
+    def _handle_arar_result(self, new):
+        #load error components into isotopes
+        for iso in self.isotopes.itervalues():
+            iso.age_error_component = self.get_error_component(iso.name)
+            #================================================================================
+            # private
+            #================================================================================
 
     def _calculate_kca(self):
         result = self.arar_result
@@ -298,14 +332,6 @@ class ArArAge(Loggable):
                 pass
 
         return ret
-
-    def calculate_age(self, **kw):
-        if not self.age:
-            #self.age=timethis(self._calculate_age, kwargs=kw, msg='calculate_age')
-            self.age = self._calculate_age(**kw)
-            self.age_dirty = True
-
-        return self.age
 
     def _make_ic_factors_dict(self):
         ic_factors = dict()
@@ -360,8 +386,10 @@ class ArArAge(Loggable):
 
         if result:
             self.arar_result = result
+
             ai = result['age']
             ai = ai / self.arar_constants.age_scalar
+
             return ai
             #            age = ai.nominal_value
             #            err = ai.std_dev()
@@ -608,14 +636,7 @@ class ArArAge(Loggable):
     #===============================================================================
     #
     #===============================================================================
-    def load_irradiation(self, ln):
-        self.timestamp = self._get_timestamp(ln)
 
-        self.irradiation_info = self._get_irradiation_info(ln)
-        self.j = self._get_j(ln)
-
-        self.production_ratios = self._get_production_ratios(ln)
-    
     def __getattr__(self, attr):
         if '/' in attr:
             #treat as ratio
@@ -623,5 +644,6 @@ class ArArAge(Loggable):
             try:
                 return getattr(self, n) / getattr(self, d)
             except ZeroDivisionError:
-                return ufloat(0,1e-20)
+                return ufloat(0, 1e-20)
+
 #============= EOF =============================================

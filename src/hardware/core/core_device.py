@@ -33,6 +33,7 @@ from src.has_communicator import HasCommunicator
 from src.hardware.core.communicators.scheduler import CommunicationScheduler
 from src.consumer_mixin import ConsumerMixin
 
+
 class Alarm(HasTraits):
     alarm_str = Str
     triggered = False
@@ -72,12 +73,12 @@ class Alarm(HasTraits):
 class CoreDevice(ScanableDevice, RPCable, HasCommunicator, ConsumerMixin):
     '''
     '''
-#    graph_klass = TimeSeriesStreamGraph
+    #    graph_klass = TimeSeriesStreamGraph
 
     implements(ICoreDevice)
     name = Str
-#    id_query = ''
-#    id_response = ''
+    #    id_query = ''
+    #    id_response = ''
 
     current_scan_value = 0
 
@@ -107,6 +108,12 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator, ConsumerMixin):
         '''
         config = self.get_configuration()
         if config:
+
+            if config.has_section('General'):
+                name = self.config_get(config, 'General', 'name', optional=True)
+                if name is not None:
+                    self.name = name
+
             if config.has_section('Communications'):
                 comtype = self.config_get(config, 'Communications', 'type')
                 if not self._load_communicator(config, comtype):
@@ -142,8 +149,8 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator, ConsumerMixin):
         if comm is not None:
             if comm.scheduler:
                 r = comm.scheduler.schedule(comm.ask, args=(cmd,),
-                                           kwargs=kw
-                                           )
+                                            kwargs=kw
+                )
             else:
                 r = comm.ask(cmd, **kw)
             self._communicate_hook(cmd, r)
@@ -172,20 +179,20 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator, ConsumerMixin):
 
     def get(self):
         return self.current_scan_value
-#        if self.simulation:
-#            return 'simulation'
+
+    #        if self.simulation:
+    #            return 'simulation'
 
     def set(self, v):
         pass
 
 
-
-#            gdict = globals()
-#            if communicator_type in gdict:
-#                return gdict[communicator_type](name='_'.join((self.name, communicator_type)),
-#                                   id_query=self.id_query,
-#                                   id_response=self.id_response
-#                                )
+    #            gdict = globals()
+    #            if communicator_type in gdict:
+    #                return gdict[communicator_type](name='_'.join((self.name, communicator_type)),
+    #                                   id_query=self.id_query,
+    #                                   id_response=self.id_response
+    #                                )
     def post_initialize(self, *args, **kw):
         self.setup_scan()
         self.setup_alarms()
@@ -217,7 +224,8 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator, ConsumerMixin):
     def set_scheduler(self, s):
         if self._communicator is not None:
             self._communicator.scheduler = s
-#            self._communicator._lock=s._lock
+            #            self._communicator._lock=s._lock
+
     def _parse_response(self, v):
         return v
 
@@ -233,8 +241,8 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator, ConsumerMixin):
             resp = self._parse_response(self.ask(cmd, verbose=verbose))
             if verbose:
                 m = 'repeat command {} response = {} len={} '.format(i + 1,
-                                                resp,
-                                                len(str(resp)) if resp is not None else None)
+                                                                     resp,
+                                                                     len(str(resp)) if resp is not None else None)
                 self.debug(m)
             if check_val is not None:
                 if self.simulation:
@@ -259,9 +267,9 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator, ConsumerMixin):
 
         return resp
 
-#===============================================================================
-# scanable interface
-#===============================================================================
+    #===============================================================================
+    # scanable interface
+    #===============================================================================
     def _scan_hook(self, v):
         for a in self.alarms:
             if a.test_condition(v):

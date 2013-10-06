@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, Any
+from traits.api import Instance, Any, Property
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
@@ -34,6 +34,8 @@ from src.spectrometer.spectrometer_parameters import SpectrometerParameters, \
 class SpectrometerManager(Manager):
     spectrometer = Instance(Spectrometer)
     spectrometer_microcontroller = Any
+    name = Property(depends_on='spectrometer_microcontroller')
+
     def _spectrometer_default(self):
         return Spectrometer(application=self.application)
 
@@ -49,7 +51,7 @@ class SpectrometerManager(Manager):
         d = dict()
         for attr, cmd in [('extraction_lens', 'ExtractionLens'), ('ysymmetry', 'YSymmetry'),
                           ('zsymmetry', 'ZSymmetry'), ('zfocus', 'ZFocus')
-                          ]:
+        ]:
             v = spec.get_parameter('Get{}'.format(cmd))
             if v is not None:
                 d[attr] = v
@@ -65,6 +67,7 @@ class SpectrometerManager(Manager):
 
     def load(self):
         self.debug('******************************* LOAD Spec')
+
         self.spectrometer.load()
 
         config = self.get_configuration(path=os.path.join(paths.spectrometer_dir, 'detectors.cfg'))
@@ -74,12 +77,11 @@ class SpectrometerManager(Manager):
             default_state = self.config_get(config, name, 'default_state', default=True, cast='boolean')
             isotope = self.config_get(config, name, 'isotope')
             self.spectrometer.add_detector(name=name,
-                                            relative_position=relative_position,
-                                            color=color,
-                                            active=default_state,
-                                            isotope=isotope
-                                            )
-
+                                           relative_position=relative_position,
+                                           color=color,
+                                           active=default_state,
+                                           isotope=isotope
+            )
 
         return True
 
@@ -131,11 +133,19 @@ class SpectrometerManager(Manager):
         ion = self.application.get_service('src.spectrometer.ion_optics_manager.IonOpticsManager')
         return klass(spectrometer=self.spectrometer, ion_optics_manager=ion)
 
-#    def _spectrometer_microcontroller_default(self):
+    def _get_name(self):
+        r = ''
+        if self.spectrometer_microcontroller:
+            r = self.spectrometer_microcontroller.name
+        return r
+
+        #    def _spectrometer_microcontroller_default(self):
+
 #        return ArgusController()
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
+
     logging_setup('spectrometer')
 # #    s = SpectrometerManager()
 #    ini = Initializer()

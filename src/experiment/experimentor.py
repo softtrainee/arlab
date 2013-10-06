@@ -537,8 +537,9 @@ class Experimentor(IsotopeDatabaseManager):
         p3 = 'src.spectrometer.ion_optics_manager.IonOpticsManager'
         kw = dict()
         if self.application:
+            spec = self.application.get_service(p2)
             kw = dict(extraction_line_manager=self.application.get_service(p1),
-                      spectrometer_manager=self.application.get_service(p2),
+                      spectrometer_manager=spec,
                       ion_optics_manager=self.application.get_service(p3), )
 
         if not self.unique_executor_db:
@@ -550,6 +551,7 @@ class Experimentor(IsotopeDatabaseManager):
             application=self.application,
             **kw
         )
+
         return e
 
     #===============================================================================
@@ -559,8 +561,15 @@ class Experimentor(IsotopeDatabaseManager):
         return self._executor_factory()
 
     def _experiment_factory_default(self):
+        dms = 'Spectrometer'
+        if self.application:
+            p2 = 'src.spectrometer.spectrometer_manager.SpectrometerManager'
+            spec = self.application.get_service(p2)
+            dms = spec.name.capitalize()
+
         e = ExperimentFactory(db=self.db,
                               application=self.application,
+                              default_mass_spectrometer=dms
                               #                              max_allowable_runs=self.max_allowable_runs,
                               #                              can_edit_scripts=self.can_edit_scripts
         )

@@ -24,6 +24,7 @@ from traits.api import HasTraits, String, Str, Property, Any, Either, Long, \
 import os
 #============= local library imports  ==========================
 from src.constants import NULL_STR, SCRIPT_KEYS, SCRIPT_NAMES, LINE_STR
+from src.experiment.automated_run.factory_view import FactoryView
 from src.experiment.utilities.identifier import SPECIAL_NAMES, SPECIAL_MAPPING, \
     convert_identifier, convert_special_name, ANALYSIS_MAPPING, NON_EXTRACTABLE, \
     make_special_identifier, make_standard_identifier
@@ -47,6 +48,8 @@ def EKlass(klass):
     return klass(enter_set=True, auto_set=False)
 
 # class AutomatedRunFactory(Viewable, ScriptMixin):
+
+
 class AutomatedRunFactory(Loggable):
     db = Any
 
@@ -184,6 +187,9 @@ class AutomatedRunFactory(Loggable):
     human_error_checker = Instance(HumanErrorChecker, ())
 
     _update_thread = None
+
+    factory_view = Instance(FactoryView)
+    factory_view_klass = FactoryView
 
     def check_run_addition(self, runs, load_name):
         '''
@@ -1224,6 +1230,8 @@ post_equilibration_script:name
             name = name.replace('{}_'.format(self.mass_spectrometer), '')
         return name
 
+    def _factory_view_default(self):
+        return self.factory_view_klass(model=self)
 
 #============= EOF =============================================
 

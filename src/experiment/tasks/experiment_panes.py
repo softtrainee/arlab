@@ -38,17 +38,7 @@ from src.experiment.plot_panel import PlotPanel
 #===============================================================================
 # editing
 #===============================================================================
-POSITION_TOOLTIP = '''Set the position for this analysis or group of analyses. 
-Examples:
-1. 4 or p4 (goto position 4)
-2. 3,4,5 (goto positions 3,4,5. treat as one analysis)
-3. 7-12 (goto positions 7,8,9,10,11,12. treat as individual analyses)
-4. 7:12 (same as #3)
-5. 10:16:2 (goto positions 10,12,14,16. treat as individual analyses)
-6. D1 (drill position 1)
-7. T1-2 (goto named position T1-2 i.e transect 1, point 2)
-8. L3 (trace path L3) 
-'''
+
 
 
 def spacer(w):
@@ -286,68 +276,77 @@ class ExperimentFactoryPane(TraitsDockPane):
         return script_grp
 
     def _get_extract_group(self):
-        sspring = lambda width=17: Spring(springy=False, width=width)
+        return RFItem('factory_view', style='custom', show_label=False)
+        #    print self.model
+        #    return self._get_default_extract_group()
+        #
+        #def _get_uv_extract_group(self):
+        #    pass
+        #
+        #def _get_default_extract_group(self):
 
-        extract_grp = VGroup(
-            HGroup(sspring(width=33),
-                   RFItem('extract_value', label='Extract',
-                          tooltip='Set the extract value in extract units',
-                          enabled_when=make_rf_name('extractable')
-                   ),
-                   RFItem('extract_units',
-                          show_label=False,
-                          editor=EnumEditor(name=make_rf_name('extract_units_names'))),
-                   RFItem('ramp_duration', label='Ramp Dur. (s)'),
-            ),
-            HGroup(
-                RFItem('template',
-                       label='Step Heat Template',
-                       editor=EnumEditor(name=make_rf_name('templates')),
-                       show_label=False,
-                ),
-                RFItem('edit_template',
-                       show_label=False,
-                       editor=ButtonEditor(label_value=make_rf_name('edit_template_label'))
-                ),
-                RFItem('extract_group_button', show_label=False,
-                       tooltip='Group selected runs as a step heating experiment'
-                ),
-                RFItem('extract_group', label='Group ID'),
-
-            ),
-            HGroup(
-                RFItem('duration', label='Duration (s)',
-                       tooltip='Set the number of seconds to run the extraction device.'
-
-                ),
-                RFItem('cleanup', label='Cleanup (s)',
-                       tooltip='Set the number of seconds to getter the sample gas'
-                )
-            ),
-            RFItem('beam_diameter'),
-            HGroup(
-                RFItem('position',
-                       tooltip=POSITION_TOOLTIP),
-                RFItem('pattern',
-                       editor=EnumEditor(name=make_rf_name('patterns'))),
-                RFItem('edit_pattern',
-                       show_label=False,
-                       editor=ButtonEditor(label_value=make_rf_name('edit_pattern_label'))
-                )
-            ),
-
-            #                              HGroup(
-            #                                      ),
-            #                                     spring,
-            #                                 RFItem('endposition', label='End',
-            #                                      enabled_when='position'
-            #                                      )
-            #                                 ),
-
-            label='Extract',
-            show_border=True
-        )
-        return extract_grp
+        #sspring = lambda width=17: Spring(springy=False, width=width)
+        #
+        #extract_grp = VGroup(
+        #    HGroup(sspring(width=33),
+        #           RFItem('extract_value', label='Extract',
+        #                  tooltip='Set the extract value in extract units',
+        #                  enabled_when=make_rf_name('extractable')
+        #           ),
+        #           RFItem('extract_units',
+        #                  show_label=False,
+        #                  editor=EnumEditor(name=make_rf_name('extract_units_names'))),
+        #           RFItem('ramp_duration', label='Ramp Dur. (s)'),
+        #    ),
+        #    HGroup(
+        #        RFItem('template',
+        #               label='Step Heat Template',
+        #               editor=EnumEditor(name=make_rf_name('templates')),
+        #               show_label=False,
+        #        ),
+        #        RFItem('edit_template',
+        #               show_label=False,
+        #               editor=ButtonEditor(label_value=make_rf_name('edit_template_label'))
+        #        ),
+        #        RFItem('extract_group_button', show_label=False,
+        #               tooltip='Group selected runs as a step heating experiment'
+        #        ),
+        #        RFItem('extract_group', label='Group ID'),
+        #
+        #    ),
+        #    HGroup(
+        #        RFItem('duration', label='Duration (s)',
+        #               tooltip='Set the number of seconds to run the extraction device.'
+        #
+        #        ),
+        #        RFItem('cleanup', label='Cleanup (s)',
+        #               tooltip='Set the number of seconds to getter the sample gas'
+        #        )
+        #    ),
+        #    RFItem('beam_diameter'),
+        #    HGroup(
+        #        RFItem('position',
+        #               tooltip=POSITION_TOOLTIP),
+        #        RFItem('pattern',
+        #               editor=EnumEditor(name=make_rf_name('patterns'))),
+        #        RFItem('edit_pattern',
+        #               show_label=False,
+        #               editor=ButtonEditor(label_value=make_rf_name('edit_pattern_label'))
+        #        )
+        #    ),
+        #
+        #    #                              HGroup(
+        #    #                                      ),
+        #    #                                     spring,
+        #    #                                 RFItem('endposition', label='End',
+        #    #                                      enabled_when='position'
+        #    #                                      )
+        #    #                                 ),
+        #
+        #    label='Extract',
+        #    show_border=True
+        #)
+        #return extract_grp
 
 #         return VGroup(extract_grp, self._get_position_group(),
 #                       label='Extraction'
@@ -527,8 +526,9 @@ class IsotopeEvolutionPane(TraitsDockPane):
                       style='custom',
                       height=0.75),
                 VGroup(
-                    HGroup(Spring(springy=False, width=-5), Label('Counts'),UItem('object.plot_panel.ncounts', label='Counts',
-                          tooltip='Set the number of measurement points')),
+                    HGroup(Spring(springy=False, width=-5), Label('Counts'),
+                           UItem('object.plot_panel.ncounts', label='Counts',
+                                 tooltip='Set the number of measurement points')),
                     UItem('object.plot_panel.analysis_view',
                           style='custom',
                           #editor=InstanceEditor(view='plot_panel_view'),

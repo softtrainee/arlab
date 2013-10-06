@@ -23,6 +23,7 @@ import os
 #============= local library imports  ==========================
 from src.experiment.automated_run.factory import AutomatedRunFactory
 from src.constants import NULL_STR
+from src.experiment.automated_run.uv.factory_view import UVFactoryView
 from src.experiment.automated_run.uv.spec import UVAutomatedRunSpec
 from src.paths import paths
 
@@ -37,7 +38,9 @@ class UVAutomatedRunFactory(AutomatedRunFactory):
     extract_units_names = List([NULL_STR, 'burst', 'continuous'])
     _default_extract_units = 'burst'
     browser_button = Button('Browse')
+
     _spec_klass = UVAutomatedRunSpec
+    factory_view_klass = UVFactoryView
 
     @cached_property
     def _get_masks(self):

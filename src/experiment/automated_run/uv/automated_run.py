@@ -26,11 +26,11 @@ class UVAutomatedRun(AutomatedRun):
     attenuator = Str
     image = Str
 
-#    masks = Property
-#    extract_units_names = List([NULL_STR, 'burst', 'continuous'])
-#    _default_extract_units = 'burst'
-#    browser_button = Button('Browse')
-    run_klass = UVAutomatedRun
+    #    masks = Property
+    #    extract_units_names = List([NULL_STR, 'burst', 'continuous'])
+    #    _default_extract_units = 'burst'
+    #    browser_button = Button('Browse')
+    #    run_klass = UVAutomatedRun
 
     def _save_extraction(self, analysis):
         ext = super(UVAutomatedRun, self)._save_extraction(analysis)
@@ -40,8 +40,8 @@ class UVAutomatedRun(AutomatedRun):
                 # use media server so only save path of file
                 # secondary option- open image and save to db
                 dbim = self.db.add_image(self.image,
-#                                  image=self.image.tostring()
-                                  )
+                                         #                                  image=self.image.tostring()
+                )
 
             ext.image = dbim
 
@@ -55,35 +55,35 @@ class UVAutomatedRun(AutomatedRun):
 
         return ext
 
-#    @cached_property
-#    def _get_masks(self):
-#        p = os.path.join(paths.device_dir, 'uv', 'masks.txt')
-#        masks = []
-#        if os.path.isfile(p):
-#            with open(p, 'r') as fp:
-#                for lin in fp:
-#                    lin = lin.strip()
-#                    if not lin or lin.startswith('#'):
-#                        continue
-#                    masks.append(lin)
-#
-#        return masks
+    #    @cached_property
+    #    def _get_masks(self):
+    #        p = os.path.join(paths.device_dir, 'uv', 'masks.txt')
+    #        masks = []
+    #        if os.path.isfile(p):
+    #            with open(p, 'r') as fp:
+    #                for lin in fp:
+    #                    lin = lin.strip()
+    #                    if not lin or lin.startswith('#'):
+    #                        continue
+    #                    masks.append(lin)
+    #
+    #        return masks
 
-#    def _get_supplemental_extract_group(self):
-#        g = VGroup(Item('reprate'),
-#                   Item('mask', editor=EnumEditor(name='masks')),
-#                   Item('attenuator'),
-#                   HGroup(Item('image', springy=True), Item('browser_button', show_label=False)),
-#                   label='UV'
-#                   )
-#        return g
+    #    def _get_supplemental_extract_group(self):
+    #        g = VGroup(Item('reprate'),
+    #                   Item('mask', editor=EnumEditor(name='masks')),
+    #                   Item('attenuator'),
+    #                   HGroup(Item('image', springy=True), Item('browser_button', show_label=False)),
+    #                   label='UV'
+    #                   )
+    #        return g
 
     def _extraction_script_factory(self, ec, key):
         obj = super(UVAutomatedRun, self)._extraction_script_factory(ec, key)
         obj.setup_context(reprate=self.reprate,
                           mask=self.mask,
                           attenuator=self.attenuator
-                          )
+        )
         return obj
 
 #    def _image_browser_factory(self):
