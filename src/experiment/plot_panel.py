@@ -47,42 +47,45 @@ VALUE_WIDTH = 12
 # class SignalAdapter(SimpleTextTableAdapter):
 class SignalAdapter(MultiTextTableAdapter):
     columns = [
-               [
-                   ('Iso.', 'isotope', str, 6),
-                   ('Det.', 'detector', str, 5),
-                   ('Fit', 'fit', str, 4),
-                   ('Intercept', 'intercept_value', None, VALUE_WIDTH),
-                   (u'{}1s'.format(PLUSMINUS), 'intercept_error', None, ERROR_WIDTH),
-                   (u'{}%'.format(PLUSMINUS), 'intercept_error_percent', str, ERROR_WIDTH - 1),
-                   ('Raw(fA)', 'raw_value', None, VALUE_WIDTH),
-                   (u'{}1s'.format(PLUSMINUS), 'raw_error', None, ERROR_WIDTH),
-                   (u'{}%'.format(PLUSMINUS), 'raw_error_percent', str, ERROR_WIDTH - 1),
-                ],
-                [
-                    ('Iso.', 'isotope', str, 6),
-                    ('Det.', 'detector', str, 5),
-                    ('Fit', 'baseline_fit', str, 4),
-                    ('Baseline', 'baseline_value', None, VALUE_WIDTH),
-                    (u'{}1s'.format(PLUSMINUS), 'baseline_error', None, ERROR_WIDTH),
-                    (u'{}%'.format(PLUSMINUS), 'baseline_error_percent', str, ERROR_WIDTH - 1),
-                    ('Blank', 'blank_value', None, VALUE_WIDTH),
-                    (u'{}1s'.format(PLUSMINUS), 'blank_error', None, ERROR_WIDTH),
-                    (u'{}%'.format(PLUSMINUS), 'blank_error_percent', str, ERROR_WIDTH - 1),
-                 ]
-             ]
+        [
+            ('Iso.', 'isotope', str, 6),
+            ('Det.', 'detector', str, 5),
+            ('Fit', 'fit', str, 4),
+            ('Intercept', 'intercept_value', None, VALUE_WIDTH),
+            (u'{}1s'.format(PLUSMINUS), 'intercept_error', None, ERROR_WIDTH),
+            (u'{}%'.format(PLUSMINUS), 'intercept_error_percent', str, ERROR_WIDTH - 1),
+            ('Raw(fA)', 'raw_value', None, VALUE_WIDTH),
+            (u'{}1s'.format(PLUSMINUS), 'raw_error', None, ERROR_WIDTH),
+            (u'{}%'.format(PLUSMINUS), 'raw_error_percent', str, ERROR_WIDTH - 1),
+        ],
+        [
+            ('Iso.', 'isotope', str, 6),
+            ('Det.', 'detector', str, 5),
+            ('Fit', 'baseline_fit', str, 4),
+            ('Baseline', 'baseline_value', None, VALUE_WIDTH),
+            (u'{}1s'.format(PLUSMINUS), 'baseline_error', None, ERROR_WIDTH),
+            (u'{}%'.format(PLUSMINUS), 'baseline_error_percent', str, ERROR_WIDTH - 1),
+            ('Blank', 'blank_value', None, VALUE_WIDTH),
+            (u'{}1s'.format(PLUSMINUS), 'blank_error', None, ERROR_WIDTH),
+            (u'{}%'.format(PLUSMINUS), 'blank_error_percent', str, ERROR_WIDTH - 1),
+        ]
+    ]
 
 
 # class PlotPanelHandler(ViewableHandler):
 #    pass
 from traits.api import HasTraits, Any
 from traitsui.api import ListEditor
+
+
 class TraitsContainer(HasTraits):
     model = Any
+
     def trait_context(self):
         """ Use the model object for the Traits UI context, if appropriate.
         """
         if self.model:
-            return { 'object': self.model }
+            return {'object': self.model}
         return super(TraitsContainer, self).trait_context()
 
 #class DisplayContainer(TraitsContainer):
@@ -150,23 +153,23 @@ class GraphContainer(TraitsContainer):
 
     def traits_view(self):
         v = View(
-                 VGroup(
-                        HGroup(spring,
-                               CustomLabel('plot_title',
-                                           weight='bold',
-                                           size=14),
-                               spring
-                               ),
-                        UItem(
-                             'graphs',
-                             editor=ListEditor(use_notebook=True,
-                                                         selected='selected_graph',
-                                                         page_name='.page_name'
-                                                         ),
-                             style='custom'
-                             )
-                        )
-               )
+            VGroup(
+                HGroup(spring,
+                       CustomLabel('plot_title',
+                                   weight='bold',
+                                   size=14),
+                       spring
+                ),
+                UItem(
+                    'graphs',
+                    editor=ListEditor(use_notebook=True,
+                                      selected='selected_graph',
+                                      page_name='.page_name'
+                    ),
+                    style='custom'
+                )
+            )
+        )
         return v
 
 
@@ -249,11 +252,11 @@ class PlotPanel(Loggable):
 
         for det in dets:
             g.new_plot(
-                       ytitle='{} {} (fA)'.format(det.name, det.isotope),
-                       xtitle='time (s)',
-                       padding_left=70,
-                       padding_right=10,
-                       )
+                ytitle='{} {} (fA)'.format(det.name, det.isotope),
+                xtitle='time (s)',
+                padding_left=70,
+                padding_right=10,
+            )
         self.detectors = dets
 
         #def clear_displays(self):
@@ -392,20 +395,21 @@ class PlotPanel(Loggable):
 
     def _graph_factory(self):
         return StackedRegressionGraph(container_dict=dict(padding=5, bgcolor='gray',
-                                                stack_order=self.stack_order
-                                             ),
-                                             bind_index=False,
-                                             use_data_tool=False,
-                                             #use_inspector_tool=False,
-                                             padding_bottom=35
-                                      )
+                                                          stack_order=self.stack_order
+        ),
+                                      bind_index=False,
+                                      use_data_tool=False,
+                                      #use_inspector_tool=False,
+                                      padding_bottom=35
+        )
 
 
     def _get_isotopes(self):
         return [d.isotope for d in self.detectors]
-#===============================================================================
-# handlers
-#===============================================================================
+
+    #===============================================================================
+    # handlers
+    #===============================================================================
     @on_trait_change('isotope_graph, peak_center_graph')
     def _update_graphs(self):
         if self.isotope_graph and self.peak_center_graph:
@@ -415,16 +419,10 @@ class PlotPanel(Loggable):
             p.page_name = 'Peak Center'
             self.graphs = [g, p]
 
-#            self.graph_container.graphs = [g, p]
+        #            self.graph_container.graphs = [g, p]
 
     def _plot_title_changed(self, new):
         self.graph_container.label = new
-
-    #@on_trait_change('correct_for_baseline, correct_for_blank')
-    #def _print_results(self):
-    #    self.display_signals = self._make_display_signals()
-    #    self.display_ratios = self._make_display_ratios()
-    #    self.display_summary = self._make_display_summary()
 
     @on_trait_change('isotope_graph:regression_results')
     def _update_display(self, new):
@@ -434,14 +432,9 @@ class PlotPanel(Loggable):
                 try:
                     vv = reg.predict(0)
                     ee = reg.predict_error(0)
-#                    u = ufloat(vv, ee)
                     if self.isbaseline:
-#                         self.baselines[iso] = u
-#                         if arar_age:
                         arar_age.set_baseline(iso, (vv, ee))
                     else:
-#                         self.signals[iso] = u
-#                         if arar_age:
                         arar_age.set_isotope(iso, (vv, ee))
 
                 except TypeError, e:
@@ -451,28 +444,16 @@ class PlotPanel(Loggable):
                     print 'assertion error', e
                     continue
             else:
-#                 pass
-#                 if arar_age:
-#                 arar_age.age_dirty = True
+
                 arar_age.age = None
                 arar_age.calculate_age()
 
                 self.analysis_view.refresh_needed = True
-                self.analysis_view.load_computed(arar_age, newlist=False)
-                #self._print_results()
-
-                #@on_trait_change('arar_age')
-                #def _update_arar_age(self, new):
-                #    if new:
-                #        new.calculate_age()
-                #        self.analysis_view.load(new, self.analysis_id)
+                self.analysis_view.load_computed(arar_age, new_list=False)
 
             #===============================================================================
-# defaults
-#===============================================================================
-            #    def _display_container_default(self):
-            #        d = DisplayContainer(model=self)
-            #        return d
+            # defaults
+            #===============================================================================
 
     def _isotope_graph_default(self):
         return self._graph_factory()
@@ -481,9 +462,10 @@ class PlotPanel(Loggable):
         self.isotope_graph.page_name = 'Isotopes'
         self.peak_center_graph.page_name = 'Peak Center'
 
-#        return GraphContainer(graphs=[self.graph, self.peak_center_graph])
+        #        return GraphContainer(graphs=[self.graph, self.peak_center_graph])
         return GraphContainer(model=self)
 
     def _graphs_default(self):
         return [self.isotope_graph, self.peak_center_graph]
-#============= EOF =============================================
+
+    #============= EOF =============================================

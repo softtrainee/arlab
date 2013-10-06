@@ -31,6 +31,7 @@ class ColorPreferenceBinding(PreferenceBinding):
             value = super(ColorPreferenceBinding, self)._get_value(name, value)
         return value
 
+
 # Factory function for creating bindings.
 def bind_preference(obj, trait_name, preference_path,
                     factory=None,

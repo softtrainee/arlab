@@ -184,7 +184,7 @@ class AutomatedRun(Loggable):
             return
         self._set_magnet_position(pos, detector, dac=dac)
 
-    def py_activate_detectors(self, dets):
+    def py_activate_detectors(self, dets, peak_center=False):
         if not self._alive:
             return
 
@@ -192,78 +192,56 @@ class AutomatedRun(Loggable):
             self.warning('no spectrometer manager')
             return
 
-        '''
-            !!! this is a potential problem !!!
-            need more sophisticated way to set up plot panel
-            e.g PP has detectors H1, AX but AX, CDD are active.
-            
-            need to remove H1 and add CDD. 
-            
-            or
-            
-            if memory leak not a problem simply always "create" new plots
-            instead of only clearing data. 
-            
-            or use both techniques
-            
-            if plot panel detectors != active detectors  "create" 
-            
-            
-        '''
-        create = False
-        if self.plot_panel is None:
-            create = True
+        if peak_center:
+            self._set_active_detectors(dets)
         else:
-            cd = set([d.name for d in self.plot_panel.detectors])
-            ad = set(dets)
-            create = cd - ad or ad - cd
+            self._activate_detectors(dets)
 
-        p = self._new_plot_panel(self.plot_panel, stack_order='top_to_bottom')
-        self.plot_panel = p
-
-        spec = self.spectrometer_manager.spectrometer
-
-        self._active_detectors = [spec.get_detector(n) for n in dets]
-        if create:
-            p.create(self._active_detectors)
-        else:
-        #             p.clear_displays()
-            p.isotope_graph.clear_plots()
-
-        p.show_isotope_graph()
-
-        for iso in self.arar_age.isotopes:
-            self.arar_age.set_isotope(iso, (0, 0))
-
-        cb = False
-        self.arar_age.clear_blanks()
-        if (not self.spec.analysis_type.startswith('blank') \
-                and not self.spec.analysis_type.startswith('background')):
-
-            cb = True
-            blanks = self.experiment_manager.get_prev_blanks()
-            if not blanks:
-                blanks = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
-
-            for iso, v in blanks.iteritems():
-                print iso, v
-                self.arar_age.set_blank(iso, v)
-
-        for d in self._active_detectors:
-            self.arar_age.set_isotope(d.isotope, (0, 0),
-                                      detector=d.name,
-                                      correct_for_blank=cb)
-
-        self.arar_age.clear_baselines()
-        baselines = self.experiment_manager.get_prev_baselines()
-        if not baselines:
-            baselines = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
-
-        for iso, v in baselines.iteritems():
-            self.arar_age.set_baseline(iso, v)
-
-        p.analysis_view.load(self)
-        #p.clear_displays()
+            #p = self._new_plot_panel(self.plot_panel, stack_order='top_to_bottom')
+            #self.plot_panel = p
+            #
+            #spec = self.spectrometer_manager.spectrometer
+            #
+            #self._active_detectors = [spec.get_detector(n) for n in dets]
+            #if create:
+            #    p.create(self._active_detectors)
+            #else:
+            ##             p.clear_displays()
+            #    p.isotope_graph.clear_plots()
+            #
+            #p.show_isotope_graph()
+            #
+            #for iso in self.arar_age.isotopes:
+            #    self.arar_age.set_isotope(iso, (0, 0))
+            #
+            #cb = False
+            #self.arar_age.clear_blanks()
+            #if (not self.spec.analysis_type.startswith('blank') \
+            #        and not self.spec.analysis_type.startswith('background')):
+            #
+            #    cb = True
+            #    blanks = self.experiment_manager.get_prev_blanks()
+            #    if not blanks:
+            #        blanks = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
+            #
+            #    for iso, v in blanks.iteritems():
+            #        self.arar_age.set_blank(iso, v)
+            #
+            #for d in self._active_detectors:
+            #    self.arar_age.set_isotope(d.isotope, (0, 0),
+            #                              detector=d.name,
+            #                              correct_for_blank=cb)
+            #
+            #self.arar_age.clear_baselines()
+            #baselines = self.experiment_manager.get_prev_baselines()
+            #if not baselines:
+            #    baselines = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
+            #
+            #for iso, v in baselines.iteritems():
+            #    self.arar_age.set_baseline(iso, v)
+            #
+            #p.analysis_view.load(self)
+            ##p.clear_displays()
 
     def py_set_regress_fits(self, fits, series=0):
         '''
@@ -364,7 +342,7 @@ class AutomatedRun(Loggable):
         mem_log('pre sniff')
         if not self._alive:
             return
-        p=self.plot_panel
+        p = self.plot_panel
         if p:
             p._ncounts = ncounts
             p.isbaseline = False
@@ -469,12 +447,10 @@ class AutomatedRun(Loggable):
                 self.plot_panel = p
 
             self.debug('peak center started')
-            #             if self.plot_panel:
-            #                 self.plot_panel.show_peak_center()
+
             ad = [di.name for di in self._active_detectors
                   if di.name != detector]
 
-            #            self.peak_center = pc
             pc = ion.setup_peak_center(detector=[detector] + ad,
                                        plot_panel=self.plot_panel,
                                        **kw)
@@ -813,7 +789,7 @@ class AutomatedRun(Loggable):
         if not self.measurement_script:
             return True
 
-        self.measurement_script.runner=self.runner
+        self.measurement_script.runner = self.runner
         self.measurement_script.manager = self.experiment_manager
 
         # use a measurement_script to explicitly define
@@ -862,8 +838,8 @@ class AutomatedRun(Loggable):
             return
         msg = 'Post Measurement Started {}'.format(self.post_measurement_script.name)
         self.info('======== {} ========'.format(msg))
-#        self.state = 'extraction'
-        self.post_measurement_script.runner=self.runner
+        #        self.state = 'extraction'
+        self.post_measurement_script.runner = self.runner
         self.post_measurement_script.manager = self.experiment_manager
 
         if self.post_measurement_script.execute():
@@ -886,7 +862,7 @@ class AutomatedRun(Loggable):
             return
         msg = 'Post Equilibration Started {}'.format(self.post_equilibration_script.name)
         self.info('======== {} ========'.format(msg))
-        self.post_equilibration_script.runner=self.runner
+        self.post_equilibration_script.runner = self.runner
         self.post_equilibration_script.manager = self.experiment_manager
 
         #         self.post_equilibration_script.syntax_checked = True
@@ -962,6 +938,81 @@ anaylsis_type={}
     #             from src.ui.thread import Thread as mThread
     #             self._term_thread = mThread(target=self.cancel_run)
     #             self._term_thread.start()
+    def _set_active_detectors(self, dets):
+        spec = self.spectrometer_manager.spectrometer
+        self._active_detectors = [spec.get_detector(n) for n in dets]
+
+    def _activate_detectors(self, dets):
+        """
+            !!! this is a potential problem !!!
+            need more sophisticated way to set up plot panel
+            e.g PP has detectors H1, AX but AX, CDD are active.
+
+            need to remove H1 and add CDD.
+
+            or
+
+            if memory leak not a problem simply always "create" new plots
+            instead of only clearing data.
+
+            or use both techniques
+
+            if plot panel detectors != active detectors  "create"
+
+
+        """
+
+        if self.plot_panel is None:
+            create = True
+        else:
+            cd = set([d.name for d in self.plot_panel.detectors])
+            ad = set(dets)
+            create = cd - ad or ad - cd
+
+        p = self._new_plot_panel(self.plot_panel, stack_order='top_to_bottom')
+        self.plot_panel = p
+
+        self._set_active_detectors(dets)
+
+        if create:
+            p.create(self._active_detectors)
+        else:
+        #             p.clear_displays()
+            p.isotope_graph.clear_plots()
+
+        p.show_isotope_graph()
+
+        for iso in self.arar_age.isotopes:
+            self.arar_age.set_isotope(iso, (0, 0))
+
+        cb = False
+        self.arar_age.clear_blanks()
+        if (not self.spec.analysis_type.startswith('blank') \
+                and not self.spec.analysis_type.startswith('background')):
+
+            cb = True
+            blanks = self.experiment_manager.get_prev_blanks()
+            if not blanks:
+                blanks = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
+
+            for iso, v in blanks.iteritems():
+                self.arar_age.set_blank(iso, v)
+
+        for d in self._active_detectors:
+            self.arar_age.set_isotope(d.isotope, (0, 0),
+                                      detector=d.name,
+                                      correct_for_blank=cb)
+
+        self.arar_age.clear_baselines()
+        baselines = self.experiment_manager.get_prev_baselines()
+        if not baselines:
+            baselines = dict(Ar40=(0, 0), Ar39=(0, 0), Ar38=(0, 0), Ar37=(0, 0), Ar36=(0, 0))
+
+        for iso, v in baselines.iteritems():
+            self.arar_age.set_baseline(iso, v)
+
+        p.analysis_view.load(self)
+
     def _add_truncate_condition(self):
         t = self.spec.truncate_condition
         if t:
@@ -1026,14 +1077,14 @@ anaylsis_type={}
         return self._get_yaml_parameter(self.extraction_script, key, default)
 
     def _use_arar_age(self):
-#        return True
+    #        return True
         ln = self.spec.labnumber
         return ln not in ('dg', 'pa')
-    
-#        if '-' in ln:
-#            ln = ln.split('-')[0]
-#
-#        return self.spec.analysis_type == 'unknown' or ln in ('c',)
+
+    #        if '-' in ln:
+    #            ln = ln.split('-')[0]
+    #
+    #        return self.spec.analysis_type == 'unknown' or ln in ('c',)
 
     def _new_plot_panel(self, plot_panel, stack_order='bottom_to_top'):
 
@@ -1099,7 +1150,6 @@ anaylsis_type={}
         if ion is not None:
             ion.position(pos, detector, dac)
             if update_labels:
-#                try:
                 # update the plot_panel labels
                 plots = self.plot_panel.isotope_graph.plots
                 n = len(plots)
@@ -1110,20 +1160,13 @@ anaylsis_type={}
                     self.arar_age.set_isotope_detector(det)
 
                 #remove non active isotopes
-                
                 for iso in self.arar_age.isotopes.keys():
                     det = next((di for di in self._active_detectors if di.isotope == iso), None)
                     if det is None:
                         self.arar_age.isotopes.pop(iso)
-                
-                self.plot_panel.analysis_view.load(self)
-                self.plot_panel.analysis_view.refresh_needed=True
-#                except Exception, e:
-#                    print 'set_position exception', e
 
-                    #===============================================================================
-                    # measurement
-                    #===============================================================================
+                self.plot_panel.analysis_view.load(self)
+                self.plot_panel.analysis_view.refresh_needed = True
 
     def _peak_hop(self, ncycles, hops, data_write_hook, starttime, series):
         '''

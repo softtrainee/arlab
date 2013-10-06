@@ -24,12 +24,7 @@ from envisage.ui.tasks.preferences_pane import PreferencesPane
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class FavoritesAdapter(ListStrAdapter):
-    columns = [('', 'name')]
-    can_edit = False
-    def get_text(self, obj, tr, ind):
-        o = getattr(obj, tr)[ind]
-        return o.split(',')[0]
+
 
 class ExperimentPreferences(BasePreferencesHelper):
     name = 'Experiment'
@@ -47,32 +42,33 @@ class ExperimentPreferences(BasePreferencesHelper):
 class ExperimentPreferencesPane(PreferencesPane):
     model_factory = ExperimentPreferences
     category = 'Experiment'
+
     def traits_view(self):
         auto_figure_grp = Group(
-                                Item('use_auto_figure'),
-                                VGroup(
-                                       Item('use_notifications'),
-                                       Item('notifications_port',
-                                            enabled_when='use_notifications',
-                                            label='Port'),
+            Item('use_auto_figure'),
+            VGroup(
+                Item('use_notifications'),
+                Item('notifications_port',
+                     enabled_when='use_notifications',
+                     label='Port'),
 
-                                       label='Notifications'
-                                       ),
-                                label='Auto Figure'
-                                )
+                label='Notifications'
+            ),
+            label='Auto Figure'
+        )
         editor_grp = Group(
-                        Item('use_auto_save',
-                             tooltip='If "Use auto save" experiment queue saved after "timeout" seconds'
-                             ),
-                        Item('auto_save_delay',
-                             label='Auto save timeout (s)',
-                             tooltip='If experiment queue is not saved then wait "timeout" seconds before saving or canceling'
-                             ),
-                           label='Editor'
-                           )
+            Item('use_auto_save',
+                 tooltip='If "Use auto save" experiment queue saved after "timeout" seconds'
+            ),
+            Item('auto_save_delay',
+                 label='Auto save timeout (s)',
+                 tooltip='If experiment queue is not saved then wait "timeout" seconds before saving or canceling'
+            ),
+            label='Editor'
+        )
         return View(
-                        auto_figure_grp,
-                        editor_grp
-                    )
+            auto_figure_grp,
+            editor_grp
+        )
 
 #============= EOF =============================================
