@@ -60,8 +60,8 @@ class BlanksTask(InterpolationTask):
 
         editor = BlanksEditor(name='Blanks {:03n}'.format(self.blank_editor_count),
                               processor=self.manager,
-                              task=self
-        )
+                              task=self,
+                              default_reference_analysis_type=self.default_reference_analysis_type)
 
         self._open_editor(editor)
         self.blank_editor_count += 1

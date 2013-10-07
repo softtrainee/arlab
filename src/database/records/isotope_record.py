@@ -55,6 +55,7 @@ class IsotopeRecordView(HasTraits):
             self.tag = dbrecord.tag or ''
             self.timestamp = dbrecord.analysis_timestamp
             self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
+#            print self.record_id, self.uuid 
 
             if ln.sample:
                 self.sample = ln.sample.name

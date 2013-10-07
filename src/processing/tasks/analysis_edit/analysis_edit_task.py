@@ -184,12 +184,12 @@ class AnalysisEditTask(BaseBrowserTask):
             if hasattr(self.active_editor, 'save'):
                 self.active_editor.save()
 
-    def _record_view_factory(self, pi, **kw):
-        db = self.manager.db
-        iso = IsotopeRecordView(**kw)
-        dbrecord = db.get_analysis(pi.uuid, key='uuid')
-        if iso.create(dbrecord):
-            return iso
+#    def _record_view_factory(self, pi, **kw):
+#        db = self.manager.db
+#        iso = IsotopeRecordView(**kw)
+#        dbrecord = db.get_analysis(pi.uuid, key='uuid')
+#        if iso.create(dbrecord):
+#            return iso
 
     def _set_previous_selection(self, pane, new):
         if new:

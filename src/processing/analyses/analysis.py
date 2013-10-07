@@ -432,7 +432,7 @@ class DBAnalysis(Analysis):
                     blank = isodict[isok].blank
                     blank.set_uvalue((ba.user_value,
                                       ba.user_error))
-                    blank.fit = ba.fit
+                    blank.fit = ba.fit or ''
                     keys.remove(isok)
                     if not keys:
                         break
