@@ -68,6 +68,7 @@ class FactoryView(HasTraits):
                 )
             ),
             Item('beam_diameter'),
+            self._position_group(),
             #                              HGroup(
             #                                      ),
             #                                     spring,
