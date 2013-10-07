@@ -94,8 +94,8 @@ class ExportSpec(Loggable):
                 except TraitError, e:
                     self.debug(e)
 
-        if hasattr(record, 'ic_factor'):
-            ic = record.ic_factor
+        if hasattr(record, 'cdd_ic_factor'):
+            ic = record.cdd_ic_factor
             self.ic_factor_v = float(ic.nominal_value)
             self.ic_factor_e = float(ic.std_dev)
         else:

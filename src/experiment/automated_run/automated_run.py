@@ -124,7 +124,7 @@ class AutomatedRun(Loggable):
     state = Str('not run')
     extract_device = Str
 
-    ic_factor = Any
+    cdd_ic_factor = Any
 
     scripts = Dict
 
@@ -1732,33 +1732,33 @@ anaylsis_type={}
         self.info('saving detector intercalibration')
 
         if self.arar_age:
-            ic = self.arar_age.ic_factor
-        else:
-            ic = ArArAge(application=self.application).ic_factor
+            ic = self.arar_age.get_ic_factor('CDD')
+#        else:
+#            ic = ArArAge(application=self.application).cdd_ic_factor
 
-        # save ic_factor so it can be exported to secondary db
-        self.ic_factor = ic
+            # save cdd_ic_factor so it can be exported to secondary db
+            self.cdd_ic_factor = ic
+    
+            def func():
+                self.info('default cdd_ic_factor={}'.format(ic))
+                db = self.db
+                user = self.spec.username
+                user = user if user else NULL_STR
+    
+                self.info('{} adding detector intercalibration history for {}'.format(user, self.runid))
+    
+                history = db.add_detector_intercalibration_history(analysis,
+                                                                   user=user,
+                )
+                analysis.selected_histories.selected_detector_intercalibration = history
+    
+                uv, ue = ic.nominal_value, ic.std_dev
+                db.add_detector_intercalibration(history, 'CDD',
+                                                 user_value=float(uv),
+                                                 user_error=float(ue),
+                )
 
-        def func():
-            self.info('default ic_factor={}'.format(ic))
-            db = self.db
-            user = self.spec.username
-            user = user if user else NULL_STR
-
-            self.info('{} adding detector intercalibration history for {}'.format(user, self.runid))
-
-            history = db.add_detector_intercalibration_history(analysis,
-                                                               user=user,
-            )
-            analysis.selected_histories.selected_detector_intercalibration = history
-
-            uv, ue = ic.nominal_value, ic.std_dev
-            db.add_detector_intercalibration(history, 'CDD',
-                                             user_value=float(uv),
-                                             user_error=float(ue),
-            )
-
-        return self._time_save(func, 'detector intercalibration')
+            return self._time_save(func, 'detector intercalibration')
 
     def _save_blank_info(self, analysis):
         self.info('saving blank info')
