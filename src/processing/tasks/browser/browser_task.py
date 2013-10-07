@@ -339,7 +339,7 @@ class BaseBrowserTask(BaseEditorTask):
         self.end_date = ed.date()
         self.start_time = sd.time()
         self.end_time = ed.time()
-
+        
         at = self.analysis_type
 
         if self.analysis_type == DEFAULT_AT:
@@ -348,8 +348,9 @@ class BaseBrowserTask(BaseEditorTask):
         ref = new[-1]
         exd = ref.extract_device
         ms = ref.mass_spectrometer
-        self.extraction_device = exd or 'Extraction Device'
-        self.mass_spectrometer = ms or 'Mass Spectrometer'
+
+        self.trait_set(extraction_device=exd or 'Extraction Device',
+                       mass_spectrometer=ms or 'Mass Spectrometer', trait_change_notify=False)
 
         db = self.manager.db
         with db.session_ctx():

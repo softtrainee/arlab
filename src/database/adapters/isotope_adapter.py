@@ -138,8 +138,9 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def add_arar(self, hist, **kw):
         a = proc_ArArTable(**kw)
-        self._add_item(a)
         hist.arar_result = a
+
+        self._add_item(a)
 
         return a
 

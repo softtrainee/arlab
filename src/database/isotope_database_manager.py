@@ -214,30 +214,32 @@ class IsotopeDatabaseManager(Loggable):
         win.activate()
 
     def _add_arar(self, meas_analysis, analysis):
+        
         db = self.db
-        hist = db.add_arar_history(meas_analysis)
-        #a, e=age.nominal_value, age.std_dev
-        d = dict()
-        attrs = ['k39', 'ca37', 'cl36', 'rad40',
-                 'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
-
-        for a in attrs:
-            v = getattr(analysis, a)
-            ek = '{}_err'.format(a)
-            d[a] = float(v.nominal_value)
-            d[ek] = float(v.std_dev)
-
-        age_scalar = analysis.arar_constants.age_scalar
-        d['age_err_wo_j'] = analysis.age_error_wo_j * age_scalar
-
-        age = analysis.age
-        d['age'] = age.nominal_value * age_scalar
-        d['age_err'] = age.std_dev * age_scalar
-
-        db.add_arar(hist, **d)
-
-        meas_analysis.selected_histories.selected_arar = hist
-
+        with db.session_ctx() as sess:
+            hist = db.add_arar_history(meas_analysis)
+            #a, e=age.nominal_value, age.std_dev
+            d = dict()
+            attrs = ['k39', 'ca37', 'cl36', 'rad40',
+                     'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
+    
+            for a in attrs:
+                v = getattr(analysis, a)
+                ek = '{}_err'.format(a)
+                d[a] = float(v.nominal_value)
+                d[ek] = float(v.std_dev)
+    
+            age_scalar = analysis.arar_constants.age_scalar
+            d['age_err_wo_j'] = analysis.age_error_wo_j * age_scalar
+    
+            age = analysis.age
+            d['age'] = age.nominal_value * age_scalar
+            d['age_err'] = age.std_dev * age_scalar
+    
+            db.add_arar(hist, **d)
+    
+            meas_analysis.selected_histories.selected_arar = hist
+            sess.commit()
         #hist.selected=analysis.selected_histories
         #analysis.selected_histories.selected_arar=hist
 
@@ -266,6 +268,7 @@ class IsotopeDatabaseManager(Loggable):
 
             def func(r):
                 meas_analysis = self.db.get_analysis_uuid(r.uuid)
+                print r.uuid,meas_analysis
 
                 ai = DBAnalysis()
 
