@@ -1108,7 +1108,8 @@ anaylsis_type={}
 
         plot_panel.trait_set(
             plot_title=title,
-            analysis_view=an
+            analysis_view=an,
+            refresh_age=self.analysis_type in ('unknown', 'cocktail')
         )
 
         return plot_panel

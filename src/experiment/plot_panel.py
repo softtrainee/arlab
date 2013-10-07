@@ -214,7 +214,8 @@ class PlotPanel(Loggable):
 
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
     info_func = None
-
+    
+    refresh_age=True
 
     def set_peak_center_graph(self, graph):
         self.peak_center_graph = graph
@@ -444,12 +445,12 @@ class PlotPanel(Loggable):
                     print 'assertion error', e
                     continue
             else:
+                if self.refresh_age:
+                    arar_age.age = None
+                    arar_age.calculate_age()
 
-                arar_age.age = None
-                arar_age.calculate_age()
-
-                self.analysis_view.refresh_needed = True
                 self.analysis_view.load_computed(arar_age, new_list=False)
+                self.analysis_view.refresh_needed = True
 
             #===============================================================================
             # defaults

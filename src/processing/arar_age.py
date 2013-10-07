@@ -259,7 +259,7 @@ class ArArAge(Loggable):
         """
             force: force recalculation of age. necessarily if you want error components
         """
-        self.debug('calculate age ={}'.format(self.age))
+#        self.debug('calculate age ={}'.format(self.age))
         if not self.age or force:
             #self.age=timethis(self._calculate_age, kwargs=kw, msg='calculate_age')
             self.age = self._calculate_age(**kw)
