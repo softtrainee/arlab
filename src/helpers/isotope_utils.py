@@ -20,12 +20,29 @@ from traitsui.api import View, Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
 import re
+from src.constants import DETECTOR_MAP
+
+
 def rank_func(x):
     if isinstance(x, (list, tuple)):
         x = x[0]
     return re.sub('\D', '', x)
 
+
 def sort_isotopes(keys, reverse=True):
     return sorted(list(keys), key=rank_func, reverse=reverse)
+
+
+def sort_detectors(idets):
+    dets = ['', ] * len(idets)
+    edets = []
+    for det in idets:
+        if det in DETECTOR_MAP:
+            dets[DETECTOR_MAP[det]] = det
+        else:
+            edets.append(det)
+
+    dets.extend(edets)
+    return dets
 
 #============= EOF =============================================

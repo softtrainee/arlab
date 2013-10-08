@@ -245,6 +245,7 @@ class Isotope(IsotopicMeasurement):
     correct_for_blank = True
     ic_factor = Float(1.0)
     age_error_component = Float(0.0)
+    temporary_ic_factor = None
 
     def ic_corrected_value(self):
         return self.get_corrected_value() * self.ic_factor

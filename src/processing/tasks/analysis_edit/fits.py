@@ -70,29 +70,18 @@ class FitSelector(HasTraits):
     fit_klass = Fit
     command_key = Bool
 
-    def _update_command_key(self, new):
-        print 'set comm', new
-        self.command_key = new
-
     def traits_view(self):
 
         cols = [ObjectColumn(name='name', editable=False),
                 CheckboxColumn(name='show'),
                 ObjectColumn(name='fit',
-                             editor=EnumEditor(name='fit_types',
-                             ),
-                ),
-                CheckboxColumn(name='use')
-        ]
-
-        #         def factory(editor=None):
-        #             return myTableView(editor=editor)
+                             editor=EnumEditor(name='fit_types'),
+                             width=75),
+                CheckboxColumn(name='use', label='Save DB')]
 
         editor = myTableEditor(columns=cols,
                                sortable=False,
-                               on_command_key=self._update_command_key
-                               #                              table_view_factory=factory
-        )
+                               on_command_key=self._update_command_key)
 
         v = View(UItem('fits',
                        style='custom',
@@ -166,6 +155,10 @@ class FitSelector(HasTraits):
 
         fits.extend(fs)
         self.fits = fits
+
+    def _update_command_key(self, new):
+        print 'set comm', new
+        self.command_key = new
 
 
 class InterpolationFit(Fit):

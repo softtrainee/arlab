@@ -76,6 +76,9 @@ class Experimentor(IsotopeDatabaseManager):
         if qs is None:
             qs = self.experiment_queues
 
+        if self.executor.isAlive():
+            qs = (self.executor.experiment_queue, )
+
         self.executor.executable = all([ei.isExecutable() for ei in qs])
         self.debug('setting executable {}'.format(self.executor.executable))
 

@@ -552,6 +552,26 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
         return exc_xs
 
+    def _new_scatter(self, kw, marker, marker_size, plotid,
+                     x, y, fit, filter_outliers_dict, si):
+        kw['type'] = 'scatter'
+        plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
+
+        rd['selection_color'] = 'white'
+        rd['selection_outline_color'] = rd['color']
+        rd['selection_marker'] = marker
+        rd['selection_marker_size'] = marker_size + 1
+        scatter = plot.plot(names, **rd)[0]
+        self.set_series_label('data{}'.format(si), plotid=plotid)
+        if filter_outliers_dict is None:
+            filter_outliers_dict = dict(filter_outliers=False)
+
+        scatter.fit = fit
+        scatter.filter = None
+        scatter.filter_outliers_dict = filter_outliers_dict
+
+        return scatter
+
     def new_series(self, x=None, y=None,
                    ux=None, uy=None, lx=None, ly=None,
                    fx=None, fy=None,
@@ -570,7 +590,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
         kw['marker'] = marker
         kw['marker_size'] = marker_size
-        #        self.filters.append(None)
 
         if not fit:
             s, p = super(RegressionGraph, self).new_series(x, y,
@@ -580,59 +599,30 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 self.add_tools(p, s, None, convert_index, add_inspector)
             return s, p
 
-        kw['type'] = 'scatter'
-        plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
+        lkw = kw.copy()
+        lkw['color'] = 'black'
+        lkw['type'] = 'line'
+        lkw['render_style'] = 'connectedpoints'
+        plot, names, rd = self._series_factory(fx, fy, plotid=plotid,
+                                               **lkw)
+        line = plot.plot(names, **rd)[0]
+        line.index.sort_order = 'ascending'
+
         si = len([p for p in plot.plots.keys() if p.startswith('data')])
 
-        rd['selection_color'] = 'white'
-        rd['selection_outline_color'] = rd['color']
+        self.set_series_label('fit{}'.format(si), plotid=plotid)
 
-        rd['selection_marker'] = marker
-        rd['selection_marker_size'] = marker_size + 1
-
-        scatter = plot.plot(names, **rd)[0]
-        self.set_series_label('data{}'.format(si), plotid=plotid)
-
-        #         scatter.value_mapper.tight_bounds = True
-        #        scatter.index.on_trait_change(self._update_graph, 'metadata_changed')
-        #        u = lambda obj, name, old, new: self._update_metadata(scatter, obj, name, old, new)
-        #        scatter.index.on_trait_change(u, 'metadata_changed')
-
-        if filter_outliers_dict is None:
-            filter_outliers_dict = dict(filter_outliers=False)
-
-        scatter.fit = fit
-        scatter.filter = None
-        scatter.filter_outliers_dict = filter_outliers_dict
-
-        #         r = None
-        #         if x is not None and y is not None:
-        #             r = self._regress(plot, scatter, None)
-        #             if args:
-        #                 r, fx, fy, ly, uy = args
-
-        kw['color'] = 'black'
-        kw['type'] = 'line'
-        kw['render_style'] = 'connectedpoints'
-        plot, names, rd = self._series_factory(fx, fy, plotid=plotid,
-                                               **kw)
-        line = plot.plot(names, **rd)[0]
         if use_error_envelope:
             self._add_error_envelope_overlay(line)
+
+        scatter = self._new_scatter(kw, marker, marker_size,
+                                    plotid, x, y, fit,
+                                    filter_outliers_dict, si)
 
         r = None
         if x is not None and y is not None:
             if not self.suppress_regression:
                 self._regress(plot, scatter, line)
-
-                #         if r is not None:
-                #             line.regressor = r
-                #             if hasattr(line, 'error_envelope'):
-                #                 line.error_envelope.lower = ly
-                #                 line.error_envelope.upper = uy
-
-        line.index.sort_order = 'ascending'
-        self.set_series_label('fit{}'.format(si), plotid=plotid)
 
         try:
             self._set_bottom_axis(plot, plot, plotid)
@@ -640,8 +630,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             pass
 
         self._bind_index(scatter, **kw)
-        if add_tools and (self.use_inspector_tool or self.use_point_inspector):
-            self.add_tools(plot, scatter, line, convert_index)
+
+        if add_tools:
+            self.add_tools(plot, scatter, line,
+                           convert_index, add_inspector)
 
         return plot, scatter, line
 

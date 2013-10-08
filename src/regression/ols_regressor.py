@@ -30,21 +30,22 @@ except ImportError:
 #============= local library imports  ==========================
 from base_regressor import BaseRegressor
 
+
 class OLSRegressor(BaseRegressor):
     degree = Property(depends_on='_degree')
     _degree = Int
     constant = None
-#    _result = None
-#    @on_trait_change('xs,ys')
-#    def _update_data(self):
-#        self._ols = OLS(self.xs, vander(self.ys, self.degree + 1))
-#        self._result = self._ols.fit()
-#    def _xs_changed(self):
-#            xs = asarray(self.xs)
-#            ys = asarray(self.ys)
-# #            print len(xs), len(ys)
-#            self._ols = OLS(ys, vander(xs, self.degree + 1))
-#            self._result = self._ols.fit()
+    #    _result = None
+    #    @on_trait_change('xs,ys')
+    #    def _update_data(self):
+    #        self._ols = OLS(self.xs, vander(self.ys, self.degree + 1))
+    #        self._result = self._ols.fit()
+    #    def _xs_changed(self):
+    #            xs = asarray(self.xs)
+    #            ys = asarray(self.ys)
+    # #            print len(xs), len(ys)
+    #            self._ols = OLS(ys, vander(xs, self.degree + 1))
+    #            self._result = self._ols.fit()
     def __degree_changed(self):
         if self._degree:
             self.calculate()
@@ -55,31 +56,32 @@ class OLSRegressor(BaseRegressor):
             vander(x,n+1)
         '''
         if not len(self.xs) or \
-            not len(self.ys):
+                not len(self.ys):
             return
 
         if len(self.xs) != len(self.ys):
             return
 
-#        xs = asarray(self.xs)
+        #        xs = asarray(self.xs)
         ys = asarray(self.ys)
-#        self._ols = OLS(ys, vander(xs, self.degree + 1))
-#        self._result = self._ols.fit()
-#            print len(xs), len(ys)
-#        print self.degree
-#        print vander(xs, self.degree + 1)
+        #        self._ols = OLS(ys, vander(xs, self.degree + 1))
+        #        self._result = self._ols.fit()
+        #            print len(xs), len(ys)
+        #        print self.degree
+        #        print vander(xs, self.degree + 1)
         X = self._get_X()
         if X is not None:
             try:
-#                 print ys
-#                 print X
+            #                 print ys
+            #                 print X
                 ols = OLS(ys, X)
                 self._result = ols.fit()
             except Exception, e:
                 print 'calculate', e
-#                print 'X', X
-#                print 'ys', ys
-#        print self.degree, self._result.summary()
+            #                print 'X', X
+            #                print 'ys', ys
+            #        print self.degree, self._result.summary()
+
     def predict(self, pos):
         return_single = False
         if isinstance(pos, (float, int)):
@@ -96,7 +98,8 @@ class OLSRegressor(BaseRegressor):
             if return_single:
                 pred = pred[0]
             return pred
-#                return self._result.predict(X)[0]
+        #                return self._result.predict(X)[0]
+
     def predict_error(self, x, error_calc='sem'):
         return_single = False
         if isinstance(x, (float, int)):
@@ -109,11 +112,11 @@ class OLSRegressor(BaseRegressor):
         return e
 
     def predict_error_algebraic(self, x, error_calc='sem'):
-        '''    
+        """
         draper and smith 24
-        
+
         predict error in y using equation 1.4.6 p.22
-        '''
+        """
         s = self.calculate_standard_error_fit()
         xs = self.xs
         Xbar = xs.mean()
@@ -139,11 +142,12 @@ class OLSRegressor(BaseRegressor):
             Xk'=(1, x, x**2...x)
             
         '''
-#        if isinstance(x, (float, int)):
-#            x = [x]
+        #        if isinstance(x, (float, int)):
+        #            x = [x]
 
         x = asarray(x)
         sef = self.calculate_standard_error_fit()
+
         def calc_error(xi, se):
 
             Xk = matrix([pow(xi, i) for i in range(self.degree + 1)]).T
@@ -180,7 +184,7 @@ class OLSRegressor(BaseRegressor):
             bx_covar = bx * cov_varM
             bx_covar = asarray(bx_covar)[0]
             var = sum(bx * bx_covar)
-#            print var
+            #            print var
             s = se * var ** 0.5
             if error_calc == 'sd':
                 s = (se ** 2 + s ** 2) ** 0.5
@@ -193,28 +197,28 @@ class OLSRegressor(BaseRegressor):
 
         return [predict_yi_err(xi) for xi in x]
 
-#    def calculate_var_covar(self):
-#        '''
-#            return (X'X)^-1
-#        '''
-#        xs = self.xs
-#        n = float(xs.shape[0])
-#        xm = xs.mean()
-#        ssx = self.ssx
-#
-#        a = (xs ** 2).sum() / (n * ssx)
-#        b = -xm / (ssx)
-#        c = 1 / ssx
-#        v = matrix([[a, b], [b, c]])
-#        return v
+    #    def calculate_var_covar(self):
+    #        '''
+    #            return (X'X)^-1
+    #        '''
+    #        xs = self.xs
+    #        n = float(xs.shape[0])
+    #        xm = xs.mean()
+    #        ssx = self.ssx
+    #
+    #        a = (xs ** 2).sum() / (n * ssx)
+    #        b = -xm / (ssx)
+    #        c = 1 / ssx
+    #        v = matrix([[a, b], [b, c]])
+    #        return v
 
-#    def calculate_var_covar(self):
-#        X = matrix(self._get_X())
-#        v = X.T * X
-#        v = v.I
-#        return v
+    #    def calculate_var_covar(self):
+    #        X = matrix(self._get_X())
+    #        v = X.T * X
+    #        v = v.I
+    #        return v
 
-#    def _calculate_X(self):
+    #    def _calculate_X(self):
 
     def calculate_y(self, x):
         coeffs = self.coefficients
@@ -228,25 +232,25 @@ class OLSRegressor(BaseRegressor):
     def calculate_x(self, y):
         return 0
 
-#    def calculate_standard_error_fit(self):
-#        res = self.calculate_residuals()
-#        ss_res = (res ** 2).sum()
-# #        s = std(devs)
-# #        s = (dd.sum() / (devs.shape[0])) ** 0.5
-#
-#        '''
-#            mass spec calculates error in fit as
-#            see LeastSquares.CalcResidualsAndFitError
-#
-#            SigmaFit=Sqrt(SumSqResid/((NP-1)-(q-1)))
-#
-#            NP = number of points
-#            q= number of fit params... parabolic =3
-#        '''
-#        n = res.shape[0]
-#        q = self._degree
-#        s = (ss_res / (n - 1 - q)) ** 0.5
-#        return s
+    #    def calculate_standard_error_fit(self):
+    #        res = self.calculate_residuals()
+    #        ss_res = (res ** 2).sum()
+    # #        s = std(devs)
+    # #        s = (dd.sum() / (devs.shape[0])) ** 0.5
+    #
+    #        '''
+    #            mass spec calculates error in fit as
+    #            see LeastSquares.CalcResidualsAndFitError
+    #
+    #            SigmaFit=Sqrt(SumSqResid/((NP-1)-(q-1)))
+    #
+    #            NP = number of points
+    #            q= number of fit params... parabolic =3
+    #        '''
+    #        n = res.shape[0]
+    #        q = self._degree
+    #        s = (ss_res / (n - 1 - q)) ** 0.5
+    #        return s
 
     def _calculate_coefficients(self):
         '''
@@ -255,24 +259,24 @@ class OLSRegressor(BaseRegressor):
         '''
         if self._result:
 
-#            print 'dsaffsadf', self._result.params
+        #            print 'dsaffsadf', self._result.params
             return self._result.params
-#        return polyfit(self.xs, self.ys, self.degree)
+        #        return polyfit(self.xs, self.ys, self.degree)
 
     def _calculate_coefficient_errors(self):
         if self._result:
-#            result = self._result
-#            covar_diag = result.cov_params().diagonal()
-#            n = result.nobs
-#            q = result.df_model
-#            ssr = result.ssr
-#            sigma_fit = (ssr / ((n - 1) - q)) ** 0.5
-#            errors = sigma_fit * covar_diag
-#            print errors, self._result.bse
+        #            result = self._result
+        #            covar_diag = result.cov_params().diagonal()
+        #            n = result.nobs
+        #            q = result.df_model
+        #            ssr = result.ssr
+        #            sigma_fit = (ssr / ((n - 1) - q)) ** 0.5
+        #            errors = sigma_fit * covar_diag
+        #            print errors, self._result.bse
             return self._result.bse
 
-#    def _calculate_confidence_interval(self, x):
-#        return self._result.conf_int
+        #    def _calculate_confidence_interval(self, x):
+        #        return self._result.conf_int
 
 
     def _get_degree(self):
@@ -300,20 +304,22 @@ class OLSRegressor(BaseRegressor):
     @property
     def var_covar(self):
         return self._result.normalized_cov_params
-#    @property
-#    def fit(self):
-#        fits = ['linear', 'parabolic', 'cubic']
-#        return fits[self._degree - 1]
+
+    #    @property
+    #    def fit(self):
+    #        fits = ['linear', 'parabolic', 'cubic']
+    #        return fits[self._degree - 1]
 
     def _get_fit(self):
         fits = ['linear', 'parabolic', 'cubic']
         return fits[self._degree - 1]
 
-#        return self._fit
+    #        return self._fit
 
     def _set_fit(self, v):
         self._set_degree(v)
-#        self._fit = v
+
+    #        self._fit = v
 
     def _get_X(self, xs=None):
         if xs is None:
@@ -328,7 +334,7 @@ class OLSRegressor(BaseRegressor):
                 [1,xj,xj^2,...]
                 ]
         '''
-#        xs = self.xs
+        #        xs = self.xs
         cols = [pow(xs, i) for i in range(self.degree + 1)]
         X = column_stack(cols)
         return X
@@ -343,6 +349,7 @@ class OLSRegressor(BaseRegressor):
 class PolynomialRegressor(OLSRegressor):
     pass
 
+
 class MultipleLinearRegressor(OLSRegressor):
     '''
         xs=[(x1,y1),(x2,y2),...,(xn,yn)]
@@ -353,7 +360,6 @@ class MultipleLinearRegressor(OLSRegressor):
         if you have a tuple of x,y pairs
         X=array(xy)
     '''
-
 
 
     def _get_X(self, xs=None):
@@ -377,24 +383,25 @@ class MultipleLinearRegressor(OLSRegressor):
             Xk'=(1, x, x**2...x)
             
         '''
-#        if isinstance(x, (float, int)):
-#            x = [x]
+        #        if isinstance(x, (float, int)):
+        #            x = [x]
 
         x = asarray(x)
         sef = self.calculate_standard_error_fit()
+
         def calc_error(xi, se):
             xi = hstack((xi, (1,)))
-#            print xi, pow(xi, 3), 'ff'
-#            print self.degree
-#            print range(self.degree + 1)
-#            print [pow(xi, i) for i in range(self.degree + 1)]
+            #            print xi, pow(xi, 3), 'ff'
+            #            print self.degree
+            #            print range(self.degree + 1)
+            #            print [pow(xi, i) for i in range(self.degree + 1)]
             Xk = matrix([pow(xi, i) for i in range(self.degree + 1)]).T
 
             covarM = matrix(self.var_covar)
             varY_hat = (Xk.T * covarM * Xk)
             varY_hat = sum(diag(varY_hat))
-#            print varY_hat
-#
+            #            print varY_hat
+            #
             if error_calc == 'sem':
                 se = sef * sqrt(varY_hat)
             else:
@@ -417,19 +424,20 @@ class FluxRegressor(MultipleLinearRegressor):
         X = column_stack((x1, x2, x1 ** 2, x2 ** 2, x1 * x2, ones_like(x1)))
         return X
 
+
 if __name__ == '__main__':
     import numpy as np
-#    xs = np.linspace(0, 10, 20)
-#    bo = 4
-#    b1 = 3
-#    ei = np.random.rand(len(xs))
-#    ys = bo + b1 * xs + ei
-#    print ys
-#    p = '/Users/ross/Sandbox/61311-36b'
-#    xs, ys = np.loadtxt(p, unpack=True)
-# #    xs, ys = np.loadtxt(p)
-#    m = PolynomialRegressor(xs=xs, ys=ys, degree=2)
-#    print m.calculate_y(0)
+    #    xs = np.linspace(0, 10, 20)
+    #    bo = 4
+    #    b1 = 3
+    #    ei = np.random.rand(len(xs))
+    #    ys = bo + b1 * xs + ei
+    #    print ys
+    #    p = '/Users/ross/Sandbox/61311-36b'
+    #    xs, ys = np.loadtxt(p, unpack=True)
+    # #    xs, ys = np.loadtxt(p)
+    #    m = PolynomialRegressor(xs=xs, ys=ys, degree=2)
+    #    print m.calculate_y(0)
     xs = [(0, 0), (1, 0), (2, 0)]
     ys = [0, 1, 2.01]
     r = MultipleLinearRegressor(xs=xs, ys=ys, fit='linear')

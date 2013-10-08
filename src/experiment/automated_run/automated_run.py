@@ -73,6 +73,7 @@ class ScriptInfo(HasTraits):
 
 
 scripts = {}
+warned_scripts = []
 
 
 def assemble_script_blob(scripts, kinds=None):
@@ -783,11 +784,17 @@ class AutomatedRun(Loggable):
             self.info_color = None
             return False
 
-    def do_measurement(self):
+    def start_measurement(self):
         if not self._alive:
             return
         if not self.measurement_script:
-            return True
+            return
+
+    def do_measurement(self):
+        if not self._alive:
+            return
+            #if not self.measurement_script:
+        #    return True
 
         self.measurement_script.runner = self.runner
         self.measurement_script.manager = self.experiment_manager
@@ -985,8 +992,10 @@ anaylsis_type={}
         for iso in self.arar_age.isotopes:
             self.arar_age.set_isotope(iso, (0, 0))
 
-        cb = False
+        self.arar_age.clear_error_components()
         self.arar_age.clear_blanks()
+
+        cb = False
         if (not self.spec.analysis_type.startswith('blank') \
                 and not self.spec.analysis_type.startswith('background')):
 
@@ -1734,25 +1743,25 @@ anaylsis_type={}
 
         if self.arar_age:
             ic = self.arar_age.get_ic_factor('CDD')
-#        else:
-#            ic = ArArAge(application=self.application).cdd_ic_factor
+            #        else:
+            #            ic = ArArAge(application=self.application).cdd_ic_factor
 
             # save cdd_ic_factor so it can be exported to secondary db
             self.cdd_ic_factor = ic
-    
+
             def func():
                 self.info('default cdd_ic_factor={}'.format(ic))
                 db = self.db
                 user = self.spec.username
                 user = user if user else NULL_STR
-    
+
                 self.info('{} adding detector intercalibration history for {}'.format(user, self.runid))
-    
+
                 history = db.add_detector_intercalibration_history(analysis,
                                                                    user=user,
                 )
                 analysis.selected_histories.selected_detector_intercalibration = history
-    
+
                 uv, ue = ic.nominal_value, ic.std_dev
                 db.add_detector_intercalibration(history, 'CDD',
                                                  user_value=float(uv),
@@ -1983,18 +1992,21 @@ anaylsis_type={}
         return script
 
     def _bootstrap_script(self, fname, name):
-        global scripts
-        if not self.warned_scripts:
-            self.warned_scripts = []
-        warned_scripts = self.warned_scripts
+        #global scripts
+        global warned_scripts
+        #if not self.warned_scripts:
+        #    self.warned_scripts = []
+        #warned_scripts = self.warned_scripts
 
         def warn(fn, e):
             self.invalid_script = True
+            self.executable = False
+            self.spec.executable = False
+
             if not fn in warned_scripts:
                 warned_scripts.append(fn)
                 #                 e = traceback.format_exc()
                 self.warning_dialog('Invalid Script {}\n{}'.format(fn, e))
-                self.executable = False
 
         self.info('loading script "{}"'.format(fname))
         func = getattr(self, '_{}_script_factory'.format(name))
@@ -2019,8 +2031,8 @@ anaylsis_type={}
             warn(fname, e)
 
         self.valid_scripts[name] = valid
-        if valid:
-            scripts[fname] = s
+        #if valid:
+        #    scripts[fname] = s
         return s
 
     def _measurement_script_factory(self):

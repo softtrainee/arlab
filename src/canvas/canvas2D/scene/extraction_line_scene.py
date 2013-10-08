@@ -35,12 +35,13 @@ class ExtractionLineScene(Scene):
 
     valves = Dict
 
-    def get_is_in(self, px, py):
-        for c in self.iteritems(exclude=[Valve, RoughValve,
-                                         Image, Label,
-                                         ValueLabel,
-                                         BorderLine,
-        ]):
+    def get_is_in(self, px, py, exclude=None):
+        if exclude is None:
+            exclude = [Valve, RoughValve, Image, Label,
+                       ValueLabel,
+                       BorderLine, ]
+
+        for c in self.iteritems(exclude=exclude):
             x, y = c.get_xy()
             w, h = c.get_wh()
             if c.identifier in ('bounds_rect', 'legend'):

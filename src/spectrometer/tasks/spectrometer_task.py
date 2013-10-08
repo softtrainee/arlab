@@ -25,9 +25,11 @@ from src.envisage.tasks.base_task import BaseExtractionLineTask
 from src.spectrometer.tasks.spectrometer_panes import ScanPane, ControlsPane, \
     ReadoutPane, IntensitiesPane
 
+
 class SpectrometerTask(BaseExtractionLineTask):
     scan_manager = Any
     name = 'Scan'
+    id = 'pychron.spectrometer'
 
     def prepare_destroy(self):
         self.scan_manager.stop_scan()
@@ -39,46 +41,45 @@ class SpectrometerTask(BaseExtractionLineTask):
 
     def _default_layout_default(self):
         return TaskLayout(
-                          left=Splitter(
-                                        PaneItem('pychron.spectrometer.controls'),
-                                        Tabbed(PaneItem('pychron.spectrometer.intensities'),
-                                               PaneItem('pychron.spectrometer.readout')),
-                                        orientation='vertical'
-                                        )
+            left=Splitter(
+                PaneItem('pychron.spectrometer.controls'),
+                Tabbed(PaneItem('pychron.spectrometer.intensities'),
+                       PaneItem('pychron.spectrometer.readout')),
+                orientation='vertical'
+            )
 
-#                          right=Splitter(
-#                                         PaneItem('pychron.experiment.stats'),
-#                                         PaneItem('pychron.experiment.console'),
-#                                         orientation='vertical'
-#                                         ),
-#                          bottom=PaneItem('pychron.experiment.console'),
-#                          top=PaneItem('pychron.experiment.controls')
-                          )
+            #                          right=Splitter(
+            #                                         PaneItem('pychron.experiment.stats'),
+            #                                         PaneItem('pychron.experiment.console'),
+            #                                         orientation='vertical'
+            #                                         ),
+            #                          bottom=PaneItem('pychron.experiment.console'),
+            #                          top=PaneItem('pychron.experiment.controls')
+        )
 
 
     def create_central_pane(self):
         g = ScanPane(
-                     model=self.scan_manager,
-                     )
+            model=self.scan_manager,
+        )
         return g
 
     def create_dock_panes(self):
         panes = [ControlsPane(model=self.scan_manager),
-                ReadoutPane(model=self.scan_manager),
-                IntensitiesPane(model=self.scan_manager)
-                ]
+                 ReadoutPane(model=self.scan_manager),
+                 IntensitiesPane(model=self.scan_manager)
+        ]
 
         panes = self._add_canvas_pane(panes)
 
-#         app = self.window.application
-#         man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
-#         if man:
-#             from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
-#             panes.append(CanvasDockPane(canvas=man.new_canvas()))
+        #         app = self.window.application
+        #         man = app.get_service('src.extraction_line.extraction_line_manager.ExtractionLineManager')
+        #         if man:
+        #             from src.extraction_line.tasks.extraction_line_pane import CanvasDockPane
+        #             panes.append(CanvasDockPane(canvas=man.new_canvas()))
 
-#             panes.append(CanvasDockPane(model=man))
+        #             panes.append(CanvasDockPane(model=man))
         return panes
-
 
 
 #============= EOF =============================================

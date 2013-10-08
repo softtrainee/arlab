@@ -22,6 +22,7 @@ from traitsui.menu import Action
 import os
 #============= local library imports  ==========================
 from src.canvas.canvas2D.overlays.extraction_line_overlay import ExtractionLineInfoTool, ExtractionLineInfoOverlay
+from src.canvas.canvas2D.scene.primitives.primitives import BorderLine
 from src.canvas.scene_viewer import SceneCanvas
 from src.canvas.canvas2D.scene.extraction_line_scene import ExtractionLineScene
 from src.canvas.canvas2D.scene.primitives.valves import Valve, RoughValve, \
@@ -31,6 +32,10 @@ from src.paths import paths
 
 W = 2
 H = 2
+
+
+class ExtractionLineAction(Action):
+    chamber = Str
 
 
 class ExtractionLineCanvas2D(SceneCanvas):
@@ -107,6 +112,7 @@ class ExtractionLineCanvas2D(SceneCanvas):
         valve = self._get_valve_by_name(name)
         if valve is not None:
             valve.soft_lock = lockstate
+            self.request_redraw()
 
             #        if refresh:
             #            self.request_redraw()
@@ -133,9 +139,11 @@ class ExtractionLineCanvas2D(SceneCanvas):
 
     def _over_item(self, event):
         x, y = event.x, event.y
-        return next((item for item in self.scene.valves.itervalues()
-                     if hasattr(item, 'is_in') and \
-                        item.is_in(x, y)), None)
+        #items=self.scene.iteritems()
+        return self.scene.get_is_in(x, y, exclude=[BorderLine, ])
+        #return next((item for item in items
+        #             if hasattr(item, 'is_in') and \
+        #                item.is_in(x, y)), None)
 
     def normal_left_down(self, event):
         pass
@@ -145,11 +153,12 @@ class ExtractionLineCanvas2D(SceneCanvas):
         item = self._over_item(event)
         #redraw=False
         if item is not None:
-            #print self.active_item, item
+            self.event_state = 'select'
+            event.window.set_pointer(self.select_pointer)
             if item != self.active_item:
                 self.active_item = item
-                self.event_state = 'select'
-                event.window.set_pointer(self.select_pointer)
+            if isinstance(item, BaseValve):
+                #print self.active_item, item
                 if self.manager:
                     self.manager.set_selected_explanation_item(item)
         else:
@@ -196,23 +205,34 @@ class ExtractionLineCanvas2D(SceneCanvas):
     def OnProperties(self, event):
         self.manager.show_valve_properties(self.active_item.name)
 
-    def _action_factory(self, name, func, **kw):
-        '''
-        '''
-        a = Action(name=name, on_perform=getattr(self, func),
-                   #                   visible_when='0',
-                   **kw)
+    def _action_factory(self, name, func, klass=None, **kw):
+        """
+        """
+        if klass is None:
+            klass = Action
+
+        a = klass(name=name,
+                  on_perform=getattr(self, func), **kw)
 
         return a
 
     def _show_menu(self, event, obj):
         actions = []
         if self.manager.mode != 'client':
-            t = 'Lock'
-            if obj.soft_lock:
-                t = 'Unlock'
-            action = self._action_factory(t, 'OnLock')
-            actions.append(action)
+            if isinstance(self.active_item, BaseValve):
+                t = 'Lock'
+                if obj.soft_lock:
+                    t = 'Unlock'
+
+                action = self._action_factory(t, 'OnLock')
+                actions.append(action)
+                #else:
+                #    if self.active_item.name
+                #
+                #    actions.append(self._action_factory('Isolate', 'OnIsolate',
+                #                                    klass=ExtractionLineAction,
+                #                                    chamber=self.active_item.name))
+
 
         #        actions = [self._action_factory(name, func) for name, func in []]
         if actions:
@@ -225,8 +245,8 @@ class ExtractionLineCanvas2D(SceneCanvas):
     def select_right_down(self, event):
         item = self.active_item
 
-        if item is not None and \
-                isinstance(item, BaseValve):
+        if item is not None:
+        #isinstance(item, BaseValve):
             self._show_menu(event, item)
 
         #        item = self.valves[self.active_item]
@@ -237,12 +257,15 @@ class ExtractionLineCanvas2D(SceneCanvas):
     #        self.invalidate_and_redraw()
 
     def select_left_down(self, event):
-        '''
-    
-        '''
+        """
+
+        """
         #        item = self.valves[self.active_item]
         item = self.active_item
         if item is None:
+            return
+
+        if not isinstance(item, BaseValve):
             return
 
         if item.soft_lock:

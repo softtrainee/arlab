@@ -17,7 +17,7 @@
 
 
 #============= enthought library imports =======================
-from traits.api import  Instance, Int, Property, List, \
+from traits.api import Instance, Int, Property, List, \
     Any, Enum, Str, DelegatesTo, Event, Bool
 
 #============= standard library imports ========================
@@ -28,11 +28,10 @@ from src.spectrometer.source import Source
 from src.spectrometer.magnet import Magnet
 from src.spectrometer.detector import Detector
 from src.spectrometer.spectrometer_device import SpectrometerDevice
-from src.constants import NULL_STR
+from src.constants import NULL_STR, DETECTOR_ORDER
 from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.paths import paths
 
-DETECTOR_ORDER = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 debug = False
 
 
@@ -56,7 +55,6 @@ class Spectrometer(SpectrometerDevice):
 
     current_hv = DelegatesTo('source')
     scan_timer = None
-
 
     molecular_weight = Str('Ar40')
     molecular_weights = None
@@ -106,79 +104,80 @@ class Spectrometer(SpectrometerDevice):
             name = str(name)
 
         return next((det for det in self.detectors if det.name == name), None)
-#    def get_hv_correction(self, current=False):
-#        cur = self.source.current_hv
-#        if current:
-#            cur = self.source.read_hv()
-#
-#        if cur is None:
-#            cor = 1
-#        else:
-#            cor = self.source.nominal_hv / cur
-#        return cor
 
-#    def get_relative_detector_position(self, det):
-#        '''
-#            return position relative to ref detector in dac space
-#        '''
-#        if det is None:
-#            return 0
-#        else:
-#            return 0
+    #    def get_hv_correction(self, current=False):
+    #        cur = self.source.current_hv
+    #        if current:
+    #            cur = self.source.read_hv()
+    #
+    #        if cur is None:
+    #            cor = 1
+    #        else:
+    #            cor = self.source.nominal_hv / cur
+    #        return cor
 
-#    def set_magnet_position(self, pos, detector=None):
-#        #calculate the dac value for pos is on the reference detector
-#        #the mftable should be set to the ref detector
-#        dac = self.magnet.calculate_dac(pos)
-#
-#        #correct for detector
-#        #calculate the dac so that this position is shifted onto the given
-#        #detector.
-# #        dac += self.get_detector_position(detector)
-#
-#        #correct for deflection
-#        self.magnet.dac = dac
-#
-#        #correct for hv
-#        dac *= self.get_hv_correction(current=True)
+    #    def get_relative_detector_position(self, det):
+    #        '''
+    #            return position relative to ref detector in dac space
+    #        '''
+    #        if det is None:
+    #            return 0
+    #        else:
+    #            return 0
 
-#===============================================================================
-# change handlers
-#===============================================================================
-#    def _molecular_weight_changed(self):
-#        self.set_magnet_position(MOLECULAR_WEIGHTS[self.molecular_weight])
+    #    def set_magnet_position(self, pos, detector=None):
+    #        #calculate the dac value for pos is on the reference detector
+    #        #the mftable should be set to the ref detector
+    #        dac = self.magnet.calculate_dac(pos)
+    #
+    #        #correct for detector
+    #        #calculate the dac so that this position is shifted onto the given
+    #        #detector.
+    # #        dac += self.get_detector_position(detector)
+    #
+    #        #correct for deflection
+    #        self.magnet.dac = dac
+    #
+    #        #correct for hv
+    #        dac *= self.get_hv_correction(current=True)
 
-#    def _integration_time_changed(self):
-#        if self.microcontroller:
-#            self.microcontroller.ask('SetIntegrationTime {}'.format(self.integration_time))
-#            self.reset_scan_timer()
+    #===============================================================================
+    # change handlers
+    #===============================================================================
+    #    def _molecular_weight_changed(self):
+    #        self.set_magnet_position(MOLECULAR_WEIGHTS[self.molecular_weight])
 
-#===============================================================================
-# timers
-#===============================================================================
+    #    def _integration_time_changed(self):
+    #        if self.microcontroller:
+    #            self.microcontroller.ask('SetIntegrationTime {}'.format(self.integration_time))
+    #            self.reset_scan_timer()
 
-#    def reset_scan_timer(self):
-#        if self.scan_timer is not None:
-#            self.scan_timer.Stop()
-#        self._timer_factory()
-#
-#    def stop(self):
-#        if self._alive == True:
-#            self.info('Calibration canceled by user')
-#            self._alive = False
-#            return False
-#        else:
-#            self._alive = False
-#            return True
-#        if self.centering_timer and self.centering_timer.IsRunning():
-#            self.centering_timer.Stop()
-#            self.info('Peak centering stopped by user')
-#            self._timer_factory()
-#        else:
-#            return True
-#===============================================================================
-# peak centering
-#===============================================================================
+    #===============================================================================
+    # timers
+    #===============================================================================
+
+    #    def reset_scan_timer(self):
+    #        if self.scan_timer is not None:
+    #            self.scan_timer.Stop()
+    #        self._timer_factory()
+    #
+    #    def stop(self):
+    #        if self._alive == True:
+    #            self.info('Calibration canceled by user')
+    #            self._alive = False
+    #            return False
+    #        else:
+    #            self._alive = False
+    #            return True
+    #        if self.centering_timer and self.centering_timer.IsRunning():
+    #            self.centering_timer.Stop()
+    #            self.info('Peak centering stopped by user')
+    #            self._timer_factory()
+    #        else:
+    #            return True
+    #===============================================================================
+    # peak centering
+    #===============================================================================
     def isAlive(self):
         return self._alive
 
@@ -196,9 +195,9 @@ class Spectrometer(SpectrometerDevice):
                 di.isotope = 'Ar{}'.format(mass)
 
 
-#===============================================================================
-# property get/set
-#===============================================================================
+            #===============================================================================
+            # property get/set
+            #===============================================================================
 
     def _get_detectors(self):
         ds = []
@@ -214,9 +213,9 @@ class Spectrometer(SpectrometerDevice):
         self.microcontroller.ask('SetSubCupConfiguration {}'.format(v))
 
 
-#===============================================================================
-# load
-#===============================================================================
+    #===============================================================================
+    # load
+    #===============================================================================
     def load_configurations(self):
         self.sub_cup_configurations = ['A', 'B', 'C']
         self._sub_cup_configuration = 'B'
@@ -261,6 +260,7 @@ class Spectrometer(SpectrometerDevice):
                 self.info('writing a default "molecular_weights.csv" file')
                 # make a default molecular_weights.csv file
                 from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS as mw
+
                 with open(p, 'U') as f:
                     writer = csv.writer(f, delimiter='\t')
                     data = [a for a in mw.itervalues()]
@@ -284,9 +284,9 @@ class Spectrometer(SpectrometerDevice):
                      **kw)
         self.detectors.append(d)
 
-#===============================================================================
-# signals
-#===============================================================================
+    #===============================================================================
+    # signals
+    #===============================================================================
     def get_intensities(self, record=True, tagged=True):
         keys, signals = None, None
         if self.microcontroller:
@@ -306,12 +306,12 @@ class Spectrometer(SpectrometerDevice):
                             signals = map(float, [data[i + 1] for i in range(0, len(data), 2)])
 
         if not keys:
-#             signals = [(ns + self.testcnt * 0.1) + random.random()
-#                         for ns in [1, 100, 3, 1, 1, 0]]
+        #             signals = [(ns + self.testcnt * 0.1) + random.random()
+        #                         for ns in [1, 100, 3, 1, 1, 0]]
             signals = [1, 100, 3, 0, 0, 0.01]
 
 
-#             signals = [(i * 2 + self.testcnt * 0.1) + random.random() for i in range(6)]
+            #             signals = [(i * 2 + self.testcnt * 0.1) + random.random() for i in range(6)]
             self.testcnt += 1
             if tagged:
                 keys = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
@@ -324,7 +324,7 @@ class Spectrometer(SpectrometerDevice):
             dkeys: str or tuple of strs
             
         '''
-#        index = DETECTOR_ORDER.index(key)
+        #        index = DETECTOR_ORDER.index(key)
         data = self.get_intensities()
         if data is not None:
             keys, signals = data
@@ -347,9 +347,9 @@ class Spectrometer(SpectrometerDevice):
         return cor
 
     def correct_dac(self, det, dac):
-#        dac is in axial units
+    #        dac is in axial units
 
-#        convert to detector
+    #        convert to detector
         dac *= det.relative_position
 
         '''
@@ -364,7 +364,7 @@ class Spectrometer(SpectrometerDevice):
 
         dac += dev
 
-#        #correct for hv
+        #        #correct for hv
         dac *= self.get_hv_correction(current=True)
         return dac
 
@@ -375,19 +375,19 @@ class Spectrometer(SpectrometerDevice):
         dac /= det.relative_position
         return dac
 
-#===============================================================================
-# private
-#===============================================================================
+    #===============================================================================
+    # private
+    #===============================================================================
 
     def _send_configuration(self):
         COMMAND_MAP = dict(ionrepeller='IonRepeller',
-                         electronenergy='ElectronEnergy',
-                         ysymmetry='YSymmetry',
-                         zsymmetry='ZSymmetry',
-                         zfocus='ZFocus',
-                         extractionlens='ExtractionLens',
-                         ioncountervoltage='IonCounterVoltage'
-                         )
+                           electronenergy='ElectronEnergy',
+                           ysymmetry='YSymmetry',
+                           zsymmetry='ZSymmetry',
+                           zfocus='ZFocus',
+                           extractionlens='ExtractionLens',
+                           ioncountervoltage='IonCounterVoltage'
+        )
 
         self.debug('Sending configuration to spectrometer')
         if self.microcontroller:
@@ -403,98 +403,100 @@ class Spectrometer(SpectrometerDevice):
 
                         if section == 'Deflections':
                             cmd = 'SetDeflection'
-                            v='{},{}'.format(attr.upper(), v)
+                            v = '{},{}'.format(attr.upper(), v)
                         else:
                             cmd = 'Set{}'.format(COMMAND_MAP[attr])
 
                         self.set_parameter(cmd, v)
 
-#===============================================================================
-# defaults
-#===============================================================================
+                    #===============================================================================
+                    # defaults
+                    #===============================================================================
+
     def _magnet_default(self):
         return Magnet(spectrometer=self)
 
     def _source_default(self):
         return Source(spectrometer=self)
 
-#============= EOF =============================================
-#    def _peak_center_scan_step(self, di, graph, plotid, cond):
-# #       3print cond
-#        if self.first:
-#            self.first = False
-#            x = di
-#            cond.acquire()
-#        else:
-#            x = self.x
-#        data = self.get_intensities()
-#        if data is not None:
-#            if self.simulation:
-#                intensity = self.peak_generator.next()
-#            else:
-#                intensity = data[DETECTOR_ORDER.index(self.reference_detector)]
-#
-#            self.intensities.append(intensity)
-#            graph.add_datum((x, intensity), plotid = plotid, update_y_limits = True)
-#
-#        try:
-#            x = self.gen.next()
-#        except StopIteration:
-#            try:
-#                cond.notify()
-#                cond.release()
-#            finally:
-#                raise StopIteration
-#
-#        self.x = x
-#        self.magnet.set_dac(x)
-#    def _peak_center(self, graph, update_mftable, update_pos, center_pos):
+    #============= EOF =============================================
+    #    def _peak_center_scan_step(self, di, graph, plotid, cond):
+    # #       3print cond
+    #        if self.first:
+    #            self.first = False
+    #            x = di
+    #            cond.acquire()
+    #        else:
+    #            x = self.x
+    #        data = self.get_intensities()
+    #        if data is not None:
+    #            if self.simulation:
+    #                intensity = self.peak_generator.next()
+    #            else:
+    #                intensity = data[DETECTOR_ORDER.index(self.reference_detector)]
+    #
+    #            self.intensities.append(intensity)
+    #            graph.add_datum((x, intensity), plotid = plotid, update_y_limits = True)
+    #
+    #        try:
+    #            x = self.gen.next()
+    #        except StopIteration:
+    #            try:
+    #                cond.notify()
+    #                cond.release()
+    #            finally:
+    #                raise StopIteration
+    #
+    #        self.x = x
+    #        self.magnet.set_dac(x)
+    #    def _peak_center(self, graph, update_mftable, update_pos, center_pos):
 
-#    def _peak_center_scan(self, start, end, step_len, graph, ppc = 40, plotid = 0):
-#
-#        #stop the scan timer and use peak scan timer
-#        self.intensities = []
-#        sign = 1 if start < end else - 1
-#        nsteps = abs(end - start + step_len * sign) / step_len
-#        dac_values = np.linspace(start, end, nsteps)
-#        self.peak_generator = psuedo_peak(ppc, start, end, nsteps)
-#
-#        self.first = True
-#        self.x = 0
-#        self.gen = (i for i in dac_values)
-#        period = self.integration_time * 1000
-#        if self.simulation:
-#            period = 150
-#
-#        #do first dac move
-# #        di = self.gen.next()
-# #        self.magnet.set_dac(di)
-# #        time.sleep(2)
-#
-#        if self.scan_timer.IsRunning():
-#            self.scan_timer.Stop()
+    #    def _peak_center_scan(self, start, end, step_len, graph, ppc = 40, plotid = 0):
+    #
+    #        #stop the scan timer and use peak scan timer
+    #        self.intensities = []
+    #        sign = 1 if start < end else - 1
+    #        nsteps = abs(end - start + step_len * sign) / step_len
+    #        dac_values = np.linspace(start, end, nsteps)
+    #        self.peak_generator = psuedo_peak(ppc, start, end, nsteps)
+    #
+    #        self.first = True
+    #        self.x = 0
+    #        self.gen = (i for i in dac_values)
+    #        period = self.integration_time * 1000
+    #        if self.simulation:
+    #            period = 150
+    #
+    #        #do first dac move
+    # #        di = self.gen.next()
+    # #        self.magnet.set_dac(di)
+    # #        time.sleep(2)
+    #
+    #        if self.scan_timer.IsRunning():
+    #            self.scan_timer.Stop()
 
-#        t = Thread(target = self.scan, args = (dac_values, graph))
-#        t.start()
-#        t.join()
-#===============================================================================
-# old
-#===============================================================================
-#        if self.condition is None:
-#            cond = Condition()
-#        with cond:
-#            if self.centering_timer is not None:
-#                self.centering_timer.Stop()
-#
-#            self.centering_timer = Timer(period, self._peak_center_scan_step, di, graph, plotid, cond)
-#            self.centering_timer.Start()
-#
-#            cond.wait()
-#===============================================================================
-# old end
-#===============================================================================
+    #        t = Thread(target = self.scan, args = (dac_values, graph))
+    #        t.start()
+    #        t.join()
+    #===============================================================================
+    # old
+    #===============================================================================
+    #        if self.condition is None:
+    #            cond = Condition()
+    #        with cond:
+    #            if self.centering_timer is not None:
+    #                self.centering_timer.Stop()
+    #
+    #            self.centering_timer = Timer(period, self._peak_center_scan_step, di, graph, plotid, cond)
+    #            self.centering_timer.Start()
+    #
+    #            cond.wait()
+    #===============================================================================
+    # old end
+    #===============================================================================
 
-        # restart the scan timer
+    # restart the scan timer
+
 #        self._timer_factory()
 #
 #        return self.finish_peak_center(graph, dac_values, self.intensities)

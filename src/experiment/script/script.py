@@ -27,6 +27,7 @@ from src.loggable import Loggable
 import ast
 import yaml
 
+
 class Script(Loggable):
     application = Any
     label = Str
@@ -66,16 +67,16 @@ class Script(Loggable):
 
     def traits_view(self):
         return View(HGroup(
-                           Label(self.label),
-                           spring,
-                           UItem('name',
-                                width=-200,
-                                editor=EnumEditor(name='names')),
-                           UItem('edit',
-                                enabled_when='name and name!="---" and name is not "None"',
-                                ),
-                           )
-                    )
+            Label(self.label),
+            spring,
+            UItem('name',
+                  width=-200,
+                  editor=EnumEditor(name='names')),
+            UItem('edit',
+                  enabled_when='name and name!="---" and name is not "None"',
+            ),
+        )
+        )
 
     def _clean_script_name(self, name):
         name = self._remove_mass_spectrometer_name(name)
@@ -104,7 +105,7 @@ class Script(Loggable):
         p = self._get_root()
         if os.path.isdir(p):
             return [s for s in os.listdir(p)
-                        if not s.startswith('.') and s.endswith('.py')]
+                    if not s.startswith('.') and s.endswith('.py')]
         else:
             self.warning_dialog('{} script directory does not exist!'.format(p))
 
@@ -115,6 +116,7 @@ class Script(Loggable):
         if ms:
             msn = '{}_'.format(self.mass_spectrometer.lower())
             names.extend([self._clean_script_name(ei) for ei in ms if ei.startswith(msn)])
+
         return names
 
 #============= EOF =============================================

@@ -238,8 +238,10 @@ class ExperimentEditorTask(EditorTask):
                     manager.executor.reset()
                     manager.update_info()
 
-                #                     manager.update_queues()
-                #                    manager.start_file_listener(path)
+                    #                     manager.update_queues()
+                    #                    manager.start_file_listener(path)
+
+            self._show_pane(self.experiment_factory_pane)
 
             return True
 
@@ -293,8 +295,10 @@ class ExperimentEditorTask(EditorTask):
         editor = ExperimentEditor()
         editor.new_queue()
         self._open_editor(editor)
+        self._show_pane(self.experiment_factory_pane)
 
-        self.manager.executor.executable = False
+        if not self.manager.executor.isAlive():
+            self.manager.executor.executable = False
 
     def _save_file(self, path):
         if self.active_editor.save(path):
@@ -392,7 +396,6 @@ class ExperimentEditorTask(EditorTask):
 
     @on_trait_change('manager.experiment_factory:extract_device')
     def _handle_extract_device(self, new):
-        print new
         if new == 'Fusions UV':
             editor = UVExperimentEditor()
             editor.new_queue()
@@ -406,7 +409,8 @@ class ExperimentEditorTask(EditorTask):
                 self.active_editor.close()
 
             self._open_editor(editor)
-            self.manager.executor.executable = False
+            if not self.manager.executor.isAlive():
+                self.manager.executor.executable = False
 
 
     @on_trait_change('manager.experiment_factory:queue_factory:load_name')
@@ -427,14 +431,14 @@ class ExperimentEditorTask(EditorTask):
         self.manager.update_info()
         if self.active_editor.queue.initialized:
             self.active_editor.dirty = True
-        #        self.debug('runs changed {}'.format(len(new)))
-        #        executor = self.manager.executor
-        #        if executor.isAlive():
-        #            executor.end_at_run_completion = True
-        #            executor.changed_flag = True
-        #        else:
-        #            self.manager.executor.executable = False
-        #        self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
+            #        self.debug('runs changed {}'.format(len(new)))
+            #        executor = self.manager.executor
+            #        if executor.isAlive():
+            #            executor.end_at_run_completion = True
+            #            executor.changed_flag = True
+            #        else:
+            #            self.manager.executor.executable = False
+            #        self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
 
     @on_trait_change('editor_area:editors[]')
     def _update_editors(self, new):
@@ -446,7 +450,7 @@ class ExperimentEditorTask(EditorTask):
     def _update_plot_panel(self, new):
         if new is not None:
             self.isotope_evolution_pane.plot_panel = new
-        #         self.summary_pane.plot_panel = new
+            #         self.summary_pane.plot_panel = new
 
     @on_trait_change('manager:executor:run_completed')
     def _update_run_completed(self, new):
@@ -576,9 +580,9 @@ class ExperimentEditorTask(EditorTask):
     def _update_active_editor_dirty(self):
         if self.active_editor.dirty:
             self.manager.executor.executable = False
-        #===============================================================================
-        # default/factory
-        #===============================================================================
+            #===============================================================================
+            # default/factory
+            #===============================================================================
 
     def _notifier_factory(self):
         n = Notifier()
@@ -610,4 +614,4 @@ class ExperimentEditorTask(EditorTask):
     def _notifier_default(self):
         return self._notifier_factory()
 
-    #============= EOF =============================================
+        #============= EOF =============================================

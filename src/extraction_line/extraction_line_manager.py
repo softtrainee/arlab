@@ -24,6 +24,7 @@ import weakref
 #=============local library imports  ==========================
 from src.extraction_line.explanation.extraction_line_explanation import ExtractionLineExplanation
 from src.extraction_line.extraction_line_canvas import ExtractionLineCanvas
+from src.extraction_line.sample_changer import SampleChanger
 from src.paths import paths
 from src.managers.manager import Manager
 # from src.pyscripts.manager import PyScriptManager
@@ -60,11 +61,11 @@ class ExtractionLineManager(Manager):
     multruns_report_manager = Any  # Instance(Manager)
     network = Instance(ExtractionLineGraph)
 
-#    multruns_report_manager = Instance(MultrunsReportManager)
-#    environmental_manager = Instance(Manager)
-#    device_stream_manager = Instance(Manager)
-#     view_controller = Instance(ViewController)
-#    pumping_monitor = Instance(PumpingMonitor)
+    #    multruns_report_manager = Instance(MultrunsReportManager)
+    #    environmental_manager = Instance(Manager)
+    #    device_stream_manager = Instance(Manager)
+    #     view_controller = Instance(ViewController)
+    #    pumping_monitor = Instance(PumpingMonitor)
 
     runscript = None
     learner = None
@@ -80,6 +81,62 @@ class ExtractionLineManager(Manager):
     use_network = Bool
     display_volume = Bool
     volume_key = Str
+
+    sample_changer = Instance(SampleChanger)
+
+    def _sample_changer_factory(self):
+        sc = self.sample_changer
+        if sc is None:
+            sc = SampleChanger(manager=self,
+                               chamber='CO2')
+
+        result = 1
+        result = sc.edit_traits(view='chamber_select_view')
+        if result:
+            if sc.chamber and sc.chamber != 'None':
+                self.sample_changer = sc
+                return sc
+
+    def isolate_chamber(self):
+        #get chamber name
+        sc = self._sample_changer_factory()
+        if sc:
+            sc.isolate_chamber()
+
+    def evacuate_chamber(self):
+        sc = self.sample_changer
+        #confirm evacuation if sample chamber is not (not isolated)
+        # or check for evacuation fails
+        msg = None
+        if sc is None:
+            msg = 'Are you sure you want to evacuate a chamber. No chamber has been isolated'
+        else:
+            err = sc.check_evacuation()
+            if err:
+                name = sc.chamber
+                msg = 'Are you sure you want to evacuate the {} chamber. {}'.format(name, err)
+
+        if msg:
+            if self.confirmation_dialog(msg):
+                sc = self._sample_changer_factory()
+
+        if sc:
+            sc.evacuate_chamber()
+
+    def finish_chamber_change(self):
+        sc = self.sample_changer
+        if sc is None:
+            msg = 'Sample change procedure was not started for any chamber'
+        else:
+            msg = sc.check_finish()
+
+        if msg:
+            if self.confirmation_dialog('{}. Are sure you want to finish?'.format(msg)):
+                sc = self._sample_changer_factory()
+        if sc:
+            sc.finish_chamber_change()
+
+        self.sample_changer = None
 
     def get_volume(self, node_name):
         v = 0
@@ -120,7 +177,7 @@ class ExtractionLineManager(Manager):
                 class_factory = self.get_manager_factory(package, klass)
 
         if class_factory:
-#            params['application'] = self.application
+        #            params['application'] = self.application
             m = class_factory(**params)
 
             if manager in ['gauge_manager',
@@ -128,8 +185,8 @@ class ExtractionLineManager(Manager):
                            'multiplexer_manager',
                            # 'environmental_manager', 'device_stream_manager',
                            'multruns_report_manager',
-                           ]:
-                self.trait_set(**{manager:m})
+            ]:
+                self.trait_set(**{manager: m})
             else:
                 self.add_trait(manager, m)
 
@@ -147,7 +204,7 @@ class ExtractionLineManager(Manager):
         if self.mode != 'client':
             self.monitor = SystemMonitor(manager=self,
                                          name='system_monitor'
-                                         )
+            )
             self.monitor.monitor()
 
         if self.use_network:
@@ -193,13 +250,13 @@ class ExtractionLineManager(Manager):
         self.refresh_canvas()
 
     def activate(self):
-#         p = os.path.join(paths.hidden_dir, 'show_explanantion')
-#         if os.path.isfile(p):
-#             with open(p, 'rb') as f:
-#                 try:
-#                     self.show_explanation = pickle.load(f)
-#                 except pickle.PickleError:
-#                     pass
+    #         p = os.path.join(paths.hidden_dir, 'show_explanantion')
+    #         if os.path.isfile(p):
+    #             with open(p, 'rb') as f:
+    #                 try:
+    #                     self.show_explanation = pickle.load(f)
+    #                 except pickle.PickleError:
+    #                     pass
 
         self.debug('$$$$$$$$$$$$$$$$$$$$$$$$ EL Activated')
         if self.mode == 'client':
@@ -218,12 +275,13 @@ class ExtractionLineManager(Manager):
 
     def start_status_monitor(self):
         self.info('starting status monitor')
-#        return
-#        self.info('starting status monitor NOT')
+        #        return
+        #        self.info('starting status monitor NOT')
         self.status_monitor.start()
 
     def bind_preferences(self):
         from apptools.preferences.preference_binding import bind_preference
+
         bind_preference(self, 'check_master_owner',
                         'pychron.extraction_line.check_master_owner')
         bind_preference(self, 'use_network',
@@ -235,10 +293,11 @@ class ExtractionLineManager(Manager):
         bind_preference(self, 'volume_key', 'pychron.extraction_line.volume_key')
 
 
-    #         bind_preference(self, 'enable_close_after', 'pychron.extraction_line.enable_close_after')
-#         bind_preference(self, 'close_after_minutes', 'pychron.extraction_line.close_after')
+        #         bind_preference(self, 'enable_close_after', 'pychron.extraction_line.enable_close_after')
 
-#        from src.extraction_line.plugins.extraction_line_preferences_page import get_valve_group_names
+    #         bind_preference(self, 'close_after_minutes', 'pychron.extraction_line.close_after')
+
+    #        from src.extraction_line.plugins.extraction_line_preferences_page import get_valve_group_names
 
     def reload_scene_graph(self):
         self.info('reloading canvas scene')
@@ -247,7 +306,7 @@ class ExtractionLineManager(Manager):
             if c is not None:
                 c.load_canvas_file(c.config_name)
 
-#                 # load state
+                #                 # load state
                 if self.valve_manager:
                     for k, v in self.valve_manager.valves.iteritems():
                         vc = c.get_object(k)
@@ -256,23 +315,24 @@ class ExtractionLineManager(Manager):
                             vc.state = v.state
 
 
-#     def load_canvas(self):
-#         '''
-#         '''
-#         p = self._file_dialog_('open', **dict(default_dir=paths.canvas2D_dir))
-#
-#         if p is not None:
-#             self.canvas.load_canvas(p)
+                        #     def load_canvas(self):
+                        #         '''
+                        #         '''
+                        #         p = self._file_dialog_('open', **dict(default_dir=paths.canvas2D_dir))
+                        #
+                        #         if p is not None:
+                        #             self.canvas.load_canvas(p)
 
-#     def set_canvas_size(self, width=None, height=None):
-#         self.canvas.set_size(width, height)
-#    def pressure_update(self, o, oo, n):
-#        '''
-#        on_trait_change handler for gauge_manager.gauges.pressure
-#
-#        '''
-#        if self.canvas:
-#            self.canvas.update_pressure(o.name, n, o.state)
+                        #     def set_canvas_size(self, width=None, height=None):
+                        #         self.canvas.set_size(width, height)
+                        #    def pressure_update(self, o, oo, n):
+                        #        '''
+                        #        on_trait_change handler for gauge_manager.gauges.pressure
+                        #
+                        #        '''
+                        #        if self.canvas:
+                        #            self.canvas.update_pressure(o.name, n, o.state)
+
     def update_valve_state(self, name, state, *args, **kw):
 
         if self.use_network:
@@ -297,7 +357,8 @@ class ExtractionLineManager(Manager):
         '''
         if self.valve_manager is not None:
             self.valve_manager.set_valve_owner(name, owner)
-#
+        #
+
     def show_valve_properties(self, name):
         if self.valve_manager is not None:
             self.valve_manager.show_valve_properties(name)
@@ -312,6 +373,8 @@ class ExtractionLineManager(Manager):
                 self.valve_manager.lock(name)
             else:
                 self.valve_manager.unlock(name)
+
+            self.update_valve_lock_state(name, lock)
 
     def get_valve_owners(self):
         if self.valve_manager is not None:
@@ -346,7 +409,7 @@ class ExtractionLineManager(Manager):
     def enable_valve(self, description):
         self._enable_valve(description, True)
 
-    def open_valve(self, name, ** kw):
+    def open_valve(self, name, **kw):
         '''
         '''
         return self._open_close_valve(name, 'open', **kw)
@@ -400,9 +463,10 @@ class ExtractionLineManager(Manager):
 
             self.explanation.selected = selected
 
-#===============================================================================
-# private
-#===============================================================================
+        #===============================================================================
+        # private
+        #===============================================================================
+
     def _enable_valve(self, description, state):
         if self.valve_manager:
             valve = self.valve_manager.get_valve_by_description(description)
@@ -427,8 +491,8 @@ class ExtractionLineManager(Manager):
 
             result = self._change_valve_state(name, mode, action, **kw)
 
-#            if self.learner:
-#                self.learner.open_close_valve(name, action, result)
+            #            if self.learner:
+            #                self.learner.open_close_valve(name, action, result)
 
             return result
 
@@ -465,9 +529,10 @@ class ExtractionLineManager(Manager):
                 v = self.valve_manager.valves[name]
             return not (v.owner and v.owner != requestor)
         return True
-#===============================================================================
-# handlers
-#===============================================================================
+
+    #===============================================================================
+    # handlers
+    #===============================================================================
     def _valve_manager_changed(self):
         if self.valve_manager is not None:
             self.status_monitor.valve_manager = self.valve_manager
@@ -491,6 +556,7 @@ class ExtractionLineManager(Manager):
     @on_trait_change('use_network,network:inherit_state')
     def _update_network(self):
         from src.canvas.canvas2D.scene.primitives.valves import Valve
+
         if not self.use_network:
             for c in self._canvases:
                 scene = c.canvas2D.scene
@@ -509,29 +575,31 @@ class ExtractionLineManager(Manager):
     def _update_canvas_inspector(self, name, new):
         for c in self._canvases:
             c.canvas2D.trait_set(**{name: new})
+            #===============================================================================
+        # defaults
         #===============================================================================
-# defaults
-#===============================================================================
-#        return self._view_controller_factory()
-#    def _pyscript_editor_default(self):
-#        return PyScriptManager(parent=self)
+        #        return self._view_controller_factory()
+        #    def _pyscript_editor_default(self):
+        #        return PyScriptManager(parent=self)
+
     def _status_monitor_default(self):
         sm = StatusMonitor(valve_manager=self.valve_manager,
-                         state_freq=self._valve_state_frequency,
-                         lock_freq=self._valve_lock_frequency)
+                           state_freq=self._valve_state_frequency,
+                           lock_freq=self._valve_lock_frequency)
         return sm
 
     def _valve_manager_default(self):
         from src.extraction_line.valve_manager import ValveManager
+
         return ValveManager(extraction_line_manager=self)
 
-#    def _gauge_manager_default(self):
-#        from src.extraction_line.gauge_manager import GaugeManager
-#        return GaugeManager()
+    #    def _gauge_manager_default(self):
+    #        from src.extraction_line.gauge_manager import GaugeManager
+    #        return GaugeManager()
 
     def _explanation_default(self):
-#        '''
-#        '''
+    #        '''
+    #        '''
         e = ExtractionLineExplanation()
         if self.valve_manager is not None:
             e.load(self.valve_manager.explanable_items)
@@ -543,7 +611,7 @@ class ExtractionLineManager(Manager):
         c = ExtractionLineCanvas(manager=self,
                                  config_name='{}.xml'.format(name),
                                  #                                  path_name='{}.xml'.format(name)
-                                 )
+        )
         self._canvases.append(c)
         c.canvas2D.trait_set(display_volume=self.display_volume,
                              volume_key=self.volume_key)
