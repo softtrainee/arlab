@@ -41,10 +41,10 @@ class InterpolationEditor(GraphEditor):
 
     default_reference_analysis_type = 'air'
     sorted_unknowns = Property(depends_on='unknowns[]')
+    sorted_references = Property(depends_on='references[]')
 
     @on_trait_change('references[]')
     def _update_references(self):
-
     #         self.make_references()
     #    if self.unknowns:
     #        ref_ans=self.unknowns[0]
@@ -81,7 +81,6 @@ class InterpolationEditor(GraphEditor):
         return start, end
 
     def _update_unknowns_hook(self):
-        print 'fin refasfdasdf'
         if self.auto_find:
             self._find_references()
 
@@ -172,9 +171,8 @@ class InterpolationEditor(GraphEditor):
                                          fit=False,
                                          type='scatter',
                                          plotid=i,
-                                         add_inspector=False
-                )
-                self._add_inspector(s)
+                                         add_inspector=False)
+                self._add_inspector(s, self.sorted_unknowns)
                 self._add_error_bars(s, c_ues)
 
                 graph.set_series_label('Unknowns-Current', plotid=i)
@@ -191,8 +189,9 @@ class InterpolationEditor(GraphEditor):
                                              yerror=r_es,
                                              type='scatter',
                                              plotid=i,
-                                             fit=False
-                    )
+                                             fit=False,
+                                             add_inspector=False, )
+                    self._add_inspector(s, self.sorted_references)
                     self._add_error_bars(s, r_es)
 
                 else:
@@ -200,10 +199,12 @@ class InterpolationEditor(GraphEditor):
                                                 display_index=ArrayDataSource(data=display_xs),
                                                 yerror=ArrayDataSource(data=r_es),
                                                 fit=fit,
-                                                plotid=i)
+                                                plotid=i,
+                                                add_inspector=False)
                     if hasattr(l, 'regressor'):
                         reg = l.regressor
 
+                    self._add_inspector(s, self.sorted_references)
                     self._add_error_bars(s, array(r_es))
 
                 if reg:
@@ -240,8 +241,8 @@ class InterpolationEditor(GraphEditor):
         setattr(scatter, '{}error'.format(orientation), ArrayDataSource(errors))
         return ebo
 
-    def _add_inspector(self, scatter):
-        ans = self.sorted_unknowns
+    def _add_inspector(self, scatter, ans):
+
 
         point_inspector = AnalysisPointInspector(scatter,
                                                  analyses=ans,
@@ -269,4 +270,24 @@ class InterpolationEditor(GraphEditor):
     def _get_sorted_unknowns(self):
         return sorted(self.unknowns, key=lambda x: x.timestamp)
 
-    #============= EOF =============================================
+    @cached_property
+    def _get_sorted_references(self):
+        return sorted(self.references, key=lambda x: x.timestamp)
+
+
+    @on_trait_change('graph:regression_results')
+    def _update_regression(self, new):
+
+        #necessary to handle user excluding points
+        gen = self._graph_generator()
+        for i, (fit, reg) in enumerate(zip(gen, new)):
+            iso = fit.name
+            plotobj = self.graph.plots[i]
+
+            scatter = plotobj.plots['Unknowns-predicted'][0]
+            xs = scatter.index.get_data()
+
+            p_uys, p_ues = self._set_interpolated_values(iso, reg, xs)
+            scatter.value.set_data(p_uys)
+            scatter.yerror.set_data(p_ues)
+            #============= EOF =============================================

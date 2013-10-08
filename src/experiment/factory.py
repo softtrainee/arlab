@@ -145,6 +145,7 @@ class ExperimentFactory(Loggable, ConsumerMixin):
     @on_trait_change('''queue_factory:[mass_spectrometer,
 extract_device, delay_+, tray, username, load_name]''')
     def _update_queue(self, name, new):
+        print name, new
         if name == 'mass_spectrometer':
             self._mass_spectrometer = new
             self.run_factory.set_mass_spectrometer(new)
@@ -220,8 +221,7 @@ extract_device, delay_+, tray, username, load_name]''')
         return self._run_factory_factory()
 
     def _queue_factory_default(self):
-        eq = ExperimentQueueFactory(db=self.db,
-                                    mass_spectrometer=self.default_mass_spectrometer)
+        eq = ExperimentQueueFactory(db=self.db)
         return eq
 
     def _db_changed(self):

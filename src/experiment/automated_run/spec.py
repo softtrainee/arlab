@@ -122,6 +122,51 @@ class AutomatedRunSpec(Loggable):
         ]
         return ','.join(map(str, self.to_string_attrs(attrs)))
 
+    def test_scripts(self, script_context=None, warned=None, duration=True):
+        if script_context is None:
+            script_context = {}
+        if warned is None:
+            warned = []
+
+        arun = None
+        s = 0
+        script_oks = []
+        for si in SCRIPT_NAMES:
+            name = getattr(self, si)
+            if name in script_context:
+                if name not in warned:
+                    self.debug('{:<30s} in script context. using previous estimated duration'.format(name))
+                    warned.append(name)
+
+                script, ok = script_context[name]
+                if si in ('measurement_script', 'extraction_script'):
+                    d = script.get_estimated_duration()
+                    s += d
+                script_oks.append(ok)
+            else:
+                if arun is None:
+                    arun = self.make_run(new_uuid=False)
+
+                arun.invalid_script = False
+                script = getattr(arun, si)
+                if script is not None:
+
+                    ok = script.syntax_ok()
+                    script_oks.append(ok)
+                    script_context[name] = script, ok
+                    if ok and duration:
+                        arun.setup_context(script)
+                        if si in ('measurement_script', 'extraction_script'):
+                            d = script.calculate_estimated_duration()
+                            s += d
+                elif arun.invalid_script:
+                    script_oks.append(False)
+        if arun:
+            arun.spec = None
+            # set executable. if all scripts have OK syntax executable is True
+        self.executable = all(script_oks)
+        return s
+
     def get_estimated_duration(self, script_context, warned):
         '''
             use the pyscripts to calculate etd
@@ -131,43 +176,7 @@ class AutomatedRunSpec(Loggable):
             this is a good point to set executable as well
         '''
         if not self._estimated_duration or self._changed:
-            arun = None
-            s = 0
-            script_oks = []
-            for si in SCRIPT_NAMES:
-                name = getattr(self, si)
-                if name in script_context:
-                    if name not in warned:
-                        self.debug('{:<30s} in script context. using previous estimated duration'.format(name))
-                        warned.append(name)
-
-                    script, ok = script_context[name]
-                    if si in ('measurement_script', 'extraction_script'):
-                        d = script.get_estimated_duration()
-                        s += d
-                    script_oks.append(ok)
-                else:
-                    if arun is None:
-                        arun = self.make_run(new_uuid=False)
-
-                    arun.invalid_script = False
-                    script = getattr(arun, si)
-                    if script is not None:
-
-                        ok = script.syntax_ok()
-                        script_oks.append(ok)
-                        script_context[name] = script, ok
-                        if ok:
-                            arun.setup_context(script)
-                            if si in ('measurement_script', 'extraction_script'):
-                                d = script.calculate_estimated_duration()
-                                s += d
-                    elif arun.invalid_script:
-                        script_oks.append(False)
-            if arun:
-                arun.spec = None
-                # set executable. if all scripts have OK syntax executable is True
-            self.executable = all(script_oks)
+            s = self.test_scripts(script_context, warned)
 
             db_save_time = 1
             self._estimated_duration = s + db_save_time
@@ -320,4 +329,4 @@ class AutomatedRunSpec(Loggable):
     def _get_rundate(self):
         return datetime.now()
 
-    #============= EOF =============================================
+        #============= EOF =============================================

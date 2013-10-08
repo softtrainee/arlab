@@ -549,12 +549,10 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
     def _extraction(self, ai):
         ret = True
-        #         invoke_in_main_thread(self.trait_set, extracting=True)
         self.extracting = True
         if not ai.do_extraction():
             ret = self._failed_execution_step('Extraction Failed')
-            #
-        #         invoke_in_main_thread(self.trait_set, extraction_state_label='', extraction=False)
+
         self.trait_set(extraction_state_label='', extracting=False)
 
         return ret
@@ -562,9 +560,15 @@ class ExperimentExecutor(IsotopeDatabaseManager):
     def _measurement(self, ai):
         ret = True
 
-        self.measuring = True
-        if not ai.do_measurement():
-            ret = self._failed_execution_step('Measurement Failed')
+        if ai.start_measurement():
+            # only set to measuring (e.g switch to iso evo pane) if
+            # automated run has a measurement_script
+            self.measuring = True
+
+            if not ai.do_measurement():
+                ret = self._failed_execution_step('Measurement Failed')
+        else:
+            ret = ai.isAlive()
 
         self.measuring = False
         return ret
@@ -870,15 +874,15 @@ If "No" select from database
         an = next((a for a in aruns if a.analysis_type in types), None)
 
         if an:
-            anidx=aruns.index(an)
+            anidx = aruns.index(an)
             #find first blank_
             #if idx > than an idx need a blank
-            nopreceeding=True
-            ban=next((a for a in aruns if a.analysis_type=='blank_{}'.format(an.analysis_type)), None)
+            nopreceeding = True
+            ban = next((a for a in aruns if a.analysis_type == 'blank_{}'.format(an.analysis_type)), None)
 
             if ban:
-                nopreceeding=aruns.index(ban)>anidx
-            
+                nopreceeding = aruns.index(ban) > anidx
+
             if anidx == 0 or nopreceeding:
                 pdbr = self._get_blank(an.analysis_type, exp.mass_spectrometer,
                                        exp.extract_device,
@@ -942,7 +946,7 @@ If "No" select from database
                     dbr = sel.selected
 
             if dbr:
-#                print dbr.aliquot
+            #                print dbr.aliquot
                 dbr = self.make_analyses([dbr])[0]
                 #                dbr = sel._record_factory(dbr)
                 return dbr

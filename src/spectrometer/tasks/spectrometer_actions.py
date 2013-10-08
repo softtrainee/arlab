@@ -26,6 +26,8 @@ from pyface.action.api import Action
 SPECTROMETER_PROTOCOL = 'src.spectrometer.spectrometer_manager.SpectrometerManager'
 ION_OPTICS_PROTOCOL = 'src.spectrometer.ion_optics_manager.IonOpticsManager'
 SCAN_PROTOCOL = 'src.spectrometer.scan_manager.ScanManager'
+
+
 def get_manager(event, protocol):
     app = event.task.window.application
     manager = app.get_service(protocol)
@@ -54,34 +56,38 @@ class SpectrometerParametersAction(Action):
     name = 'Spectrometer Parameters...'
     description = 'View/Set spectrometer parameters'
     accelerator = 'Alt+Ctrl+S'
+
     def perform(self, event):
         man = get_manager(event, SPECTROMETER_PROTOCOL)
         man.open_parameters()
 
+
 class PeakCenterAction(Action):
     description = 'Calculate peak center'
     name = 'Peak Center...'
-#     def __init__(self, *args, **kw):
-#         super(PeakCenterAction, self).__init__(*args, **kw)
-#         man = self.window.workbench.application.get_service(ION_OPTICS_PROTOCOL)
+    #     def __init__(self, *args, **kw):
+    #         super(PeakCenterAction, self).__init__(*args, **kw)
+    #         man = self.window.workbench.application.get_service(ION_OPTICS_PROTOCOL)
 
-#         man.on_trait_change(self._update_enabled, 'alive')
-#         self.enabled = True
+    #         man.on_trait_change(self._update_enabled, 'alive')
+    #         self.enabled = True
 
-#     def _update_enabled(self, new):
-#         self.enabled = not self.enabled
+    #     def _update_enabled(self, new):
+    #         self.enabled = not self.enabled
 
     def perform(self, event):
         man = get_manager(event, ION_OPTICS_PROTOCOL)
-        man.setup_peak_center()
-        man.do_peak_center(confirm_save=True, warn=True)
+        if man.setup_peak_center():
+            man.do_peak_center(confirm_save=True, warn=True)
+
 #        man.open_peak_center()
 
 class CoincidenceScanAction(Action):
     name = 'Coincidence...'
+
     def perform(self, event):
         man = get_manager(event, SPECTROMETER_PROTOCOL)
-#        man.do_coincidence()
+        #        man.do_coincidence()
         man.coincidence_scan_task_factory()
 
 #        open_manager(event.window.application, obj)
@@ -89,7 +95,8 @@ class CoincidenceScanAction(Action):
 class RelativePositionsAction(Action):
     def perform(self, event):
         man = get_manager(event, SPECTROMETER_PROTOCOL)
-#        obj = man.relative_detector_positions_task_factory()
+
+    #        obj = man.relative_detector_positions_task_factory()
 #        open_manager(event.window.application, obj)
 
 
@@ -101,6 +108,7 @@ class CDDOperateVoltageAction(Action):
     def perform(self, event):
         man = get_manager(event, SPECTROMETER_PROTOCOL)
         man.cdd_operate_voltage_scan_task_factory()
-#        open_manager(event.window.application, obj)
+
+    #        open_manager(event.window.application, obj)
 
 #============= EOF ====================================

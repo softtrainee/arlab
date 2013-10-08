@@ -22,7 +22,7 @@ import yaml
 import os
 import datetime
 #============= local library imports  ==========================
-from src.constants import NULL_STR
+from src.constants import NULL_STR, LINE_STR
 from src.experiment.stats import ExperimentStats
 from src.paths import paths
 from src.experiment.automated_run.spec import AutomatedRunSpec
@@ -103,9 +103,9 @@ class BaseExperimentQueue(Loggable):
                 else:
                     aruns.extend(runviews)
 
-                #===============================================================================
-                # persistence
-                #===============================================================================
+                    #===============================================================================
+                    # persistence
+                    #===============================================================================
 
     def load(self, txt):
         self.initialized = False
@@ -176,12 +176,14 @@ class BaseExperimentQueue(Loggable):
         # load sample map
         self._load_map(meta)
 
-        default = lambda x: str(x) if x else ''
+        #default = lambda x: str(x) if x else ' '
         default_int = lambda x: x if x is not None else 1
+        key_default = lambda k: lambda x: str(x) if x else k
+        default = key_default('')
 
         self._set_meta_param('tray', meta, default)
-        self._set_meta_param('extract_device', meta, default)
-        self._set_meta_param('mass_spectrometer', meta, default)
+        self._set_meta_param('extract_device', meta, key_default('Extract Device'))
+        self._set_meta_param('mass_spectrometer', meta, key_default('Spectrometer'))
         self._set_meta_param('delay_between_analyses', meta, default_int)
         self._set_meta_param('delay_before_analyses', meta, default_int)
         self._set_meta_param('username', meta, default)
@@ -276,6 +278,7 @@ class BaseExperimentQueue(Loggable):
         except KeyError:
             pass
 
+        print 'settinag', attr, func(v), v
         setattr(self, attr, func(v))
 
     def _get_dump_attrs(self):
@@ -323,6 +326,10 @@ class BaseExperimentQueue(Loggable):
         return header, attrs
 
     def _meta_dumper(self, fp):
+        ms = self.mass_spectrometer
+        if ms in ('Spectrometer', LINE_STR):
+            ms = ''
+
         s = '''
 username: {}
 date: {}
@@ -335,7 +342,7 @@ load: {}
 '''.format(
             self.username,
             datetime.datetime.today(),
-            self.mass_spectrometer,
+            ms,
             self.delay_before_analyses,
             self.delay_between_analyses,
             self.extract_device,
@@ -360,7 +367,12 @@ load: {}
     def _delay_before_analyses_changed(self, new):
         self.stats.delay_before_analyses = new
 
-    #===============================================================================
+    def _mass_spectrometer_changed(self):
+        ms = self.mass_spectrometer
+        for ai in self.automated_runs:
+            ai.mass_spectrometer = ms
+
+        #===============================================================================
     # property get/set
     #===============================================================================
     def _get_cleaned_automated_runs(self):

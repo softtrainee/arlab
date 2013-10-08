@@ -33,7 +33,7 @@ from src.spectrometer.tasks.spectrometer_preferences import SpectrometerPreferen
 #============= local library imports  ==========================
 
 class SpectrometerPlugin(BaseTaskPlugin):
-    id = 'pychron.spectrometer'
+    #id = 'pychron.spectrometer'
 
     def get_spectrometer(self):
         spec = self.application.get_service('src.spectrometer.spectrometer_manager.SpectrometerManager')
@@ -55,8 +55,8 @@ class SpectrometerPlugin(BaseTaskPlugin):
         return SpectrometerManager(application=self.application)
 
     def _managers_default(self):
-        '''
-        '''
+        """
+        """
         app = self.application
         return [dict(name='spectrometer_manager',
                      manager=app.get_service(SpectrometerManager))]
@@ -85,8 +85,8 @@ class SpectrometerPlugin(BaseTaskPlugin):
         return [SpectrometerPreferencesPane]
 
     def _service_offers_default(self):
-        '''
-        '''
+        """
+        """
         so = self.service_offer_factory(
             protocol=SpectrometerManager,
             factory=self._factory_spectrometer)
@@ -101,24 +101,26 @@ class SpectrometerPlugin(BaseTaskPlugin):
 
     def _my_task_extensions_default(self):
         return [
-            TaskExtension(actions=[
-                SchemaAddition(id='Measure',
-                               factory=lambda: SMenu(id='Measure',
-                                                     name='Measure'),
-                               path='MenuBar',
-                               before='Window',
-                               after='Tools'
-                ),
-                SchemaAddition(id='peak_center',
-                               factory=PeakCenterAction,
-                               path='MenuBar/Measure'),
-                SchemaAddition(id='coincidence',
-                               factory=CoincidenceScanAction,
-                               path='MenuBar/Measure'),
-                SchemaAddition(id='parameters',
-                               factory=SpectrometerParametersAction,
-                               path='MenuBar/Edit'),
-            ])
+            TaskExtension(
+                task_id='pychron.spectrometer',
+                actions=[
+                    SchemaAddition(id='Measure',
+                                   factory=lambda: SMenu(id='Measure',
+                                                         name='Measure'),
+                                   path='MenuBar',
+                                   before='Window',
+                                   after='Tools'
+                    ),
+                    SchemaAddition(id='peak_center',
+                                   factory=PeakCenterAction,
+                                   path='MenuBar/Measure'),
+                    SchemaAddition(id='coincidence',
+                                   factory=CoincidenceScanAction,
+                                   path='MenuBar/Measure'),
+                    SchemaAddition(id='parameters',
+                                   factory=SpectrometerParametersAction,
+                                   path='MenuBar/Edit'),
+                ])
         ]
 
-    #============= EOF =============================================
+        #============= EOF =============================================

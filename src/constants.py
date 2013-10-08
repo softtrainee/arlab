@@ -40,17 +40,19 @@ SCRIPT_NAMES = ['{}_script'.format(si) for si in SCRIPT_KEYS]
 
 FIT_TYPES = ['linear', 'parabolic', 'cubic',
              u'average {}SD'.format(PLUSMINUS),
-              u'average {}SEM'.format(PLUSMINUS)]
+             u'average {}SEM'.format(PLUSMINUS)]
 INTERPOLATE_TYPES = ['Preceeding', 'Bracketing Interpolate', 'Bracketing Average']
 FIT_TYPES_INTERPOLATE = FIT_TYPES + ['Preceeding', 'Bracketing Interpolate', 'Bracketing Average']
-DELIMITERS = {',':'comma', '\t':'tab', ' ':'space'}
-AGE_SCALARS = {'Ma':1e6, 'ka':1e3, 'a':1}
+DELIMITERS = {',': 'comma', '\t': 'tab', ' ': 'space'}
+AGE_SCALARS = {'Ma': 1e6, 'ka': 1e3, 'a': 1}
 
 import string
+
 seeds = string.ascii_uppercase
 ALPHAS = [a for a in seeds] + ['{}{}'.format(a, b)
-                                    for a in seeds
-                                        for b in seeds]
+                               for a in seeds
+                               for b in seeds]
+
 
 def alphas(idx):
     '''
@@ -72,10 +74,11 @@ IRRADIATION_KEYS = [('k4039', 'K_40_Over_39'),
                     ('ca3837', 'Ca_38_Over_37'),
                     ('ca3637', 'Ca_36_Over_37'),
                     ('cl3638', 'P36Cl_Over_38Cl')
-                    ]
+]
+
 DECAY_KEYS = [('a37decayfactor', '37_Decay'),
               ('a39decayfactor', '39_Decay'),
-              ]
+]
 
 MEASUREMENT_COLOR = '#FF7EDF'  # magenta
 EXTRACTION_COLOR = '#FFFF66'
@@ -87,7 +90,10 @@ FAILED_COLOR = 'red'
 END_AFTER_COLOR = 'gray'
 NOT_EXECUTABLE_COLOR = 'red'
 
+DETECTOR_ORDER = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
+DETECTOR_MAP = {o: i for i, o in enumerate(DETECTOR_ORDER)}
 
+IC_ANALYSIS_TYPE_MAP = {'air': 0, 'cocktail': 1}
 # MINNA_BLUFF_IRRADIATIONS = [('NM-205', ['E', 'F' , 'G', 'H', 'O']),
 # ('NM-213', ['A', 'C', 'I', 'J', 'K', 'L']),
 # ('NM-216', ['C', 'D', 'E', 'F']),

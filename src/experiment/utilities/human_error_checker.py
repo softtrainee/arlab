@@ -25,28 +25,32 @@ from src.constants import NULL_STR, LINE_STR
 
 class HumanErrorChecker(Loggable):
     _extraction_line_required = False
-    _mass_spec_required = False
+    _mass_spec_required = True
 
     def check_queue(self, qi):
         self.info('check queue {}'.format(qi.name))
         if self._extraction_line_required:
             if not qi.extract_device or \
-                qi.extract_device in ('Extract Device', LINE_STR):
-                self.info('no extraction line')
-                return 'no extraction line'
+                            qi.extract_device in ('Extract Device', LINE_STR):
+                msg = '"Extract Device is not set". Not saving experiment!'
+                self.info(msg)
+                return msg
 
         if self._mass_spec_required:
             if not qi.mass_spectrometer or \
-                qi.mass_spectrometer in ('Spectrometer', LINE_STR):
-                self.info('no mass spectrometer')
-                return 'no mass spectrometer'
+                            qi.mass_spectrometer in ('Spectrometer', LINE_STR):
+                msg = '"Spectrometer" is not set. Not saving experiment!'
+                return msg
 
-    def check_runs(self, runs, test_all=False, inform=True):
+    def check_runs(self, runs, test_all=False, inform=True,
+                   test_scripts=False):
         ret = dict()
 
+        self._script_context = {}
+        self._warned = []
         inform = inform and not test_all
         for i, ai in enumerate(runs):
-            err = self._check_run(ai, inform)
+            err = self._check_run(ai, inform, test_scripts)
             if err is not None:
                 ai.state = 'invalid'
                 ret[ai.runid] = err
@@ -55,6 +59,9 @@ class HumanErrorChecker(Loggable):
             else:
                 ai.state = 'not run'
 
+        del self._script_context
+        del self._warned
+
         return ret
 
     def report_errors(self, errdict):
@@ -62,10 +69,14 @@ class HumanErrorChecker(Loggable):
         msg = '\n'.join(['{} {}'.format(k, v) for k, v in errdict.iteritems()])
         self.warning_dialog(msg)
 
-    def check_run(self, run, inform=True):
-        return self._check_run(run, inform)
+    def check_run(self, run, inform=True, test=False):
+        return self._check_run(run, inform, test)
 
-    def _check_run(self, run, inform):
+    def _check_run(self, run, inform, test):
+        if test:
+            run.test_scripts(script_context=self._script_context,
+                             warned=self._warned,
+                             duration=False)
 
         err = self._check_attr(run, 'labnumber', inform)
         if err is not None:
@@ -82,8 +93,8 @@ class HumanErrorChecker(Loggable):
                 if not run.extract_value:
                     return 'position but no extract value'
 
-        if ant in ('unknown', 'background') or ant.startswith('blank'):
-            self._mass_spec_required = True
+        #if ant in ('unknown', 'background') or ant.startswith('blank'):
+        #self._mass_spec_required = True
 
         if run.extract_value or run.cleanup or run.duration:
             self._extraction_line_required = True

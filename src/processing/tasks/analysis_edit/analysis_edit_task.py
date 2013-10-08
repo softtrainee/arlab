@@ -33,6 +33,7 @@ from src.processing.selection.data_selector import DataSelector
 #============= local library imports  ==========================
 
 class AnalysisEditTask(BaseBrowserTask):
+    id = 'pychron.analysis_edit'
     unknowns_pane = Instance(TablePane)
     controls_pane = Instance(ControlsPane)
     #    results_pane = Instance(ResultsPane)
@@ -43,20 +44,17 @@ class AnalysisEditTask(BaseBrowserTask):
     data_selector = Instance(DataSelector)
     _analysis_cache = List
 
+    ic_factor_editor_count = 0
 
-    def _get_tagname(self):
-        from src.processing.tasks.analysis_edit.tags import TagTableView
+    def new_ic_factor(self):
+        from src.processing.tasks.detector_calibration.intercalibration_factor_editor import IntercalibrationFactorEditor
 
-        db = self.manager.db
-        with db.session_ctx():
-            v = TagTableView()
-            v.table.db = db
-            v.table.load()
+        editor = IntercalibrationFactorEditor(name='ICFactor {:03n}'.format(self.ic_factor_editor_count),
+                                              processor=self.manager
+        )
+        self._open_editor(editor)
+        self.ic_factor_editor_count += 1
 
-        info = v.edit_traits()
-        if info.result:
-            tag = v.selected
-            return tag.name
 
     def save_as(self):
         self.save()
@@ -164,6 +162,20 @@ class AnalysisEditTask(BaseBrowserTask):
         up.load()
         return up
 
+    def _get_tagname(self):
+        from src.processing.tasks.analysis_edit.tags import TagTableView
+
+        db = self.manager.db
+        with db.session_ctx():
+            v = TagTableView()
+            v.table.db = db
+            v.table.load()
+
+        info = v.edit_traits()
+        if info.result:
+            tag = v.selected
+            return tag.name
+
     def _open_ideogram_editor(self, ans, name, task=None):
         _id = 'pychron.processing.figures'
         task = self._open_external_task(_id)
@@ -225,7 +237,6 @@ class AnalysisEditTask(BaseBrowserTask):
                 if hasattr(self.active_editor, 'unknowns'):
                     if self.active_editor.unknowns:
                         self.unknowns_pane.items = self.active_editor.unknowns
-
 
     @on_trait_change('active_editor:component_changed')
     def _update_component(self):
@@ -311,6 +322,9 @@ class AnalysisEditTask(BaseBrowserTask):
 
     def _handle_key_pressed(self, c):
         pass
+
+
+
 
         #===============================================================================
 

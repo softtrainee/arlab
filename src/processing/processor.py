@@ -406,10 +406,6 @@ class Processor(IsotopeDatabaseManager):
                 analysis.set_blank(key, (v[0], e[0]))
                 self.apply_correction(history, analysis, fit_obj, [ai], kind)
 
-
-    def recall(self):
-        pass
-
     #===============================================================================
     # figures
     #===============================================================================
@@ -462,6 +458,27 @@ class Processor(IsotopeDatabaseManager):
         func = getattr(self, '_apply_{}_correction'.format(kind))
         func(history, analysis, fit_obj, predictors)
 
+    def _apply_detector_intercalibration_correction(self, history, analysis, fit_obj, predictors):
+        n, d = fit_obj.split('/')
+        ic = analysis.get_isotope(detector=d).temporary_ic_factor
+        if ic is None:
+            self.debug('************************* no ic factor for {} {}'.format(analysis.record_id,
+                                                                                 fit_obj))
+            return
+
+        ic_v, ic_e = ic
+        db = self.db
+        item = db.add_detector_intercalibration(history,
+                                                detector=d,
+                                                user_value=ic_v,
+                                                user_error=ic_e,
+                                                fit=fit_obj.fit)
+        if predictors:
+            for pi in predictors:
+                dbr = db.get_analysis_uuid(pi.uuid)
+                db.add_detector_intercalibration_set(item, dbr)
+
+
     def _apply_blanks_correction(self, history, analysis, fit_obj, predictors):
         ss = analysis.isotopes[fit_obj.name]
 
@@ -477,15 +494,16 @@ class Processor(IsotopeDatabaseManager):
         else:
             blank = ss.blank
 
-        item = self.db.add_blanks(history,
-                                  isotope=fit_obj.name,
-                                  user_value=float(blank.value),
-                                  user_error=float(blank.error),
-                                  fit=fit_obj.fit)
+        db = self.db
+        item = db.add_blanks(history,
+                             isotope=fit_obj.name,
+                             user_value=float(blank.value),
+                             user_error=float(blank.error),
+                             fit=fit_obj.fit)
 
         #        ps = self.interpolation_correction.predictors
         if predictors:
-            db = self.db
+
             for pi in predictors:
                 dbr = db.get_analysis_uuid(pi.uuid)
                 #                 self.db.add_blanks_set(item, pi.dbrecord)

@@ -16,12 +16,15 @@
 
 #============= enthought library imports =======================
 # from traits.api import HasTraits
+from datetime import timedelta
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, HSplitter, Tabbed
 
 from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
 from src.processing.tasks.analysis_edit.panes import ControlsPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.processing.tasks.browser.browser_task import DEFAULT_AT
+
 
 class BlanksTask(InterpolationTask):
     id = 'pychron.analysis_edit.blanks'
@@ -66,7 +69,9 @@ class BlanksTask(InterpolationTask):
         self._open_editor(editor)
         self.blank_editor_count += 1
 
-#        selector = self.manager.db.selector
-#        self.unknowns_pane.items = selector.records[156:159]
-#        self.references_pane.items = selector.records[150:155]
+    def _set_selected_analysis(self, new):
+        if not new:
+            return
+        self._load_references(new)
+
 #============= EOF =============================================

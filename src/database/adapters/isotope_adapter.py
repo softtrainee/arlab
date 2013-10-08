@@ -1067,6 +1067,9 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_aliquots(self, **kw):
         return self._retrieve_items(meas_AnalysisTable, **kw)
 
+    def get_detectors(self, **kw):
+        return self._retrieve_items(gen_DetectorTable, **kw)
+
     def get_steps(self, **kw):
         return self._retrieve_items(meas_AnalysisTable, **kw)
 

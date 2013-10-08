@@ -52,25 +52,26 @@ class BlanksEditor(InterpolationEditor):
             return
 
         db = self.processor.db
-        cname = 'blanks'
-        self.info('Attempting to save corrections to database')
+        with db.session_ctx():
+            cname = 'blanks'
+            self.info('Attempting to save corrections to database')
 
-        for unk in self.unknowns:
-            meas_analysis = db.get_analysis_uuid(unk.uuid)
+            for unk in self.unknowns:
+                meas_analysis = db.get_analysis_uuid(unk.uuid)
 
-            histories = getattr(meas_analysis, '{}_histories'.format(cname))
-            phistory = histories[-1] if histories else None
-            history = self.processor.add_history(meas_analysis, cname)
-            for si in self.tool.fits:
-                if not si.use:
-                    self.debug('using previous value {} {}'.format(unk.record_id, si.name))
-                    self.processor.apply_fixed_value_correction(phistory, history, si, cname)
-                else:
-                    self.debug('saving {} {}'.format(unk.record_id, si.name))
-                    self.processor.apply_correction(history, unk, si,
-                                                    self.references, cname)
+                histories = getattr(meas_analysis, '{}_histories'.format(cname))
+                phistory = histories[-1] if histories else None
+                history = self.processor.add_history(meas_analysis, cname)
+                for si in self.tool.fits:
+                    if not si.use:
+                        self.debug('using previous value {} {}'.format(unk.record_id, si.name))
+                        self.processor.apply_fixed_value_correction(phistory, history, si, cname)
+                    else:
+                        self.debug('saving {} {}'.format(unk.record_id, si.name))
+                        self.processor.apply_correction(history, unk, si,
+                                                        self.references, cname)
 
-                    #     def _update_unknowns_hook(self):
+                        #     def _update_unknowns_hook(self):
                     #         '''
                     #             load references based on unknowns
                     #         '''
@@ -83,25 +84,11 @@ class BlanksEditor(InterpolationEditor):
                     #         self.task.references_pane.items = ans
 
 
-    @on_trait_change('graph:regression_results')
-    def _update_regression(self, new):
-        gen = self._graph_generator()
-        for i, (fit, reg) in enumerate(zip(gen, new)):
-            iso = fit.name
-            plotobj = self.graph.plots[i]
-
-            scatter = plotobj.plots['Unknowns-predicted'][0]
-            xs = scatter.index.get_data()
-
-            p_uys, p_ues = self._set_interpolated_values(iso, reg, xs)
-            scatter.value.set_data(p_uys)
-            scatter.yerror.set_data(p_ues)
-
     def _set_interpolated_values(self, iso, reg, xs):
         p_uys = reg.predict(xs)
         p_ues = reg.predict_error(xs)
 
-        for ui, v, e in zip(self.unknowns, p_uys, p_ues):
+        for ui, v, e in zip(self.sorted_unknowns, p_uys, p_ues):
             ui.set_temporary_blank(iso, v, e)
 
         return p_uys, p_ues

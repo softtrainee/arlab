@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import on_trait_change
 from pyface.tasks.task_layout import TaskLayout, VSplitter, PaneItem, \
     HSplitter, Tabbed
 #============= standard library imports ========================
@@ -49,8 +50,18 @@ class IntercalibrationFactorTask(InterpolationTask):
         self._open_editor(editor)
         self.ic_factor_editor_count += 1
 
-        selector = self.manager.db.selector
-        self.unknowns_pane.items = selector.records[156:159]
-        self.references_pane.items = selector.records[150:155]
+        #selector = self.manager.db.selector
+        #self.unknowns_pane.items = selector.records[156:159]
+        #self.references_pane.items = selector.records[150:155]
+
+    @on_trait_change('active_editor:tool:[analysis_type,standard_ratio]')
+    def _handle_analysis_type(self, obj, name, old, new):
+        if name == 'analysis_type':
+            ans = self._load_references(self.analysis_table.selected_analysis, new)
+            ans = self.manager.make_analyses(ans)
+            self.references_pane.items = ans
+        elif name == 'standard_ratio':
+            self.active_editor.standard_ratio = new
+
 
 #============= EOF =============================================

@@ -222,10 +222,6 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
         s38 = s38 * disc ** 2
         s37 = s37 * disc ** 1
     else:
-        #@todo: need more flexible way of defining ic factor
-        # apply intercalibration factor to corrected 36
-        #s36 *= ic
-
         s40 *= ic_factors.get('Ar40', 1)
         s39 *= ic_factors.get('Ar39', 1)
         s38 *= ic_factors.get('Ar38', 1)

@@ -66,9 +66,12 @@ class GraphEditor(BaseTraitsEditor):
 
         if self.unknowns:
             refiso = self.unknowns[0]
-            self.load_fits(refiso)
+            self._load_refiso(refiso)
             self._set_name()
             self._update_unknowns_hook()
+
+    def _load_refiso(self, refiso):
+        self.load_fits(refiso)
 
     def load_fits(self, refiso):
         self.tool.load_fits(refiso.isotope_keys,
@@ -86,9 +89,8 @@ class GraphEditor(BaseTraitsEditor):
     @on_trait_change('tool:update_needed')
     def _tool_refresh(self):
         self.rebuild_graph()
-        if not self.tool.suppress_refresh_unknowns:
-            self.refresh_unknowns()
-
+        #if not self.tool.suppress_refresh_unknowns:
+        self.refresh_unknowns()
 
     def refresh_unknowns(self):
         pass

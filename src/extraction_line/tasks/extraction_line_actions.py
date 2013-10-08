@@ -22,6 +22,35 @@ from pyface.action.api import Action
 #============= local library imports  ==========================
 # from src.envisage.core.action_helper import open_manager
 
+#sample change actions
+from pyface.image_resource import ImageResource
+from pyface.tasks.action.task_action import TaskAction
+from src.paths import paths
+
+
+def icon(name):
+    return ImageResource(name='{}.png'.format(name),
+                         search_path=paths.icon_search_path)
+
+
+class IsolateChamberAction(TaskAction):
+    name = 'Isolate Chamber'
+    method = 'isolate_chamber'
+    image = icon('arrow_in')
+
+
+class EvacuateChamberAction(TaskAction):
+    name = 'Evacuate Chamber'
+    method = 'evacuate_chamber'
+    image = icon('arrow_out')
+
+
+class FinishChamberChangeAction(TaskAction):
+    name = 'Finish'
+    method = 'finish_chamber_change'
+    image = icon('tick')
+
+
 class ExtractionLineAction(Action):
     def _get_manager(self, event, app=None):
         EL_PROTOCOL = 'src.extraction_line.extraction_line_manager.ExtractionLineManager'
@@ -29,16 +58,19 @@ class ExtractionLineAction(Action):
             app = event.task.window.application
         return app.get_service(EL_PROTOCOL)
 
+
 class OpenExtractionLineManager(ExtractionLineAction):
     description = 'Open extraction line manager'
     name = 'Open Extraction Line Manager'
     accelerator = 'Ctrl+E'
+
     def perform(self, event):
         man = self._get_manager(event)
 
         app = self.window.application
         app.open_view(man)
-#        open_manager(app, man)
+
+    #        open_manager(app, man)
 
 class OpenExtractionLineExplanation(ExtractionLineAction):
     description = 'Open extraction line explanation'
@@ -47,7 +79,8 @@ class OpenExtractionLineExplanation(ExtractionLineAction):
         man = self._get_manager(event)
         app = self.window.application
         app.open_view(man.explanation)
-#        open_manager(app, man.explanation)
+
+    #        open_manager(app, man.explanation)
 
 class LoadCanvasAction(ExtractionLineAction):
     '''
@@ -55,23 +88,24 @@ class LoadCanvasAction(ExtractionLineAction):
     description = 'load an updated canvas file'
     name = 'Load Canvas'
     enabled = False
+
     def perform(self, event):
         '''
         
         '''
         manager = self._get_manager(event)
-#        manager.window = self.window
+        #        manager.window = self.window
         manager.load_canvas()
+
 
 class RefreshCanvasAction(ExtractionLineAction):
     description = 'reload the scene graph to reflect changes made to setupfiles'
     name = 'Refresh Canvas'
-#    enabled = False
+    #    enabled = False
     def perform(self, event):
         manager = self._get_manager(event)
-#        manager.window = self.window
+        #        manager.window = self.window
         manager.reload_canvas()
-
 
 
 # class OpenViewControllerAction(ExtractionLineAction):
@@ -127,9 +161,9 @@ class OpenPyScriptEditorAction(ExtractionLineAction):
         app.open_view(manager.pyscript_editor)
 
 
-
 class OpenMultiplexerAction(ExtractionLineAction):
     accelerator = 'Ctrl+Shift+M'
+
     def __init__(self, *args, **kw):
         super(OpenMultiplexerAction, self).__init__(*args, **kw)
         manager = self._get_manager(None, app=self.window.application)
@@ -141,4 +175,5 @@ class OpenMultiplexerAction(ExtractionLineAction):
         if manager.multiplexer_manager:
             app = event.window.application
             app.open_view(manager.multiplexer_manager)
+
 #============= EOF ====================================

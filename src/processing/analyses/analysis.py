@@ -15,24 +15,19 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Int, Str, Float, Dict, Property, \
+from traits.api import Instance, Int, Str, Float, Dict, Property, \
     Date
-# from traitsui.api import View, Item
 #============= standard library imports ========================
 import time
 from datetime import datetime
 from uncertainties import ufloat
 from collections import namedtuple
 #============= local library imports  ==========================
-from src.codetools.simple_timeit import timethis
 from src.processing.analyses.analysis_view import DBAnalysisView, AnalysisView
 from src.processing.arar_age import ArArAge
 from src.processing.analyses.summary import AnalysisSummary
 from src.processing.analyses.db_summary import DBAnalysisSummary
-# from src.database.orms.isotope_orm import meas_AnalysisTable
-# from src.database.records.isotope_record import IsotopeRecordView
 from src.experiment.utilities.identifier import make_runid, make_aliquot_step
-# from src.constants import NULL_STR
 from src.processing.isotope import Isotope, Blank, Baseline, Sniff
 from src.constants import ARGON_KEYS
 from src.helpers.formatting import calc_percent_error
@@ -121,32 +116,10 @@ class DBAnalysis(Analysis):
     status_text = Property
     age_string = Property
 
-    def _get_age_string(self):
-
-        a = self.age.nominal_value
-        e = self.age.std_dev
-
-        pe = calc_percent_error(a, e)
-
-        return u'{:0.3f} +/-{:0.3f} ({}%)'.format(a, e, pe)
-
-    def _get_status_text(self):
-        '''
-        
-        '''
-        r = 'OK'
-        #         if self.status != 0:
-        #             r = 'Invalid'
-
-        if self.temp_status != 0:
-            r = 'Omitted'
-
-        return r
-
-    #         if self.temp_status == 0:
-    #             return 'OK'
-    #         else:
-    #             return 'Omitted'
+    def set_temporary_ic_factor(self, k, v, e):
+        iso = self.get_isotope(detector=k)
+        if iso:
+            iso.temporary_ic_factor = (v, e)
 
     def set_temporary_blank(self, k, v, e):
         if self.isotopes.has_key(k):
@@ -161,6 +134,59 @@ class DBAnalysis(Analysis):
         get = lambda iso: iso.baseline.uvalue
         return self._get_isotope_dict(get)
 
+    def get_ic_factor(self, det):
+        if det in self.ic_factors:
+            r = self.ic_factors[det]
+        else:
+            #get the ic_factor from preferences if available otherwise 1.0
+            r = ArArAge.get_ic_factor(self, det)
+
+        return r
+
+    def get_db_fit(self, meas_analysis, name, kind):
+        try:
+            sel_hist = meas_analysis.selected_histories
+            sel_fithist = sel_hist.selected_fits
+            fits = sel_fithist.fits
+            return next((fi for fi in fits
+                         if fi.isotope.kind == kind and \
+                            fi.isotope.molecular_weight.name == name
+                        ), None)
+
+        except AttributeError:
+            pass
+
+    def flush(self):
+        """
+        """
+
+    def commit(self, sess):
+        """
+            use the provided db adapter to
+            save changes to database
+        """
+
+    def init(self, meas_analysis):
+        pass
+
+    def sync_arar(self, meas_analysis):
+        hist = meas_analysis.selected_histories.selected_arar
+        if hist:
+            result = hist.arar_result
+            self.persisted_age = ufloat(result.age, result.age_err)
+            self.age = self.persisted_age / self.arar_constants.age_scalar
+
+            attrs = ['k39', 'ca37', 'cl36',
+                     'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36', 'rad40']
+            d = dict()
+            f = lambda k: getattr(result, k)
+            for ai in attrs:
+                vs = map(f, (ai, '{}_err'.format(ai)))
+                d[ai] = ufloat(*vs)
+
+            d['age_err_wo_j'] = result.age_err_wo_j
+            self.arar_result.update(d)
+
     def _get_isotope_dict(self, get):
         d = dict()
         for ki in ARGON_KEYS:
@@ -172,13 +198,6 @@ class DBAnalysis(Analysis):
 
         return d
 
-    def get_ic_factor(self, det):
-        if det in self.ic_factors:
-            r = self.ic_factors[det]
-        else:
-            r = ufloat(1.0, 0)
-        return r
-
     def _get_ic_factors(self, meas_analysis):
         icfs = dict()
         if meas_analysis.selected_histories:
@@ -187,29 +206,12 @@ class DBAnalysis(Analysis):
                 for ic in hist.detector_intercalibrations:
                     icfs[ic.detector.name] = (ic.user_value, ic.user_error)
 
-                    #                 icf = next((ic for ic in hist.detector_intercalibrations
-                    #                             if ic.detector.name == det), None)
-                    #                 if icf:
-                    #                     r = icf.user_value, icf.user_error
-
         return icfs
-
-    def flush(self):
-        '''
-        '''
-
-    def commit(self, sess):
-        '''
-            use the provided db adapter to 
-            save changes to database
-        '''
 
     def _get_position(self, extraction):
         r = ''
         pos = extraction.positions
 
-        #         pos = self._get_extraction_value('positions')
-        #         if pos != NULL_STR:
         pp = []
         for pi in pos:
             pii = pi.position
@@ -248,8 +250,6 @@ class DBAnalysis(Analysis):
             self.duration = extraction.extract_duration
             self.position = self._get_position(extraction)
 
-    def init(self, meas_analysis):
-        pass
 
     def _sync(self, meas_analysis, unpack=False):
         '''
@@ -290,8 +290,6 @@ class DBAnalysis(Analysis):
 
         self.analysis_type = self._get_analysis_type(meas_analysis)
 
-        #self._sync_view()
-
     def _sync_view(self, av=None):
         if av is None:
             av = self.analysis_view
@@ -299,30 +297,6 @@ class DBAnalysis(Analysis):
         av.analysis_type = self.analysis_type
         av.analysis_id = self.record_id
         av.load(self)
-        #av.isotopes=[self.isotopes[k] for k in self.isotope_keys]
-        #av.analysis_id=self.record_id
-        #
-        #av.load_computed(self)
-        #av.load_extraction(self)
-        #av.load_measurement(self)
-
-    def sync_arar(self, meas_analysis):
-        hist = meas_analysis.selected_histories.selected_arar
-        if hist:
-            result = hist.arar_result
-            self.persisted_age = ufloat(result.age, result.age_err)
-            self.age = self.persisted_age / self.arar_constants.age_scalar
-
-            attrs = ['k39', 'ca37', 'cl36',
-                     'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36', 'rad40']
-            d = dict()
-            f = lambda k: getattr(result, k)
-            for ai in attrs:
-                vs = map(f, (ai, '{}_err'.format(ai)))
-                d[ai] = ufloat(*vs)
-
-            d['age_err_wo_j'] = result.age_err_wo_j
-            self.arar_result.update(d)
 
     def _sync_analysis_info(self, meas_analysis):
         self.sample = self._get_sample(meas_analysis)
@@ -408,19 +382,6 @@ class DBAnalysis(Analysis):
         self._get_blanks(isotopes, meas_analysis)
 
         return isotopes
-
-    def get_db_fit(self, meas_analysis, name, kind):
-        try:
-            selhist = meas_analysis.selected_histories
-            selfithist = selhist.selected_fits
-            fits = selfithist.fits
-            return next((fi for fi in fits
-                         if fi.isotope.kind == kind and \
-                            fi.isotope.molecular_weight.name == name
-                        ), None)
-
-        except AttributeError:
-            pass
 
     def _get_blanks(self, isodict, meas_analysis):
         history = meas_analysis.selected_histories.selected_blanks
@@ -630,6 +591,23 @@ class DBAnalysis(Analysis):
                     #         print 'aasfaf', ln, prs
 
         return prs
+
+    def _get_age_string(self):
+
+        a = self.age.nominal_value
+        e = self.age.std_dev
+
+        pe = calc_percent_error(a, e)
+
+        return u'{:0.3f} +/-{:0.3f} ({}%)'.format(a, e, pe)
+
+    def _get_status_text(self):
+        r = 'OK'
+
+        if self.temp_status != 0:
+            r = 'Omitted'
+
+        return r
 
     def __getattr__(self, attr):
         lattr = attr.lower()

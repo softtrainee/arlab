@@ -157,7 +157,8 @@ class ExperimentEditor(BaseTraitsEditor):
             qi.executable = True
             qi.initialized = True
 
-            err = hec.check_runs(qi.automated_runs, test_all=True)
+            err = hec.check_runs(qi.automated_runs, test_all=True,
+                                 test_scripts=True)
             if err:
                 qi.executable = False
                 qi.initialized = False
@@ -167,7 +168,7 @@ class ExperimentEditor(BaseTraitsEditor):
 
             err = hec.check_queue(qi)
             if err:
-                self.information_dialog(err)
+                self.warning_dialog(err)
                 break
 
         else:

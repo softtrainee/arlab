@@ -97,8 +97,8 @@ class BaseBrowserTask(BaseEditorTask):
 
     clear_selection_button = Button
 
-    default_reference_analysis_type = 'blank_unknown'
-    auto_select_references = Bool(False)
+    #default_reference_analysis_type = 'blank_unknown'
+    #auto_select_references = Bool(False)
 
     filter_non_run_samples = Bool(True)
 
@@ -192,8 +192,8 @@ class BaseBrowserTask(BaseEditorTask):
             ans = db.get_sample_analyses(sample, limit=limit)
             return [self._record_view_factory(a) for a in ans]
 
-    def _record_view_factory(self, ai):
-        iso = IsotopeRecordView()
+    def _record_view_factory(self, ai, **kw):
+        iso = IsotopeRecordView(**kw)
         iso.create(ai)
         return iso
 
@@ -320,47 +320,7 @@ class BaseBrowserTask(BaseEditorTask):
         self._set_selected_analysis(new)
 
     def _set_selected_analysis(self, new):
-        if not new:
-            return
-
-        if not self.auto_select_references:
-            return
-
-        if not hasattr(new, '__iter__'):
-            new = (new, )
-
-        ds = [ai.timestamp for ai in new]
-        dt = timedelta(days=self.days_pad, hours=self.hours_pad)
-
-        sd = min(ds) - dt
-        ed = max(ds) + dt
-
-        self.start_date = sd.date()
-        self.end_date = ed.date()
-        self.start_time = sd.time()
-        self.end_time = ed.time()
-        
-        at = self.analysis_type
-
-        if self.analysis_type == DEFAULT_AT:
-            self.analysis_type = at = self.default_reference_analysis_type
-
-        ref = new[-1]
-        exd = ref.extract_device
-        ms = ref.mass_spectrometer
-
-        self.trait_set(extraction_device=exd or 'Extraction Device',
-                       mass_spectrometer=ms or 'Mass Spectrometer', trait_change_notify=False)
-
-        db = self.manager.db
-        with db.session_ctx():
-            ans = db.get_analyses_data_range(sd, ed,
-                                             analysis_type=at,
-                                             mass_spectrometer=ms,
-                                             extract_device=exd
-            )
-            ans = [self._record_view_factory(ai) for ai in ans]
-            self.danalysis_table.set_analyses(ans)
+        pass
 
     def _dclicked_sample_changed(self):
         ans = self._get_sample_analyses(self.selected_sample[-1])

@@ -205,6 +205,10 @@ class ArArAge(Loggable):
         for k in self.isotopes:
             self.set_blank(k, (0, 0))
 
+    def clear_error_components(self):
+        for iso in self.isotopes.itervalues():
+            iso.age_error_component = 0
+
     def set_isotope_detector(self, det):
         name, det = det.isotope, det.name
         if name in self.isotopes:
@@ -221,13 +225,13 @@ class ArArAge(Loggable):
             raise NotImplementedError('name or detector required')
 
         if name:
-            attr = 'name'
+            return self.isotopes[name]
+            #attr = 'name'
         else:
             attr = 'detector'
-
-        value = detector or name
-
-        return next((iso for iso in self.isotopes.itervalues() if getattr(iso, attr) == value), None)
+            value = detector
+            return next((iso for iso in self.isotopes.itervalues()
+                         if getattr(iso, attr) == value), None)
 
     def set_isotope(self, iso, v, **kw):
         if not self.isotopes.has_key(iso):
@@ -259,7 +263,7 @@ class ArArAge(Loggable):
         """
             force: force recalculation of age. necessarily if you want error components
         """
-#        self.debug('calculate age ={}'.format(self.age))
+        #        self.debug('calculate age ={}'.format(self.age))
         if not self.age or force:
             #self.age=timethis(self._calculate_age, kwargs=kw, msg='calculate_age')
             self.age = self._calculate_age(**kw)
