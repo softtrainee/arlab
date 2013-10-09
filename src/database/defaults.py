@@ -97,17 +97,18 @@ def _load_tray_map(db, p, name):
     db.add_load_holder(name, geometry=blob)
 
 def _load_irradiation_map(db, p, name):
-    with open(p, 'r') as f:
-        h = f.readline()
-        nholes, _diam = h.split(',')
-        nholes = int(nholes)
+    if p.endswith('.txt'):
+        with open(p, 'r') as f:
+            h = f.readline()
+            nholes, _diam = h.split(',')
+            nholes = int(nholes)
 
-        holes = []
-        for i, l in enumerate(f):
-            try:
-                holes.append(map(float, l.strip().split(',')))
-            except ValueError:
-                break
+            holes = []
+            for i, l in enumerate(f):
+                try:
+                    holes.append(map(float, l.strip().split(',')))
+                except ValueError:
+                    break
 
-        blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
-        db.add_irradiation_holder(name, geometry=blob)
+            blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
+            db.add_irradiation_holder(name, geometry=blob)

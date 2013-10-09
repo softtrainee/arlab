@@ -15,8 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Button, List, Instance, Property, Any, Event, Bool, Int
-from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, EnumEditor, ButtonEditor
+from traits.api import HasTraits, Button, List, Instance, Property, Any, Event, Bool, Int, \
+    Str
+from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, EnumEditor, ButtonEditor, \
+    Spring
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from pyface.image_resource import ImageResource
 # from src.processing.search.previous_selection import PreviousSelection
@@ -25,6 +27,7 @@ import shelve
 import hashlib
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.ui.custom_label_editor import CustomLabel
 from src.ui.tabular_editor import myTabularEditor
 from src.processing.tasks.analysis_edit.ianalysis_edit_tool import IAnalysisEditTool
 from src.paths import paths
@@ -95,6 +98,9 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
     configure_history_tooltip = 'Configure previous selections'
     clear_prev_selection_tooltip = 'Clear previous selections'
 
+    ps_label = Str('Previous Selections')
+    cs_label = Str('Current Selection')
+
     def load(self):
         self.load_previous_selections()
 
@@ -114,7 +120,9 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
             except Exception:
                 pass
 
-        self.previous_selections = [get_value(ki) for ki in keys]
+        self.previous_selections = [PreviousSelection([], name='Previous Selections'),
+                                    PreviousSelection([], name='')] + [get_value(ki) for ki in keys]
+        self.previous_selection = self.previous_selections[0]
         #self.previous_selections = filter(None, [get_value(ki) for ki in keys])
 
     def dump_selection(self):
@@ -192,10 +200,11 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
                                      tooltip=self._add_tooltip),
                    new_button_editor('replace_button', 'arrow_refresh',
                                      tooltip=self._replace_tooltip)),
-            HGroup(UItem('previous_selection', editor=EnumEditor(name='previous_selections')),
+            HGroup(UItem('previous_selection',
+                         editor=EnumEditor(name='previous_selections')),
                    new_button_editor('configure_button', 'cog',
-                                     tooltip=self.configure_history_tooltip),
-            ),
+                                     tooltip=self.configure_history_tooltip)),
+            HGroup(spring, CustomLabel('cs_label'), spring),
             UItem('items', editor=myTabularEditor(adapter=self.adapter_klass(),
                                                   operations=['move', 'delete'],
                                                   editable=True,
@@ -205,13 +214,7 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
                                                   refresh='refresh_needed',
                                                   multi_select=True,
                                                   column_clicked='column_clicked'
-                                                  #                                                             refresh='refresh_needed',
-                                                  #                                                             update='update_needed'
-                                                  #                                                            auto_resize_rows=True
-            )
-            )
-        )
-        )
+            ))))
         return v
 
     def configure_view(self):
