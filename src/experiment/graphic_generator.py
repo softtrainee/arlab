@@ -202,8 +202,9 @@ class GraphicModel(HasTraits):
 def make_xml(path, offset=100, default_bounds=(50, 50),
              default_radius=3, convert_mm=False,
              make=True,
-             use_label=True
-             ):
+             use_label=True,
+             rotate=0
+):
     '''
         convert a csv into an xml
         
@@ -246,8 +247,12 @@ def make_xml(path, offset=100, default_bounds=(50, 50),
     off = 0
     reader = csv.reader(open(path, 'r'), delimiter=',')
     writer = open(path + 'angles.txt', 'w')
-    _header = reader.next()
+    nwriter = csv.writer(open(path + 'rotated_{}.txt'.format(rotate), 'w'))
 
+    header = reader.next()
+    nwriter.writerow(header)
+
+    theta = math.radians(rotate)
     for k, row in enumerate(reader):
         print k, row
         row = map(str.strip, row)
@@ -256,6 +261,13 @@ def make_xml(path, offset=100, default_bounds=(50, 50),
             x, y, l = Element('x'), Element('y'), Element('label')
 
             xx, yy = float(row[0]), float(row[1])
+
+            px = math.cos(theta) * xx - math.sin(theta) * yy
+            py = math.sin(theta) * xx + math.cos(theta) * yy
+
+            xx, yy = px, py
+            nwriter.writerow(('{:0.2f}'.format(xx), '{:0.2f}'.format(yy)))
+
             if convert_mm:
                 xx = xx * 2.54
                 yy = yy * 2.54
@@ -285,15 +297,17 @@ def make_xml(path, offset=100, default_bounds=(50, 50),
 
 def open_txt(p, bounds, radius,
              use_label=True,
-             convert_mm=False, make=True):
+             convert_mm=False,
+             make=True, rotate=None):
     gm = GraphicModel()
     p = make_xml(p,
                  default_radius=radius,
                  default_bounds=bounds,
                  convert_mm=convert_mm,
                  use_label=use_label,
-                 make=make
-                 )
+                 make=make,
+                 rotate=rotate
+    )
     print p
 #    p = '/Users/ross/Sandbox/graphic_gen_from_csv.xml'
     gm.load(p)
@@ -307,7 +321,8 @@ if __name__ == '__main__':
     p = '/Users/ross/Sandbox/1_75mmirrad_ordered.txt'
     p = '/Users/ross/Sandbox/1_75mmirrad_ordered.txt'
     p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad_ordered1.txt'
-#    p = '/Users/ross/Sandbox/graphic_gen.csv'
+
+    #    p = '/Users/ross/Sandbox/graphic_gen.csv'
 #    gcc1 = open_txt(p)
 #    do_later(gcc1.edit_traits)
 
@@ -316,17 +331,25 @@ if __name__ == '__main__':
 #    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad.txt'
 
 #    p = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/0_75mmirrad_continuous.txt'
-    p = '/Users/ross/Pychrondata_dev/setupfiles/irradiation_tray_maps/newtrays/2mmirrad_continuous.txt'
-    gcc, gm = open_txt(p, (2.54, 2.54), 0.1, convert_mm=True, make=True)
+    #    p = '/Users/ross/Pychrondata_dev/setupfiles/irradiation_tray_maps/newtrays/2mmirrad_continuous.txt'
 
-#     p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_6-Hole.txt'
+    #p = '/Users/ross/Pychrondata_dev/setupfiles/irradiation_tray_maps/newtrays/40_no_spokes.txt'
+
+    #p = '/Users/ross/Pychrondata_dev/setupfiles/irradiation_tray_maps/newtrays/26_spokes.txt'
+    p = '/Users/ross/Pychrondata_dev/setupfiles/irradiation_tray_maps/newtrays/26_no_spokes.txt'
+
+    gcc, gm = open_txt(p, (2.54, 2.54), 0.0175 * 2.54,
+                       convert_mm=True, make=True,
+                       rotate=-28)
+
+    #     p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_6-Hole.txt'
 #     gcc, gm2 = open_txt(p2, (2.54, 2.54), .1, make=False)
 
-#     p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_20-Hole.txt'
-#     gcc, gm2 = open_txt(p2, (2.54, 2.54), .1, make=False)
+    #p2 = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/newtrays/TX_20-Hole.txt'
+    #gcc, gm2 = open_txt(p2, (2.54, 2.54), .1, make=False)
 
 
-#     gm2.container.bgcolor = 'transparent'
+    #     gm2.container.bgcolor = 'transparent'
 #     gm2.container.add(gm.container)
 
     gcc.configure_traits()

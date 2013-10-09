@@ -204,7 +204,8 @@ class AnalysisEditTask(BaseBrowserTask):
     #        return iso
 
     def _set_previous_selection(self, pane, new):
-        if new:
+        if new and new.name != 'Previous Selection':
+            print new.name
             db = self.manager.db
             with db.session_ctx():
                 #def func(rec, **kw):
@@ -249,7 +250,7 @@ class AnalysisEditTask(BaseBrowserTask):
                 self.controls_pane.tool = tool
 
             if self.unknowns_pane:
-                self.unknowns_pane.previous_selection = ''
+                self.unknowns_pane.previous_selection = self.unknowns_pane.previous_selections[0]
                 if hasattr(self.active_editor, 'unknowns'):
                     if self.active_editor.unknowns:
                         self.unknowns_pane.items = self.active_editor.unknowns
@@ -308,12 +309,15 @@ class AnalysisEditTask(BaseBrowserTask):
     @on_trait_change('unknowns_pane:[append_button, replace_button]')
     def _append_unknowns(self, obj, name, old, new):
         s = self.data_selector.selector.selected
-        s = self.manager.make_analyses(s)
+        #s = self.manager.make_analyses(s)
 
         if name == 'append_button':
-            self.unknowns_pane.items.extend(s)
+            self.active_editor.unknowns.extend(s)
+            #self.unknowns_pane.items.extend(s)
+
         else:
-            self.unknowns_pane.items = s
+            self.active_editor.unknowns = s
+            #self.unknowns_pane.items = s
 
     @on_trait_change('data_selector:selector:key_pressed')
     def _key_press(self, obj, name, old, new):
@@ -329,9 +333,11 @@ class AnalysisEditTask(BaseBrowserTask):
                 c = new.text
                 #             shift = new.shift
                 if c == 'u':
-                    self.unknowns_pane.items.extend(s)
+                    self.active_editor.unknowns.extend(s)
+                    #self.unknowns_pane.items.extend(s)
                 elif c == 'U':
-                    self.unknowns_pane.items = s
+                    self.active_editor.unknowns = s
+                    #self.unknowns_pane.items = s
                 else:
                     self._handle_key_pressed(c)
 

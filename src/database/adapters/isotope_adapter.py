@@ -1044,19 +1044,23 @@ class IsotopeAdapter(DatabaseAdapter):
     '''
 
     def get_analyses(self, **kw):
-        '''
+        """
             kw: meas_Analysis attributes
-        '''
-        q = self.sess.query(meas_AnalysisTable)
-        for k, v in kw.iteritems():
-            if hasattr(v, '__call__'):
-                q = q.filter(v(meas_AnalysisTable))
-            else:
-                q = q.filter(getattr(meas_AnalysisTable, k) == v)
+                or callable predicate that accepts "meas_AnalysisTable"
+        """
+        with self.session_ctx() as sess:
+            q = sess.query(meas_AnalysisTable)
+            for k, v in kw.iteritems():
+                if hasattr(v, '__call__'):
+                    q = q.filter(v(meas_AnalysisTable))
+                else:
+                    q = q.filter(getattr(meas_AnalysisTable, k) == v)
 
-        q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+            q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+            q = q.order_by(meas_AnalysisTable.aliquot.asc())
+            q = q.order_by(meas_AnalysisTable.step.asc())
 
-        return q.all()
+            return q.all()
 
     def get_figures(self, project=None):
         if project:
