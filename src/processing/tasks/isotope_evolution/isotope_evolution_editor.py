@@ -17,23 +17,25 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Instance, Dict, on_trait_change, Bool
 from traitsui.api import View, Item, UItem
-from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
-#============= standard library imports ========================
-from numpy import Inf, polyfit
 from enable.component_editor import ComponentEditor
-# from src.graph.regression_graph import StackedRegressionGraph
 from chaco.plot_containers import GridPlotContainer
+#============= standard library imports ========================
+import os
+from numpy import Inf, polyfit
+
+#============= local library imports  ==========================
 from src.codetools.simple_timeit import timethis
 from src.processing.tasks.analysis_edit.fits import IsoEvoFitSelector
-# from src.processing.equilibration_utils import calc_optimal_eqtime
-#============= local library imports  ==========================
+from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 
 
 class IsotopeEvolutionEditor(GraphEditor):
     component = Instance(GridPlotContainer)
     graphs = Dict
     _suppress_update = Bool
+
     tool = Instance(IsoEvoFitSelector, ())
+    pickle_path = 'iso_fits'
 
     def calculate_optimal_eqtime(self):
         # get x,y data
@@ -83,15 +85,16 @@ class IsotopeEvolutionEditor(GraphEditor):
                 continue
 
             # get database fit
-            if fi.name.endswith('bs'):
-                n = fi.name[:-2]
-                dbfit = unk.get_db_fit(n, meas_analysis, 'baseline')
+            name = fi.name
+            if name.endswith('bs'):
+                name = name[:-2]
+                dbfit = unk.get_db_fit(name, meas_analysis, 'baseline')
                 kind = 'baseline'
-                v = unk.isotopes[n].baseline
+                v = unk.isotopes[name].baseline.uvalue
             else:
-                dbfit = unk.get_db_fit(fi.name, meas_analysis, 'signal')
+                dbfit = unk.get_db_fit(name, meas_analysis, 'signal')
                 kind = 'signal'
-                v = unk.isotopes[n]
+                v = unk.isotopes[name].uvalue
 
             if dbfit != fi.fit:
                 if fit_hist is None:

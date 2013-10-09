@@ -37,7 +37,7 @@ from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
 from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
 from src.processing.tasks.figures.auto_figure_preferences import AutoFigurePreferencesPane
 from src.processing.tasks.smart_project.smart_project_task import SmartProjectTask
-from src.processing.tasks.browser.browser_task import BrowserTask
+#from src.processing.tasks.browser.browser_task import BrowserTask
 from src.processing.tasks.entry.actions import LabnumberEntryAction, \
     SensitivityEntryAction
 from pyface.message_dialog import warning
@@ -177,8 +177,9 @@ Install to enable MS Excel export''')
                   self._auto_figure_task_factory, 'AutoFigure'),
                  ('pychron.processing.smart_project',
                   self._smart_project_task_factory, 'SmartProject'),
-                 ('pychron.processing.browser',
-                  self._browser_task_factory, 'Analysis Browser', '', 'Ctrl+Shift+B'),
+                 #('pychron.processing.browser',
+                 # self._browser_task_factory, 'Analysis Browser'),
+                 #'', 'Ctrl+Shift+B'),
                  ('pychron.processing.respository',
                   self._repository_task_factory, 'Repository', '', 'Ctrl+Shift+R')
         ]
@@ -261,8 +262,8 @@ Install to enable MS Excel export''')
     def _smart_project_task_factory(self):
         return SmartProjectTask(manager=self._processor_factory())
 
-    def _browser_task_factory(self):
-        return BrowserTask(manager=self._processor_factory())
+    #def _browser_task_factory(self):
+    #    return BrowserTask(manager=self._processor_factory())
 
     #    def _task_factory(self):
     # #        processor = self.application.get_service(Processor)

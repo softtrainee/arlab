@@ -37,12 +37,11 @@ class FigureContainer(HasTraits):
 
         for i in range(r):
             for j in range(c):
-#                 k = i * c + j
+            #                 k = i * c + j
                 p = self.model.next_panel()
                 comp.add(p.make_graph())
 
         self.component = comp
-
 
     def _component_factory(self, ngraphs, gpi):
 
@@ -62,7 +61,7 @@ class FigureContainer(HasTraits):
                                bgcolor='white',
                                fill_padding=True,
                                padding_top=10
-                               )
+        )
         return op, r, c
 
 

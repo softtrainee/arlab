@@ -171,6 +171,8 @@ class InterpolationEditor(GraphEditor):
                                          fit=False,
                                          type='scatter',
                                          plotid=i,
+                                         marker='square',
+
                                          add_inspector=False)
                 self._add_inspector(s, self.sorted_unknowns)
                 self._add_error_bars(s, c_ues)

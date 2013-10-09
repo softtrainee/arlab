@@ -54,14 +54,17 @@ class IntercalibrationFactorTask(InterpolationTask):
         #self.unknowns_pane.items = selector.records[156:159]
         #self.references_pane.items = selector.records[150:155]
 
-    @on_trait_change('active_editor:tool:[analysis_type,standard_ratio]')
+    @on_trait_change('active_editor:tool:[analysis_type]')
     def _handle_analysis_type(self, obj, name, old, new):
         if name == 'analysis_type':
-            ans = self._load_references(self.analysis_table.selected_analysis, new)
-            ans = self.manager.make_analyses(ans)
-            self.references_pane.items = ans
-        elif name == 'standard_ratio':
-            self.active_editor.standard_ratio = new
+            records = self.unknowns_pane.items
+            if records is None:
+                records = self.analysis_table.selected_analysis
+
+            if records:
+                ans = self._load_references(records, new)
+                ans = self.manager.make_analyses(ans)
+                self.references_pane.items = ans
 
 
 #============= EOF =============================================

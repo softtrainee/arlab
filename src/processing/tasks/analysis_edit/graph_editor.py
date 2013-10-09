@@ -21,15 +21,13 @@ from src.codetools.simple_timeit import timethis
 from src.envisage.tasks.base_editor import BaseTraitsEditor
 #============= standard library imports ========================
 from numpy import asarray
-from src.processing.tasks.analysis_edit.fits import FitSelector
-from src.helpers.isotope_utils import sort_isotopes
-from src.graph.regression_graph import StackedRegressionGraph
 import os
-import copy
 from itertools import groupby
-from src.helpers.iterfuncs import partition
-from numpy.ma.core import ids
+import pickle
 #============= local library imports  ==========================
+from src.paths import paths
+from src.processing.tasks.analysis_edit.fits import FitSelector
+from src.graph.regression_graph import StackedRegressionGraph
 
 
 class GraphEditor(BaseTraitsEditor):
@@ -45,6 +43,29 @@ class GraphEditor(BaseTraitsEditor):
     path = File
     analysis_cache = List
     basename = ''
+    pickle_path = '_'
+
+    def prepare_destroy(self):
+        self.dump_tool()
+
+    def dump_tool(self):
+        p = os.path.join(paths.hidden_dir, self.pickle_path)
+        with open(p, 'w') as fp:
+            pickle.dump(self.tool.fits, fp)
+
+    def load_tool(self):
+        p = os.path.join(paths.hidden_dir, self.pickle_path)
+        if os.path.isfile(p):
+            with open(p, 'r') as fp:
+                try:
+                    fits = pickle.load(fp)
+                except (pickle.PickleError, OSError, EOFError):
+                    return
+
+                for fi in fits:
+                    ff = next((fo for fo in self.tool.fits if fo.name == fi.name), None)
+                    if ff:
+                        ff.trait_set(fit=fi.fit, use=fi.use)
 
     def normalize(self, xs, start=None):
         xs = asarray(xs)
@@ -76,6 +97,7 @@ class GraphEditor(BaseTraitsEditor):
     def load_fits(self, refiso):
         self.tool.load_fits(refiso.isotope_keys,
                             refiso.isotope_fits)
+        self.load_tool()
 
     def _set_name(self):
         na = set([ni.sample for ni in self.unknowns])

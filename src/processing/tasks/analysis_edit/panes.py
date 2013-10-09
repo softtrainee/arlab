@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Button, List, Instance, Property, Any, Event, Bool
+from traits.api import HasTraits, Button, List, Instance, Property, Any, Event, Bool, Int
 from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, EnumEditor, ButtonEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from pyface.image_resource import ImageResource
@@ -33,13 +33,15 @@ from src.processing.selection.previous_selection import PreviousSelection
 from src.column_sorter_mixin import ColumnSorterMixin
 
 
-def new_button_editor(trait, name, **kw):
+def new_button_editor(trait, name, label=None, **kw):
+    kw['show_label'] = label is not None
+    kw['label'] = label or ''
     name = '{}.png'.format(name)
-    return UItem(trait, style='custom',
-                 editor=ButtonEditor(image=ImageResource(name=name,
-                                                         search_path=paths.icon_search_path
-                 )),
-                 **kw
+    return Item(trait, style='custom',
+                editor=ButtonEditor(image=ImageResource(name=name,
+                                                        search_path=paths.icon_search_path
+                )),
+                **kw
     )
 
 
@@ -86,6 +88,12 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
 
     _add_tooltip = '''(u) Append unknowns'''
     _replace_tooltip = '''(Shift+u) Replace unknowns'''
+    configure_button = Button
+    clear_button = Button
+    history_limit = Int(10)
+
+    configure_history_tooltip = 'Configure previous selections'
+    clear_prev_selection_tooltip = 'Clear previous selections'
 
     def load(self):
         self.load_previous_selections()
@@ -106,7 +114,8 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
             except Exception:
                 pass
 
-        self.previous_selections = filter(None, [get_value(ki) for ki in keys])
+        self.previous_selections = [get_value(ki) for ki in keys]
+        #self.previous_selections = filter(None, [get_value(ki) for ki in keys])
 
     def dump_selection(self):
         records = self.items
@@ -120,7 +129,10 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
         def make_name(rec):
             s = rec[0]
             e = rec[-1]
-            return '{} - {}'.format(s.record_id, e.record_id)
+            if s != e:
+                return '{} - {}'.format(s.record_id, e.record_id)
+            else:
+                return s.record_id
 
         def make_hash(rec):
             md5 = hashlib.md5()
@@ -158,6 +170,15 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
 
             d[next_key] = ps
 
+        #trim
+        keys = sorted(d.keys())
+        t = len(keys)
+        n = t - self.history_limit
+
+        if n > 0:
+            for ki in keys[:n]:
+                d.pop(ki)
+
         d.close()
 
     def _open_shelve(self):
@@ -168,22 +189,21 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
     def traits_view(self):
         v = View(VGroup(
             HGroup(new_button_editor('append_button', 'add',
-                                     tooltip=self._add_tooltip
-            ),
+                                     tooltip=self._add_tooltip),
                    new_button_editor('replace_button', 'arrow_refresh',
-                                     tooltip=self._replace_tooltip
-                   ),
-
+                                     tooltip=self._replace_tooltip)),
+            HGroup(UItem('previous_selection', editor=EnumEditor(name='previous_selections')),
+                   new_button_editor('configure_button', 'cog',
+                                     tooltip=self.configure_history_tooltip),
             ),
-            UItem('previous_selection', editor=EnumEditor(name='previous_selections')),
             UItem('items', editor=myTabularEditor(adapter=self.adapter_klass(),
                                                   operations=['move', 'delete'],
                                                   editable=True,
                                                   drag_external=True,
                                                   selected='selected',
                                                   dclicked='dclicked',
+                                                  refresh='refresh_needed',
                                                   multi_select=True,
-                                                  auto_update=True,
                                                   column_clicked='column_clicked'
                                                   #                                                             refresh='refresh_needed',
                                                   #                                                             update='update_needed'
@@ -193,6 +213,25 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
         )
         )
         return v
+
+    def configure_view(self):
+        v = View(
+            Item('history_limit', label='Max. N History'),
+            new_button_editor('clear_button', 'delete',
+                              label='Clear',
+                              tooltip=self.clear_prev_selection_tooltip),
+            buttons=['OK', 'Cancel', 'Revert'],
+            title='Configure History'
+        )
+        return v
+
+    def _clear_button_fired(self):
+        d = self._open_shelve()
+        d.update(dict())
+        d.close()
+
+    def _configure_button_fired(self):
+        self.edit_traits(view='configure_view', kind='livemodal')
 
 
 class UnknownsPane(HistoryTablePane):

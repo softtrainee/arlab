@@ -146,10 +146,10 @@ class IsotopeDatabaseManager(Loggable):
 
                     rs = []
                     for ai in ans:
-                        r = self._record_factory(ai,
-                                                 progress=progress,
-                                                 calculate_age=calculate_age,
-                                                 **kw)
+                        r = self._analysis_factory(ai,
+                                                   progress=progress,
+                                                   calculate_age=calculate_age,
+                                                   **kw)
                         if r is not None:
                             rs.append(r)
 
@@ -214,7 +214,7 @@ class IsotopeDatabaseManager(Loggable):
         win.activate()
 
     def _add_arar(self, meas_analysis, analysis):
-        
+
         db = self.db
         with db.session_ctx() as sess:
             hist = db.add_arar_history(meas_analysis)
@@ -222,30 +222,33 @@ class IsotopeDatabaseManager(Loggable):
             d = dict()
             attrs = ['k39', 'ca37', 'cl36', 'rad40',
                      'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
-    
+
             for a in attrs:
                 v = getattr(analysis, a)
                 ek = '{}_err'.format(a)
                 d[a] = float(v.nominal_value)
                 d[ek] = float(v.std_dev)
-    
+
             age_scalar = analysis.arar_constants.age_scalar
             d['age_err_wo_j'] = analysis.age_error_wo_j * age_scalar
-    
+
             age = analysis.age
             d['age'] = age.nominal_value * age_scalar
             d['age_err'] = age.std_dev * age_scalar
-    
+
             db.add_arar(hist, **d)
-    
+
             meas_analysis.selected_histories.selected_arar = hist
             sess.commit()
-        #hist.selected=analysis.selected_histories
-        #analysis.selected_histories.selected_arar=hist
+            #hist.selected=analysis.selected_histories
+            #analysis.selected_histories.selected_arar=hist
 
-    def _record_factory(self, rec, progress=None,
-                        calculate_age=False,
-                        exclude=None, **kw):
+    def _analysis_factory(self, rec, progress=None,
+                          calculate_age=False,
+                          exclude=None, **kw):
+        graph_id = 0
+        group_id = 0
+
         if isinstance(rec, (Analysis, DBAnalysis)):
             if progress:
                 progress.increment()
@@ -263,15 +266,20 @@ class IsotopeDatabaseManager(Loggable):
             else:
                 rid = id(rec)
 
+            if hasattr(rec, 'group_id'):
+                group_id = rec.group_id
+
+            if hasattr(rec, 'graph_id'):
+                graph_id = rec.graph_id
+
             if atype is None:
                 atype = rec.analysis_type
 
             def func(r):
                 meas_analysis = self.db.get_analysis_uuid(r.uuid)
-                print r.uuid,meas_analysis
 
-                ai = DBAnalysis()
-
+                ai = DBAnalysis(group_id=group_id,
+                                graph_id=graph_id)
                 if atype in ('unknown', 'cocktail'):
                     ai.sync_arar(meas_analysis)
                     if not ai.persisted_age:
