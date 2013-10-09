@@ -196,23 +196,39 @@ class AnalysisEditTask(BaseBrowserTask):
             if hasattr(self.active_editor, 'save'):
                 self.active_editor.save()
 
-#    def _record_view_factory(self, pi, **kw):
-#        db = self.manager.db
-#        iso = IsotopeRecordView(**kw)
-#        dbrecord = db.get_analysis(pi.uuid, key='uuid')
-#        if iso.create(dbrecord):
-#            return iso
+    #def _record_view_factory(self, pi, **kw):
+    #    db = self.manager.db
+    #    iso = IsotopeRecordView(**kw)
+    #    dbrecord = db.get_analysis(pi.uuid, key='uuid')
+    #    if iso.create(dbrecord):
+    #        return iso
 
     def _set_previous_selection(self, pane, new):
         if new:
             db = self.manager.db
             with db.session_ctx():
-                func = self._record_view_factory
-                ps = [func(si, graph_id=si.graph_id,
-                           group_id=si.group_id) for si in new.analysis_ids]
-                ps = [pi for pi in ps if pi]
+                #def func(rec, **kw):
+                #    dbr=db.get_analysis(rec.uuid, key='uuid')
+                #    return self._record_view_factory(dbr, **kw)
 
-                pane.items = self.manager.make_analyses(ps)
+                #print new.analysis_ids
+                #func = self._record_view_factory
+                #ps = [func(si, graph_id=si.graph_id,
+                #               group_id=si.group_id) for si in new.analysis_ids]
+                #ps = [pi for pi in ps if pi]
+                ids = [si.uuid for si in new.analysis_ids]
+
+                f = lambda t: t.uuid.in_(ids)
+                ans = db.get_analyses(uuid=f)
+                func = self._record_view_factory
+                ans = [func(si) for si in ans]
+
+                for ti in new.analysis_ids:
+                    a = next((ai for ai in ans if ai.uuid == ti.uuid), None)
+                    if a:
+                        a.trait_set(group_id=ti.group_id, graph_id=ti.graph_id)
+
+                pane.items = ans
 
     def _save_file(self, path):
         if self.active_editor:
@@ -248,7 +264,6 @@ class AnalysisEditTask(BaseBrowserTask):
     def _update_unknowns_runs(self, obj, name, old, new):
         if not obj._no_update:
             if self.active_editor:
-            #                 self.active_editor._unknowns = self.unknowns_pane.items
                 self.active_editor.unknowns = self.unknowns_pane.items
                 self._append_cache(self.active_editor)
 

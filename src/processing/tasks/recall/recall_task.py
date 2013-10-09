@@ -19,7 +19,7 @@ from traits.api import on_trait_change
 from src.envisage.tasks.editor_task import EditorTask
 from src.processing.tasks.recall.recall_editor import RecallEditor
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
-from pyface.tasks.task_layout import Splitter, TaskLayout, PaneItem
+from pyface.tasks.task_layout import Splitter, TaskLayout, PaneItem, Tabbed
 from src.processing.tasks.analysis_edit.panes import ControlsPane
 from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
 from src.loading.actions import SaveLoadingAction
@@ -33,52 +33,61 @@ from src.paths import paths
 class AddIsoEvoAction(TaskAction):
     method = 'add_iso_evo'
     image = ImageResource(name='chart_curve_add.png',
-                        search_path=paths.icon_search_path
-                        )
+                          search_path=paths.icon_search_path
+    )
+
 
 class RecallTask(AnalysisEditTask):
     name = 'Recall'
 
     tool_bars = [
-                 SToolBar(AddIsoEvoAction(),
-                          image_size=(16, 16)
-                          )
-                 ]
+        SToolBar(AddIsoEvoAction(),
+                 image_size=(16, 16))]
+
+    def activated(self):
+        editor = RecallEditor()
+        self._open_editor(editor)
+        self.load_projects()
+
+        db = self.manager.db
+        db.selector.limit = 100
+        db.selector.load_recent()
+
+    def new_editor(self):
+        editor = RecallEditor()
+        self._open_editor(editor)
+
+    def _set_selected_analysis(self, an):
+        if an and isinstance(self.active_editor, RecallEditor):
+        #             l, a, s = strip_runid(s)
+        #             an = self.manager.db.get_unique_analysis(l, a, s)
+            an = self.manager.make_analyses(an, calculate_age=True)[0]
+            #             an.load_isotopes(refit=False)
+            #self.active_editor.analysis_summary = an.analysis_summary
+            self.active_editor.analysis_view = an.analysis_view
+
+    def create_dock_panes(self):
+        return [self._create_browser_pane(multi_select=False)]
+
+    def _dclicked_sample_changed(self):
+        pass
 
     def _default_layout_default(self):
         return TaskLayout(
-                          id='pychron.recall',
-#                          left=Splitter(
-#                                     PaneItem('pychron.analysis_edit.unknowns'),
-#                                     orientation='vertical'
-#                                     ),
-                          left=Splitter(
-                                         PaneItem('pychron.search.results'),
-                                         PaneItem('pychron.search.query'),
-                                         orientation='vertical'
-                                         ),
-                          right=Splitter(
-                                         PaneItem('pychron.analysis_edit.controls'),
-                                         PaneItem('pychron.processing.editor'),
-                                         orientation='vertical'
-                                         ),
-
-#                                     PaneItem('pychron.pyscript.editor')
-#                                     ),
-#                          top=PaneItem('pychron.pyscript.description'),
-#                          bottom=PaneItem('pychron.pyscript.example'),
-
-                          )
+            id='pychron.recall',
+            left=Tabbed(
+                PaneItem('pychron.browser'),
+                PaneItem('pychron.search.query'),
+            ))
 
     def create_dock_panes(self):
         self.controls_pane = ControlsPane()
         self.plot_editor_pane = PlotEditorPane()
         panes = [
-#                self._create_unknowns_pane(),
-                self.controls_pane,
-                self.plot_editor_pane
-
-                ]
+            self.controls_pane,
+            self.plot_editor_pane,
+            self._create_browser_pane()
+        ]
         ps = self._create_db_panes()
         if ps:
             panes.extend(ps)
@@ -89,16 +98,17 @@ class RecallTask(AnalysisEditTask):
         ans = self.manager.make_analyses(records)
 
         def func(rec):
-#             rec.load_isotopes()
+        #             rec.load_isotopes()
             rec.calculate_age()
             reditor = RecallEditor(model=rec)
             self.editor_area.add_editor(reditor)
-#             self.add_iso_evo(reditor.name, rec)
+
+        #             self.add_iso_evo(reditor.name, rec)
 
         if ans:
             for ri in ans:
                 func(ri)
-#             self.manager._load_analyses(ans, func=func)
+                #             self.manager._load_analyses(ans, func=func)
 
             ed = self.editor_area.editors[-1]
             self.editor_area.activate_editor(ed)
@@ -113,10 +123,11 @@ class RecallTask(AnalysisEditTask):
             return
 
         from src.processing.tasks.isotope_evolution.isotope_evolution_editor import IsotopeEvolutionEditor
+
         ieditor = IsotopeEvolutionEditor(
-                                        name='IsoEvo {}'.format(name),
-                                        processor=self.manager,
-                                        )
+            name='IsoEvo {}'.format(name),
+            processor=self.manager,
+        )
 
         ieditor.unknowns = [rec]
         self.editor_area.add_editor(ieditor)

@@ -329,35 +329,6 @@ class BaseBrowserTask(BaseEditorTask):
             self.active_editor.unknowns = ans
             self.unknowns_pane.items = self.active_editor.unknowns
 
-
-class BrowserTask(BaseBrowserTask):
-    name = 'Analysis Browser'
-
-
-    def activated(self):
-        editor = RecallEditor()
-        self._open_editor(editor)
-        self.load_projects()
-
-    def new_editor(self):
-        editor = RecallEditor()
-        self._open_editor(editor)
-
-    def _default_layout_default(self):
-        return TaskLayout(left=PaneItem('pychron.browser'))
-
-    def _set_selected_analysis(self, an):
-        if an and isinstance(self.active_editor, RecallEditor):
-        #             l, a, s = strip_runid(s)
-        #             an = self.manager.db.get_unique_analysis(l, a, s)
-            an = self.manager.make_analyses([an], calculate_age=True)[0]
-            #             an.load_isotopes(refit=False)
-            #self.active_editor.analysis_summary = an.analysis_summary
-            self.active_editor.analysis_view = an.analysis_view
-
-    def create_dock_panes(self):
-        return [self._create_browser_pane(multi_select=False)]
-
     def _analysis_table_default(self):
         at = AnalysisTable(db=self.manager.db)
         return at
@@ -366,8 +337,44 @@ class BrowserTask(BaseBrowserTask):
         at = AnalysisTable(db=self.manager.db)
         return at
 
-    def _dclicked_sample_changed(self):
-        pass
+#class BrowserTask(BaseBrowserTask):
+#    name = 'Analysis Browser'
+#
+#
+#    def activated(self):
+#        editor = RecallEditor()
+#        self._open_editor(editor)
+#        self.load_projects()
+#
+#    def new_editor(self):
+#        editor = RecallEditor()
+#        self._open_editor(editor)
+#
+#    def _default_layout_default(self):
+#        return TaskLayout(left=PaneItem('pychron.browser'))
+#
+#    def _set_selected_analysis(self, an):
+#        if an and isinstance(self.active_editor, RecallEditor):
+#        #             l, a, s = strip_runid(s)
+#        #             an = self.manager.db.get_unique_analysis(l, a, s)
+#            an = self.manager.make_analyses([an], calculate_age=True)[0]
+#            #             an.load_isotopes(refit=False)
+#            #self.active_editor.analysis_summary = an.analysis_summary
+#            self.active_editor.analysis_view = an.analysis_view
+#
+#    def create_dock_panes(self):
+#        return [self._create_browser_pane(multi_select=False)]
+#
+#    def _analysis_table_default(self):
+#        at = AnalysisTable(db=self.manager.db)
+#        return at
+#
+#    def _danalysis_table_default(self):
+#        at = AnalysisTable(db=self.manager.db)
+#        return at
+#
+#    def _dclicked_sample_changed(self):
+#        pass
 
 #===============================================================================
 # handlers

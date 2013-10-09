@@ -76,7 +76,7 @@ class InterpolationTask(AnalysisEditTask):
         if not hasattr(analyses, '__iter__'):
             analyses = (analyses, )
 
-        ds = [ai.timestamp for ai in analyses]
+        ds = [ai.rundate for ai in analyses]
         dt = timedelta(days=self.days_pad, hours=self.hours_pad)
 
         sd = min(ds) - dt

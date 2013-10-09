@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+import time
 from traits.api import HasTraits
 
 #============= standard library imports ========================
@@ -31,8 +32,8 @@ class IsotopeRecordView(HasTraits):
     analysis_type = ''
     uuid = ''
     sample = ''
-    sample=''
-    
+    sample = ''
+
     iso_fit_status = False
     blank_fit_status = False
     ic_fit_status = False
@@ -53,15 +54,17 @@ class IsotopeRecordView(HasTraits):
             self.step = dbrecord.step
             self.uuid = dbrecord.uuid
             self.tag = dbrecord.tag or ''
-            self.timestamp = dbrecord.analysis_timestamp
+            self.rundate = dbrecord.analysis_timestamp
+            self.timestamp = time.mktime(self.rundate.timetuple())
+
             self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
-#            print self.record_id, self.uuid 
+            #            print self.record_id, self.uuid
 
             if ln.sample:
                 self.sample = ln.sample.name
             if dbrecord.labnumber.sample:
-                self.sample=dbrecord.labnumber.sample.name
-            
+                self.sample = dbrecord.labnumber.sample.name
+
             irp = ln.irradiation_position
             if irp is not None:
                 irl = irp.level

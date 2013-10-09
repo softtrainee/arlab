@@ -1049,7 +1049,10 @@ class IsotopeAdapter(DatabaseAdapter):
         '''
         q = self.sess.query(meas_AnalysisTable)
         for k, v in kw.iteritems():
-            q = q.filter(getattr(meas_AnalysisTable, k) == v)
+            if hasattr(v, '__call__'):
+                q = q.filter(v(meas_AnalysisTable))
+            else:
+                q = q.filter(getattr(meas_AnalysisTable, k) == v)
 
         q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
 

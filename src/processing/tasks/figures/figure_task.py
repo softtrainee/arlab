@@ -340,8 +340,9 @@ class FigureTask(AnalysisEditTask):
         """
 
         if isinstance(self.active_editor, klass):
-            if self.selected_analysis:
-                ts = self.manager.make_analyses(self.selected_analysis)
+            sa = self.analysis_table.selected_analysis
+            if sa:
+                ts = self.manager.make_analyses(sa)
             else:
                 ts = [ai for si in self.selected_sample
                       for ai in self._get_sample_analyses(si)]
@@ -364,9 +365,8 @@ class FigureTask(AnalysisEditTask):
             self.active_editor.rebuild(compress_groups=False)
 
     def _new_figure(self, ans, name, klass, tklass=None,
-                    add_iso=True,
-                    set_ans=True
-    ):
+                    add_iso=False,
+                    set_ans=True):
         # new figure editor
         editor = klass(
             name=name,
@@ -445,11 +445,8 @@ class FigureTask(AnalysisEditTask):
                 idxs = [items.index(ai) for ai in analyses]
                 self.active_editor.set_group(idxs, i, refresh=False)
 
-            #             self.unknowns_pane.update_needed = True
             self.unknowns_pane.refresh_needed = True
-            #             print 'asdfsdfsadfsd'
             self.active_editor.rebuild(refresh_data=False)
-
 
             #===============================================================================
             # handlers

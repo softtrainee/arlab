@@ -206,21 +206,22 @@ class PlotEditor(HasTraits):
                 Item('ymin'),
                 Item('ymax'),
             ),
-            Group(
-                Item('padding_left', label='Left'),
-                Item('padding_right', label='Right'),
-                Item('padding_top', label='Top'),
-                Item('padding_bottom', label='Bottom'),
-                label='Padding'
-            ),
             y_grp,
             grids_grp,
             label='General'
         )
+        layout_grp = Group(
+            Item('padding_left', label='Left'),
+                Item('padding_right', label='Right'),
+                Item('padding_top', label='Top'),
+                Item('padding_bottom', label='Bottom'),
+                label='Padding'
+        )
 
         v = View(
             renderers_grp,
-            general_grp
+            general_grp,
+            layout_grp,
         )
         return v
 

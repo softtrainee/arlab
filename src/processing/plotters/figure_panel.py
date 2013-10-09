@@ -18,6 +18,7 @@
 from traits.api import HasTraits, Any, on_trait_change, List
 #============= standard library imports ========================
 from itertools import groupby
+from src.codetools.simple_timeit import timethis
 from src.graph.stacked_graph import StackedGraph
 from src.processing.plotters.ideogram.ideogram import Ideogram
 from numpy.core.numeric import Inf
@@ -74,10 +75,10 @@ class FigurePanel(HasTraits):
 
             if i == 0:
                 fig.build(plots)
-
-            fig.plot(plots)
-
-        #meta=self.meta
+                #print fig
+            #fig.plot(plots)
+            timethis(fig.plot, args=(plots,), msg='fit.plot {} {}'.format(i, fig))
+            #meta=self.meta
         #print 'meta',meta
         #if meta:
         #    g.load_metadata(meta)
@@ -86,4 +87,4 @@ class FigurePanel(HasTraits):
         #print self.graph
         return g.plotcontainer
 
-    #============= EOF =============================================
+        #============= EOF =============================================

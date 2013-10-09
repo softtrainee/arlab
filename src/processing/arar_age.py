@@ -180,8 +180,11 @@ class ArArAge(Loggable):
         self.age = ufloat(0, 0)
 
     def get_ic_factor(self, det):
-        ic = next((ic.value for ic in self.arar_constants.ic_factors
-                   if ic.detector.lower() == det.lower()), 1.0)
+        factors = self.arar_constants.ic_factors
+        r = 1
+        if factors:
+            ic = next((ic.value for ic in factors
+                       if ic.detector.lower() == det.lower()), 1.0)
         r = ufloat(ic, 0)
         return r
 
@@ -340,8 +343,9 @@ class ArArAge(Loggable):
     def _make_ic_factors_dict(self):
         ic_factors = dict()
         for ki in ARGON_KEYS:
-            iso = self.isotopes[ki]
-            ic_factors[ki] = self.get_ic_factor(iso.detector)
+            if ki in self.isotopes:
+                iso = self.isotopes[ki]
+                ic_factors[ki] = self.get_ic_factor(iso.detector)
 
         return ic_factors
 

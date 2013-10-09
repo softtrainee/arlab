@@ -63,19 +63,17 @@ class Ideogram(BaseArArFigure):
 
         self._analysis_number_cnt = 0
 
-        self.xs, self.xes = array([[ai.nominal_value, ai.std_dev]
+        self.xs, self.xes = array([(ai.nominal_value, ai.std_dev)
                                    for ai in self._get_xs(key=self.index_key)]).T
 
         self._plot_relative_probability(graph.plots[0], 0)
 
-        omit = [i for i, ai in enumerate(self.sorted_analyses)
-                if ai.temp_status]
+        omit = [i for i, ai in enumerate(self.sorted_analyses) if ai.temp_status]
 
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
-            scatter = getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1,
-            )
-            if omit:
-                scatter.index.metadata['selections'] = omit
+            scatter = getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1)
+            #if omit:
+            #    scatter.index.metadata['selections'] = omit
 
         graph.set_x_limits(min_=self.xmi, max_=self.xma,
                            pad='0.1')
@@ -148,9 +146,12 @@ class Ideogram(BaseArArFigure):
         graph = self.graph
         bins, probs = self._calculate_probability_curve(self.xs, self.xes)
 
-        gid = self.group_id + 1
+        ogid = self.group_id
+        gid = ogid + 1
+        sgid = ogid * 3
+
         scatter, _p = graph.new_series(x=bins, y=probs, plotid=pid)
-        graph.set_series_label('Current-{}'.format(gid), series=0, plotid=pid)
+        graph.set_series_label('Current-{}'.format(gid), series=sgid, plotid=pid)
 
         # add the dashed original line
         graph.new_series(x=bins, y=probs,
@@ -159,7 +160,7 @@ class Ideogram(BaseArArFigure):
                          color=scatter.color,
                          line_style='dash',
         )
-        graph.set_series_label('Original-{}'.format(gid), series=1, plotid=pid)
+        graph.set_series_label('Original-{}'.format(gid), series=sgid + 1, plotid=pid)
 
         self._add_info(graph, plot)
         self._add_mean_indicator(graph, scatter, bins, probs, pid)
@@ -175,12 +176,13 @@ class Ideogram(BaseArArFigure):
     def _add_info(self, g, plot):
         m = self.options.mean_calculation_kind
         e = self.options.error_calc_method
-        pl = PlotLabel(text='Mean: {}\nError: {}'.format(m, e),
-                       overlay_position='inside top',
-                       hjustify='left',
-                       component=plot,
-        )
-        plot.overlays.append(pl)
+        s = self.options.nsigma
+        if self.options.show_info:
+            pl = PlotLabel(text=u'Mean: {}\nError Mag.: {}s\nError Type: {}'.format(m, s, e),
+                           overlay_position='inside top',
+                           hjustify='left',
+                           component=plot)
+            plot.overlays.append(pl)
 
     def _add_mean_indicator(self, g, scatter, bins, probs, pid):
         offset = 0
@@ -202,8 +204,10 @@ class Ideogram(BaseArArFigure):
                             color=scatter.color,
                             plotid=0
         )
-        gid = self.group_id + 1
-        g.set_series_label('Mean-{}'.format(gid), series=2, plotid=pid)
+        ogid = self.group_id
+        gid = ogid + 1
+        sgid = ogid * 3
+        g.set_series_label('Mean-{}'.format(gid), series=sgid + 2, plotid=pid)
 
         self._add_error_bars(s, [we], 'x', self.options.nsigma)
         #         display_mean_indicator = self._get_plot_option(self.options, 'display_mean_indicator', default=True)
@@ -330,7 +334,9 @@ class Ideogram(BaseArArFigure):
             marker='circle',
             marker_size=3,
             selection_marker_size=3,
+            bind_id=self.group_id,
             plotid=pid, **kw)
+
         graph.set_series_label('{}-{}'.format(title, self.group_id + 1),
                                plotid=pid)
         return s

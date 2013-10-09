@@ -637,9 +637,9 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
         return plot, scatter, line
 
-    def _bind_index(self, scatter, **kw):
-        index = scatter.index
-        index.on_trait_change(self.update_metadata, 'metadata_changed')
+    #def _bind_index(self, scatter, **kw):
+    #    index = scatter.index
+    #    index.on_trait_change(self.update_metadata, 'metadata_changed')
 
     #         self.indices.append(index)
 
@@ -725,10 +725,10 @@ class RegressionTimeSeriesGraph(RegressionGraph, TimeSeriesGraph):
 class StackedRegressionGraph(RegressionGraph, StackedGraph):
     pass
 
-    def _bind_index(self, scatter, bind_selection=True, **kw):
-        super(StackedRegressionGraph, self)._bind_index(scatter)
+    #def _bind_index(self, scatter, bind_selection=True, **kw):
+    #    super(StackedRegressionGraph, self)._bind_index(scatter)
 
-        #        if bind_selection:
+    #        if bind_selection:
 
 #            scatter.index.on_trait_change(self._update_metadata, 'metadata_changed')
 #

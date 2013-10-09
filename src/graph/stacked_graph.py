@@ -175,13 +175,18 @@ class StackedGraph(Graph):
     def new_series(self, *args, **kw):
         if not 'plotid' in kw:
             kw['plotid'] = 0
+        if not 'bind_id' in kw:
+            kw['bind_id'] = 0
 
         plotid = kw['plotid']
+        bind_id = kw['bind_id']
         s, _p = super(StackedGraph, self).new_series(*args, **kw)
 
         series_id = self.series[plotid][-1]
-        #        print series_id
-        self._bind_index(s, series_id)
+        s.bind_id = bind_id
+        #print series_id
+
+        self._bind_index(s, series_id, bind_id)
         return s, _p
 
     def _bounds_changed(self, bounds):
@@ -210,28 +215,22 @@ class StackedGraph(Graph):
             except IndexError:
                 pass
 
-    def _update_metadata(self, scatter, series_id, obj, name, old, new):
+    def _update_metadata(self, bind_id, obj, name, old, new):
         for plot in self.plots:
             for k, ps in plot.plots.iteritems():
                 si = ps[0]
 
-                #print si
                 if not si.index is obj:
-                    si.index.metadata = obj.metadata
-                    #sii = int(series_id[0][-1])
-                    #try:
-                    #    pi = int(k[-1])
-                    #    #                    if isinstance(si, ScatterPlot):
-                    #    if not si.index is obj and pi == sii:
-                    #        si.index.trait_set(metadata=obj.metadata)
-                    #except ValueError:
-                    #    pass
+                    if hasattr(si, 'bind_id'):
+                        if si.bind_id == bind_id:
+                            si.index.metadata = obj.metadata
 
-    def _bind_index(self, scatter, series_id, bind_selection=True, **kw):
+
+    def _bind_index(self, scatter, bind_id=0, bind_selection=True, **kw):
         if bind_selection:
-            u = lambda obj, name, old, new: self._update_metadata(scatter, series_id, obj, name, old, new)
+            u = lambda obj, name, old, new: self._update_metadata(bind_id,
+                                                                  obj, name, old, new)
             scatter.index.on_trait_change(u, 'metadata_changed')
 
 
-#        pass
 #============= EOF ====================================

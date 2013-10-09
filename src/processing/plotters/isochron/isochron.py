@@ -85,6 +85,7 @@ class InverseIsochron(Isochron):
         xx = a39 / a40
         yy = a36 / a40
 
+        return
         xs, xerrs = zip(*[(xi.nominal_value, xi.std_dev) for xi in xx])
         ys, yerrs = zip(*[(yi.nominal_value, yi.std_dev) for yi in yy])
 

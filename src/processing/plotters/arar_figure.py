@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from chaco.array_data_source import ArrayDataSource
 from traits.api import HasTraits, Any, Int, Str, Tuple, Property, \
-    Event, Bool
+    Event, Bool, cached_property
 from traitsui.api import View, Item
 from chaco.tools.data_label_tool import DataLabelTool
 #============= standard library imports ========================
@@ -240,8 +240,9 @@ class BaseArArFigure(HasTraits):
     #===============================================================================
     # property get/set
     #===============================================================================
+    @cached_property
     def _get_sorted_analyses(self):
-        return sorted([a for a in self.analyses],
+        return sorted(self.analyses,
                       key=self._cmp_analyses,
                       reverse=self._reverse_sorted_analyses
         )

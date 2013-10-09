@@ -45,8 +45,6 @@ from src.processing.argon_calculations import find_plateaus, age_equation
 N = 500
 
 
-
-
 class Spectrum(BaseArArFigure):
 #     xmi = Float
 #     xma = Float
@@ -54,8 +52,8 @@ class Spectrum(BaseArArFigure):
     xs = Array
 
 
-#     index_key = 'age'
-#     ytitle = 'Relative Probability'
+    #     index_key = 'age'
+    #     ytitle = 'Relative Probability'
 
     def plot(self, plots):
         '''
@@ -75,17 +73,17 @@ class Spectrum(BaseArArFigure):
     def min_x(self, attr):
         return min([ai.nominal_value for ai in self._unpack_attr(attr)])
 
-#===============================================================================
-# plotters
-#===============================================================================
+    #===============================================================================
+    # plotters
+    #===============================================================================
     def _plot_aux(self, title, vk, ys, po, plot, pid, es=None):
         scatter = self._add_aux_plot(ys, title, vk, pid)
 
-#         self._add_error_bars(scatter, self.xes, 'x', 1,
-#                              visible=po.x_error)
-#         if es:
-#             self._add_error_bars(scatter, es, 'y', 1,
-#                              visible=po.y_error)
+    #         self._add_error_bars(scatter, self.xes, 'x', 1,
+    #                              visible=po.x_error)
+    #         if es:
+    #             self._add_error_bars(scatter, es, 'y', 1,
+    #                              visible=po.y_error)
 
     def _plot_age_spectrum(self, plot, pid):
         graph = self.graph
@@ -125,25 +123,25 @@ class Spectrum(BaseArArFigure):
                                   font='modern 10',
                                   label_position='bottom right',
                                   append=False
-                                  )
+        )
 
         self._set_y_limits(miages, maages, pad='0.1')
 
-#         d = lambda a, b, c, d: self.update_index_mapper(a, b, c, d)
-#         plot.index_mapper.on_trait_change(d, 'updated')
+    #         d = lambda a, b, c, d: self.update_index_mapper(a, b, c, d)
+    #         plot.index_mapper.on_trait_change(d, 'updated')
 
     def _add_plot(self, xs, ys, es, plotid, value_scale='linear'):
         graph = self.graph
 
         ds, p = graph.new_series(xs, ys, plotid=plotid)
 
-#         u = lambda a, b, c, d: self.update_graph_metadata(ds, group_id, a, b, c, d)
-#         ds.index.on_trait_change(u, 'metadata_changed')
+        #         u = lambda a, b, c, d: self.update_graph_metadata(ds, group_id, a, b, c, d)
+        #         ds.index.on_trait_change(u, 'metadata_changed')
 
         ds.index.sort_order = 'ascending'
-#         ds.index.on_trait_change(self._update_graph, 'metadata_changed')
+        #         ds.index.on_trait_change(self._update_graph, 'metadata_changed')
 
-#        sp = SpectrumTool(ds, spectrum=self, group_id=group_id)
+        #        sp = SpectrumTool(ds, spectrum=self, group_id=group_id)
         sp = SpectrumTool(ds, cumulative39s=self.xs)
         ds.tools.append(sp)
 
@@ -161,67 +159,68 @@ class Spectrum(BaseArArFigure):
             p.value_axis.tick_generator = SparseTicks()
         return ds
 
-#===============================================================================
-# overlays
-#===============================================================================
+    #===============================================================================
+    # overlays
+    #===============================================================================
     def _add_plateau_overlay(self, lp, bounds, age):
         ov = PlateauOverlay(component=lp, plateau_bounds=bounds,
                             cumulative39s=hstack(([0], self.xs)),
                             y=age
-                            )
+        )
         lp.overlays.append(ov)
 
         tool = PlateauTool(component=ov)
         lp.tools.insert(0, tool)
 
-    def update_index_mapper(self, obj, name, old, new):
+    def update_index_mapper(self, gid, obj, name, old, new):
         if new is True:
-            self.update_graph_metadata(None, name, old, new)
+            self.update_graph_metadata(gid, None, name, old, new)
 
-    def update_graph_metadata(self, obj, name, old, new):
+    def update_graph_metadata(self, group_id, obj, name, old, new):
         pass
-#         sorted_ans = self.sorted_analyses
-#         if obj:
-#             hover = obj.metadata.get('hover')
-#             if hover:
-#                 hoverid = hover[0]
-#                 try:
-#                     self.selected_analysis = sorted_ans[hoverid]
-#                 except IndexError, e:
-#                     print 'asaaaaa', e
-#                     return
-#             else:
-#                 self.selected_analysis = None
-#
-#             sel = obj.metadata.get('selections', [])
-#
-#             if sel:
-#                 obj.was_selected = True
-#                 self._rebuild_fig(sel)
-#             elif hasattr(obj, 'was_selected'):
-#                 if obj.was_selected:
-#                     self._rebuild_spec(sel)
-#
-#                 obj.was_selected = False
-#
-#             # set the temp_status for all the analyses
-#             for i, a in enumerate(sorted_ans):
-#                 a.temp_status = 1 if i in sel else 0
-#         else:
-#             sel = [i for i, a in enumerate(sorted_ans)
-#                     if a.temp_status or a.status]
-#
-#             self._rebuild_spec(sel)
-#     def _rebuild_spec(self, sel):
-#         pass
 
-#===============================================================================
-# utils
-#===============================================================================
+    #         sorted_ans = self.sorted_analyses
+    #         if obj:
+    #             hover = obj.metadata.get('hover')
+    #             if hover:
+    #                 hoverid = hover[0]
+    #                 try:
+    #                     self.selected_analysis = sorted_ans[hoverid]
+    #                 except IndexError, e:
+    #                     print 'asaaaaa', e
+    #                     return
+    #             else:
+    #                 self.selected_analysis = None
+    #
+    #             sel = obj.metadata.get('selections', [])
+    #
+    #             if sel:
+    #                 obj.was_selected = True
+    #                 self._rebuild_fig(sel)
+    #             elif hasattr(obj, 'was_selected'):
+    #                 if obj.was_selected:
+    #                     self._rebuild_spec(sel)
+    #
+    #                 obj.was_selected = False
+    #
+    #             # set the temp_status for all the analyses
+    #             for i, a in enumerate(sorted_ans):
+    #                 a.temp_status = 1 if i in sel else 0
+    #         else:
+    #             sel = [i for i, a in enumerate(sorted_ans)
+    #                     if a.temp_status or a.status]
+    #
+    #             self._rebuild_spec(sel)
+    #     def _rebuild_spec(self, sel):
+    #         pass
+
+    #===============================================================================
+    # utils
+    #===============================================================================
     def _get_age_errors(self, ans):
         ages, errors = zip(*[(ai.age.nominal_value,
-                                ai.age.std_dev)
-                                for ai in self.sorted_analyses])
+                              ai.age.std_dev)
+                             for ai in self.sorted_analyses])
         return array(ages), array(errors)
 
     def _get_plateau(self, analyses, exclude=None):
@@ -240,8 +239,8 @@ class Spectrum(BaseArArFigure):
             for j, ai in enumerate(analyses):
                 if j not in exclude and platbounds[0] <= j <= platbounds[1]:
                     ans.append(ai)
-#            ans=[ai for (j,ai) in analyses if]
-#            ans = analyses[platbounds[0]:platbounds[1]]
+                #            ans=[ai for (j,ai) in analyses if]
+                #            ans = analyses[platbounds[0]:platbounds[1]]
 
             ages, errors = self._get_ages_errors(ans)
             mswd, valid, n = self._get_mswd(ages, errors)
@@ -271,7 +270,7 @@ class Spectrum(BaseArArFigure):
                             group_id=0,
                             index_key='k39',
                             value_key='age'
-                            ):
+    ):
 
         if excludes is None:
             excludes = []
@@ -286,7 +285,7 @@ class Spectrum(BaseArArFigure):
         sar = sum(ar39s)
         prev = 0
         c39s = []
-#        steps = []
+        #        steps = []
         for i, (aa, ar) in enumerate(zip(values, ar39s)):
             if isinstance(aa, tuple):
                 ai, ei = aa
@@ -323,10 +322,10 @@ class Spectrum(BaseArArFigure):
 
     def _calculate_stats(self, ages, errors, xs, ys):
         mswd, valid_mswd, n = self._get_mswd(ages, errors)
-#         mswd = calculate_mswd(ages, errors)
-#         valid_mswd = validate_mswd(mswd, len(ages))
+        #         mswd = calculate_mswd(ages, errors)
+        #         valid_mswd = validate_mswd(mswd, len(ages))
         if self.options.mean_calculation_kind == 'kernel':
-            wm , we = 0, 0
+            wm, we = 0, 0
             delta = 1
             maxs, _mins = find_peaks(ys, delta, xs)
             wm = max(maxs, axis=1)[0]
@@ -347,9 +346,9 @@ class Spectrum(BaseArArFigure):
                 a = mswd ** 0.5
         return we * a * n
 
-#===============================================================================
-# labels
-#===============================================================================
+    #===============================================================================
+    # labels
+    #===============================================================================
     def _build_integrated_age_label(self, tga, *args):
         age, error = tga.nominal_value, tga.std_dev
         error *= self.options.nsigma

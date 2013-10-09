@@ -116,7 +116,7 @@ class IsotopeTabularAdapter(BaseTabularAdapter):
         return calc_percent_error(cv.nominal_value, cv.std_dev)
 
     def _get_age_error_component_text(self):
-        return floatfmt(self.item.age_error_component)
+        return floatfmt(self.item.age_error_component, n=1)
 
 
 class CompuatedValueTabularAdapter(BaseTabularAdapter):
@@ -328,7 +328,7 @@ class AnalysisView(HasTraits):
             cv.insert(1, ComputedValue(name='w/o J',
                                        tag='wo_j',
                                        value='',
-                                       error=an.age_error_wo_j))
+                                       error=floatfmt(an.age_error_wo_j)))
             self.computed_values = cv
         else:
             for ci in self.computed_values:

@@ -107,7 +107,7 @@ class IntercalibrationFactorEditor(InterpolationEditor):
         nys = array([ri.get_isotope(detector=n).uvalue for ri in self.references])
         dys = array([ri.get_isotope(detector=d).uvalue for ri in self.references])
         try:
-            rys = (nys / dys) / self.standard_ratio
+            rys = (nys / dys) / self.tool.standard_ratio
             return zip(*[(ri.nominal_value, ri.std_dev) for ri in rys])
         except ZeroDivisionError:
             return None, None
@@ -121,7 +121,7 @@ class IntercalibrationFactorEditor(InterpolationEditor):
         nys = array([ri.get_ic_factor(n) for ri in self.unknowns])
         dys = array([ri.get_ic_factor(d) for ri in self.unknowns])
         try:
-            rys = nys / dys
+            rys = dys / nys
             return zip(*[(ri.nominal_value, ri.std_dev) for ri in rys])
         except ZeroDivisionError:
             return None, None

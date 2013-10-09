@@ -267,17 +267,19 @@ class PlotterOptions(BasePlotterOptions):
             label='X')
         return v
 
-    def traits_view(self):
-        axis_grp = VGroup(
-            self._get_x_axis_group(),
+    def _get_main_group(self):
+        main_grp = Group(
             VGroup(
-                self._create_axis_group('y', 'title'),
-                self._create_axis_group('y', 'tick'),
-                #                                           show_border=True,
-                label='Y'),
-            label='Axes'
-        )
+                HGroup(Item('auto_generate_title', tooltip='Auto generate a title based on the analysis list'),
+                       Item('title', springy=True, enabled_when='not auto_generate_title',
+                            tooltip='User specified plot title')),
+            ),
+            self._get_aux_plots_group(),
+            label='Plot')
 
+        return main_grp
+
+    def _get_aux_plots_group(self):
         cols = [
             CheckboxColumn(name='use'),
             ObjectColumn(name='name',
@@ -297,33 +299,26 @@ class PlotterOptions(BasePlotterOptions):
                                                 deletable=False,
                                                 reorderable=False
                              ))
-        default_grp = Group(
-            VGroup(
-                HGroup(Item('auto_generate_title', tooltip='Auto generate a title based on the analysis list'),
-                       Item('title', springy=True, enabled_when='not auto_generate_title',
-                            tooltip='User specified plot title')),
-                #                              Item('data_type',
-                #                                   editor=EnumEditor(values={'database':'0:Database',
-                #                                                             'data_file':'1:Data File',
-                #                                                             'manual_entry':'2:Manual Entry'}),
-                #                                   defined_when='data_type_editable'),
-            ),
-            aux_plots_grp,
-            label='Plot'
-        )
+        return aux_plots_grp
 
-        g = Group(default_grp, axis_grp, layout='tabbed')
+    def traits_view(self):
+        axis_grp = VGroup(
+            self._get_x_axis_group(),
+            VGroup(
+                self._create_axis_group('y', 'title'),
+                self._create_axis_group('y', 'tick'),
+                #                                           show_border=True,
+                label='Y'),
+            label='Axes'
+        )
+        main_grp = self._get_main_group()
+
+        g = Group(main_grp, axis_grp, layout='tabbed')
         grps = self._get_groups()
         if grps:
             g.content.extend(grps)
 
-        v = View(
-            g,
-            #                  resizable=True,
-            #                 title='Plotter Options',
-            #                  buttons=['OK', 'Cancel'],
-            #                  handler=self.handler_klass
-        )
+        v = View(g)
         return v
 
 
@@ -332,13 +327,15 @@ class AgeOptions(PlotterOptions):
     include_irradiation_error = Bool(True)
     include_decay_error = Bool(False)
     nsigma = Enum(1, 2, 3)
+    show_info = Bool(True)
 
     def _get_dump_attrs(self):
         attrs = super(AgeOptions, self)._get_dump_attrs()
         attrs += ['include_j_error',
                   'include_irradiation_error',
                   'include_decay_error',
-                  'nsigma'
+                  'nsigma',
+                  'show_info'
         ]
         return attrs
 
@@ -370,6 +367,8 @@ class IdeogramOptions(AgeOptions):
 
     def _get_groups(self):
         g = Group(
+            Item('show_info', label='Display Info.'),
+            Item('_'),
             Item('probability_curve_kind',
                  width=-150,
                  label='Probability Curve Method'),
@@ -383,6 +382,7 @@ class IdeogramOptions(AgeOptions):
             Item('include_j_error'),
             Item('include_irradiation_error'),
             Item('include_decay_error'),
+
             label='Calculations'
         )
         return (g,)

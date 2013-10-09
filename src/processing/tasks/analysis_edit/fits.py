@@ -89,16 +89,15 @@ class FitSelector(HasTraits):
         ))
         return v
 
-    @on_trait_change('fits:[show, fit]')
+    @on_trait_change('fits:[show, fit, use]')
     def _fit_changed(self, obj, name, old, new):
     #         self.suppress_refresh_unknowns = True
         if self.command_key:
             for fi in self.fits:
                 fi.trait_set(trait_change_notify=False,
-                             **{name: new}
-                )
-
-        self.update_needed = True
+                             **{name: new})
+        if name in ('show', 'fit'):
+            self.update_needed = True
 
     #         self.suppress_refresh_unknowns = False
 
@@ -157,7 +156,6 @@ class FitSelector(HasTraits):
         self.fits = fits
 
     def _update_command_key(self, new):
-        print 'set comm', new
         self.command_key = new
 
 

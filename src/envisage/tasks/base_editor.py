@@ -25,14 +25,21 @@ from pyface.tasks.traits_editor import TraitsEditor
 
 class BaseTraitsEditor(TraitsEditor, Loggable):
     dirty = Bool(False)
-#    ui = Instance(UI)
-#
-#    def create(self, parent):
-#        self.control = self._create_control(parent)
-#
-#    def destroy(self):
-#        self.ui.dispose()
-#        self.control = self.ui = None
+    #    ui = Instance(UI)
+    #
+    #    def create(self, parent):
+    #        self.control = self._create_control(parent)
+
+    def prepare_destroy(self):
+        pass
+
+    def destroy(self):
+        self.prepare_destroy()
+        super(BaseTraitsEditor, self).destroy()
+
+        #self.ui.dispose()
+        #self.control = self.ui = None
+
 #
 #    def _create_control(self, parent):
 #        self.ui = self.edit_traits(kind='subpanel', parent=parent)
