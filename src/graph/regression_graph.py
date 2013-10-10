@@ -553,7 +553,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         return exc_xs
 
     def _new_scatter(self, kw, marker, marker_size, plotid,
-                     x, y, fit, filter_outliers_dict, si):
+                     x, y, fit, filter_outliers_dict):
         kw['type'] = 'scatter'
         plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
 
@@ -561,7 +561,9 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         rd['selection_outline_color'] = rd['color']
         rd['selection_marker'] = marker
         rd['selection_marker_size'] = marker_size + 1
-        scatter = plot.plot(names, **rd)[0]
+        scatter = plot.plot(names, add=False, **rd)[0]
+        si = len([p for p in plot.plots.keys() if p.startswith('data')])
+
         self.set_series_label('data{}'.format(si), plotid=plotid)
         if filter_outliers_dict is None:
             filter_outliers_dict = dict(filter_outliers=False)
@@ -569,9 +571,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter.fit = fit
         scatter.filter = None
         scatter.filter_outliers_dict = filter_outliers_dict
-
-        return scatter
-
+        return scatter, si
+    
     def new_series(self, x=None, y=None,
                    ux=None, uy=None, lx=None, ly=None,
                    fx=None, fy=None,
@@ -599,25 +600,24 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 self.add_tools(p, s, None, convert_index, add_inspector)
             return s, p
 
+        scatter,si = self._new_scatter(kw, marker, marker_size,
+                                    plotid, x, y, fit,
+                                    filter_outliers_dict)
         lkw = kw.copy()
         lkw['color'] = 'black'
         lkw['type'] = 'line'
         lkw['render_style'] = 'connectedpoints'
         plot, names, rd = self._series_factory(fx, fy, plotid=plotid,
                                                **lkw)
-        line = plot.plot(names, **rd)[0]
+        line = plot.plot(names, add=False, **rd)[0]
         line.index.sort_order = 'ascending'
-
-        si = len([p for p in plot.plots.keys() if p.startswith('data')])
-
         self.set_series_label('fit{}'.format(si), plotid=plotid)
-
+        
+        plot.add(line)
+        plot.add(scatter)
+        
         if use_error_envelope:
             self._add_error_envelope_overlay(line)
-
-        scatter = self._new_scatter(kw, marker, marker_size,
-                                    plotid, x, y, fit,
-                                    filter_outliers_dict, si)
 
         r = None
         if x is not None and y is not None:

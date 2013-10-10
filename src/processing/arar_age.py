@@ -181,7 +181,7 @@ class ArArAge(Loggable):
 
     def get_ic_factor(self, det):
         factors = self.arar_constants.ic_factors
-        r = 1
+        ic = 1
         if factors:
             ic = next((ic.value for ic in factors
                        if ic.detector.lower() == det.lower()), 1.0)

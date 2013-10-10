@@ -964,12 +964,7 @@ class Graph(Viewable, ContextMenuMixin):
                   ymin_anchor=None,
                   #                    do_after=None,
                   **kw):
-        '''
-        '''
-
-
-
-
+        
         #         def add(datum):
         #         print plotid, series, self.series
         names = self.series[plotid][series]

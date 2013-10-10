@@ -789,6 +789,7 @@ class AutomatedRun(Loggable):
             return
         if not self.measurement_script:
             return
+        return True
 
     def do_measurement(self):
         if not self._alive:
