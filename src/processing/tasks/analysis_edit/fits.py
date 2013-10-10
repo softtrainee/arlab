@@ -16,14 +16,14 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Bool, Property, on_trait_change, \
-    List, Event, Enum
-from traitsui.api import View, Item, HGroup, VGroup, Spring, spring, \
-    UItem, EnumEditor, ListEditor, InstanceEditor, Label, TableEditor
-from src.constants import FIT_TYPES, FIT_TYPES_INTERPOLATE
+    List, Event, Button
+from traitsui.api import View, HGroup, UItem, EnumEditor, spring, Item
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
-from src.ui.qt.table_editor import myTableView
+
+from src.constants import FIT_TYPES, FIT_TYPES_INTERPOLATE
 from src.ui.table_editor import myTableEditor
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class Fit(HasTraits):
@@ -69,9 +69,13 @@ class FitSelector(HasTraits):
 
     fit_klass = Fit
     command_key = Bool
+    auto_update = Bool(True)
 
     def traits_view(self):
+        v = View(self._get_fit_group())
+        return v
 
+    def _get_fit_group(self):
         cols = [ObjectColumn(name='name', editable=False),
                 CheckboxColumn(name='show'),
                 ObjectColumn(name='fit',
@@ -82,24 +86,21 @@ class FitSelector(HasTraits):
         editor = myTableEditor(columns=cols,
                                sortable=False,
                                on_command_key=self._update_command_key)
-
-        v = View(UItem('fits',
-                       style='custom',
-                       editor=editor
-        ))
-        return v
+        grp = UItem('fits',
+                    style='custom',
+                    editor=editor)
+        return grp
 
     @on_trait_change('fits:[show, fit, use]')
     def _fit_changed(self, obj, name, old, new):
-    #         self.suppress_refresh_unknowns = True
         if self.command_key:
             for fi in self.fits:
                 fi.trait_set(trait_change_notify=False,
                              **{name: new})
-        if name in ('show', 'fit'):
-            self.update_needed = True
 
-    #         self.suppress_refresh_unknowns = False
+        if self.auto_update:
+            if name in ('show', 'fit'):
+                self.update_needed = True
 
     def load_fits(self, keys, fits):
 
@@ -169,6 +170,8 @@ class InterpolationFitSelector(FitSelector):
 
 
 class IsoEvoFitSelector(FitSelector):
+    plot_button = Button('Plot')
+
     def load_fits(self, keys, fits):
         bs = [
             '{}bs'.format(ki) for ki in keys
@@ -176,5 +179,24 @@ class IsoEvoFitSelector(FitSelector):
         bfs = ['average_SEM' for fi in fits]
         #         for ki in keys:
         super(IsoEvoFitSelector, self).load_fits(keys + bs, fits + bfs)
+
+    def _plot_button_fired(self):
+        self.update_needed = True
+
+    def _auto_update_changed(self):
+        self.update_needed = True
+
+    def traits_view(self):
+        v = View(
+            HGroup(UItem('plot_button',
+                         tooltip='Replot the isotope evolutions. \
+This may take awhile if many analyses are selected'),
+                   spring,
+                   Item('auto_update',
+                        label='Auto Plot',
+                        tooltip='Should the plot refresh after each change ie. "fit" or "show". \
+It is not advisable to use this option with many analyses')),
+            self._get_fit_group())
+        return v
 
 #============= EOF =============================================

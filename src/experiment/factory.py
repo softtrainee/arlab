@@ -29,6 +29,7 @@ from src.loggable import Loggable
 import time
 from src.consumer_mixin import ConsumerMixin
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
+from src.ui.gui import invoke_in_main_thread
 
 
 class ExperimentFactory(Loggable, ConsumerMixin):
@@ -78,40 +79,44 @@ class ExperimentFactory(Loggable, ConsumerMixin):
     def set_selected_runs(self, runs):
         self.run_factory.set_selected_runs(runs)
 
-
     #     _prev_add_time = None
     def _add_run(self, *args, **kw):
-
-    #         if self._prev_add_time:
+        def add():
+        #         if self._prev_add_time:
     #             if abs(time.time() - self._prev_add_time) < 0.5:
     #                 self.debug('skipping')
     #                 return
     #
     #         self._prev_add_time = time.time()
 
-        egs = list(set([ai.extract_group for ai in self.queue.automated_runs]))
-        eg = max(egs) if egs else 0
+            egs = list(set([ai.extract_group for ai in self.queue.automated_runs]))
+            eg = max(egs) if egs else 0
 
-        positions = [str(pi.positions[0]) for pi in self.selected_positions]
+            positions = [str(pi.positions[0]) for pi in self.selected_positions]
 
-        load_name = self.queue_factory.load_name
-        new_runs, freq = self.run_factory.new_runs(positions=positions,
-                                                   auto_increment_position=self.auto_increment_position,
-                                                   auto_increment_id=self.auto_increment_id,
-                                                   extract_group_cnt=eg
-        )
-        #         if self.run_factory.check_run_addition(new_runs, load_name):
+            load_name = self.queue_factory.load_name
+            new_runs, freq = self.run_factory.new_runs(positions=positions,
+                                                       auto_increment_position=self.auto_increment_position,
+                                                       auto_increment_id=self.auto_increment_id,
+                                                       extract_group_cnt=eg
+            )
+            #         if self.run_factory.check_run_addition(new_runs, load_name):
 
-        q = self.queue
-        if q.selected:
-            idx = q.automated_runs.index(q.selected[-1])
-        else:
-            idx = len(q.automated_runs) - 1
+            q = self.queue
+            if q.selected:
+                idx = q.automated_runs.index(q.selected[-1])
+            else:
+                idx = len(q.automated_runs) - 1
 
-        self.queue.add_runs(new_runs, freq)
+            self.queue.add_runs(new_runs, freq)
 
-        idx += len(new_runs)
-        self.queue.select_run_idx(idx)
+            idx += len(new_runs)
+            self.run_factory.set_labnumber = False
+            self.queue.select_run_idx(idx)
+            self.run_factory.set_labnumber = True
+
+        #add()
+        invoke_in_main_thread(add)
 
     #===============================================================================
     # handlers
@@ -120,11 +125,11 @@ class ExperimentFactory(Loggable, ConsumerMixin):
         self.queue.clear_frequency_runs()
 
     def _add_button_fired(self):
-        '''
+        """
             only allow add button to be fired every 0.5s
 
             use consumermixin.add_consumable instead of frequency limiting
-        '''
+        """
         self.add_consumable(1)
 
     def _edit_mode_button_fired(self):

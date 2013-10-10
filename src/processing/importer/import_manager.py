@@ -101,8 +101,8 @@ class ImportManager(IsotopeDatabaseManager):
                                            'Import {} {} failed'.format(si, inc))
 
         self.info('====== Import Finished elapsed_time= {}s======'.format(int(time.time() - st)))
-        if self.imported_names:
-            self.update_irradiations_needed = True
+        #if self.imported_names:
+        #    self.update_irradiations_needed = True
 
     @cached_property
     def _get_readable_names(self):

@@ -31,7 +31,8 @@ class LabnumberEntryTask(BaseManagerTask):
     importer = Instance(ImportManager)
 
     def _manager_default(self):
-        return LabnumberEntry()
+        print self.application
+        return LabnumberEntry(application=self.application)
 
     def _importer_default(self):
         return ImportManager(db=self.manager.db,

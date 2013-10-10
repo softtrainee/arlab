@@ -19,6 +19,7 @@ import os
 from src.paths import paths
 from pyface.message_dialog import warning
 
+
 def iterdir(d):
     for t in os.listdir(d):
         if t.startswith('.'):
@@ -28,6 +29,7 @@ def iterdir(d):
             continue
 
         yield p, t
+
 #
 
 def load_isotopedb_defaults(db):
@@ -39,7 +41,7 @@ def load_isotopedb_defaults(db):
                    'blank_cocktail',
                    'blank_unknown',
                    'background', 'air', 'cocktail', 'unknown']:
-    #                           blank', 'air', 'cocktail', 'background', 'unknown']:
+        #                           blank', 'air', 'cocktail', 'background', 'unknown']:
             db.add_analysis_type(at)
 
         for mi in ['obama', 'jan', 'nmgrl map']:
@@ -48,25 +50,25 @@ def load_isotopedb_defaults(db):
         project = db.add_project('references')
         #print project
         for i, di in enumerate(['blank_air',
-                   'blank_cocktail',
-                   'blank_unknown',
-                   'background', 'air', 'cocktail']):
+                                'blank_cocktail',
+                                'blank_unknown',
+                                'background', 'air', 'cocktail']):
             samp = db.add_sample(di, project=project)
             #print samp.id, samp, project.id
-#            samp.project = project
+            #            samp.project = project
             #samp.project_id=project.id
             #print samp.project_id
             db.add_labnumber(i + 1, sample=samp)
         sess.commit()
 
         for hi, kind, make in [('Fusions CO2', '10.6um co2', 'photon machines'),
-                              ('Fusions Diode', '810nm diode', 'photon machines'),
-                              ('Fusions UV', '193nm eximer', 'photon machines')
-                              ]:
+                               ('Fusions Diode', '810nm diode', 'photon machines'),
+                               ('Fusions UV', '193nm eximer', 'photon machines')
+        ]:
             db.add_extraction_device(name=hi,
                                      kind=kind,
                                      make=make,
-                                     )
+            )
 
         mdir = os.path.join(paths.setup_dir, 'irradiation_tray_maps')
         if not os.path.isdir(mdir):
@@ -87,8 +89,10 @@ def load_isotopedb_defaults(db):
         for t in ('', 'invalid'):
             db.add_tag(t, user='default')
 
+
 def _load_tray_map(db, p, name):
     from src.lasers.stage_managers.stage_map import StageMap
+
     sm = StageMap(file_path=p)
 
     r = sm.g_dimension
@@ -96,9 +100,10 @@ def _load_tray_map(db, p, name):
                     for si in sm.sample_holes])
     db.add_load_holder(name, geometry=blob)
 
+
 def _load_irradiation_map(db, p, name):
-    if p.endswith('.txt'):
-        with open(p, 'r') as f:
+    with open(p, 'r') as f:
+        try:
             h = f.readline()
             nholes, _diam = h.split(',')
             nholes = int(nholes)
@@ -111,4 +116,7 @@ def _load_irradiation_map(db, p, name):
                     break
 
             blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
+            name, _ = os.path.splitext(name)
             db.add_irradiation_holder(name, geometry=blob)
+        except Exception:
+            pass

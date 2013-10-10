@@ -211,8 +211,7 @@ class Experimentor(IsotopeDatabaseManager):
                     if not en in ecache:
                         ecache[en] = dict(egrp=-1,
                                           step=-1,
-                                          aliquot=last['aliquot']
-                        )
+                                          aliquot=last['aliquot'])
 
                     s = -1
                     if not ai.assigned_aliquot:
@@ -257,8 +256,7 @@ class Experimentor(IsotopeDatabaseManager):
                              sample=last['sample'] or '',
                              irradiation=last['irradiation'] or '',
                              material=last['material'] or '',
-                             step=st
-                )
+                             step=st)
                 #                 last.update(aliquot=aq, step=st,
                 #                             egrp=egrp
                 #                             )
@@ -518,11 +516,13 @@ class Experimentor(IsotopeDatabaseManager):
         ef = self.experiment_factory
         rf = ef.run_factory
         rf.special_labnumber = 'Special Labnumber'
-        rf._labnumber = NULL_STR
-        rf.labnumber = ''
+
+        #rf._labnumber = NULL_STR
+        #rf.labnumber = ''
         #         rf.edit_mode = True
 
         rf.suppress_update = True
+        #print 'mmmm'
         rf.set_selected_runs(new)
 
     #        rf.suppress_update = True

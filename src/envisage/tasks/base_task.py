@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, on_trait_change, Event, List, Unicode
+from traits.api import Any, on_trait_change, Event, List, Unicode, DelegatesTo
 # from traitsui.api import View, Item
 from pyface.tasks.task import Task
 from pyface.tasks.action.schema import SMenu, SMenuBar, SGroup
@@ -209,6 +209,8 @@ class TaskGroup(Group):
 
 
 class BaseTask(Task, Loggable):
+    application = DelegatesTo('window')
+
     def _show_pane(self, p):
         ctrl = p.control
         if not p.visible:
@@ -401,10 +403,10 @@ class BaseExtractionLineTask(BaseManagerTask):
         if man:
             man.deactivate()
 
-        #     def activated(self):
-        #         man = self._get_el_manager()
-        #         if man:
-        #             man.activate()
+            #     def activated(self):
+            #         man = self._get_el_manager()
+            #         if man:
+            #             man.activate()
 
     def _add_canvas_pane(self, panes):
         app = self.window.application

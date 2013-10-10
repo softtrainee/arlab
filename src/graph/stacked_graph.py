@@ -183,10 +183,11 @@ class StackedGraph(Graph):
         s, _p = super(StackedGraph, self).new_series(*args, **kw)
 
         series_id = self.series[plotid][-1]
-        s.bind_id = bind_id
-        #print series_id
+        if self.bind_index:
+            s.bind_id = bind_id
+            #print series_id
 
-        self._bind_index(s, series_id, bind_id)
+            self._bind_index(s, series_id, bind_id)
         return s, _p
 
     def _bounds_changed(self, bounds):

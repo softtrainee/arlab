@@ -1050,15 +1050,19 @@ class IsotopeAdapter(DatabaseAdapter):
         """
         with self.session_ctx() as sess:
             q = sess.query(meas_AnalysisTable)
+            q = q.join(gen_LabTable)
             for k, v in kw.iteritems():
                 if hasattr(v, '__call__'):
-                    q = q.filter(v(meas_AnalysisTable))
+                    ff = v(meas_AnalysisTable, gen_LabTable)
+                    q = q.filter(and_(*ff))
+
                 else:
                     q = q.filter(getattr(meas_AnalysisTable, k) == v)
 
-            q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+            q = q.order_by(gen_LabTable.identifier.asc())
             q = q.order_by(meas_AnalysisTable.aliquot.asc())
             q = q.order_by(meas_AnalysisTable.step.asc())
+            q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
 
             return q.all()
 

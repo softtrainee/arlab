@@ -52,6 +52,7 @@ def EKlass(klass):
 
 class AutomatedRunFactory(Loggable):
     db = Any
+    set_labnumber = True
 
     labnumber = String(enter_set=True, auto_set=False)
     update_labnumber = Event
@@ -62,7 +63,7 @@ class AutomatedRunFactory(Loggable):
     user_defined_aliquot = False
     special_labnumber = Str('Special Labnumber')
 
-    _labnumber = Str
+    _labnumber = String
     labnumbers = Property(depends_on='project, selected_level')
 
     project = Any
@@ -233,15 +234,15 @@ class AutomatedRunFactory(Loggable):
     #                ri.user_defined_aliquot = False
 
     def set_selected_runs(self, runs):
-        run = None
+        self.debug('len selected runs {}'.format(len(runs)))
+        print 'adsfsaf', self.set_labnumber, self.labnumber
         if runs:
             run = runs[0]
-            self._clone_run(run)
+            self._clone_run(run, set_labnumber=self.set_labnumber)
 
         self._selected_runs = runs
-        self.suppress_update = False
+        #self.suppress_update = False
 
-        self.debug('len selected runs {}'.format(len(runs)))
         if not runs:
             self.edit_mode = False
             self.edit_enabled = False
@@ -278,7 +279,8 @@ class AutomatedRunFactory(Loggable):
         )
 
         if auto_increment_id:
-            self.labnumber = self._increment(self.labnumber)
+            self._labnumber = self._increment(self.labnumber)
+            #print self.labnumber
 
         if auto_increment_position:
             pos = self.position
@@ -564,9 +566,15 @@ class AutomatedRunFactory(Loggable):
             s = getattr(self, name)
             setattr(arv, name, s.name)
 
-    def _clone_run(self, run, excludes=None):
+    def _clone_run(self, run, excludes=None, set_labnumber=True):
+        print 'a', self.labnumber
+
         if excludes is None:
             excludes = []
+
+        if not set_labnumber:
+            excludes.append('labnumber')
+
         for attr in ('labnumber',
                      'extract_value', 'extract_units', 'cleanup', 'duration',
                      'extract_group',
@@ -576,6 +584,7 @@ class AutomatedRunFactory(Loggable):
         ):
             if attr in excludes:
                 continue
+
             setattr(self, attr, getattr(run, attr))
 
         if run.user_defined_aliquot:
@@ -591,6 +600,7 @@ class AutomatedRunFactory(Loggable):
                                        label=si,
                                        application=self.application,
                                        mass_spectrometer=self.mass_spectrometer))
+        print 'b', self.labnumber
 
     def _load_extraction_info(self, script=None):
         if script is None:
@@ -1050,7 +1060,6 @@ post_equilibration_script:name
     def _selected_level_changed(self):
         self._clear_labnumber()
 
-
     def _special_labnumber_changed(self):
         if not self.special_labnumber in ('Special Labnumber', LINE_STR):
             ln = convert_special_name(self.special_labnumber)
@@ -1083,8 +1092,7 @@ post_equilibration_script:name
             self._frequency_enabled = False
 
     def _labnumber_changed(self, old, labnumber):
-    #         print old, new, id(self)
-    #         labnumber = self.labnumber
+
         if not labnumber or labnumber == NULL_STR:
             return
 

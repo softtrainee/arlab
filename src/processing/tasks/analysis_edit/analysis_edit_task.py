@@ -208,18 +208,12 @@ class AnalysisEditTask(BaseBrowserTask):
             print new.name
             db = self.manager.db
             with db.session_ctx():
-                #def func(rec, **kw):
-                #    dbr=db.get_analysis(rec.uuid, key='uuid')
-                #    return self._record_view_factory(dbr, **kw)
-
-                #print new.analysis_ids
-                #func = self._record_view_factory
-                #ps = [func(si, graph_id=si.graph_id,
-                #               group_id=si.group_id) for si in new.analysis_ids]
-                #ps = [pi for pi in ps if pi]
+                lns = set([si.labnumber for si in new.analysis_ids])
                 ids = [si.uuid for si in new.analysis_ids]
 
-                f = lambda t: t.uuid.in_(ids)
+                def f(t, t2):
+                    return t2.identifier.in_(lns), t.uuid.in_(ids)
+
                 ans = db.get_analyses(uuid=f)
                 func = self._record_view_factory
                 ans = [func(si) for si in ans]

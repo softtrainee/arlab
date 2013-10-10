@@ -557,6 +557,16 @@ class SummaryPane(TraitsDockPane):
         return v
 
 
+class AnalysisHealthPane(TraitsDockPane):
+    id = 'pychron.experiment.analysis_health'
+    name = 'Health'
+
+    def traits_view(self):
+        v = View(UItem('analysis_type'),
+
+        )
+        return v
+
 # from pyface.tasks.enaml_dock_pane import EnamlDockPane
 # class TestEnamlPane(EnamlDockPane):
 #    def create_component(self):

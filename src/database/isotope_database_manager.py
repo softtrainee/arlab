@@ -123,7 +123,6 @@ class IsotopeDatabaseManager(Loggable):
         return filter(lambda x: not x.tag in exclude, ans)
 
     def make_analyses(self, ans, calculate_age=False, exclude=None, **kw):
-
         if exclude:
             ans = self.filter_analysis_tag(ans, exclude)
 
@@ -141,8 +140,8 @@ class IsotopeDatabaseManager(Loggable):
                     if n > 1:
                         progress = self._open_progress(n)
 
-                    if progress:
-                        progress.on_trait_change(self._progress_closed, 'closed')
+                    #if progress:
+                    #    progress.on_trait_change(self._progress_closed, 'closed')
 
                     rs = []
                     for ai in ans:
@@ -207,11 +206,13 @@ class IsotopeDatabaseManager(Loggable):
         pd = myProgressDialog(max=n - 1,
                               size=(550, 15))
         pd.open()
+        pd.on_trait_change(self._progress_closed, 'closed')
         return pd
 
     def _progress_closed(self):
-        win = self.application.windows[-1]
-        win.activate()
+        if self.application:
+            win = self.application.windows[-1]
+            win.activate()
 
     def _add_arar(self, meas_analysis, analysis):
 

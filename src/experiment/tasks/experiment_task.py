@@ -26,6 +26,7 @@ import weakref
 import os
 #============= local library imports  ==========================
 # from src.envisage.tasks.base_task import BaseManagerTask
+from src.experiment.health.analysis_health import AnalysisHealth
 from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPane, \
     ControlsPane, ConsolePane, ExplanationPane, WaitPane, IsotopeEvolutionPane, \
     SummaryPane
@@ -53,6 +54,11 @@ class ExperimentEditorTask(EditorTask):
 
     loading_manager = Instance('src.loading.loading_manager.LoadingManager')
     notifier = Instance(Notifier)
+    analysis_health = Instance(AnalysisHealth)
+
+    def _analysis_health_default(self):
+        ah = AnalysisHealth(db=self.manager.db)
+        return ah
 
     def _loading_manager_default(self):
         lm = self.window.application.get_service('src.loading.loading_manager.LoadingManager')

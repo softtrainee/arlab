@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,36 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Str, Int, Long, Any
+from traits.api import HasTraits, Str
+from traitsui.api import View, Item
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
-
-class TempAnalysis(HasTraits):
-    uuid = Any
-    group_id = Int
-    graph_id = Int
+from src.loggable import Loggable
 
 
-class PreviousSelection(HasTraits):
-    analysis_ids = List(TempAnalysis)
-    name = Str
-    hash_str = Str
-
-    def __init__(self, records, **kw):
-        super(PreviousSelection, self).__init__(**kw)
-
-        ps = []
-        for ai in records:
-            ps.append(TempAnalysis(uuid=ai.uuid,
-                                   group_id=ai.group_id,
-                                   graph_id=ai.graph_id,
-                                   labnumber=ai.labnumber
-            ))
-
-        self.analysis_ids = ps
-
-    def __repr__(self):
-        return self.name
-
+class AnalysisHealth(Loggable):
+    analysis_type = Str
 
 #============= EOF =============================================
