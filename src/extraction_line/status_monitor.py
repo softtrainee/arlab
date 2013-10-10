@@ -9,7 +9,7 @@ class StatusMonitor(Loggable):
     state_freq = 3
     lock_freq = 5
     owner_freq = 5
-    period = 1
+    period = 2
     def start(self):
         if not self._clients:
             if self._stop_evt:
