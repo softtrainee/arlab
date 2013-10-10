@@ -42,6 +42,7 @@ import yaml
 from src.experiment.utilities.human_error_checker import HumanErrorChecker
 from src.helpers.filetools import list_directory, add_extension
 from src.lasers.pattern.pattern_maker_view import PatternMakerView
+from src.ui.gui import invoke_in_main_thread
 
 
 def EKlass(klass):
@@ -235,7 +236,6 @@ class AutomatedRunFactory(Loggable):
 
     def set_selected_runs(self, runs):
         self.debug('len selected runs {}'.format(len(runs)))
-        print 'adsfsaf', self.set_labnumber, self.labnumber
         if runs:
             run = runs[0]
             self._clone_run(run, set_labnumber=self.set_labnumber)
@@ -387,6 +387,7 @@ class AutomatedRunFactory(Loggable):
 
         arvs = []
         s = None
+        e= None
         inc = 1
         if SLICE_REGEX.match(pos):
             s, e = map(int, pos.split('-'))
@@ -394,30 +395,46 @@ class AutomatedRunFactory(Loggable):
             s, e, inc = map(int, pos.split(':'))
         elif PSLICE_REGEX.match(pos):
             s, e = map(int, pos.split(':'))[:2]
-
-        if s is not None:
-            if e < s:
-                self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
-                return
-
-            #             print e - s + 1, inc, template
-            for i in range(0, e - s + 1, inc):
-                p = str(s + i)
-                if template:
-                    arvs.extend(self._render_template(extract_group_cnt,
-                                                      position=p
-                    ))
-                    extract_group_cnt += 1
-                else:
-                    arvs.append(self._new_run(position=str(p),
-                                              excludes=['position']))
-                '''
-                    clear user_defined_aliquot flag
-                    if adding multiple runs this allows
-                    the subsequent runs to have there aliquots defined by db
-                '''
-                self.user_defined_aliquot = False
-
+        else:
+            try:
+                s=int(self.position)
+                e=s
+            except ValueError:
+                pass
+        
+#         if s is not None:
+        if e < s:
+            self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
+            return
+        
+        set_pos=True
+        if s is not None and e is not None:
+            positions=range(s, e+1, inc)
+        else:
+            set_pos=False
+            positions=[0]
+            
+#             print e - s + 1, inc, template
+        p=''
+        for i in positions:
+            if set_pos:
+                p = str(i)
+#             print 'poss',p
+            if template:
+                arvs.extend(self._render_template(extract_group_cnt,
+                                                  position=p
+                ))
+                extract_group_cnt += 1
+            else:
+                arvs.append(self._new_run(position=str(p),
+                                          excludes=['position']))
+            '''
+                clear user_defined_aliquot flag
+                if adding multiple runs this allows
+                the subsequent runs to have there aliquots defined by db
+            '''
+            self.user_defined_aliquot = False
+#         print arvs
         return arvs
 
     def _new_runs(self, positions, special=False,
@@ -430,13 +447,16 @@ class AutomatedRunFactory(Loggable):
             if positions:
                 arvs = [self._new_run(position=pi, excludes=['position'])
                         for pi in positions]
-            elif self.position:
+            else:
+#             elif self.position:
                 template = self._use_template() and not freq and not special
+
                 arvs = self._new_runs_by_position(template, extract_group_cnt)
 
+#         print arvs
         if not arvs:
             arvs = [self._new_run()]
-
+        
         return arvs
 
 
@@ -567,7 +587,6 @@ class AutomatedRunFactory(Loggable):
             setattr(arv, name, s.name)
 
     def _clone_run(self, run, excludes=None, set_labnumber=True):
-        print 'a', self.labnumber
 
         if excludes is None:
             excludes = []
@@ -600,7 +619,6 @@ class AutomatedRunFactory(Loggable):
                                        label=si,
                                        application=self.application,
                                        mass_spectrometer=self.mass_spectrometer))
-        print 'b', self.labnumber
 
     def _load_extraction_info(self, script=None):
         if script is None:
@@ -619,7 +637,8 @@ class AutomatedRunFactory(Loggable):
         self._labnumber = NULL_STR
 
     def _template_closed(self):
-        self.load_templates()
+        invoke_in_main_thread(self.load_templates)
+#         self.load_templates()
 
     #         self.template = self._template.name
     #         self.template = os.path.splitext(self._template.name)[0]
@@ -1009,7 +1028,7 @@ pattern,
 position,
 weight, comment, skip, extract_group''')
     def _edit_handler(self, name, new):
-        print name, new
+#         print name, new
         self._update_run_values(name, new)
 
     def _end_after_changed(self, new):
@@ -1162,14 +1181,15 @@ post_equilibration_script:name
     def _edit_template_fired(self):
         temp = self._new_template()
         temp.on_trait_change(self._template_closed, 'close_event')
+        
         self.open_view(temp)
-        self._template = temp
+#         self._template = temp
 
     def _edit_pattern_fired(self):
         pat = self._new_pattern()
         pat.on_trait_change(self._pattern_closed, 'close_event')
         self.open_view(pat)
-        self._pattern = pat
+#         self._pattern = pat
 
     def _edit_mode_button_fired(self):
         self.edit_mode = not self.edit_mode
