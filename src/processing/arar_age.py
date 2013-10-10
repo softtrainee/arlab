@@ -527,42 +527,43 @@ class ArArAge(Loggable):
             return ufloat(0, 1e-20)
 
     def _get_Ar40(self):
-        return self._get_arar_result_attr('40')
+
+        return self._get_arar_result_attr('Ar40')
 
     def _get_Ar39(self):
-        return self._get_arar_result_attr('39')
+        return self._get_arar_result_attr('Ar39')
 
     def _get_Ar38(self):
-        return self._get_arar_result_attr('38')
+        return self._get_arar_result_attr('Ar38')
 
     def _get_Ar37(self):
-        return self._get_arar_result_attr('37')
+        return self._get_arar_result_attr('Ar37')
 
     def _get_Ar36(self):
-        return self._get_arar_result_attr('36')
+        return self._get_arar_result_attr('Ar36')
 
     def _get_Ar40_error(self):
-        r = self._get_arar_result_attr('40')
+        r = self._get_arar_result_attr('Ar40')
         if r:
             return r.std_dev
 
     def _get_Ar39_error(self):
-        r = self._get_arar_result_attr('39')
+        r = self._get_arar_result_attr('Ar39')
         if r:
             return r.std_dev
 
     def _get_Ar38_error(self):
-        r = self._get_arar_result_attr('38')
+        r = self._get_arar_result_attr('Ar38')
         if r:
             return r.std_dev
 
     def _get_Ar37_error(self):
-        r = self._get_arar_result_attr('37')
+        r = self._get_arar_result_attr('Ar37')
         if r:
             return r.std_dev
 
     def _get_Ar36_error(self):
-        r = self._get_arar_result_attr('36')
+        r = self._get_arar_result_attr('Ar36')
         if r:
             return r.std_dev
 
@@ -609,21 +610,22 @@ class ArArAge(Loggable):
         return self._sensitivity_multiplier
 
     def _get_arar_result_attr(self, key):
-        if key.startswith('s'):
-            key = key[1:]
-        elif key.startswith('Ar'):
-            key = key[2:]
-
-        arar_attr = 's{}'.format(key)
-
+        #if key.startswith('s'):
+        #    key = key[1:]
+        #elif key.startswith('Ar'):
+        #    key = key[2:]
+        #
+        #arar_attr = 's{}'.format(key)
+        #
+        #print self.arar_result.keys()
         if self.arar_result.has_key(key):
             return self.arar_result[key]
-        elif self.arar_result.has_key(arar_attr):
-            return self.arar_result[arar_attr]
-        else:
-            iso_attr = 'Ar{}'.format(key)
-            if self.isotopes.has_key(iso_attr):
-                return self.isotopes[iso_attr].get_corrected_value()
+            #elif self.arar_result.has_key(arar_attr):
+        #    return self.arar_result[arar_attr]
+        #else:
+        #    iso_attr = 'Ar{}'.format(key)
+        #    if self.isotopes.has_key(iso_attr):
+        #        return self.isotopes[iso_attr].get_corrected_value()
 
         return ufloat(0, 1e-20)
 

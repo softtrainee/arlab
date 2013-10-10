@@ -65,7 +65,9 @@ class GraphEditor(BaseTraitsEditor):
                 for fi in fits:
                     ff = next((fo for fo in self.tool.fits if fo.name == fi.name), None)
                     if ff:
-                        ff.trait_set(fit=fi.fit, use=fi.use)
+                        ff.trait_set(fit=fi.fit,
+                                     use=fi.use,
+                                     show=fi.show)
 
     def normalize(self, xs, start=None):
         xs = asarray(xs)
@@ -142,8 +144,9 @@ class GraphEditor(BaseTraitsEditor):
     def _graph_default(self):
         return self._graph_factory()
 
-    def _graph_factory(self):
-        g = StackedRegressionGraph(container_dict=dict(stack_order='top_to_bottom'))
+    def _graph_factory(self, **kw):
+        g = StackedRegressionGraph(container_dict=dict(stack_order='top_to_bottom'),
+                                   **kw)
         return g
 
     def _graph_generator(self):

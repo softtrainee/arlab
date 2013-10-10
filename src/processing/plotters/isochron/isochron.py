@@ -21,6 +21,7 @@ from chaco.array_data_source import ArrayDataSource
 #============= standard library imports ========================
 from numpy import array, linspace
 #============= local library imports  ==========================
+from src.codetools.simple_timeit import timethis
 
 from src.helpers.formatting import calc_percent_error
 from src.processing.plotters.arar_figure import BaseArArFigure
@@ -75,17 +76,28 @@ class InverseIsochron(Isochron):
     def _add_plot(self, xs, ys, es, plotid, value_scale='linear'):
         pass
 
+    #def _get_analyses(self):
+    #    ans=self.analyses
+    #
+    #    for a in ans:
+    #        a.Ar40
+    #       #timethis(lambda :a.Ar40)
+    #
+    #    return ans
+
     def _plot_inverse_isochron(self, plot, pid):
         analyses = self.analyses
         plot.padding_left = 75
 
         ans = [(a.Ar39, a.Ar36, a.Ar40) for a in analyses]
+        #ans= timethis(self._get_analyses)
+        #return
+
         a39, a36, a40 = array(ans).T
 
         xx = a39 / a40
         yy = a36 / a40
 
-        return
         xs, xerrs = zip(*[(xi.nominal_value, xi.std_dev) for xi in xx])
         ys, yerrs = zip(*[(yi.nominal_value, yi.std_dev) for yi in yy])
 

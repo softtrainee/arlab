@@ -34,43 +34,22 @@ class IsotopeEvolutionEditor(GraphEditor):
     graphs = Dict
     _suppress_update = Bool
 
-    tool = Instance(IsoEvoFitSelector, ())
+    #tool = Instance(IsoEvoFitSelector, ())
+    tool = Instance(IsoEvoFitSelector)
     pickle_path = 'iso_fits'
 
-    def calculate_optimal_eqtime(self):
-        # get x,y data
-        self.info('========================================')
-        self.info('           Optimal Eq. Results')
-        self.info('========================================')
-
-        from src.processing.utils.equilibration_utils import calc_optimal_eqtime
-
-        for unk in self.unknowns:
-
-            for fit in self.tool.fits:
-                if fit.fit and fit.use:
-                    isok = fit.name
-                    iso = unk.isotopes[isok]
-                    sniff = iso.sniff
-                    if sniff:
-                        xs, ys = sniff.xs, sniff.ys
-                        _rise_rates, ti, _vi = calc_optimal_eqtime(xs, ys)
-
-                        xs, ys = iso.xs, iso.ys
-                        m, b = polyfit(xs[:50], ys[:50], 1)
-                        self.info(
-                            '{:<12s} {}  t={:0.1f}  initial static pump={:0.2e} (fA/s)'.format(unk.record_id, isok, ti,
-                                                                                               m))
-                        g = self.graphs[unk.record_id]
-                        if ti:
-                            for plot in g.plots:
-                                g.add_vertical_rule(ti, plot=plot)
-
-        self.info('========================================')
-        self.component.invalidate_and_redraw()
+    def _tool_default(self):
+        t = IsoEvoFitSelector(auto_update=False)
+        return t
 
     def save(self):
+        proc = self.processor
+        prog = proc.open_progress(n=len(self.unknowns))
+
         for unk in self.unknowns:
+            prog.change_message('Saving fits for {}'.format(unk.record_id))
+            prog.increment()
+
             self._save_fit(unk)
 
     def _save_fit(self, unk):
@@ -133,70 +112,91 @@ class IsotopeEvolutionEditor(GraphEditor):
 
         self.component = self._container_factory((r, c))
 
+
+
+
+        #fits=[fit for fit in self.tool.fits
+        #      if (fit.fit and fit.show)]
+        fits = list(self._graph_generator())
+
+        if not fits:
+            return
+
+        add_tools = bind_index = self.tool.auto_update
+        n = len(self.unknowns)
+        prog = self.processor.open_progress(n)
+
         for j, unk in enumerate(self.unknowns):
             set_ytitle = j % c == 0
             set_xtitle = j >= (n / r)
-            g = self._graph_factory()
+            g = self._graph_factory(bind_index=bind_index)
+            plot_kw = dict(padding=[50, 1, 1, 1],
+                           title=unk.record_id)
+
             with g.no_regression(refresh=False):
                 ma = -Inf
                 set_x_flag = False
                 i = 0
-                for fit in self.tool.fits:
-                    if fit.fit and fit.show:
-                        set_x_flag = True
-                        isok = fit.name
-                        kw = dict(padding=[50, 1, 1, 1],
-                                  title=unk.record_id
-                        )
-                        if set_ytitle:
-                        #                        kw = dict(padding=[50, 1, 1, 1])
-                            kw['ytitle'] = '{} (fA)'.format(isok)
+                for fit in fits:
+                    #if fit.fit and fit.show:
+                    set_x_flag = True
+                    isok = fit.name
+                    if set_ytitle:
+                        plot_kw['ytitle'] = '{} (fA)'.format(isok)
 
-                        if set_xtitle:
-                            kw['xtitle'] = 'Time (s)'
+                    if set_xtitle:
+                        plot_kw['xtitle'] = 'Time (s)'
 
-                        g.new_plot(**kw)
+                    g.new_plot(**plot_kw)
 
-                        if isok.endswith('bs'):
-                            isok = isok[:-2]
-                            iso = unk.isotopes[isok]
-                            iso.baseline.fit = fit.fit
-                            xs, ys = iso.baseline.xs, iso.baseline.ys
-                            g.new_series(xs, ys,
-                                         fit=fit.fit,
-                                         #                                      add_tools=False,
-                                         plotid=i)
-                        else:
-                        #                     if isok in unk.isotopes:
-                            iso = unk.isotopes[isok]
-                            if display_sniff:
-                                sniff = iso.sniff
-                                if sniff:
-                                    g.new_series(sniff.xs, sniff.ys,
-                                                 plotid=i,
-                                                 type='scatter',
-                                                 fit=False)
-                            iso.fit = fit.fit
-                            xs, ys = iso.xs, iso.ys
-                            g.new_series(xs, ys,
-                                         fit=fit.fit,
-                                         plotid=i)
+                    if isok.endswith('bs'):
+                        isok = isok[:-2]
+                        iso = unk.isotopes[isok]
+                        iso.baseline.fit = fit.fit
+                        xs, ys = iso.baseline.xs, iso.baseline.ys
+                        g.new_series(xs, ys,
+                                     fit=fit.fit,
+                                     add_tools=add_tools,
+                                     plotid=i)
+                    else:
+                    #                     if isok in unk.isotopes:
+                        iso = unk.isotopes[isok]
+                        if display_sniff:
+                            sniff = iso.sniff
+                            if sniff:
+                                g.new_series(sniff.xs, sniff.ys,
+                                             plotid=i,
+                                             type='scatter',
+                                             fit=False)
+                        iso.fit = fit.fit
+                        xs, ys = iso.xs, iso.ys
+                        g.new_series(xs, ys,
+                                     fit=fit.fit,
+                                     add_tools=add_tools,
+                                     plotid=i)
 
-                        ma = max(max(xs), ma)
-                        i += 1
+                    ma = max(max(xs), ma)
+                    i += 1
 
             if set_x_flag:
                 g.set_x_limits(0, ma * 1.1)
                 g.refresh()
 
-            self.graphs[unk.record_id] = g
-            self.component.add(g.plotcontainer)
+                #self.graphs[unk.record_id] = g
 
-    def refresh_unknowns(self):
-        if not self._suppress_update:
-            for ui in self.unknowns:
-            #                 ui.load_age()
-                ui.analysis_summary.update_needed = True
+            prog.change_message('Plotting {}'.format(unk.record_id))
+            prog.increment()
+
+            self.component.add(g.plotcontainer)
+            self.component.invalidate_draw()
+
+            #self.component.request_redraw()
+
+    #def refresh_unknowns(self):
+    #    if not self._suppress_update:
+    #        for ui in self.unknowns:
+    #        #                 ui.load_age()
+    #            ui.analysis_summary.update_needed = True
 
     def traits_view(self):
         v = View(UItem('component',
@@ -209,8 +209,41 @@ class IsotopeEvolutionEditor(GraphEditor):
 
     def _container_factory(self, shape):
         return GridPlotContainer(shape=shape,
-                                 spacing=(1, 1),
-                                 #                                 bgcolor='lightgray',
+                                 spacing=(1, 1,),
+                                 backbuffer=True
         )
 
-#============= EOF =============================================
+    #============= deprecated =============================================
+    def calculate_optimal_eqtime(self):
+        # get x,y data
+        self.info('========================================')
+        self.info('           Optimal Eq. Results')
+        self.info('========================================')
+
+        from src.processing.utils.equilibration_utils import calc_optimal_eqtime
+
+        for unk in self.unknowns:
+
+            for fit in self.tool.fits:
+                if fit.fit and fit.use:
+                    isok = fit.name
+                    iso = unk.isotopes[isok]
+                    sniff = iso.sniff
+                    if sniff:
+                        xs, ys = sniff.xs, sniff.ys
+                        _rise_rates, ti, _vi = calc_optimal_eqtime(xs, ys)
+
+                        xs, ys = iso.xs, iso.ys
+                        m, b = polyfit(xs[:50], ys[:50], 1)
+                        self.info(
+                            '{:<12s} {}  t={:0.1f}  initial static pump={:0.2e} (fA/s)'.format(unk.record_id, isok, ti,
+                                                                                               m))
+                        g = self.graphs[unk.record_id]
+                        if ti:
+                            for plot in g.plots:
+                                g.add_vertical_rule(ti, plot=plot)
+
+        self.info('========================================')
+        self.component.invalidate_and_redraw()
+
+    #============= EOF =============================================

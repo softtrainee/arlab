@@ -365,7 +365,7 @@ class FigureTask(AnalysisEditTask):
             self.active_editor.rebuild(compress_groups=False)
 
     def _new_figure(self, ans, name, klass, tklass=None,
-                    add_iso=False,
+                    add_iso=True,
                     set_ans=True):
         # new figure editor
         editor = klass(
