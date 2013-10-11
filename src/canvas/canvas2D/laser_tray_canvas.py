@@ -33,6 +33,7 @@ from src.canvas.canvas2D.scene.primitives.laser_primitives import Transect, \
 from src.regex import TRANSECT_REGEX, DRILL_REGEX
 from src.canvas.canvas2D.crosshairs_overlay import CrosshairsOverlay
 import os
+from chaco.data_view import DataView
 
 
 # class Point(HasTraits):
@@ -706,6 +707,16 @@ class LaserTrayCanvas(MapCanvas):
 #===============================================================================
 # draw
 #===============================================================================
+    def draw(self, gc, *args, **kw):
+        '''
+
+        '''
+        gc.clip_to_rect(self.outer_x, self.outer_y,
+                        self.outer_width, self.outer_height)
+        DataView.draw(self, gc, *args, **kw)
+        self._draw_hook(gc, *args, **kw)
+
+
 
 #    def _draw_hook(self, gc, *args, **kw):
 #        '''

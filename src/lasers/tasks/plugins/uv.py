@@ -21,6 +21,7 @@ from envisage.ui.tasks.task_extension import TaskExtension
 #============= local library imports  ==========================
 from src.lasers.tasks.plugins.laser_plugin import FusionsPlugin
 from src.lasers.tasks.laser_task import FusionsUVTask
+from src.lasers.tasks.laser_preferences import FusionsUVPreferencesPane
 
 
 class FusionsUVPlugin(FusionsPlugin):
@@ -75,9 +76,8 @@ class FusionsUVPlugin(FusionsPlugin):
 
         return exts + [ext1]
 
-#     def _preferences_panes_default(self):
-#         return [FusionsUVPreferencesPane]
-
+    def _preferences_panes_default(self):
+        return [FusionsUVPreferencesPane]
 
     def _task_factory(self):
 #        print self._get_manager()

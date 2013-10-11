@@ -70,7 +70,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
     _data_position = Float
 
     update_position = Float
-    nominal_position = Float(0)
+    nominal_position = Float
 
     progress = None
 
@@ -101,9 +101,9 @@ class KerrMotor(KerrDevice, ConsumerMixin):
         '''
             F6  B004 2003 F401 E803 FF 00 E803 01 01 01
             cmd p    d    i    il   ol cl el   sr db sm
-            
+
             B004 2003 F401 B004 FF 00 6400 010101
-            
+
             100 1000 0 0 255 0 4000 1 1 1
         '''
 #        p = (45060, 4)
@@ -252,7 +252,7 @@ class KerrMotor(KerrDevice, ConsumerMixin):
         self._initialize_(*args, **kw)
         self._finish_initialize()
 
-        if self.nominal_position:
+        if self.nominal_position is not None:
             move_to_nominal = True
             if not globalv.ignore_initialization_questions:
 
@@ -261,11 +261,14 @@ class KerrMotor(KerrDevice, ConsumerMixin):
             if move_to_nominal:
                 # move to the home position
                 np = self.nominal_position
-                self._set_motor(self.nominal_position)
+                self._set_motor(self.nominal_position, main=False)
 
-                timeout = 60
-                # timer stops when move has completed
-                timed_out = self.timer.wait_for_completion(timeout=timeout)
+                timed_out = False
+                if self.timer:
+                    timeout = 60
+                    # timer stops when move has completed
+                    timed_out = self.timer.wait_for_completion(timeout=timeout)
+
                 if timed_out:
                     msg = 'move to nominal position {} timed out after {}s'.format(np, timeout)
                     self.warning(msg)
@@ -612,8 +615,9 @@ class KerrMotor(KerrDevice, ConsumerMixin):
     def _set_data_position(self, pos):
         self.add_consumable((self._set_motor, pos))
 
-    def _set_motor(self, pos):
-        if self._data_position != pos:
+    def _set_motor(self, pos, main=True):
+#         print self._data_position, pos
+        if self._data_position != pos or not self._data_position:
             self.info('setting motor in data space {:0.3f}'.format(float(pos)))
 
             self._data_position = pos
@@ -635,19 +639,23 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                     hv = hysteresis
 
             self._set_motor_position_(steps, hv)
+
             def launch():
                 self.timer = self.timer_factory()
 
-            invoke_in_main_thread(launch)
+            if main:
+                invoke_in_main_thread(launch)
+            else:
+                launch()
 
 #            if self.parent.simulation:
 #                self.update_position = self._data_position
 
     def timer_factory(self):
         '''
-        
+
             reuse timer if possible
-            
+
         '''
         timer = self.timer
 

@@ -41,12 +41,12 @@ class SerialCommunicator(Communicator):
     '''
         Base Class for devices that communicate using a rs232 serial port.
         Using Keyspan serial converter is the best option for a Mac
-        class is built on top of pyserial. Pyserial is used to create a handle and 
+        class is built on top of pyserial. Pyserial is used to create a handle and
         this class uses the handle to read and write.
         handles are created when a serial device is opened
         setup args are loaded using load(). this method should be overwritten to
         load specific items.
-    
+
     '''
 
     # char_write = False
@@ -95,7 +95,7 @@ class SerialCommunicator(Communicator):
 
     def load(self, config, path):
         '''
-           
+
         '''
 
         self.config_path = path
@@ -133,7 +133,7 @@ class SerialCommunicator(Communicator):
 
     def tell(self, cmd, is_hex=False, info=None, verbose=True, **kw):
         '''
-           
+
         '''
         if self.handle is None:
             if verbose:
@@ -178,7 +178,7 @@ class SerialCommunicator(Communicator):
             nchars=None
             ):
         '''
-            
+
         '''
 
         if self.handle is None:
@@ -220,8 +220,8 @@ class SerialCommunicator(Communicator):
 
     def open(self, **kw):
         '''
-            Use pyserial to create a handle connected to port wth baudrate 
-            default handle parameters 
+            Use pyserial to create a handle connected to port wth baudrate
+            default handle parameters
             baudrate=9600
             bytesize=EIGHTBITS
             parity= PARITY_NONE
@@ -325,9 +325,9 @@ class SerialCommunicator(Communicator):
 
     def _validate_address(self, port):
         '''
-            use glob to check the avaibable serial ports 
+            use glob to check the avaibable serial ports
             valid ports start with /dev/tty.U or /dev/tty.usbmodem
-    
+
         '''
         valid = get_ports()
         if port in valid:
@@ -356,8 +356,8 @@ class SerialCommunicator(Communicator):
 
     def _write(self, cmd, is_hex=False):
         '''
-            use the serial handle to write the cmd to the serial buffer 
-            
+            use the serial handle to write the cmd to the serial buffer
+
         '''
         def write(cmd_str):
             try:
@@ -474,7 +474,7 @@ class SerialCommunicator(Communicator):
         inw = handle.inWaiting()
         c = min(inw, nchars - len(r))
         r += handle.read(c)
-        print 'get n', len(r), nchars, self._prep_str(r), len(r) == nchars
+        # print 'get n', len(r), nchars, self._prep_str(r), len(r) == nchars
         return r[:nchars], len(r) >= nchars
 
     def _check_handshake(self, handshake_chrs):
@@ -540,7 +540,8 @@ class SerialCommunicator(Communicator):
             ct = time.time()
 
         if ct - st > timeout:
-            self.info('timed out. {}s r={}, len={}'.format(timeout, r, len(r)))
+            l = len(r) if r else 0
+            self.info('timed out. {}s r={}, len={}'.format(timeout, r, l))
 
         return r
 #    def _read(self, is_hex=False, time_out=1, delay=None):

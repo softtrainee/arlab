@@ -247,7 +247,7 @@ class VideoStageManager(StageManager):
             path: abs path to use
             name: base name to use if auto saving in default dir
             auto: force auto save
-            
+
             returns:
                     path: local abs path
                     upath: remote abs path
@@ -589,10 +589,11 @@ class VideoStageManager(StageManager):
 #         self._update_xy_limits()
 
     def _get_camera_zoom_coefficients(self):
-        return self._camera_zoom_coefficients
+        return self.canvas.camera.zoom_coefficients
 
     def _set_camera_zoom_coefficients(self, v):
-        self.canvas.camera.zoom_coefficients = v
+        print v
+        self.canvas.camera.zoom_coefficients = ','.join(map(str, v))
         self._update_xy_limits()
 
     def _validate_camera_zoom_coefficients(self, v):

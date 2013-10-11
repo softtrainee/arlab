@@ -263,7 +263,7 @@ class BaseDataCanvas(DataView):
         for o in self.overlays:
             if o.visible:
                 o.overlay(None, gc, *args, **kw)
-                #super(BaseDataCanvas, self).draw(gc, *args, **kw)
+                # super(BaseDataCanvas, self).draw(gc, *args, **kw)
 
 
 #====================EOF==================

@@ -24,7 +24,7 @@
 '''
 
 from PySide import QtCore
-
+from PySide.QtGui import QColor
 
 class InvokeEvent(QtCore.QEvent):
     EVENT_TYPE = QtCore.QEvent.Type(QtCore.QEvent.registerEventType())
@@ -49,5 +49,16 @@ def invoke_in_main_thread(fn, *args, **kwargs):
                                       InvokeEvent(fn, *args, **kwargs))
 
     QtCore.QCoreApplication.processEvents()
+
+def convert_color(color, output='rgbF'):
+    if isinstance(color, QColor):
+        rgb = color.toTuple()
+
+    tofloat = lambda x: x / 255.
+    if output == 'rgbF':
+        return map(tofloat, rgb[:3])
+    elif output == 'rgbaF':
+        return map(tofloat, rgb)
+
 
 #============= EOF =============================================

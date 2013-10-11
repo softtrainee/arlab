@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Any, Dict, Bool, Str, Property, List, Int, \
-    Color, on_trait_change, String, cached_property, Either
+    Color, on_trait_change, String, cached_property, Either, RGBColor
 from traitsui.api import View, VGroup, HGroup, Item, Group
 from chaco.default_colormaps import color_map_name_dict
 from chaco.data_range_1d import DataRange1D
@@ -215,9 +215,9 @@ class Primitive(HasTraits):
 
     def request_redraw(self):
         if self.canvas:
-            #self.canvas._layout_needed = True
+            # self.canvas._layout_needed = True
             self.canvas.request_redraw()
-            #self.canvas._layout_needed = False
+            # self.canvas._layout_needed = False
 
     def _get_klass_name(self):
         return self.__class__.__name__.split('.')[-1]
@@ -277,7 +277,7 @@ class Point(QPrimitive):
     radius = Float(1)
 
     def _get_group(self):
-        g = VGroup('radius')
+        gs = VGroup('radius')
         return gs
 
     def _radius_changed(self):
@@ -753,8 +753,9 @@ class Indicator(QPrimitive):
             gc = args[0]
             with gc:
                 if self.spot_color:
-                    gc.set_fill_color(self.spot_color)
-                    gc.set_stroke_color(self.spot_color)
+                    sc = self._convert_color(self.spot_color)
+                    gc.set_fill_color(sc)
+                    gc.set_stroke_color(sc)
 
                 l = self.spot_size
                 x, y = self.get_xy()

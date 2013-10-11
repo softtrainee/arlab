@@ -15,10 +15,20 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from src.ui.factory import toolkit_factory
+# from traits.api import HasTraits
+# from traitsui.api import View, Item
+from src.applications.pychron_application import PychronApplication
+from pyface.tasks.task_window_layout import TaskWindowLayout
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-invoke_in_main_thread = toolkit_factory('gui', 'invoke_in_main_thread')
-convert_color = toolkit_factory('gui', 'convert_color')
+class PyUV(PychronApplication):
+    id = 'pychron.uv.application'
+    name = 'pyUV'
+    default_layout = [
+                      TaskWindowLayout(
+                                        'tasks.hardware'),
+                      TaskWindowLayout(
+                                      'pychron.fusions.uv'),
+                      ]
 #============= EOF =============================================
