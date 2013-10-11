@@ -144,7 +144,8 @@ class Camera(ConfigLoadable):
         self.info('saving px per mm calibration to {}'.format(self.config_path))
         config = self.get_configuration(self.config_path)
 
-
+        if not config.has_section('Zoom'):
+            config.add_section('Zoom')
         config.set('Zoom', 'coefficients', self.zoom_coefficients)
 #                    self.calibration_data.xcoeff_str)
 #         config.set('General', 'ycoefficients', self.calibration_data.ycoeff_str)

@@ -21,11 +21,11 @@ from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor, InstanceEdito
 from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports ========================
 # from threading import Thread, Timer as DoLaterTimer, Lock
-import os
+# import os
 #=============local library imports  ==========================
 # from src.graph.stream_graph import StreamGraph
-from src.database.adapters.power_adapter import PowerAdapter
-from src.managers.data_managers.h5_data_manager import H5DataManager
+# from src.database.adapters.power_adapter import PowerAdapter
+# from src.managers.data_managers.h5_data_manager import H5DataManager
 # from src.database.data_warehouse import DataWarehouse
 # from src.helpers.timer import Timer
 from src.hardware.fusions.fusions_logic_board import FusionsLogicBoard
@@ -33,7 +33,6 @@ from src.hardware.fiber_light import FiberLight
 # from src.helpers.paths import co2laser_db_root, co2laser_db, diodelaser_db
 # from src.progress_dialog import myProgressDialog
 # from src.lasers.power.power_calibration_manager import PowerCalibrationManager
-from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
 
 from laser_manager import LaserManager
 # from src.lasers.laser_managers.brightness_pid_manager import BrightnessPIDManager
@@ -400,40 +399,40 @@ class FusionsLaserManager(LaserManager):
             power_grp.content.append(ps)
         return power_grp
 
-    def get_additional_group(self):
-        og = Group(Item('laser_controller', show_label=False,
-                    editor=InstanceEditor(view='control_view'),
-                    style='custom'),
-                   label='Optics',
-                   )
-        ac = Group(
-                   og,
-                   show_border=True,
-                   label='Additional Controls',
-                   layout='tabbed')
+#     def get_additional_group(self):
+#         og = Group(Item('laser_controller', show_label=False,
+#                     editor=InstanceEditor(view='control_view'),
+#                     style='custom'),
+#                    label='Optics',
+#                    )
+#         ac = Group(
+#                    og,
+#                    show_border=True,
+#                    label='Additional Controls',
+#                    layout='tabbed')
+#
+#         aclist = self.get_additional_controls()
+#         if aclist is None:
+#             og.label = 'Optics'
+#             og.show_border = True
+#             ac = og
+#         else:
+#             for ai in aclist:
+#                 ac.content.append(ai)
+#         return ac
 
-        aclist = self.get_additional_controls()
-        if aclist is None:
-            og.label = 'Optics'
-            og.show_border = True
-            ac = og
-        else:
-            for ai in aclist:
-                ac.content.append(ai)
-        return ac
-
-    def get_control_group(self):
-        '''
-        '''
-        power_grp = self.get_power_group()
-        pulse_grp = Group(Item('pulse', style='custom', show_label=False),
-                        label='Pulse', show_border=True
-                        )
-        power_grp = HGroup(power_grp, pulse_grp)
-        ac = self.get_additional_group()
-        g = HGroup(power_grp, ac)
-
-        return g
+#     def get_control_group(self):
+#         '''
+#         '''
+#         power_grp = self.get_power_group()
+#         pulse_grp = Group(Item('pulse', style='custom', show_label=False),
+#                         label='Pulse', show_border=True
+#                         )
+#         power_grp = HGroup(power_grp, pulse_grp)
+#         ac = self.get_additional_group()
+#         g = HGroup(power_grp, ac)
+#
+#         return g
 
     def _get_pointer_label(self):
         '''
@@ -446,15 +445,15 @@ class FusionsLaserManager(LaserManager):
     def _get_record_brightness(self):
         return self.record_brightness and self._get_machine_vision() is not None
 
-
 #========================= defaults =======================
     def get_power_database(self):
+        from src.database.adapters.power_adapter import PowerAdapter
         db = PowerAdapter(name=self.dbname,
                           kind='sqlite')
         return db
 
     def get_power_calibration_database(self):
-
+        from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
         db = PowerCalibrationAdapter(name=self.dbname,
                                      kind='sqlite')
         return db

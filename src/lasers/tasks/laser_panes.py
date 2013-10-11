@@ -209,7 +209,7 @@ class ControlPane(TraitsDockPane):
                                UItem('enabled_led',
                                      editor=LEDEditor(),
                                      style='custom',
-                                     height=-35
+                                     height= -35
                                      ),
                                UItem('enable', editor=ButtonEditor(label_value='enable_label'))
                                ),
@@ -263,9 +263,9 @@ class ClientPane(TraitsTaskPane):
                        UItem('enable', editor=ButtonEditor(label_value='enable_label'))
                        ),
                  Item('position'),
-                 Item('x', editor=RangeEditor(low=-25.0, high=25.0)),
-                 Item('y', editor=RangeEditor(low=-25.0, high=25.0)),
-                 Item('z', editor=RangeEditor(low=-25.0, high=25.0)),
+                 Item('x', editor=RangeEditor(low= -25.0, high=25.0)),
+                 Item('y', editor=RangeEditor(low= -25.0, high=25.0)),
+                 Item('z', editor=RangeEditor(low= -25.0, high=25.0)),
                  title='Laser Manager',
                  )
         return v
@@ -276,6 +276,8 @@ class AuxilaryGraphPane(TraitsDockPane):
     def traits_view(self):
         v = View(UItem('auxilary_graph', editor=ComponentEditor()))
         return v
+
+
 
 # from pyface.tasks.enaml_dock_pane import EnamlDockPane
 # import enaml

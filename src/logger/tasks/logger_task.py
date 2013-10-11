@@ -31,11 +31,10 @@ class LoggerTask(BaseTask):
 
     def activated(self):
         app = self.window.application
-
         # if a logger window is already open close this window
         for win in app.windows:
             if win.active_task:
-                if win.active_task.id == 'pychron.logger' :
+                if win.active_task.id == 'pychron.logger':
                     do_later(self.window.close)
                     break
 

@@ -13,7 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-from traits.api import HasTraits, Any, Event, Property, Bool, Enum
+from traits.api import HasTraits, Any, Event, \
+    Property, Bool, Enum, Button
 from traitsui.api import View, Item, ButtonEditor
 import yaml
 import time
@@ -29,7 +30,7 @@ class LaserScriptExecutor(Loggable):
     laser_manager = Any
     _executing = Bool(False)
     _cancel = False
-    execute_button = Event
+    execute_button = Button
     execute_label = Property(depends_on='_executing')
     kind = Enum('scan', 'calibration')
     def _kind_default(self):

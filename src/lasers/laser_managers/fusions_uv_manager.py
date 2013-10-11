@@ -39,7 +39,7 @@ from src.ui.led_editor import LEDEditor
 from src.paths import paths
 from threading import Thread
 
-#@todo: don't save mask and attenuator when programming points, only xyz
+# @todo: don't save mask and attenuator when programming points, only xyz
 
 class FusionsUVManager(FusionsLaserManager):
     """
@@ -82,9 +82,9 @@ class FusionsUVManager(FusionsLaserManager):
     burst_shot = Int(enter_set=True, auto_set=False)
     reprate = Int(enter_set=True, auto_set=False)
 
-    execute_button = DelegatesTo('laser_script_executor')
-    execute_label = DelegatesTo('laser_script_executor')
-    names = DelegatesTo('laser_script_executor')
+#     execute_button = DelegatesTo('laser_script_executor')
+#     execute_label = DelegatesTo('laser_script_executor')
+#     names = DelegatesTo('laser_script_executor')
 
     _is_tracing = False
     _cancel_tracing = False
@@ -386,42 +386,42 @@ class FusionsUVManager(FusionsLaserManager):
     #===============================================================================
     # views
     #===============================================================================
-    def get_control_group(self):
-        cg = VGroup(
-            HGroup(
-                Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
-                self._button_factory('enable', 'enable_label'),
-                self._button_factory('execute_button', 'execute_label'),
-                Item('names', show_label=False),
-                spring
-            ),
-            #                      Item('execute_button', show_label=False, editor=ButtonEditor(label_value='execute_label')),
-            HGroup(
-                Item('action_readback', width=100, style='readonly', label='Action'),
-                Item('status_readback', style='readonly', label='Status'),
-            ),
-            HGroup(self._button_factory('fire_button', 'fire_label'),
-                   Item('mode', show_label=False),
-                   enabled_when='object.enabled and object.status_readback=="Laser On"'
-            ),
-            HGroup(
-                Item('burst_shot', label='N Burst', enabled_when='mode=="Burst"'),
-                Item('reprate', label='Rep. Rate')
-            ),
-            HGroup(
-                Item('burst_readback', label='Burst Rem.', width=50, style='readonly'),
-                Item('energy_readback', label='Energy (mJ)',
-                     style='readonly', format_str='%0.2f'),
-                Item('pressure_readback', label='Pressure (mbar)',
-                     style='readonly', width=100, format_str='%0.1f'),
-                spring,
-                enabled_when='object.enabled'
-            ),
-            show_border=True,
-            label='Power')
-
-        ac = self.get_additional_group()
-        return HGroup(cg, ac)
+#     def get_control_group(self):
+#         cg = VGroup(
+#             HGroup(
+#                 Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
+#                 self._button_factory('enable', 'enable_label'),
+#                 self._button_factory('execute_button', 'execute_label'),
+#                 Item('names', show_label=False),
+#                 spring
+#             ),
+#             #                      Item('execute_button', show_label=False, editor=ButtonEditor(label_value='execute_label')),
+#             HGroup(
+#                 Item('action_readback', width=100, style='readonly', label='Action'),
+#                 Item('status_readback', style='readonly', label='Status'),
+#             ),
+#             HGroup(self._button_factory('fire_button', 'fire_label'),
+#                    Item('mode', show_label=False),
+#                    enabled_when='object.enabled and object.status_readback=="Laser On"'
+#             ),
+#             HGroup(
+#                 Item('burst_shot', label='N Burst', enabled_when='mode=="Burst"'),
+#                 Item('reprate', label='Rep. Rate')
+#             ),
+#             HGroup(
+#                 Item('burst_readback', label='Burst Rem.', width=50, style='readonly'),
+#                 Item('energy_readback', label='Energy (mJ)',
+#                      style='readonly', format_str='%0.2f'),
+#                 Item('pressure_readback', label='Pressure (mbar)',
+#                      style='readonly', width=100, format_str='%0.1f'),
+#                 spring,
+#                 enabled_when='object.enabled'
+#             ),
+#             show_border=True,
+#             label='Power')
+#
+#         ac = self.get_additional_group()
+#         return HGroup(cg, ac)
 
 
     #===============================================================================

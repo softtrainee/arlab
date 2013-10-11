@@ -254,8 +254,8 @@ class _LEDEditor(Editor):
             # system background color
             scene.setBackgroundBrush(QBrush(QColor(237, 237, 237)))
             self.control.setStyleSheet("border: 0px")
-            self.control.setMaximumWidth(100)
-            self.control.setMaximumHeight(100)
+            self.control.setMaximumWidth(50)
+            self.control.setMaximumHeight(50)
 
             x, y = 10, 10
             rad = 20

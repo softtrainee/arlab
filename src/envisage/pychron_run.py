@@ -183,7 +183,7 @@ def app_factory(klass):
 
 def check_dependencies():
     '''
-        check the dependencies and 
+        check the dependencies and
     '''
     from pyface.api import warning
 

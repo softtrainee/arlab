@@ -27,7 +27,8 @@ from src.lasers.tasks.laser_panes import PulsePane, OpticsPane, \
 from src.lasers.tasks.panes.diode import FusionsDiodeClientPane, \
     FusionsDiodePane, FusionsDiodeStagePane, FusionsDiodeControlPane, \
     FusionsDiodeSupplementalPane
-from src.lasers.tasks.panes.uv import FusionsUVPane, FusionsUVClientPane
+from src.lasers.tasks.panes.uv import FusionsUVPane, FusionsUVClientPane, \
+    FusionsUVSupplementalPane, FusionsUVControlPane, FusionsUVStagePane
 # from pyface.tasks.action.schema import SMenu
 # from src.lasers.tasks.laser_actions import OpenScannerAction
 #============= standard library imports ========================
@@ -173,5 +174,14 @@ class FusionsUVTask(FusionsTask):
         if self.manager.mode == 'client':
             return []
         else:
-            return []
+            return [
+                    FusionsUVStagePane(model=self.manager),
+                    FusionsUVControlPane(model=self.manager),
+                    FusionsUVSupplementalPane(model=self.manager),
+
+    #                TestPane(model=self.manager),
+#                     PulsePane(model=self.manager),
+                    OpticsPane(model=self.manager),
+                    # AuxilaryGraphPane(model=self.manager),
+                    ]
 #============= EOF =============================================

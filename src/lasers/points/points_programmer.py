@@ -28,6 +28,7 @@ from src.lasers.points.maker import BaseMaker, LineMaker, PointMaker, \
     PolygonMaker, TransectMaker
 # from src.canvas.scene_viewer import LaserMineViewer
 from src.regex import TRANSECT_REGEX
+from src.ui.gui import convert_color
 maker_dict = dict(polygon=PolygonMaker, point=PointMaker, line=LineMaker, transect=TransectMaker)
 
 
@@ -212,6 +213,7 @@ class PointsProgrammer(Manager):
     def _load_points(self, points, ptargs):
         canvas = self.canvas
         point_color = self.maker.point_color
+#         ptargs['spot_color'] = convert_color(self.maker.spot_color, output='rgbF')
         ptargs['spot_color'] = self.maker.spot_color
         for pi in points:
             mi = pi['mask'] if pi.has_key('mask') else 0
