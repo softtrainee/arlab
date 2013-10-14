@@ -394,6 +394,7 @@ class FigureTask(AnalysisEditTask):
             ieditor = self._new_associated_isochron(ans, name)
             if ieditor:
                 editor.associated_editors.append(weakref.ref(ieditor)())
+                ieditor.parent_editor = editor
 
         # activate figure editor
         self.editor_area.activate_editor(editor)

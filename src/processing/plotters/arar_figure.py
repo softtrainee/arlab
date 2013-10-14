@@ -52,11 +52,13 @@ class BaseArArFigure(HasTraits):
     use_sparse_ticks = Bool(True)
 
     refresh_unknowns_table = Event
+    _suppress_table_update = False
 
     def build(self, plots):
         """
             make plots
         """
+        self._plots = plots
 
         def _setup_plot(pp):
             pp.value_range.tight_bounds = False
@@ -96,7 +98,8 @@ class BaseArArFigure(HasTraits):
         for i, a in enumerate(ans):
             a.temp_status = 1 if i in sel else 0
 
-        self.refresh_unknowns_table = True
+        if not self._suppress_table_update:
+            self.refresh_unknowns_table = True
 
     def _filter_metadata_changes(self, obj, func, ans):
         sel = obj.metadata.get('selections', [])
@@ -118,7 +121,7 @@ class BaseArArFigure(HasTraits):
                 func(sel)
                 self._set_selected(ans, sel)
             obj.was_selected = False
-            obj.prev_selection = None
+            #obj.prev_selection = None
 
         return sel
 

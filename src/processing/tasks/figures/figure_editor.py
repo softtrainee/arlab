@@ -51,7 +51,7 @@ class FigureEditor(GraphEditor):
 
     @on_trait_change('model:panels:figures:refresh_unknowns_table')
     def _handle_refresh(self):
-        print 'refresh', self
+        print 'figure editor refresh', self
         for e in self.associated_editors:
             if isinstance(e, FigureEditor):
                 e.rebuild(refresh_data=False)
@@ -95,25 +95,26 @@ class FigureEditor(GraphEditor):
     def _rebuild_graph(self):
         self.rebuild(refresh_data=False)
 
-    def rebuild(self, refresh_data=True, compress_groups=True):
-        #ans=self.unknowns
+    def rebuild(self, refresh_data=True, compress_groups=True, update_associated=True):
+
         ans = self._gather_unknowns(refresh_data, compress_groups=compress_groups)
 
         if ans:
-            for e in self.associated_editors:
-                if isinstance(e, FigureEditor):
-                    e.analysis_cache = self.analysis_cache
-                    e.unknowns = ans
-
-                else:
-                    e.items = ans
+            if update_associated:
+                for e in self.associated_editors:
+                    if isinstance(e, FigureEditor):
+                        e.analysis_cache = self.analysis_cache
+                        e.unknowns = ans
+                    else:
+                        e.items = ans
 
             po = self.plotter_options_manager.plotter_options
 
             model, comp = timethis(self.get_component, args=(ans, po),
                                    msg='get_component {}'.format(self.__class__.__name__))
-            #         comp = self._get_component(ans, po)
+            #comp = self._get_component(ans, po)
 
+            #if set_model:
             self.model = model
             self.component = comp
             self.component_changed = True

@@ -83,7 +83,7 @@ class GraphEditor(BaseTraitsEditor):
 
     @on_trait_change('unknowns[]')
     def _update_unknowns(self, obj, name, old, new):
-
+        #if not self.suppress_update:
         self._gather_unknowns(True)
 
         self.rebuild_graph()
@@ -135,11 +135,6 @@ class GraphEditor(BaseTraitsEditor):
 
     def _rebuild_graph(self):
         pass
-
-    #     def _make_unknowns(self):
-    #         if self.unknowns:
-    #             self._unknowns = self.processor.make_analyses(self.unknowns)
-    # #             self.processor.load_analyses(self._unknowns)
 
     def traits_view(self):
         v = View(UItem('graph',

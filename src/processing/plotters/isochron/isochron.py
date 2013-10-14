@@ -130,6 +130,8 @@ class InverseIsochron(Isochron):
                                        yerror=ArrayDataSource(data=yerrs),
                                        type='scatter',
                                        marker='circle',
+                                       #selection_marker_size=5,
+                                       #selection_color='green',
                                        marker_size=1)
         self._scatter = scatter
 
@@ -201,7 +203,6 @@ class InverseIsochron(Isochron):
             self.update_graph_metadata(None, name, old, new)
 
     def _rebuild_iso(self, sel):
-        #print 'rebuild iso',sel
         if self._cached_data:
             self._scatter.index.metadata['selections'] = sel
 
