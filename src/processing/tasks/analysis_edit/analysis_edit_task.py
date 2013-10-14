@@ -257,7 +257,6 @@ class AnalysisEditTask(BaseBrowserTask):
     @on_trait_change('active_editor:component_changed')
     def _update_component(self):
         if self.plot_editor_pane:
-            #print 'update plot editor'
             self.plot_editor_pane.component = self.active_editor.component
 
     @on_trait_change('unknowns_pane:[items, update_needed]')

@@ -93,21 +93,38 @@ class PlotEditor(HasTraits):
         getattr(self.plot, name).visible = new
 
     def _plot_changed(self):
-        self.xmin = self.plot.index_range.low
-        self.xmax = self.plot.index_range.high
+        #self.xmin = self.plot.index_range.low
+        #self.xmax = self.plot.index_range.high
+        #
+        #self.ymin = self.plot.value_range.low
+        #self.ymax = self.plot.value_range.high
+        self.trait_set(xmin=self.plot.index_range.low,
+                       xmax=self.plot.index_range.high,
+                       ymin=self.plot.value_range.low,
+                       ymax=self.plot.value_range.high,
+                       trait_change_notify=False)
 
-        self.ymin = self.plot.value_range.low
-        self.ymax = self.plot.value_range.high
-
+        traits = {}
         for attr in ('left', 'right', 'top', 'bottom'):
             attr = 'padding_{}'.format(attr)
-            setattr(self, attr, getattr(self.plot, attr))
+            v = getattr(self.plot, attr)
+            traits[attr] = v
 
-        self.title_spacing = self.plot.value_axis.title_spacing
-        self.tick_visible = self.plot.value_axis.tick_visible
+            #setattr(self, attr, getattr(self.plot, attr))
 
-        self.x_grid = self.plot.x_grid.visible
-        self.y_grid = self.plot.y_grid.visible
+
+        #self.title_spacing = self.plot.value_axis.title_spacing
+        #self.tick_visible = self.plot.value_axis.tick_visible
+        #
+        #self.x_grid = self.plot.x_grid.visible
+        #self.y_grid = self.plot.y_grid.visible
+        traits['title_spacing'] = self.plot.value_axis.title_spacing
+        traits['tick_visible'] = self.plot.value_axis.tick_visible
+        #
+        traits['x_grid'] = self.plot.x_grid.visible
+        traits['y_grid'] = self.plot.y_grid.visible
+
+        self.trait_set(trait_change_notify=False, **traits)
 
         rs = []
         for k, ps in self.plot.plots.iteritems():
@@ -282,17 +299,20 @@ class ScatterRendererEditor(RendererEditor):
     marker_size = Range(0.0, 10.0)
     outline_color = Color
     marker = MarkerTrait
+    selection_marker_size = Range(0.0, 10.0)
 
     @on_trait_change('marker+, outline_color')
     def _update_values2(self, name, new):
         self._set_value(name, new)
-        if name.startswith('marker'):
-            self._set_value('selection_{}'.format(name), new)
+        #if name.startswith('marker'):
+        #    self._set_value('selection_{}'.format(name), new)
 
     def _sync(self):
         self.outline_color = self.renderer.outline_color
         self.marker = self.renderer.marker
         self.marker_size = self.renderer.marker_size
+
+        self.selection_marker_size = self.renderer.selection_marker_size
 
     def _get_group(self):
         g = VGroup(

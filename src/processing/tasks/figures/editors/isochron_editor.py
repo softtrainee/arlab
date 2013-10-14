@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from pyface.timer.do_later import do_later
 from traits.api import Instance, on_trait_change
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -27,9 +28,12 @@ class InverseIsochronEditor(FigureEditor):
     plotter_options_manager = Instance(InverseIsochronOptionsManager, ())
     basename = 'iso'
 
+    parent_editor = None
+
     @on_trait_change('model:panels:figures:refresh_unknowns_table')
-    def _handle_refresh(self):
-        print 'refresh', self
+    def _handle_refresh(self, obj, name, old, new):
+        if self.parent_editor:
+            self.parent_editor.rebuild()
 
     def load_fits(self, refiso):
         pass
