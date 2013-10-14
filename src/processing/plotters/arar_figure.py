@@ -51,6 +51,8 @@ class BaseArArFigure(HasTraits):
     y_grid_visible = Bool(True)
     use_sparse_ticks = Bool(True)
 
+    refresh_unknowns_table = Event
+
     def build(self, plots):
         """
             make plots
@@ -86,6 +88,39 @@ class BaseArArFigure(HasTraits):
 
     def plot(self, *args, **kw):
         pass
+
+    def _get_omitted(self, ans):
+        return [i for i, ai in enumerate(ans) if ai.temp_status]
+
+    def _set_selected(self, ans, sel):
+        for i, a in enumerate(ans):
+            a.temp_status = 1 if i in sel else 0
+
+        self.refresh_unknowns_table = True
+
+    def _filter_metadata_changes(self, obj, func, ans):
+        sel = obj.metadata.get('selections', [])
+        if sel:
+            obj.was_selected = True
+
+            prev = None
+            if hasattr(obj, 'prev_selection'):
+                prev = obj.prev_selection
+
+            if prev != sel:
+                func(sel)
+                self._set_selected(ans, sel)
+
+            obj.prev_selection = sel
+
+        elif hasattr(obj, 'was_selected'):
+            if obj.was_selected:
+                func(sel)
+                self._set_selected(ans, sel)
+            obj.was_selected = False
+            obj.prev_selection = None
+
+        return sel
 
     def _get_mswd(self, ages, errors):
         mswd = calculate_mswd(ages, errors)

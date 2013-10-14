@@ -20,10 +20,19 @@ from src.paths import paths
 from pyface.message_dialog import warning
 
 
-def iterdir(d):
+def iterdir(d, exclude=None):
+    #if exclude is None:
+    #    exclude =tuple()
+
     for t in os.listdir(d):
         if t.startswith('.'):
             continue
+
+        if exclude:
+            _, ext = os.path.splitext(t)
+            if ext in exclude:
+                continue
+
         p = os.path.join(d, t)
         if not os.path.isfile(p):
             continue
@@ -75,7 +84,7 @@ def load_isotopedb_defaults(db):
             warning(None, 'No irradiation_tray_maps directory. add to .../setupfiles')
 
         else:
-            for p, name in iterdir(mdir):
+            for p, name in iterdir(mdir, exclude='.zip'):
                 _load_irradiation_map(db, p, name)
 
         mdir = paths.map_dir
@@ -118,5 +127,6 @@ def _load_irradiation_map(db, p, name):
             blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
             name, _ = os.path.splitext(name)
             db.add_irradiation_holder(name, geometry=blob)
-        except Exception:
-            pass
+        except Exception, e:
+            print p, name, e
+

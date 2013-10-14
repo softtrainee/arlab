@@ -182,7 +182,8 @@ class BrowserPane(TraitsDockPane):
                       adapter=AnalysisAdapter(),
                       #                                                       editable=False,
                       operations=['move'],
-                      selected=make_name('selected_analysis'),
+                      selected=make_name('selected'),
+                      dclicked=make_name('dclicked'),
                       multi_select=self.multi_select,
                       drag_external=True
 

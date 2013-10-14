@@ -33,7 +33,9 @@ class DisplayModel(HasTraits):
 #    message = Tuple
     clear_event = Event
     refresh = Event
-#    message = Queue
+
+
+    #    message = Queue
     def __init__(self, *args, **kw):
         super(DisplayModel, self).__init__(*args, **kw)
 
@@ -43,12 +45,14 @@ class DisplayModel(HasTraits):
         '''
             if txt,color same as previous txt,color than message only added if force=True
         '''
-#         ms = self.messages[-self.max_messages:]
-#         ms.append((txt, color))
-#        self.message = (txt, color, force)
+        #         ms = self.messages[-self.max_messages:]
+        #         ms.append((txt, color))
+        #        self.message = (txt, color, force)
         self.qmessage.put((txt, color, force))
         invoke_in_main_thread(self.trait_set, refresh=True)
-#        self.refresh = True
+
+        #        self.refresh = True
+
 
 class DisplayController(ApplicationController):
     x = Int
@@ -58,7 +62,7 @@ class DisplayController(ApplicationController):
     title = Str
 
     default_color = Color('black')
-#    default_size = Int
+    #    default_size = Int
     bg_color = Color
     font_name = Str
     font_size = Int(12)
@@ -70,6 +74,7 @@ class DisplayController(ApplicationController):
 
     opened = Bool(False)
     was_closed = Bool(False)
+    text_added = Event
 
     def __init__(self, *args, **kw):
         super(DisplayController, self).__init__(model=DisplayModel(),
@@ -79,15 +84,17 @@ class DisplayController(ApplicationController):
     def init(self, info):
         self.opened = True
         super(DisplayController, self).init(info)
-#        print 'rrrrr', info
-#        info.object.ui = info.ui
+
+    #        print 'rrrrr', info
+    #        info.object.ui = info.ui
 
     def clear(self, **kw):
-#        self.clear_event = True
+    #        self.clear_event = True
         self.model.clear_event = True
-#        self.model.clear_event = True
-#         self.model.message=('%%clear%%',)
-#         self.model.messages = []
+
+    #        self.model.clear_event = True
+    #         self.model.message=('%%clear%%',)
+    #         self.model.messages = []
 
     # @deprecated
     def freeze(self):
@@ -104,16 +111,18 @@ class DisplayController(ApplicationController):
         with self._lock:
             self.model.add_text(txt, **kw)
 
+        self.text_added = True
+
 
     def traits_view(self):
         self.visible = True
         v = View(UItem('qmessage', editor=self.editor_klass(bg_color=self.bg_color,
-                                                           clear='clear_event',
-                                                           refresh='refresh',
-                                                           font_name=self.font_name,
-                                                           font_size=self.font_size,
-                                                           max_blocks=self.max_blocks
-                                                       )),
+                                                            clear='clear_event',
+                                                            refresh='refresh',
+                                                            font_name=self.font_name,
+                                                            font_size=self.font_size,
+                                                            max_blocks=self.max_blocks
+        )),
                  x=self.x, y=self.y, width=self.width,
                  height=self.height,
                  title=self.title)
@@ -138,7 +147,6 @@ class DisplayController(ApplicationController):
 
 class ErrorDisplay(DisplayController):
     pass
-
 
 
 #============= EOF =============================================

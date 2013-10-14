@@ -180,14 +180,14 @@ class StackedGraph(Graph):
 
         plotid = kw['plotid']
         bind_id = kw['bind_id']
+        #print bind_id, self.bind_index, self
         s, _p = super(StackedGraph, self).new_series(*args, **kw)
 
-        series_id = self.series[plotid][-1]
+        #series_id = self.series[plotid][-1]
         if self.bind_index:
             s.bind_id = bind_id
-            #print series_id
+            self._bind_index(s, bind_id=bind_id)
 
-            self._bind_index(s, series_id, bind_id)
         return s, _p
 
     def _bounds_changed(self, bounds):
@@ -217,6 +217,7 @@ class StackedGraph(Graph):
                 pass
 
     def _update_metadata(self, bind_id, obj, name, old, new):
+        #print bind_id, obj, name, old, new
         for plot in self.plots:
             for k, ps in plot.plots.iteritems():
                 si = ps[0]
@@ -228,6 +229,7 @@ class StackedGraph(Graph):
 
 
     def _bind_index(self, scatter, bind_id=0, bind_selection=True, **kw):
+        #print bind_selection, scatter
         if bind_selection:
             u = lambda obj, name, old, new: self._update_metadata(bind_id,
                                                                   obj, name, old, new)

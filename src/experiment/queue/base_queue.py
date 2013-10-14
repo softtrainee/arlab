@@ -278,7 +278,6 @@ class BaseExperimentQueue(Loggable):
         except KeyError:
             pass
 
-        print 'settinag', attr, func(v), v
         setattr(self, attr, func(v))
 
     def _get_dump_attrs(self):
@@ -372,9 +371,11 @@ load: {}
         for ai in self.automated_runs:
             ai.mass_spectrometer = ms
 
+            #===============================================================================
+
+            # property get/set
+
         #===============================================================================
-    # property get/set
-    #===============================================================================
     def _get_cleaned_automated_runs(self):
         return [ci for ci in self.automated_runs
                 if not ci.skip and ci.state == 'not run']

@@ -45,8 +45,8 @@ from src.ui.gui import invoke_in_main_thread
 color_name_gen = colorname_generator()
 NAME_WIDTH = 40
 
-class Loggable(HasTraits):
 
+class Loggable(HasTraits):
     '''
     '''
     application = Any
@@ -80,9 +80,10 @@ class Loggable(HasTraits):
 
         self.logger = new_logger(name)
         c = color_name_gen.next()
-        if c in [ 'gray', 'silver', 'greenyellow']:
+        if c in ['gray', 'silver', 'greenyellow']:
             c = color_name_gen.next()
         self.logcolor = c
+
     def add_window(self, ui):
 
         try:
@@ -97,39 +98,41 @@ class Loggable(HasTraits):
             self.add_window(ui)
 
         invoke_in_main_thread(_open_)
+
     def warning_dialog(self, msg, sound=None, title='Warning'):
         dialog = myMessageDialog(
-                               parent=None, message=msg,
-                               title=title,
-                               severity='warning'
-                               )
-#         if sound:
-#             from src.helpers.media import loop_sound
-#             evt = loop_sound(sound)
-#             dialog.close = lambda: self._close_warning(evt)
+            parent=None, message=msg,
+            title=title,
+            severity='warning'
+        )
+        #         if sound:
+        #             from src.helpers.media import loop_sound
+        #             evt = loop_sound(sound)
+        #             dialog.close = lambda: self._close_warning(evt)
 
-#         from threading import current_thread
-#         print current_thread()
+        #         from threading import current_thread
+        #         print current_thread()
         dialog.open()
 
     def confirmation_dialog(self, msg, return_retval=False, cancel=False, title=''):
 
         dlg = myConfirmationDialog(
-                                   cancel=cancel,
-                                   message=msg,
-                                   title=title,
-                                   style='modal')
+            cancel=cancel,
+            message=msg,
+            title=title,
+            style='modal')
         retval = dlg.open()
         if return_retval:
             return retval
         else:
             from pyface.api import YES
+
             return retval == YES
 
     def information_dialog(self, msg, title='Information'):
         dlg = myMessageDialog(parent=None, message=msg,
-                            title=title,
-                            severity='information')
+                              title=title,
+                              severity='information')
         dlg.open()
 
     def db_save_dialog(self):
@@ -137,12 +140,14 @@ class Loggable(HasTraits):
 
     def message(self, msg):
         from src.displays.gdisplays import gMessageDisplay
+
         if not gMessageDisplay.opened and not gMessageDisplay.was_closed:
             gMessageDisplay.opened = True
             invoke_in_main_thread(gMessageDisplay.edit_traits)
 
         gMessageDisplay.add_text(msg)
-#        self.info(msg)
+
+    #        self.info(msg)
 
     def warning(self, msg, decorate=True):
         '''
@@ -151,11 +156,13 @@ class Loggable(HasTraits):
         if self.logger is not None:
             if self.use_warning_display:
                 from src.displays.gdisplays import gWarningDisplay
+
                 if globalv.show_warnings:
-                    if not gWarningDisplay.opened and not gWarningDisplay.was_closed:
-                        invoke_in_main_thread(gWarningDisplay.edit_traits)
-                        gWarningDisplay.opened = True
-                gWarningDisplay.add_text('{{:<{}s}} -- {{}}'.format(NAME_WIDTH).format(self.logger.name.strip(), msg))
+                #if not gWarningDisplay.opened and not gWarningDisplay.was_closed:
+                #invoke_in_main_thread(gWarningDisplay.edit_traits)
+                #gWarningDisplay.opened = True
+                    gWarningDisplay.add_text(
+                        '{{:<{}s}} -- {{}}'.format(NAME_WIDTH).format(self.logger.name.strip(), msg))
 
             if decorate:
                 msg = '****** {}'.format(msg)
@@ -168,13 +175,14 @@ class Loggable(HasTraits):
         if self.logger is not None:
             if self.use_logger_display:
                 from src.displays.gdisplays import gLoggerDisplay
+
                 if globalv.show_infos:
-#                     if not gLoggerDisplay.opened and not gLoggerDisplay.was_closed:
-#                         invoke_in_main_thread(gLoggerDisplay.edit_traits)
+                #                     if not gLoggerDisplay.opened and not gLoggerDisplay.was_closed:
+                #                         invoke_in_main_thread(gLoggerDisplay.edit_traits)
 
 
                     args = ('{{:<{}s}} -- {{}}'.format(NAME_WIDTH).format(self.logger.name.strip(),
-                            msg))
+                                                                          msg))
                     gLoggerDisplay.add_text(args, color=color)
 
             if decorate:
@@ -184,6 +192,7 @@ class Loggable(HasTraits):
 
     def close_displays(self):
         from src.displays.gdisplays import gLoggerDisplay, gWarningDisplay, gMessageDisplay
+
         gLoggerDisplay.close_ui()
         gWarningDisplay.close_ui()
         gMessageDisplay.close_ui()
@@ -212,8 +221,10 @@ class Loggable(HasTraits):
         if self.logger is None:
             return
 
-        extras = {'threadName_':get_thread_name()}
+        extras = {'threadName_': get_thread_name()}
         func = getattr(self.logger, func)
         func(msg, extra=extras)
-#        func(msg)
+
+        #        func(msg)
+
 #============= EOF =============================================

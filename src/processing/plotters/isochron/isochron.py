@@ -19,11 +19,12 @@ from traits.api import Array
 from chaco.plot_label import PlotLabel
 from chaco.array_data_source import ArrayDataSource
 #============= standard library imports ========================
-from numpy import array, linspace
+from numpy import array, linspace, delete
 #============= local library imports  ==========================
 from src.codetools.simple_timeit import timethis
 
 from src.helpers.formatting import calc_percent_error
+from src.processing.argon_calculations import age_equation
 from src.processing.plotters.arar_figure import BaseArArFigure
 
 from src.stats.peak_detection import find_peaks
@@ -43,6 +44,8 @@ class InverseIsochron(Isochron):
 #     xma = Float
 
     xs = Array
+    _cached_data = None
+    _plot_label = None
 
     def plot(self, plots):
         """
@@ -54,6 +57,10 @@ class InverseIsochron(Isochron):
 
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
             getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1)
+
+        omit = self._get_omitted(self.analyses)
+        if omit:
+            self._rebuild_iso(omit)
 
     def max_x(self, attr):
         return max([ai.nominal_value for ai in self._unpack_attr(attr)])
@@ -89,17 +96,27 @@ class InverseIsochron(Isochron):
         analyses = self.analyses
         plot.padding_left = 75
 
+        refiso = analyses[0]
+
+        self._ref_j = refiso.j
+        self._ref_age_scalar = refiso.arar_constants.age_scalar
+        self._ref_age_units = refiso.arar_constants.age_units
+
         ans = [(a.Ar39, a.Ar36, a.Ar40) for a in analyses]
         #ans= timethis(self._get_analyses)
         #return
 
         a39, a36, a40 = array(ans).T
-
-        xx = a39 / a40
-        yy = a36 / a40
+        try:
+            xx = a39 / a40
+            yy = a36 / a40
+        except ZeroDivisionError:
+            return
 
         xs, xerrs = zip(*[(xi.nominal_value, xi.std_dev) for xi in xx])
         ys, yerrs = zip(*[(yi.nominal_value, yi.std_dev) for yi in yy])
+
+        self._cached_data = (xs, ys, xerrs, yerrs)
 
         graph = self.graph
         graph.set_x_title('39Ar/40Ar')
@@ -114,6 +131,7 @@ class InverseIsochron(Isochron):
                                        type='scatter',
                                        marker='circle',
                                        marker_size=1)
+        self._scatter = scatter
 
         eo = ErrorEllipseOverlay(component=scatter)
         scatter.overlays.append(eo)
@@ -129,6 +147,7 @@ class InverseIsochron(Isochron):
         rys = reg.predict(rxs)
 
         graph.new_series(rxs, rys)
+        graph.set_series_label('fit')
 
         self._add_scatter_inspector(scatter,
                                     # add_tool,
@@ -141,7 +160,7 @@ class InverseIsochron(Isochron):
     #===============================================================================
     # overlays
     #===============================================================================
-    def _add_info(self, plot, reg):
+    def _add_info(self, plot, reg, label=None):
         intercept = reg.predict(0)
         err = reg.get_intercept_error()
         try:
@@ -152,22 +171,70 @@ class InverseIsochron(Isochron):
 
         except ZeroDivisionError:
             v, e, p = 'NaN', 'NaN', 'NaN'
+        ratio_line = 'Ar40/Ar36= {} +/-{} ({}%)'.format(v, e, p)
 
-        l = PlotLabel(text=u'''Ar40/Ar36= {}
-               +/-{} ({}%)\n\n'''.format(v, e, p),
-                      component=plot,
-                      overlay_position='inside bottom',
-                      hjustify='left')
-        plot.overlays.append(l)
+        xt = reg.x_intercept
+
+        j = self._ref_j
+        s = self._ref_age_scalar
+        u = self._ref_age_units
+
+        age = age_equation(j, xt, scalar=s)
+        v = age.nominal_value
+        e = age.std_dev
+        p = calc_percent_error(v, e)
+
+        age_line = 'Age= {:0.3f} +/-{:0.4f} ({}%) {}'.format(v, e, p, u)
+        if label is None:
+            label = PlotLabel(
+                component=plot,
+                overlay_position='inside bottom',
+                hjustify='left')
+            plot.overlays.append(label)
+            self._plot_label = label
+
+        lines = '\n'.join((ratio_line, age_line))
+        label.text = '{}\n\n'.format(lines)
 
     def update_index_mapper(self, obj, name, old, new):
         if new is True:
             self.update_graph_metadata(None, name, old, new)
 
-    def update_graph_metadata(self, obj, name, old, new):
-        pass
+    def _rebuild_iso(self, sel):
+        #print 'rebuild iso',sel
+        if self._cached_data:
+            self._scatter.index.metadata['selections'] = sel
 
-    #===============================================================================
+            xs, ys, xerr, yerr = self._cached_data
+
+            nxs = delete(xs, sel)
+            nys = delete(ys, sel)
+            nxerr = delete(xerr, sel)
+            nyerr = delete(yerr, sel)
+
+            reg = ReedYorkRegressor(xs=nxs, ys=nys,
+                                    xserr=nxerr, yserr=nyerr)
+            reg.calculate()
+
+            rxs = self.graph.get_data(series=1)
+            #mi, ma = self.graph.get_x_limits()
+            #rxs = linspace(mi, ma)
+            rys = reg.predict(rxs)
+
+            #self.graph.set_data(nxs,series=1, axis=0)
+            self.graph.set_data(rys, series=1, axis=1)
+
+            if self._plot_label:
+                self._add_info(self.graph.plots[0], reg, label=self._plot_label)
+
+    def update_graph_metadata(self, obj, name, old, new):
+        if obj:
+            self._filter_metadata_changes(obj, self._rebuild_iso, self.analyses)
+            #self._set_selected(self.analyses, sel)
+
+            #
+
+        #===============================================================================
     # utils
     #===============================================================================
     def _get_age_errors(self, ans):

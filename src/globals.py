@@ -25,8 +25,8 @@ class Globals(object):
     open_logger_on_launch = True
 
     # force display flags
-    show_warnings = False
-    show_infos = False
+    show_warnings = True
+    show_infos = True
 
     # using ipc_dgram is currently not working
     ipc_dgram = False
@@ -38,18 +38,18 @@ class Globals(object):
     ignore_initialization_questions = False
 
     video_test = False
-#    video_test = True
+    #    video_test = True
     video_test_path = '/Users/ross/Sandbox/pos_err/diodefailsnapshot.jpg'
-#    video_test_path = '/Users/ross/Sandbox/snapshot002-6.662--8.572.jpg'
-#    video_test_path = '/Users/ross/Sandbox/watershed_test.jpg'
+    #    video_test_path = '/Users/ross/Sandbox/snapshot002-6.662--8.572.jpg'
+    #    video_test_path = '/Users/ross/Sandbox/watershed_test.jpg'
     video_test_path = '/Users/ross/Sandbox/watershed_test2.jpg'
     video_test_path = '/Users/ross/Sandbox/snapshot002.jpg'
-#    video_test_path = '/Users/ross/Sandbox/snapshot003-fail.jpg'
+    #    video_test_path = '/Users/ross/Sandbox/snapshot003-fail.jpg'
     show_autocenter_debug_image = False
-#    show_autocenter_debug_image = True
+    #    show_autocenter_debug_image = True
 
     test_experiment_set = None
-#    test_experiment_set = '/Users/ross/Pychrondata_experiment/experiments/bar.txt'
+    #    test_experiment_set = '/Users/ross/Pychrondata_experiment/experiments/bar.txt'
     # use_ipc = False == embed the remote hardware servers into pychron
     # = True == an instance of RemoteHardwareServer must be launched
 
@@ -58,11 +58,11 @@ class Globals(object):
     _test = False  # set test to 'true' when running tests
 
     experiment_debug = False
-#    experiment_debug = True
+    #    experiment_debug = True
     experiment_savedb = True
     automated_run_debug = False
     spectrometer_debug = False
-#    spectrometer_debug = True
+    #    spectrometer_debug = True
 
     load_valve_states = True
     load_soft_locks = True
@@ -85,7 +85,7 @@ class Globals(object):
                            ('experiment_debug', str_to_bool),
                            ('experiment_savedb', str_to_bool),
                            ('test_experiment_set', str)
-                            ]:
+        ]:
             a = ip.get_global(attr)
             if a:
                 setattr(globalv, attr, func(a))
@@ -95,6 +95,7 @@ class Globals(object):
 
     # mode is readonly. set once in the launchers/pychron.py module
     test = property(fget=_get_test)
+
 
 globalv = Globals()
 

@@ -35,6 +35,7 @@ from src.helpers.isotope_utils import sort_isotopes
 
 class BlanksEditor(InterpolationEditor):
     name = Str
+    pickle_path = 'blank_fits'
 
     def load_fits(self, ref_ans):
         keys = ref_ans.isotope_keys
@@ -56,7 +57,16 @@ class BlanksEditor(InterpolationEditor):
             cname = 'blanks'
             self.info('Attempting to save corrections to database')
 
+            n = len(self.unknowns)
+            prog = None
+            if n > 1:
+                prog = self.processor.open_progress(n)
+
             for unk in self.unknowns:
+                if prog:
+                    prog.change_message('Saving blanks for {}'.format(unk.record_id))
+                    prog.increment()
+
                 meas_analysis = db.get_analysis_uuid(unk.uuid)
 
                 histories = getattr(meas_analysis, '{}_histories'.format(cname))
@@ -68,20 +78,24 @@ class BlanksEditor(InterpolationEditor):
                         self.processor.apply_fixed_value_correction(phistory, history, si, cname)
                     else:
                         self.debug('saving {} {}'.format(unk.record_id, si.name))
+
                         self.processor.apply_correction(history, unk, si,
-                                                        self.references, cname)
+                                                        self._clean_references(), cname)
+                unk.sync(meas_analysis)
 
-                        #     def _update_unknowns_hook(self):
-                    #         '''
-                    #             load references based on unknowns
-                    #         '''
+            self.rebuild_graph()
 
-                    #         ans = set([ai for ui in self._unknowns
-                    #                     for ai in self.processor.find_associated_analyses(ui)])
-                    #
-                    #         ans = sorted(list(ans), key=lambda x: x.analysis_timestamp)
-                    #         ans = self.processor.make_analyses(ans)
-                    #         self.task.references_pane.items = ans
+            #     def _update_unknowns_hook(self):
+            #         '''
+            #             load references based on unknowns
+            #         '''
+
+            #         ans = set([ai for ui in self._unknowns
+            #                     for ai in self.processor.find_associated_analyses(ui)])
+            #
+            #         ans = sorted(list(ans), key=lambda x: x.analysis_timestamp)
+            #         ans = self.processor.make_analyses(ans)
+            #         self.task.references_pane.items = ans
 
 
     def _set_interpolated_values(self, iso, reg, xs):

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Instance
+from traits.api import Instance
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.tasks.figures.figure_editor import FigureEditor
@@ -23,20 +23,23 @@ from src.processing.plotters.figure_container import FigureContainer
 from src.processing.plotter_options_manager import SpectrumOptionsManager
 from src.processing.tasks.figures.editors.auto_controls import AutoSpectrumControl
 
+
 class SpectrumEditor(FigureEditor):
     plotter_options_manager = Instance(SpectrumOptionsManager, ())
     basename = 'spec'
+
     def get_component(self, ans, plotter_options):
         if plotter_options is None:
             pom = SpectrumOptionsManager()
             plotter_options = pom.plotter_options
 
         from src.processing.plotters.spectrum.spectrum_model import SpectrumModel
+
         model = SpectrumModel(plot_options=plotter_options)
         model.analyses = ans
         iv = FigureContainer(model=model)
-        self._model = model
-        return iv.component
+        #self._model = model
+        return model, iv.component
 
 
 class AutoSpectrumEditor(SpectrumEditor):

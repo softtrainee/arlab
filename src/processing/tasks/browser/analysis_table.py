@@ -25,7 +25,8 @@ from traits.api import HasTraits, List, Any, Str, Enum, Bool, Button, \
 class AnalysisTable(HasTraits):
     analyses = List
     oanalyses = List
-    selected_analysis = Any
+    selected = Any
+    dclicked = Any
 
     analysis_filter = Str
     analysis_filter_values = List
@@ -52,17 +53,8 @@ class AnalysisTable(HasTraits):
         pass
 
     def set_analyses(self, ans):
-        ans = self.filter_invalid(ans)
         self.analyses = ans
         self.oanalyses = ans
-
-    def filter_invalid(self, ans):
-        if self.omit_invalid:
-            ans = filter(self._omit_invalid_filter, ans)
-        return ans
-
-    def _omit_invalid_filter(self, x):
-        return x.tag != 'invalid'
 
     def _analysis_filter_changed(self, new):
         if new:
@@ -72,12 +64,6 @@ class AnalysisTable(HasTraits):
                 new = new.upper()
 
             self.analyses = filter(self._filter_func(new, name, comp), self.oanalyses)
-        else:
-            self.analyses = self.oanalyses
-
-    def _omit_invalid_changed(self, new):
-        if new:
-            self.analyses = filter(self._omit_invalid_filter, self.oanalyses)
         else:
             self.analyses = self.oanalyses
 
@@ -106,3 +92,17 @@ class AnalysisTable(HasTraits):
             self.analysis_filter_values = vs
 
 #============= EOF =============================================
+        #def filter_invalid(self, ans):
+        #    if self.omit_invalid:
+        #        ans = filter(self._omit_invalid_filter, ans)
+        #    return ans
+
+        #def _omit_invalid_filter(self, x):
+        #    return x.tag != 'invalid'
+
+        #def _omit_invalid_changed(self, new):
+        #    if new:
+        #        self._
+        #        self.analyses = filter(self._omit_invalid_filter, self.oanalyses)
+        #    else:
+        #        self.analyses = self.oanalyses

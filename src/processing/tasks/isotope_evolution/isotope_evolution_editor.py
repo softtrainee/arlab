@@ -37,6 +37,7 @@ class IsotopeEvolutionEditor(GraphEditor):
     #tool = Instance(IsoEvoFitSelector, ())
     tool = Instance(IsoEvoFitSelector)
     pickle_path = 'iso_fits'
+    unpack_peaktime = True
 
     def _tool_default(self):
         t = IsoEvoFitSelector(auto_update=False)
@@ -94,6 +95,7 @@ class IsotopeEvolutionEditor(GraphEditor):
                 self.debug('adding fit {} - {}'.format(fi.name, fi.fit))
 
     def _rebuild_graph(self):
+
         unk = self.unknowns
         n = len(unk)
         c = 1
@@ -111,9 +113,6 @@ class IsotopeEvolutionEditor(GraphEditor):
         display_sniff = True
 
         self.component = self._container_factory((r, c))
-
-
-
 
         #fits=[fit for fit in self.tool.fits
         #      if (fit.fit and fit.show)]
@@ -189,8 +188,8 @@ class IsotopeEvolutionEditor(GraphEditor):
 
             self.component.add(g.plotcontainer)
             self.component.invalidate_draw()
+            self.component.request_redraw()
 
-            #self.component.request_redraw()
 
     #def refresh_unknowns(self):
     #    if not self._suppress_update:
@@ -246,4 +245,4 @@ class IsotopeEvolutionEditor(GraphEditor):
         self.info('========================================')
         self.component.invalidate_and_redraw()
 
-    #============= EOF =============================================
+        #============= EOF =============================================

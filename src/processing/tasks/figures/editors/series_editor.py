@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Instance
+from traits.api import Instance
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.tasks.figures.figure_editor import FigureEditor
@@ -23,9 +23,11 @@ from src.processing.plotters.figure_container import FigureContainer
 from src.processing.plotter_options_manager import SeriesOptionsManager
 from src.processing.tasks.figures.editors.auto_controls import AutoSeriesControl
 
+
 class SeriesEditor(FigureEditor):
     plotter_options_manager = Instance(SeriesOptionsManager, ())
     basename = 'series'
+
     def _update_unknowns_hook(self):
         po = self.plotter_options_manager.plotter_options
 
@@ -33,21 +35,23 @@ class SeriesEditor(FigureEditor):
         po.load_aux_plots(ref)
 
         self._set_name()
+
     def get_component(self, ans, plotter_options):
-#         print plotter_options
+    #         print plotter_options
         if plotter_options is None:
             pom = SeriesOptionsManager()
             plotter_options = pom.plotter_options
 
-#         ref = ans[0]
-#         plotter_options.load_aux_plots(ref)
-#             plotter_options.load_fits(ref)
+        #         ref = ans[0]
+        #         plotter_options.load_aux_plots(ref)
+        #             plotter_options.load_fits(ref)
 
         from src.processing.plotters.series.series_model import SeriesModel
+
         model = SeriesModel(plot_options=plotter_options)
         model.analyses = ans
         iv = FigureContainer(model=model)
-        return iv.component
+        return model, iv.component
 
 #     def show_series(self, key, fit='Linear'):
 #         fi = next((ti for ti in self.tool.fits if ti.name == key), None)

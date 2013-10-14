@@ -29,6 +29,7 @@ from src.deprecate import deprecated
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 import weakref
 from sqlalchemy.sql.expression import subquery
+
 ATTR_KEYS = ['kind', 'username', 'host', 'name', 'password']
 
 
@@ -50,6 +51,7 @@ class SessionCTX(object):
     _close_at_exit = True
     _commit = True
     _parent = None
+
     def __init__(self, sess=None, commit=True, parent=None):
         self._sess = sess
         self._commit = commit
@@ -60,7 +62,6 @@ class SessionCTX(object):
     def __enter__(self):
         if self._parent:
             if self._sess is None:
-
                 self._sess = self._parent.session_factory()
 
             self._parent._sess_stack += 1
@@ -79,7 +80,6 @@ class SessionCTX(object):
         if self._close_at_exit:
             try:
                 if self._commit:
-                    #print 'scommint'
                     self._sess.commit()
             except Exception, e:
                 print 'exception commiting session: {}'.format(e)
@@ -101,7 +101,7 @@ class DatabaseAdapter(Loggable):
     kind = Str  # ('mysql')
     username = Str  # ('root')
     host = Str  # ('localhost')
-#    name = Str#('massspecdata_local')
+    #    name = Str#('massspecdata_local')
     password = Password  # ('Argon')
 
     selector_klass = Any
@@ -136,29 +136,29 @@ class DatabaseAdapter(Loggable):
     def isConnected(self):
         return self.connected
 
-#     def reset(self):
-#         if self.sess:
-#             self.info('clearing current session. uncommitted changes will be deleted')
-#             self.sess.flush()
-#             self.sess.close()
-#
-#             self.sess.remove()
-#             self.sess = None
+    #     def reset(self):
+    #         if self.sess:
+    #             self.info('clearing current session. uncommitted changes will be deleted')
+    #             self.sess.flush()
+    #             self.sess.close()
+    #
+    #             self.sess.remove()
+    #             self.sess = None
 
-#             import gc
-#             gc.collect()
+    #             import gc
+    #             gc.collect()
 
 
     def connect(self, test=True, force=False, warn=True):
         if force:
             self.debug('forcing database connection')
-#             self.reset()
-#             self.session_factory = None
+            #             self.reset()
+        #             self.session_factory = None
 
         if self.connection_parameters_changed:
             force = True
 
-#        print not self.isConnected() or force, self.connection_parameters_changed
+        #        print not self.isConnected() or force, self.connection_parameters_changed
 
         if not self.isConnected() or force:
             self.connected = True if self.kind == 'sqlite' else False
@@ -173,11 +173,11 @@ class DatabaseAdapter(Loggable):
                 if url is not None:
                     self.info('connecting to database {}'.format(url))
                     engine = create_engine(url, echo=False)
-#                     Session.configure(bind=engine)
+                    #                     Session.configure(bind=engine)
 
                     self.session_factory = sessionmaker(bind=engine,
-#                                                         autoflush=False
-                                                        )
+                                                        #                                                         autoflush=False
+                    )
                     if test:
                         self.connected = self._test_db_connection()
                     else:
@@ -193,65 +193,66 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
         self.connection_parameters_changed = False
         return self.connected
 
-#     def new_session(self):
-# #         sess = self.session_factory()
-#         sess = scoped_session(Session)
-#         return sess
+    #     def new_session(self):
+    # #         sess = self.session_factory()
+    #         sess = scoped_session(Session)
+    #         return sess
 
     def initialize_database(self):
         pass
 
-#     def get_query(self, table):
-#         sess = self.get_session()
-#         if sess:
-#             q = sess.query(table)
-#             return q
+    #     def get_query(self, table):
+    #         sess = self.get_session()
+    #         if sess:
+    #             q = sess.query(table)
+    #             return q
 
     def get_session(self):
-#         '''
-#         '''
+    #         '''
+    #         '''
         sess = self.sess
         if sess is None:
             sess = self.session_factory()
 
         return sess
-# #             if self.session_factory is not None:
-#             self.sess = self.new_session()
-#
-#         return self.sess
 
-#     def expire(self):
-#         if self.sess is not None:
-#             self.sess.expire_all()
-#
-#     def delete(self, item):
-#         if self.sess is not None:
-#             self.sess.delete(item)
-#
-#     def commit(self):
-#         if self.sess is not None:
-#             self.sess.commit()
-#
-#     def flush(self):
-#         if self.sess is not None:
-#             self.sess.flush()
-#
-#     def rollback(self):
-#         if self.sess is not None:
-#             self.sess.rollback()
-#
-#     def close(self):
-#         if self.sess is not None:
-#             self.sess.close()
+    # #             if self.session_factory is not None:
+    #             self.sess = self.new_session()
+    #
+    #         return self.sess
+
+    #     def expire(self):
+    #         if self.sess is not None:
+    #             self.sess.expire_all()
+    #
+    #     def delete(self, item):
+    #         if self.sess is not None:
+    #             self.sess.delete(item)
+    #
+    #     def commit(self):
+    #         if self.sess is not None:
+    #             self.sess.commit()
+    #
+    #     def flush(self):
+    #         if self.sess is not None:
+    #             self.sess.flush()
+    #
+    #     def rollback(self):
+    #         if self.sess is not None:
+    #             self.sess.rollback()
+    #
+    #     def close(self):
+    #         if self.sess is not None:
+    #             self.sess.close()
 
 
     def get_migrate_version(self):
         with self.session_ctx() as s:
-#         sess = self.get_session()
-#         if sess:
+        #         sess = self.get_session()
+        #         if sess:
             q = s.query(MigrateVersionTable)
             mv = q.one()
-#             self.close()
+            #             self.close()
             return mv
 
     def get_results(self, tablename, **kw):
@@ -259,12 +260,11 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
         tables = self._get_tables()
         table = tables[tablename]
-#         sess = self.get_session()
+        #         sess = self.get_session()
         q = sess.query(table)
         if kw:
 
             for k, (cp, val) in kw.iteritems():
-
                 d = getattr(table, k)
                 func = getattr(d, cp)
                 q = q.filter(func(val))
@@ -300,10 +300,12 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
                 https://github.com/petehunt/PyMySQL/
             '''
             import pymysql
+
             driver = 'pymysql'
         except ImportError:
             try:
                 import _mysql
+
                 driver = 'mysqldb'
             except ImportError:
                 self.warning_dialog('A mysql driver was not found. Install PyMySQL or MySQL-python')
@@ -317,9 +319,9 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             try:
                 connected = False
                 if self.test_func is not None:
-    #                 self.sess = None
-    #                 self.get_session()
-    #                sess = self.session_factory()
+                #                 self.sess = None
+                #                 self.get_session()
+                #                sess = self.session_factory()
                     self.info('testing database connection')
                     getattr(self, self.test_func)()
                     connected = True
@@ -332,56 +334,58 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
             finally:
                 self.info('closing test session')
-#                 if self.sess is not None:
-#                     self.sess.close()
+                #                 if self.sess is not None:
+                #                     self.sess.close()
 
         return connected
 
-    # @deprecated
-#     def _get_query(self, klass, join_table=None, filter_str=None, sess=None,
-#                     *args, **clause):
-# #         sess = self.get_session()
-#         q = sess.query(klass)
-#
-#         if join_table is not None:
-#             q = q.join(join_table)
-#
-#         if filter_str:
-#             q = q.filter(filter_str)
-#         else:
-#             q = q.filter_by(**clause)
-#         return q
-#
-#     def _get_tables(self):
-#         pass
+        # @deprecated
+
+    #     def _get_query(self, klass, join_table=None, filter_str=None, sess=None,
+    #                     *args, **clause):
+    # #         sess = self.get_session()
+    #         q = sess.query(klass)
+    #
+    #         if join_table is not None:
+    #             q = q.join(join_table)
+    #
+    #         if filter_str:
+    #             q = q.filter(filter_str)
+    #         else:
+    #             q = q.filter_by(**clause)
+    #         return q
+    #
+    #     def _get_tables(self):
+    #         pass
 
     def _add_item(self, obj):
-#         sess = self._session
+    #         sess = self._session
         sess = self.get_session()
         if sess:
             sess.add(obj)
             try:
                 sess.flush()
-            except SQLAlchemyError:
+            except SQLAlchemyError, e:
+                self.debug('add_item exception {} {}'.format(obj, e))
                 sess.rollback()
 
 
-#     def _add_item(self, obj, sess=None):
+                #     def _add_item(self, obj, sess=None):
 
-#         def func(s):
-#             s.add(obj)
-#
-#         if sess is None:
-#             with session() as sess:
-#                 func(sess)
-#         else:
-#             func(sess)
+                #         def func(s):
+                #             s.add(obj)
+                #
+                #         if sess is None:
+                #             with session() as sess:
+                #                 func(sess)
+                #         else:
+                #             func(sess)
 
-#         with session(sess) as s:
-#             s.add(obj)
-#         sess = self.get_session()
-#         if sess is not None:
-#             sess.add(obj)
+                #         with session(sess) as s:
+                #             s.add(obj)
+                #         sess = self.get_session()
+                #         if sess is not None:
+                #             sess.add(obj)
 
 
     def _add_unique(self, item, attr, name):
@@ -390,16 +394,17 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             self.info('adding {}= {}'.format(attr, name))
             self._add_item(item)
             nitem = item
+
         return nitem
 
 
-#         def func(s):
-            # test if already exists
-#                 self.flush()
-#                 self.debug('add unique flush')
+    #         def func(s):
+    # test if already exists
+    #                 self.flush()
+    #                 self.debug('add unique flush')
 
-#            self.info('{}= {} already exists'.format(attr, name))
-#         return nitem
+    #            self.info('{}= {} already exists'.format(attr, name))
+    #         return nitem
 
 
     def _get_path_keywords(self, path, args):
@@ -420,8 +425,8 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
                 sess = self.session_factory()
 
         with self.session_ctx(sess):
-    #         print 'get items', sess, self.session_factory
-    #         sess = self.get_session()
+        #         print 'get items', sess, self.session_factory
+        #         sess = self.get_session()
             if sess is not None:
                 q = sess.query(table)
 
@@ -466,9 +471,9 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
     def _retrieve_item(self, table, value, key='name', last=None,
                        joins=None, filters=None, options=None):
-#         sess = self.get_session()
-#         if sess is None:
-#             return
+    #         sess = self.get_session()
+    #         if sess is None:
+    #             return
 
         if not isinstance(value, (str, int, unicode, long, float, list, tuple)):
             return value
@@ -481,8 +486,8 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
         def __retrieve(s):
             q = s.query(table)
 
-#             if options:
-#                 q = q.options(subqueryload(options))
+            #             if options:
+            #                 q = q.options(subqueryload(options))
 
             if joins:
                 try:
@@ -507,12 +512,14 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
             except StatementError:
                 import traceback
+
                 self.debug(traceback.format_exc())
                 s.rollback()
-#                 return __retrieve()
+            #                 return __retrieve()
 
             except MultipleResultsFound:
-                self.debug('multiples row found for {} {} {}. Trying to get last row'.format(table.__tablename__, key, value))
+                self.debug(
+                    'multiples row found for {} {} {}. Trying to get last row'.format(table.__tablename__, key, value))
                 try:
                     if hasattr(table, 'id'):
                         q = q.order_by(table.id.desc())
@@ -534,16 +541,16 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
                    limit=None,
                    order=None,
                    key=None
-                   ):
+    ):
 
         if isinstance(join_table, str):
             join_table = gtables[join_table]
 
         q = self._get_query(table, join_table=join_table,
-                             filter_str=filter_str)
+                            filter_str=filter_str)
         if order:
             for o in order \
-                    if isinstance(order, list) else [order]:
+                if isinstance(order, list) else [order]:
                 q = q.order_by(o)
 
         if limit:
@@ -560,30 +567,29 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
         return res
 
 
-
     def _selector_default(self):
         return self._selector_factory()
 
-#    def open_selector(self):
-#        s = self._selector_factory()
-#        if s:
-#            s.edit_traits()
-#            self.
+    #    def open_selector(self):
+    #        s = self._selector_factory()
+    #        if s:
+    #            s.edit_traits()
+    #            self.
 
     def selector_factory(self, **kw):
         sel = self._selector_factory(**kw)
         self.selector = weakref.ref(sel)()
         return self.selector
 
-#    def new_selector(self, **kw):
-#        if self.selector_klass:
-#            s = self.selector_klass(_db=self, **kw)
-#            return s
+    #    def new_selector(self, **kw):
+    #        if self.selector_klass:
+    #            s = self.selector_klass(_db=self, **kw)
+    #            return s
 
     def _selector_factory(self, **kw):
         if self.selector_klass:
             s = self.selector_klass(db=self, **kw)
-#            s.load_recent()
+            #            s.load_recent()
             return s
 
 #    def _get(self, table, query_dict, func='one'):
@@ -608,6 +614,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
 class PathDatabaseAdapter(DatabaseAdapter):
     path_table = None
+
     def add_path(self, rec, path, **kw):
         if self.path_table is None:
             raise NotImplementedError

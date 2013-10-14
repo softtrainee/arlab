@@ -172,7 +172,8 @@ class InterpolationEditor(GraphEditor):
                                          type='scatter',
                                          plotid=i,
                                          marker='square',
-
+                                         marker_size=3,
+                                         bind_id=-1,
                                          add_inspector=False)
                 self._add_inspector(s, self.sorted_unknowns)
                 self._add_error_bars(s, c_ues)
@@ -192,6 +193,7 @@ class InterpolationEditor(GraphEditor):
                                              type='scatter',
                                              plotid=i,
                                              fit=False,
+                                             marker_size=3,
                                              add_inspector=False, )
                     self._add_inspector(s, self.sorted_references)
                     self._add_error_bars(s, r_es)
@@ -202,6 +204,7 @@ class InterpolationEditor(GraphEditor):
                                                 yerror=ArrayDataSource(data=r_es),
                                                 fit=fit,
                                                 plotid=i,
+                                                marker_size=3,
                                                 add_inspector=False)
                     if hasattr(l, 'regressor'):
                         reg = l.regressor
@@ -218,8 +221,9 @@ class InterpolationEditor(GraphEditor):
                                              yerror=ArrayDataSource(p_ues),
                                              fit=False,
                                              type='scatter',
+                                             marker_size=3,
                                              plotid=i,
-                    )
+                                             bind_id=-1)
                     graph.set_series_label('Unknowns-predicted', plotid=i)
                     self._add_error_bars(s, p_ues)
 
@@ -292,4 +296,8 @@ class InterpolationEditor(GraphEditor):
             p_uys, p_ues = self._set_interpolated_values(iso, reg, xs)
             scatter.value.set_data(p_uys)
             scatter.yerror.set_data(p_ues)
-            #============= EOF =============================================
+
+    def _clean_references(self):
+        return [ri for ri in self.references if ri.temp_status == 0]
+
+        #============= EOF =============================================

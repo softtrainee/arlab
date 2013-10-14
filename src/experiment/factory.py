@@ -79,16 +79,8 @@ class ExperimentFactory(Loggable, ConsumerMixin):
     def set_selected_runs(self, runs):
         self.run_factory.set_selected_runs(runs)
 
-    #     _prev_add_time = None
     def _add_run(self, *args, **kw):
         def add():
-        #         if self._prev_add_time:
-    #             if abs(time.time() - self._prev_add_time) < 0.5:
-    #                 self.debug('skipping')
-    #                 return
-    #
-    #         self._prev_add_time = time.time()
-
             egs = list(set([ai.extract_group for ai in self.queue.automated_runs]))
             eg = max(egs) if egs else 0
 
@@ -111,11 +103,10 @@ class ExperimentFactory(Loggable, ConsumerMixin):
             self.queue.add_runs(new_runs, freq)
 
             idx += len(new_runs)
-            self.run_factory.set_labnumber = False
-            self.queue.select_run_idx(idx)
-            self.run_factory.set_labnumber = True
 
-        #add()
+            with self.run_factory.update_selected_ctx():
+                self.queue.select_run_idx(idx)
+
         invoke_in_main_thread(add)
 
     #===============================================================================
@@ -150,7 +141,6 @@ class ExperimentFactory(Loggable, ConsumerMixin):
     @on_trait_change('''queue_factory:[mass_spectrometer,
 extract_device, delay_+, tray, username, load_name]''')
     def _update_queue(self, name, new):
-        print name, new
         if name == 'mass_spectrometer':
             self._mass_spectrometer = new
             self.run_factory.set_mass_spectrometer(new)
@@ -174,7 +164,9 @@ extract_device, delay_+, tray, username, load_name]''')
         self.run_factory = self._run_factory_factory()
         #         self.run_factory.update_templates_needed = True
         self.run_factory.load_templates()
-        self.run_factory.load_patterns(self._get_patterns(ed))
+        self.run_factory.load_patterns()
+        self.run_factory.remote_patterns = self._get_patterns(ed)
+
         if self.queue:
             self.queue.set_extract_device(ed)
 

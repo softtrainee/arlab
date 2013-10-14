@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance
+from traits.api import HasTraits, Instance, Any, on_trait_change
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -28,12 +28,11 @@ from src.processing.tasks.figures.editors.auto_controls import AutoIdeogramContr
 class IdeogramEditor(FigureEditor):
     plotter_options_manager = Instance(IdeogramOptionsManager, ())
     basename = 'ideo'
-    _model = None
 
     def get_component(self, ans, plotter_options):
         meta = None
-        if self._model:
-            meta = self._model.dump_metadata()
+        if self.model:
+            meta = self.model.dump_metadata()
 
         if plotter_options is None:
             pom = IdeogramOptionsManager()
@@ -48,9 +47,7 @@ class IdeogramEditor(FigureEditor):
         if meta:
             model.load_metadata(meta)
 
-        self._model = model
-
-        return iv.component
+        return model, iv.component
 
 
 class AutoIdeogramEditor(IdeogramEditor):

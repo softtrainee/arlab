@@ -340,7 +340,7 @@ class FigureTask(AnalysisEditTask):
         """
 
         if isinstance(self.active_editor, klass):
-            sa = self.analysis_table.selected_analysis
+            sa = self.analysis_table.selected
             if sa:
                 ts = self.manager.make_analyses(sa)
             else:
@@ -477,8 +477,13 @@ class FigureTask(AnalysisEditTask):
 
     @on_trait_change('active_editor:unknowns')
     def _ac_unknowns_changed(self):
-
         self.unknowns_pane.items = self.active_editor.unknowns
+
+    #@on_trait_change('active_editor:refresh_unknowns_table')
+    @on_trait_change('active_editor:model:panels:figures:refresh_unknowns_table')
+    def _ac_refresh_table(self):
+        if self.unknowns_pane:
+            self.unknowns_pane.refresh_needed = True
 
     #===========================================================================
     # browser protocol

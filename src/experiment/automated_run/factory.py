@@ -45,6 +45,19 @@ from src.lasers.pattern.pattern_maker_view import PatternMakerView
 from src.ui.gui import invoke_in_main_thread
 
 
+class UpdateSelectedCTX(object):
+    _factory = None
+
+    def __init__(self, factory):
+        self._factory = None
+
+    def __enter__(self):
+        self._factory.set_labnumber = False
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self._factory.set_labnumber = True
+
+
 def EKlass(klass):
     return klass(enter_set=True, auto_set=False)
 
@@ -53,13 +66,22 @@ def EKlass(klass):
 
 class AutomatedRunFactory(Loggable):
     db = Any
+
+    extraction_script = Instance(Script)
+    measurement_script = Instance(Script)
+    post_measurement_script = Instance(Script)
+    post_equilibration_script = Instance(Script)
+    load_defaults_button = Button('Defaults')
+
+    human_error_checker = Instance(HumanErrorChecker, ())
+    factory_view = Instance(FactoryView)
+    factory_view_klass = FactoryView
+
     set_labnumber = True
 
     labnumber = String(enter_set=True, auto_set=False)
     update_labnumber = Event
-    #    aliquot = Property(Int(enter_set=True, auto_set=False), depends_on='_aliquot')
-    #    _aliquot = Int
-    #    o_aliquot = Int
+
     aliquot = EKlass(Int)
     user_defined_aliquot = False
     special_labnumber = Str('Special Labnumber')
@@ -77,12 +99,10 @@ class AutomatedRunFactory(Loggable):
 
     flux = Property(Float, depends_on='labnumber')
     flux_error = Property(Float, depends_on='labnumber')
-    #    flux_error=Property(Float, depends_on='labnumber')
+
     _flux = None
     _flux_error = None
     save_flux_button = Button
-
-    #    _flux_error=Float
 
     skip = Bool(False)
     end_after = Property(Bool, depends_on='_end_after')
@@ -93,7 +113,6 @@ class AutomatedRunFactory(Loggable):
 
     position = Property(depends_on='_position')
     _position = Str
-    #     endposition = Int
 
     #===========================================================================
     # extract
@@ -116,10 +135,9 @@ class AutomatedRunFactory(Loggable):
     beam_diameter = Property(EKlass(Str), depends_on='beam_diameter')
     _beam_diameter = Any
 
-    pattern = Str
+    pattern = String('Pattern')
     patterns = List
-    #     patterns = Property(depends_on='_patterns')
-    #     _patterns = List
+    remote_patterns = List
 
     edit_pattern = Event
     edit_pattern_label = Property(depends_on='pattern')
@@ -127,8 +145,8 @@ class AutomatedRunFactory(Loggable):
     # templates
     #===========================================================================
     template = String('Step Heat Template')
-    templates = List  # Property(depends_on='update_templates_needed')
-    #     update_templates_needed = Event
+    templates = List
+
     edit_template = Event
     edit_template_label = Property(depends_on='template')
 
@@ -163,14 +181,11 @@ class AutomatedRunFactory(Loggable):
     _spec_klass = AutomatedRunSpec
     _extract_group_cnt = 1
 
-    #    frequencyable = Property(depends_on='labnumber')
     extractable = Property(depends_on='labnumber')
     update_info_needed = Event
     refresh_table_needed = Event
     changed = Event
-    #clear_end_after = Event
     suppress_update = False
-    #    clear_selection = Event
 
     edit_mode = Bool(False)
     edit_mode_label = Property(depends_on='edit_mode')
@@ -179,19 +194,8 @@ class AutomatedRunFactory(Loggable):
     mass_spectrometer = String
     extract_device = Str
 
-    extraction_script = Instance(Script)
-    measurement_script = Instance(Script)
-    post_measurement_script = Instance(Script)
-    post_equilibration_script = Instance(Script)
-
-    #     def _template_changed(self):
-    #         print self, self.template
-    human_error_checker = Instance(HumanErrorChecker, ())
-
-    _update_thread = None
-
-    factory_view = Instance(FactoryView)
-    factory_view_klass = FactoryView
+    def update_selected_ctx(self):
+        return UpdateSelectedCTX(self)
 
     def check_run_addition(self, runs, load_name):
         '''
@@ -212,8 +216,8 @@ class AutomatedRunFactory(Loggable):
     def load_templates(self):
         self.templates = self._get_templates()
 
-    def load_patterns(self, ps):
-        self.patterns = self._get_patterns(ps)
+    def load_patterns(self):
+        self.patterns = self._get_patterns()
 
     def load_truncations(self):
         self.truncations = self._get_truncations()
@@ -241,7 +245,7 @@ class AutomatedRunFactory(Loggable):
             self._clone_run(run, set_labnumber=self.set_labnumber)
 
         self._selected_runs = runs
-        #self.suppress_update = False
+        self.suppress_update = False
 
         if not runs:
             self.edit_mode = False
@@ -304,14 +308,14 @@ class AutomatedRunFactory(Loggable):
                         ne = ns + d
                         self.position = '{}-{}'.format(ns, ne)
 
-                    #                 e = int(self.endposition)
-                    #                 if e:
-                    #                     self.position = str(e + 1)
-                    #                 else:
-                    #                     self.position = self._increment(self.position, increment=increment)
-                    #
-                    #                 if self.endposition:
-                    #                     self.endposition = 2 * e + 1 - s
+                        #                 e = int(self.endposition)
+                        #                 if e:
+                        #                     self.position = str(e + 1)
+                        #                 else:
+                        #                     self.position = self._increment(self.position, increment=increment)
+                        #
+                        #                 if self.endposition:
+                        #                     self.endposition = 2 * e + 1 - s
 
         return arvs, freq
 
@@ -329,9 +333,9 @@ class AutomatedRunFactory(Loggable):
             s = getattr(self, '{}_script'.format(s))
             s.extract_device = new
 
-        #===============================================================================
-        # private
-        #===============================================================================
+            #===============================================================================
+            # private
+            #===============================================================================
 
     def _make_short_labnumber(self, labnumber=None):
         if labnumber is None:
@@ -379,7 +383,7 @@ class AutomatedRunFactory(Loggable):
                 arv.trait_set(**st.make_dict(self.duration, self.cleanup))
                 arvs.append(arv)
 
-            #        self._extract_group_cnt += 1
+                #        self._extract_group_cnt += 1
         return arvs
 
     def _new_runs_by_position(self, template=False, extract_group_cnt=0):
@@ -387,7 +391,7 @@ class AutomatedRunFactory(Loggable):
 
         arvs = []
         s = None
-        e= None
+        e = None
         inc = 1
         if SLICE_REGEX.match(pos):
             s, e = map(int, pos.split('-'))
@@ -397,29 +401,29 @@ class AutomatedRunFactory(Loggable):
             s, e = map(int, pos.split(':'))[:2]
         else:
             try:
-                s=int(self.position)
-                e=s
+                s = int(self.position)
+                e = s
             except ValueError:
                 pass
-        
-#         if s is not None:
+
+                #         if s is not None:
         if e < s:
             self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
             return
-        
-        set_pos=True
+
+        set_pos = True
         if s is not None and e is not None:
-            positions=range(s, e+1, inc)
+            positions = range(s, e + 1, inc)
         else:
-            set_pos=False
-            positions=[0]
-            
-#             print e - s + 1, inc, template
-        p=''
+            set_pos = False
+            positions = [0]
+
+        #             print e - s + 1, inc, template
+        p = ''
         for i in positions:
             if set_pos:
                 p = str(i)
-#             print 'poss',p
+                #             print 'poss',p
             if template:
                 arvs.extend(self._render_template(extract_group_cnt,
                                                   position=p
@@ -434,7 +438,7 @@ class AutomatedRunFactory(Loggable):
                 the subsequent runs to have there aliquots defined by db
             '''
             self.user_defined_aliquot = False
-#         print arvs
+            #         print arvs
         return arvs
 
     def _new_runs(self, positions, special=False,
@@ -448,15 +452,15 @@ class AutomatedRunFactory(Loggable):
                 arvs = [self._new_run(position=pi, excludes=['position'])
                         for pi in positions]
             else:
-#             elif self.position:
+            #             elif self.position:
                 template = self._use_template() and not freq and not special
 
                 arvs = self._new_runs_by_position(template, extract_group_cnt)
 
-#         print arvs
+                #         print arvs
         if not arvs:
             arvs = [self._new_run()]
-        
+
         return arvs
 
 
@@ -638,27 +642,24 @@ class AutomatedRunFactory(Loggable):
 
     def _template_closed(self):
         invoke_in_main_thread(self.load_templates)
-#         self.load_templates()
-
-    #         self.template = self._template.name
-    #         self.template = os.path.splitext(self._template.name)[0]
-    #         del self._template
 
     def _pattern_closed(self):
-        self.load_patterns()
-
-    #         self.pattern = self._pattern.name
-    #         self.pattern = os.path.splitext(self._pattern.name)[0]
-    #         del self._pattern
+        invoke_in_main_thread(self.load_patterns)
 
     def _use_pattern(self):
-        return self.pattern and not self.pattern in (LINE_STR,)
+        return self.pattern and not self.pattern in (LINE_STR, 'None', '',
+                                                     'Pattern',
+                                                     'Local Patterns',
+                                                     'Remote Patterns')
 
     def _use_template(self):
-        return self.template and not self.template in ('Step Heat Template', LINE_STR)
+        return self.template and not self.template in ('Step Heat Template',
+                                                       LINE_STR, 'None')
 
     def _update_run_values(self, attr, v):
-        def func():
+        if self.edit_mode and \
+                self._selected_runs and \
+                not self.suppress_update:
             for si in self._selected_runs:
                 setattr(si, attr, v)
 
@@ -667,17 +668,6 @@ class AutomatedRunFactory(Loggable):
 
             self.changed = True
             self.refresh_table_needed = True
-
-        if self.edit_mode and \
-                self._selected_runs and \
-                not self.suppress_update:
-
-            if self._update_thread:
-                self._update_thread.join()
-
-            t = Thread(target=func)
-            t.start()
-            self._update_thread = t
 
     def _save_flux(self):
         if self._flux is None and self._flux_error is None:
@@ -703,9 +693,9 @@ class AutomatedRunFactory(Loggable):
                     dbln.selected_flux_history = dbhist
                     self.information_dialog(u'Flux for {} {} \u00b1{} saved to database'.format(self.labnumber, v, e))
 
-                #===============================================================================
-                #
-                #===============================================================================
+                    #===============================================================================
+                    #
+                    #===============================================================================
 
     def _load_extraction_defaults(self, ln):
         defaults = self._load_default_file()
@@ -729,7 +719,9 @@ class AutomatedRunFactory(Loggable):
             dont load if was unknown and now unknown
             this preserves the users changes 
         '''
-        # if new is special e.g bu-01-01
+        if not old:
+            return
+            # if new is special e.g bu-01-01
         if '-' in new:
             new = new.split('-')[0]
         if '-' in old:
@@ -766,7 +758,6 @@ class AutomatedRunFactory(Loggable):
                     new_script_name = self._remove_file_extension(new_script_name)
                     if labnumber in ('u', 'bu') and self.extract_device != NULL_STR:
 
-                    #                        print defaults
                         # the default value trumps pychron's
                         if self.extract_device:
                             e = self.extract_device.split(' ')[1].lower()
@@ -915,11 +906,12 @@ class AutomatedRunFactory(Loggable):
     def _get_edit_template_label(self):
         return 'Edit' if self._use_template() else 'New'
 
-    def _get_patterns(self, ps):
+    def _get_patterns(self):
         p = paths.pattern_dir
         extension = '.lp'
         patterns = list_directory(p, extension)
-        return ['', ] + ps + [LINE_STR] + patterns
+        return ['Pattern', 'None', LINE_STR, 'Remote Patterns', ''] + self.remote_patterns + \
+               ['Local Patterns', ''] + patterns
 
     def _get_templates(self):
         p = paths.incremental_heat_template_dir
@@ -930,7 +922,7 @@ class AutomatedRunFactory(Loggable):
         else:
             self.template = 'Step Heat Template'
 
-        return ['Step Heat Template', LINE_STR] + temps
+        return ['Step Heat Template', 'None', ''] + temps
 
     def _get_truncations(self):
         p = paths.truncation_dir
@@ -992,10 +984,14 @@ class AutomatedRunFactory(Loggable):
         self.set_end_after(v)
         self._end_after = v
 
-        #===============================================================================
+    #===============================================================================
 
     # handlers
     #===============================================================================
+    def _load_defaults_button_fired(self):
+        if self.labnumber:
+            self._load_default_scripts(self.labnumber)
+
     def _extract_group_button_fired(self):
         if self.edit_mode and \
                 self._selected_runs and \
@@ -1028,7 +1024,10 @@ pattern,
 position,
 weight, comment, skip, extract_group''')
     def _edit_handler(self, name, new):
-#         print name, new
+        if name == 'pattern':
+            if not self._use_pattern():
+                new = ''
+                #print name, new, self._use_pattern()
         self._update_run_values(name, new)
 
     def _end_after_changed(self, new):
@@ -1181,15 +1180,17 @@ post_equilibration_script:name
     def _edit_template_fired(self):
         temp = self._new_template()
         temp.on_trait_change(self._template_closed, 'close_event')
-        
+
         self.open_view(temp)
-#         self._template = temp
+
+    #         self._template = temp
 
     def _edit_pattern_fired(self):
         pat = self._new_pattern()
         pat.on_trait_change(self._pattern_closed, 'close_event')
         self.open_view(pat)
-#         self._pattern = pat
+
+    #         self._pattern = pat
 
     def _edit_mode_button_fired(self):
         self.edit_mode = not self.edit_mode
@@ -1199,13 +1200,16 @@ post_equilibration_script:name
             for si in self._selected_runs:
                 if si.aliquot != self.aliquot:
                     si.user_defined_aliquot = True
+
                     si.assigned_aliquot = int(self.aliquot)
 
             self.update_info_needed = True
+            self.refresh_table_needed = True
 
-    def _edit_mode_changed(self):
-        if self.edit_mode:
-            self._load_default_scripts(self.labnumber)
+            #def _edit_mode_changed(self):
+
+        #    if self.edit_mode:
+    #        self._load_default_scripts(self.labnumber)
 
     def _save_flux_button_fired(self):
         self._save_flux()
@@ -1223,9 +1227,9 @@ post_equilibration_script:name
             script = getattr(self, si)
             setattr(script, name, new)
 
-        #===============================================================================
-        # defaults
-        #===============================================================================
+            #===============================================================================
+            # defaults
+            #===============================================================================
 
     def _script_factory(self, label, name, kind='ExtractionLine'):
         return Script(label=label,

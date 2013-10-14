@@ -1817,7 +1817,7 @@ anaylsis_type={}
             dbhist = db.add_fit_history(analysis,
                                         user=self.spec.username)
 
-            key = lambda x: x[2]
+            key = lambda x: x[1]
             si = sorted(self._save_isotopes, key=key)
 
             for detname, isos in groupby(si, key=key):
@@ -2069,7 +2069,6 @@ anaylsis_type={}
 
     def _ext_factory(self, root, file_name, klass=None):
         file_name = self._make_script_name(file_name)
-        self.debug('EXT FACTORY runner:{}'.format(self.runner))
         if os.path.isfile(os.path.join(root, file_name)):
             if klass is None:
                 klass = ExtractionPyScript
@@ -2088,13 +2087,12 @@ anaylsis_type={}
         return name
 
     def _setup_context(self, script):
-        '''
+        """
             setup_context to expose variables to the pyscript
-        '''
+        """
         spec = self.spec
         hdn = spec.extract_device.replace(' ', '_').lower()
         an = spec.analysis_type.split('_')[0]
-        self.debug('######################### setup context extract value= {}'.format(spec.extract_value))
         script.setup_context(tray=spec.tray,
                              position=self.get_position_list(),
                              disable_between_positions=spec.disable_between_positions,

@@ -102,6 +102,34 @@ class BaseBrowserTask(BaseEditorTask):
 
     filter_non_run_samples = Bool(True)
 
+    #def recall(self, records):
+    #    ans = self.manager.make_analyses(records, calculate_age=True)
+    #
+    #    def func(rec):
+    #    #             rec.load_isotopes()
+    #        rec.calculate_age()
+    #        reditor = RecallEditor(analysis_view=rec.analysis_view)
+    #        self.editor_area.add_editor(reditor)
+    #
+    #    #             self.add_iso_evo(reditor.name, rec)
+    #
+    #    if ans:
+    #        for ri in ans:
+    #            func(ri)
+    #            #             self.manager._load_analyses(ans, func=func)
+    #
+    #        ed = self.editor_area.editors[-1]
+    #        self.editor_area.activate_editor(ed)
+    def set_projects(self, ps, sel):
+        self.oprojects = ps
+        self.projects = ps
+        self.trait_set(selected_project=sel)
+
+    def set_samples(self, s, sel):
+        self.samples = s
+        self.osamples = s
+        self.trait_set(selected_sample=sel)
+
     def activated(self):
         self.load_projects()
 
@@ -145,6 +173,7 @@ class BaseBrowserTask(BaseEditorTask):
         return BrowserPane(model=self, **kw)
 
     def _selected_project_changed(self, new):
+        print new, new[0].name
         if new:
             db = self.manager.db
             with db.session_ctx():
@@ -178,7 +207,7 @@ class BaseBrowserTask(BaseEditorTask):
             self.samples = sams
             self.osamples = sams
 
-    def _get_sample_analyses(self, srv, limit=50):
+    def _get_sample_analyses(self, srv, limit=50, include_invalid=False):
         db = self.manager.db
         with db.session_ctx():
             for project in self.selected_project:
@@ -189,7 +218,8 @@ class BaseBrowserTask(BaseEditorTask):
             else:
                 return []
 
-            ans = db.get_sample_analyses(sample, limit=limit)
+            ans = db.get_sample_analyses(sample, limit=limit,
+                                         include_invalid=include_invalid)
             return [self._record_view_factory(a) for a in ans]
 
     def _record_view_factory(self, ai, **kw):
@@ -201,14 +231,15 @@ class BaseBrowserTask(BaseEditorTask):
         if new:
             ans = []
             for ni in new:
-                aa = self._get_sample_analyses(ni)
+                aa = self._get_sample_analyses(ni,
+                                               include_invalid=not self.analysis_table.omit_invalid)
                 #print 'aa', new, ans
                 ans.extend(aa)
 
             ans = self.analysis_table.set_analyses(ans)
 
             if ans and self.auto_select_analysis:
-                self.analysis_table.selected_analysis = ans[0]
+                self.analysis_table.selected = ans[0]
 
     def _filter_func(self, new, attr=None, comp=None):
         comp_keys = {'=': '__eq__',
@@ -265,7 +296,7 @@ class BaseBrowserTask(BaseEditorTask):
     def _clear_selection_button_fired(self):
         self.selected_project = []
         self.selected_sample = []
-        self.analysis_table.selected_analysis = []
+        self.analysis_table.selected = []
 
     def _ok_query(self):
         ms = self.mass_spectrometer not in (DEFAULT_SPEC, 'None')
@@ -315,19 +346,42 @@ class BaseBrowserTask(BaseEditorTask):
             if self.analysis_type == 'None':
                 self.analysis_type = DEFAULT_AT
 
-    @on_trait_change('analysis_table:selected_analysis')
+    @on_trait_change('analysis_table:selected')
     def _selected_analysis_changed(self, new):
         self._set_selected_analysis(new)
 
     def _set_selected_analysis(self, new):
         pass
 
+    @on_trait_change('analysis_table:omit_invalid')
+    def _omit_invalid_changed(self):
+        self._selected_sample_changed(self.selected_sample)
+
     def _dclicked_sample_changed(self):
-        ans = self._get_sample_analyses(self.selected_sample[-1])
+        ans = self._get_sample_analyses(self.selected_sample[-1],
+                                        include_invalid=not self.analysis_table.omit_invalid
+        )
         #print self.active_editor
         if self.active_editor:
             self.active_editor.unknowns = ans
-            self.unknowns_pane.items = self.active_editor.unknowns
+            #self.unknowns_pane.items = self.active_editor.unknowns
+
+    #def _open_external_task(self, tid):
+    #    app = self.window.application
+    #    return app.open_task(tid)
+
+    #def _open_recall_editor(self, recs):
+    #    tid = 'pychron.recall'
+    #    app = self.window.application
+    #
+    #    win, task, is_open=app.get_open_task(tid)
+    #
+    #    if is_open:
+    #        win.activate()
+    #    else:
+    #        win.open()
+    #
+    #    task.recall(recs)
 
     def _analysis_table_default(self):
         at = AnalysisTable(db=self.manager.db)

@@ -17,6 +17,7 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 from numpy import asarray
+
 try:
     from statsmodels.api import WLS
 except ImportError:
@@ -24,24 +25,27 @@ except ImportError:
 #============= local library imports  ==========================
 # from src.regression.base_regressor import BaseRegressor
 from src.regression.ols_regressor import OLSRegressor
+
+
 class WeightedPolynomialRegressor(OLSRegressor):
     def calculate(self):
         if not len(self.xs) or \
-            not len(self.ys) or\
-            not len(self.yserr):
+                not len(self.ys) or \
+                not len(self.yserr):
             return
 
         if len(self.xs) != len(self.ys) or len(self.xs) != len(self.yserr):
             return
 
-        xs = self.xs
-        xs = asarray(xs)
+        #xs = self.xs
+        #xs = asarray(xs)
+
         es = asarray(self.yserr)
         ys = self.ys
-        X = self._get_X()
-        self._wls = WLS(ys, X,
+        x = self._get_X()
+        self._wls = WLS(ys, x,
                         weights=1 / es
-                        )
+        )
         self._result = self._wls.fit()
 
 

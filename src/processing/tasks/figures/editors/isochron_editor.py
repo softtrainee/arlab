@@ -15,16 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Instance
+from traits.api import Instance, on_trait_change
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.tasks.figures.figure_editor import FigureEditor
 from src.processing.plotters.figure_container import FigureContainer
 from src.processing.plotter_options_manager import InverseIsochronOptionsManager
 
+
 class InverseIsochronEditor(FigureEditor):
     plotter_options_manager = Instance(InverseIsochronOptionsManager, ())
     basename = 'iso'
+
+    @on_trait_change('model:panels:figures:refresh_unknowns_table')
+    def _handle_refresh(self):
+        print 'refresh', self
+
+    def load_fits(self, refiso):
+        pass
+
     def get_component(self, ans, plotter_options):
         if plotter_options is None:
             pom = InverseIsochronOptionsManager()
@@ -37,7 +46,6 @@ class InverseIsochronEditor(FigureEditor):
         model.analyses = ans
         iv = FigureContainer(model=model)
 
-        self._model = model
-        return iv.component
+        return model, iv.component
 
 #============= EOF =============================================

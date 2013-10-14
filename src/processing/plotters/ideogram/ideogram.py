@@ -68,7 +68,9 @@ class Ideogram(BaseArArFigure):
 
         self._plot_relative_probability(graph.plots[0], 0)
 
-        omit = [i for i, ai in enumerate(self.sorted_analyses) if ai.temp_status]
+        omit = self._get_omitted(self.sorted_analyses)
+
+        #omit = [i for i, ai in enumerate(self.sorted_analyses) if ai.temp_status]
 
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
             scatter = getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1)
@@ -247,20 +249,11 @@ class Ideogram(BaseArArFigure):
             else:
                 self.selected_analysis = None
 
-            sel = obj.metadata.get('selections', [])
-
-            if sel:
-                obj.was_selected = True
-                self._rebuild_ideo(sel)
-            elif hasattr(obj, 'was_selected'):
-                if obj.was_selected:
-                    self._rebuild_ideo(sel)
-
-                obj.was_selected = False
-
+            sel = self._filter_metadata_changes(obj, self._rebuild_ideo, sorted_ans)
+            #self._set_selected(sorted_ans, sel)
             # set the temp_status for all the analyses
-            for i, a in enumerate(sorted_ans):
-                a.temp_status = 1 if i in sel else 0
+            #for i, a in enumerate(sorted_ans):
+            #    a.temp_status = 1 if i in sel else 0
         else:
             sel = [i for i, a in enumerate(sorted_ans)
                    if a.temp_status]
@@ -268,10 +261,15 @@ class Ideogram(BaseArArFigure):
             self._rebuild_ideo(sel)
 
     def _rebuild_ideo(self, sel):
-        #print 'rebuild'
         graph = self.graph
-        plot = graph.plots[0]
 
+        if graph.bind_index:
+            for p in graph.plots[1:]:
+                for plot in p.plots.itervalues():
+                    plot = plot[0]
+                    plot.index.metadata['selections'] = sel
+
+        plot = graph.plots[0]
         gid = self.group_id + 1
         lp = plot.plots['Current-{}'.format(gid)][0]
         dp = plot.plots['Original-{}'.format(gid)][0]
@@ -283,42 +281,42 @@ class Ideogram(BaseArArFigure):
 
         d = zip(self.xs, self.xes)
         oxs, oxes = zip(*d)
-
         d = filter(f, enumerate(d))
-        fxs, fxes = zip(*[(a, b) for _, (a, b) in d])
+        if d:
+            fxs, fxes = zip(*[(a, b) for _, (a, b) in d])
 
-        xs, ys = self._calculate_probability_curve(fxs, fxes)
-        wm, we, mswd, valid_mswd = self._calculate_stats(fxs, fxes, xs, ys)
+            xs, ys = self._calculate_probability_curve(fxs, fxes)
+            wm, we, mswd, valid_mswd = self._calculate_stats(fxs, fxes, xs, ys)
 
-        lp.value.set_data(ys)
-        lp.index.set_data(xs)
+            lp.value.set_data(ys)
+            lp.index.set_data(xs)
 
-        sp.index.set_data([wm])
-        sp.xerror.set_data([we])
+            sp.index.set_data([wm])
+            sp.xerror.set_data([we])
 
-        mi = min(ys)
-        ma = max(ys)
-        self._set_y_limits(mi, ma, min_=0)
+            mi = min(ys)
+            ma = max(ys)
+            self._set_y_limits(mi, ma, min_=0)
 
-        # update the data label position
-        for ov in sp.overlays:
-            if isinstance(ov, DataLabel):
-                _, y = ov.data_point
-                ov.data_point = wm, y
-                n = len(fxs)
-                ov.label_text = self._build_label_text(wm, we, mswd, valid_mswd, n)
+            # update the data label position
+            for ov in sp.overlays:
+                if isinstance(ov, DataLabel):
+                    _, y = ov.data_point
+                    ov.data_point = wm, y
+                    n = len(fxs)
+                    ov.label_text = self._build_label_text(wm, we, mswd, valid_mswd, n)
 
-        if sel:
-            dp.visible = True
-            xs, ys = self._calculate_probability_curve(oxs, oxes)
-            dp.value.set_data(ys)
-            dp.index.set_data(xs)
-        else:
-            dp.visible = False
+            if sel:
+                dp.visible = True
+                xs, ys = self._calculate_probability_curve(oxs, oxes)
+                dp.value.set_data(ys)
+                dp.index.set_data(xs)
+            else:
+                dp.visible = False
 
-            #===============================================================================
-            # utils
-            #===============================================================================
+                #===============================================================================
+                # utils
+                #===============================================================================
 
     def _get_xs(self, key='age'):
         xs = array([ai for ai in self._unpack_attr(key)])

@@ -44,6 +44,7 @@ class GraphEditor(BaseTraitsEditor):
     analysis_cache = List
     basename = ''
     pickle_path = '_'
+    unpack_peaktime = False
 
     def prepare_destroy(self):
         self.dump_tool()
@@ -97,9 +98,10 @@ class GraphEditor(BaseTraitsEditor):
         self.load_fits(refiso)
 
     def load_fits(self, refiso):
-        self.tool.load_fits(refiso.isotope_keys,
-                            refiso.isotope_fits)
-        self.load_tool()
+        if refiso.isotope_keys:
+            self.tool.load_fits(refiso.isotope_keys,
+                                refiso.isotope_fits)
+            self.load_tool()
 
     def _set_name(self):
         na = set([ni.sample for ni in self.unknowns])
@@ -112,11 +114,15 @@ class GraphEditor(BaseTraitsEditor):
 
     @on_trait_change('tool:update_needed')
     def _tool_refresh(self):
+        print 'tool update'
         self.rebuild_graph()
         #if not self.tool.suppress_refresh_unknowns:
         self.refresh_unknowns()
 
     def refresh_unknowns(self):
+        pass
+
+    def rebuild(self, *args, **kw):
         pass
 
     def rebuild_graph(self):
@@ -209,9 +215,12 @@ class GraphEditor(BaseTraitsEditor):
             bb = [next((ai for ai in self.analysis_cache if ai.uuid == i)) for i in nids]
             aa = list(aa)
             if aa:
-                unks = timethis(self.processor.make_analyses, args=(list(aa),),
-                                kwargs={'exclude': exclude},
+                unks = timethis(self.processor.make_analyses,
+                                args=(list(aa),),
+                                kwargs={'exclude': exclude,
+                                        'unpack': self.unpack_peaktime},
                                 msg='MAKE ANALYSES TOTAL')
+
                 #unks = self.processor.make_analyses(list(aa),
                 #                                    exclude=exclude)
                 ans = unks

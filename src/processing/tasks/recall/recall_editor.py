@@ -25,7 +25,7 @@ from src.envisage.tasks.base_editor import BaseTraitsEditor
 class RecallEditor(BaseTraitsEditor):
     #model = Any
     analysis_view = Instance('src.processing.analyses.analysis_view.AnalysisView')
-    analysis_summary = Any
+    #analysis_summary = Any
 
     name = Property(depends_on='analysis_view.analysis_id')
 
@@ -37,6 +37,7 @@ class RecallEditor(BaseTraitsEditor):
         return v
 
     def _get_name(self):
+        #if self.model and self.model.analysis_view:
         if self.analysis_view:
             return self.analysis_view.analysis_id
         else:

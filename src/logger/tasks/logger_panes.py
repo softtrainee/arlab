@@ -15,17 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Instance
-from traitsui.api import View, UItem
+from traits.api import Instance, List, Any
+from traitsui.api import View, UItem, ListEditor
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
+
 class DisplayPane(TraitsTaskPane):
-    logger = Instance('src.displays.display.DisplayController')
+    loggers = List
+    selected = Any
+
     def traits_view(self):
-        v = View(UItem('logger', style='custom'))
+        v = View(UItem('loggers',
+                       editor=ListEditor(use_notebook=True,
+                                         page_name='.title',
+                                         selected='selected'
+                       ),
+                       style='custom'))
 
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================

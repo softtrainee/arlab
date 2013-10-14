@@ -29,45 +29,46 @@ from src.displays.display import ErrorDisplay, DisplayController
 #    sw, sh = 1200, 900
 ds = get_display_size()
 
-
 gWarningDisplay = DisplayController(
-                                  title='Warnings',
-                                  width=450,
-                                  default_color='red',
-                                   max_blocks=300
-                                  )
+    title='Warnings',
+    width=450,
+    default_color='red',
+    bg_color='light grey',
+    max_blocks=300
+)
+
 gLoggerDisplay = DisplayController(
-                                   title='Logger',
-                                   width=700,
-                                   x=ds.width - 650,
-                                   y=20,
-                                   font_size=10,
-                                   default_color='black',
-                                   bg_color='light grey',
-                                   max_blocks=300
-                                 )
+    title='Info',
+    width=700,
+    x=ds.width - 650,
+    y=20,
+    font_size=10,
+    default_color='black',
+    bg_color='light grey',
+    max_blocks=300
+)
 
 gMessageDisplay = DisplayController(
 
-                                    title='Messages',
-                                 width=480,
-#                                 x=(sw-width)/2,
-                                 y=100,
+    title='Messages',
+    width=480,
+    #                                 x=(sw-width)/2,
+    y=100,
 
-#                                 default_size=14,
-                                 default_color='darkgreen',
-                                 bg_color='light grey',
-                                 max_blocks=300
-                                 )
+    #                                 default_size=14,
+    default_color='darkgreen',
+    bg_color='light grey',
+    max_blocks=300
+)
 
 gTraceDisplay = ErrorDisplay(
 
-                             title='Error Stack',
-                                 width=825,
-                                 x=(ds.width - 825) / 2,
-                                 y=100,
-                                 default_color='black'
-                                 )
+    title='Error Stack',
+    width=825,
+    x=(ds.width - 825) / 2,
+    y=100,
+    default_color='black'
+)
 
 #============= EOF =============================================
 # from traits.api import HasTraits, List, Str, Property, Enum

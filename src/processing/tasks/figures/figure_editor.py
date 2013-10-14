@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Any, Instance, on_trait_change, \
-    List, Bool, Int, Float
+    List, Bool, Int, Float, Event
 from traitsui.api import View, Item, UItem
 from enable.component_editor import ComponentEditor as EnableComponentEditor
 #============= standard library imports ========================
@@ -46,6 +46,15 @@ class FigureEditor(GraphEditor):
     #     _suppress_rebuild = False
 
     annotation_tool = Any
+
+    model = Any
+
+    @on_trait_change('model:panels:figures:refresh_unknowns_table')
+    def _handle_refresh(self):
+        print 'refresh', self
+        for e in self.associated_editors:
+            if isinstance(e, FigureEditor):
+                e.rebuild(refresh_data=False)
 
     def traits_view(self):
         v = View(UItem('component',
@@ -95,21 +104,25 @@ class FigureEditor(GraphEditor):
                 if isinstance(e, FigureEditor):
                     e.analysis_cache = self.analysis_cache
                     e.unknowns = ans
+
                 else:
                     e.items = ans
 
             po = self.plotter_options_manager.plotter_options
 
-            comp = timethis(self.get_component, args=(ans, po), msg='get_component')
+            model, comp = timethis(self.get_component, args=(ans, po),
+                                   msg='get_component {}'.format(self.__class__.__name__))
             #         comp = self._get_component(ans, po)
 
+            self.model = model
             self.component = comp
             self.component_changed = True
 
     def get_component(self, ans, po):
         pass
 
-    #         return self._get_component()
+        #         return self._get_component()
+
 #         func = getattr(self.processor, self.func)
 #         return func(ans=ans, plotter_options=po)
 

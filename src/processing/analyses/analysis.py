@@ -340,6 +340,9 @@ class DBAnalysis(Analysis):
                 continue
 
             name = dbiso.molecular_weight.name
+            if not name in isotopes:
+                continue
+
             det = dbiso.detector.name
 
             iso = isotopes[name]
@@ -415,20 +418,22 @@ class DBAnalysis(Analysis):
                 r = Isotope(
                     dbrecord=iso,
                     dbresult=result,
-
                     name=name,
                     detector=det,
-                    unpack=unpack
-                )
+                    unpack=unpack)
 
-                fit = self.get_db_fit(meas_analysis, name, 'signal')
+                if r.unpack_error:
+                    self.warning('Bad isotope {} {}. error: {}'.format(self.record_id, name, r.unpack_error))
+                    self.temp_status = 1
+                else:
+                    fit = self.get_db_fit(meas_analysis, name, 'signal')
 
-                if fit is None:
-                    fit = Fit(fit='linear', filter_outliers=True,
-                              filter_outlier_iterations=1,
-                              filter_outlier_std_devs=2)
-                r.set_fit(fit)
-                isodict[name] = r
+                    if fit is None:
+                        fit = Fit(fit='linear', filter_outliers=True,
+                                  filter_outlier_iterations=1,
+                                  filter_outlier_std_devs=2)
+                    r.set_fit(fit)
+                    isodict[name] = r
 
 
     def _load_peak_center(self, meas_analysis):

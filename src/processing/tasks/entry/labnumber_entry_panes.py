@@ -28,37 +28,40 @@ from src.processing.entry.irradiated_position import IrradiatedPositionAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
+
 class IrradiationEditorPane(TraitsDockPane):
     id = 'pychron.labnumber.editor'
     name = 'Editor'
+
     def traits_view(self):
         v = View(
-                 VGroup(
-                        UItem('load_file_button'),
-                        UItem('generate_labnumbers_button'),
-                         HGroup(
-                                Item('project',
-                                     editor=EnumEditor(name='projects')),
-                                UItem('add_project_button')
-                              ),
-                         HGroup(
-                               Item('material',
-                                    editor=EnumEditor(name='materials')),
-                               UItem('add_material_button')
-                             ),
-                         HGroup(
-                                Item('sample',
-                                     editor=EnumEditor(name='samples')),
-                                UItem('add_sample_button')
-                              ),
-                        ),
+            VGroup(
+                UItem('load_file_button'),
+                UItem('generate_labnumbers_button'),
+                HGroup(
+                    Item('project',
+                         editor=EnumEditor(name='projects')),
+                    UItem('add_project_button')
+                ),
+                HGroup(
+                    Item('material',
+                         editor=EnumEditor(name='materials')),
+                    UItem('add_material_button')
+                ),
+                HGroup(
+                    Item('sample',
+                         editor=EnumEditor(name='samples')),
+                    UItem('add_sample_button')
+                ),
+            ),
 
-               )
+        )
         return v
 
 
 class ImportNameAdapter(TabularAdapter):
     columns = [('Name', 'name')]
+
 
 class ImportedNameAdapter(TabularAdapter):
     columns = [('Name', 'name'), ('Skipped', 'skipped')]
@@ -73,123 +76,126 @@ class ImportedNameAdapter(TabularAdapter):
             color = 'red'
         return color
 
+
 class LabnumbersPane(TraitsTaskPane):
     def traits_view(self):
         v = View(Item('irradiated_positions',
-                             editor=TabularEditor(adapter=IrradiatedPositionAdapter(),
-                                                  refresh='refresh_table',
-                                                  multi_select=True,
-                                                  selected='selected',
-                                                  operations=['edit']
-                                                  ),
-                             show_label=False
-                             )
-                 )
+                      editor=TabularEditor(adapter=IrradiatedPositionAdapter(),
+                                           refresh='refresh_table',
+                                           multi_select=True,
+                                           selected='selected',
+                                           operations=['edit']
+                      ),
+                      show_label=False
+        )
+        )
         return v
 
 
 class ImporterPane(TraitsDockPane):
     name = 'Importer'
     id = 'pychron.labnumber.importer'
+
     def traits_view(self):
         v = View(
-                 VGroup(
-                     HGroup(
-                            HGroup(Item('include_analyses', label='Analyses'),
-                                Item('include_blanks', label='Blanks'),
-                                Item('include_airs', label='Airs'),
-                                Item('include_cocktails', label='Cocktails'),
-                                label='Include',
-                                show_border=True,
-                                ),
-                            VGroup(
-                                   HGroup(spring,
-                                          UItem('import_button'),
-                                          Item('dry_run'),
+            VGroup(
+                HGroup(
+                    HGroup(Item('include_analyses', label='Analyses'),
+                           Item('include_blanks', label='Blanks'),
+                           Item('include_airs', label='Airs'),
+                           Item('include_cocktails', label='Cocktails'),
+                           label='Include',
+                           show_border=True,
+                    ),
+                    VGroup(
+                        HGroup(spring,
+                               UItem('import_button'),
+                               #Item('dry_run')
+                        ),
+                        label='Import',
+                        show_border=True
+                    )
+                ),
+                VGroup(
+                    HGroup(spring, Item('data_source')),
+                    #                         VFold(
+                    VGroup(
+                        VGroup(
+                            Item('object.importer.dbconn_spec', style='custom', show_label=False),
+                            HGroup(spring, Item('object.importer.connect_button', show_label=False)),
+                            label='Source'
+                        ),
+                        VGroup(
 
-                                          ),
-                                   label='Import',
-                                   show_border=True
-                                   )
+                            HGroup(Item('import_kind', show_label=False),
+                                   UItem('open_button', visible_when='import_kind=="rid_list"'),
                             ),
-                     VGroup(
-                         HGroup(spring, Item('data_source')),
-#                         VFold(
-                         VGroup(
-                             VGroup(
-                                    Item('object.importer.dbconn_spec', style='custom', show_label=False),
-                                    HGroup(spring, Item('object.importer.connect_button', show_label=False)),
-                                    label='Source'
-                                    ),
-                             VGroup(
-
-                                    HGroup(Item('import_kind', show_label=False),
-                                           UItem('open_button', visible_when='import_kind=="rid_list"'),
-                                           ),
-                                    UItem('text_selected'),
-                                    HGroup(
-                                           Item('names', show_label=False, editor=TabularEditor(adapter=ImportNameAdapter(),
-                                                                    editable=False,
-                                                                    selected='selected',
-                                                                    multi_select=True,
-                                                                    scroll_to_row='scroll_to_row'
-                                                                    )),
-#                                    CustomLabel('custom_label1',
-#                                             color='blue',
-#                                             size=10),
-                                            Item('imported_names', show_label=False, editor=TabularEditor(adapter=ImportedNameAdapter(),
-                                                                    editable=False,
-                                                                    ))
-                                           ),
-#                                    HGroup(spring, Item('import_button', show_label=False)),
-                                    label='Results'
-                                 )
-                           )
+                            UItem('text_selected'),
+                            HGroup(
+                                Item('names', show_label=False, editor=TabularEditor(adapter=ImportNameAdapter(),
+                                                                                     editable=False,
+                                                                                     selected='selected',
+                                                                                     multi_select=True,
+                                                                                     scroll_to_row='scroll_to_row'
+                                )),
+                                #                                    CustomLabel('custom_label1',
+                                #                                             color='blue',
+                                #                                             size=10),
+                                Item('imported_names', show_label=False,
+                                     editor=TabularEditor(adapter=ImportedNameAdapter(),
+                                                          editable=False,
+                                     ))
+                            ),
+                            #                                    HGroup(spring, Item('import_button', show_label=False)),
+                            label='Results'
                         )
                     )
-                 )
+                )
+            )
+        )
         return v
 
 
 class IrradiationPane(TraitsDockPane):
     name = 'Irradiation'
     id = 'pychron.labnumber.irradiation'
+
     def traits_view(self):
         v = View(
-                   HGroup(
-                          VGroup(HGroup(Item('irradiation',
-                                             editor=EnumEditor(name='irradiations')
-                                             ),
-                                        Item('edit_irradiation_button',
-                                             enabled_when='edit_irradiation_enabled',
-                                             show_label=False)
-                                        ),
-                                 HGroup(Item('level', editor=EnumEditor(name='levels')),
-                                        spring,
-                                        Item('edit_level_button',
-                                             enabled_when='edit_level_enabled',
-                                             show_label=False)
-                                        ),
-                                 Item('add_irradiation_button', show_label=False),
-                                 Item('add_level_button', show_label=False),
-#                                        Item('irradiation_tray',
-#                                             editor=EnumEditor(name='irradiation_trays')
-#                                             )
-                                 ),
-                          spring,
-                          VGroup(
-                                 Item('tray_name', style='readonly', show_label=False),
-#                                  Item('irradiation_tray_image',
-#                                       editor=ImageEditor(),
-#                                       height=100,
-#                                       width=200,
-#                                       style='custom',
-#                                       show_label=False),
-                                 ),
-                               ),
-#                            label='Irradiation',
-#                            show_border=True
-                   )
+            HGroup(
+                VGroup(HGroup(Item('irradiation',
+                                   editor=EnumEditor(name='irradiations')
+                ),
+                              Item('edit_irradiation_button',
+                                   enabled_when='edit_irradiation_enabled',
+                                   show_label=False)
+                ),
+                       HGroup(Item('level', editor=EnumEditor(name='levels')),
+                              spring,
+                              Item('edit_level_button',
+                                   enabled_when='edit_level_enabled',
+                                   show_label=False)
+                       ),
+                       Item('add_irradiation_button', show_label=False),
+                       Item('add_level_button', show_label=False),
+                       #                                        Item('irradiation_tray',
+                       #                                             editor=EnumEditor(name='irradiation_trays')
+                       #                                             )
+                ),
+                spring,
+                VGroup(
+                    Item('tray_name', style='readonly', show_label=False),
+                    #                                  Item('irradiation_tray_image',
+                    #                                       editor=ImageEditor(),
+                    #                                       height=100,
+                    #                                       width=200,
+                    #                                       style='custom',
+                    #                                       show_label=False),
+                ),
+            ),
+            #                            label='Irradiation',
+            #                            show_border=True
+        )
         return v
 
 #     def traits_view(self):

@@ -15,12 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from pyface.image_resource import ImageResource
 from traits.api import HasTraits, Str
 from traitsui.api import View, Item
 from pyface.tasks.action.task_action import TaskAction
 from pyface.tasks.task_window_layout import TaskWindowLayout
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.paths import paths
+
+
 class AnalysisEditAction(TaskAction):
     task_id = 'pychron.analysis_edit'
     #     def _create_window(self, app):
@@ -42,6 +46,8 @@ class DatabaseSaveAction(TaskAction):
     name = 'Database Save'
     description = 'Save current changes to the database'
     method = 'save_to_db'
+    image = ImageResource(name='database_save.png',
+                          search_path=paths.icon_search_path)
 
 
 class TagAction(TaskAction):
