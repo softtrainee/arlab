@@ -86,11 +86,16 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_sample_analyses(self, *args, **kw):
         return self._get_sample_analyses('all', *args, **kw)
 
-    def _get_sample_analyses(self, func, sample, limit=None, offset=None):
+    def _get_sample_analyses(self, f, sample, limit=None, offset=None,
+                             include_invalid=False):
         with self.session_ctx() as sess:
             q = sess.query(meas_AnalysisTable)
             q = q.join(gen_LabTable)
             q = q.join(gen_SampleTable)
+
+            if not include_invalid:
+                q = q.filter(meas_AnalysisTable.tag != 'invalid')
+
             q = q.filter(gen_SampleTable.name == sample.name)
             q = q.order_by(meas_AnalysisTable.analysis_timestamp.asc())
 
@@ -99,7 +104,7 @@ class IsotopeAdapter(DatabaseAdapter):
             if offset:
                 q = q.offset(offset)
 
-            return getattr(q, func)()
+            return getattr(q, f)()
 
     def get_analyses_data_range(self, mi, ma,
                                 analysis_type=None,
@@ -207,17 +212,23 @@ class IsotopeAdapter(DatabaseAdapter):
         return h
 
     def _add_set(self, name, key, value, analysis, idname=None, **kw):
+        """
+            name: e.g Blanks
+            key:
+        """
         table = globals()['proc_{}SetTable'.format(name)]
         nset = table(**kw)
         pa = getattr(self, 'get_{}'.format(key))(value)
 
-        analysis = self.get_analysis(analysis, )
+        analysis = self.get_analysis(analysis)
         if analysis:
             if idname is None:
                 idname = key
             setattr(nset, '{}_analysis_id'.format(idname), analysis.id)
+
         if pa:
-            pa.sets.append(nset)
+            setattr(nset, '{}_id'.format(name.lower()), pa.id)
+
         return nset
 
     def _add_series_item(self, name, key, history, **kw):
@@ -236,8 +247,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def add_tag(self, name, **kw):
         tag = proc_TagTable(name=name, **kw)
-        self._add_item(tag)
-        return tag
+        return self._add_unique(tag, 'tag', name)
 
     def add_import(self, **kw):
         dbimport = gen_ImportTable(**kw)

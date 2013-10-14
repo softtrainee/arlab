@@ -148,9 +148,9 @@ class meas_IsotopeTable(Base, BaseMixin):
     detector_id = foreignkey('gen_DetectorTable')
     kind = stringcolumn()
 
-    signals = relationship('meas_SignalTable',
-                           backref='isotope',
-                           uselist=False)
+    signal = relationship('meas_SignalTable',
+                          backref='isotope',
+                          uselist=False)
 
     fits = relationship('proc_FitTable',
                         backref='isotope')

@@ -122,7 +122,9 @@ class IsotopeDatabaseManager(Loggable):
 
         return filter(lambda x: not x.tag in exclude, ans)
 
-    def make_analyses(self, ans, calculate_age=False, exclude=None, **kw):
+    def make_analyses(self, ans, calculate_age=False,
+                      unpack=False,
+                      exclude=None, **kw):
         if exclude:
             ans = self.filter_analysis_tag(ans, exclude)
 
@@ -148,6 +150,7 @@ class IsotopeDatabaseManager(Loggable):
                         r = self._analysis_factory(ai,
                                                    progress=progress,
                                                    calculate_age=calculate_age,
+                                                   unpack=unpack,
                                                    **kw)
                         if r is not None:
                             rs.append(r)
@@ -246,6 +249,7 @@ class IsotopeDatabaseManager(Loggable):
 
     def _analysis_factory(self, rec, progress=None,
                           calculate_age=False,
+                          unpack=False,
                           exclude=None, **kw):
         graph_id = 0
         group_id = 0
@@ -283,18 +287,22 @@ class IsotopeDatabaseManager(Loggable):
                                 graph_id=graph_id)
                 if atype in ('unknown', 'cocktail'):
                     ai.sync_arar(meas_analysis)
-                    if not ai.persisted_age:
+
+                    if calculate_age:
+                        ai.sync(meas_analysis, unpack=True)
+                        ai.calculate_age(force=True)
+                    elif not ai.persisted_age:
                         ai.sync(meas_analysis, unpack=True)
                         ai.calculate_age()
                         self._add_arar(meas_analysis, ai)
-                    elif calculate_age:
-                        ai.sync(meas_analysis, unpack=True)
-                        ai.calculate_age(force=True)
+                    #elif calculate_age:
+                    #    ai.sync(meas_analysis, unpack=True)
+                    #    ai.calculate_age(force=True)
                     else:
-                        ai.sync(meas_analysis)
+                        ai.sync(meas_analysis, unpack=unpack)
 
                 else:
-                    ai.sync(meas_analysis)
+                    ai.sync(meas_analysis, unpack=unpack)
 
                 return ai
 

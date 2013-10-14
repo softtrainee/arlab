@@ -44,14 +44,15 @@ class RecallTask(AnalysisEditTask):
         SToolBar(AddIsoEvoAction(),
                  image_size=(16, 16))]
 
-    def activated(self):
-        editor = RecallEditor()
-        self._open_editor(editor)
+    def activated(self, load=False):
         self.load_projects()
+        if load:
+            editor = RecallEditor()
+            self._open_editor(editor)
 
-        db = self.manager.db
-        db.selector.limit = 100
-        db.selector.load_recent()
+            db = self.manager.db
+            db.selector.limit = 100
+            db.selector.load_recent()
 
     def new_editor(self):
         editor = RecallEditor()
@@ -61,7 +62,9 @@ class RecallTask(AnalysisEditTask):
         if an and isinstance(self.active_editor, RecallEditor):
         #             l, a, s = strip_runid(s)
         #             an = self.manager.db.get_unique_analysis(l, a, s)
-            an = self.manager.make_analyses(an, calculate_age=True)[0]
+        #    print 'asdfasfdasdfasdf'
+            an = self.manager.make_analyses(an,
+                                            calculate_age=True)[0]
             #             an.load_isotopes(refit=False)
             #self.active_editor.analysis_summary = an.analysis_summary
             self.active_editor.analysis_view = an.analysis_view
@@ -93,25 +96,25 @@ class RecallTask(AnalysisEditTask):
             panes.extend(ps)
         return panes
 
-    def recall(self, records):
-
-        ans = self.manager.make_analyses(records)
-
-        def func(rec):
-        #             rec.load_isotopes()
-            rec.calculate_age()
-            reditor = RecallEditor(model=rec)
-            self.editor_area.add_editor(reditor)
-
-        #             self.add_iso_evo(reditor.name, rec)
-
-        if ans:
-            for ri in ans:
-                func(ri)
-                #             self.manager._load_analyses(ans, func=func)
-
-            ed = self.editor_area.editors[-1]
-            self.editor_area.activate_editor(ed)
+    #def recall(self, records):
+    #
+    #    ans = self.manager.make_analyses(records, calculate_age=True)
+    #
+    #    def func(rec):
+    #    #             rec.load_isotopes()
+    #        rec.calculate_age()
+    #        reditor = RecallEditor(analysis_view=rec.analysis_view)
+    #        self.editor_area.add_editor(reditor)
+    #
+    #    #             self.add_iso_evo(reditor.name, rec)
+    #
+    #    if ans:
+    #        for ri in ans:
+    #            func(ri)
+    #            #             self.manager._load_analyses(ans, func=func)
+    #
+    #        ed = self.editor_area.editors[-1]
+    #        self.editor_area.activate_editor(ed)
 
     def add_iso_evo(self, name=None, rec=None):
         if rec is None:

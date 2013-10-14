@@ -26,14 +26,42 @@ import math
 
 #============= local library imports  ==========================
 
+# http://www.earth-time.org/projects/upb/public_docs/ErrorEllipses.pdf
+# 5) To create a 95% confidence ellipse from the 1s error ellipse, we must enlarge it by a factor of 2.4477.
+SCALE_FACTOR = 2.4477 * 10
+
+
+def error_ellipse(ox, oy, pxy, aspectratio=1):
+    """
+        return  a, b axes and rotation
+
+        http://www.earth-time.org/projects/upb/public_docs/ErrorEllipses.pdf
+
+    """
+    covar = ox * oy * pxy
+    covmat = [[ox * ox, covar],
+              [covar, oy * oy]]
+    w, _v = eig(covmat)
+
+    if ox > oy:
+        a = (max(w)) ** 0.5
+        b = (min(w)) ** 0.5
+    else:
+        a = (min(w)) ** 0.5
+        b = (max(w)) ** 0.5
+
+    a, b = a * SCALE_FACTOR, b * SCALE_FACTOR
+    #        print aspectratio, dx, dy, width, height
+    rotation = 0.5 * math.atan(1 / aspectratio * (2 * covar) / (ox ** 2 - oy ** 2))
+    return a, b, rotation
+
 
 class ErrorEllipseOverlay(AbstractOverlay):
-    nsigma = 2
     def overlay(self, component, gc, view_bounds=None, mode='normal'):
         '''
             
         '''
-#        gc.save_state()
+        #        gc.save_state()
         gc.clip_to_rect(component.x, component.y, component.width, component.height)
 
         x = component.index.get_data()
@@ -44,54 +72,57 @@ class ErrorEllipseOverlay(AbstractOverlay):
         pxy = corrcoef(x, y)[0][1]
         try:
             for cx, cy, ox, oy in zip(x, y, xer, yer):
-                a, b, rot = self.calculate_ellipse(component, cx, cy, ox, oy, pxy)
-                gc.save_state()
-                self._draw_ellipse(gc, component, cx, cy, a, b, rot)
-                gc.restore_state()
+                a, b, rot = error_ellipse(ox, oy, pxy,
+                                          aspectratio=1)
+                #print a,b,rot
+                #a, b, rot = self.calculate_ellipse(component, cx, cy, ox, oy, pxy)
+                #gc.save_state()
+                with gc:
+                    self._draw_ellipse(gc, component, cx, cy, a, b, rot)
+                    #gc.restore_state()
         except Exception, e:
             print e
 
 
-    def calculate_ellipse(self, component, x, y, ox, oy, pxy,):
-
-        covar = ox * oy * pxy
-        covmat = [[ox * ox, covar],
-                       [covar, oy * oy]
-                       ]
-        w, _v = eig(covmat)
-
-        if ox > oy:
-            a = (max(w)) ** 0.5
-            b = (min(w)) ** 0.5
-        else:
-            a = (min(w)) ** 0.5
-            b = (max(w)) ** 0.5
-        dx = abs(component.index_mapper.range.low -
-                 component.index_mapper.range.high)
-        dy = abs(component.value_mapper.range.low -
-                 component.value_mapper.range.high)
-
-        height = component.height
-        width = component.width
-
-        aspectratio = (dy / height) / (dx / width)
-#        print aspectratio, dx, dy, width, height
-        rotation = 0.5 * math.atan(1 / aspectratio * (2 * covar) / (ox ** 2 - oy ** 2))
-        return a, b, rotation
+            #    def calculate_ellipse(self, component, x, y, ox, oy, pxy,):
+            #
+            #        covar = ox * oy * pxy
+            #        covmat = [[ox * ox, covar],
+            #                       [covar, oy * oy]
+            #                       ]
+            #        w, _v = eig(covmat)
+            #
+            #        if ox > oy:
+            #            a = (max(w)) ** 0.5
+            #            b = (min(w)) ** 0.5
+            #        else:
+            #            a = (min(w)) ** 0.5
+            #            b = (max(w)) ** 0.5
+            #        dx = abs(component.index_mapper.range.low -
+            #                 component.index_mapper.range.high)
+            #        dy = abs(component.value_mapper.range.low -
+            #                 component.value_mapper.range.high)
+            #
+            #        height = component.height
+            #        width = component.width
+            #
+            #        aspectratio = (dy / height) / (dx / width)
+            ##        print aspectratio, dx, dy, width, height
+            #        rotation = 0.5 * math.atan(1 / aspectratio * (2 * covar) / (ox ** 2 - oy ** 2))
+            #        return a, b, rotation
 
     def _draw_ellipse(self, gc, component, cx, cy, a, b, rot):
-        a *= self.nsigma
-        b *= self.nsigma
+        #a *= self.nsigma
+        #b *= self.nsigma
         scx, scy = component.map_screen([(cx, cy)])[0]
         ox, oy = component.map_screen([(0, 0)])[0]
-#        gc.translate_ctm(-scx, -scy)
+
+        #        gc.translate_ctm(-scx, -scy)
         # gc.rotate_ctm(45)
         x1 = linspace(-a, a, 200)
         y1 = b * sqrt((1 - power(x1 / a, 2)))
-#         y1 = sqrt(power(b, 2) * (1 - power(x1 / a, 2)))
 
         x2 = x1[::-1]
-#         y2 = -sqrt(power(b, 2) * (1 - power(x2 / a, 2)))
         y2 = -b * sqrt((1 - power(x2 / a, 2)))
 
         x = hstack((x1, x2))
@@ -100,7 +131,9 @@ class ErrorEllipseOverlay(AbstractOverlay):
 
         gc.translate_ctm(scx, scy)
 
-        gc.rotate_ctm(rot - pi / 2.)
+        #print math.degrees(rot)
+        #rot*=10
+        gc.rotate_ctm(-rot)
         gc.translate_ctm(-scx, -scy)
 
         gc.translate_ctm(scx - ox, scy - oy)
@@ -108,6 +141,7 @@ class ErrorEllipseOverlay(AbstractOverlay):
         gc.begin_path()
         gc.lines(pts)
         gc.stroke_path()
+
 
 if __name__ == '__main__':
     x = [1, 2, 3, 4, 4.1]
@@ -122,8 +156,8 @@ if __name__ == '__main__':
 
     covar = ox * oy * pxy
     covmat = [[ox * ox, covar],
-                   [covar, oy * oy]
-                   ]
+              [covar, oy * oy]
+    ]
     w, _v = eig(covmat)
 
     if ox > oy:

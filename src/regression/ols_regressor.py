@@ -51,10 +51,11 @@ class OLSRegressor(BaseRegressor):
             self.calculate()
 
     def calculate(self):
-        '''
+        """
             vander is equivalent to sm.add_constant(np.column_stack((x**n,..x**2,x**1)))
             vander(x,n+1)
-        '''
+        """
+
         if not len(self.xs) or \
                 not len(self.ys):
             return
@@ -78,9 +79,9 @@ class OLSRegressor(BaseRegressor):
                 self._result = ols.fit()
             except Exception, e:
                 print 'calculate', e
-            #                print 'X', X
-            #                print 'ys', ys
-            #        print self.degree, self._result.summary()
+                #                print 'X', X
+                #                print 'ys', ys
+                #        print self.degree, self._result.summary()
 
     def predict(self, pos):
         return_single = False
@@ -98,7 +99,7 @@ class OLSRegressor(BaseRegressor):
             if return_single:
                 pred = pred[0]
             return pred
-        #                return self._result.predict(X)[0]
+            #                return self._result.predict(X)[0]
 
     def predict_error(self, x, error_calc='sem'):
         return_single = False
@@ -261,7 +262,7 @@ class OLSRegressor(BaseRegressor):
 
         #            print 'dsaffsadf', self._result.params
             return self._result.params
-        #        return polyfit(self.xs, self.ys, self.degree)
+            #        return polyfit(self.xs, self.ys, self.degree)
 
     def _calculate_coefficient_errors(self):
         if self._result:
@@ -275,8 +276,8 @@ class OLSRegressor(BaseRegressor):
         #            print errors, self._result.bse
             return self._result.bse
 
-        #    def _calculate_confidence_interval(self, x):
-        #        return self._result.conf_int
+            #    def _calculate_confidence_interval(self, x):
+            #        return self._result.conf_int
 
 
     def _get_degree(self):

@@ -34,6 +34,7 @@ class FigurePanel(HasTraits):
     graph_klass = StackedGraph
     meta = Any
 
+
     @on_trait_change('analyses[]')
     def _analyses_items_changed(self):
         self.figures = self._make_figures()
@@ -76,8 +77,8 @@ class FigurePanel(HasTraits):
             if i == 0:
                 fig.build(plots)
                 #print fig
-            #fig.plot(plots)
-            timethis(fig.plot, args=(plots,), msg='fit.plot {} {}'.format(i, fig))
+            fig.plot(plots)
+            #timethis(fig.plot, args=(plots,), msg='fit.plot {} {}'.format(i, fig))
             #meta=self.meta
         #print 'meta',meta
         #if meta:

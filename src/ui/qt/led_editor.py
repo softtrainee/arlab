@@ -34,11 +34,10 @@ QT_COLORS = [QColor(ci) for ci in COLORS]
 #             ]
 
 class LED(HasTraits):
-    '''
-    '''
     shape = 'circle'
     state = Property(depends_on='_state')
     _state = Int
+
     def _set_state(self, v):
         if isinstance(v, str):
             self._state = COLORS.index(v)
@@ -50,16 +49,15 @@ class LED(HasTraits):
     def _get_state(self):
         return self._state
 
+
 class ButtonLED(LED):
     callable = Callable
+
     def on_action(self):
         self.callable()
 
 
 def change_intensity(color, fac):
-    '''
-
-    '''
     rgb = [color.red(), color.green(), color.blue()]
     for i, intensity in enumerate(rgb):
         rgb[i] = min(int(round(intensity * fac, 0)), 255)
@@ -221,17 +219,21 @@ from PySide.QtGui import QGraphicsView, QGraphicsScene, QBrush, \
     QPen, QRadialGradient
 from PySide.QtCore import Qt
 
+
 class qtLED(QGraphicsView):
     pass
 
+
 class _LEDEditor(Editor):
     led = Any
+
     def _get_color(self, state):
         if isinstance(state, str):
             c = QColor(state)
         else:
             c = QT_COLORS[state]
         return c
+
     def get_color(self, state, cx, cy, rad):
         c = self._get_color(state)
 
@@ -248,14 +250,14 @@ class _LEDEditor(Editor):
         if self.control is None:
             self.control = qtLED()
             scene = QGraphicsScene()
-#             self.control.setStyleSheet("qtLED { border-style: none; }");
-#             self.control.setAutoFillBackground(True)
+            #             self.control.setStyleSheet("qtLED { border-style: none; }");
+            #             self.control.setAutoFillBackground(True)
 
             # system background color
             scene.setBackgroundBrush(QBrush(QColor(237, 237, 237)))
             self.control.setStyleSheet("border: 0px")
-            self.control.setMaximumWidth(50)
-            self.control.setMaximumHeight(50)
+            self.control.setMaximumWidth(35)
+            self.control.setMaximumHeight(35)
 
             x, y = 10, 10
             rad = 20
@@ -266,9 +268,9 @@ class _LEDEditor(Editor):
             pen = QPen()
             pen.setWidth(0)
             self.led = scene.addEllipse(x, y, rad, rad,
-                             pen=pen,
-                             brush=brush
-                             )
+                                        pen=pen,
+                                        brush=brush
+            )
 
             self.control.setScene(scene)
 
@@ -286,18 +288,19 @@ class _LEDEditor(Editor):
                 r = rect.width()
                 x += r / 1.75
                 y += r / 1.75
-#                 g = br.gradient()
-#                 print self._get_color(new)
-#                 g.setColorAt(1, self._get_color(new))
-#                 x, y, r = 75, 75, 40
+                #                 g = br.gradient()
+                #                 print self._get_color(new)
+                #                 g.setColorAt(1, self._get_color(new))
+                #                 x, y, r = 75, 75, 40
                 self.led.setBrush(self.get_color(new, x, y, r / 2))
-#                 self.control.set_state(new)
+                #                 self.control.set_state(new)
 
     def update_editor(self, *args, **kw):
         '''
         '''
         if self.control:
             pass
+
 #        self.control = self._create_control(None)
 #        self.value.on_trait_change(self.update_object, 'state')
 
@@ -312,4 +315,5 @@ class LEDEditor(BasicEditorFactory):
     '''
     '''
     klass = _LEDEditor
+
 #============= EOF ====================================

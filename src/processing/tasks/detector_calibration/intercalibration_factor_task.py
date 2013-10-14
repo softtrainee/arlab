@@ -59,7 +59,7 @@ class IntercalibrationFactorTask(InterpolationTask):
         if name == 'analysis_type':
             records = self.unknowns_pane.items
             if records is None:
-                records = self.analysis_table.selected_analysis
+                records = self.analysis_table.selected
 
             if records:
                 ans = self._load_references(records, new)

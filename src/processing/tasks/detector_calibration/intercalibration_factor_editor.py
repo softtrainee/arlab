@@ -30,6 +30,7 @@ class IntercalibrationFactorEditor(InterpolationEditor):
     standard_ratio = 1.0
     tool = Instance(DetectorCalibrationTool)
     auto_find = False
+    pickle_path = 'ic_fits'
 
     def save(self):
         if not any([si.valid for si in self.tool.fits]):
@@ -47,17 +48,20 @@ class IntercalibrationFactorEditor(InterpolationEditor):
                 phistory = histories[-1] if histories else None
                 history = self.processor.add_history(meas_analysis, cname)
                 for si in self.tool.fits:
-                    self.debug('saving {} {}'.format(unk.record_id, si.name))
-                    self.processor.apply_correction(history, unk, si,
-                                                    self.references, cname)
+                    if si.valid:
+                        self.debug('saving {} {}'.format(unk.record_id, si.name))
+                        self.processor.apply_correction(history, unk, si,
+                                                        self._clean_references(), cname)
 
-                    #if not si.use:
-                    #    self.debug('using previous value {} {}'.format(unk.record_id, si.name))
-                    #    self.processor.apply_fixed_value_correction(phistory, history, si, cname)
-                    #else:
-                    #    self.debug('saving {} {}'.format(unk.record_id, si.name))
-                    #    self.processor.apply_correction(history, unk, si,
-                    #                                    self.references, cname)
+                unk.sync(meas_analysis)
+
+                #if not si.use:
+                #    self.debug('using previous value {} {}'.format(unk.record_id, si.name))
+                #    self.processor.apply_fixed_value_correction(phistory, history, si, cname)
+                #else:
+                #    self.debug('saving {} {}'.format(unk.record_id, si.name))
+                #    self.processor.apply_correction(history, unk, si,
+                #                                    self.references, cname)
 
     def _tool_default(self):
         with self.processor.db.session_ctx():
@@ -85,8 +89,7 @@ class IntercalibrationFactorEditor(InterpolationEditor):
         pass
 
     def _load_refiso(self, refiso):
-
-        keys = refiso.isotope_keys
+        #keys = refiso.isotope_keys
         dets = [iso.detector for iso in refiso.isotopes.itervalues()]
         dets = sort_detectors(dets)
 
@@ -113,7 +116,7 @@ class IntercalibrationFactorEditor(InterpolationEditor):
             return None, None
 
             #rys = [ri.nominal_value for ri in rys]
-        #return rys, None
+            #return rys, None
 
     def _get_current_values(self, dets):
         #return None, None

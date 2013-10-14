@@ -480,6 +480,9 @@ class Processor(IsotopeDatabaseManager):
 
 
     def _apply_blanks_correction(self, history, analysis, fit_obj, predictors):
+        if not fit_obj.name in analysis.isotopes:
+            return
+
         ss = analysis.isotopes[fit_obj.name]
 
         #ss=next((iso for iso in analysis.isotopes
@@ -504,10 +507,19 @@ class Processor(IsotopeDatabaseManager):
         #        ps = self.interpolation_correction.predictors
         if predictors:
 
-            for pi in predictors:
-                dbr = db.get_analysis_uuid(pi.uuid)
-                #                 self.db.add_blanks_set(item, pi.dbrecord)
-                db.add_blanks_set(item, dbr)
+            lns = set([si.labnumber for si in predictors])
+            ids = [si.uuid for si in predictors]
+
+            def f(t, t2):
+                return t2.identifier.in_(lns), t.uuid.in_(ids)
+
+            ans = db.get_analyses(uuid=f)
+            for ai in ans:
+                db.add_blanks_set(item, ai)
+                #for pi in predictors:
+                #    dbr = db.get_analysis_uuid(pi.uuid)
+                #    #                 self.db.add_blanks_set(item, pi.dbrecord)
+                #    db.add_blanks_set(item, dbr)
 
 #============= EOF =============================================
 

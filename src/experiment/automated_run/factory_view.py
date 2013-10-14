@@ -33,6 +33,9 @@ Examples:
 8. L3 (trace path L3)
 '''
 
+PATTERN_TOOLTIP = 'Select a pattern from Remote or Local Patterns. \
+If unsure from which group to choice use a "Remote" pattern'
+
 
 class FactoryView(HasTraits):
     model = Instance('src.experiment.automated_run.factory.AutomatedRunFactory')
@@ -69,14 +72,6 @@ class FactoryView(HasTraits):
             ),
             Item('beam_diameter'),
             self._position_group(),
-            #                              HGroup(
-            #                                      ),
-            #                                     spring,
-            #                                 Item('endposition', label='End',
-            #                                      enabled_when='position'
-            #                                      )
-            #                                 ),
-
             label='Extract',
             show_border=True
         )
@@ -87,6 +82,8 @@ class FactoryView(HasTraits):
             Item('position',
                  tooltip=POSITION_TOOLTIP),
             Item('pattern',
+                 show_label=False,
+                 tooltip=PATTERN_TOOLTIP,
                  editor=EnumEditor(name='patterns')),
             Item('edit_pattern',
                  show_label=False,

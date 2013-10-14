@@ -29,7 +29,7 @@ import os
 from src.experiment.health.analysis_health import AnalysisHealth
 from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPane, \
     ControlsPane, ConsolePane, ExplanationPane, WaitPane, IsotopeEvolutionPane, \
-    SummaryPane
+    SummaryPane, AnalysisHealthPane
 # from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.envisage.tasks.editor_task import EditorTask
 from src.experiment.tasks.experiment_editor import ExperimentEditor, UVExperimentEditor
@@ -155,16 +155,15 @@ class ExperimentEditorTask(EditorTask):
 
         self.experiment_factory_pane = ExperimentFactoryPane(model=self.manager.experiment_factory)
         self.wait_pane = WaitPane(model=self.manager.executor)
-        panes = [
-            self.experiment_factory_pane,
-            StatsPane(model=self.manager),
-            ControlsPane(model=self.manager.executor),
-            ConsolePane(model=self.manager.executor),
-            #                 ExplanationPane(),
-            self.isotope_evolution_pane,
-            self.wait_pane
-            #                 self.summary_pane,
-        ]
+
+        panes = [StatsPane(model=self.manager),
+                 ControlsPane(model=self.manager.executor),
+                 ConsolePane(model=self.manager.executor),
+                 #AnalysisHealthPane(model=self.analysis_health),
+
+                 self.experiment_factory_pane,
+                 self.isotope_evolution_pane,
+                 self.wait_pane]
 
         if self.loading_manager:
             self.load_pane = self.window.application.get_service('src.loading.panes.LoadDockPane')

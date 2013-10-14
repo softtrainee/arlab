@@ -266,12 +266,13 @@ class ArArAge(Loggable):
         """
             force: force recalculation of age. necessarily if you want error components
         """
+        #print 'calc', self.age, force
         #        self.debug('calculate age ={}'.format(self.age))
         if not self.age or force:
             #self.age=timethis(self._calculate_age, kwargs=kw, msg='calculate_age')
             self.age = self._calculate_age(**kw)
-            self.age_dirty = True
 
+            self.age_dirty = True
         return self.age
 
     def load_irradiation(self, ln):
@@ -288,9 +289,11 @@ class ArArAge(Loggable):
     #================================================================================
     @on_trait_change('age_dirty')
     def _handle_arar_result(self, new):
+        print 'asdfasdf'
         #load error components into isotopes
         for iso in self.isotopes.itervalues():
             iso.age_error_component = self.get_error_component(iso.name)
+            print iso.name, iso.age_error_component
             #================================================================================
             # private
             #================================================================================

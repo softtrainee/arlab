@@ -252,14 +252,13 @@ class Experimentor(IsotopeDatabaseManager):
                     st = ''
                     egrp = -1
 
-                ai.trait_set(aliquot=int(aq),
-                             sample=last['sample'] or '',
-                             irradiation=last['irradiation'] or '',
-                             material=last['material'] or '',
-                             step=st)
-                #                 last.update(aliquot=aq, step=st,
-                #                             egrp=egrp
-                #                             )
+                if ai.state == 'not run':
+                    ai.trait_set(aliquot=int(aq),
+                                 sample=last['sample'] or '',
+                                 irradiation=last['irradiation'] or '',
+                                 material=last['material'] or '',
+                                 step=st)
+
                 cache[ln] = last
 
     def _is_special(self, ln):
@@ -522,7 +521,6 @@ class Experimentor(IsotopeDatabaseManager):
         #         rf.edit_mode = True
 
         rf.suppress_update = True
-        #print 'mmmm'
         rf.set_selected_runs(new)
 
     #        rf.suppress_update = True

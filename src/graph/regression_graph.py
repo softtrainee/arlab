@@ -158,12 +158,12 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
     def clear(self):
         self.regressors = []
 
-        x = self.indices[:]
-        for idx in x:
-            idx.on_trait_change(self.update_metadata,
-                                'metadata_changed', remove=True)
-            self.indices.remove(idx)
-        del x
+        #x = self.indices[:]
+        #for idx in x:
+        #    idx.on_trait_change(self.update_metadata,
+        #                        'metadata_changed', remove=True)
+        #    self.indices.remove(idx)
+        #del x
         self.selected_component = None
 
         for p in self.plots:
@@ -184,10 +184,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         self._update_graph()
 
     def update_metadata(self, obj, name, old, new):
-        '''
+        """
             fired when the index metadata changes e.i user selection
-        '''
-        #         print obj, name, old, new
+        """
+        #print obj, name, old, new
         sel = obj.metadata.get('selections', None)
         #
         if sel:
@@ -332,7 +332,6 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
         self.regressors.append(r)
 
-
     def _least_square_regress(self, r, x, y, ox, oy, index,
                               fit, fod, apply_filter):
         fitfunc, errfunc = fit
@@ -393,13 +392,16 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
 
     def _poly_regress(self, r, x, y, ox, oy, index,
                       fit, fod, apply_filter, scatter, selection):
+
         if hasattr(scatter, 'yerror'):
             es = scatter.yerror.get_data()
             if selection:
                 es = delete(es, selection, 0)
 
             if r is None or not isinstance(r, WeightedPolynomialRegressor):
-                r = WeightedPolynomialRegressor(yserr=es)
+                r = WeightedPolynomialRegressor()
+
+            r.trait_set(yserr=es, trait_change_notify=False)
         else:
             if r is None or not isinstance(r, PolynomialRegressor):
                 r = PolynomialRegressor()
@@ -408,7 +410,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                     trait_change_notify=False)
         #        r.degree = fit
         r.calculate()
-
+        #print 'aaaa',r
         if apply_filter:
             r = self._apply_outlier_filter(r, ox, oy, index, fod)
 
@@ -571,8 +573,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         scatter.fit = fit
         scatter.filter = None
         scatter.filter_outliers_dict = filter_outliers_dict
+        scatter.index.on_trait_change(self.update_metadata, 'metadata_changed')
+
         return scatter, si
-    
+
     def new_series(self, x=None, y=None,
                    ux=None, uy=None, lx=None, ly=None,
                    fx=None, fy=None,
@@ -600,9 +604,9 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 self.add_tools(p, s, None, convert_index, add_inspector)
             return s, p
 
-        scatter,si = self._new_scatter(kw, marker, marker_size,
-                                    plotid, x, y, fit,
-                                    filter_outliers_dict)
+        scatter, si = self._new_scatter(kw, marker, marker_size,
+                                        plotid, x, y, fit,
+                                        filter_outliers_dict)
         lkw = kw.copy()
         lkw['color'] = 'black'
         lkw['type'] = 'line'
@@ -612,10 +616,10 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         line = plot.plot(names, add=False, **rd)[0]
         line.index.sort_order = 'ascending'
         self.set_series_label('fit{}'.format(si), plotid=plotid)
-        
+
         plot.add(line)
         plot.add(scatter)
-        
+
         if use_error_envelope:
             self._add_error_envelope_overlay(line)
 

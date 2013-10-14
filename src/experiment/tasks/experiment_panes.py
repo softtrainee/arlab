@@ -18,9 +18,10 @@
 from traits.api import Color, Instance
 from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
     ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label, InstanceEditor, \
-    CheckListEditor, VSplit
+    CheckListEditor, VSplit, TabularEditor
 # from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
+from traitsui.tabular_adapter import TabularAdapter
 from src.experiment.utilities.identifier import SPECIAL_NAMES
 # from src.ui.tabular_editor import myTabularEditor
 # from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
@@ -270,6 +271,10 @@ class ExperimentFactoryPane(TraitsDockPane):
             RFItem('measurement_script', style='custom', show_label=False),
             RFItem('post_equilibration_script', style='custom', show_label=False),
             RFItem('post_measurement_script', style='custom', show_label=False),
+            HGroup(spring, RFItem('load_defaults_button',
+                                  tooltip='load the default scripts for this analysis type',
+                                  show_label=False,
+                                  enabled_when=make_rf_name('labnumber'))),
             show_border=True,
             label='Scripts'
         )
@@ -277,80 +282,7 @@ class ExperimentFactoryPane(TraitsDockPane):
 
     def _get_extract_group(self):
         return RFItem('factory_view', style='custom', show_label=False)
-        #    print self.model
-        #    return self._get_default_extract_group()
-        #
-        #def _get_uv_extract_group(self):
-        #    pass
-        #
-        #def _get_default_extract_group(self):
 
-        #sspring = lambda width=17: Spring(springy=False, width=width)
-        #
-        #extract_grp = VGroup(
-        #    HGroup(sspring(width=33),
-        #           RFItem('extract_value', label='Extract',
-        #                  tooltip='Set the extract value in extract units',
-        #                  enabled_when=make_rf_name('extractable')
-        #           ),
-        #           RFItem('extract_units',
-        #                  show_label=False,
-        #                  editor=EnumEditor(name=make_rf_name('extract_units_names'))),
-        #           RFItem('ramp_duration', label='Ramp Dur. (s)'),
-        #    ),
-        #    HGroup(
-        #        RFItem('template',
-        #               label='Step Heat Template',
-        #               editor=EnumEditor(name=make_rf_name('templates')),
-        #               show_label=False,
-        #        ),
-        #        RFItem('edit_template',
-        #               show_label=False,
-        #               editor=ButtonEditor(label_value=make_rf_name('edit_template_label'))
-        #        ),
-        #        RFItem('extract_group_button', show_label=False,
-        #               tooltip='Group selected runs as a step heating experiment'
-        #        ),
-        #        RFItem('extract_group', label='Group ID'),
-        #
-        #    ),
-        #    HGroup(
-        #        RFItem('duration', label='Duration (s)',
-        #               tooltip='Set the number of seconds to run the extraction device.'
-        #
-        #        ),
-        #        RFItem('cleanup', label='Cleanup (s)',
-        #               tooltip='Set the number of seconds to getter the sample gas'
-        #        )
-        #    ),
-        #    RFItem('beam_diameter'),
-        #    HGroup(
-        #        RFItem('position',
-        #               tooltip=POSITION_TOOLTIP),
-        #        RFItem('pattern',
-        #               editor=EnumEditor(name=make_rf_name('patterns'))),
-        #        RFItem('edit_pattern',
-        #               show_label=False,
-        #               editor=ButtonEditor(label_value=make_rf_name('edit_pattern_label'))
-        #        )
-        #    ),
-        #
-        #    #                              HGroup(
-        #    #                                      ),
-        #    #                                     spring,
-        #    #                                 RFItem('endposition', label='End',
-        #    #                                      enabled_when='position'
-        #    #                                      )
-        #    #                                 ),
-        #
-        #    label='Extract',
-        #    show_border=True
-        #)
-        #return extract_grp
-
-#         return VGroup(extract_grp, self._get_position_group(),
-#                       label='Extraction'
-#                       )
 
 #===============================================================================
 # execution
@@ -557,12 +489,21 @@ class SummaryPane(TraitsDockPane):
         return v
 
 
+class AnalysisHealthAdapter(TabularAdapter):
+    columns = [('Isotope', 'name'),
+               ('Min.', 'health_min'),
+               ('Health', 'health'),
+               ('Max.', 'health_max')]
+
+
 class AnalysisHealthPane(TraitsDockPane):
     id = 'pychron.experiment.analysis_health'
     name = 'Health'
 
     def traits_view(self):
-        v = View(UItem('analysis_type'),
+        v = View(UItem('analysis_type', style='readonly'),
+
+                 Item('isotopes', editor=TabularEditor(adapter=AnalysisHealthAdapter()))
 
         )
         return v

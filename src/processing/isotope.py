@@ -26,7 +26,7 @@ from src.regression.mean_regressor import MeanRegressor
 from src.regression.ols_regressor import PolynomialRegressor
 import struct
 #============= local library imports  ==========================
-logger = new_logger('isotopes')
+#logger = new_logger('isotopes')
 
 
 class BaseMeasurement(HasTraits):
@@ -37,15 +37,17 @@ class BaseMeasurement(HasTraits):
     mass = Float
     detector = Str
 
+    unpack_error = None
+
     def __init__(self, dbrecord=None, unpack=True, *args, **kw):
         super(BaseMeasurement, self).__init__(*args, **kw)
 
         if dbrecord and unpack:
             try:
-                xs, ys = self._unpack_blob(dbrecord.signals.data)
-            except (ValueError, TypeError, IndexError), e:
-                logger.warning('base measurment {} {}'.format(self, e))
-                xs, ys = [], []
+                xs, ys = self._unpack_blob(dbrecord.signal.data)
+            except (ValueError, TypeError, IndexError, AttributeError), e:
+                self.unpack_error = e
+                return
 
             self.xs = array(xs)
             self.ys = array(ys)
