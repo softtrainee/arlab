@@ -329,26 +329,55 @@ class AnalysisEditTask(BaseBrowserTask):
     def _update_up_previous_selection(self, obj, name, old, new):
         self._set_previous_selection(obj, new)
 
-    def _get_selected_analyses(self):
+    def _get_selected_analyses(self, unks=None):
         s = self.analysis_table.selected
         if not s:
             if self.selected_sample:
+                iv = not self.analysis_table.omit_invalid
+
+                uuids = []
+                if unks:
+                    uuids = [x.uuid for x in unks]
+
+                def test(aa):
+                    return not aa.uuid in uuids
+
                 s = [ai for si in self.selected_sample
-                     for ai in self._get_sample_analyses(si,
-                                                         include_invalid=not self.analysis_table.omit_invalid)]
+                     for ai in self._get_sample_analyses(si, include_invalid=iv)
+                     if test(ai)]
+
             else:
                 s = self.data_selector.selector.selected
+
         return s
 
     @on_trait_change('unknowns_pane:[append_button, replace_button]')
     def _append_unknowns(self, obj, name, old, new):
 
-        s = self._get_selected_analyses()
-        if s:
-            if name == 'append_button':
-                self.active_editor.unknowns.extend(s)
-            else:
-                self.active_editor.unknowns = s
+        is_append = name == 'append_button'
+
+        if self.active_editor:
+            unks = None
+            if is_append:
+                unks = self.active_editor.unknowns
+
+            s = self._get_selected_analyses(unks)
+            if s:
+                if is_append:
+
+                    unks = self.active_editor.unknowns
+                    unks.extend(s)
+
+                    #self.active_editor.unknowns=unks
+                else:
+                    self.active_editor.unknowns = s
+
+                #print 'asd', len(self.active_editor.unknowns)
+                #self.unknowns_pane.items=self.active_editor.unknowns
+                self._add_unknowns_hook()
+
+    def _add_unknowns_hook(self, *args, **kw):
+        pass
 
     @on_trait_change('data_selector:selector:key_pressed')
     def _key_press(self, obj, name, old, new):

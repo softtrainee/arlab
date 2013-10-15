@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any , on_trait_change, Int, List, Bool
+from traits.api import Any, on_trait_change, Int, List, Bool, Property
 from pyface.timer.do_later import do_later
 #============= standard library imports ========================
 
@@ -40,6 +40,7 @@ class ExperimentQueue(BaseExperimentQueue):
     queue_actions = List
 
     executed = Bool(False)
+    total_runs = Property(depends_on='automated_runs[], executed_runs[]')
 
     def select_run_idx(self, idx):
         if self.automated_runs:
@@ -51,16 +52,17 @@ class ExperimentQueue(BaseExperimentQueue):
         self._no_update = True
         for ei in reversed(ens):
             ei.state = 'not run'
-#             ei.aliquot = 0
-#             ei.assigned_aliquot=0
-#             ei.step = ''
+            #             ei.aliquot = 0
+            #             ei.assigned_aliquot=0
+            #             ei.step = ''
             ans.insert(0, ei)
 
         self.executed_runs = []
         self.executed = False
         self._no_update = False
-#         self.update_needed = True
-#         self.refresh_table_needed = True
+
+    #         self.update_needed = True
+    #         self.refresh_table_needed = True
 
     def set_run_inprogress(self, aid):
         run = self._find_run(aid)
@@ -73,11 +75,11 @@ class ExperimentQueue(BaseExperimentQueue):
             self.automated_runs.remove(run)
             self.executed_runs.append(run)
             idx = len(self.executed_runs) - 1
-#             self.trait_set(executed_runs_scroll_to_row=idx)
-#             do_later(self.trait_set, executed_runs_scroll_to_row=idx)
-#             invoke_in_main_thread(do_later, lambda:self.trait_set(executed_runs_scroll_to_row=idx))
-            invoke_in_main_thread(do_later, lambda:self.trait_set(executed_runs_scroll_to_row=idx))
-#             invoke_in_main_thread(self.trait_set, executed_runs_scroll_to_row=idx)
+            #             self.trait_set(executed_runs_scroll_to_row=idx)
+            #             do_later(self.trait_set, executed_runs_scroll_to_row=idx)
+            #             invoke_in_main_thread(do_later, lambda:self.trait_set(executed_runs_scroll_to_row=idx))
+            invoke_in_main_thread(do_later, lambda: self.trait_set(executed_runs_scroll_to_row=idx))
+            #             invoke_in_main_thread(self.trait_set, executed_runs_scroll_to_row=idx)
             self.debug('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ set ex scroll to {}'.format(idx))
         else:
             self.debug('Problem removing {}'.format(aid))
@@ -101,28 +103,28 @@ class ExperimentQueue(BaseExperimentQueue):
             ci.aliquot = 0
         return ci
 
-#     _test = True
+    #     _test = True
 
     @on_trait_change('automated_runs[]')
     def _refresh_info(self, new):
 
-#             do_later(self.trait_set, automated_runs_scroll_to_row=idx)
+    #             do_later(self.trait_set, automated_runs_scroll_to_row=idx)
 
-#         if new > 1:
-#             if self._test:
-#                 self.executed_runs.append(new[0])
-#                 self._test = False
+    #         if new > 1:
+    #             if self._test:
+    #                 self.executed_runs.append(new[0])
+    #                 self._test = False
 
         if not self._no_update:
             self.debug('automated runs len changed {}'.format(len(new)))
             if new:
                 idx = self.automated_runs.index(new[-1])
                 self.debug('SSSSSSSSSSSSSS set AR scroll to {}'.format(idx))
-                invoke_in_main_thread(do_later, lambda:self.trait_set(automated_runs_scroll_to_row=idx))
+                invoke_in_main_thread(do_later, lambda: self.trait_set(automated_runs_scroll_to_row=idx))
 
             if self.automated_runs:
                 self.update_needed = True
-#                self.refresh_button = True
+            #                self.refresh_button = True
 
     @on_trait_change('automated_runs:state')
     def _refresh_table1(self):
@@ -132,8 +134,8 @@ class ExperimentQueue(BaseExperimentQueue):
         super(ExperimentQueue, self)._load_meta(meta)
         if 'actions' in meta:
             self.queue_actions = [ExperimentQueueAction(astr)
-                                    for astr in meta['actions']
-                                    ]
+                                  for astr in meta['actions']
+            ]
 
         else:
             self.debug('no actions provided for this queue')
@@ -160,6 +162,7 @@ class ExperimentQueue(BaseExperimentQueue):
         runs = [ri for ri in runs if ri.executable]
         rgen = (r for r in runs)
         return rgen, len(runs)
+
 
 #============= EOF =============================================
 #        rgen = (r for r in newruns)

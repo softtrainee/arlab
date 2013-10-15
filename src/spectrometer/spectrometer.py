@@ -195,9 +195,9 @@ class Spectrometer(SpectrometerDevice):
                 di.isotope = 'Ar{}'.format(mass)
 
 
-            #===============================================================================
-            # property get/set
-            #===============================================================================
+                #===============================================================================
+                # property get/set
+                #===============================================================================
 
     def _get_detectors(self):
         ds = []
@@ -328,7 +328,6 @@ class Spectrometer(SpectrometerDevice):
         data = self.get_intensities()
         if data is not None:
             keys, signals = data
-
             if isinstance(dkeys, (tuple, list)):
                 return [signals[keys.index(key)] for key in dkeys]
             else:
@@ -409,9 +408,9 @@ class Spectrometer(SpectrometerDevice):
 
                         self.set_parameter(cmd, v)
 
-                    #===============================================================================
-                    # defaults
-                    #===============================================================================
+                        #===============================================================================
+                        # defaults
+                        #===============================================================================
 
     def _magnet_default(self):
         return Magnet(spectrometer=self)
@@ -419,83 +418,83 @@ class Spectrometer(SpectrometerDevice):
     def _source_default(self):
         return Source(spectrometer=self)
 
-    #============= EOF =============================================
-    #    def _peak_center_scan_step(self, di, graph, plotid, cond):
-    # #       3print cond
-    #        if self.first:
-    #            self.first = False
-    #            x = di
-    #            cond.acquire()
-    #        else:
-    #            x = self.x
-    #        data = self.get_intensities()
-    #        if data is not None:
-    #            if self.simulation:
-    #                intensity = self.peak_generator.next()
-    #            else:
-    #                intensity = data[DETECTOR_ORDER.index(self.reference_detector)]
-    #
-    #            self.intensities.append(intensity)
-    #            graph.add_datum((x, intensity), plotid = plotid, update_y_limits = True)
-    #
-    #        try:
-    #            x = self.gen.next()
-    #        except StopIteration:
-    #            try:
-    #                cond.notify()
-    #                cond.release()
-    #            finally:
-    #                raise StopIteration
-    #
-    #        self.x = x
-    #        self.magnet.set_dac(x)
-    #    def _peak_center(self, graph, update_mftable, update_pos, center_pos):
+        #============= EOF =============================================
+        #    def _peak_center_scan_step(self, di, graph, plotid, cond):
+        # #       3print cond
+        #        if self.first:
+        #            self.first = False
+        #            x = di
+        #            cond.acquire()
+        #        else:
+        #            x = self.x
+        #        data = self.get_intensities()
+        #        if data is not None:
+        #            if self.simulation:
+        #                intensity = self.peak_generator.next()
+        #            else:
+        #                intensity = data[DETECTOR_ORDER.index(self.reference_detector)]
+        #
+        #            self.intensities.append(intensity)
+        #            graph.add_datum((x, intensity), plotid = plotid, update_y_limits = True)
+        #
+        #        try:
+        #            x = self.gen.next()
+        #        except StopIteration:
+        #            try:
+        #                cond.notify()
+        #                cond.release()
+        #            finally:
+        #                raise StopIteration
+        #
+        #        self.x = x
+        #        self.magnet.set_dac(x)
+        #    def _peak_center(self, graph, update_mftable, update_pos, center_pos):
 
-    #    def _peak_center_scan(self, start, end, step_len, graph, ppc = 40, plotid = 0):
-    #
-    #        #stop the scan timer and use peak scan timer
-    #        self.intensities = []
-    #        sign = 1 if start < end else - 1
-    #        nsteps = abs(end - start + step_len * sign) / step_len
-    #        dac_values = np.linspace(start, end, nsteps)
-    #        self.peak_generator = psuedo_peak(ppc, start, end, nsteps)
-    #
-    #        self.first = True
-    #        self.x = 0
-    #        self.gen = (i for i in dac_values)
-    #        period = self.integration_time * 1000
-    #        if self.simulation:
-    #            period = 150
-    #
-    #        #do first dac move
-    # #        di = self.gen.next()
-    # #        self.magnet.set_dac(di)
-    # #        time.sleep(2)
-    #
-    #        if self.scan_timer.IsRunning():
-    #            self.scan_timer.Stop()
+        #    def _peak_center_scan(self, start, end, step_len, graph, ppc = 40, plotid = 0):
+        #
+        #        #stop the scan timer and use peak scan timer
+        #        self.intensities = []
+        #        sign = 1 if start < end else - 1
+        #        nsteps = abs(end - start + step_len * sign) / step_len
+        #        dac_values = np.linspace(start, end, nsteps)
+        #        self.peak_generator = psuedo_peak(ppc, start, end, nsteps)
+        #
+        #        self.first = True
+        #        self.x = 0
+        #        self.gen = (i for i in dac_values)
+        #        period = self.integration_time * 1000
+        #        if self.simulation:
+        #            period = 150
+        #
+        #        #do first dac move
+        # #        di = self.gen.next()
+        # #        self.magnet.set_dac(di)
+        # #        time.sleep(2)
+        #
+        #        if self.scan_timer.IsRunning():
+        #            self.scan_timer.Stop()
 
-    #        t = Thread(target = self.scan, args = (dac_values, graph))
-    #        t.start()
-    #        t.join()
-    #===============================================================================
-    # old
-    #===============================================================================
-    #        if self.condition is None:
-    #            cond = Condition()
-    #        with cond:
-    #            if self.centering_timer is not None:
-    #                self.centering_timer.Stop()
-    #
-    #            self.centering_timer = Timer(period, self._peak_center_scan_step, di, graph, plotid, cond)
-    #            self.centering_timer.Start()
-    #
-    #            cond.wait()
-    #===============================================================================
-    # old end
-    #===============================================================================
+        #        t = Thread(target = self.scan, args = (dac_values, graph))
+        #        t.start()
+        #        t.join()
+        #===============================================================================
+        # old
+        #===============================================================================
+        #        if self.condition is None:
+        #            cond = Condition()
+        #        with cond:
+        #            if self.centering_timer is not None:
+        #                self.centering_timer.Stop()
+        #
+        #            self.centering_timer = Timer(period, self._peak_center_scan_step, di, graph, plotid, cond)
+        #            self.centering_timer.Start()
+        #
+        #            cond.wait()
+        #===============================================================================
+        # old end
+        #===============================================================================
 
-    # restart the scan timer
+        # restart the scan timer
 
 #        self._timer_factory()
 #

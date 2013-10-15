@@ -145,7 +145,8 @@ class IsotopeDatabaseManager(Loggable):
                     #if progress:
                     #    progress.on_trait_change(self._progress_closed, 'closed')
 
-                    rs = []
+                    #rs = []
+                    uuids = [a.uuid for a in dbans]
                     for ai in ans:
                         r = self._analysis_factory(ai,
                                                    progress=progress,
@@ -153,9 +154,12 @@ class IsotopeDatabaseManager(Loggable):
                                                    unpack=unpack,
                                                    **kw)
                         if r is not None:
-                            rs.append(r)
+                            #rs.append(r)
+                            if r.uuid not in uuids:
+                                dbans.append(r)
+                                uuids.append(r.uuid)
 
-                    dbans.extend(rs)
+                    #dbans.extend(rs)
 
                     if progress:
                         progress.on_trait_change(self._progress_closed,

@@ -177,6 +177,8 @@ class AutomatedRun(Loggable):
     _current_data_frame = None
 
     warned_scripts = []
+
+    is_last = False
     #===============================================================================
     # pyscript interface
     #===============================================================================
@@ -281,6 +283,11 @@ class AutomatedRun(Loggable):
         for i, fb in enumerate(self.fits):
             self.debug('{:02n} {}'.format(i + 1, fb))
         self.debug('========================================')
+
+    def py_get_spectrometer_parameter(self, name):
+        self.info('getting spectrometer parameter {}'.format(name))
+        if self.spectrometer_manager:
+            return self.spectrometer_manager.spectrometer.get_parameter(name)
 
     def py_set_spectrometer_parameter(self, name, v):
         self.info('setting spectrometer parameter {} {}'.format(name, v))
@@ -739,6 +746,7 @@ class AutomatedRun(Loggable):
         # setup the scripts
         if self.measurement_script:
             self.measurement_script.reset(weakref.ref(self)())
+            self.measurement_script.setup_context(is_last=self.is_last)
 
         for si in ('extraction', 'post_measurement', 'post_equilibration'):
             script = getattr(self, '{}_script'.format(si))
@@ -2044,8 +2052,10 @@ anaylsis_type={}
 
         ms = MeasurementPyScript(root=root,
                                  name=sname,
-                                 runner=self.runner
+                                 runner=self.runner,
         )
+        ms.setup_context(is_last=self.is_last)
+
         return ms
 
     def _extraction_script_factory(self):
@@ -2105,8 +2115,8 @@ anaylsis_type={}
                              ramp_rate=spec.ramp_rate,
                              pattern=spec.pattern,
                              beam_diameter=spec.beam_diameter,
-                             ramp_duration=spec.ramp_duration
-        )
+                             ramp_duration=spec.ramp_duration,
+                             is_last=self.is_last)
 
     def _add_script_extension(self, name, ext='.py'):
         return name if name.endswith(ext) else name + ext

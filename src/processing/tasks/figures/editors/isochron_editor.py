@@ -32,13 +32,15 @@ class InverseIsochronEditor(FigureEditor):
 
     @on_trait_change('model:panels:figures:refresh_unknowns_table')
     def _handle_refresh(self, obj, name, old, new):
-        if self.parent_editor:
+        #print 'rebuild parent', obj.suppress
+        if self.parent_editor and not obj.suppress:
             self.parent_editor.rebuild()
 
     def load_fits(self, refiso):
         pass
 
     def get_component(self, ans, plotter_options):
+
         if plotter_options is None:
             pom = InverseIsochronOptionsManager()
             plotter_options = pom.plotter_options
@@ -50,6 +52,12 @@ class InverseIsochronEditor(FigureEditor):
         model.analyses = ans
         iv = FigureContainer(model=model)
 
+        #force are refresh
+        model.refresh()
+
         return model, iv.component
+
+        #def replot(self):
+        #    print self.model
 
 #============= EOF =============================================

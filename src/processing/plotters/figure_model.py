@@ -28,6 +28,11 @@ class FigureModel(HasTraits):
     plot_options = Any
     _panel_klass = Instance('src.processing.plotters.figure_panel.FigurePanel')
 
+    def refresh(self):
+        for p in self.panels:
+            for f in p.figures:
+                f.replot()
+
     def dump_metadata(self):
         ps = []
         for pp in self.panels:

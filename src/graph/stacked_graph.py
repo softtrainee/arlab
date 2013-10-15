@@ -17,7 +17,7 @@
 
 
 #=============enthought library imports=======================
-from traits.api import Bool, on_trait_change
+from traits.api import Bool, on_trait_change, List, Event
 from chaco.scatterplot import ScatterPlot
 #=============standard library imports ========================
 
@@ -26,8 +26,10 @@ from graph import Graph
 
 
 class StackedGraph(Graph):
-    '''
-    '''
+    """
+    """
+    #indices=List
+
     bind_index = Bool(True)
     bind_padding = Bool(True)
     bind_y_title_spacing = Bool(True)
@@ -36,6 +38,8 @@ class StackedGraph(Graph):
     panel_height = 100
     _has_title = False
     padding_bottom = 50
+
+    metadata_updated = Event
 
     @on_trait_change('plots:value_axis:title_spacing')
     def _update_value_axis(self, obj, name, old, new):
@@ -176,17 +180,18 @@ class StackedGraph(Graph):
         if not 'plotid' in kw:
             kw['plotid'] = 0
         if not 'bind_id' in kw:
-            kw['bind_id'] = 0
+            kw['bind_id'] = None
 
         plotid = kw['plotid']
         bind_id = kw['bind_id']
         #print bind_id, self.bind_index, self
         s, _p = super(StackedGraph, self).new_series(*args, **kw)
-
+        #print 'new series', bind_id
         #series_id = self.series[plotid][-1]
         if self.bind_index:
-            s.bind_id = bind_id
-            self._bind_index(s, bind_id=bind_id)
+            if isinstance(s, ScatterPlot):
+                s.bind_id = bind_id
+                self._bind_index(s, bind_id=bind_id)
 
         return s, _p
 
@@ -235,5 +240,16 @@ class StackedGraph(Graph):
                                                                   obj, name, old, new)
             scatter.index.on_trait_change(u, 'metadata_changed')
 
+            #self.indices.append(scatter.index)
+            #print 'fff', len(self.indices)
+
+            #def clear(self):
+            #    print 'clear', self.indices
+            #    for idx in self.indices:
+            #        print 'removing', idx
+            #        #idx.on_trait_change('', 'metadata_changed', remove=True)
+            #    self.indices=[]
+            #
+            #    super(StackedGraph,self).clear()
 
 #============= EOF ====================================

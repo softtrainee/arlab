@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Float, DelegatesTo, Int, List, Bool
-from traitsui.api import View, Item, EnumEditor, Group
+from traitsui.api import View, Item, EnumEditor, Group, HGroup, spring, ButtonEditor
 from pyface.timer.do_later import do_after
 #============= standard library imports ========================
 from numpy import linspace, exp, hstack, array
@@ -54,6 +54,8 @@ class MagnetScan(SpectrometerTask):
     step_mass = Float(1)
     period = Int(900)
     normalize = Bool(True)
+
+    verbose = False
     #    title = 'Magnet Scan'
     #    def _scan_dac(self, values, det, delay=850):
     #
@@ -175,7 +177,8 @@ class MagnetScan(SpectrometerTask):
         return True
 
     def _iter_dac(self, mag, di, gen, evt, intensities, det, peak_generator):
-        mag.set_dac(di, verbose=False)
+
+        mag.set_dac(di, verbose=self.verbose)
 
         d = self._magnet_step_hook(detector=det,
                                    peak_generator=peak_generator)
@@ -244,9 +247,11 @@ class MagnetScan(SpectrometerTask):
 
     def _magnet_step_hook(self, detector=None, peak_generator=None):
         spec = self.spectrometer
-
-        ds = [self.reference_detector] + self.additional_detectors
-        #        spec.magnet.set_dac(di, verbose=False)
+        if detector:
+            ds = [str(detector)]
+        else:
+            ds = [str(self.reference_detector)] + self.additional_detectors
+            #        spec.magnet.set_dac(di, verbose=False)
         #        if delay:
         #            time.sleep(delay)
         intensity = spec.get_intensity(ds)
@@ -267,7 +272,7 @@ class MagnetScan(SpectrometerTask):
                     r[2] *= 0.1
 
             intensity = r
-        #             intensity = (intensity,) * len(ds)
+            #             intensity = (intensity,) * len(ds)
 
         return intensity
 
@@ -276,13 +281,16 @@ class MagnetScan(SpectrometerTask):
         em = self.stop_mass
         stm = self.step_mass
 
+        self.verbose = True
         if abs(sm - em) > stm:
-        #        ds = mag.calculate_dac(sm)
             self._do_scan(sm, em, stm)
             self._alive = False
             self._post_execute()
 
+        self.verbose = False
+
     def _do_scan(self, sm, em, stm, directions=None, map_mass=True):
+        self.debug('_do_scan')
         # default to forward scan
         if directions is None:
             directions = [1]
@@ -333,7 +341,7 @@ class MagnetScan(SpectrometerTask):
         return True
 
     def _post_execute(self):
-        pass
+        self.debug('scan finished')
 
     def _reference_detector_default(self):
         return self.detectors[0]
@@ -352,6 +360,8 @@ class MagnetScan(SpectrometerTask):
                 Item('stop_mass', label='Stop'),
                 Item('step_mass', label='Step'),
                 Item('period', label='Scan Period (ms)'),
+                HGroup(spring, Item('execute_button', editor=ButtonEditor(label_value='execute_label'),
+                                    show_label=False)),
                 label='Magnet Scan',
                 show_border=True
             )
