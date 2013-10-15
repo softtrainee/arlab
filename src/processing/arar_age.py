@@ -264,7 +264,7 @@ class ArArAge(Loggable):
 
     def calculate_age(self, force=False, **kw):
         """
-            force: force recalculation of age. necessarily if you want error components
+            force: force recalculation of age. necessary if you want error components
         """
         #print 'calc', self.age, force
         #        self.debug('calculate age ={}'.format(self.age))

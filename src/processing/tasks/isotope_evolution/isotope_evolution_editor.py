@@ -45,21 +45,27 @@ class IsotopeEvolutionEditor(GraphEditor):
 
     def save(self):
         proc = self.processor
-        prog = proc.open_progress(n=len(self.unknowns))
+        prog = proc.open_progress(n=len(self.unknowns) * 2)
 
+        db = proc.db
         for unk in self.unknowns:
             prog.change_message('Saving fits for {}'.format(unk.record_id))
             prog.increment()
 
-            self._save_fit(unk)
+            meas_analysis = db.get_analysis_uuid(unk.uuid)
+            self._save_fit(unk, meas_analysis)
 
-    def _save_fit(self, unk):
+            prog.change_message('Saving new ArAr age for {}'.format(unk.record_id))
+            prog.increment()
+
+            proc.save_arar(unk, meas_analysis)
+
+
+    def _save_fit(self, unk, meas_analysis):
         fit_hist = None
         db = self.processor.db
 
         #ai=self.processor.make_analyses([unk])[0]
-        meas_analysis = db.get_analysis_uuid(unk.uuid)
-
         for fi in self.tool.fits:
             if not fi.use:
                 continue
