@@ -15,34 +15,35 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Bool, Instance
-from traitsui.api import View, Item, UI
-# from pyface.tasks.editor import Editor
-from src.loggable import Loggable
-from pyface.tasks.traits_editor import TraitsEditor
+from traits.api import HasTraits
+from traitsui.api import View, Item
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.base_editor import BaseTraitsEditor
 
-class BaseTraitsEditor(TraitsEditor, Loggable):
-    dirty = Bool(False)
-    #    ui = Instance(UI)
-    #
-    #    def create(self, parent):
-    #        self.control = self._create_control(parent)
 
-    def prepare_destroy(self):
-        pass
+class BaseUnknownsEditor(BaseTraitsEditor):
+    def _grouped_name(self, names, delimiter='-'):
+        s = names[0]
+        e = names[-1]
+        if s != e:
+            if all([delimiter in x for x in names]):
+                prev = None
+                for x in names:
+                    h, t = x.split(delimiter)
+                    if prev and prev != h:
+                        #print 'not a group'
+                        break
+                    prev = h
+                else:
+                    #print 'is a group'
+                    s = names[0]
+                    e = names[-1].split(delimiter)[-1]
 
-    def destroy(self):
-        self.prepare_destroy()
-        super(BaseTraitsEditor, self).destroy()
+            s = '{} - {}'.format(s, e)
 
-        #self.ui.dispose()
-        #self.control = self.ui = None
-
-#
-#    def _create_control(self, parent):
-#        self.ui = self.edit_traits(kind='subpanel', parent=parent)
-#        return self.ui.control
+        return s
 
 #============= EOF =============================================
+

@@ -438,16 +438,27 @@ class FigureTask(AnalysisEditTask):
         items = self.unknowns_pane.items
         return [items.index(si) for si in self.unknowns_pane.selected]
 
-    def _group_by(self, key):
+    def _add_unknowns_hook(self, *args, **kw):
+        self.group_by_labnumber()
         if self.active_editor:
-            items = self.unknowns_pane.items
+            for ai in self.active_editor.associated_editors:
+                if isinstance(ai, FigureEditor):
+                    ai.rebuild_graph()
+
+    def _group_by(self, key):
+
+        editor = self.active_editor
+        if editor:
+            items = editor.unknowns
+
+            #items = self.unknowns_pane.items
             items = sorted(items, key=key)
             for i, (_, analyses) in enumerate(groupby(items, key=key)):
                 idxs = [items.index(ai) for ai in analyses]
-                self.active_editor.set_group(idxs, i, refresh=False)
+                editor.set_group(idxs, i, refresh=False)
 
             self.unknowns_pane.refresh_needed = True
-            self.active_editor.rebuild(refresh_data=False)
+            editor.rebuild(refresh_data=False)
 
             #===============================================================================
             # handlers

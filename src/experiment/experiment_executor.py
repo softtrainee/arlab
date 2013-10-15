@@ -388,9 +388,14 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
     def _do_runA(self, run):
         mem_log('< start')
-        run.state = 'not run'
-        self.current_run = run
 
+        run.state = 'not run'
+
+        q = self.experiment_queue
+        #is this the last run in the queue
+        run.is_last = len(q.automated_runs) == 0
+
+        self.current_run = run
         st = time.time()
         for step in (
             '_start',

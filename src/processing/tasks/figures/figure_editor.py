@@ -51,11 +51,22 @@ class FigureEditor(GraphEditor):
 
     @on_trait_change('model:panels:figures:refresh_unknowns_table')
     def _handle_refresh(self):
-        print 'figure editor refresh', self
+        pass
+        #self.suppress_rebuild=True
+        print 'figure editor refresh', id(self)
         for e in self.associated_editors:
             if isinstance(e, FigureEditor):
-                e.rebuild(refresh_data=False)
+                #e.rebuild_graph()
+                if e.model:
+                    for p in e.model.panels:
+                        for f in p.figures:
+                            f.replot()
 
+                            #e.replota()
+
+                            #e.rebuild(refresh_data=False)
+
+    #    self.suppress_rebuild=False
     def traits_view(self):
         v = View(UItem('component',
                        style='custom',
@@ -95,19 +106,20 @@ class FigureEditor(GraphEditor):
     def _rebuild_graph(self):
         self.rebuild(refresh_data=False)
 
-    def rebuild(self, refresh_data=True, compress_groups=True, update_associated=True):
+    def _update_unknowns_hook(self):
+        ans = self.unknowns
+        for e in self.associated_editors:
+            if isinstance(e, FigureEditor):
+                e.analysis_cache = self.analysis_cache
+                #e.trait_set(unknowns=ans, trait_change_notify=False)
+                e.unknowns = ans
+            else:
+                e.items = ans
 
+    def rebuild(self, refresh_data=True, compress_groups=True):
         ans = self._gather_unknowns(refresh_data, compress_groups=compress_groups)
 
         if ans:
-            if update_associated:
-                for e in self.associated_editors:
-                    if isinstance(e, FigureEditor):
-                        e.analysis_cache = self.analysis_cache
-                        e.unknowns = ans
-                    else:
-                        e.items = ans
-
             po = self.plotter_options_manager.plotter_options
 
             model, comp = timethis(self.get_component, args=(ans, po),

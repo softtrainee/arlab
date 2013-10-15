@@ -89,6 +89,7 @@ class Ideogram(BaseArArFigure):
         plot.value_axis.tick_label_formatter = lambda x: ''
         plot.value_axis.tick_visible = False
 
+        #print 'ideo omit', omit
         if omit:
             self._rebuild_ideo(omit)
 
@@ -180,7 +181,7 @@ class Ideogram(BaseArArFigure):
         e = self.options.error_calc_method
         s = self.options.nsigma
         if self.options.show_info:
-            pl = PlotLabel(text=u'Mean: {}\nError Mag.: {}s\nError Type: {}'.format(m, s, e),
+            pl = PlotLabel(text=u'Mean: {} +/-{}s\nError Type: {}'.format(m, s, e),
                            overlay_position='inside top',
                            hjustify='left',
                            component=plot)
@@ -263,11 +264,11 @@ class Ideogram(BaseArArFigure):
     def _rebuild_ideo(self, sel):
         graph = self.graph
 
-        if graph.bind_index:
-            for p in graph.plots[1:]:
-                for plot in p.plots.itervalues():
-                    plot = plot[0]
-                    plot.index.metadata['selections'] = sel
+        #if graph.bind_index:
+        #    for p in graph.plots[1:]:
+        #        for plot in p.plots.itervalues():
+        #            plot = plot[0]
+        #            plot.index.metadata['selections'] = sel
 
         plot = graph.plots[0]
         gid = self.group_id + 1
@@ -326,6 +327,8 @@ class Ideogram(BaseArArFigure):
         graph = self.graph
         graph.set_y_title(title,
                           plotid=pid)
+
+        #print 'aux plot',title, self.group_id
         s, p = graph.new_series(
             x=self.xs, y=ys,
             type='scatter',

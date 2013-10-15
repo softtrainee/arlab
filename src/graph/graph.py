@@ -16,6 +16,7 @@
 
 #=============enthought library imports=======================
 from chaco.scatterplot import ScatterPlot
+from enable.colors import color_table
 from traits.api import Instance, Any, Bool, \
     List, Str, Property, Dict, Callable
 from traitsui.api import View, Item, Handler
@@ -171,7 +172,12 @@ class Graph(Viewable, ContextMenuMixin):
         for ai in attrs:
             v = getattr(plot, ai)
             if ai == 'color':
-                v = v[0] * 255, v[1] * 255, v[2] * 255
+                #print ai, v, type(v)
+                if isinstance(v, str):
+                    v = color_table[v]
+                else:
+                    v = v[0] * 255, v[1] * 255, v[2] * 255
+                    #print '_assemble_plot_metadata', ai, v
 
             meta[ai] = v
 
@@ -202,17 +208,22 @@ class Graph(Viewable, ContextMenuMixin):
         return ps
 
     def load_metadata(self, metas):
+
         for i, meta in enumerate(metas):
             if not meta:
                 continue
+
             plot = self.plots[i]
+            plots = plot.plots
             for k, d in meta.iteritems():
+                obj = None
                 if k == 'value_axis':
                     obj = plot.value_axis
-                else:
-                    obj = plot.plots[k][0]
+                elif k in plots:
+                    obj = plots[k][0]
 
-                obj.trait_set(**d)
+                if obj:
+                    obj.trait_set(**d)
 
         self.redraw()
 
@@ -815,6 +826,7 @@ class Graph(Viewable, ContextMenuMixin):
                    **kw):
         '''
         '''
+
         if plotid is None:
             plotid = len(self.plots) - 1
         kw['plotid'] = plotid
@@ -838,6 +850,7 @@ class Graph(Viewable, ContextMenuMixin):
         #            return renderer, plotobj
 
         #        else:
+
         if 'type' in rd:
             if rd['type'] == 'line_scatter':
 

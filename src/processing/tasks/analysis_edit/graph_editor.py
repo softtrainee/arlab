@@ -28,9 +28,10 @@ import pickle
 from src.paths import paths
 from src.processing.tasks.analysis_edit.fits import FitSelector
 from src.graph.regression_graph import StackedRegressionGraph
+from src.processing.tasks.editor import BaseUnknownsEditor
 
 
-class GraphEditor(BaseTraitsEditor):
+class GraphEditor(BaseUnknownsEditor):
     tool = Instance(FitSelector, ())
     graph = Any
     processor = Any
@@ -83,7 +84,6 @@ class GraphEditor(BaseTraitsEditor):
 
     @on_trait_change('unknowns[]')
     def _update_unknowns(self, obj, name, old, new):
-        #if not self.suppress_update:
         self._gather_unknowns(True)
 
         self.rebuild_graph()
@@ -93,6 +93,7 @@ class GraphEditor(BaseTraitsEditor):
             self._load_refiso(refiso)
             self._set_name()
             self._update_unknowns_hook()
+
 
     def _load_refiso(self, refiso):
         self.load_fits(refiso)
@@ -104,9 +105,9 @@ class GraphEditor(BaseTraitsEditor):
             self.load_tool()
 
     def _set_name(self):
-        na = set([ni.sample for ni in self.unknowns])
-        na = ','.join(na)
+        na = list(set([ni.sample for ni in self.unknowns]))
 
+        na = self._grouped_name(na)
         self.name = '{} {}'.format(na, self.basename)
 
     def _update_unknowns_hook(self):
@@ -126,6 +127,7 @@ class GraphEditor(BaseTraitsEditor):
         pass
 
     def rebuild_graph(self):
+        #if not self.suppress_rebuild:
         graph = self.graph
 
         graph.clear()
@@ -203,33 +205,35 @@ class GraphEditor(BaseTraitsEditor):
 
         ans = self.unknowns
         if refresh_data or not ans:
-            ids = [ai.uuid for ai in self.analysis_cache]
-            aa = [ai for ai in self.unknowns if ai.uuid not in ids]
+            #ids = [ai.uuid for ai in self.analysis_cache]
+            #aa = [ai for ai in self.unknowns if ai.uuid not in ids]
+            #
+            #nids = (ai.uuid for ai in self.unknowns if ai.uuid in ids)
+            #bb = [next((ai for ai in self.analysis_cache if ai.uuid == i)) for i in nids]
+            #aa = list(aa)
+            #aa=self.unknowns
 
-            nids = (ai.uuid for ai in self.unknowns if ai.uuid in ids)
-            bb = [next((ai for ai in self.analysis_cache if ai.uuid == i)) for i in nids]
-            aa = list(aa)
-            if aa:
-                unks = timethis(self.processor.make_analyses,
-                                args=(list(aa),),
-                                kwargs={'exclude': exclude,
+            if ans:
+                ans = timethis(self.processor.make_analyses,
+                               args=(ans,),
+                               kwargs={'exclude': exclude,
                                         'unpack': self.unpack_peaktime},
                                 msg='MAKE ANALYSES TOTAL')
 
                 #unks = self.processor.make_analyses(list(aa),
                 #                                    exclude=exclude)
-                ans = unks
-                if bb:
-                    ans.extend(bb)
-            else:
-                ans = bb
+                #ans = unks
+            #    if bb:
+            #        ans.extend(bb)
+            #else:
+            #    ans = bb
 
             if compress_groups:
                 # compress groups
                 self._compress_unknowns(ans)
 
-            self.trait_set(unknowns=ans, trait_change_notify=False)
-            #self.unknowns = ans
+            #self.trait_set(unknowns=ans, trait_change_notify=False)
+            self.unknowns = ans
         else:
             if exclude:
                 ans = self.processor.filter_analysis_tag(ans, exclude)

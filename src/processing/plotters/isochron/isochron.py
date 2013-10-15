@@ -35,6 +35,15 @@ from src.regression.new_york_regressor import ReedYorkRegressor
 N = 500
 
 
+class OffsetPlotLabel(PlotLabel):
+    offset = None
+
+    def overlay(self, component, gc, view_bounds=None, mode="normal"):
+        if self.offset:
+            gc.translate_ctm(*self.offset)
+        super(OffsetPlotLabel, self).overlay(component, gc, view_bounds, mode)
+
+
 class Isochron(BaseArArFigure):
     pass
 
@@ -46,6 +55,7 @@ class InverseIsochron(Isochron):
     xs = Array
     _cached_data = None
     _plot_label = None
+    suppress = False
 
     def plot(self, plots):
         """
@@ -58,15 +68,15 @@ class InverseIsochron(Isochron):
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
             getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1)
 
-        omit = self._get_omitted(self.analyses)
+        omit = self._get_omitted(self.sorted_analyses)
         if omit:
             self._rebuild_iso(omit)
 
-    def max_x(self, attr):
-        return max([ai.nominal_value for ai in self._unpack_attr(attr)])
-
-    def min_x(self, attr):
-        return min([ai.nominal_value for ai in self._unpack_attr(attr)])
+    #def max_x(self, attr):
+    #    return max([ai.nominal_value for ai in self._unpack_attr(attr)])
+    #
+    #def min_x(self, attr):
+    #    return min([ai.nominal_value for ai in self._unpack_attr(attr)])
 
     #===============================================================================
     # plotters
@@ -93,7 +103,7 @@ class InverseIsochron(Isochron):
     #    return ans
 
     def _plot_inverse_isochron(self, plot, pid):
-        analyses = self.analyses
+        analyses = self.sorted_analyses
         plot.padding_left = 75
 
         refiso = analyses[0]
@@ -130,26 +140,31 @@ class InverseIsochron(Isochron):
                                        yerror=ArrayDataSource(data=yerrs),
                                        type='scatter',
                                        marker='circle',
+                                       bind_id=self.group_id,
                                        #selection_marker_size=5,
                                        #selection_color='green',
                                        marker_size=1)
-        self._scatter = scatter
+        #self._scatter = scatter
+        graph.set_series_label('data{}'.format(self.group_id))
 
         eo = ErrorEllipseOverlay(component=scatter)
         scatter.overlays.append(eo)
-
-        graph.set_x_limits(min_=min(xs), max_=max(xs), pad='0.1')
 
         reg = ReedYorkRegressor(xs=xs, ys=ys, xserr=xerrs, yserr=yerrs)
         reg.calculate()
 
         mi, ma = graph.get_x_limits()
 
+        ma = max(ma, max(xs))
+        mi = min(mi, min(xs))
         rxs = linspace(mi, ma)
         rys = reg.predict(rxs)
 
+        graph.set_x_limits(min_=mi, max_=ma, pad='0.1')
+
         graph.new_series(rxs, rys)
-        graph.set_series_label('fit')
+        graph.set_series_label('fit{}'.format(self.group_id))
+        #self._fit_line=l
 
         self._add_scatter_inspector(scatter,
                                     # add_tool,
@@ -188,7 +203,8 @@ class InverseIsochron(Isochron):
 
         age_line = 'Age= {:0.3f} +/-{:0.4f} ({}%) {}'.format(v, e, p, u)
         if label is None:
-            label = PlotLabel(
+            label = OffsetPlotLabel(
+                offset=(0, 50 * self.group_id),
                 component=plot,
                 overlay_position='inside bottom',
                 hjustify='left')
@@ -202,10 +218,26 @@ class InverseIsochron(Isochron):
         if new is True:
             self.update_graph_metadata(None, name, old, new)
 
-    def _rebuild_iso(self, sel):
-        if self._cached_data:
-            self._scatter.index.metadata['selections'] = sel
+    def replot(self):
+        self.suppress = True
+        #print 'replaot', id(self), om, self.group_id
+        #self._rebuild_iso(om)
 
+        om = self._get_omitted(self.sorted_analyses)
+        scatter = self.graph.plots[0].plots['data{}'.format(self.group_id)][0]
+
+        p = scatter.index.metadata['selections']
+        if p == om:
+            self._rebuild_iso(om)
+        else:
+            scatter.index.metadata['selections'] = om
+
+        self.suppress = False
+
+    def _rebuild_iso(self, sel):
+        #print 'rebuild iso', sel
+        #print 'rebuild iso', sel, id(self), self.group_id, len(self.analyses)
+        if self._cached_data:
             xs, ys, xerr, yerr = self._cached_data
 
             nxs = delete(xs, sel)
@@ -217,19 +249,23 @@ class InverseIsochron(Isochron):
                                     xserr=nxerr, yserr=nyerr)
             reg.calculate()
 
-            rxs = self.graph.get_data(series=1)
-            #mi, ma = self.graph.get_x_limits()
-            #rxs = linspace(mi, ma)
+            fit = self.graph.plots[0].plots['fit{}'.format(self.group_id)][0]
+
+            mi, ma = self.graph.get_x_limits()
+            rxs = linspace(mi, ma, 10)
+
             rys = reg.predict(rxs)
 
-            #self.graph.set_data(nxs,series=1, axis=0)
-            self.graph.set_data(rys, series=1, axis=1)
+            fit.index.set_data(rxs)
+            fit.value.set_data(rys)
 
             if self._plot_label:
                 self._add_info(self.graph.plots[0], reg, label=self._plot_label)
 
     def update_graph_metadata(self, obj, name, old, new):
         if obj:
+        #if not self.suppress_metachange:
+        #print 'iso',new, self.suppress_metachange, id(self)
             self._filter_metadata_changes(obj, self._rebuild_iso, self.analyses)
             #self._set_selected(self.analyses, sel)
 

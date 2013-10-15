@@ -250,7 +250,7 @@ class RendererEditor(HasTraits):
 
     @on_trait_change('visible, color')
     def _update_value(self, name, new):
-        #print name,new
+        #print 'render editor',name,new
         self._set_value(name, new)
 
     def _set_value(self, name, new):

@@ -84,6 +84,7 @@ class ErrorBarOverlay(AbstractOverlay):
             color = component.color
             if isinstance(color, str):
                 color = color_table[color]
+                #print 'ebo color',color
             gc.set_stroke_color(color)
             gc.set_fill_color(color)
             gc.line_set(start, end)

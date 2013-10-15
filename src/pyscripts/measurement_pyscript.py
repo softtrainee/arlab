@@ -274,7 +274,10 @@ class MeasurementPyScript(ValvePyScript):
     def _set_spectrometer_parameter(self, *args, **kw):
         self._automated_run_call('py_set_spectrometer_parameter', *args, **kw)
 
-    #===============================================================================
+    def _get_spectrometer_parameter(self, *args, **kw):
+        self._automated_run_call('py_get_spectrometer_parameter', *args, **kw)
+
+        #===============================================================================
     # set commands
     #===============================================================================
     @verbose_skip
@@ -382,10 +385,22 @@ class MeasurementPyScript(ValvePyScript):
 
     @verbose_skip
     @command_register
-    def set_deflection(self, detname, v):
+    def set_deflection(self, detname, v=None):
 
-        v = '{},{}'.format(detname, v)
-        self._set_spectrometer_parameter('SetDeflection', v)
+        if v is None:
+            self._get_deflection_from_file(detname)
+
+        if v is not None:
+            v = '{},{}'.format(detname, v)
+            self._set_spectrometer_parameter('SetDeflection', v)
+        else:
+            self.debug('no deflection value for {} supplied or in the config file'.format(detname))
+
+    @verbose_skip
+    @command_register
+    def get_deflection(self, detname):
+
+        self._get_spectrometer_parameter('GetDeflection', detname)
 
     @verbose_skip
     @command_register
@@ -433,6 +448,14 @@ class MeasurementPyScript(ValvePyScript):
             v = config.getfloat(section, dn)
             if v is not None:
                 func('SetDeflection', '{},{}'.format(dn, v))
+
+    def _get_deflection_from_file(self, name):
+        config = self._get_config()
+        section = 'Deflections'
+        dets = config.options(section)
+        for dn in dets:
+            if dn.lower() == name.lower():
+                return config.getfloat(section, dn)
 
     def _set_from_file(self, attrs, section, **user_params):
         func = self._set_spectrometer_parameter

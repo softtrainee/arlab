@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from chaco.array_data_source import ArrayDataSource
 from traits.api import HasTraits, Any, Int, Str, Tuple, Property, \
-    Event, Bool, cached_property
+    Event, Bool, cached_property, on_trait_change
 from traitsui.api import View, Item
 from chaco.tools.data_label_tool import DataLabelTool
 #============= standard library imports ========================
@@ -73,8 +73,6 @@ class BaseArArFigure(HasTraits):
 
         graph = self.graph
 
-        #meta=graph.dump_metadata()
-
         p = graph.new_plot(ytitle=self.ytitle,
                            padding=self.padding)
         _setup_plot(p)
@@ -85,21 +83,23 @@ class BaseArArFigure(HasTraits):
                                ytitle=po.name)
             _setup_plot(p)
 
-            #print meta
-            #graph.load_metadata(meta)
-
     def plot(self, *args, **kw):
+        pass
+
+    def replot(self, *args, **kw):
         pass
 
     def _get_omitted(self, ans):
         return [i for i, ai in enumerate(ans) if ai.temp_status]
 
     def _set_selected(self, ans, sel):
+        #print self.group_id, sel
         for i, a in enumerate(ans):
             a.temp_status = 1 if i in sel else 0
 
-        if not self._suppress_table_update:
-            self.refresh_unknowns_table = True
+        self.refresh_unknowns_table = True
+        #if not self._suppress_table_update:
+        #    self.refresh_unknowns_table = True
 
     def _filter_metadata_changes(self, obj, func, ans):
         sel = obj.metadata.get('selections', [])
@@ -121,7 +121,9 @@ class BaseArArFigure(HasTraits):
                 func(sel)
                 self._set_selected(ans, sel)
             obj.was_selected = False
-            #obj.prev_selection = None
+            obj.prev_selection = None
+        else:
+            obj.prev_selection = None
 
         return sel
 
