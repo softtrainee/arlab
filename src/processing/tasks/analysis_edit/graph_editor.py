@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from chaco.plot_containers import HPlotContainer
 from traits.api import Any, List, on_trait_change, Instance, Property, Event, File
 from traitsui.api import View, UItem, InstanceEditor
 from src.codetools.simple_timeit import timethis
@@ -84,16 +85,21 @@ class GraphEditor(BaseUnknownsEditor):
 
     @on_trait_change('unknowns[]')
     def _update_unknowns(self, obj, name, old, new):
+        print '11111', new, len(self.unknowns)
         self._gather_unknowns(True)
-
-        self.rebuild_graph()
-
+        print '22222', new, len(self.unknowns)
         if self.unknowns:
+            self.rebuild_graph()
             refiso = self.unknowns[0]
             self._load_refiso(refiso)
             self._set_name()
             self._update_unknowns_hook()
+        else:
+            self._null_component()
+            self.component_changed = True
 
+    def _null_component(self):
+        self.graph = self._graph_factory()
 
     def _load_refiso(self, refiso):
         self.load_fits(refiso)

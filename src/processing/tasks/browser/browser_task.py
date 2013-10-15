@@ -173,14 +173,12 @@ class BaseBrowserTask(BaseEditorTask):
         return BrowserPane(model=self, **kw)
 
     def _selected_project_changed(self, new):
-        print new, new[0].name
         if new:
             db = self.manager.db
             with db.session_ctx():
                 self._set_samples()
                 sams = self.samples
                 if sams:
-                    #print sams[:1]
                     self.selected_sample = sams[:1]
 
                 p = self._get_sample_filter_parameter()

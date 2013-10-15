@@ -262,6 +262,7 @@ class AnalysisEditTask(BaseBrowserTask):
     @on_trait_change('unknowns_pane:[items, update_needed]')
     def _update_unknowns_runs(self, obj, name, old, new):
         if not obj._no_update:
+            #print 'upadte unkownasdf pane', new,
             if self.active_editor:
                 self.active_editor.unknowns = self.unknowns_pane.items
                 self._append_cache(self.active_editor)

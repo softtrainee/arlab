@@ -289,8 +289,11 @@ class ReedYorkRegressor(YorkRegressor):
         sumA = sum(W * (slope * U - V) ** 2)
 
         sumB = sum(W * U ** 2)
+        try:
+            var = 1 / float(n - 2) * sumA / sumB
+        except ZeroDivisionError:
+            var = 0
 
-        var = 1 / float(n - 2) * sumA / sumB
         return var
 
 

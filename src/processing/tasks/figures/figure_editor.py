@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from chaco.base_plot_container import BasePlotContainer
 from traits.api import HasTraits, Any, Instance, on_trait_change, \
     List, Bool, Int, Float, Event
 from traitsui.api import View, Item, UItem
@@ -49,11 +50,13 @@ class FigureEditor(GraphEditor):
 
     model = Any
 
+    def _null_component(self):
+        self.component = BasePlotContainer()
+
     @on_trait_change('model:panels:figures:refresh_unknowns_table')
     def _handle_refresh(self):
-        pass
-        #self.suppress_rebuild=True
-        print 'figure editor refresh', id(self)
+
+        #print 'figure editor refresh', id(self)
         for e in self.associated_editors:
             if isinstance(e, FigureEditor):
                 #e.rebuild_graph()
@@ -62,11 +65,6 @@ class FigureEditor(GraphEditor):
                         for f in p.figures:
                             f.replot()
 
-                            #e.replota()
-
-                            #e.rebuild(refresh_data=False)
-
-    #    self.suppress_rebuild=False
     def traits_view(self):
         v = View(UItem('component',
                        style='custom',
