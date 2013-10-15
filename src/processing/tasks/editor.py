@@ -31,7 +31,10 @@ class BaseUnknownsEditor(BaseTraitsEditor):
             if all([delimiter in x for x in names]):
                 prev = None
                 for x in names:
-                    h, t = x.split(delimiter)
+                    nx = x.split(delimiter)
+                    h, t = delimiter.join(nx[:-1]), nx[-1]
+
+                    #h, t = x.split(delimiter)
                     if prev and prev != h:
                         #print 'not a group'
                         break

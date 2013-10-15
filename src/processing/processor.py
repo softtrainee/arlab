@@ -19,7 +19,7 @@
 #============= standard library imports ========================
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import and_, not_
-import datetime
+from datetime import datetime
 from traits.api import HasTraits, Int, Str
 #============= local library imports  ==========================
 from src.database.isotope_database_manager import IsotopeDatabaseManager
@@ -410,6 +410,37 @@ class Processor(IsotopeDatabaseManager):
     # figures
     #===============================================================================
 
+    def save_arar(self, analysis, meas_analysis):
+        with self.db.session_ctx():
+            arar = meas_analysis.selected_arar
+            if not arar:
+                hist = self.db.add_arar_history(meas_analysis)
+                arar = self.db.add_arar(hist)
+
+            #force analysis to recalculate age
+            #potentially redundant
+            analysis.calculate_age(force=True)
+
+            units = analysis.arar_constants.age_scalar
+
+            attr = ('Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36',
+                    'rad40', 'cl36', 'ca37', 'k39')
+            for ai in attr:
+                a = getattr(analysis, ai)
+                v, e = float(a.nominal_value), float(a.std_dev)
+                setattr(arar, ai, v)
+                setattr(arar, '{}_err'.format(ai), e)
+
+            v, e = analysis.age * units
+            je = analysis.age_wo_j_err * units
+
+            arar.age = float(v)
+            arar.age_error = float(e)
+            arar.age_wo_j_err = je
+
+            #update arar_history timestamp
+            arar.history.create_date = datetime.now()
+
     #===============================================================================
     # corrections
     #===============================================================================
@@ -523,160 +554,6 @@ class Processor(IsotopeDatabaseManager):
 
 #============= EOF =============================================
 
-
-#
-# class Processor2(IsotopeDatabaseManager):
-#    count = 0
-#    selector_manager = Instance(SelectorManager)
-#    search_manager = Instance(SearchManager)
-#    active_editor = Any
-#    analyses = List
-#    component = Any
-#    _plotter_options = Any
-#
-# #    @on_trait_change('''options_manager:plotter_options:[+, aux_plots:+]
-# # ''')
-# #    def _options_update(self, name, new):
-# #        print name, new, len(self.analyses), self
-# #        if self.analyses:
-# #            comp = self.new_ideogram(ans=self.analyses)
-# # #            self.component = comp
-# #            if comp:
-# #                self.active_editor.component = comp
-#    def recall(self):
-#        if self.db:
-#            if self.db.connect():
-#                ps = self.search_manager
-#                ps.selected = None
-#                ps.selector.load_last(n=100)
-#
-# #                return [self._record_factory(si) for si in ps.selector.records[-1:]]
-#                info = ps.edit_traits(view='modal_view')
-#    #            print info.result
-#                if info.result:
-#                    ans = [self._record_factory(si) for si in ps.selector.selected]
-#    #                self._load_analyses(ans)
-#                    return ans
-#
-#    def find(self):
-#        if self.db.connect():
-#            ps = self.search_manager
-#            ps.selected = None
-#            ps.selector.load_last(n=20)
-#            self.open_view(ps)
-#
-#    def _gather_data(self):
-#        d = self.selector_manager
-#        if self.db:
-#            if self.db.connect():
-#                info = d.edit_traits(kind='livemodal')
-#                if info.result:
-#                    ans = [self._record_factory(ri)
-#                                for ri in d.selected_records
-#                                    if not isinstance(ri, Marker)]
-#
-#                    self._load_analyses(ans)
-#                    return ans
-#
-#    def new_spectrum(self, plotter_options=None, ans=None):
-#        from src.processing.plotters.spectrum import Spectrum
-#
-#        p = Spectrum()
-#        if ans is None:
-#            ans = self._gather_data()
-#
-#        if plotter_options is None:
-#            plotter_options = self._plotter_options
-#
-#        options = {}
-#
-#        self._plotter_options = plotter_options
-#        if ans:
-#            self.analyses = ans
-#            gideo = p.build(ans, options=options,
-#                            plotter_options=plotter_options)
-#            if gideo:
-#                gideo, _plots = gideo
-#
-#            return gideo
-#
-#    def new_ideogram(self, plotter_options=None, ans=None):
-#        '''
-#            return a plotcontainer
-#        '''
-#        from src.processing.plotters.ideogram import Ideogram
-#
-# #        g = self._window_factory()
-#
-#        probability_curve_kind = 'cumulative'
-#        mean_calculation_kind = 'weighted_mean'
-#        data_label_font = None
-#        metadata_label_font = None
-# #        highlight_omitted = True
-#        display_mean_indicator = True
-#        display_mean_text = True
-#        title = 'Foo'  # .format(self.count)
-# #        self.count += 1
-#        p = Ideogram(
-# #                     db=self.db,
-# #                     processing_manager=self,
-#                     probability_curve_kind=probability_curve_kind,
-#                     mean_calculation_kind=mean_calculation_kind
-#                     )
-#
-# #        plotter_options = self.options_manager.plotter_options
-# #        ps = self._build_aux_plots(plotter_options.get_aux_plots())
-#        options = dict(
-# #                       aux_plots=ps,
-# #                       use_centered_range=plotter_options.use_centered_range,
-# #                       centered_range=plotter_options.centered_range,
-# #                       xmin=plotter_options.xmin,
-# #                       xmax=plotter_options.xmax,
-# #                       xtitle_font=xtitle_font,
-# #                       xtick_font=xtick_font,
-# #                       ytitle_font=ytitle_font,
-# #                       ytick_font=ytick_font,
-#                       data_label_font=data_label_font,
-#                       metadata_label_font=metadata_label_font,
-#                       title=title,
-#                       display_mean_text=display_mean_text,
-#                       display_mean_indicator=display_mean_indicator,
-#                       )
-#
-#        if ans is None:
-#            ans = self._gather_data()
-#
-#        if plotter_options is None:
-#            plotter_options = self._plotter_options
-#
-#        self._plotter_options = plotter_options
-#        if ans:
-#            self.analyses = ans
-#            gideo = p.build(ans, options=options,
-#                            plotter_options=plotter_options)
-#            if gideo:
-#                gideo, _plots = gideo
-#
-#            return gideo
-#
-#
-#
-#
-#
-##===============================================================================
-# # defaults
-##===============================================================================
-#    def _selector_manager_default(self):
-#        db = self.db
-#        d = SelectorManager(db=db)
-#        return d
-#
-#    def _search_manager_default(self):
-#        db = self.db
-#        d = SearchManager(db=db)
-#        if not db.connected:
-#            db.connect()
-#        return d
 #============= EOF =============================================
 #     def new_ideogram2(self, ans, plotter_options=None):
 #         '''
