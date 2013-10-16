@@ -490,10 +490,6 @@ class FigureTask(AnalysisEditTask):
 
         super(FigureTask, self)._active_editor_changed()
 
-    @on_trait_change('active_editor:unknowns')
-    def _ac_unknowns_changed(self):
-        self.unknowns_pane.items = self.active_editor.unknowns
-
     #@on_trait_change('active_editor:refresh_unknowns_table')
     @on_trait_change('active_editor:model:panels:figures:refresh_unknowns_table')
     def _ac_refresh_table(self):

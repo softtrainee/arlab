@@ -380,6 +380,10 @@ class AnalysisEditTask(BaseBrowserTask):
     def _add_unknowns_hook(self, *args, **kw):
         pass
 
+    @on_trait_change('active_editor:unknowns')
+    def _ac_unknowns_changed(self):
+        self.unknowns_pane.items = self.active_editor.unknowns
+
     @on_trait_change('data_selector:selector:key_pressed')
     def _key_press(self, obj, name, old, new):
         '''

@@ -85,78 +85,78 @@ class IsotopeEvolutionTask(AnalysisEditTask):
 
     #_refit_thread = None
 
-    def refit_isotopes(self, dry_run=False):
-        self.new_isotope_evolution()
-
-        #self.debug('refit disabled')
-        #return
-        #
-        #from src.ui.thread import Thread
-        #
-        #if not self._refit_thread or not self._refit_thread.isRunning():
-        #    pd = self.manager.open_progress()
-        #    t = Thread(target=self._do_refit,
-        #               name='refit_isotopes',
-        #               args=(self._refit_isotopes_date_range, dry_run, pd))
-        #    t.start()
-        #    self._refit_thread = t
-
-    def _gather_analyses(self, imports):
-        db = self.manager.db
-
-        levels = (db.get_irradiation_level(irrad, level) \
-                  for irrad, levels in imports \
-                  for level in levels)
-
-        lns = (pi.labnumber for level in levels \
-               for pi in level.positions \
-               if pi.labnumber.sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff') \
-            )
-        ans = [ai for ln in lns
-               for ai in ln.analyses
-               if ai.status == 0]
-        return ans
-
-    def _do_refit(self, fit_func, *args, **kw):
-        self.info('Started refit')
-        st = time.time()
-
-        fit_func(*args, **kw)
-
-        self.info('Refit finished {}s'.format(int(time.time() - st)))
-
-    def _refit_analyses(self, ans, dry_run, pd):
-        for ai in ans:
-            if ai.status == 0:
-                try:
-                    self.manager.refit_isotopes(ai, pd=pd)
-                except Exception:
-                    import traceback
-
-                    traceback.print_exc()
-                    ai.status = 10
-
-        db = self.manager.db
-        if not dry_run:
-            msg = 'changes committed'
-            db.commit()
-        else:
-            msg = 'dry run- not changes committed'
-            db.rollback()
-
-        self.info(msg)
-
-    def _refit_isotopes_date_range(self, dry_run, pd):
-        '''
-            refit all analyses in date range
-        '''
-
-        start = '1/1/2006'
-        end = '1/1/2014'
-
-        ans = self.manager.db.selector.get_date_range(start, end, limit=-1)
-        pd.max = len([ai for ai in ans if ai.status == 0]) - 1
-        self._refit_analyses(ans, dry_run, pd)
+    #def refit_isotopes(self, dry_run=False):
+    #    self.new_isotope_evolution()
+    #
+    #    #self.debug('refit disabled')
+    #    #return
+    #    #
+    #    #from src.ui.thread import Thread
+    #    #
+    #    #if not self._refit_thread or not self._refit_thread.isRunning():
+    #    #    pd = self.manager.open_progress()
+    #    #    t = Thread(target=self._do_refit,
+    #    #               name='refit_isotopes',
+    #    #               args=(self._refit_isotopes_date_range, dry_run, pd))
+    #    #    t.start()
+    #    #    self._refit_thread = t
+    #
+    #def _gather_analyses(self, imports):
+    #    db = self.manager.db
+    #
+    #    levels = (db.get_irradiation_level(irrad, level) \
+    #              for irrad, levels in imports \
+    #              for level in levels)
+    #
+    #    lns = (pi.labnumber for level in levels \
+    #           for pi in level.positions \
+    #           if pi.labnumber.sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff') \
+    #        )
+    #    ans = [ai for ln in lns
+    #           for ai in ln.analyses
+    #           if ai.status == 0]
+    #    return ans
+    #
+    #def _do_refit(self, fit_func, *args, **kw):
+    #    self.info('Started refit')
+    #    st = time.time()
+    #
+    #    fit_func(*args, **kw)
+    #
+    #    self.info('Refit finished {}s'.format(int(time.time() - st)))
+    #
+    #def _refit_analyses(self, ans, dry_run, pd):
+    #    for ai in ans:
+    #        if ai.status == 0:
+    #            try:
+    #                self.manager.refit_isotopes(ai, pd=pd)
+    #            except Exception:
+    #                import traceback
+    #
+    #                traceback.print_exc()
+    #                ai.status = 10
+    #
+    #    db = self.manager.db
+    #    if not dry_run:
+    #        msg = 'changes committed'
+    #        db.commit()
+    #    else:
+    #        msg = 'dry run- not changes committed'
+    #        db.rollback()
+    #
+    #    self.info(msg)
+    #
+    #def _refit_isotopes_date_range(self, dry_run, pd):
+    #    '''
+    #        refit all analyses in date range
+    #    '''
+    #
+    #    start = '1/1/2006'
+    #    end = '1/1/2014'
+    #
+    #    ans = self.manager.db.selector.get_date_range(start, end, limit=-1)
+    #    pd.max = len([ai for ai in ans if ai.status == 0]) - 1
+    #    self._refit_analyses(ans, dry_run, pd)
 
     #     def _refit_isotopes_levels(self, dry_run, pd):
     #         imports = MINNA_BLUFF_IRRADIATIONS
@@ -194,6 +194,7 @@ class IsotopeEvolutionTask(AnalysisEditTask):
         if self.active_editor:
             sa = self.selected_sample[0]
             ans = self._get_sample_analyses(sa)
+            print ans
             self.unknowns_pane.items = ans
 
             #for sa in self.selected_sample:

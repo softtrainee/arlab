@@ -48,6 +48,9 @@ class GraphEditor(BaseUnknownsEditor):
     pickle_path = '_'
     unpack_peaktime = False
 
+    auto_plot = Property
+    update_on_unknowns = True
+
     def prepare_destroy(self):
         self.dump_tool()
 
@@ -89,7 +92,9 @@ class GraphEditor(BaseUnknownsEditor):
         self._gather_unknowns(True)
         #print '22222', new, len(self.unknowns)
         if self.unknowns:
-            self.rebuild_graph()
+            if self.auto_plot:
+                self.rebuild_graph()
+
             refiso = self.unknowns[0]
             self._load_refiso(refiso)
             self._set_name()
@@ -262,4 +267,7 @@ class GraphEditor(BaseUnknownsEditor):
             for ai in analyses:
                 ai.group_id = gid - mgid
 
-#============= EOF =============================================
+    def _get_auto_plot(self):
+        return len(self.unknowns) == 1 or self.update_on_unknowns
+
+    #============= EOF =============================================
