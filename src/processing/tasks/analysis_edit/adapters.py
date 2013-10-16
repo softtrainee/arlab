@@ -58,7 +58,11 @@ class UnknownsAdapter(TabularAdapter):
         return r
 
     def get_text_color(self, obj, trait, row, column=0):
-        return colornames[obj.items[row].group_id]
+        n=len(colornames)
+        gid=obj.items[row].group_id    
+        cid=gid%n
+    
+        return colornames[cid]
 
 #     def _get_record_id_text_color(self):
 # #         print self.item.group_id
