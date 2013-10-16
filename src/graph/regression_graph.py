@@ -603,26 +603,26 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             if add_tools:
                 self.add_tools(p, s, None, convert_index, add_inspector)
             return s, p
-
-        scatter, si = self._new_scatter(kw, marker, marker_size,
-                                        plotid, x, y, fit,
-                                        filter_outliers_dict)
+        
+        scatter,si = self._new_scatter(kw, marker, marker_size,
+                                    plotid, x, y, fit,
+                                    filter_outliers_dict)
         lkw = kw.copy()
         lkw['color'] = 'black'
         lkw['type'] = 'line'
         lkw['render_style'] = 'connectedpoints'
         plot, names, rd = self._series_factory(fx, fy, plotid=plotid,
                                                **lkw)
-        line = plot.plot(names, add=False, **rd)[0]
+        line = plot.plot(names,add=False, **rd)[0]
         line.index.sort_order = 'ascending'
         self.set_series_label('fit{}'.format(si), plotid=plotid)
-
+        
         plot.add(line)
         plot.add(scatter)
-
+        
         if use_error_envelope:
             self._add_error_envelope_overlay(line)
-
+            
         r = None
         if x is not None and y is not None:
             if not self.suppress_regression:

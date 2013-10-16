@@ -19,7 +19,8 @@ from traits.api import Password, Bool, Str, on_trait_change, Any, Property, cach
 #=============standard library imports ========================
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session, subqueryload
-from sqlalchemy.exc import SQLAlchemyError, InvalidRequestError, StatementError
+from sqlalchemy.exc import SQLAlchemyError, InvalidRequestError, StatementError,\
+    DBAPIError
 import os
 #=============local library imports  ==========================
 
@@ -506,32 +507,37 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
             if last:
                 q = q.order_by(last)
-
-            try:
-                return q.one()
-
-            except StatementError:
-                import traceback
-
-                self.debug(traceback.format_exc())
-                s.rollback()
-            #                 return __retrieve()
-
-            except MultipleResultsFound:
-                self.debug(
-                    'multiples row found for {} {} {}. Trying to get last row'.format(table.__tablename__, key, value))
+            
+            ntries=3
+            import traceback
+            for i in range(ntries):
                 try:
-                    if hasattr(table, 'id'):
-                        q = q.order_by(table.id.desc())
-                    return q.limit(1).all()[-1]
-
-                except (SQLAlchemyError, IndexError, AttributeError), e:
-                    self.debug('no rows for {} {} {}'.format(table.__tablename__, key, value))
-
-            except NoResultFound:
-                self.debug('no row found for {} {} {}'.format(table.__tablename__, key, value))
+                    return q.one()
+                except DBAPIError:
+                    self.debug(traceback.format_exc())
+                    s.rollback()
+                    continue
+                
+                except StatementError:
+                    self.debug(traceback.format_exc())
+                    s.rollback()
+    #                 return __retrieve()
+    
+                except MultipleResultsFound:
+                    self.debug('multiples row found for {} {} {}. Trying to get last row'.format(table.__tablename__, key, value))
+                    try:
+                        if hasattr(table, 'id'):
+                            q = q.order_by(table.id.desc())
+                        return q.limit(1).all()[-1]
+    
+                    except (SQLAlchemyError, IndexError, AttributeError), e:
+                        self.debug('no rows for {} {} {}'.format(table.__tablename__, key, value))
+    
+                except NoResultFound:
+                    self.debug('no row found for {} {} {}'.format(table.__tablename__, key, value))
 
         # no longer true: __retrieve is recursively called if a StatementError is raised
+        # use retry loop instead
         with self.session_ctx() as s:
             return __retrieve(s)
 
