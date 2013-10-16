@@ -56,12 +56,16 @@ class AutomatedRunSpec(Loggable):
     # run id
     #===========================================================================
     labnumber = Str
+
     aliquot = Property
     _aliquot = Int
-    assigned_aliquot = Int
+    #assigned_aliquot = Int
+
+    user_defined_aliquot = Int
+
     step = Property(depends_on='_step')
     _step = Int(-1)
-    user_defined_aliquot = False
+
 
     #===========================================================================
     # scripts
@@ -301,10 +305,14 @@ class AutomatedRunSpec(Loggable):
 
     #
     def _get_aliquot(self):
-        a = self.assigned_aliquot
+        a = self.user_defined_aliquot
         if not a:
             a = self._aliquot
         return a
+        #a = self.assigned_aliquot
+        #if not a:
+        #    a = self._aliquot
+        #return a
 
     def _get_analysis_type(self):
         return get_analysis_type(self.labnumber)

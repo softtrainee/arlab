@@ -214,24 +214,24 @@ class Experimentor(IsotopeDatabaseManager):
                                           aliquot=last['aliquot'])
 
                     s = -1
-                    if not ai.assigned_aliquot:
-                        egrp = ai.extract_group
-                        elast = ecache[en]
-                        aq = elast['aliquot']
-                        #                         print ln, egrp, elast['egrp'], elast['aliquot']
-                        if egrp == elast['egrp']:
-                        #                         print egrp, last['egrp']
-                        #                         if egrp == last['egrp']:
-                            s = elast['step']
-                        else:
-                            aq += 1
+                    elast = ecache[en]
 
+                    egrp = ai.extract_group
+                    aq = elast['aliquot']
+                    if egrp == elast['egrp']:
+                        s = elast['step']
                     else:
+                        aq += 1
+
+                    #print ai.runid, ai.user_defined_aliquot
+                    if ai.user_defined_aliquot:
+                        aq = ai.user_defined_aliquot
                         dban = db.get_last_analysis(ln, aliquot=aq)
-                        aq = dban.aliquot + 1
-                        #                         last['aliquot'] = aq
-                        if dban.step:
-                            s = LAlphas.index(dban)
+                        if dban:
+                            #aq = dban.aliquot + 1
+                            #last['aliquot'] = aq
+                            if dban.step:
+                                s = LAlphas.index(dban)
 
                     st = s + 1
                     elast['step'] = st
@@ -244,7 +244,7 @@ class Experimentor(IsotopeDatabaseManager):
                 #                     last['step'] = st
 
                 else:
-                    if not ai.assigned_aliquot:
+                    if not ai.user_defined_aliquot:
                         aq = last['aliquot'] + 1
                         last['aliquot'] = aq
 
@@ -266,120 +266,6 @@ class Experimentor(IsotopeDatabaseManager):
         if '-' in ln:
             special = ln.split('-')[0] in ANALYSIS_MAPPING
         return special
-
-    def _modify_aliquots_steps2(self, ans, exclude=None):
-        '''
-        '''
-
-        def get_is_special(ln):
-            special = False
-            if '-' in ln:
-                special = ln.split('-')[0] in ANALYSIS_MAPPING
-            return ln, special
-
-        def get_analysis_info(li):
-            sample, irradiationpos = '', ''
-
-            #            analysis = db.get_last_analysis(li)
-            #            if analysis:
-            #                dbln = analysis.labnumber
-            dbln = db.get_labnumber(li)
-            if dbln:
-                sample = dbln.sample
-                if sample:
-                    sample = sample.name
-
-                dbpos = dbln.irradiation_position
-                if dbpos:
-                    level = dbpos.level
-                    irradiationpos = '{}{}'.format(level.irradiation.name,
-                                                   level.name)
-                    #            self.debug('{} {} {}'.format(li, analysis, sample))
-            return sample, irradiationpos
-
-        db = self.db
-        with db.session_ctx():
-            groups = self._group_analyses(ans, exclude=exclude)
-            for ln, analyses in groups:
-                ln, special = get_is_special(ln)
-                cln = convert_identifier(ln)
-
-                sample, irradiationpos = get_analysis_info(cln)
-
-                aliquot_key = lambda x: x._aliquot
-                egroup_key = lambda x: x.extract_group
-                if not special:
-                    a = sorted(analyses, key=aliquot_key)
-                    for aliquot, aa in groupby(a, key=aliquot_key):
-                        aa = sorted(aa, key=egroup_key)
-                        aliquot_start = None
-
-                        for egroup, ais in groupby(aa, key=egroup_key):
-                            ast = self._set_aliquot_step(ais, special, cln,
-                                                         aliquot,
-                                                         aliquot_start,
-                                                         egroup,
-                                                         sample,
-                                                         irradiationpos)
-                            aliquot_start = ast + 1
-
-                else:
-                    aliquot_start = None
-                    egroup = 0
-                    ans = sorted(analyses, key=aliquot_key)
-                    for aliquot, ais in groupby(ans, key=aliquot_key):
-                        self._set_aliquot_step(ais, special, cln, aliquot,
-                                               aliquot_start,
-                                               egroup,
-                                               sample, irradiationpos)
-
-    def _set_aliquot_step(self, ais, special, cln,
-                          aliquot,
-                          aliquot_start,
-                          egroup,
-                          sample, irradiationpos):
-        db = self.db
-
-        #         step_start = 0
-        an = db.get_last_analysis(cln, aliquot=aliquot)
-        if aliquot_start is None:
-            aliquot_start = 0
-            if an:
-                aliquot_start = an.aliquot
-                #                 print an.aliquot, aliquot
-                #                 if an.step and an.aliquot == aliquot:
-                #                     step_start = LAlphas.index(an.step) + 1
-
-        step_cnt = 0
-        aliquot_cnt = 0
-        for arun in ais:
-        #             for arun in aruns:
-            arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
-            if arun.skip:
-                arun.aliquot = 0
-                continue
-
-            if arun.state in ('failed', 'canceled'):
-                continue
-
-            if not arun.user_defined_aliquot:
-                if arun.state in ('not run', 'extraction', 'measurement'):
-                #                     print arun.runid, egroup, aliquot_start, aliquot_cnt
-                    arun.assigned_aliquot = int(aliquot_start + aliquot_cnt + 1)
-                    if special or not egroup:
-                        aliquot_cnt += 1
-
-            if not special and egroup:
-                step_start = 0
-                #                 an = db.get_last_analysis(cln, aliquot=aliquot)
-                if an and an.step and an.aliquot == arun.aliquot:
-                    step_start = LAlphas.index(an.step) + 1
-
-                arun.step = int(step_start + step_cnt)
-                #                 print arun.aliquot, arun.step, step_start, step_cnt
-                step_cnt += 1
-
-        return aliquot_start
 
     #     def execute_queues(self, queues, path, text, text_hash):
     def execute_queues(self, queues):
@@ -595,3 +481,116 @@ class Experimentor(IsotopeDatabaseManager):
 #     def stop_file_listener(self):
 #         if self.filelistener:
 #             self.filelistener.stop()
+        #def _modify_aliquots_steps2(self, ans, exclude=None):
+        #        '''
+        #        '''
+        #
+        #        def get_is_special(ln):
+        #            special = False
+        #            if '-' in ln:
+        #                special = ln.split('-')[0] in ANALYSIS_MAPPING
+        #            return ln, special
+        #
+        #        def get_analysis_info(li):
+        #            sample, irradiationpos = '', ''
+        #
+        #            #            analysis = db.get_last_analysis(li)
+        #            #            if analysis:
+        #            #                dbln = analysis.labnumber
+        #            dbln = db.get_labnumber(li)
+        #            if dbln:
+        #                sample = dbln.sample
+        #                if sample:
+        #                    sample = sample.name
+        #
+        #                dbpos = dbln.irradiation_position
+        #                if dbpos:
+        #                    level = dbpos.level
+        #                    irradiationpos = '{}{}'.format(level.irradiation.name,
+        #                                                   level.name)
+        #                    #            self.debug('{} {} {}'.format(li, analysis, sample))
+        #            return sample, irradiationpos
+        #
+        #        db = self.db
+        #        with db.session_ctx():
+        #            groups = self._group_analyses(ans, exclude=exclude)
+        #            for ln, analyses in groups:
+        #                ln, special = get_is_special(ln)
+        #                cln = convert_identifier(ln)
+        #
+        #                sample, irradiationpos = get_analysis_info(cln)
+        #
+        #                aliquot_key = lambda x: x._aliquot
+        #                egroup_key = lambda x: x.extract_group
+        #                if not special:
+        #                    a = sorted(analyses, key=aliquot_key)
+        #                    for aliquot, aa in groupby(a, key=aliquot_key):
+        #                        aa = sorted(aa, key=egroup_key)
+        #                        aliquot_start = None
+        #
+        #                        for egroup, ais in groupby(aa, key=egroup_key):
+        #                            ast = self._set_aliquot_step(ais, special, cln,
+        #                                                         aliquot,
+        #                                                         aliquot_start,
+        #                                                         egroup,
+        #                                                         sample,
+        #                                                         irradiationpos)
+        #                            aliquot_start = ast + 1
+        #
+        #                else:
+        #                    aliquot_start = None
+        #                    egroup = 0
+        #                    ans = sorted(analyses, key=aliquot_key)
+        #                    for aliquot, ais in groupby(ans, key=aliquot_key):
+        #                        self._set_aliquot_step(ais, special, cln, aliquot,
+        #                                               aliquot_start,
+        #                                               egroup,
+        #                                               sample, irradiationpos)
+        #
+        #    def _set_aliquot_step(self, ais, special, cln,
+        #                          aliquot,
+        #                          aliquot_start,
+        #                          egroup,
+        #                          sample, irradiationpos):
+        #        db = self.db
+        #
+        #        #         step_start = 0
+        #        an = db.get_last_analysis(cln, aliquot=aliquot)
+        #        if aliquot_start is None:
+        #            aliquot_start = 0
+        #            if an:
+        #                aliquot_start = an.aliquot
+        #                #                 print an.aliquot, aliquot
+        #                #                 if an.step and an.aliquot == aliquot:
+        #                #                     step_start = LAlphas.index(an.step) + 1
+        #
+        #        step_cnt = 0
+        #        aliquot_cnt = 0
+        #        for arun in ais:
+        #        #             for arun in aruns:
+        #            arun.trait_set(sample=sample or '', irradiation=irradiationpos or '')
+        #            if arun.skip:
+        #                arun.aliquot = 0
+        #                continue
+        #
+        #            if arun.state in ('failed', 'canceled'):
+        #                continue
+        #
+        #            if not arun.user_defined_aliquot:
+        #                if arun.state in ('not run', 'extraction', 'measurement'):
+        #                #                     print arun.runid, egroup, aliquot_start, aliquot_cnt
+        #                    arun.assigned_aliquot = int(aliquot_start + aliquot_cnt + 1)
+        #                    if special or not egroup:
+        #                        aliquot_cnt += 1
+        #
+        #            if not special and egroup:
+        #                step_start = 0
+        #                #                 an = db.get_last_analysis(cln, aliquot=aliquot)
+        #                if an and an.step and an.aliquot == arun.aliquot:
+        #                    step_start = LAlphas.index(an.step) + 1
+        #
+        #                arun.step = int(step_start + step_cnt)
+        #                #                 print arun.aliquot, arun.step, step_start, step_cnt
+        #                step_cnt += 1
+        #
+        #        return aliquot_start
