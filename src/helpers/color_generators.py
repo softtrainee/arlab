@@ -51,12 +51,12 @@ colors1f = dict()
 for color in colors8i:
     c = colors8i[color]
     colors1f[color] = c[0] / 255., c[1] / 255., c[2] / 255.
-colornames = [ 'black', 'red', 'blue', 'violet', 'maroon', 'yellow',
+colornames = [ 'black', 'red', 'blue', 'violet', 'maroon', 
+              #'yellow',
 #               'olive',
                'lime green', 'gray', 'green', 'aquamarine',
                # 'teal',
                 'silver', 'navy', 'plum', 'purple',
-
                'blue violet', 'brown', 'firebrick', 'green yellow'
                ]
 
