@@ -40,7 +40,6 @@ class ExperimentQueue(BaseExperimentQueue):
     queue_actions = List
 
     executed = Bool(False)
-    total_runs = Property(depends_on='automated_runs[], executed_runs[]')
 
     def select_run_idx(self, idx):
         if self.automated_runs:
@@ -124,7 +123,7 @@ class ExperimentQueue(BaseExperimentQueue):
 
             if self.automated_runs:
                 self.update_needed = True
-            #                self.refresh_button = True
+                #                self.refresh_button = True
 
     @on_trait_change('automated_runs:state')
     def _refresh_table1(self):

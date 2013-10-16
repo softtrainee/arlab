@@ -1198,10 +1198,12 @@ post_equilibration_script:name
     def _aliquot_changed(self):
         if self.edit_mode:
             for si in self._selected_runs:
+                a = None
                 if si.aliquot != self.aliquot:
-                    si.user_defined_aliquot = True
+                    a = int(self.aliquot)
 
-                    si.assigned_aliquot = int(self.aliquot)
+                si.user_defined_aliquot = a
+                #si.assigned_aliquot = int(self.aliquot)
 
             self.update_info_needed = True
             self.refresh_table_needed = True
