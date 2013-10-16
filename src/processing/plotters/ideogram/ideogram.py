@@ -89,7 +89,7 @@ class Ideogram(BaseArArFigure):
         plot.value_axis.tick_label_formatter = lambda x: ''
         plot.value_axis.tick_visible = False
 
-        #print 'ideo omit', omit
+        print 'ideo omit', self.group_id, omit
         if omit:
             self._rebuild_ideo(omit)
 
@@ -261,14 +261,17 @@ class Ideogram(BaseArArFigure):
 
             self._rebuild_ideo(sel)
 
+
     def _rebuild_ideo(self, sel):
         graph = self.graph
 
-        #if graph.bind_index:
-        #    for p in graph.plots[1:]:
-        #        for plot in p.plots.itervalues():
-        #            plot = plot[0]
-        #            plot.index.metadata['selections'] = sel
+        if len(graph.plots) > 1:
+            ss = [p.plots[key][0]
+                  for p in graph.plots[1:]
+                  for key in p.plots
+                  if key.endswith('{}'.format(self.group_id + 1))]
+
+            self._set_renderer_selection(ss, sel)
 
         plot = graph.plots[0]
         gid = self.group_id + 1

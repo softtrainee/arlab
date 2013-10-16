@@ -29,6 +29,7 @@ class FigureModel(HasTraits):
     _panel_klass = Instance('src.processing.plotters.figure_panel.FigurePanel')
 
     def refresh(self):
+        #return
         for p in self.panels:
             for f in p.figures:
                 f.replot()

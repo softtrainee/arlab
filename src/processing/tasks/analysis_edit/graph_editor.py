@@ -85,9 +85,9 @@ class GraphEditor(BaseUnknownsEditor):
 
     @on_trait_change('unknowns[]')
     def _update_unknowns(self, obj, name, old, new):
-        print '11111', new, len(self.unknowns)
+        print '11111', len(self.unknowns)
         self._gather_unknowns(True)
-        print '22222', new, len(self.unknowns)
+        #print '22222', new, len(self.unknowns)
         if self.unknowns:
             self.rebuild_graph()
             refiso = self.unknowns[0]

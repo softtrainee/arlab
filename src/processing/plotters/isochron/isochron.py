@@ -68,7 +68,11 @@ class InverseIsochron(Isochron):
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
             getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1)
 
+        #for si in self.sorted_analyses:
+        #    print si.record_id, si.group_id
+
         omit = self._get_omitted(self.sorted_analyses)
+        print 'iso omit', omit
         if omit:
             self._rebuild_iso(omit)
 
@@ -143,7 +147,7 @@ class InverseIsochron(Isochron):
                                        bind_id=self.group_id,
                                        #selection_marker_size=5,
                                        #selection_color='green',
-                                       marker_size=1)
+                                       marker_size=2)
         #self._scatter = scatter
         graph.set_series_label('data{}'.format(self.group_id))
 
@@ -162,7 +166,7 @@ class InverseIsochron(Isochron):
 
         graph.set_x_limits(min_=mi, max_=ma, pad='0.1')
 
-        graph.new_series(rxs, rys)
+        graph.new_series(rxs, rys, color=scatter.color)
         graph.set_series_label('fit{}'.format(self.group_id))
         #self._fit_line=l
 
@@ -172,12 +176,13 @@ class InverseIsochron(Isochron):
                                     # additional_info
         )
 
-        self._add_info(plot, reg)
+        self._add_info(plot, reg, text_color=scatter.color)
+
 
     #===============================================================================
     # overlays
     #===============================================================================
-    def _add_info(self, plot, reg, label=None):
+    def _add_info(self, plot, reg, label=None, text_color='black'):
         intercept = reg.predict(0)
         err = reg.get_intercept_error()
         try:
@@ -207,7 +212,9 @@ class InverseIsochron(Isochron):
                 offset=(0, 50 * self.group_id),
                 component=plot,
                 overlay_position='inside bottom',
-                hjustify='left')
+                hjustify='left',
+                color=text_color
+            )
             plot.overlays.append(label)
             self._plot_label = label
 
@@ -220,23 +227,31 @@ class InverseIsochron(Isochron):
 
     def replot(self):
         self.suppress = True
-        #print 'replaot', id(self), om, self.group_id
-        #self._rebuild_iso(om)
 
         om = self._get_omitted(self.sorted_analyses)
-        scatter = self.graph.plots[0].plots['data{}'.format(self.group_id)][0]
+        print 'replaot', id(self), om, self.group_id
+        self._rebuild_iso(om)
 
-        p = scatter.index.metadata['selections']
-        if p == om:
-            self._rebuild_iso(om)
-        else:
-            scatter.index.metadata['selections'] = om
+        #scatter = self.graph.plots[0].plots['data{}'.format(self.group_id)][0]
+
+        #p = scatter.index.metadata['selections']
+        #if p == om:
+        #    self._rebuild_iso(om)
+        #else:
+        #    scatter.index.metadata['selections'] = om
 
         self.suppress = False
 
     def _rebuild_iso(self, sel):
         #print 'rebuild iso', sel
         #print 'rebuild iso', sel, id(self), self.group_id, len(self.analyses)
+        g = self.graph
+        ss = [p.plots[pp][0] for p in g.plots
+              for pp in p.plots
+              if pp == 'data{}'.format(self.group_id)]
+
+        self._set_renderer_selection(ss, sel)
+
         if self._cached_data:
             xs, ys, xerr, yerr = self._cached_data
 
@@ -261,6 +276,7 @@ class InverseIsochron(Isochron):
 
             if self._plot_label:
                 self._add_info(self.graph.plots[0], reg, label=self._plot_label)
+
 
     def update_graph_metadata(self, obj, name, old, new):
         if obj:

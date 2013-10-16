@@ -277,6 +277,11 @@ class BaseArArFigure(HasTraits):
 
         return u'{} {}{} {} {}'.format(x, pm, we, mswd, n)
 
+    def _set_renderer_selection(self, rs, sel):
+        for rend in rs:
+            meta = {'selections': sel}
+            rend.index.trait_set(metadata=meta, trait_change_notify=False)
+
     #===============================================================================
     # property get/set
     #===============================================================================
