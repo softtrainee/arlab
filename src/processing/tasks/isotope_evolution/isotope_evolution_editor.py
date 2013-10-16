@@ -38,6 +38,7 @@ class IsotopeEvolutionEditor(GraphEditor):
     tool = Instance(IsoEvoFitSelector)
     pickle_path = 'iso_fits'
     unpack_peaktime = True
+    update_on_unknowns = False
 
     def _tool_default(self):
         t = IsoEvoFitSelector(auto_update=False)
