@@ -289,11 +289,10 @@ class ArArAge(Loggable):
     #================================================================================
     @on_trait_change('age_dirty')
     def _handle_arar_result(self, new):
-        print 'asdfasdf'
         #load error components into isotopes
         for iso in self.isotopes.itervalues():
             iso.age_error_component = self.get_error_component(iso.name)
-            print iso.name, iso.age_error_component
+#            print iso.name, iso.age_error_component
             #================================================================================
             # private
             #================================================================================

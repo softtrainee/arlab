@@ -94,7 +94,7 @@ class AnalysisEditTask(BaseBrowserTask):
         db = self.manager.db
         with db.session_ctx():
             self._save_to_db()
-        self.information_dialog('Changes save to the database')
+        self.information_dialog('Changes saved to the database')
 
     def set_tag(self):
         """

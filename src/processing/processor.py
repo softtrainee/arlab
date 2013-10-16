@@ -412,11 +412,13 @@ class Processor(IsotopeDatabaseManager):
 
     def save_arar(self, analysis, meas_analysis):
         with self.db.session_ctx():
-            arar = meas_analysis.selected_arar
-            if not arar:
+            hist = meas_analysis.selected_histories.selected_arar
+            if not hist:
                 hist = self.db.add_arar_history(meas_analysis)
                 arar = self.db.add_arar(hist)
-
+            else:
+                arar=hist.arar_result
+                
             #force analysis to recalculate age
             #potentially redundant
             analysis.calculate_age(force=True)
@@ -431,12 +433,14 @@ class Processor(IsotopeDatabaseManager):
                 setattr(arar, ai, v)
                 setattr(arar, '{}_err'.format(ai), e)
 
-            v, e = analysis.age * units
-            je = analysis.age_wo_j_err * units
+            age = analysis.age * units
+            v,e=age.nominal_value, age.std_dev
+            
+            je = analysis.age_error_wo_j * units
 
             arar.age = float(v)
-            arar.age_error = float(e)
-            arar.age_wo_j_err = je
+            arar.age_err = float(e)
+            arar.age_err_wo_j = je
 
             #update arar_history timestamp
             arar.history.create_date = datetime.now()
