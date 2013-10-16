@@ -69,8 +69,7 @@ class FigurePanel(HasTraits):
         for i, fig in enumerate(self.figures):
             fig.trait_set(xma=ma, xmi=mi,
                           options=po,
-                          graph=g,
-            )
+                          graph=g)
 
             plots = list(po.get_aux_plots())
 
@@ -78,6 +77,7 @@ class FigurePanel(HasTraits):
                 fig.build(plots)
                 #print fig
             fig.plot(plots)
+
             #timethis(fig.plot, args=(plots,), msg='fit.plot {} {}'.format(i, fig))
             #meta=self.meta
         #print 'meta',meta

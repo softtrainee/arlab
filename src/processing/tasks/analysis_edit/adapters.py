@@ -30,17 +30,18 @@ class UnknownsAdapter(TabularAdapter):
                ('Age', 'age'),
                (u'\u00b11\u03c3', 'error'),
                ('Tag', 'tag')
-               ]
+    ]
     font = 'arial 12'
-#     record_id_text_color = Property
-#     tag_text_color = Property
+    #     record_id_text_color = Property
+    #     tag_text_color = Property
     age_text = Property
     error_text = Property
+
     def get_bg_color(self, obj, trait, row, column=0):
         c = 'white'
         if self.item.tag == 'invalid':
             c = '#C9C5C5'
-        elif self.item.temp_status != 0 and not self.item.tag:
+        elif self.item.temp_status != 0:#and not self.item.tag:
             c = '#FAC0C0'
         return c
 
@@ -80,9 +81,10 @@ class UnknownsAdapter(TabularAdapter):
 
 class ReferencesAdapter(TabularAdapter):
     columns = [
-               ('Run ID', 'record_id'),
-               ]
+        ('Run ID', 'record_id'),
+    ]
     font = 'arial 12'
+
 #     font = 'modern 10'
 #    record_id_width = Int(50)
 #============= EOF =============================================
