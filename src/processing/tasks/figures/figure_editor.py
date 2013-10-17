@@ -124,6 +124,8 @@ class FigureEditor(GraphEditor):
                                    msg='get_component {}'.format(self.__class__.__name__))
             #comp = self._get_component(ans, po)
 
+            comp.invalidate_and_redraw()
+
             #if set_model:
             self.model = model
             self.component = comp

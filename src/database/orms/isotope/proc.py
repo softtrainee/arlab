@@ -49,6 +49,10 @@ class proc_TagTable(Base):
     create_date = Column(DateTime, default=func.now())
     user = stringcolumn()
 
+    omit_ideo = Column(Boolean)
+    omit_spec = Column(Boolean)
+    omit_iso = Column(Boolean)
+
     analyses = relationship('meas_AnalysisTable', backref='tag_item')
 
 

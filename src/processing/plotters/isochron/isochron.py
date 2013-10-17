@@ -21,6 +21,7 @@ from chaco.array_data_source import ArrayDataSource
 #============= standard library imports ========================
 from numpy import array, linspace, delete
 #============= local library imports  ==========================
+from uncertainties import ufloat
 from src.codetools.simple_timeit import timethis
 
 from src.helpers.formatting import calc_percent_error
@@ -196,7 +197,7 @@ class InverseIsochron(Isochron):
             v, e, p = 'NaN', 'NaN', 'NaN'
         ratio_line = 'Ar40/Ar36= {} +/-{} ({}%)'.format(v, e, p)
 
-        xt = reg.x_intercept
+        xt = ufloat(reg.x_intercept, reg.x_intercept_error)
 
         j = self._ref_j
         s = self._ref_age_scalar

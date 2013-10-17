@@ -80,6 +80,7 @@ class BaseArArFigure(HasTraits):
         for po in plots:
             p = graph.new_plot(padding=self.padding,
                                bounds=[50, po.height],
+                               value_scale=po.scale,
                                ytitle=po.name)
             _setup_plot(p)
 

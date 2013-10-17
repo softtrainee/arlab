@@ -99,7 +99,7 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
     clear_prev_selection_tooltip = 'Clear previous selections'
 
     ps_label = Str('Previous Selections')
-    cs_label = Str('Current Selection')
+    cs_label = Property(depends_on='items[]')
 
     def load(self):
         self.load_previous_selections()
@@ -235,6 +235,12 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
 
     def _configure_button_fired(self):
         self.edit_traits(view='configure_view', kind='livemodal')
+
+    def _get_cs_label(self):
+        m = 'Current Selection'
+        if self.items:
+            m = '{} n= {}'.format(m, len(self.items))
+        return m
 
 
 class UnknownsPane(HistoryTablePane):

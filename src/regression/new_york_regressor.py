@@ -19,6 +19,7 @@ from numpy import linspace, Inf, identity
 from scipy.optimize import fsolve
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from uncertainties import ufloat
 from src.regression.ols_regressor import OLSRegressor
 
 
@@ -42,6 +43,7 @@ class YorkRegressor(OLSRegressor):
     _intercept = Float
 
     x_intercept = Property
+    x_intercept_error = Property
 
     def calculate(self, *args, **kw):
         super(YorkRegressor, self).calculate(*args, **kw)
@@ -113,7 +115,13 @@ class YorkRegressor(OLSRegressor):
         return self._intercept
 
     def _get_x_intercept(self):
-        return -self.intercept / self.slope
+        v = -self.intercept / self.slope
+        return v
+
+    def _get_x_intercept_error(self):
+        v = self.x_intercept
+        e = self.get_intercept_error() / (v ** 0.5)
+        return e
 
 
 class NewYorkRegressor(YorkRegressor):
