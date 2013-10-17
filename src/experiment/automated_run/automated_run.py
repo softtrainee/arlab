@@ -718,16 +718,16 @@ class AutomatedRun(Loggable):
             ln = self.spec.labnumber
             ln = convert_identifier(ln)
             with self.db.session_ctx():
-
                 ln = self.db.get_labnumber(ln)
-                an = DBAnalysis()
-                an.load_irradiation(ln)
+                if ln:
+                    an = DBAnalysis()
+                    an.load_irradiation(ln)
 
-                self.arar_age.j = an.j
-                self.arar_age.production_ratios = an.production_ratios
-                self.arar_age.irradiation_info = an.irradiation_info
-                #                 self.arar_age.load_irradiation(ln)
-                #             self.arar_age.labnumber_record = ln
+                    self.arar_age.j = an.j
+                    self.arar_age.production_ratios = an.production_ratios
+                    self.arar_age.irradiation_info = an.irradiation_info
+                    #                 self.arar_age.load_irradiation(ln)
+                    #             self.arar_age.labnumber_record = ln
 
         self.info('Start automated run {}'.format(self.runid))
 

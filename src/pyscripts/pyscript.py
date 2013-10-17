@@ -21,7 +21,7 @@ from pyface.confirmation_dialog import confirm  # from pyface.wx.dialog import c
 import time
 import os
 import inspect
-from threading import Event, Thread
+from threading import Event, Thread, Lock
 #============= local library imports  ==========================
 
 from src.loggable import Loggable
@@ -37,9 +37,8 @@ import weakref
 from src.globals import globalv
 from src.wait.wait_control import WaitControl
 from src.pyscripts.error import PyscriptError, IntervalError, GosubError, \
-    KlassError
+    KlassError, MainError
 from src.ui.gui import invoke_in_main_thread
-
 
 
 
@@ -174,12 +173,16 @@ class PyScript(Loggable):
     _syntax_checked = False
     _syntax_error = None
     _gosub_script = None
-    _wait_dialog = None
+    _wait_control = None
 
     _estimated_duration = 0
     _graph_calc = False
 
     trace_line = Int
+
+    def __init__(self, *args, **kw):
+        super(PyScript, self).__init__(*args, **kw)
+        self._block_lock = Lock()
 
     def calculate_estimated_duration(self):
         self._estimated_duration = 0
@@ -416,8 +419,8 @@ class PyScript(Loggable):
             if not self.parent_script._cancel:
                 self.parent_script.cancel()
 
-        if self._wait_dialog:
-            self._wait_dialog.stop()
+        if self._wait_control:
+            self._wait_control.stop()
 
         self._cancel_hook()
 
@@ -537,11 +540,11 @@ class PyScript(Loggable):
         if self._cancel:
             return
 
-        def wait(t, f, n):
-            self._sleep(t)
+        def wait(dur, flag, n):
+            self._sleep(dur)
             if not self._cancel:
                 self.info('{} finished'.format(n))
-                f.set()
+                flag.set()
 
         duration = float(duration)
 
@@ -552,10 +555,12 @@ class PyScript(Loggable):
         if not self.testing_syntax:
             f = Event()
             self.info('BEGIN INTERVAL {} waiting for {}'.format(name, duration))
-            t = Thread(target=wait, args=(duration, f, name))
+            t = Thread(name=name,
+                       target=wait, args=(duration, f, name))
             t.start()
 
         self._interval_stack.put((t, f, name))
+
 
     @command_register
     def sleep(self, duration=0, message=None):
@@ -676,53 +681,53 @@ class PyScript(Loggable):
 
         if v > 1:
             self._block(v, message=message, dialog=True)
-
-#            if v >= :
-#            else:
-#                self._block(v, dialog=False)
-
         else:
             time.sleep(v)
 
+    def _setup_wait_control(self, timeout, message):
+        if self.manager:
+            wd = self.manager.wait_group.active_control
+            if wd.is_active():
+                wd = self.manager.wait_group.add_control()
+        else:
+            wd = self._wait_control
+
+        if wd is None:
+            wd = WaitControl()
+
+        self._wait_control = wd
+        if self.manager:
+            self.manager.wait_group.active_control = wd
+
+        wd.trait_set(message='Waiting for {:0.1f}  {}'.format(timeout, message))
+        wd.start(block=False, wtime=timeout)
+
+        return wd
+
     def _block(self, timeout, message=None, dialog=False):
-        self.debug('starting _block')
+        self.debug('block started')
         st = time.time()
         if dialog:
             if message is None:
                 message = ''
 
-            if self.manager:
-                wd = self.manager.wait_group.active_control
-                if wd.isActive():
-                    wd = self.manager.wait_group.add_control()
-            else:
-                wd = self._wait_dialog
+            """
+                use lock to synchronize wait control creation
+                this is necessary so that the created wait control has a chance to start
+                before the next control asks if the active control is running.
 
-            if wd is None:
-                wd = WaitControl()
+            """
+            with self._block_lock:
+                wd = self._setup_wait_control(timeout, message)
 
-            self._wait_dialog = wd
-            if self.manager:
-#                invoke_in_main_thread(self.manager.wait_group.trait_set, active_control=wd)
-                self.manager.wait_group.active_control = wd
-#                 self.manager.wait_dialog = wd
-            
-#            wd.trait_set(wtime=timeout,
-#                         # parent=weakref.ref(self)(),
-#                         message='Waiting for {:0.1f}  {}'.format(timeout, message),
-#                         )
-            invoke_in_main_thread(wd.trait_set, wtime=timeout, 
-                                  message='Waiting for {:0.1f}  {}'.format(timeout, message),)
-            time.sleep(0.05)
-            wd.reset()
-            wd.start(block=True)
-#            time.sleep(100)
+            wd.join()
+
             if self.manager:
                 self.manager.wait_group.pop()
 
-            if wd._canceled:
+            if wd.is_canceled():
                 self.cancel()
-            elif wd._continued:
+            elif wd.is_continued():
                 self.info('continuing script after {:0.3f} s'.format(time.time() - st))
 
         else:
@@ -731,12 +736,16 @@ class PyScript(Loggable):
                     break
                 time.sleep(0.05)
 
-#===============================================================================
-# properties
+        self.debug('block finished. duration {}'.format(time.time() - st))
+
+        #===============================================================================
+
+    # properties
 #===============================================================================
     @property
     def filename(self):
         return os.path.join(self.root, self.name)
+
     @property
     def state(self):
         # states

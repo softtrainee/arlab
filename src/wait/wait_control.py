@@ -53,11 +53,21 @@ class WaitControl(Loggable):
         if self.auto_start:
             self.start(evt=self.end_evt)
 
-    def isActive(self):
+    def is_active(self):
         if self.timer:
             return self.timer.isActive()
 
-    def start(self, block=True, evt=None):
+    def is_canceled(self):
+        return self._canceled
+
+    def is_continued(self):
+        return self._continued
+
+    def join(self):
+        while not self.end_evt.is_set():
+            time.sleep(0.05)
+
+    def start(self, block=True, evt=None, wtime=None):
         if evt is None:
             evt = Event()
 
@@ -65,13 +75,15 @@ class WaitControl(Loggable):
             evt.clear()
             self.end_evt = evt
 
+        if wtime:
+            self.high = wtime
+
         self.timer = Timer(1000, self._update_time,
                            delay=1000)
         self._continued = False
 
         if block:
-            while not evt.is_set():
-                time.sleep(0.05)
+            self.join()
 
     def stop(self):
         self._end()
@@ -79,6 +91,7 @@ class WaitControl(Loggable):
         if self.current_time > 1:
             self.message = 'Stopped'
             self.message_color = 'red'
+        self.current_time = 0
 
     def reset(self):
         self.high = self.wtime

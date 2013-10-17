@@ -17,7 +17,7 @@
 
 
 #=============enthought library imports=======================
-from traits.api import Enum, Float, Tuple
+from traits.api import Enum, Float, Tuple, Int
 from chaco.api import AbstractOverlay
 
 #=============standard library imports ========================
@@ -34,6 +34,8 @@ class GuideOverlay(AbstractOverlay):
     color = Tuple(1, 0, 0)
     line_style = 'dash'
 
+    line_width = Int(1)
+
     def overlay(self, component, gc, view_bounds=None, mode='normal'):
         '''
 
@@ -42,6 +44,10 @@ class GuideOverlay(AbstractOverlay):
         gc.clip_to_rect(self.component.x, self.component.y, self.component.width, self.component.height)
         if self.line_style == 'dash':
             gc.set_line_dash([5, 2.5])
+
+        #if self.line_width:
+        gc.set_line_width(self.line_width)
+
         gc.set_stroke_color(self.color)
         gc.begin_path()
 

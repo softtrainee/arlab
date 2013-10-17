@@ -399,7 +399,7 @@ class Ideogram(BaseArArFigure):
         if self.options.mean_calculation_kind == 'kernel':
             wm, we = 0, 0
             delta = 1
-            maxs, _mins = find_peaks(ys, delta, xs)
+            maxs, _mins = find_peaks(ys, xs, delta=delta, lookahead=1)
             wm = max(maxs, axis=1)[0]
         else:
             wm, we = calculate_weighted_mean(ages, errors)

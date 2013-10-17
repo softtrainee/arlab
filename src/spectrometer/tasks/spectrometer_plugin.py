@@ -15,20 +15,21 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
+from envisage.ui.tasks.task_factory import TaskFactory
+from pyface.tasks.action.schema_addition import SchemaAddition
+from envisage.ui.tasks.task_extension import TaskExtension
+from pyface.tasks.action.schema import SMenu
+
 from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from src.spectrometer.spectrometer_manager import SpectrometerManager
 from src.spectrometer.ion_optics_manager import IonOpticsManager
 from src.spectrometer.scan_manager import ScanManager
-from envisage.ui.tasks.task_factory import TaskFactory
+from src.spectrometer.tasks.mass_cal.mass_calibration_task import MassCalibrationTask
 from src.spectrometer.tasks.spectrometer_task import SpectrometerTask
-from pyface.tasks.action.schema_addition import SchemaAddition
-from envisage.ui.tasks.task_extension import TaskExtension
 from src.spectrometer.tasks.spectrometer_actions import PeakCenterAction, \
     CoincidenceScanAction, SpectrometerParametersAction
-from pyface.tasks.action.schema import SMenu
 from src.spectrometer.tasks.spectrometer_preferences import SpectrometerPreferencesPane
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -65,17 +66,26 @@ class SpectrometerPlugin(BaseTaskPlugin):
         ts = [TaskFactory(id='pychron.spectrometer',
                           task_group='hardware',
                           factory=self._task_factory,
-                          name='Spectrometer'
-        )]
+                          name='Spectrometer'),
+              TaskFactory(id='pychron.mass_calibration',
+                          factory=self._mass_cal_task_factory,
+                          name='Mass Calibration',
+                          accelerator='Ctrl+Shift+M'
+                          #include_view_menu=False
+              )]
         return ts
+
+    def _mass_cal_task_factory(self):
+        sm = self.application.get_service(SpectrometerManager)
+        t = MassCalibrationTask(spectrometer_manager=sm)
+        return t
 
     def _task_factory(self):
         sm = self.application.get_service(SpectrometerManager)
         scm = self.application.get_service(ScanManager)
 
         t = SpectrometerTask(manager=sm,
-                             scan_manager=scm
-        )
+                             scan_manager=scm)
         return t
 
     #===============================================================================

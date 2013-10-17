@@ -25,20 +25,16 @@ from src.database.core.functions import delete_one
 from src.database.core.database_adapter import DatabaseAdapter
 from src.database.selectors.isotope_selector import IsotopeAnalysisSelector
 
-
+#spec_
+from src.database.orms.isotope.spec import spec_MassCalHistoryTable, spec_MassCalScanTable
 
 # med_
 from src.database.orms.isotope.med import med_ImageTable, med_SnapshotTable
-
-
 
 # flux_
 from src.database.orms.isotope.flux import flux_FluxTable, flux_HistoryTable, flux_MonitorTable
 
 
-#===============================================================================
-# new location
-#===============================================================================
 # loading_
 from src.database.orms.isotope.loading import loading_LoadTable, loading_PositionsTable
 
@@ -136,6 +132,25 @@ class IsotopeAdapter(DatabaseAdapter):
             q = q.filter(and_(meas_AnalysisTable.analysis_timestamp >= mi,
                               meas_AnalysisTable.analysis_timestamp <= ma))
             return q.all()
+
+    def add_mass_calibration_history(self, spectrometer):
+        spec = self.get_mass_spectrometer(spectrometer)
+        if spec:
+            hist = spec_MassCalHistoryTable()
+            hist.spectrometer_id = spec.id
+            self._add_item(hist)
+            return hist
+
+    def add_mass_calibration_scan(self, hist, iso, **kw):
+        s = spec_MassCalScanTable(**kw)
+
+        iso = self.get_molecular_weight(iso)
+
+        s.history_id = hist.id
+        s.molecular_weight_id = iso.id
+
+        self._add_item(s)
+        return s
 
     def add_arar_history(self, analysis, **kw):
         hist = self._add_history('ArAr', analysis, **kw)

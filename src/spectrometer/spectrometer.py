@@ -29,7 +29,7 @@ from src.spectrometer.magnet import Magnet
 from src.spectrometer.detector import Detector
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.constants import NULL_STR, DETECTOR_ORDER
-from src.database.isotope_database_manager import IsotopeDatabaseManager
+#from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.paths import paths
 
 debug = False
@@ -234,41 +234,6 @@ class Spectrometer(SpectrometerDevice):
         self.molecular_weight = 'Ar40'
 
     def load(self):
-
-        # get the molecular weights from the database
-        dbm = IsotopeDatabaseManager(application=self.application,
-                                     warn=False)
-
-        if dbm.isConnected():
-            self.info('loading molecular_weights from database')
-            mws = dbm.db.get_molecular_weights()
-            # convert to a dictionary
-            m = dict([(mi.name, mi.mass) for mi in mws])
-            self.molecular_weights = m
-
-        else:
-            import csv
-            # load the molecular weights dictionary
-            p = os.path.join(paths.spectrometer_dir, 'molecular_weights.csv')
-            if os.path.isfile(p):
-                self.info('loading "molecular_weights.csv" file')
-                with open(p, 'U') as f:
-                    reader = csv.reader(f, delimiter='\t')
-                    args = [[l[0], float(l[1])] for l in reader]
-                    self.molecular_weights = dict(args)
-            else:
-                self.info('writing a default "molecular_weights.csv" file')
-                # make a default molecular_weights.csv file
-                from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS as mw
-
-                with open(p, 'U') as f:
-                    writer = csv.writer(f, delimiter='\t')
-                    data = [a for a in mw.itervalues()]
-                    data = sorted(data, key=lambda x: x[1])
-                    for row in data:
-                        writer.writerow(row)
-                self.molecular_weights = mw
-
         self.magnet.load()
 
     def finish_loading(self):

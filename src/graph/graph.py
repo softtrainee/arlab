@@ -339,6 +339,13 @@ class Graph(Viewable, ContextMenuMixin):
     #        if self.ui is not None:
     #            do_after_timer(1, self.ui.dispose)
     #        self.ui = None
+
+    def remove_rulers(self, plotid=0):
+        plot = self.plots[plotid]
+        for o in plot.overlays:
+            if isinstance(o, GuideOverlay):
+                plot.overlays.remove(o)
+
     def clear_plots(self):
         x = range(len(self.plots))
 
@@ -977,7 +984,7 @@ class Graph(Viewable, ContextMenuMixin):
                   ymin_anchor=None,
                   #                    do_after=None,
                   **kw):
-        
+
         #         def add(datum):
         #         print plotid, series, self.series
         names = self.series[plotid][series]
@@ -1048,6 +1055,7 @@ class Graph(Viewable, ContextMenuMixin):
         l = GuideOverlay(plot, value=v, orientation='v', **kw)
 
         plot.overlays.append(l)
+        return l
 
     def add_horizontal_rule(self, v, plotid=0, **kw):
         '''

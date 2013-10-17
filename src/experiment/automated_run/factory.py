@@ -49,7 +49,7 @@ class UpdateSelectedCTX(object):
     _factory = None
 
     def __init__(self, factory):
-        self._factory = None
+        self._factory = factory
 
     def __enter__(self):
         self._factory.set_labnumber = False
