@@ -573,9 +573,13 @@ class AutomatedRunFactory(Loggable):
         ):
             if attr in excludes:
                 continue
-
-            setattr(arv, attr, getattr(self, attr))
-            setattr(arv, '_prev_{}'.format(attr), getattr(self, attr))
+            v=getattr(self, attr)
+            if attr=='pattern':
+                if not self._use_pattern():
+                    v=''
+                    
+            setattr(arv, attr, v)
+            setattr(arv, '_prev_{}'.format(attr), v)
 
         if self.user_defined_aliquot:
             self.debug('setting user defined aliquot')
