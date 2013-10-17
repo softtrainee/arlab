@@ -453,12 +453,18 @@ class FigureTask(AnalysisEditTask):
         if editor:
             #items = editor.unknowns
             items = self.unknowns_pane.items
+            ids = []
+            for it in items:
+                v = key(it)
+                if v in ids:
+                    ids.append(v)
 
             sitems = sorted(items, key=key)
-
-            for i, (_, analyses) in enumerate(groupby(sitems, key=key)):
+            #for i, (_, analyses) in enumerate(groupby(sitems, key=key)):
+            for k, analyses in groupby(sitems, key=key):
+                gid = ids.index(k)
                 idxs = [items.index(ai) for ai in analyses]
-                editor.set_group(idxs, i, refresh=False)
+                editor.set_group(idxs, gid, refresh=False)
 
             self.unknowns_pane.refresh_needed = True
             editor.rebuild(refresh_data=False)

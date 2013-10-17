@@ -105,6 +105,7 @@ class Ideogram(BaseArArFigure):
     #===============================================================================
 
     def _plot_aux(self, title, vk, ys, po, plot, pid, es=None):
+
         scatter = self._add_aux_plot(ys,
                                      title, pid)
 
@@ -328,6 +329,10 @@ class Ideogram(BaseArArFigure):
         return xs
 
     def _add_aux_plot(self, ys, title, pid, **kw):
+        plot = self.graph.plots[pid]
+        if plot.value_scale == 'log':
+            ys[ys < 0] = 1e-20
+
         graph = self.graph
         graph.set_y_title(title,
                           plotid=pid)

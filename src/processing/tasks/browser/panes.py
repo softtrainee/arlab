@@ -115,6 +115,7 @@ class BrowserPane(TraitsDockPane):
                       selected='selected_sample',
                       multi_select=True,
                       dclicked='dclicked_sample',
+                      column_clicked='column_clicked'
                   ),
                   width=75
             )

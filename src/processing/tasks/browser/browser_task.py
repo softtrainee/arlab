@@ -22,6 +22,7 @@ from pyface.tasks.task_layout import TaskLayout, PaneItem
 from pyface.tasks.action.schema import SToolBar
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.column_sorter_mixin import ColumnSorterMixin
 from src.database.orms.isotope.gen import gen_MassSpectrometerTable, gen_LabTable, gen_ExtractionDeviceTable, \
     gen_AnalysisTypeTable, gen_ProjectTable
 from src.database.orms.isotope.meas import meas_MeasurementTable, meas_AnalysisTable, meas_ExtractionTable
@@ -49,7 +50,7 @@ DEFAULT_AT = 'Analysis Type'
 DEFAULT_ED = 'Extraction Device'
 
 
-class BaseBrowserTask(BaseEditorTask):
+class BaseBrowserTask(BaseEditorTask, ColumnSorterMixin):
     projects = List
     oprojects = List
 

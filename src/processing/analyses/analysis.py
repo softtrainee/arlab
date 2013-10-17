@@ -286,7 +286,7 @@ class DBAnalysis(Analysis):
 
         tag = meas_analysis.tag
         if tag:
-            tag = tag.tag_item
+            tag = meas_analysis.tag_item
             self.set_tag(tag)
 
         #self.tag = tag or ''
