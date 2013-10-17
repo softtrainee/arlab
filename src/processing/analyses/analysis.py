@@ -204,7 +204,7 @@ class DBAnalysis(Analysis):
             hist = meas_analysis.selected_histories.selected_detector_intercalibration
             if hist:
                 for ic in hist.detector_intercalibrations:
-                    icfs[ic.detector.name] = (ic.user_value, ic.user_error)
+                    icfs[ic.detector.name] = ufloat(ic.user_value, ic.user_error)
 
         return icfs
 

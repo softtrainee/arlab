@@ -287,9 +287,11 @@ class InverseIsochron(Isochron):
 
             #
 
+            #===============================================================================
+
+            # utils
+
         #===============================================================================
-    # utils
-    #===============================================================================
     def _get_age_errors(self, ans):
         ages, errors = zip(*[(ai.age.nominal_value,
                               ai.age.std_dev)
@@ -305,20 +307,20 @@ class InverseIsochron(Isochron):
         s = self._add_plot(xs, ys, es, pid, **kw)
         return s
 
-    def _calculate_stats(self, ages, errors, xs, ys):
-        mswd, valid_mswd, n = self._get_mswd(ages, errors)
-        #         mswd = calculate_mswd(ages, errors)
-        #         valid_mswd = validate_mswd(mswd, len(ages))
-        if self.options.mean_calculation_kind == 'kernel':
-            wm, we = 0, 0
-            delta = 1
-            maxs, _mins = find_peaks(ys, delta, xs)
-            wm = max(maxs, axis=1)[0]
-        else:
-            wm, we = calculate_weighted_mean(ages, errors)
-            we = self._calc_error(we, mswd)
-
-        return wm, we, mswd, valid_mswd
+    #def _calculate_stats(self, ages, errors, xs, ys):
+    #    mswd, valid_mswd, n = self._get_mswd(ages, errors)
+    #    #         mswd = calculate_mswd(ages, errors)
+    #    #         valid_mswd = validate_mswd(mswd, len(ages))
+    #    if self.options.mean_calculation_kind == 'kernel':
+    #        wm, we = 0, 0
+    #        delta = 1
+    #        maxs, _mins = find_peaks(ys, delta, xs)
+    #        wm = max(maxs, axis=1)[0]
+    #    else:
+    #        wm, we = calculate_weighted_mean(ages, errors)
+    #        we = self._calc_error(we, mswd)
+    #
+    #    return wm, we, mswd, valid_mswd
 
     def _calc_error(self, we, mswd):
         ec = self.options.error_calc_method

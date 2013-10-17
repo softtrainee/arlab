@@ -239,8 +239,8 @@ class Spectrum(BaseArArFigure):
             for j, ai in enumerate(analyses):
                 if j not in exclude and platbounds[0] <= j <= platbounds[1]:
                     ans.append(ai)
-                #            ans=[ai for (j,ai) in analyses if]
-                #            ans = analyses[platbounds[0]:platbounds[1]]
+                    #            ans=[ai for (j,ai) in analyses if]
+                    #            ans = analyses[platbounds[0]:platbounds[1]]
 
             ages, errors = self._get_ages_errors(ans)
             mswd, valid, n = self._get_mswd(ages, errors)
@@ -320,20 +320,20 @@ class Spectrum(BaseArArFigure):
         s = self._add_plot(xs, ys, es, pid, **kw)
         return s
 
-    def _calculate_stats(self, ages, errors, xs, ys):
-        mswd, valid_mswd, n = self._get_mswd(ages, errors)
-        #         mswd = calculate_mswd(ages, errors)
-        #         valid_mswd = validate_mswd(mswd, len(ages))
-        if self.options.mean_calculation_kind == 'kernel':
-            wm, we = 0, 0
-            delta = 1
-            maxs, _mins = find_peaks(ys, delta, xs)
-            wm = max(maxs, axis=1)[0]
-        else:
-            wm, we = calculate_weighted_mean(ages, errors)
-            we = self._calc_error(we, mswd)
-
-        return wm, we, mswd, valid_mswd
+    #def _calculate_stats(self, ages, errors, xs, ys):
+    #    mswd, valid_mswd, n = self._get_mswd(ages, errors)
+    #    #         mswd = calculate_mswd(ages, errors)
+    #    #         valid_mswd = validate_mswd(mswd, len(ages))
+    #    if self.options.mean_calculation_kind == 'kernel':
+    #        wm, we = 0, 0
+    #        delta = 1
+    #        maxs, _mins = find_peaks(ys, delta, xs)
+    #        wm = max(maxs, axis=1)[0]
+    #    else:
+    #        wm, we = calculate_weighted_mean(ages, errors)
+    #        we = self._calc_error(we, mswd)
+    #
+    #    return wm, we, mswd, valid_mswd
 
     def _calc_error(self, we, mswd):
         ec = self.options.error_calc_method

@@ -42,9 +42,9 @@ def handle_uncaught_exception(func):
 
 
 def decorate_all(cls):
-    '''
-         adds the handle_uncaught_exception decorator to all methods of the class 
-    '''
+    """
+         adds the handle_uncaught_exception decorator to all methods of the class
+    """
 
     for name, m in inspect.getmembers(cls, inspect.ismethod):
         setattr(cls, name, handle_uncaught_exception(m))
@@ -58,7 +58,8 @@ class InitializationParser(XMLParser):
 
     def __init__(self, *args, **kw):
         ver = '_proc'
-        #ver = '_exp'
+        ver = '_exp'
+        #ver= '_spec'
         #ver = ''
         p = os.path.join(paths.setup_dir, 'initialization{}.xml'.format(ver))
         if os.path.isfile(p):

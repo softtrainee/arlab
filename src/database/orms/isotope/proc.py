@@ -57,8 +57,7 @@ class proc_ArArHistoryTable(Base, HistoryMixin):
                                uselist=False)
     selected = relationship('proc_SelectedHistoriesTable',
                             backref='selected_arar',
-                            uselist=False
-    )
+                            uselist=False)
 
 
 class proc_ArArTable(Base, BaseMixin):
