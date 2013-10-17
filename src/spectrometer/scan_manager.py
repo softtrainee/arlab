@@ -360,7 +360,7 @@ class ScanManager(Manager):
 
 
     def _consume(self, dm):
-
+        self._consuming=True
         _first_recording = True
         while self._consuming:
             time.sleep(0.0001)

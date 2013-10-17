@@ -180,9 +180,9 @@ class PyScript(Loggable):
 
     trace_line = Int
 
-    def __init__(self, *args, **kw):
-        super(PyScript, self).__init__(*args, **kw)
-        self._block_lock = Lock()
+#    def __init__(self, *args, **kw):
+#        super(PyScript, self).__init__(*args, **kw)
+#        self._block_lock = Lock()
 
     def calculate_estimated_duration(self):
         self._estimated_duration = 0
@@ -686,9 +686,10 @@ class PyScript(Loggable):
 
     def _setup_wait_control(self, timeout, message):
         if self.manager:
-            wd = self.manager.wait_group.active_control
-            if wd.is_active():
-                wd = self.manager.wait_group.add_control()
+            with self.manager.wait_control_lock:
+                wd = self.manager.wait_group.active_control
+                if wd.is_active():
+                    wd = self.manager.wait_group.add_control()
         else:
             wd = self._wait_control
 
@@ -698,8 +699,9 @@ class PyScript(Loggable):
         self._wait_control = wd
         if self.manager:
             self.manager.wait_group.active_control = wd
-
-        wd.trait_set(message='Waiting for {:0.1f}  {}'.format(timeout, message))
+        msg='Waiting for {:0.1f}  {}'.format(timeout, message)
+        self.debug(msg)
+        wd.trait_set(message=msg, wtime=timeout)
         wd.start(block=False, wtime=timeout)
 
         return wd
@@ -717,8 +719,8 @@ class PyScript(Loggable):
                 before the next control asks if the active control is running.
 
             """
-            with self._block_lock:
-                wd = self._setup_wait_control(timeout, message)
+            #with self._block_lock:
+            wd = self._setup_wait_control(timeout, message)
 
             wd.join()
 

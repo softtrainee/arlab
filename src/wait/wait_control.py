@@ -64,8 +64,10 @@ class WaitControl(Loggable):
         return self._continued
 
     def join(self):
+        time.sleep(0.25)
         while not self.end_evt.is_set():
             time.sleep(0.05)
+        self.debug('Join finished')
 
     def start(self, block=True, evt=None, wtime=None):
         if evt is None:
@@ -76,10 +78,12 @@ class WaitControl(Loggable):
             self.end_evt = evt
 
         if wtime:
-            self.high = wtime
+            self.wtime=wtime
+            self.reset()
 
         self.timer = Timer(1000, self._update_time,
-                           delay=1000)
+                           delay=1000
+                           )
         self._continued = False
 
         if block:
