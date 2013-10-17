@@ -141,7 +141,10 @@ class Paths():
     # files
     #===========================================================================
     backup_recovery_file = None
-
+    def set_icon_search_path(self, app_rec=None):
+        self.app_resources=app_rec
+        self.icon_search_path = [self.icons,
+                                 self.app_resources]
     def build(self, version):
         self.version = version
 
@@ -269,10 +272,9 @@ class Paths():
         #=======================================================================
         self.backup_recovery_file = join(self.hidden_dir, 'backup_recovery')
 
-        self.icon_search_path = [self.icons,
-                                 self.app_resources]
+        self.set_icon_search_path()
 
-
+        
 paths = Paths()
 paths.build('_beta')
 

@@ -133,7 +133,7 @@ class Template(object):
         #copy entire icons dir
         iroot=os.path.join(root, 'resources','icons')
         for di in os.listdir(iroot):
-            print di
+#            print di
             ins.copy_resource(os.path.join(iroot, di))
         
         # copy helper mod

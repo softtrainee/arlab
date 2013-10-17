@@ -42,8 +42,7 @@ def get_resource_root():
     return path
 
 
-paths.app_resources = get_resource_root()
-
+paths.set_icon_search_path(get_resource_root())
 
 class PychronApplication(BaseTasksApplication):
     def _about_dialog_default(self):

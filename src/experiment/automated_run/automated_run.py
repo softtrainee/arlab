@@ -1915,14 +1915,17 @@ anaylsis_type={}
         sig_ints = []
         base_ints = []
         psignals = self._processed_signals_dict
+        baseline_fits=[]
         for iso, _, kind in self._save_isotopes:
             if kind == 'signal':
                 si = psignals['{}signal'.format(iso)]
                 bi = psignals['{}baseline'.format(iso)]
                 sig_ints.append(si.uvalue)
                 base_ints.append(bi.uvalue)
+            elif kind == 'baseline':
+                baseline_fits.append('Average Y')
 
-        baseline_fits = ['Average Y', ] * len(self._active_detectors)
+#        baseline_fits = ['Average Y', ] * len(self._active_detectors)
 
         rs_name, rs_text = self._assemble_script_blob()
         rid = self.runid

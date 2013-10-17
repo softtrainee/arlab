@@ -23,7 +23,7 @@ from pyface.constant import CANCEL, YES, NO
 from pyface.timer.do_later import do_after
 
 #============= standard library imports ========================
-from threading import Thread, Event as Flag
+from threading import Thread, Event as Flag, Lock
 import weakref
 import time
 from sqlalchemy.orm.exc import NoResultFound
@@ -129,7 +129,10 @@ class ExperimentExecutor(IsotopeDatabaseManager):
     _prev_blanks = Dict
     _prev_baselines = Dict
     _err_message = None
-
+    def __init__(self,*args, **kw):
+        super(ExperimentExecutor,self).__init__(*args, **kw)
+        self.wait_control_lock=Lock()
+        
     def set_queue_modified(self):
         self.queue_modified = True
 
@@ -393,7 +396,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
         q = self.experiment_queue
         #is this the last run in the queue
-        run.is_last = len(q.automated_runs) == 0
+        run.is_last = len(q.cleaned_automated_runs) == 0
 
         self.current_run = run
         st = time.time()
