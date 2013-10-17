@@ -49,7 +49,7 @@ class proc_TagTable(Base):
     create_date = Column(DateTime, default=func.now())
     user = stringcolumn()
 
-#     analyses = relationship('meas_AnalysisTable')
+    analyses = relationship('meas_AnalysisTable', backref='tag_item')
 
 
 class proc_ArArHistoryTable(Base, HistoryMixin):

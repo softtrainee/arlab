@@ -89,8 +89,15 @@ class BaseArArFigure(HasTraits):
     def replot(self, *args, **kw):
         pass
 
-    def _get_omitted(self, ans):
-        return [i for i, ai in enumerate(ans) if ai.temp_status]
+    def _get_omitted(self, ans, omit=None):
+        def test(a):
+            r = ai.temp_status
+            if omit:
+                r = r or getattr(ai, omit)
+            return r
+
+        return [i for i, ai in enumerate(ans)
+                if test(ai)]
 
     def _set_selected(self, ans, sel):
         #print self.group_id, sel

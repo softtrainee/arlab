@@ -29,41 +29,39 @@ import os
 from src.envisage.tasks.base_tasks_application import BaseTasksApplication
 # from src.lasers.tasks.laser_preferences import FusionsLaserPreferences
 
+from src.paths import paths
+
+
+def get_resource_root():
+    path = __file__
+    from src.globals import globalv
+
+    if not globalv.debug:
+        while os.path.basename(path) != 'Resources':
+            path = os.path.dirname(path)
+    return path
+
+
+paths.app_resources = get_resource_root()
+
+
 class PychronApplication(BaseTasksApplication):
-    '''
-    '''
-
-    def _get_resource_root(self):
-
-        path = __file__
-        from src.globals import globalv
-        if not globalv.debug:
-            while os.path.basename(path) != 'Resources':
-                path = os.path.dirname(path)
-        return path
-
     def _about_dialog_default(self):
-        '''
-        '''
-        from src.paths import paths
-        path = self._get_resource_root()
         about_dialog = AboutDialog(
-                                   image=ImageResource(name='about{}.png'.format(paths.version),
-                                              search_path=[path, paths.abouts]
-                                            ),
-                                   )
+            image=ImageResource(name='about{}.png'.format(paths.version),
+                                search_path=[paths.app_resources,
+                                             paths.abouts]
+            ),
+        )
         return about_dialog
 
     def _splash_screen_default(self):
-        from src.paths import paths
-        path = self._get_resource_root()
-        paths.app_resources = path
-
         sp = SplashScreen(
-                          image=ImageResource(name='splash{}.png'.format(paths.version),
-                                              search_path=[path, paths.splashes]
-                                            ),
-                          )
+            image=ImageResource(name='splash{}.png'.format(paths.version),
+                                search_path=[paths.app_resources,
+                                             paths.splashes]
+            ),
+        )
         return sp
 
 

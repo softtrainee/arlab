@@ -99,29 +99,34 @@ class AnalysisEditTask(BaseBrowserTask):
     def set_tag(self):
         """
             set tag for either
-
-            analyses in a figure with temp_status==1
-            if no analyses set all analyses to valid and remove tag
+            analyses selected in unknowns pane
+            or
+            analyses selected in figure e.g temp_status!=0
 
         """
         items = self.unknowns_pane.selected
+        if not items:
+            items = [i for i in self.unknowns_pane.items if i.temp_status != 0]
+
         if items:
-            name = self._get_tagname()
+            tag = self._get_tag()
+            if tag:
+                db = self.manager.db
+                name = tag.name
+                with db.session_ctx():
+                    def func(ai, x):
+                        self.debug('setting {} tag= {}'.format(ai.record_id, name))
+                        x.tag = name
 
-            db = self.manager.db
-            with db.session_ctx():
-                def func(i, x):
-                    self.debug('setting {} tag= {}'.format(i.record_id, name))
-                    x.tag = name
-                    i.tag = name
-                    i.temp_status = 1 if name else 0
+                        ai.set_tag(tag)
 
-                for it in items:
-                    ma = db.get_analysis_uuid(it.uuid)
-                    func(it, ma)
 
-            self.unknowns_pane.refresh_needed = True
-            self.active_editor.rebuild(refresh_data=False)
+                    for it in items:
+                        ma = db.get_analysis_uuid(it.uuid)
+                        func(it, ma)
+
+                self.unknowns_pane.refresh_needed = True
+                self.active_editor.rebuild(refresh_data=False)
 
     def prepare_destroy(self):
         if self.unknowns_pane:
@@ -188,7 +193,7 @@ class AnalysisEditTask(BaseBrowserTask):
         info = v.edit_traits()
         if info.result:
             tag = v.selected
-            return tag.name
+            return tag
 
     def _open_ideogram_editor(self, ans, name, task=None):
         _id = 'pychron.processing.figures'
