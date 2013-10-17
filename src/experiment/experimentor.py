@@ -204,10 +204,10 @@ class Experimentor(IsotopeDatabaseManager):
                 egrp = -1
 
                 special = self._is_special(ln)
-
+                egrp = ai.extract_group
                 # is run part of aq step heat
-                if ai.extract_group and not special:
-                    en = '{}_{}'.format(ln, ai.extract_group)
+                if egrp and not special:
+                    en = '{}_{}'.format(ln, egrp)
                     if not en in ecache:
                         ecache[en] = dict(egrp=-1,
                                           step=-1,
@@ -216,7 +216,6 @@ class Experimentor(IsotopeDatabaseManager):
                     s = -1
                     elast = ecache[en]
 
-                    egrp = ai.extract_group
                     aq = elast['aliquot']
                     if egrp == elast['egrp']:
                         s = elast['step']
@@ -226,12 +225,15 @@ class Experimentor(IsotopeDatabaseManager):
                     #print ai.runid, ai.user_defined_aliquot
                     if ai.user_defined_aliquot:
                         aq = ai.user_defined_aliquot
-                        dban = db.get_last_analysis(ln, aliquot=aq)
-                        if dban:
-                            #aq = dban.aliquot + 1
-                            #last['aliquot'] = aq
-                            if dban.step:
-                                s = LAlphas.index(dban)
+                        if egrp == elast['egrp']:
+                            s = elast['step']
+                        else:
+                            dban = db.get_last_analysis(ln, aliquot=aq)
+                            if dban:
+                                #aq = dban.aliquot + 1
+                                #last['aliquot'] = aq
+                                if dban.step:
+                                    s = LAlphas.index(dban.step)
 
                     st = s + 1
                     elast['step'] = st
