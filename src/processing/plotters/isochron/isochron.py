@@ -71,7 +71,8 @@ class InverseIsochron(Isochron):
         #for si in self.sorted_analyses:
         #    print si.record_id, si.group_id
 
-        omit = self._get_omitted(self.sorted_analyses)
+        omit = self._get_omitted(self.sorted_analyses,
+                                 omit='omit_iso')
         print 'iso omit', omit
         if omit:
             self._rebuild_iso(omit)

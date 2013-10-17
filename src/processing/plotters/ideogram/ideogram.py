@@ -68,7 +68,8 @@ class Ideogram(BaseArArFigure):
 
         self._plot_relative_probability(graph.plots[0], 0)
 
-        omit = self._get_omitted(self.sorted_analyses)
+        omit = self._get_omitted(self.sorted_analyses,
+                                 omit='omit_ideo')
 
         #omit = [i for i, ai in enumerate(self.sorted_analyses) if ai.temp_status]
 

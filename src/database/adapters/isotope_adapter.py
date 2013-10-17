@@ -1177,6 +1177,9 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_tags(self, **kw):
         return self._retrieve_items(proc_TagTable, **kw)
 
+    def delete_tag(self, name):
+        self._delete_item('tag', name)
+
     #===============================================================================
     # deleters
     #===============================================================================
@@ -1199,6 +1202,7 @@ class IsotopeAdapter(DatabaseAdapter):
     @delete_one
     def delete_labnumber(self, name):
         return gen_LabTable, 'labnumber'
+
 
     #===============================================================================
     # private

@@ -48,6 +48,9 @@ class Analysis(ArArAge):
 
     aliquot_step_str = Str
 
+    omit_ideo = False
+    omit_spec = False
+    omit_iso = False
 
     def flush(self, *args, **kw):
         '''
@@ -156,15 +159,20 @@ class DBAnalysis(Analysis):
         except AttributeError:
             pass
 
-    def flush(self):
-        """
-        """
+    def set_tag(self, tag):
 
-    def commit(self, sess):
-        """
-            use the provided db adapter to
-            save changes to database
-        """
+        name = tag.name
+        self.tag = name
+        #self.temp_status = 1 if name else 0
+        omit = False
+        for a in ('ideo', 'spec', 'iso'):
+            a = 'omit_{}'.format(a)
+            v = getattr(tag, a)
+            setattr(self, a, v)
+            if v:
+                omit = True
+
+        self.temp_status = 1 if omit else 0
 
     def init(self, meas_analysis):
         pass
@@ -277,9 +285,13 @@ class DBAnalysis(Analysis):
         self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
 
         tag = meas_analysis.tag
-        self.tag = tag or ''
-        if self.tag:
-            self.temp_status = 1
+        if tag:
+            tag = tag.tag_item
+            self.set_tag(tag)
+
+        #self.tag = tag or ''
+        #if self.tag:
+        #    self.temp_status = 1
 
         # copy related table attrs
         self._sync_irradiation(meas_analysis)

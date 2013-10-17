@@ -19,7 +19,7 @@ from traits.api import Password, Bool, Str, on_trait_change, Any, Property, cach
 #=============standard library imports ========================
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session, subqueryload
-from sqlalchemy.exc import SQLAlchemyError, InvalidRequestError, StatementError,\
+from sqlalchemy.exc import SQLAlchemyError, InvalidRequestError, StatementError, \
     DBAPIError
 import os
 #=============local library imports  ==========================
@@ -415,6 +415,18 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
         args['filename'] = n
         return args
 
+    def _delete_item(self, name, value):
+        sess = self.sess
+        if sess is None:
+            if self.session_factory:
+                sess = self.session_factory()
+
+        with self.session_ctx(sess):
+            func = getattr(self, 'get_{}'.format(name))
+            item = func(value)
+            if item:
+                sess.delete(item)
+
     def _retrieve_items(self, table,
                         joins=None,
                         filters=None,
@@ -428,29 +440,29 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
         with self.session_ctx(sess):
         #         print 'get items', sess, self.session_factory
         #         sess = self.get_session()
-            if sess is not None:
-                q = sess.query(table)
+        #    if sess is not None:
+            q = sess.query(table)
 
-                if joins:
-                    try:
-                        for ji in joins:
-                            if ji != table:
-                                q = q.join(ji)
-                    except InvalidRequestError:
-                        pass
+            if joins:
+                try:
+                    for ji in joins:
+                        if ji != table:
+                            q = q.join(ji)
+                except InvalidRequestError:
+                    pass
 
-                if filters is not None:
-                    for fi in filters:
-                        q = q.filter(fi)
+            if filters is not None:
+                for fi in filters:
+                    q = q.filter(fi)
 
-                if order is not None:
-                    q = q.order_by(order)
+            if order is not None:
+                q = q.order_by(order)
 
-                if limit is not None:
-                    q = q.limit(limit)
+            if limit is not None:
+                q = q.limit(limit)
 
-                r = q.all()
-                return r
+            r = q.all()
+            return r
 
     def _retrieve_first(self, table, value, key='name', order_by=None):
         if not isinstance(value, (str, int, unicode, long, float)):
@@ -507,9 +519,10 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
             if last:
                 q = q.order_by(last)
-            
-            ntries=3
+
+            ntries = 3
             import traceback
+
             for i in range(ntries):
                 try:
                     return q.one()
@@ -517,22 +530,24 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
                     self.debug(traceback.format_exc())
                     s.rollback()
                     continue
-                
+
                 except StatementError:
                     self.debug(traceback.format_exc())
                     s.rollback()
-    #                 return __retrieve()
-    
+                    #                 return __retrieve()
+
                 except MultipleResultsFound:
-                    self.debug('multiples row found for {} {} {}. Trying to get last row'.format(table.__tablename__, key, value))
+                    self.debug(
+                        'multiples row found for {} {} {}. Trying to get last row'.format(table.__tablename__, key,
+                                                                                          value))
                     try:
                         if hasattr(table, 'id'):
                             q = q.order_by(table.id.desc())
                         return q.limit(1).all()[-1]
-    
+
                     except (SQLAlchemyError, IndexError, AttributeError), e:
                         self.debug('no rows for {} {} {}'.format(table.__tablename__, key, value))
-    
+
                 except NoResultFound:
                     self.debug('no row found for {} {} {}'.format(table.__tablename__, key, value))
 

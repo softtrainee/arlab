@@ -51,14 +51,12 @@ colors1f = dict()
 for color in colors8i:
     c = colors8i[color]
     colors1f[color] = c[0] / 255., c[1] / 255., c[2] / 255.
-colornames = [ 'black', 'red', 'blue', 'violet', 'maroon', 
-              #'yellow',
-#               'olive',
-               'lime green', 'gray', 'green', 'aquamarine',
-               # 'teal',
-                'silver', 'navy', 'plum', 'purple',
-               'blue violet', 'brown', 'firebrick', 'green yellow'
-               ]
+
+colornames = ['black', 'red', 'blue', 'violet', 'maroon',
+              'lime green', 'gray', 'green', 'aquamarine',
+              'silver', 'navy', 'plum', 'purple',
+              'blue violet', 'brown', 'firebrick', 'green yellow',
+]
 
 allcolornames = ['aquamarine'
 'black', 'blue violet', 'blue', 'brown',
@@ -118,14 +116,14 @@ def paired_colorname_generator():
 
 
 def colorname_generator():
-    '''
-    '''
+    """
+    """
     return gen(colornames)
 
 
 def color8i_generator():
-    '''
-    '''
+    """
+    """
     i = 0
     while 1:
         if i > len(colornames):
@@ -134,8 +132,8 @@ def color8i_generator():
         i += 1
 
 def color1f_generator():
-    '''
-    '''
+    """
+    """
     i = 0
     while 1:
         if i > len(colornames):
