@@ -1042,7 +1042,7 @@ If "No" select from database
         if self.isAlive():
             is_last = len(self.experiment_queue.automated_runs) == 0
             if self.current_run.measurement_script:
-                self.measurement_script.setup_context(is_last=is_last)
+                self.current_run.measurement_script.setup_context(is_last=is_last)
 
 
     def _cancel_run_button_fired(self):
