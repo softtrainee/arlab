@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Event, Button, Float, String, \
-    Bool, Enum, Property, Instance, Int, List, Any, Color, Dict
+    Bool, Enum, Property, Instance, Int, List, Any, Color, Dict, on_trait_change
 # from traitsui.api import View, Item
 from apptools.preferences.preference_binding import bind_preference
 from pyface.constant import CANCEL, YES, NO
@@ -1037,6 +1037,13 @@ If "No" select from database
     #===============================================================================
     #     def _resume_button_fired(self):
     #         self.resume_runs = True
+    @on_trait_change('experiment_queue:automated_runs[]')
+    def _update_automated_runs(self):
+        if self.isAlive():
+            is_last = len(self.experiment_queue.automated_runs) == 0
+            if self.current_run.measurement_script:
+                self.measurement_script.setup_context(is_last=is_last)
+
 
     def _cancel_run_button_fired(self):
         self.debug('cancel run {}'.format(self.isAlive()))
