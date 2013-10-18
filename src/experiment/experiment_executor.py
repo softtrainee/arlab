@@ -1040,10 +1040,11 @@ If "No" select from database
     @on_trait_change('experiment_queue:automated_runs[]')
     def _update_automated_runs(self):
         if self.isAlive():
-            is_last = len(self.experiment_queue.automated_runs) == 0
-            if self.current_run.measurement_script:
-                self.current_run.measurement_script.setup_context(is_last=is_last)
-
+            is_last = len(self.experiment_queue.cleaned_automated_runs) == 0
+            self.current_run.is_last=is_last
+#            if self.current_run.measurement_script:
+#                self.current_run.measurement_script.setup_context(is_last=is_last)
+#                self.debug('$$$$$$$$$$$$$$$$$$$$$$ Setting is_last {}'.format(is_last))
 
     def _cancel_run_button_fired(self):
         self.debug('cancel run {}'.format(self.isAlive()))

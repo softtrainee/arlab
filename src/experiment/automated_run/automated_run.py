@@ -182,6 +182,9 @@ class AutomatedRun(Loggable):
     #===============================================================================
     # pyscript interface
     #===============================================================================
+    def py_is_last_run(self):
+        return self.is_last
+    
     def py_position_magnet(self, pos, detector, dac=False):
         if not self._alive:
             return
@@ -746,8 +749,8 @@ class AutomatedRun(Loggable):
         # setup the scripts
         if self.measurement_script:
             self.measurement_script.reset(weakref.ref(self)())
-            self.debug('XXXXXXXXXXXXXXXXXXXXXXXXX Setting measurement script is_last {}'.format(self.is_last))
-            self.measurement_script.setup_context(is_last=self.is_last)
+#            self.debug('XXXXXXXXXXXXXXXXXXXXXXXXX Setting measurement script is_last {}'.format(self.is_last))
+#            self.measurement_script.setup_context(is_last=self.is_last)
 
         for si in ('extraction', 'post_measurement', 'post_equilibration'):
             script = getattr(self, '{}_script'.format(si))
@@ -2060,7 +2063,7 @@ anaylsis_type={}
                                  name=sname,
                                  runner=self.runner,
         )
-        ms.setup_context(is_last=self.is_last)
+#        ms.setup_context(is_last=self.is_last)
 
         return ms
 
