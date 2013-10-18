@@ -48,14 +48,14 @@ class FigureEditor(GraphEditor):
 
     annotation_tool = Any
 
-    model = Any
+    figure_model = Any
 
     def _null_component(self):
         self.component = BasePlotContainer()
 
-    @on_trait_change('model:panels:figures:refresh_unknowns_table')
-    def _handle_refresh(self):
-
+    @on_trait_change('figure_model:panels:figures:refresh_unknowns_table')
+    def _handle_refresh(self, obj, name, old, new):
+        #if not obj.suppress_associated:
         #print 'figure editor refresh', id(self)
         for e in self.associated_editors:
             if isinstance(e, FigureEditor):
@@ -127,7 +127,7 @@ class FigureEditor(GraphEditor):
             comp.invalidate_and_redraw()
 
             #if set_model:
-            self.model = model
+            self.figure_model = model
             self.component = comp
             self.component_changed = True
 

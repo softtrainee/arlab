@@ -15,12 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from collections import OrderedDict
+import weakref
 from traits.api import Instance, String, Property, Event, \
-    cached_property
+    cached_property, Dict
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.adapters.isotope_adapter import IsotopeAdapter
+from src.helpers.iterfuncs import partition
 from src.managers.manager import Manager
 from src.ui.progress_dialog import myProgressDialog
 # from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
@@ -34,6 +37,10 @@ from src.experiment.utilities.identifier import make_runid
 # from src.constants import NULL_STR
 # from src.ui.gui import invoke_in_main_thread
 
+ANALYSIS_CACHE = {}
+ANALYSIS_CACHE_COUNT = {}
+CACHE_LIMIT = 500
+
 
 class IsotopeDatabaseManager(Loggable):
     db = Instance(IsotopeAdapter)
@@ -46,7 +53,6 @@ class IsotopeDatabaseManager(Loggable):
 
     saved = Event
     updated = Event
-
 
     def __init__(self, bind=True, connect=True, warn=True, *args, **kw):
         super(IsotopeDatabaseManager, self).__init__(*args, **kw)
@@ -98,14 +104,6 @@ class IsotopeDatabaseManager(Loggable):
         prefid = 'pychron.database'
         try:
             bind_preference(self, 'username', '{}.username'.format(prefid))
-            #        bind_preference(self, 'repo_kind', '{}.repo_kind'.format(prefid))
-
-            #        if self.repo_kind == 'FTP':
-            #            bind_preference(self.repository, 'host', '{}.ftp_host'.format(prefid))
-            #            bind_preference(self.repository, 'username', '{}.ftp_username'.format(prefid))
-            #            bind_preference(self.repository, 'password', '{}.ftp_password'.format(prefid))
-            #            bind_preference(self.repository, 'remote', '{}.repo_root'.format(prefid))
-
             bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
             if self.db.kind == 'mysql':
                 bind_preference(self.db, 'host', '{}.db_host'.format(prefid))
@@ -138,37 +136,27 @@ class IsotopeDatabaseManager(Loggable):
             if ans:
                 progress = None
 
-                dbans = filter(lambda x: isinstance(x, DBAnalysis), ans)
-                nodbans = filter(lambda x: not isinstance(x, DBAnalysis), ans)
-                if nodbans:
-                    n = len(ans)
+                db_ans, no_db_ans = map(list, partition(ans, lambda x: isinstance(x, DBAnalysis)))
+                if no_db_ans:
+
+                    cached_ans, no_db_ans = map(list, partition(no_db_ans,
+                                                                lambda x: x.uuid in ANALYSIS_CACHE))
+
+                    db_ans.extend([ANALYSIS_CACHE[ci.uuid] for ci in cached_ans])
+                    n = len(no_db_ans)
                     if n > 1:
                         progress = self._open_progress(n)
 
-                    #if progress:
-                    #    progress.on_trait_change(self._progress_closed, 'closed')
-
-                    #rs = []
-                    uuids = [a.uuid for a in dbans]
-                    for ai in ans:
-                        r = self._analysis_factory(ai,
-                                                   progress=progress,
+                    db_ans.extend([self._analysis_factory(ai,
+                                                          progress=progress,
                                                    calculate_age=calculate_age,
                                                    unpack=unpack,
                                                    **kw)
-                        if r is not None:
-                            #rs.append(r)
-                            if r.uuid not in uuids:
-                                dbans.append(r)
-                                uuids.append(r.uuid)
-
-                    #dbans.extend(rs)
-
+                                   for ai in no_db_ans])
                     if progress:
                         progress.on_trait_change(self._progress_closed,
                                                  'closed', remove=True)
-
-                return dbans
+                return db_ans
 
     def get_level(self, level, irradiation=None):
         if irradiation is None:
@@ -254,77 +242,107 @@ class IsotopeDatabaseManager(Loggable):
             #hist.selected=analysis.selected_histories
             #analysis.selected_histories.selected_arar=hist
 
+    def _add_to_cache(self, rec):
+        if not rec.uuid in ANALYSIS_CACHE:
+            self.debug('Adding {} to cache'.format(rec.record_id))
+            ANALYSIS_CACHE[rec.uuid] = weakref.ref(rec)()
+            ANALYSIS_CACHE_COUNT[rec.uuid] = 1
+        else:
+            ANALYSIS_CACHE_COUNT[rec.uuid] += 1
+
+        #remove items from cached based on frequency of use
+        if len(ANALYSIS_CACHE) > CACHE_LIMIT:
+            s = sorted(ANALYSIS_CACHE_COUNT.iteritems(), key=lambda x: x[1])
+            k, v = s[0]
+            ANALYSIS_CACHE.pop(k)
+            ANALYSIS_CACHE_COUNT.pop(k)
+            self.debug('Cache limit exceeded {}. removing {} n uses={}'.format(CACHE_LIMIT, k, v))
+
     def _analysis_factory(self, rec, progress=None,
                           calculate_age=False,
                           unpack=False,
                           exclude=None, **kw):
-        graph_id = 0
-        group_id = 0
+
 
         if isinstance(rec, (Analysis, DBAnalysis)):
             if progress:
                 progress.increment()
+            self._add_to_cache(rec)
 
             return rec
 
         else:
-            atype = None
-            if isinstance(rec, meas_AnalysisTable):
-                rid = make_runid(rec.labnumber.identifier, rec.aliquot, rec.step)
-                atype = rec.measurement.analysis_type.name
-
-            elif hasattr(rec, 'record_id'):
-                rid = rec.record_id
-            else:
-                rid = id(rec)
-
-            if hasattr(rec, 'group_id'):
-                group_id = rec.group_id
-
-            if hasattr(rec, 'graph_id'):
-                graph_id = rec.graph_id
-
-            if atype is None:
-                atype = rec.analysis_type
-
-            def func(r):
-                meas_analysis = self.db.get_analysis_uuid(r.uuid)
-
-                ai = DBAnalysis(group_id=group_id,
-                                graph_id=graph_id)
-                if atype in ('unknown', 'cocktail'):
-                    ai.sync_arar(meas_analysis)
-
-                    if calculate_age:
-                        ai.sync(meas_analysis, unpack=True)
-                        ai.calculate_age(force=True)
-                    elif not ai.persisted_age:
-                        ai.sync(meas_analysis, unpack=True)
-                        ai.calculate_age()
-                        self._add_arar(meas_analysis, ai)
-                    #elif calculate_age:
-                    #    ai.sync(meas_analysis, unpack=True)
-                    #    ai.calculate_age(force=True)
-                    else:
-                        ai.sync(meas_analysis, unpack=unpack)
-
-                else:
-                    ai.sync(meas_analysis, unpack=unpack)
-
-                return ai
-
-            if progress:
-                show_age = calculate_age and atype in ('unknown', 'cocktail')
-                m = 'calculating age' if show_age else ''
-                msg = 'loading {}. {}'.format(rid, m)
-                progress.change_message(msg)
-                #a = timethis(func, args=(rec,), msg='make analysis')
-                a = func(rec)
-                progress.increment()
-            else:
-                a = func(rec)
-
+            a = self._construct_analysis(rec, calculate_age, unpack, progress)
+            self._add_to_cache(a)
             return a
+            #if progress:
+            #    show_age = calculate_age and atype in ('unknown', 'cocktail')
+            #    m = 'calculating age' if show_age else ''
+            #    msg = 'loading {}. {}'.format(rid, m)
+            #    progress.change_message(msg)
+            #    #a = timethis(func, args=(rec,), msg='make analysis')
+            #    a = func(rec)
+            #    self._add_to_cache(rec)
+            #    progress.increment()
+            #else:
+            #    a = func(rec)
+
+            #return a
+
+    def _construct_analysis(self, rec, calculate_age, unpack, prog):
+        atype = None
+        if isinstance(rec, meas_AnalysisTable):
+            rid = make_runid(rec.labnumber.identifier, rec.aliquot, rec.step)
+            atype = rec.measurement.analysis_type.name
+        elif hasattr(rec, 'record_id'):
+            rid = rec.record_id
+        else:
+            rid = id(rec)
+
+        graph_id = 0
+        group_id = 0
+
+        if hasattr(rec, 'group_id'):
+            group_id = rec.group_id
+
+        if hasattr(rec, 'graph_id'):
+            graph_id = rec.graph_id
+
+        if atype is None:
+            atype = rec.analysis_type
+
+        if prog:
+            show_age = calculate_age and atype in ('unknown', 'cocktail')
+            m = 'calculating age' if show_age else ''
+            msg = 'loading {}. {}'.format(rid, m)
+            prog.change_message(msg)
+            prog.increment()
+
+        meas_analysis = self.db.get_analysis_uuid(rec.uuid)
+
+        ai = DBAnalysis(group_id=group_id,
+                        graph_id=graph_id)
+        if atype in ('unknown', 'cocktail'):
+            ai.sync_arar(meas_analysis)
+
+            if calculate_age:
+                ai.sync(meas_analysis, unpack=True)
+                ai.calculate_age(force=True)
+            elif not ai.persisted_age:
+                ai.sync(meas_analysis, unpack=True)
+                ai.calculate_age()
+                self._add_arar(meas_analysis, ai)
+            #elif calculate_age:
+            #    ai.sync(meas_analysis, unpack=True)
+            #    ai.calculate_age(force=True)
+            else:
+                ai.sync(meas_analysis, unpack=unpack)
+
+        else:
+            ai.sync(meas_analysis, unpack=unpack)
+
+        return ai
+
 
     def _db_factory(self):
 
