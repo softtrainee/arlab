@@ -129,10 +129,11 @@ class ExperimentExecutor(IsotopeDatabaseManager):
     _prev_blanks = Dict
     _prev_baselines = Dict
     _err_message = None
-    def __init__(self,*args, **kw):
-        super(ExperimentExecutor,self).__init__(*args, **kw)
-        self.wait_control_lock=Lock()
-        
+
+    def __init__(self, *args, **kw):
+        super(ExperimentExecutor, self).__init__(*args, **kw)
+        self.wait_control_lock = Lock()
+
     def set_queue_modified(self):
         self.queue_modified = True
 
@@ -395,8 +396,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         run.state = 'not run'
 
         q = self.experiment_queue
-        #is this the last run in the queue
-        run.is_last = len(q.cleaned_automated_runs) == 0
+        #is this the last run in the queue. queue is not empty until _start runs so n==1 means last run
+        run.is_last = len(q.cleaned_automated_runs) == 1
 
         self.current_run = run
         st = time.time()

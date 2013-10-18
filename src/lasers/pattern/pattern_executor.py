@@ -62,12 +62,12 @@ class PatternExecutor(Patternable):
             graph.redraw()
 
     def load_pattern(self, name_or_pickle):
-        '''
+        """
             look for name_or_pickle in local pattern dir
-            
+
             if not found try interpreting name_or_pickle is a pickled name_or_pickle
-            
-        '''
+
+        """
         path = None
         if name_or_pickle is None:
             path = self.open_file_dialog()
@@ -80,9 +80,7 @@ class PatternExecutor(Patternable):
             fp = open(path, 'rb')
         else:
             # convert name_or_pickle into a file like obj
-            fp = cStringIO.StringIO()
-            fp.write(name_or_pickle)
-            fp.seek(0)
+            fp = cStringIO.StringIO(name_or_pickle)
 
         # self._load_pattern sets self.pattern
         pattern = self._load_pattern(fp, path)
@@ -97,14 +95,20 @@ class PatternExecutor(Patternable):
             path = os.path.join(paths.pattern_dir, ni)
             if os.path.isfile(path):
                 return path
-        p = test_name(name)
-        if p:
-            return p
-        else:
-            pname = name
-            if not name.endswith('.lp'):
-                pname = name + '.lp'
-                return test_name(pname)
+
+        for ni in (name, name + '.lp'):
+            p = test_name(ni)
+            if p:
+                return p
+
+                #p = test_name(name)
+                #if p:
+                #    return p
+                #else:
+                #    pname = name
+                #    if not name.endswith('.lp'):
+                #        pname = name + '.lp'
+                #        return test_name(pname)
 
 
     def stop(self):

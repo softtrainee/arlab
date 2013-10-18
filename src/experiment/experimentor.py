@@ -201,7 +201,7 @@ class Experimentor(IsotopeDatabaseManager):
 
                 aq = ai.aliquot
                 st = ''
-                egrp = -1
+                #egrp = -1
 
                 special = self._is_special(ln)
                 egrp = ai.extract_group
@@ -213,30 +213,32 @@ class Experimentor(IsotopeDatabaseManager):
                                           step=-1,
                                           aliquot=last['aliquot'])
 
-                    s = -1
+                    s = 0
                     elast = ecache[en]
 
                     aq = elast['aliquot']
                     if egrp == elast['egrp']:
-                        s = elast['step']
+                        s = elast['step'] + 1
                     else:
                         aq += 1
 
-                    #print ai.runid, ai.user_defined_aliquot
+                        #print ai.runid, ai.state, ai.user_defined_aliquot
+                        #print ai.runid, ai.user_defined_aliquot
                     if ai.user_defined_aliquot:
                         aq = ai.user_defined_aliquot
-                        if egrp == elast['egrp']:
-                            s = elast['step']
-                        else:
-                            dban = db.get_last_analysis(ln, aliquot=aq)
-                            if dban:
-                                #aq = dban.aliquot + 1
-                                #last['aliquot'] = aq
-                                if dban.step:
-                                    s = LAlphas.index(dban.step)
+                        if ai.state not in ('success', 'failed', 'canceled'):
+                            if egrp == elast['egrp']:
+                                s = elast['step'] + 1
+                            else:
+                                dban = db.get_last_analysis(ln, aliquot=aq)
+                                if dban:
+                                    if dban.step:
+                                        s = LAlphas.index(dban.step) + 1
 
-                    st = s + 1
-                    elast['step'] = st
+                    if ai.state != 'not run':
+                        s = LAlphas.index(ai.step)
+
+                    elast['step'] = s
                     elast['egrp'] = ai.extract_group
                     elast['aliquot'] = aq
 
@@ -259,7 +261,7 @@ class Experimentor(IsotopeDatabaseManager):
                                  sample=last['sample'] or '',
                                  irradiation=last['irradiation'] or '',
                                  material=last['material'] or '',
-                                 step=st)
+                                 step=s)
 
                 cache[ln] = last
 
@@ -470,19 +472,19 @@ class Experimentor(IsotopeDatabaseManager):
 
         return e
 
-#============= EOF =============================================
-#     def start_file_listener(self, path):
-#         fl = FileListener(
-#                           path,
-#                           callback=self._reload_from_disk,
-#                           check=self._check_for_file_mods
-#                           )
-#         self.filelistener = fl
-#
-#     # @deprecated
-#     def stop_file_listener(self):
-#         if self.filelistener:
-#             self.filelistener.stop()
+        #============= EOF =============================================
+        #     def start_file_listener(self, path):
+        #         fl = FileListener(
+        #                           path,
+        #                           callback=self._reload_from_disk,
+        #                           check=self._check_for_file_mods
+        #                           )
+        #         self.filelistener = fl
+        #
+        #     # @deprecated
+        #     def stop_file_listener(self):
+        #         if self.filelistener:
+        #             self.filelistener.stop()
         #def _modify_aliquots_steps2(self, ans, exclude=None):
         #        '''
         #        '''

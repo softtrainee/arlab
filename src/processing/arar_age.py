@@ -525,7 +525,8 @@ class ArArAge(Loggable):
     def _get_rad40_percent(self):
         try:
             return self.rad40 / self.Ar40 * 100
-        except (ZeroDivisionError, TypeError):
+        except (ZeroDivisionError, TypeError), e:
+            self.debug('Rad40 Percent error {}'.format(e))
             return ufloat(0, 1e-20)
 
     def _get_Ar40(self):
@@ -612,16 +613,21 @@ class ArArAge(Loggable):
         return self._sensitivity_multiplier
 
     def _get_arar_result_attr(self, key):
-        #if key.startswith('s'):
-        #    key = key[1:]
+
+        if self.arar_result.has_key(key):
+            return self.arar_result[key]
+        else:
+            keys = self.arar_result.keys()
+            self.warning('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ NO KEY {} {}'.format(key, keys))
+            return ufloat(0, 1e-20)
+
+            #if key.startswith('s'):
+            #    key = key[1:]
         #elif key.startswith('Ar'):
         #    key = key[2:]
         #
         #arar_attr = 's{}'.format(key)
         #
-        #print self.arar_result.keys()
-        if self.arar_result.has_key(key):
-            return self.arar_result[key]
             #elif self.arar_result.has_key(arar_attr):
         #    return self.arar_result[arar_attr]
         #else:
@@ -629,7 +635,7 @@ class ArArAge(Loggable):
         #    if self.isotopes.has_key(iso_attr):
         #        return self.isotopes[iso_attr].get_corrected_value()
 
-        return ufloat(0, 1e-20)
+            #return ufloat(0, 1e-20)
 
     def _get_isotope_keys(self):
         keys = self.isotopes.keys()

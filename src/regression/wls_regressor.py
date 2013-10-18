@@ -24,7 +24,7 @@ except ImportError:
     from scikits.statsmodels.api import WLS
 #============= local library imports  ==========================
 # from src.regression.base_regressor import BaseRegressor
-from src.regression.ols_regressor import OLSRegressor
+from src.regression.ols_regressor import OLSRegressor, MultipleLinearRegressor
 
 
 class WeightedPolynomialRegressor(OLSRegressor):
@@ -44,9 +44,14 @@ class WeightedPolynomialRegressor(OLSRegressor):
         ys = self.ys
         x = self._get_X()
         self._wls = WLS(ys, x,
-                        weights=1 / es
+                        #weights=1 / es
+                        weights=es ** -2
         )
         self._result = self._wls.fit()
+
+
+class WeightedMultipleLinearRegressor(WeightedPolynomialRegressor, MultipleLinearRegressor):
+    pass
 
 
 #    def calculate_var_covar(self):

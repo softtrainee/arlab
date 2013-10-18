@@ -16,8 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, Enum, Any, DelegatesTo, List, Property, \
-     Bool, Int, Button, Event, String, cached_property, \
-     HasTraits, Range, Float
+    Bool, Int, Button, Event, String, cached_property, \
+    HasTraits, Range, Float
 # from pyface.timer.api import Timer
 #============= standard library imports ========================
 import random
@@ -93,6 +93,7 @@ class ScanManager(Manager):
     record_data_manager = Any
     _consuming = False
     queue = None
+
     def _update_graph_limits(self, name, new):
         if 'high' in name:
             self._graph_ymax = max(new, self._graph_ymin)
@@ -105,9 +106,9 @@ class ScanManager(Manager):
 
     def _update_magnet(self, obj, name, old, new):
         if new:
-            # covnert dac into a mass
-            # convert mass to isotope
-#            d = self.magnet.dac
+        # covnert dac into a mass
+        # convert mass to isotope
+        #            d = self.magnet.dac
             iso = self.magnet.map_dac_to_isotope()
             if not iso in self.isotopes:
                 iso = NULL_STR
@@ -198,8 +199,7 @@ class ScanManager(Manager):
                 'graph_ymax',
                 'graph_y_auto',
                 'graph_scan_width'
-                ]
-
+        ]
 
 
     def _update(self, data):
@@ -207,7 +207,7 @@ class ScanManager(Manager):
         if signals:
             x = self.graph.record_multiple(signals,
                                            track_y=False,
-                                           )
+            )
 
             if self._recording and self.queue:
                 self.queue.put((x, keys, signals))
@@ -216,20 +216,20 @@ class ScanManager(Manager):
         data = self.spectrometer.get_intensities()
         if data:
             self._update(data)
-#            self._write_data(x, keys, signals)
+            #            self._write_data(x, keys, signals)
 
-#    def _write_data(self, x, keys, signals):
-# #        st = time.clock()
-#            dm = self.record_data_manager
-#            if dm:
-#                if self._first_recording:
-#                    self._first_recording = False
-#                    dm.write_to_frame(('time',) + tuple(keys))
-#                dm.write_to_frame((x,) + tuple(signals))
-# #        print time.clock() - st
+            #    def _write_data(self, x, keys, signals):
+            # #        st = time.clock()
+            #            dm = self.record_data_manager
+            #            if dm:
+            #                if self._first_recording:
+            #                    self._first_recording = False
+            #                    dm.write_to_frame(('time',) + tuple(keys))
+            #                dm.write_to_frame((x,) + tuple(signals))
+            # #        print time.clock() - st
 
     def _start_timer(self):
-#        self._first_iteration = True
+    #        self._first_iteration = True
         self.info('starting scan timer')
         self.integration_time = 1.048576
         self.timer = self._timer_factory()
@@ -239,28 +239,26 @@ class ScanManager(Manager):
         self.timer.Stop()
 
     def _start_recording(self):
-#        self._first_recording = True
+    #        self._first_recording = True
         self.queue = Queue()
         self.record_data_manager = dm = CSVDataManager()
-
-
         self.consumer = Thread(target=self._consume, args=(dm,))
         self.consumer.start()
-# #        root = paths.spectrometer_scans_dir
-# #        p, _c = unique_path(root, 'scan')
+        # #        root = paths.spectrometer_scans_dir
+        # #        p, _c = unique_path(root, 'scan')
         dm.new_frame(directory=paths.spectrometer_scans_dir)
 
 
     def _stop_recording(self):
         self._consuming = False
         self.record_data_manager.close_file()
-#===============================================================================
-# handlers
-#===============================================================================
+
+    #===============================================================================
+    # handlers
+    #===============================================================================
     def _set_position(self):
         if self.isotope and self.isotope != NULL_STR \
             and self.detector:
-
             self.info('set position {} on {}'.format(self.isotope, self.detector))
             self.ion_optics_manager.position(self.isotope, self.detector.name)
 
@@ -273,7 +271,8 @@ class ScanManager(Manager):
 
         plot = self.graph.plots[0]
         plot.value_range.on_trait_change(self._update_graph_limits, '_low_value, _high_value')
-#        plot.value_range.on_trait_change(self._update_graph_limits, '_high_value')
+
+    #        plot.value_range.on_trait_change(self._update_graph_limits, '_high_value')
 
     def _detector_changed(self):
         if self.detector:
@@ -286,7 +285,7 @@ class ScanManager(Manager):
                 plot = plot[0]
                 plot.line_width = emphasize_width if name == self.detector.name else nominal_width
 
-#            print self.detector, self.magnet.mass, self.magnet._mass
+            #            print self.detector, self.magnet.mass, self.magnet._mass
 
             mass = self.magnet.mass
             if abs(mass) > 1e-5:
@@ -302,7 +301,7 @@ class ScanManager(Manager):
                 # simple allows gui to update while the magnet is delaying for settling_time
                 t = Thread(target=self.ion_optics_manager.position, args=(mass, self.detector))
                 t.start()
-#
+                #
 
     def _graph_y_auto_changed(self, new):
         p = self.graph.plots[0]
@@ -315,21 +314,21 @@ class ScanManager(Manager):
         self.graph.redraw()
 
 
-#    def _graph_ymin_auto_changed(self, new):
-#        p = self.graph.plots[0]
-#        if new:
-#            p.value_range.low_setting = 'auto'
-#        else:
-#            p.value_range.low_setting = self.graph_ymin
-#        self.graph.redraw()
-#
-#    def _graph_ymax_auto_changed(self, new):
-#        p = self.graph.plots[0]
-#        if new:
-#            p.value_range.high_setting = 'auto'
-#        else:
-#            p.value_range.high_setting = self.graph_ymax
-#        self.graph.redraw()
+    #    def _graph_ymin_auto_changed(self, new):
+    #        p = self.graph.plots[0]
+    #        if new:
+    #            p.value_range.low_setting = 'auto'
+    #        else:
+    #            p.value_range.low_setting = self.graph_ymin
+    #        self.graph.redraw()
+    #
+    #    def _graph_ymax_auto_changed(self, new):
+    #        p = self.graph.plots[0]
+    #        if new:
+    #            p.value_range.high_setting = 'auto'
+    #        else:
+    #            p.value_range.high_setting = self.graph_ymax
+    #        self.graph.redraw()
 
     def _graph_scale_changed(self, new):
         p = self.graph.plots[0]
@@ -360,7 +359,7 @@ class ScanManager(Manager):
 
 
     def _consume(self, dm):
-        self._consuming=True
+        self._consuming = True
         _first_recording = True
         while self._consuming:
             time.sleep(0.0001)
@@ -376,9 +375,10 @@ class ScanManager(Manager):
                     _first_recording = False
 
                 dm.write_to_frame((x,) + tuple(signals))
-#===============================================================================
-# factories
-#===============================================================================
+                #===============================================================================
+                # factories
+                #===============================================================================
+
     def _timer_factory(self, func=None):
 
         if func is None:
@@ -390,58 +390,58 @@ class ScanManager(Manager):
     def _graph_factory(self):
         g = TimeSeriesStreamGraph(container_dict=dict(bgcolor='lightgray',
                                                       padding=5
-                                                      )
-                                  )
+        )
+        )
 
         n = self.graph_scan_width * 60
         plot = g.new_plot(padding=[55, 5, 5, 50],
-                   data_limit=n,
-                   xtitle='Time',
-                   ytitle='Signal',
-                   scale=self.graph_scale,
-                   bgcolor='whitesmoke',
-                   zoom=True
-                   )
+                          data_limit=n,
+                          xtitle='Time',
+                          ytitle='Signal',
+                          scale=self.graph_scale,
+                          bgcolor='whitesmoke',
+                          zoom=True
+        )
 
         plot.x_grid.visible = False
 
         for i, det in enumerate(self.detectors):
-#            if not det.active:
+        #            if not det.active:
             g.new_series(visible=det.active,
-#                         use_downsampling=False,
+                         #                         use_downsampling=False,
                          color=det.color)
-#            print s.use_downsampling
+            #            print s.use_downsampling
             g.set_series_label(det.name)
             det.series_id = i
 
-#        print p, p.plots
+        #        print p, p.plots
         cp = plot.plots[det.name][0]
         dt = DataTool(plot=cp, component=plot,
                       normalize_time=True,
                       use_date_str=False)
         dto = DataToolOverlay(
-                              component=plot,
-                              tool=dt)
+            component=plot,
+            tool=dt)
         plot.tools.append(dt)
         plot.overlays.append(dto)
 
-#        self.graph_ymax_auto = True
-#        self.graph_ymin_auto = True
-#        p.value_range.low_setting = 'auto'
-#        p.value_range.high_setting = 'auto'
-#        p.value_range.tight_bounds = False
+        #        self.graph_ymax_auto = True
+        #        self.graph_ymin_auto = True
+        #        p.value_range.low_setting = 'auto'
+        #        p.value_range.high_setting = 'auto'
+        #        p.value_range.tight_bounds = False
 
         n = self.graph_scan_width
         n = max(n, 1 / 60.)
         mins = n * 60
         g.data_limits[0] = 1.8 * mins
-#        g.set_x_tracking(mins)
+        #        g.set_x_tracking(mins)
 
         return g
 
-#===============================================================================
-# property get/set
-#===============================================================================
+    #===============================================================================
+    # property get/set
+    #===============================================================================
     @cached_property
     def _get_isotopes(self):
         molweights = self.spectrometer.molecular_weights
@@ -485,9 +485,10 @@ class ScanManager(Manager):
 
     def _get_record_label(self):
         return 'Record' if not self._recording else 'Stop'
-#===============================================================================
-# defaults
-#===============================================================================
+
+    #===============================================================================
+    # defaults
+    #===============================================================================
     def _graph_default(self):
         return self._graph_factory()
 
@@ -597,10 +598,11 @@ class ScanManager(Manager):
 
 
 if __name__ == '__main__':
-
     from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
+
     class Magnet(HasTraits):
         dac = Range(0.0, 6.0)
+
         def map_mass_to_dac(self, d):
             return d
 
@@ -612,6 +614,7 @@ if __name__ == '__main__':
         magnet = Instance(Magnet, ())
         source = Instance(Source, ())
         molecular_weights = MOLECULAR_WEIGHTS
+
         def get_intensities(self):
             return [d.name for d in self.detectors], [random.random() + (i * 12.3) for i in range(len(self.detectors))]
 
@@ -619,31 +622,31 @@ if __name__ == '__main__':
             return 1
 
     detectors = [
-             Detector(name='H2',
-                      color='black',
-                      isheader=True
-                      ),
-             Detector(name='H1',
-                      color='red'
-                      ),
-             Detector(name='AX',
-                      color='violet'
-                      ),
-             Detector(name='L1',
-                      color='maroon'
-                      ),
-             Detector(name='L2',
-                      color='yellow'
-                      ),
-             Detector(name='CDD',
-                      color='lime green',
-                      active=False
-                      ),
+        Detector(name='H2',
+                 color='black',
+                 isheader=True
+        ),
+        Detector(name='H1',
+                 color='red'
+        ),
+        Detector(name='AX',
+                 color='violet'
+        ),
+        Detector(name='L1',
+                 color='maroon'
+        ),
+        Detector(name='L2',
+                 color='yellow'
+        ),
+        Detector(name='CDD',
+                 color='lime green',
+                 active=False
+        ),
 
-             ]
+    ]
     sm = ScanManager(
-#                     detectors=detectors,
-                     spectrometer=DummySpectrometer(detectors=detectors))
-#    sm.load_detectors()
+        #                     detectors=detectors,
+        spectrometer=DummySpectrometer(detectors=detectors))
+    #    sm.load_detectors()
     sm.configure_traits()
 #============= EOF =============================================

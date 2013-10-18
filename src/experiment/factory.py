@@ -172,10 +172,13 @@ extract_device, delay_+, tray, username, load_name]''')
 
     def _get_patterns(self, ed):
         ps = []
-        ed = ed.replace(' ', '_').lower()
-        man = self.application.get_service(ILaserManager, 'name=="{}"'.format(ed))
+        service_name = ed.replace(' ', '_').lower()
+        man = self.application.get_service(ILaserManager, 'name=="{}"'.format(service_name))
         if man:
             ps = man.get_pattern_names()
+        else:
+            self.debug('No remote patterns. {} ({}) not available'.format(ed, service_name))
+
         return ps
 
     #===============================================================================
