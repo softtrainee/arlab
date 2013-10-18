@@ -947,7 +947,9 @@ If "No" select from database
                     pass
 
             else:
+                q = q.limit(100)
                 dbs = q.all()
+
                 sel.load_records(dbs, load=False)
                 sel.selected = sel.records[-1]
                 info = sel.edit_traits(kind='livemodal')
@@ -956,7 +958,8 @@ If "No" select from database
 
             if dbr:
             #                print dbr.aliquot
-                dbr = self.make_analyses([dbr])[0]
+            #    dbr = self.make_analyses([dbr])[0]
+                dbr = self.make_analysis(dbr)
                 #                dbr = sel._record_factory(dbr)
                 return dbr
 

@@ -112,7 +112,8 @@ class ExperimentEditorTask(EditorTask):
         db = self.manager.db
         #         an=db.get_last_analysis('bu-FD-o')
         an = db.get_last_analysis('ba-01-o')
-        an = self.manager.make_analyses([an])[0]
+        #an = self.manager.make_analyses([an])[0]
+        an = self.manager.make_analysis(an)
         if an:
             self.debug('test push {}'.format(an.record_id))
             self._publish_notification(an)

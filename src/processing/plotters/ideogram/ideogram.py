@@ -118,20 +118,30 @@ class Ideogram(BaseArArFigure):
         self._add_scatter_inspector(scatter)
         return scatter
 
-    def _plot_analysis_number(self, po, plot, pid):
+    def _plot_analysis_number(self, *args, **kw):
+        self.__plot_analysis_number(*args, **kw)
+
+    def _plot_analysis_number_stacked(self, *args, **kw):
+        kw['stacked'] = True
+        self.__plot_analysis_number(*args, **kw)
+
+    def __plot_analysis_number(self, po, plot, pid, stacked=False):
         xs = self.xs
         n = xs.shape[0]
 
         startidx = 1
-        for p in self.graph.plots:
-            if p.y_axis.title == 'Analysis #':
-                startidx += p.default_index.get_size()
-                #                 print 'asdfasfsa', p.index.data.get_size()
+        name = 'analysis #'
+        if stacked:
+            name = 'Analysis #'
+            for p in self.graph.plots:
+                if p.y_axis.title == name:
+                    r = p.value_range
+                    startidx += (r.high - r.low)
+                    #                 print 'asdfasfsa', p.index.data.get_size()
 
         ys = arange(startidx, startidx + n)
 
-        scatter = self._add_aux_plot(ys,
-                                     'Analysis #', pid)
+        scatter = self._add_aux_plot(ys, name, pid)
 
         self._add_error_bars(scatter, self.xes, 'x', 1,
                              visible=po.x_error)
@@ -258,9 +268,9 @@ class Ideogram(BaseArArFigure):
             #for i, a in enumerate(sorted_ans):
             #    a.temp_status = 1 if i in sel else 0
         else:
-            sel = [i for i, a in enumerate(sorted_ans)
-                   if a.temp_status]
-
+            #sel = [i for i, a in enumerate(sorted_ans)
+            #            if a.temp_status]
+            sel = self._get_omitted(sorted_ans, omit='omit_ideo')
             self._rebuild_ideo(sel)
 
 
@@ -272,7 +282,7 @@ class Ideogram(BaseArArFigure):
                   for p in graph.plots[1:]
                   for key in p.plots
                   if key.endswith('{}'.format(self.group_id + 1))]
-
+            #print ss, sel
             self._set_renderer_selection(ss, sel)
 
         plot = graph.plots[0]
@@ -319,10 +329,10 @@ class Ideogram(BaseArArFigure):
                 dp.index.set_data(xs)
             else:
                 dp.visible = False
-
-                #===============================================================================
-                # utils
-                #===============================================================================
+        graph.redraw()
+        #===============================================================================
+        # utils
+        #===============================================================================
 
     def _get_xs(self, key='age'):
         xs = array([ai for ai in self._unpack_attr(key)])

@@ -66,6 +66,7 @@ class _myTableView(_TableView, ConsumerMixin):
             size = QFontMetrics(fnt)
             vheader.setDefaultSectionSize(size.height() + 2)
             hheader = self.horizontalHeader()
+            #hheader.setStretchLastSection(editor.factory.stretch_last_section)
 
             hheader.setFont(fnt)
 

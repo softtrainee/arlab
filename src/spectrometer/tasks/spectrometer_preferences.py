@@ -31,6 +31,7 @@ from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
 class ICFactor(HasTraits):
     detector = String
     value = Float
+    error = Float
 
 
 class SpectrometerPreferences(BasePreferencesHelper):
@@ -45,7 +46,7 @@ class SpectrometerPreferences(BasePreferencesHelper):
 
     def _ic_factory(self, **kw):
         ic = ICFactor(**kw)
-        ic.on_trait_change(self._ic_update, 'detector,value')
+        ic.on_trait_change(self._ic_update, 'detector,value,error')
         return ic
 
     def _preferences_changed_listener(self, node, key, old, new):
@@ -56,8 +57,10 @@ class SpectrometerPreferences(BasePreferencesHelper):
             if new:
                 ss = []
                 for si in eval(new):
-                    d, v = si.split(',')
-                    ic = self._ic_factory(detector=d, value=float(v))
+                    d, v, e = si.split(',')
+                    ic = self._ic_factory(detector=d,
+                                          value=float(v),
+                                          error=float(e))
                     ss.append(ic)
 
                 self.trait_set(ic_factors=ss, trait_change_notify=False)
@@ -78,14 +81,16 @@ class SpectrometerPreferences(BasePreferencesHelper):
                 s = preferences.get('{}.{}'.format(path, 'stored_ic_factors'))
 
                 if not s:
-                    self.stored_ic_factors = [',0' for i in range(10)]
+                    self.stored_ic_factors = [',0,0' for i in range(10)]
                     self.ic_factors = [self._ic_factory() for i in range(10)]
                 else:
                     ss = []
                     ns = eval(s)
                     for si in ns:
-                        d, v = si.split(',')
-                        ic = self._ic_factory(detector=d, value=float(v))
+                        d, v, e = si.split(',')
+                        ic = self._ic_factory(detector=d,
+                                              value=float(v),
+                                              error=float(e))
                         ss.append(ic)
 
                     self.stored_ic_factors = ns
@@ -109,7 +114,7 @@ class SpectrometerPreferences(BasePreferencesHelper):
         return
 
     def _ic_update(self, v):
-        ics = ['{},{}'.format(ic.detector, ic.value)
+        ics = ['{},{},{}'.format(ic.detector, ic.value, ic.error)
                for ic in self.ic_factors]
         self.stored_ic_factors = ics
 
@@ -120,7 +125,9 @@ class SpectrometerPreferencesPane(PreferencesPane):
 
     def traits_view(self):
         cols = [ObjectColumn(name='detector', label='Detector'),
-                ObjectColumn(name='value', label='Value', width=100)]
+                ObjectColumn(name='value', label='Value', width=100),
+                ObjectColumn(name='error', label=u'\u00b11\u03c3', width=100),
+        ]
 
         return View(
             VGroup(

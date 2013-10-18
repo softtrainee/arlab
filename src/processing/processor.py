@@ -173,7 +173,7 @@ class Processor(IsotopeDatabaseManager):
     def refit_isotopes(self, meas_analysis, pd=None, fits=None, keys=None, verbose=False):
 
     #         if not isinstance(analysis, Analysis):
-        analysis = self.make_analyses([meas_analysis])[0]
+        analysis = self.make_analysis(meas_analysis)
 
         #         analysis.load_isotopes()
         dbr = meas_analysis
@@ -332,7 +332,7 @@ class Processor(IsotopeDatabaseManager):
             if atype is None use "blank_{analysis.analysis_type}"
         """
         if not isinstance(analysis, Analysis):
-            analysis = self.make_analyses([analysis])[0]
+            analysis = self.make_analyses(analysis)
             #             analysis.load_isotopes()
 
         ms = analysis.mass_spectrometer
@@ -352,7 +352,7 @@ class Processor(IsotopeDatabaseManager):
         from src.regression.interpolation_regressor import InterpolationRegressor
 
         if not isinstance(analysis, Analysis):
-            analysis = self.make_analyses([analysis])[0]
+            analysis = self.make_analysis(analysis)
             #             analysis.load_isotopes()
 
         msg = 'applying preceeding blank for {}'.format(analysis.record_id)
@@ -374,7 +374,7 @@ class Processor(IsotopeDatabaseManager):
             self.warning('no preceeding blank for {}'.format(analysis.record_id))
             return
 
-        ai = self.make_analyses([an])[0]
+        ai = self.make_analyses(an)
         #         ai.load_isotopes()
 
         if keys is None:
@@ -417,8 +417,8 @@ class Processor(IsotopeDatabaseManager):
                 hist = self.db.add_arar_history(meas_analysis)
                 arar = self.db.add_arar(hist)
             else:
-                arar=hist.arar_result
-                
+                arar = hist.arar_result
+
             #force analysis to recalculate age
             #potentially redundant
             analysis.calculate_age(force=True)
@@ -434,8 +434,8 @@ class Processor(IsotopeDatabaseManager):
                 setattr(arar, '{}_err'.format(ai), e)
 
             age = analysis.age * units
-            v,e=age.nominal_value, age.std_dev
-            
+            v, e = age.nominal_value, age.std_dev
+
             je = analysis.age_error_wo_j * units
 
             arar.age = float(v)

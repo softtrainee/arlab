@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from datetime import timedelta
 from traits.api import List, Str, Bool, Any, Enum, String, \
-    Button, on_trait_change, Date, Int, Time, Instance
+    Button, on_trait_change, Date, Int, Time, Instance, Event
 from pyface.tasks.task_layout import TaskLayout, PaneItem
 from pyface.tasks.action.schema import SToolBar
 #============= standard library imports ========================
@@ -31,6 +31,7 @@ from src.processing.tasks.browser.actions import NewBrowserEditorAction
 from src.processing.tasks.browser.analysis_table import AnalysisTable
 from src.processing.tasks.browser.panes import BrowserPane
 from src.processing.tasks.browser.record_views import ProjectRecordView, SampleRecordView
+from src.processing.tasks.browser.table_configurer import TableConfigurer
 from src.processing.tasks.recall.recall_editor import RecallEditor
 from src.database.records.isotope_record import IsotopeRecordView
 
@@ -82,6 +83,8 @@ class BaseBrowserTask(BaseEditorTask, ColumnSorterMixin):
     sample_filter_comparator = Enum('=', 'not =')
     sample_filter_parameters = List(['Sample', 'Material'])
 
+    configure_sample_table = Button
+
     mass_spectrometer = Str(DEFAULT_SPEC)
     mass_spectrometers = List
     analysis_type = Str(DEFAULT_AT)
@@ -102,6 +105,9 @@ class BaseBrowserTask(BaseEditorTask, ColumnSorterMixin):
     #auto_select_references = Bool(False)
 
     filter_non_run_samples = Bool(True)
+
+    browser_pane = Any
+    #update_sample_table=Event
 
     #def recall(self, records):
     #    ans = self.manager.make_analyses(records, calculate_age=True)
@@ -171,7 +177,10 @@ class BaseBrowserTask(BaseEditorTask, ColumnSorterMixin):
         db = self.manager.db
 
     def _create_browser_pane(self, **kw):
-        return BrowserPane(model=self, **kw)
+        self.browser_pane = BrowserPane(model=self, **kw)
+        self.analysis_table.tabular_adapter = self.browser_pane.analysis_tabular_adapter
+
+        return self.browser_pane
 
     def _selected_project_changed(self, new):
         if new:
@@ -187,6 +196,11 @@ class BaseBrowserTask(BaseEditorTask, ColumnSorterMixin):
 
     def _filter_non_run_samples_changed(self):
         self._set_samples()
+
+    def _configure_sample_table_fired(self):
+        s = TableConfigurer(adapter=self.browser_pane.sample_tabular_adapter,
+                            title='Configure Sample Table')
+        s.edit_traits()
 
     def _set_samples(self):
         db = self.manager.db

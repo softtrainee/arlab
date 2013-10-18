@@ -30,21 +30,18 @@ named_register = makeNamedRegistry(command_register)
 
 class ValvePyScript(PyScript):
     runner = Any
-#     def _finished(self):
-#         self.runner.scripts.remove(self)
+    #     def _finished(self):
+    #         self.runner.scripts.remove(self)
 
-#     def _runner_changed(self):
-#         if self.runner:
-#             self.runner.scripts.append(weakref.ref(self)())
+    #     def _runner_changed(self):
+    #         if self.runner:
+    #             self.runner.scripts.append(weakref.ref(self)())
 
     def get_command_register(self):
         return command_register.commands.items()
 
     def gosub(self, *args, **kw):
         kw['runner'] = self.runner
-        if self.runner is None:
-            self.debug('%%%%%%%%%%%%%%%%%%%%%%%%%%%% GOSUB setting runner to None')
-
         super(ValvePyScript, self).gosub(*args, **kw)
 
     @verbose_skip
@@ -57,9 +54,9 @@ class ValvePyScript(PyScript):
         self.info('opening {} ({})'.format(name, description))
 
         result = self._manager_action([('open_valve', (name,), dict(
-                                                      mode='script',
-                                                      description=description
-                                                      ))], protocol=ELPROTOCOL)
+            mode='script',
+            description=description
+        ))], protocol=ELPROTOCOL)
         if result is not None:
             self._finish_valve_change('open', result, name, description)
 
@@ -72,9 +69,9 @@ class ValvePyScript(PyScript):
 
         self.info('closing {} ({})'.format(name, description))
         result = self._manager_action([('close_valve', (name,), dict(
-                                                      mode='script',
-                                                      description=description
-                                                      ))], protocol=ELPROTOCOL)
+            mode='script',
+            description=description
+        ))], protocol=ELPROTOCOL)
         if result is not None:
             self._finish_valve_change('close', result, name, description)
 
@@ -84,9 +81,9 @@ class ValvePyScript(PyScript):
             time.sleep(0.25)
 
         locked = self._manager_action([('get_software_lock', (name,), dict(
-                                                  mode='script',
-                                                  description=description
-                                                  ))], protocol=ELPROTOCOL)
+            mode='script',
+            description=description
+        ))], protocol=ELPROTOCOL)
         if not ok and not locked:
             self.info('Failed to {} valve {} {}'.format(action, name, description))
 
@@ -116,7 +113,7 @@ class ValvePyScript(PyScript):
 
     def _get_valve_state(self, name, description):
         return self._manager_action([('get_valve_state', (name,), dict(
-                                                      description=description
-                                                      ))], protocol=ELPROTOCOL)
+            description=description
+        ))], protocol=ELPROTOCOL)
 
 #============= EOF =============================================

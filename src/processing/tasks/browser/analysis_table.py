@@ -21,6 +21,8 @@ from traits.api import HasTraits, List, Any, Str, Enum, Bool, Button, \
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.processing.tasks.browser.table_configurer import TableConfigurer
+
 
 class AnalysisTable(HasTraits):
     analyses = List
@@ -68,10 +70,14 @@ class AnalysisTable(HasTraits):
             self.analyses = self.oanalyses
 
     def _configure_analysis_filter_fired(self):
-        msg = 'Advanced search not implemented yet!'
-        warning(None, msg)
+        #msg = 'Advanced search not implemented yet!'
+        #warning(None, msg)
 
         #self.information_dialog()
+        c = TableConfigurer(adapter=self.tabular_adapter,
+                            title='Configure Analysis Table')
+        c.edit_traits()
+
 
     def _get_analysis_filter_parameter(self):
         p = self.analysis_filter_parameter
