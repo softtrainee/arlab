@@ -391,12 +391,13 @@ class MultipleLinearRegressor(OLSRegressor):
         sef = self.calculate_standard_error_fit()
 
         def calc_error(xi, se):
-            xi = hstack((xi, (1,)))
+            #xi = hstack((xi, (1,)))
             #            print xi, pow(xi, 3), 'ff'
             #            print self.degree
             #            print range(self.degree + 1)
             #            print [pow(xi, i) for i in range(self.degree + 1)]
-            Xk = matrix([pow(xi, i) for i in range(self.degree + 1)]).T
+            #Xk = matrix([pow(xi, i) for i in range(self.degree + 1)]).T
+            Xk = self._get_X(xi).T
 
             covarM = matrix(self.var_covar)
             varY_hat = (Xk.T * covarM * Xk)
@@ -424,6 +425,48 @@ class FluxRegressor(MultipleLinearRegressor):
         x1, x2 = xs.T
         X = column_stack((x1, x2, x1 ** 2, x2 ** 2, x1 * x2, ones_like(x1)))
         return X
+
+        #def predict_error_matrix(self, x, error_calc='sem'):
+        #    '''
+        #        predict the error in y using matrix math
+        #        draper and smith chapter 2.4 page 56
+        #    '''
+        #    '''
+        #        Xk'=(1, x, x**2...x)
+        #
+        #    '''
+        #    #        if isinstance(x, (float, int)):
+        #    #            x = [x]
+        #
+        #    x = asarray(x)
+        #    sef = self.calculate_standard_error_fit()
+        #
+        #    def calc_error(xi, se):
+        #        #xi = hstack((xi, (1,)))
+        #        #            print xi, pow(xi, 3), 'ff'
+        #        #            print self.degree
+        #        #            print range(self.degree + 1)
+        #        #            print [pow(xi, i) for i in range(self.degree + 1)]
+        #        #Xk = matrix([pow(xi, i) for i in range(self.degree + 1)]).T
+        #
+        #        #xs = asarray(xi)
+        #        #x1, x2 = xs.T
+        #
+        #        #Xk = column_stack((x1, x2, x1 ** 2, x2 ** 2, x1 * x2, ones_like(x1))).T
+        #        Xk=self._get_X(xi).T
+        #        covarM = matrix(self.var_covar)
+        #        varY_hat = (Xk.T * covarM * Xk)
+        #        varY_hat = sum(diag(varY_hat))
+        #        #            print varY_hat
+        #        #
+        #        if error_calc == 'sem':
+        #            se = sef * sqrt(varY_hat)
+        #        else:
+        #            se = sqrt(sef ** 2 + sef ** 2 * varY_hat)
+        #
+        #        return se
+        #
+        #    return [calc_error(xi, sef) for xi in x]
 
 
 if __name__ == '__main__':

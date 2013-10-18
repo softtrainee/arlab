@@ -746,6 +746,7 @@ class AutomatedRun(Loggable):
         # setup the scripts
         if self.measurement_script:
             self.measurement_script.reset(weakref.ref(self)())
+            self.debug('XXXXXXXXXXXXXXXXXXXXXXXXX Setting measurement script is_last {}'.format(self.is_last))
             self.measurement_script.setup_context(is_last=self.is_last)
 
         for si in ('extraction', 'post_measurement', 'post_equilibration'):
@@ -1915,7 +1916,7 @@ anaylsis_type={}
         sig_ints = []
         base_ints = []
         psignals = self._processed_signals_dict
-        baseline_fits=[]
+        baseline_fits = []
         for iso, _, kind in self._save_isotopes:
             if kind == 'signal':
                 si = psignals['{}signal'.format(iso)]
@@ -1925,7 +1926,7 @@ anaylsis_type={}
             elif kind == 'baseline':
                 baseline_fits.append('Average Y')
 
-#        baseline_fits = ['Average Y', ] * len(self._active_detectors)
+                #        baseline_fits = ['Average Y', ] * len(self._active_detectors)
 
         rs_name, rs_text = self._assemble_script_blob()
         rid = self.runid

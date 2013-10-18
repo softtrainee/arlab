@@ -123,16 +123,16 @@ class ExperimentEditor(BaseTraitsEditor):
             #
             #===========================================================================
 
-    def new_queue(self, txt=None):
-        queue = self.queue_factory()
+    def new_queue(self, txt=None, **kw):
+        queue = self.queue_factory(**kw)
         if txt:
             if queue.load(txt):
                 self.queue = queue
         else:
             self.queue = queue
 
-    def queue_factory(self):
-        return ExperimentQueue()
+    def queue_factory(self, **kw):
+        return ExperimentQueue(**kw)
 
     #                             db=self.db,
     #                             application=self.application,

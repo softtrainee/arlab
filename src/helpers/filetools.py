@@ -19,33 +19,41 @@
 #========== standard library imports ==========
 import os
 
+
 def list_directory(p, extension=None, filtername=None, remove_extension=False):
     ds = []
-    if extension:
-        def test(path):
-            return any([path.endswith(ext) for ext in extension.split(',')])
-    else:
-        def test(path):
-            return True
+    #if extension:
+
+    #return any([path.endswith(ext) for ext in extension.split(',')])
+    #else:
+    #    def test(path):
+    #        return True
 
     if os.path.isdir(p):
         ds = os.listdir(p)
         if extension is not None:
+            def test(path):
+                for ext in extension.split(','):
+                    if path.endswith(ext):
+                        return True
+
             ds = [pi for pi in ds
-                        if test(pi)]
+                  if test(pi)]
         if filtername:
             ds = [pi for pi in ds
                   if pi.startswith(filtername)
-                  ]
+            ]
 
     if remove_extension:
         ds = [os.path.splitext(pi)[0] for pi in ds]
     return ds
 
+
 def add_extension(p, ext='.txt'):
     if not p.endswith(ext):
         p += ext
     return p
+
 
 def unique_dir(root, base):
     p = os.path.join(root, '{}001'.format(base))
@@ -57,6 +65,7 @@ def unique_dir(root, base):
     os.mkdir(p)
 
     return p
+
 
 def unique_path(root, base, extension='txt'):
     '''
@@ -78,6 +87,7 @@ def unique_path(root, base, extension='txt'):
 
     return p, cnt
 
+
 def str_to_bool(a):
     '''
     '''
@@ -93,6 +103,7 @@ def str_to_bool(a):
     elif a in fks:
         return False
 
+
 def parse_xy(p, delimiter=','):
     '''
     '''
@@ -102,6 +113,7 @@ def parse_xy(p, delimiter=','):
 
         return func(0, data), func(1, data)
 
+
 def commented_line(l):
     '''
     '''
@@ -109,6 +121,7 @@ def commented_line(l):
         return True
     else:
         return False
+
 
 def parse_file(p, delimiter=None):
     '''
@@ -129,6 +142,7 @@ def parse_setupfile(p):
     fp = parse_file(p)
     if fp:
         return [line.split(',') for line in file]
+
 
 def parse_canvasfile(p, kw):
     '''
@@ -157,10 +171,13 @@ def parse_canvasfile(p, kw):
                             break
 
             return indices
+
+
 def filetoarray(f, commentchar='#'):
     '''
 
     '''
+
     def isNewLine(c):
         return c == chr(10) or c == chr(13)
 

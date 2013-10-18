@@ -456,7 +456,7 @@ class FigureTask(AnalysisEditTask):
             ids = []
             for it in items:
                 v = key(it)
-                if v in ids:
+                if not v in ids:
                     ids.append(v)
 
             sitems = sorted(items, key=key)

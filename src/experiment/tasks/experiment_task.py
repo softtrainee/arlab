@@ -297,8 +297,11 @@ class ExperimentEditorTask(EditorTask):
     #                 ei.path = path
 
     def new(self):
+
+        ms = self.manager.experiment_factory.queue_factory.mass_spectrometer
         editor = ExperimentEditor()
-        editor.new_queue()
+        editor.new_queue(mass_spectrometer=ms)
+
         self._open_editor(editor)
         self._show_pane(self.experiment_factory_pane)
 

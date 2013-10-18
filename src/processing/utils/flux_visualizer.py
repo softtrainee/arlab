@@ -14,8 +14,9 @@
 # limitations under the License.
 #===============================================================================
 
-# from traits.etsconfig.etsconfig import ETSConfig
-# ETSConfig.toolkit = 'qt4'
+from traits.etsconfig.etsconfig import ETSConfig
+
+ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
 from traits.api import HasTraits
 from traitsui.api import View, Item
@@ -216,10 +217,10 @@ def visualize_flux_contour(p, holder, delim=','):
 #    ETSConfig.toolkit = 'qt4'
 #    from src.regression.ols_regressor import MultipleLinearRegressor
     use_2d = True
-    use_2d = False
-#     fit_dev = True
-#     calc_dev = True
-#     calc_dev = False
+    #use_2d = False
+    fit_dev = False
+    #     calc_dev = True
+    #     calc_dev = False
 #     age_space = 280.2
 #     age_space = 0
 
@@ -255,6 +256,33 @@ def visualize_flux_contour(p, holder, delim=','):
 
     show()
 
+
+def interpolate_flux(pholes, p, holder, delim=','):
+    holes = load_holder(holder)
+
+    (xx, yy, z, ze), hole_ids = load_flux_xls(p, holes)
+    xy = zip(xx, yy)
+    reg = FluxRegressor(xs=xy, ys=z)
+
+    output = []
+    for hi in pholes:
+        x, y, t = holes[hi - 1]
+
+        j, je = 0, 0
+        pt = [(x, y)]
+        j = reg.predict(pt)[0]
+        je = reg.predict_error([pt])[0]
+
+        print hi, j, je
+        #output.append((j,je))
+
+        #n = z.shape[0]
+        #r = max(xx)
+        #XX, YY = make_grid(r, n)
+
+        #ZZ = model_flux(n, xx, yy, XX, YY, z)
+
+
 def make_grid(r, n):
     xi = linspace(-r, r, n)
     yi = linspace(-r, r, n)
@@ -268,12 +296,15 @@ if __name__ == '__main__':
     p = '/Users/ross/Sandbox/flux_visualizer/J_nm-258_tray_G2.xls'
     p = '/Users/ross/Sandbox/flux_visualizer/J_NM-259A.xls'
     p = '/Users/ross/Sandbox/flux_visualizer/J_NM-259A2.xls'
-#     p = '/Users/ross/Sandbox/flux_visualizer/runid_contour.txt'
-#    p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G.txt'
-    holder = '/Users/ross/Pychrondata_diode/setupfiles/irradiation_tray_maps/1_75mm_3level'
-#    visualize_flux(p, holder)
-#    visualize_flux_contour(p, holder)
-    visualize_flux_contour(p, holder, delim='\t')
+    p = '/Users/ross/Sandbox/flux_visualizer/Tray_I_NM-261.xls'
+    #     p = '/Users/ross/Sandbox/flux_visualizer/runid_contour.txt'
+    #    p = '/Users/ross/Sandbox/flux_visualizer/J_data_for_nm-258_tray_G.txt'
+    holder = '/Users/ross/Sandbox/flux_visualizer/irradiation_tray_maps/1_75mm_3level'
+    #    visualize_flux(p, holder)
+    #    visualize_flux_contour(p, holder)
+    #    visualize_flux_contour(p, holder, delim='\t')
+    holes = [45, 47, 49, 51, 53]
+    interpolate_flux(holes, p, holder, delim='\t')
 #============= EOF =============================================
 # def load_flux_csv(p, holes, delim):
 #     with open(p, 'U') as fp:

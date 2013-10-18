@@ -38,6 +38,8 @@ from pyface.timer.do_later import do_later
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.ui.gui import invoke_in_main_thread
+
 
 class WindowGroup(Group):
     items = List
@@ -212,10 +214,13 @@ class BaseTask(Task, Loggable):
     application = DelegatesTo('window')
 
     def _show_pane(self, p):
-        ctrl = p.control
-        if not p.visible:
-            ctrl.show()
-        ctrl.raise_()
+        def _show():
+            ctrl = p.control
+            if not p.visible:
+                ctrl.show()
+            ctrl.raise_()
+
+        invoke_in_main_thread(_show)
 
     def _menu_bar_factory(self, menus=None):
         if not menus:
