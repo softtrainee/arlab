@@ -95,7 +95,7 @@ class BaseArArFigure(HasTraits):
             r = ai.temp_status
             if omit:
                 r = r or getattr(ai, omit)
-            return r
+            return r or ai.tag == 'omit'
 
         return [i for i, ai in enumerate(ans)
                 if test(ai)]

@@ -48,6 +48,7 @@ class PlotterOption(HasTraits):
 
     def _get_plot_names(self):
         return {NULL_STR: NULL_STR,
+                'analysis_number_stacked': 'Analysis Number Stacked',
                 'analysis_number': 'Analysis Number',
                 'radiogenic_yield': 'Radiogenic 40Ar',
                 'kca': 'K/Ca',

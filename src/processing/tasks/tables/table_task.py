@@ -24,12 +24,13 @@ from pyface.tasks.action.schema import SToolBar, SGroup
 # from pyface.tasks.action.schema import SToolBar
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.processing.tasks.browser.browser_task import BaseBrowserTask
 from src.processing.tasks.tables.table_actions import ToggleStatusAction, \
     SummaryTableAction, AppendSummaryTableAction, MakePDFTableAction, \
     AppendLaserTableAction, MakeXLSTableAction, MakeCSVTableAction
 # from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.processing.tasks.tables.panes import TableEditorPane
-from src.processing.tasks.browser.browser_task import BrowserTask
+#from src.processing.tasks.browser.browser_task import BrowserTask
 from src.processing.tasks.tables.editors.laser_table_editor import LaserTableEditor
 from src.processing.tasks.tables.table_task_editor import TableTaskEditor
 from src.processing.tasks.tables.editors.adapters import TableSeparator
@@ -60,7 +61,7 @@ class FusionSummary(Summary):
     age_types = List(['Weighted Mean', ])
 
 
-class TableTask(BrowserTask):
+class TableTask(BaseBrowserTask):
     name = 'Tables'
     editor = Instance(TableTaskEditor, ())
 
@@ -200,7 +201,7 @@ class TableTask(BrowserTask):
             if sam is None:
                 man = self.manager
                 ans = self._get_sample_analyses(sa)
-                ans = man.make_analyses(ans[:4])
+                ans = man.make_analyses(ans)
 
                 aa = ans
                 #                 aa = [r for ai in ans

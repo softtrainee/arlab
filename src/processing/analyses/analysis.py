@@ -163,8 +163,8 @@ class DBAnalysis(Analysis):
 
         name = tag.name
         self.tag = name
-        #self.temp_status = 1 if name else 0
-        omit = False
+
+        omit = name == 'omit'
         for a in ('ideo', 'spec', 'iso'):
             a = 'omit_{}'.format(a)
             v = getattr(tag, a)

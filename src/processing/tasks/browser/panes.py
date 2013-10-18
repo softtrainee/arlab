@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, Int, Bool, Str
+from traits.api import HasTraits, Property, Int, Bool, Str, Instance, List
 from traitsui.api import View, Item, UItem, VGroup, HGroup, Label, spring, \
     VSplit, TabularEditor, EnumEditor, Group, DateEditor, StyledDateEditor, Heading
 from pyface.tasks.traits_dock_pane import TraitsDockPane
@@ -31,6 +31,11 @@ from src.ui.tabular_editor import myTabularEditor
 
 class BrowserAdapter(TabularAdapter):
     font = 'arial 10'
+    all_columns = List
+    all_columns_dict = Property
+
+    def _get_all_columns_dict(self):
+        return dict(self.all_columns)
 
 
 class ProjectAdapter(BrowserAdapter):
@@ -38,14 +43,27 @@ class ProjectAdapter(BrowserAdapter):
 
 
 class AnalysisAdapter(BrowserAdapter):
-    columns = [('RunID', 'record_id'),
-               ('Tag', 'tag'),
-               ('Iso Fits', 'iso_fit_status'),
+    all_columns = [('RunID', 'record_id'),
+                   ('Tag', 'tag'),
+                   ('Iso Fits', 'iso_fit_status'),
                ('Blank', 'blank_fit_status'),
                ('IC', 'ic_fit_status'),
-               ('Flux', 'flux_fit_status'),
+               ('Flux', 'flux_fit_status')]
 
+    columns = [('RunID', 'record_id'),
+               ('Tag', 'tag'),
+               #('Iso Fits', 'iso_fit_status'),
+               #('Blank', 'blank_fit_status'),
+               #('IC', 'ic_fit_status'),
+               #('Flux', 'flux_fit_status')
     ]
+
+    #def __init__(self, *args, **kw):
+    #super(AnalysisAdapter, self).__init__(*args, **kw)
+    #self.ocolumns=[c for c,_ in self.columns]
+    #self.columns=[('RunID','record_id'),('Tag','tag')]
+
+
     #     record_id_text = Property
     #     blank_fit_status_text = Property
     #     flux_fit_status_text = Property
@@ -53,16 +71,19 @@ class AnalysisAdapter(BrowserAdapter):
     #     ic_fit_status_text = Property
 
     record_id_width = Int(65)
+    tag_width = Int(65)
     odd_bg_color = 'lightgray'
     font = 'arial 10'
 
 
 class SampleAdapter(BrowserAdapter):
     columns = [('Sample', 'name'), ('Material', 'material')]
+    all_columns = [('Sample', 'name'), ('Material', 'material')]
     #     material_text = Property
     odd_bg_color = 'lightgray'
-    name_width = Int(75)
-    material_width = Int(75)
+
+    name_width = Int(150)
+    material_width = Int(100)
 
 #     def _get_material_text(self):
 #         n = ''
@@ -75,6 +96,9 @@ class BrowserPane(TraitsDockPane):
     id = 'pychron.browser'
     multi_select = True
     analyses_defined = Str('1')
+
+    sample_tabular_adapter = Instance(SampleAdapter, ())
+    analysis_tabular_adapter = Instance(AnalysisAdapter, ())
 
     def _get_browser_group(self):
         project_grp = VGroup(
@@ -107,15 +131,22 @@ class BrowserPane(TraitsDockPane):
                       width=-25),
                 UItem('filter_non_run_samples',
                       tooltip='Omit non-analyzed samples'),
+                new_button_editor('configure_sample_table',
+                                  'cog',
+                                  tooltip='Configure Sample Table'
+                )
             ),
             UItem('samples',
                   editor=TabularEditor(
-                      adapter=SampleAdapter(),
+                      adapter=self.sample_tabular_adapter,
                       editable=False,
                       selected='selected_sample',
                       multi_select=True,
                       dclicked='dclicked_sample',
-                      column_clicked='column_clicked'
+                      column_clicked='column_clicked',
+                      #update='update_sample_table',
+                      #refresh='update_sample_table',
+                      stretch_last_section=False
                   ),
                   width=75
             )
@@ -180,13 +211,14 @@ class BrowserPane(TraitsDockPane):
             ),
             UItem(make_name('analyses'),
                   editor=myTabularEditor(
-                      adapter=AnalysisAdapter(),
+                      adapter=self.analysis_tabular_adapter,
                       #                                                       editable=False,
                       operations=['move'],
                       selected=make_name('selected'),
                       dclicked=make_name('dclicked'),
                       multi_select=self.multi_select,
-                      drag_external=True
+                      drag_external=True,
+                      stretch_last_section=False
 
                   ),
                   #                                  editor=ListStrEditor(editable=False,

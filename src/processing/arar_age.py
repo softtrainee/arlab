@@ -54,8 +54,11 @@ class ICFactorPreferenceBinding(PreferenceBinding):
         ics = eval(ics)
         ss = []
         for ic in ics:
-            detector, v = ic.split(',')
-            ss.append(ICFactor(detector=detector, value=float(v)))
+            detector, v, e = ic.split(',')
+            ss.append(ICFactor(detector=detector,
+                               value=float(v),
+                               error=float(e)
+            ))
         return ss
 
 
@@ -98,21 +101,8 @@ class ArArAge(Loggable):
     sensitivity_multiplier = Property
     _sensitivity_multiplier = Float
 
-    #     labnumber_record = Any
-
-
-
-    #     irradiation_info = Property
-    #     irradiation_level = Property
-    #     irradiation_position = Property
-    #     production_ratios = Property
-
-    #    signals = AgeProperty()
-    #    _signals = Dict
     isotopes = Dict
     isotope_keys = Property
-
-    #     age = Property(depends_on='include_decay_error, include_j_error, include_irradiation_error, age_dirty')
 
     age = None
     R = AgeProperty()
@@ -134,8 +124,6 @@ class ArArAge(Loggable):
 
     moles_Ar40 = AgeProperty()
     moles_K39 = AgeProperty()
-
-    #ic_factor = Property(depends_on='arar_constants:[ic_factor_v, ic_factor_e]')
 
     arar_constants = Instance(ArArConstants, ())
 
@@ -169,10 +157,7 @@ class ArArAge(Loggable):
             bind_preference(arc, 'abundance_sensitivity', 'pychron.experiment.constants.abundance_sensitivity')
 
             mybind_preference(arc, 'ic_factors', 'pychron.spectrometer.ic_factors',
-                              factory=ICFactorPreferenceBinding,
-            )
-            #bind_preference(wr, 'ic_factor_v', 'pychron.experiment.constants.ic_factor')
-            #bind_preference(wr, 'ic_factor_e', 'pychron.experiment.constants.ic_factor_error')
+                              factory=ICFactorPreferenceBinding)
 
         except AttributeError, e:
             print 'arar init', e
@@ -181,11 +166,11 @@ class ArArAge(Loggable):
 
     def get_ic_factor(self, det):
         factors = self.arar_constants.ic_factors
-        ic = 1
+        ic = 1, 1e-20
         if factors:
-            ic = next((ic.value for ic in factors
-                       if ic.detector.lower() == det.lower()), 1.0)
-        r = ufloat(ic, 0)
+            ic = next(((ic.value, ic.error) for ic in factors
+                       if ic.detector.lower() == det.lower()), (1.0, 1e-20))
+        r = ufloat(*ic)
         return r
 
     def get_error_component(self, key):
@@ -292,7 +277,7 @@ class ArArAge(Loggable):
         #load error components into isotopes
         for iso in self.isotopes.itervalues():
             iso.age_error_component = self.get_error_component(iso.name)
-#            print iso.name, iso.age_error_component
+            #            print iso.name, iso.age_error_component
             #================================================================================
             # private
             #================================================================================
@@ -623,17 +608,17 @@ class ArArAge(Loggable):
 
             #if key.startswith('s'):
             #    key = key[1:]
-        #elif key.startswith('Ar'):
-        #    key = key[2:]
-        #
-        #arar_attr = 's{}'.format(key)
-        #
+            #elif key.startswith('Ar'):
+            #    key = key[2:]
+            #
+            #arar_attr = 's{}'.format(key)
+            #
             #elif self.arar_result.has_key(arar_attr):
-        #    return self.arar_result[arar_attr]
-        #else:
-        #    iso_attr = 'Ar{}'.format(key)
-        #    if self.isotopes.has_key(iso_attr):
-        #        return self.isotopes[iso_attr].get_corrected_value()
+            #    return self.arar_result[arar_attr]
+            #else:
+            #    iso_attr = 'Ar{}'.format(key)
+            #    if self.isotopes.has_key(iso_attr):
+            #        return self.isotopes[iso_attr].get_corrected_value()
 
             #return ufloat(0, 1e-20)
 

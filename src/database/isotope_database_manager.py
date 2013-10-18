@@ -122,6 +122,9 @@ class IsotopeDatabaseManager(Loggable):
 
         return filter(lambda x: not x.tag in exclude, ans)
 
+    def make_analysis(self, ai):
+        return self.make_analyses((ai,))[0]
+
     def make_analyses(self, ans, calculate_age=False,
                       unpack=False,
                       exclude=None, **kw):
