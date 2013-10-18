@@ -32,16 +32,18 @@ from dateutil import parser as dparser
 import time
 from pyface.timer.do_later import do_later
 
+
 class Grapher(HasTraits):
     downs = Int(100)
     graph = Instance(TimeSeriesGraph, ())
     use_smooth = Bool
+
     def traits_view(self):
         v = View(HGroup(Item('downs'), Item('use_smooth')),
 
-               Item('graph', show_label=False, style='custom'),
-               resizable=True
-               )
+                 Item('graph', show_label=False, style='custom'),
+                 resizable=True
+        )
         return v
 
     def _downs_changed(self):
@@ -54,13 +56,13 @@ class Grapher(HasTraits):
         p1 = os.path.join(paths.data_dir, 'furnace_calibration', 'DPi32TemperatureMonitor001.txt')
         p2 = os.path.join(paths.data_dir, 'furnace_calibration', 'Eurotherm001.txt')
         func = lambda x: 1
-#        func = lambda x: time.mktime(dparser.parse(x.split('+')[0]).timetuple())
+        #        func = lambda x: time.mktime(dparser.parse(x.split('+')[0]).timetuple())
         data1 = loadtxt(p1, unpack=True,
-                        converters={0:float, 1:func},
-                         skiprows=1, delimiter='\t')
+                        converters={0: float, 1: func},
+                        skiprows=1, delimiter='\t')
         data2 = loadtxt(p2, unpack=True,
-                        converters={0:float, 1:func},
-                    skiprows=1, delimiter='\t')
+                        converters={0: float, 1: func},
+                        skiprows=1, delimiter='\t')
         return data1, data2
 
     def replot(self):
@@ -68,7 +70,7 @@ class Grapher(HasTraits):
         g.clear()
         data1, data2 = self.get_data()
         x = data1[0]
-#        print x
+        #        print x
         y = data1[2]
 
         x2 = data2[0]
@@ -78,19 +80,19 @@ class Grapher(HasTraits):
 
                    xtitle='Time (s)',
                    ytitle='Temperature (C)'
-                   )
+        )
         g.new_series(x=x, y=y, downsample=self.downs,
-                      use_smooth=self.use_smooth,
-                      time_series=False,
-                      normalize=True,
-                      scale=1 / 3600.
-                      )
+                     use_smooth=self.use_smooth,
+                     time_series=False,
+                     normalize=True,
+                     scale=1 / 3600.
+        )
         g.new_series(x=x2, y=y2, downsample=self.downs,
-                      use_smooth=self.use_smooth,
-                      time_series=False,
-                      normalize=True,
-                      scale=1 / 3600.
-                      )
+                     use_smooth=self.use_smooth,
+                     time_series=False,
+                     normalize=True,
+                     scale=1 / 3600.
+        )
 
         g.set_series_label('Tin')
 
@@ -104,6 +106,7 @@ def extract_data(p):
     '''
     '''
     import csv
+
     reader = csv.reader(open(p, 'U'), delimiter='\t')
     x = []
     y = []
@@ -135,7 +138,7 @@ def extract_data(p):
 if __name__ == '__main__':
     g = Grapher()
     g.replot()
-#    do_later(g.plot)
+    #    do_later(g.plot)
     g.configure_traits()
 # #    p1 = os.path.join(paths.data_dir, 'furnace_calibration', 'DPi32TemperatureMonitor002.txt')
 #    p1 = os.path.join(paths.data_dir, 'furnace_calibration', 'DPi32TemperatureMonitor001.txt')

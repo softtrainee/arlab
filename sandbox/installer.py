@@ -38,6 +38,7 @@ import shutil
     move support files into place
 '''
 
+
 def main():
     if install_epd():
         return
@@ -63,6 +64,7 @@ def main():
     if move_support_files(root):
         return
 
+
 def move_support_files(root, version='processing'):
     home = os.path.expanduser('~')
 
@@ -70,6 +72,7 @@ def move_support_files(root, version='processing'):
     dst = os.path.join(home, name)
     src = os.path.join(root, name)
     shutil.copytree(src, dst)
+
 
 def install_python_package(root, name, version=None):
     if version:
@@ -94,6 +97,7 @@ def install_epd():
 
     if user_cancel():
         return True
+
 
 def user_cancel():
     '''

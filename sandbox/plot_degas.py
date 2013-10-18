@@ -29,6 +29,7 @@ from src.managers.manager import Manager
 
 DEGAS = os.path.join(paths.data_dir, 'degas')
 
+
 class DegasViewer(Manager):
     open = Button
     build = Button
@@ -42,9 +43,9 @@ class DegasViewer(Manager):
 
     def traits_view(self):
         return View(
-                    Item('open', show_label=False),
-                    Item('build', show_label=False),
-                     resizable=True)
+            Item('open', show_label=False),
+            Item('build', show_label=False),
+            resizable=True)
 
     def open_graph(self, p, save=False, offset=(0, 0)):
         g = TimeSeriesStackedGraph(panel_height=190)
@@ -77,7 +78,6 @@ class DegasViewer(Manager):
         g.set_y_title('Pressure (torr)', plotid=1)
         g.plots[1].value_axis.tick_label_formatter = lambda x: '{:0.2e}'.format(x)
 
-
         g.new_plot()
         g.new_series(x, temp, plotid=2)
         g.set_y_title('Temp (C)', plotid=2)
@@ -87,7 +87,6 @@ class DegasViewer(Manager):
         g.window_x = 50 + offset[0]
         g.window_y = 50 + offset[1]
         g.set_title(os.path.basename(p))
-
 
         g.edit_traits()
         if save:
@@ -102,10 +101,10 @@ class DegasViewer(Manager):
                 self.open_graph(os.path.join(DEGAS, p), save=True, offset=(15 * i, 5 * i))
                 i += 1
 
+
 def main():
     dg = DegasViewer()
     dg.configure_traits()
-
 
 
 if __name__ == '__main__':

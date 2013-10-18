@@ -35,6 +35,7 @@ def write_stats(stats):
     f.write('%s\n' % stats)
     f.close()
 
+
 def scan(root):
     '''
     
@@ -42,9 +43,9 @@ def scan(root):
     with open(os.path.join(root, 'sloccount_stats.txt'), 'w') as f:
         os.environ['PATH'] = ':'.join((os.environ['PATH'], '/usr/local/bin'))
         subprocess.call(['/usr/local/bin/sloccount', root, 'cached'],
-                                      stdout=f
-                                      )
-    # parse results
+                        stdout=f
+        )
+        # parse results
     with open(os.path.join(root, 'sloccount_stats.txt'), 'r') as f:
         line = f.next().strip()
         while line != 'Computing results.':
@@ -56,10 +57,8 @@ def scan(root):
         while line != 'Totals grouped by language (dominant language first):':
             line = f.next().strip()
 
-
         line = f.next().strip()
         while line:
-
             # parse individual languages
             lang, stats = line.split(':')
             n, per = stats.strip().split(' ')
@@ -75,6 +74,7 @@ def plot_stats(root):
     '''
     from pylab import plot, show, date2num, subplot
     from datetime import datetime
+
     with open(os.path.join(root, 'stats.txt')) as f:
         lines = f.read().split('\n')
         lines = [l for l in lines if l.rstrip()]
@@ -93,7 +93,6 @@ def plot_stats(root):
                 t -= start_t
 
             if i + 1 < len(lines):
-
                 nfile = int(lines[i + 1].split(':')[1])
                 nlines = int(lines[i + 2].split(':')[1])
                 tlines = int(lines[i + 3].split(':')[1])
@@ -110,8 +109,8 @@ def plot_stats(root):
     plot(x, y3, 'b')
     show()
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     root = os.getcwd()
     scan(root)
     # plot_stats(root)

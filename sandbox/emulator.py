@@ -20,12 +20,14 @@ import sys
 import select
 import socket
 
+
 class Server(object):
     def start_server(self, host, port):
         print 'Starting server {} {}'.format(host, port)
         server = SocketServer.TCPServer((host, port), Emulator)
         server.allow_reuse_address = True
         server.serve_forever()
+
 
 class LinkServer(object):
     def start_server(self, host, port):
@@ -67,7 +69,6 @@ class LinkServer(object):
 
 
 class Emulator(object):
-
     cnt = 0
     state = '1'
     #===========================================================================
@@ -93,8 +94,8 @@ class Emulator(object):
         # if self.cnt%2==0:
         #    r='T1'
 
-#        self.cnt+=1
-#        r='T'+self.state
+        #        self.cnt+=1
+        #        r='T'+self.state
         print 'Get valve states ', r
         return r
 
@@ -105,7 +106,7 @@ class Emulator(object):
                         'E', '1',
                         'F', '1',
                         'G', '0',
-                        ])
+        ])
 
     def GetManualState(self, name):
         print 'Get manual state - %s' % name
@@ -197,7 +198,7 @@ class Emulator(object):
             [38, 1, 1.5],
             [39, 10, 1.5],
             [40, 100, 1.5],
-            ]
+        ]
         return '\n'.join([','.join(['%f' % ri for ri in r]) for r in d])
 
     def GetDataNow(self, *args):
@@ -229,8 +230,8 @@ class Emulator(object):
         print 'set tuning %s' % name
         return 'OK'
 
-class EmulatorHandler(SocketServer.BaseRequestHandler, Emulator):
 
+class EmulatorHandler(SocketServer.BaseRequestHandler, Emulator):
     #===========================================================================
     # BaseRequestHandler protocol
     #===========================================================================
@@ -259,8 +260,6 @@ class EmulatorHandler(SocketServer.BaseRequestHandler, Emulator):
 
         print 'recieved (%i) - %s, %s' % (len(data), data, result)
         self.request.send(result + '\n')
-
-
 
 
 class LinkEmulator(Emulator):
@@ -295,6 +294,7 @@ class LinkEmulator(Emulator):
 
         return result
 
+
 if __name__ == '__main__':
     args = sys.argv[1:]
 
@@ -302,8 +302,8 @@ if __name__ == '__main__':
     if len(args) == 1:
         portn = int(args[0])
 
-#    s = Server()
-#    s.start_server('129.138.12.138', portn)
+    #    s = Server()
+    #    s.start_server('129.138.12.138', portn)
 
     ls = LinkServer()
     ls.start_server('129.138.12.138', 1070)

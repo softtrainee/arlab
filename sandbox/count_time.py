@@ -31,8 +31,10 @@ from multiprocessing import Pool
 from src.data_processing.regression.ols import OLS
 from src.stats import calculate_mswd
 
+
 def mcalculate_mswd(d):
     return calculate_mswd(*d)
+
 
 def regress(d, degree=2):
 
@@ -41,10 +43,12 @@ def regress(d, degree=2):
     o = OLS(*d, fitdegree=degree)
     return [o.get_coefficients()[2], o.get_coefficient_standard_errors()[2]]
 
+
 class CountAnalyzer(HasTraits):
     graph = Instance(Graph)
     regressor = Instance(Regressor)
     test = Button
+
     def _regressor_default(self):
         r = Regressor()
         return r
@@ -57,7 +61,7 @@ class CountAnalyzer(HasTraits):
         g.new_plot(padding=[30, 20, 10, 10], ytitle='Ar36_err')
         g.new_plot(padding=[30, 20, 10, 10], ytitle='Ar40/Ar36')
         g.new_plot(padding=[30, 20, 10, 10], ytitle='%Diff')
-#        g.new_plot(padding=[20, 20, 10, 10], ytitle='Ar40_err')
+        #        g.new_plot(padding=[20, 20, 10, 10], ytitle='Ar40_err')
         return g
 
     def traits_view(self):
@@ -65,7 +69,7 @@ class CountAnalyzer(HasTraits):
                  Item('graph', show_label=False, style='custom'), resizable=True,
                  height=0.92,
                  width=0.55
-                 )
+        )
         return v
 
     def calculate_intercept(self, xs, ys):
@@ -159,15 +163,15 @@ class CountAnalyzer(HasTraits):
         ys = array(ys)
 
         mxs = masked_array(xs, mask=outs)
-#        print 's', sum(mxs), outs
+        #        print 's', sum(mxs), outs
         mys = masked_array(ys, mask=outs)
         o = OLS(mxs, mys, fitdegree=degree)
         coeffs = o.get_coefficients()
 
         n = len(xs) - sum(outs)
-#        coeff_errs = o.get_coefficient_standard_errors()
+        #        coeff_errs = o.get_coefficient_standard_errors()
 
-#        ymean = ys.mean()
+        #        ymean = ys.mean()
         yeval = polyval(coeffs, xs)
 
         # calculate detection_tol. use error of fit
@@ -189,10 +193,9 @@ class CountAnalyzer(HasTraits):
             do_omits = [True] * len(rids)
         if colors is None:
             colors = [None] * len(rids)
-        # load the file
-#        args = self.load_data2()
+            # load the file
+        #        args = self.load_data2()
         for rid, do_omit, color in zip(rids, do_omits, colors):
-
             args = self.load_data(rid, do_omit=do_omit)
             oxs_40, oys_40 = args[0], args[1]
             oxs_36, oys_36 = args[-2], args[-1]
@@ -219,11 +222,11 @@ class CountAnalyzer(HasTraits):
 
             ro = r[-1]
             ys = (r - ro) / ro * 100
-    #        mswd calculation
-    #        err = ((io40_e / io40) ** 2 + (io36_e / io36) ** 2) ** 0.5 * r
-    # #        for ri, ei in zip(r, err):
-    # #            print ri, ei
-    #        resultmswd = pool.map(mcalculate_mswd, [(r[:i], err[:i]) for i in range(len(r))])
+            #        mswd calculation
+            #        err = ((io40_e / io40) ** 2 + (io36_e / io36) ** 2) ** 0.5 * r
+            # #        for ri, ei in zip(r, err):
+            # #            print ri, ei
+            #        resultmswd = pool.map(mcalculate_mswd, [(r[:i], err[:i]) for i in range(len(r))])
             self.graph.new_series(xs, ys, plotid=5, **kw)
 
         self.graph.redraw()
@@ -232,9 +235,10 @@ class CountAnalyzer(HasTraits):
         t = Thread(target=self.analyze_count_times, kwargs=dict(rids=['769', '769'],
                                                                 # colors=['black', 'green'],
                                                                 do_omits=[False, True]
-                                                                ))
+        ))
         t.start()
-#        time.sleep(2)
+
+    #        time.sleep(2)
 #        t = Thread(target=self.analyze_count_times, kwargs=dict(rid='769', color='green', do_omit=True))
 #        t.start()
 #
@@ -251,22 +255,22 @@ if __name__ == '__main__':
     # d.configure_traits()
     x, y, _, _ = d.load_data('769')
 
-#    outlier_mask = zeros(len(x))
+    #    outlier_mask = zeros(len(x))
     step = 10
     m = zeros(step)
     end = len(x)
     end = 20
     for i in range(10, end, step):
-#    for i in range(10, 20, step):
-#    for i in [10, 10]:
-#        oom = outlier_mask[:i]
+    #    for i in range(10, 20, step):
+    #    for i in [10, 10]:
+    #        oom = outlier_mask[:i]
         d._detect_outliers_by_cluster(x[:i], y[:i], m)
 
-#        print m
+        #        print m
         m = hstack((m, zeros(step)))
-#        print
+    #        print
     i = 1
-    for  xi, mi, oo in zip(x[:50], m[:50], d.omits[:50]):
+    for xi, mi, oo in zip(x[:50], m[:50], d.omits[:50]):
         if mi:
             match = oo == 'User omitted'
         else:
