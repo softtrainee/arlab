@@ -135,8 +135,8 @@ class DetectorRatioTabularAdapter(BaseTabularAdapter):
                (SIGMA_1, 'error'),               
                ('Calc. IC', 'calc_ic'),
                ('ICFactor', 'ic_factor'),
-               ('Ref. Ratio', 'ref_ratio')
-               
+               ('Ref. Ratio', 'ref_ratio'),
+
                ('Non IC Corrected', 'noncorrected_value'),
                (SIGMA_1, 'noncorrected_error'),
                ]
@@ -188,7 +188,8 @@ class DetectorRatio(ComputedValue):
     calc_ic=Property(depends_on='value')
     ref_ratio=Float
     def _get_calc_ic(self):
-        return self.non_corrected_value/self.ref_ratio
+        return self.noncorrected_value / self.ref_ratio
+
 
 class ExtractionValue(NamedValue):
     units = Str
@@ -330,8 +331,8 @@ class AnalysisView(HasTraits):
             
             ci.trait_set(value=floatfmt(rr.nominal_value),
                          error=floatfmt(rr.std_dev),
-                         noncorrected_value=floatfmt(r.nominal_value),
-                         noncorrected_error=floatfmt(r.std_dev),
+                         noncorrected_value=r.nominal_value,
+                         noncorrected_error=r.std_dev,
                          ic_factor=ic)
 
     def _load_air_computed(self, an, new_list):

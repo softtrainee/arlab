@@ -605,7 +605,7 @@ class ArArAge(Loggable):
         else:
 
             keys = self.arar_result.keys()
-            self.warning('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ NO KEY {} {}'.format(key, keys))
+            #self.warning('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ NO KEY {} {}'.format(key, keys))
             return ufloat(0, 1e-20)
 
             #if key.startswith('s'):
