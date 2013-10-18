@@ -266,16 +266,14 @@ class AnalysisView(HasTraits):
             n, d = nd.split('/')
             r = self._get_non_corrected_ratio(nd)
 
-            iso = self._get_isotope(d)
-            ic = '1.0'
-            if iso:
-                det = iso.detector
-                ic = floatfmt(an.get_ic_factor(det).nominal_value)
-
             if r is not None:
+                d_iso = self._get_isotope(d)
+                n_iso = self._get_isotope(n)
+                ic = d_iso.ic_factor / n_iso.ic_factor
+                rr = n_iso.ic_corrected_value() / d_iso.ic_corrected_value()
                 dr = DetectorRatio(name=name,
-                                   value=floatfmt(getattr(an, nd).nominal_value),
-                                   error=floatfmt(getattr(an, nd).std_dev),
+                                   value=floatfmt(rr.nominal_value),
+                                   error=floatfmt(rr.std_dev),
                                    noncorrected_value=floatfmt(r.nominal_value),
                                    noncorrected_error=floatfmt(r.std_dev),
                                    ic_factor=ic,
