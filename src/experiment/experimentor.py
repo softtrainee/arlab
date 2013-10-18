@@ -186,6 +186,9 @@ class Experimentor(IsotopeDatabaseManager):
         db = self.db
         with db.session_ctx():
             for ai in ans:
+                if ai.skip:
+                    continue
+                
                 ln = ai.labnumber
                 # is run in cache
                 if not ln in cache:
@@ -200,7 +203,7 @@ class Experimentor(IsotopeDatabaseManager):
                 last = cache[ln]
 
                 aq = ai.aliquot
-                st = ''
+                s = -1
                 #egrp = -1
 
                 special = self._is_special(ln)
@@ -253,7 +256,7 @@ class Experimentor(IsotopeDatabaseManager):
                         last['aliquot'] = aq
 
                 if special:
-                    st = ''
+                    s = ''
                     egrp = -1
 
                 if ai.state == 'not run':

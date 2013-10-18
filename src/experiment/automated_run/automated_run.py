@@ -1170,23 +1170,25 @@ anaylsis_type={}
         if ion is not None:
             ion.position(pos, detector, dac)
             if update_labels:
-                # update the plot_panel labels
-                plots = self.plot_panel.isotope_graph.plots
-                n = len(plots)
-                for i, det in enumerate(self._active_detectors):
-                    if i < n:
-                        plots[i].y_axis.title = '{} {}'.format(det.name, det.isotope)
-
-                    self.arar_age.set_isotope_detector(det)
-
-                #remove non active isotopes
-                for iso in self.arar_age.isotopes.keys():
-                    det = next((di for di in self._active_detectors if di.isotope == iso), None)
-                    if det is None:
-                        self.arar_age.isotopes.pop(iso)
-
-                self.plot_panel.analysis_view.load(self)
-                self.plot_panel.analysis_view.refresh_needed = True
+                if self.plot_panel:
+                    if self.plot_panel.isotope_graph:
+                        # update the plot_panel labels
+                        plots = self.plot_panel.isotope_graph.plots
+                        n = len(plots)
+                        for i, det in enumerate(self._active_detectors):
+                            if i < n:
+                                plots[i].y_axis.title = '{} {}'.format(det.name, det.isotope)
+        
+                            self.arar_age.set_isotope_detector(det)
+    
+                    #remove non active isotopes
+                    for iso in self.arar_age.isotopes.keys():
+                        det = next((di for di in self._active_detectors if di.isotope == iso), None)
+                        if det is None:
+                            self.arar_age.isotopes.pop(iso)
+    
+                    self.plot_panel.analysis_view.load(self)
+                    self.plot_panel.analysis_view.refresh_needed = True
 
     def _peak_hop(self, ncycles, hops, data_write_hook, starttime, series):
         '''

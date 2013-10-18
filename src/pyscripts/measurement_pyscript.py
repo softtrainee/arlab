@@ -385,10 +385,10 @@ class MeasurementPyScript(ValvePyScript):
 
     @verbose_skip
     @command_register
-    def set_deflection(self, detname, v=None):
+    def set_deflection(self, detname, v=''):
 
-        if v is None:
-            self._get_deflection_from_file(detname)
+        if v =='':
+            v=self._get_deflection_from_file(detname)
 
         if v is not None:
             v = '{},{}'.format(detname, v)
