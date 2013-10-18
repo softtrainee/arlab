@@ -46,7 +46,10 @@ class MeasurementPyScript(ValvePyScript):
 
     _detectors = None
     abbreviated_count_ratio = None
-
+    def gosub(self, *args, **kw):
+        kw['automated_run']=self.automated_run
+        super(MeasurementPyScript, self).gosub(*args, **kw)
+        
     def reset(self, arun):
         self.automated_run = arun
 
@@ -275,11 +278,17 @@ class MeasurementPyScript(ValvePyScript):
         self._automated_run_call('py_set_spectrometer_parameter', *args, **kw)
 
     def _get_spectrometer_parameter(self, *args, **kw):
-        self._automated_run_call('py_get_spectrometer_parameter', *args, **kw)
+        return self._automated_run_call('py_get_spectrometer_parameter', *args, **kw)
 
         #===============================================================================
     # set commands
     #===============================================================================
+    
+    @verbose_skip
+    @command_register
+    def is_last_run(self):
+        return self._automated_run_call('py_is_last_run')
+        
     @verbose_skip
     @command_register
     def clear_conditions(self):

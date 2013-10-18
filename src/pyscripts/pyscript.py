@@ -212,7 +212,8 @@ class PyScript(Loggable):
 
     def execute(self, new_thread=False, bootstrap=True,
                 trace=False,
-                finished_callback=None):
+                finished_callback=None, 
+                argv=None):
         if bootstrap:
             self.bootstrap()
 
@@ -220,7 +221,7 @@ class PyScript(Loggable):
             self.test()
 
         def _ex_():
-            self._execute(trace)
+            self._execute(trace, argv)
             if finished_callback:
                 finished_callback()
 
@@ -258,12 +259,12 @@ class PyScript(Loggable):
             #         else:
             #             return _ex_()
 
-    def test(self):
+    def test(self, argv=None):
         if not self.syntax_checked:
             self.testing_syntax = True
             self._syntax_error = True
 
-            r = self._execute()
+            r = self._execute(argv=argv)
 
             if r is not None:
                 self.info('invalid syntax')
@@ -297,7 +298,7 @@ class PyScript(Loggable):
 
         return self._tracer
 
-    def execute_snippet(self, trace=False):
+    def execute_snippet(self, trace=False, argv=None):
         safe_dict = self.get_context()
 
         if trace:
@@ -315,6 +316,8 @@ class PyScript(Loggable):
                 return e
             script.__dict__.update(safe_dict)
             try:
+                script.main(*argv)
+            except TypeError:
                 script.main()
             except AttributeError:
                 return MainError
@@ -324,19 +327,13 @@ class PyScript(Loggable):
             code_or_err = self.compile_snippet(snippet)
             if not isinstance(code_or_err, Exception):
                 try:
-
-                #                 sys.settrace(None)
                     exec code_or_err in safe_dict
-
-                    safe_dict['main']()
-                    #                 db = PyScriptDebugger()
-
-                    #                 expr = "safe_dict['main']()"
-                    #                 db.runeval(expr, locals())
-
-                    #                 import pdb
-                    #                 pdb.runeval(expr)
-
+                    func=safe_dict['main']
+                    try:
+                        func(*argv)
+                    except TypeError:
+                        func()
+                        
                 except KeyError, e:
                     return MainError()
                 except Exception, e:
@@ -455,7 +452,7 @@ class PyScript(Loggable):
             #==============================================================================
 
     @command_register
-    def gosub(self, name=None, root=None, klass=None, **kw):
+    def gosub(self, name=None, root=None, klass=None, argv=None, **kw):
         if not name.endswith('.py'):
             name += '.py'
 
@@ -502,7 +499,7 @@ class PyScript(Loggable):
 
         if self.testing_syntax:
             s.bootstrap()
-            err = s.test()
+            err = s.test(argv=argv)
             if err:
                 raise PyscriptError(self.name, err)
 
@@ -510,7 +507,7 @@ class PyScript(Loggable):
             if not self._cancel:
                 self.info('doing GOSUB')
                 self._gosub_script = s
-                s.execute()
+                s.execute(argv=argv)
                 self._gosub_script = None
                 if not self._cancel:
                     self.info('gosub finished')
@@ -637,13 +634,13 @@ class PyScript(Loggable):
                 # private
                 #===============================================================================
 
-    def _execute(self, trace=False):
+    def _execute(self, trace=False, argv=None):
 
         self._cancel = False
         self._completed = False
         self._truncate = False
 
-        error = self.execute_snippet(trace)
+        error = self.execute_snippet(trace, argv)
 
         if error:
             return error
