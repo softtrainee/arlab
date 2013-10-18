@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  HasTraits, Array, List, Event, Property, cached_property
+from traits.api import HasTraits, Array, List, Event, Property, cached_property
 #============= standard library imports ========================
 import math
 from numpy import array, asarray, where, vectorize
@@ -28,8 +28,8 @@ from src.constants import PLUSMINUS, ALPHAS
 class BaseRegressor(HasTraits):
     xs = Array
     ys = Array
-#    xs = Any
-#    ys = Any
+    #    xs = Any
+    #    ys = Any
     xserr = Array
     yserr = Array
 
@@ -42,8 +42,9 @@ class BaseRegressor(HasTraits):
     fit = Property
     _fit = None
 
+
     def _xs_changed(self):
-#        if len(self.xs) and len(self.ys):
+    #        if len(self.xs) and len(self.ys):
         self.calculate()
 
     def _ys_changed(self):
@@ -67,7 +68,7 @@ class BaseRegressor(HasTraits):
         s = u''
         for a, ci, ei in zip(ALPHAS, cs, ce):
             pp = '({:0.2f}%)'.format(self.percent_error(ci, ei))
-#            print pp, ci, ei, self.percent_error(ci, ei)
+            #            print pp, ci, ei, self.percent_error(ci, ei)
             fmt = '{{:0.{}e}}' if abs(ci) < math.pow(10, -sig_figs) else '{{:0.{}f}}'
             ci = fmt.format(sig_figs).format(ci)
 
@@ -77,9 +78,9 @@ class BaseRegressor(HasTraits):
             vfmt = u'{}= {} +/- {} {}'
             coeffs.append(vfmt.format(a, ci, ei, pp))
 
-#        s = ', '.join([fmt.format(a, ci, pm, cei, self.percent_error(ci, cei))
-#                       for a, ci, cei in zip(ALPHAS, cs, ce)
-#                       ])
+        #        s = ', '.join([fmt.format(a, ci, pm, cei, self.percent_error(ci, cei))
+        #                       for a, ci, cei in zip(ALPHAS, cs, ce)
+        #                       ])
         s = u', '.join(coeffs)
         return s
 
@@ -137,8 +138,8 @@ class BaseRegressor(HasTraits):
         res = self.calculate_residuals()
 
         ss_res = (res ** 2).sum()
-#        s = std(devs)
-#        s = (dd.sum() / (devs.shape[0])) ** 0.5
+        #        s = std(devs)
+        #        s = (dd.sum() / (devs.shape[0])) ** 0.5
 
         '''
             mass spec calculates error in fit as 
@@ -173,13 +174,13 @@ class BaseRegressor(HasTraits):
 
     def calculate_ci(self, rx, rmodel):
         cors = self._calculate_ci(rx, rmodel)
-#         print cors
+        #         print cors
         if rmodel is not None and cors is not None:
             if rmodel.shape[0] and cors.shape[0]:
                 return rmodel - cors, rmodel + cors
 
-#                 lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
-#                 return asarray(lci), asarray(uci)
+            #                 lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
+            #                 return asarray(lci), asarray(uci)
 
     def _calculate_ci(self, rx, rmodel):
         if isinstance(rx, (float, int)):
@@ -187,8 +188,8 @@ class BaseRegressor(HasTraits):
 
         X = self.xs
         Y = self.ys
-#         model = self.predict(X)
-#         rmodel = self.predict(rx)
+        #         model = self.predict(X)
+        #         rmodel = self.predict(rx)
         cors = self._calculate_confidence_interval(X, Y, rx, rmodel)
         return cors
 
@@ -222,12 +223,12 @@ class BaseRegressor(HasTraits):
         n = self.xs.shape[0]
         obs = self.ys
 
-#         for di in dir(self._result):
-#             print di
+        #         for di in dir(self._result):
+        #             print di
 
-#         model = self._result.fittedvalues
+        #         model = self._result.fittedvalues
         model = self.predict(self.xs)
-#         print 'sssss', model.shape, obs.shape
+        #         print 'sssss', model.shape, obs.shape
         if model is not None:
             return (1. / (n - 2) * ((obs - model) ** 2).sum()) ** 0.5
         else:

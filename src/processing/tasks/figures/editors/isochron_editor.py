@@ -30,11 +30,11 @@ class InverseIsochronEditor(FigureEditor):
 
     parent_editor = None
 
-    #@on_trait_change('model:panels:figures:refresh_unknowns_table')
-    #def _handle_refresh(self, obj, name, old, new):
-    #    #print 'rebuild parent', obj.suppress
-    #    if self.parent_editor and not obj.suppress:
-    #        self.parent_editor.rebuild()
+    @on_trait_change('figure_model:panels:figures:refresh_unknowns_table')
+    def _handle_refresh(self, obj, name, old, new):
+        print 'rebuild parent', obj.suppress
+        if self.parent_editor and not obj.suppress:
+            self.parent_editor.rebuild()
 
     def load_fits(self, refiso):
         pass

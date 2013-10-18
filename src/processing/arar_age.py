@@ -376,8 +376,7 @@ class ArArAge(Loggable):
                                     #ic=ic,
                                     #ic=self.ic_factor,
                                     include_decay_error=include_decay_error,
-                                    arar_constants=self.arar_constants
-        )
+                                    arar_constants=self.arar_constants)
 
         if result:
             self.arar_result = result

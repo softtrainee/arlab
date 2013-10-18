@@ -64,16 +64,16 @@ class SummaryTabularAdapter(TabularAdapter):
         return floatfmt(self.item.mswd)
 
     def _get_kca_text(self):
-        return floatfmt(self.item.weighted_kca.nominal_value)
+        return floatfmt(self.item.weighted_kca.nominal_value, n=1)
 
     def _get_kca_error_text(self):
-        return floatfmt(self.item.weighted_kca.std_dev)
+        return floatfmt(self.item.weighted_kca.std_dev, n=2)
 
     def _get_age_text(self):
-        return floatfmt(self.item.weighted_age.nominal_value)
+        return floatfmt(self.item.weighted_age.nominal_value, n=5)
 
     def _get_age_error_text(self):
-        return floatfmt(self.item.weighted_age.std_dev)
+        return floatfmt(self.item.weighted_age.std_dev, n=6)
 
     def set_widths(self, ws):
         for (_, ai), wi in zip(self.columns, ws):

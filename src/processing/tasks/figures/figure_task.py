@@ -496,8 +496,9 @@ class FigureTask(AnalysisEditTask):
 
         super(FigureTask, self)._active_editor_changed()
 
-    #@on_trait_change('active_editor:refresh_unknowns_table')
-    @on_trait_change('active_editor:model:panels:figures:refresh_unknowns_table')
+
+    #@on_trait_change('active_editor:figure_model:panels:figures:refresh_unknowns_table')
+    @on_trait_change('active_editor:refresh_unknowns_table')
     def _ac_refresh_table(self):
         if self.unknowns_pane:
             self.unknowns_pane.refresh_needed = True
