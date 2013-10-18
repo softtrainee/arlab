@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2012 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,13 +14,37 @@
 # limitations under the License.
 #===============================================================================
 
-
-
 #============= enthought library imports =======================
+from traits.api import HasTraits
+from traitsui.api import View, Item, TableEditor
+import os
+from src.paths import paths
 #============= standard library imports ========================
-from src.managers.peak_regression_manager import main
 #============= local library imports  ==========================
-if __name__ == '__main__':
+paths.build('_test')
 
-    main()
-#============= EOF ====================================
+
+def launch_device(name, path):
+    print 'Launching: {}'.format(name)
+    print 'Config File: {}'.format(path)
+
+    from src.hardware.pid_controller import DevelopmentPidController
+
+    klass = DevelopmentPidController
+
+    dev = klass(name=name, config_path=path)
+    dev.bootstrap()
+    dev.setup_scan()
+    dev.start_scan()
+    print dev
+    dev.configure_traits()
+
+
+if __name__ == '__main__':
+    from src.helpers.logger_setup import logging_setup
+
+    logging_setup('device_launcher')
+    name = 'PIDController'
+    path = os.path.join(paths.device_dir, 'pid_controller.cfg')
+    launch_device(name, path)
+#============= EOF =============================================

@@ -72,7 +72,6 @@ import time
 
 
 def test(protocol, client):
-
     print '=' * 80
     print 'Testing commands'
     print '=' * 80
@@ -91,6 +90,7 @@ def test(protocol, client):
     print 'Finished testing commands'
     print '=' * 80
 
+
 def main(launch=False, simulator=False):
     if launch:
         # launch pychron
@@ -98,12 +98,13 @@ def main(launch=False, simulator=False):
         # launch remote hardware server
         subprocess.Popen(['python', './launchers/remote_hardware_server.py'])
         # use testclient to send commands
-#        time.sleep()
+    #        time.sleep()
     else:
-#    run_test = raw_input(' execute test y/n [y]>> ') == '' or 'y'
-#    if not run_test:
-#        return
+    #    run_test = raw_input(' execute test y/n [y]>> ') == '' or 'y'
+    #    if not run_test:
+    #        return
         from src.messaging.testclient import Client
+
         client = Client(host='localhost',
                         port=1063)
         if simulator:
@@ -148,11 +149,10 @@ def mass_spec_simulator(client):
 
 if __name__ == '__main__':
     import argparse
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-l', '--launch', action='store_true')
     parser.add_argument('-s', '--simulator', action='store_true')
-
-
 
     args = parser.parse_args()
     main(launch=args.launch,

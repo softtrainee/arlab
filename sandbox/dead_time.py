@@ -47,18 +47,18 @@ class DeadTime():
         rsind = header.index('Run Script')
 
         nshots = dict(one36=[],
-                    two36=[],
-                    three36=[],
-                    four36=[],
-                    five36=[],
-                    six36=[],
-                    one40=[],
-                    two40=[],
-                    three40=[],
-                    four40=[],
-                    five40=[],
-                    six40=[]
-                    )
+                      two36=[],
+                      three36=[],
+                      four36=[],
+                      five36=[],
+                      six36=[],
+                      one40=[],
+                      two40=[],
+                      three40=[],
+                      four40=[],
+                      five40=[],
+                      six40=[]
+        )
         for l in reader:
             if not l or l[0] == '':
                 break
@@ -95,13 +95,14 @@ class DeadTime():
 
 if __name__ == '__main__':
     from numpy import linspace, polyfit, polyval
+
     d = DeadTime()
     g = Graph()
 
     g.new_plot(padding=[30, 10, 20, 40])
     g.new_plot(padding=[30, 10, 20, 40], show_legend=True)
     nshots = d.read_csv()
-#    taus = range(5, 40, 5)
+    #    taus = range(5, 40, 5)
     taus = linspace(0, 30, 41)
     rratios1 = []
     mswds1 = []
@@ -113,7 +114,7 @@ if __name__ == '__main__':
         print 'uncorrected ratio {} = {:0.2f} '.format(i, m1)
 
     for tau in taus:
-#        print 'calculating for dt= ', tau
+    #        print 'calculating for dt= ', tau
         for k in KEYS36:
             d._correct_for_deadtime(nshots, k, tau / 1e9)
 
@@ -134,12 +135,12 @@ if __name__ == '__main__':
         if tau % 5 == 0:
             g.new_series(x, ratios1, plotid=1, type='line')
             i = int((tau / 5) - 1)
-#            g.set_series_label('p', plotid=1, series=i)
-#            g.set_series_label('{} (ns)'.format(tau), plotid=1, series=i)
+        #            g.set_series_label('p', plotid=1, series=i)
+        #            g.set_series_label('{} (ns)'.format(tau), plotid=1, series=i)
 
 
-#    g.plots[1].legend.plots = dict([(k, v[0]) for k, v in g.plots[1].plots.iteritems()])
-#    print g.plots[1].legend.plots
+        #    g.plots[1].legend.plots = dict([(k, v[0]) for k, v in g.plots[1].plots.iteritems()])
+        #    print g.plots[1].legend.plots
     g.new_series(taus, mswds1, plotid=0, type='line_scatter')
     g.set_y_limits(min(mswds1) - 5, max(mswds1) + 5, plotid=0)
 
@@ -157,11 +158,11 @@ if __name__ == '__main__':
     g.set_y_title('MSWD', plotid=0)
 
     g.add_vertical_rule(dt)
-#    g.add_plot_label('dead time (ns)= {:0.2f}'.format(dt), 235, 100)
-#    g.add_data_label('dead time (ns)= {:0.2f}'.format(dt), dt, 30, plotid=0)
+    #    g.add_plot_label('dead time (ns)= {:0.2f}'.format(dt), 235, 100)
+    #    g.add_data_label('dead time (ns)= {:0.2f}'.format(dt), dt, 30, plotid=0)
     g.add_data_label(dt, polyval(coeffs1, dt), plotid=0)
 
-#    g.set_series_label('{} (ns)'.format(tau), plotid=1, series=0)
+    #    g.set_series_label('{} (ns)'.format(tau), plotid=1, series=0)
     g.configure_traits()
 
 #======== EOF ================================

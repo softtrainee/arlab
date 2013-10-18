@@ -14,6 +14,7 @@
 # limitations under the License.
 #===============================================================================
 from traits.etsconfig.etsconfig import ETSConfig
+
 ETSConfig.toolkit = 'qt4'
 import time
 
@@ -33,16 +34,17 @@ class Demo(HasTraits):
 
     def traits_view(self):
         v = View(
-                 Item('canvas',
-                      show_label=False,
-                      style='custom',
-                      editor=ComponentEditor()),
+            Item('canvas',
+                 show_label=False,
+                 style='custom',
+                 editor=ComponentEditor()),
 
-                 Item('editor', style='custom', show_label=False),
-                 resizable=True
-                 )
+            Item('editor', style='custom', show_label=False),
+            resizable=True
+        )
         return v
-# from src.ui.qt.pie_clock_editor import PieClockEditor
+
+    # from src.ui.qt.pie_clock_editor import PieClockEditor
 # from src.ui.thread import Thread
 # class Demo(HasTraits):
 #     pie_clock = Float
@@ -117,6 +119,8 @@ def setup(d):
     d.canvas.add_image_underlay(p, 0.7)
 
     d.editor.set_canvas(d.canvas)
+
+
 if __name__ == '__main__':
     d = Demo()
     setup(d)
