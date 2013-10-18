@@ -119,15 +119,15 @@ class BaseArArFigure(HasTraits):
                 prev = obj.prev_selection
 
             if prev != sel:
-                func(sel)
                 self._set_selected(ans, sel)
+                func(sel)
 
             obj.prev_selection = sel
 
         elif hasattr(obj, 'was_selected'):
             if obj.was_selected:
-                func(sel)
                 self._set_selected(ans, sel)
+                func(sel)
             obj.was_selected = False
             obj.prev_selection = None
         else:
@@ -288,7 +288,8 @@ class BaseArArFigure(HasTraits):
     def _set_renderer_selection(self, rs, sel):
         for rend in rs:
             meta = {'selections': sel}
-            rend.index.trait_set(metadata=meta, trait_change_notify=False)
+            rend.index.trait_set(metadata=meta,
+                                 trait_change_notify=False)
 
     #===============================================================================
     # property get/set

@@ -90,7 +90,7 @@ class Ideogram(BaseArArFigure):
         plot.value_axis.tick_label_formatter = lambda x: ''
         plot.value_axis.tick_visible = False
 
-        print 'ideo omit', self.group_id, omit
+        #print 'ideo omit', self.group_id, omit
         if omit:
             self._rebuild_ideo(omit)
 
@@ -135,9 +135,9 @@ class Ideogram(BaseArArFigure):
             name = 'Analysis #'
             for p in self.graph.plots:
                 if p.y_axis.title == name:
-                    r = p.value_range
-                    startidx += (r.high - r.low)
-                    #                 print 'asdfasfsa', p.index.data.get_size()
+                    for k, rend in p.plots.iteritems():
+                        if k.startswith(name):
+                            startidx += rend[0].index.get_size()
 
         ys = arange(startidx, startidx + n)
 

@@ -55,6 +55,7 @@ class FigureEditor(GraphEditor):
 
     @on_trait_change('figure_model:panels:figures:refresh_unknowns_table')
     def _handle_refresh(self, obj, name, old, new):
+        self.refresh_unknowns_table = True
         #if not obj.suppress_associated:
         #print 'figure editor refresh', id(self)
         for e in self.associated_editors:
@@ -114,7 +115,7 @@ class FigureEditor(GraphEditor):
             else:
                 e.items = ans
 
-    def rebuild(self, refresh_data=True, compress_groups=True):
+    def rebuild(self, refresh_data=False, compress_groups=True):
         ans = self._gather_unknowns(refresh_data, compress_groups=compress_groups)
 
         if ans:
@@ -123,7 +124,6 @@ class FigureEditor(GraphEditor):
             model, comp = timethis(self.get_component, args=(ans, po),
                                    msg='get_component {}'.format(self.__class__.__name__))
             #comp = self._get_component(ans, po)
-
             comp.invalidate_and_redraw()
 
             #if set_model:

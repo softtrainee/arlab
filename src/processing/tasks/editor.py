@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Event
 from traitsui.api import View, Item
 
 #============= standard library imports ========================
@@ -24,6 +24,8 @@ from src.envisage.tasks.base_editor import BaseTraitsEditor
 
 
 class BaseUnknownsEditor(BaseTraitsEditor):
+    refresh_unknowns_table = Event
+
     def _grouped_name(self, names, delimiter='-'):
         s = names[0]
         e = names[-1]

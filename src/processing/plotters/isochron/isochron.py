@@ -24,12 +24,12 @@ from numpy import array, linspace, delete
 from uncertainties import ufloat
 from src.codetools.simple_timeit import timethis
 
-from src.helpers.formatting import calc_percent_error
+from src.helpers.formatting import calc_percent_error, floatfmt
 from src.processing.argon_calculations import age_equation
 from src.processing.plotters.arar_figure import BaseArArFigure
 
 from src.stats.peak_detection import find_peaks
-from src.stats.core import calculate_weighted_mean
+from src.stats.core import calculate_weighted_mean, calculate_mswd, validate_mswd
 from src.graph.error_ellipse_overlay import ErrorEllipseOverlay
 from src.regression.new_york_regressor import ReedYorkRegressor
 
@@ -74,16 +74,9 @@ class InverseIsochron(Isochron):
 
         omit = self._get_omitted(self.sorted_analyses,
                                  omit='omit_iso')
-        print 'iso omit', omit
+        #print 'iso omit', omit
         if omit:
             self._rebuild_iso(omit)
-
-    #def max_x(self, attr):
-    #    return max([ai.nominal_value for ai in self._unpack_attr(attr)])
-    #
-    #def min_x(self, attr):
-    #    return min([ai.nominal_value for ai in self._unpack_attr(attr)])
-
     #===============================================================================
     # plotters
     #===============================================================================
@@ -99,15 +92,6 @@ class InverseIsochron(Isochron):
     def _add_plot(self, xs, ys, es, plotid, value_scale='linear'):
         pass
 
-    #def _get_analyses(self):
-    #    ans=self.analyses
-    #
-    #    for a in ans:
-    #        a.Ar40
-    #       #timethis(lambda :a.Ar40)
-    #
-    #    return ans
-
     def _plot_inverse_isochron(self, plot, pid):
         analyses = self.sorted_analyses
         plot.padding_left = 75
@@ -119,8 +103,6 @@ class InverseIsochron(Isochron):
         self._ref_age_units = refiso.arar_constants.age_units
 
         ans = [(a.Ar39, a.Ar36, a.Ar40) for a in analyses]
-        #ans= timethis(self._get_analyses)
-        #return
 
         a39, a36, a40 = array(ans).T
         try:
@@ -170,13 +152,8 @@ class InverseIsochron(Isochron):
 
         graph.new_series(rxs, rys, color=scatter.color)
         graph.set_series_label('fit{}'.format(self.group_id))
-        #self._fit_line=l
 
-        self._add_scatter_inspector(scatter,
-                                    # add_tool,
-                                    # value_format,
-                                    # additional_info
-        )
+        self._add_scatter_inspector(scatter)
 
         self._add_info(plot, reg, text_color=scatter.color)
 
@@ -203,12 +180,24 @@ class InverseIsochron(Isochron):
         s = self._ref_age_scalar
         u = self._ref_age_units
 
-        age = age_equation(j, xt, scalar=s)
+        age = age_equation(j, xt ** -1, scalar=s)
         v = age.nominal_value
         e = age.std_dev
         p = calc_percent_error(v, e)
 
-        age_line = 'Age= {:0.3f} +/-{:0.4f} ({}%) {}'.format(v, e, p, u)
+        ages, errors = zip(*[(ai.age.nominal_value, ai.age_error_wo_j)
+                             for ai in self.analyses
+                             if ai.temp_status == 0
+        ])
+
+        n = len(ages)
+        mswd = calculate_mswd(ages, errors)
+        mswd = '{:0.2f}'.format(mswd)
+        valid = validate_mswd(mswd, n)
+        if not valid:
+            mswd = '*{}'.format(mswd)
+        age_line = 'Age= {} +/-{} ({}%) {}'.format(floatfmt(v, n=3), floatfmt(e, n=4), p, u)
+        mswd_line = 'N= {} mswd= {}'.format(n, mswd)
         if label is None:
             label = OffsetPlotLabel(
                 offset=(0, 50 * self.group_id),
@@ -220,8 +209,9 @@ class InverseIsochron(Isochron):
             plot.overlays.append(label)
             self._plot_label = label
 
-        lines = '\n'.join((ratio_line, age_line))
-        label.text = '{}\n\n'.format(lines)
+        lines = '\n'.join((ratio_line, age_line, mswd_line))
+        label.text = '{}'.format(lines)
+        label.request_redraw()
 
     def update_index_mapper(self, obj, name, old, new):
         if new is True:
@@ -233,20 +223,9 @@ class InverseIsochron(Isochron):
         om = self._get_omitted(self.sorted_analyses)
         print 'replaot', id(self), om, self.group_id
         self._rebuild_iso(om)
-
-        #scatter = self.graph.plots[0].plots['data{}'.format(self.group_id)][0]
-
-        #p = scatter.index.metadata['selections']
-        #if p == om:
-        #    self._rebuild_iso(om)
-        #else:
-        #    scatter.index.metadata['selections'] = om
-
         self.suppress = False
 
     def _rebuild_iso(self, sel):
-        #print 'rebuild iso', sel
-        #print 'rebuild iso', sel, id(self), self.group_id, len(self.analyses)
         g = self.graph
         ss = [p.plots[pp][0] for p in g.plots
               for pp in p.plots
@@ -282,18 +261,11 @@ class InverseIsochron(Isochron):
 
     def update_graph_metadata(self, obj, name, old, new):
         if obj:
-        #if not self.suppress_metachange:
-        #print 'iso',new, self.suppress_metachange, id(self)
             self._filter_metadata_changes(obj, self._rebuild_iso, self.analyses)
-            #self._set_selected(self.analyses, sel)
 
-            #
-
-            #===============================================================================
-
-            # utils
-
-        #===============================================================================
+    #===============================================================================
+    # utils
+    #===============================================================================
     def _get_age_errors(self, ans):
         ages, errors = zip(*[(ai.age.nominal_value,
                               ai.age.std_dev)
@@ -324,16 +296,50 @@ class InverseIsochron(Isochron):
     #
     #    return wm, we, mswd, valid_mswd
 
-    def _calc_error(self, we, mswd):
-        ec = self.options.error_calc_method
-        n = self.options.nsigma
-        if ec == 'SEM':
-            a = 1
-        elif ec == 'SEM, but if MSWD>1 use SEM * sqrt(MSWD)':
-            a = 1
-            if mswd > 1:
-                a = mswd ** 0.5
-        return we * a * n
+        #def _calc_error(self, we, mswd):
+        #    ec = self.options.error_calc_method
+        #    n = self.options.nsigma
+        #    if ec == 'SEM':
+        #        a = 1
+        #    elif ec == 'SEM, but if MSWD>1 use SEM * sqrt(MSWD)':
+        #        a = 1
+        #        if mswd > 1:
+        #            a = mswd ** 0.5
+        #    return we * a * n
+        #def _calculate_individual_ages(self, include_j_err=False):
+        from numpy import polyfit
+        #reg=ReedYorkRegressor()
+        #def func(ai):
+        #    a40,a39,a36=ai.Ar40, ai.Ar39, ai.Ar36
+        #    x,y=a39/a40, a36/a40
+        #
+        #    #x,y=x.nominal_value, y.nominal_value
+        #    #calculate fit with atmosphere
+        #    #x0,y0=0, 1/295.5
+        #    #m,b=polyfit([x,x0],[y,y0], 1)
+        #
+        #    xs=[0,x.nominal_value]
+        #    xserr=[0, x.std_dev]
+        #    ys=[1/295.5, y.nominal_value]
+        #    yserr=[0, y.std_dev]
+        #
+        #    print xs,ys
+        #    reg.trait_set(xs=xs, ys=ys, xserr=xserr, yserr=yserr)
+        #    reg.calculate()
+        #
+        #    R = ufloat(reg.x_intercept, reg.x_intercept_error)
+        #    print R
+        #    #inverse x_intercept
+        #    #R=(m/-b)
+        #    j=ai.j
+        #    if not include_j_err:
+        #        j=j.nominal_value
+        #
+        #    age=age_equation(j, R**-1, arar_constants=ai.arar_constants)
+        #    return age.nominal_value, age.std_dev
+        #
+        #return zip(*[func(aa) for aa in self.analyses])
+
 
 #===============================================================================
 # labels
