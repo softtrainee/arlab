@@ -111,12 +111,13 @@ class SpectrometerManager(Manager):
             color = self.config_get(config, name, 'color', default='black')
             default_state = self.config_get(config, name, 'default_state', default=True, cast='boolean')
             isotope = self.config_get(config, name, 'isotope')
+            kind = self.config_get(config, name, 'kind', default='Faraday')
             self.spectrometer.add_detector(name=name,
                                            relative_position=relative_position,
                                            color=color,
                                            active=default_state,
-                                           isotope=isotope
-            )
+                                           isotope=isotope,
+                                           kind=kind)
 
         return True
 

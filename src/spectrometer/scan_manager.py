@@ -159,8 +159,11 @@ class ScanManager(Manager):
             with open(p, 'rb') as f:
                 try:
                     params = pickle.load(f)
-                    self.detector = spec.get_detector(params['detector'])
-                    self.isotope = params['isotope']
+
+                    det = spec.get_detector(params['detector'])
+                    if det.kind == 'Faraday':
+                        self.detector = det
+                        self.isotope = params['isotope']
 
                     for pi in self.graph_attr_keys:
                         try:
