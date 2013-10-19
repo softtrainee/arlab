@@ -16,10 +16,12 @@
 
 #============= enthought library imports =======================
 #============= standard library imports ========================
-from sqlalchemy.sql.expression import and_, func
-from sqlalchemy.orm.exc import NoResultFound
 from cStringIO import StringIO
 import hashlib
+
+from sqlalchemy.sql.expression import and_, func
+from sqlalchemy.orm.exc import NoResultFound
+
 #============= local library imports  ==========================
 from src.database.core.functions import delete_one
 from src.database.core.database_adapter import DatabaseAdapter
@@ -59,8 +61,7 @@ from src.database.orms.isotope.meas import meas_AnalysisTable, \
 from src.database.orms.isotope.proc import proc_DetectorIntercalibrationHistoryTable, \
     proc_DetectorIntercalibrationTable, proc_SelectedHistoriesTable, \
     proc_BlanksTable, proc_BackgroundsTable, proc_BlanksHistoryTable, proc_BackgroundsHistoryTable, \
-    proc_BlanksSetTable, proc_BackgroundsSetTable, proc_DetectorIntercalibrationSetTable, \
-    proc_DetectorParamHistoryTable, proc_IsotopeResultsTable, proc_FitHistoryTable, \
+    proc_IsotopeResultsTable, proc_FitHistoryTable, \
     proc_FitTable, proc_DetectorParamTable, proc_NotesTable, proc_FigureTable, proc_FigureAnalysisTable, \
     proc_FigurePrefTable, proc_TagTable, proc_ArArTable
 
@@ -504,7 +505,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def add_irradiation_position(self, pos, labnumber, irrad, level, **kw):
         if labnumber:
-            labnumber = self.get_labnumber(labnumber, )
+            labnumber = self.get_labnumber(labnumber)
 
         irrad = self.get_irradiation(irrad, )
         if isinstance(level, (str, unicode)):
@@ -513,13 +514,14 @@ class IsotopeAdapter(DatabaseAdapter):
         if level:
             dbpos = next((di for di in level.positions if di.position == pos), None)
             if not dbpos:
-                dbpos = irrad_PositionTable(position=pos,
-                                            labnumber=labnumber, **kw)
+                dbpos = irrad_PositionTable(position=pos, **kw)
+
                 dbpos.level_id = level.id
                 self._add_item(dbpos)
-                #                 level.positions.append(dbpos)
 
-        return dbpos
+            labnumber.irradiation_position = dbpos
+
+            return dbpos
 
     def add_irradiation_chronology(self, chronblob):
         '''
@@ -775,15 +777,19 @@ class IsotopeAdapter(DatabaseAdapter):
                       unique=True,
                       sess=None,
                       **kw):
+
+        sample = self.get_sample(sample)
         if unique:
-            ln = self.get_labnumber(labnumber, )
+            ln = self.get_labnumber(labnumber)
+            #print labnumber, ln, sample, ln.sample
+            if ln and sample and ln.sample != sample:
+                ln = None
         else:
             ln = None
 
         if ln is None:
             ln = gen_LabTable(identifier=labnumber, **kw)
 
-            sample = self.get_sample(sample, )
             if sample is not None:
                 ln.sample_id = sample.id
                 #                 sample.labnumbers.append(ln)
@@ -1037,11 +1043,15 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_script(self, value):
         return self._retrieve_item(meas_ScriptTable, value, key='hash', )
 
-    def get_sample(self, value, project=None):
+    def get_sample(self, value, project=None, material=None):
         kw = dict()
         if project:
             kw['joins'] = [gen_ProjectTable]
             kw['filters'] = [gen_ProjectTable.name == project]
+
+        if material:
+            kw['joins'] = [gen_MaterialTable]
+            kw['filters'] = [gen_MaterialTable.name == material]
 
         return self._retrieve_item(gen_SampleTable, value, **kw)
 
@@ -1137,10 +1147,21 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_flux_monitors(self, **kw):
         return self._retrieve_items(flux_MonitorTable, **kw)
 
-    def get_irradiations(self, **kw):
-    #        return self._retrieve_items(irrad_IrradiationTable, order=irrad_IrradiationTable.name, ** kw)
+    def get_irradiations(self, names=None, order_func='desc', **kw):
+        """
+            if names is callable should take from of F(irradiationTable)
+            returns list of filters
+        """
+        if names is not None:
+            if hasattr(names, '__call__'):
+                f = names(irrad_IrradiationTable)
+            else:
+                f = (irrad_IrradiationTable.name.in_(names),)
+            kw['filters'] = f
+
+            #        return self._retrieve_items(irrad_IrradiationTable, order=irrad_IrradiationTable.name, ** kw)
         return self._retrieve_items(irrad_IrradiationTable,
-                                    order=irrad_IrradiationTable.name.desc(),
+                                    order=getattr(irrad_IrradiationTable.name, order_func)(),
                                     **kw)
 
     def get_irradiation_productions(self, **kw):

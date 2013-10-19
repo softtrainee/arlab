@@ -15,21 +15,17 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from collections import OrderedDict
 import weakref
 from traits.api import Instance, String, Property, Event, \
-    cached_property, Dict
+    cached_property
 from apptools.preferences.preference_binding import bind_preference
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.helpers.iterfuncs import partition
-from src.managers.manager import Manager
 from src.ui.progress_dialog import myProgressDialog
 # from src.database.records.isotope_record import IsotopeRecord, IsotopeRecordView
-from src.database.records.isotope_record import IsotopeRecordView
 # from src.processing.analysis import Analysis, NonDBAnalysis
-from src.codetools.simple_timeit import simple_timer, timethis
 from src.processing.analyses.analysis import DBAnalysis, Analysis
 from src.loggable import Loggable
 from src.database.orms.isotope.meas import meas_AnalysisTable
@@ -149,9 +145,9 @@ class IsotopeDatabaseManager(Loggable):
 
                     db_ans.extend([self._analysis_factory(ai,
                                                           progress=progress,
-                                                   calculate_age=calculate_age,
-                                                   unpack=unpack,
-                                                   **kw)
+                                                          calculate_age=calculate_age,
+                                                          unpack=unpack,
+                                                          **kw)
                                    for ai in no_db_ans])
                     if progress:
                         progress.on_trait_change(self._progress_closed,

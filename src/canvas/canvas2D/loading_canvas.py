@@ -42,8 +42,8 @@ class LoadingCanvas(SceneCanvas):
     use_pan = False
     use_zoom = False
     selected = Any
-#     fill_padding = True
-#     bgcolor = 'red'
+    #     fill_padding = True
+    #     bgcolor = 'red'
     show_axes = False
     show_grids = False
 
@@ -54,10 +54,12 @@ class LoadingCanvas(SceneCanvas):
 
     aspect_ratio = 1
     editable = True
+    _scene_klass = LoadingScene
 
-    def load_tray_map(self, t, show_hole_numbers):
-        scene = LoadingScene()
-        scene.load(t, show_hole_numbers=show_hole_numbers)
+    def load_scene(self, t, **kw):
+
+        scene = self._scene_klass()
+        scene.load(t, **kw)
 
         self.view_x_range = scene.get_xrange()
         self.view_y_range = scene.get_yrange()
@@ -66,7 +68,7 @@ class LoadingCanvas(SceneCanvas):
 
     def normal_left_down(self, event):
         if self.editable:
-            self.hittest(event)
+            self.selected = self.hittest(event)
             self.request_redraw()
             self.selected = None
 
@@ -74,10 +76,16 @@ class LoadingCanvas(SceneCanvas):
         for li in self.scene.layers:
             for it in li.components:
                 if it.is_in(event.x, event.y):
-#                     it.fill = not it.fill
-                    self.selected = it
+                    return it
 
-                    return True
+    def normal_mouse_move(self, event):
+        if self.hittest(event):
+            event.window.set_pointer(self.select_pointer)
+        else:
+            self._set_normal_pointer(event)
+
+    def _set_normal_pointer(self, event):
+        event.window.set_pointer(self.normal_pointer)
 
 
 #============= EOF =============================================

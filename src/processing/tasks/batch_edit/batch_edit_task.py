@@ -15,19 +15,20 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, on_trait_change, List
-from traitsui.api import View, Item
-from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
-from src.processing.tasks.batch_edit.batch_edit_panes import BatchEditPane, \
-    UValue
-from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed
-from src.paths import paths
 import os
 import shelve
-from src.processing.entry.sensitivity_entry import SensitivityEntry
-from src.processing.tasks.entry.sensitivity_entry_panes import SensitivityPane
+
+from traits.api import Instance, on_trait_change, List
+from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed
+
+from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
+from src.processing.tasks.batch_edit.batch_edit_panes import BatchEditPane
+from src.paths import paths
+
+#from src.processing.entry.sensitivity_entry import SensitivityEntry
+#from src.processing.tasks.entry.sensitivity_entry_panes import SensitivityPane
 from src.processing.tasks.browser.browser_task import BaseBrowserTask
-from src.processing.tasks.figures.panes import MultiSelectAnalysisBrowser
+#from src.processing.tasks.figures.panes import MultiSelectAnalysisBrowser
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -37,10 +38,10 @@ class BatchEditTask(AnalysisEditTask):
     batch_edit_pane = Instance(BatchEditPane)
     unknowns = List
 
-    def create_dock_panes(self):
-        panes = AnalysisEditTask.create_dock_panes(self)
-        panes.append(MultiSelectAnalysisBrowser(model=self))
-        return panes
+    #def create_dock_panes(self):
+    #    panes = AnalysisEditTask.create_dock_panes(self)
+    #    #panes.append(MultiSelectAnalysisBrowser(model=self))
+    #    return panes
 
     def create_central_pane(self):
         self.batch_edit_pane = BatchEditPane()
@@ -177,14 +178,19 @@ class BatchEditTask(AnalysisEditTask):
 
     @on_trait_change('batch_edit_pane:db_sens_button')
     def _update_db_sens_button(self):
-        se = SensitivityEntry()
-        se.activate()
+        app = self.window.application
+        entry = app.get_service('pychron.entry.modal_sensitivity')
+        if entry:
+            print entry
 
-        p = SensitivityPane(model=se)
-        info = p.edit_traits(kind='livemodal', view='readonly_view')
-        if info.result:
-            s = se.selected
-            self.batch_edit_pane.sens_value = s.sensitivity
+            #se = SensitivityEntry()
+            #se.activate()
+
+            #p = SensitivityPane(model=se)
+            #info = p.edit_traits(kind='livemodal', view='readonly_view')
+            #if info.result:
+            #    s = se.selected
+            #    self.batch_edit_pane.sens_value = s.sensitivity
 
             #===============================================================================
             # defaults

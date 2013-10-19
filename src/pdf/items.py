@@ -16,19 +16,21 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Int, Str, Any, Either, Callable
-from traitsui.api import View, Item
 #============= standard library imports ========================
 from reportlab.platypus.paragraph import Paragraph
 from reportlab.lib.styles import getSampleStyleSheet
 #============= local library imports  ==========================
 
 STYLES = getSampleStyleSheet()
+
+
 class Row(HasTraits):
     items = List
     fontsize = Int
     fontname = Str
     spans = List
     height = None
+
     def render(self):
         return [it.render() for it in self.items]
 
@@ -52,6 +54,9 @@ class Row(HasTraits):
     def __iter__(self):
         return (it.render() for it in self.items)
 
+    def __getitem__(self, i):
+        return self.items[i].value
+
 
 class BaseItem(HasTraits):
     value = Any
@@ -59,6 +64,7 @@ class BaseItem(HasTraits):
     fontsize = Int(8)
     fontname = 'Helvetica'
     italic = False
+
     def render(self):
         v = self.value
 
@@ -92,17 +98,22 @@ class BaseItem(HasTraits):
         p = Paragraph(t, style)
         return p
 
+
 class RowItem(BaseItem):
     pass
+
 
 def Superscript(v):
     return '<super>{}</super>'.format(v)
 
+
 def Subscript(v):
     return '<sub>{}</sub>'.format(v)
 
+
 def NamedParameter(name, value):
     return '<b>{}</b>: {}'.format(name, value)
+
 
 def Anchor(tagname, num, s='Normal'):
     snum = Superscript(num)
@@ -119,14 +130,18 @@ def Anchor(tagname, num, s='Normal'):
 
     def p2(n, v):
         return Paragraph(tag.format(n, v), style)
-#    p1 = lambda x: Paragraph(link.format(x), style)
-#     p2 = lambda n, v: Paragraph(tag.format(n, v), style)
+
+    #    p1 = lambda x: Paragraph(link.format(x), style)
+    #     p2 = lambda n, v: Paragraph(tag.format(n, v), style)
 
     return flink, p2
 
 
 class FootNoteRow(Row):
     pass
+
+
 class FooterRow(Row):
     pass
+
 #============= EOF =============================================

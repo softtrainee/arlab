@@ -15,51 +15,22 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, Instance, Unicode, on_trait_change
-from traitsui.api import View, Item
+from traits.api import Property, Instance
 from pyface.tasks.api import IEditor, IEditorAreaPane
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.loggable import Loggable
 from src.envisage.tasks.base_task import BaseManagerTask, BaseExtractionLineTask
 # from pyface.tasks.split_editor_area_pane import SplitEditorAreaPane
 # from pyface.confirmation_dialog import ConfirmationDialog
-from pyface.constant import CANCEL, YES
 
 from pyface.tasks.advanced_editor_area_pane import AdvancedEditorAreaPane
-import subprocess
-import os
 # class EditorTask(BaseManagerTask, Loggable):
 class BaseEditorTask(BaseManagerTask):
     active_editor = Property(Instance(IEditor),
                              depends_on='editor_area.active_editor'
                              )
     editor_area = Instance(IEditorAreaPane)
-    def view_pdf(self, p):
-        self.view_file(p)
-
-    def view_xls(self, p):
-        application = 'Microsoft Office 2011/Microsoft Excel'
-        self.view_file(p, application)
-#         self.view_file(p)
-
-    def view_csv(self, p):
-        application = 'TextWrangler'
-        self.view_file(p, application)
-
-    def view_file(self, p, application='Preview'):
-
-        app_path = '/Applications/{}.app'.format(application)
-        if not os.path.exists(app_path):
-            app_path = '/Applications/Preview.app'
-
-        try:
-            subprocess.call(['open', '-a', app_path, p])
-        except OSError:
-            self.debug('failed opening {} using {}'.format(p, app_path))
-            subprocess.call(['open', p])
-
 
     def open(self, path=None, **kw):
         ''' Shows a dialog to open a file.
@@ -128,37 +99,27 @@ class BaseEditorTask(BaseManagerTask):
 #                                     default=CANCEL, title='Save Changes?')
 #         return dialog.open()
 
-    def _handle_prompt_for_save(self):
-        return True
-
     def _prompt_for_save(self):
         if self.editor_area is None:
-            return self._handle_prompt_for_save()
+            return True
+            #return self._handle_prompt_for_save()
 
         dirty_editors = dict([(editor.name, editor)
                               for editor in self.editor_area.editors
                               if editor.dirty])
         if not dirty_editors.keys():
             return True
+
         message = 'You have unsaved files. Would you like to save them?'
-        result = self._confirmation(message)
-        if result == CANCEL:
-            return False
-        elif result == YES:
+        ret = self._handle_prompt_for_save(message)
+        if ret == 'save':
             for _, editor in dirty_editors.items():
                 editor.save(editor.path)
 
-        return True
+        return ret
 
+        #### Trait change handlers ################################################
 
-    #### Trait change handlers ################################################
-
-    @on_trait_change('window:closing')
-    def _prompt_on_close(self, event):
-        """ Prompt the user to save when exiting.
-        """
-        close = self._prompt_for_save()
-        event.veto = not close
 
 class EditorTask(BaseExtractionLineTask, BaseEditorTask):
     pass

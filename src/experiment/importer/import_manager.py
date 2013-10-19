@@ -15,14 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Enum, Instance, Str, Password, \
-    Button, List, Any, Bool, Property, Event, cached_property, Int
+from traits.api import Enum, Instance, Str, Button, List, Any, Bool, Property, Event, cached_property, Int
 #============= standard library imports ========================
 from collections import namedtuple
 import time
 
 #============= local library imports  ==========================
-from src.processing.importer.mass_spec_extractor import Extractor, \
+from src.experiment.importer.mass_spec_extractor import Extractor, \
     MassSpecExtractor
 from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.constants import NULL_STR
@@ -164,7 +163,7 @@ class ImportManager(IsotopeDatabaseManager):
             if selected:
                 if not isinstance(selected[0], tuple):
                     selected = [(si.name, tuple()) for si in selected]
-                #                if self._import_thread and self._import_thread.isRunning():
+                    #                if self._import_thread and self._import_thread.isRunning():
                 #                    return
 
                 if self.db.connect():

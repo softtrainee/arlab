@@ -15,13 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
-from src.processing.importer.extractor import Extractor
+#from src.processing.importer.extractor import Extractor
 import os
 import struct
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.experiment.importer.extractor import Extractor
+
 
 class MassSpecBinaryExtractor(Extractor):
     def _get_next_str(self, fp):
@@ -34,9 +34,11 @@ class MassSpecBinaryExtractor(Extractor):
                         yield t.strip()
                         t = ''
                     t += a
+
         g = _gen()
         return lambda: g.next()
-#         return lambda :_gen()
+
+    #         return lambda :_gen()
 
     def _get_single(self, fp):
         def _gen():
@@ -68,6 +70,7 @@ class MassSpecBinaryExtractor(Extractor):
         with open(p, 'r') as fp:
             # use big-endian
             gns = self._get_next_str(fp)
+
             def pgns():
                 print gns()
 
@@ -198,7 +201,7 @@ class MassSpecBinaryExtractor(Extractor):
                 ndet = gh()
                 if ndet > 1:
                     mx_det_type_n = 1
-#                     det_conv_factor = []
+                    #                     det_conv_factor = []
                     for i in range(mx_det_type_n):
                         for j in range(i, mx_det_type_n, 1):
                             gs()
@@ -256,7 +259,7 @@ class MassSpecBinaryExtractor(Extractor):
                            'Ar37/Ar39',
                            'Ar36/Ar39',
                            'Bsln'
-                           ]
+                ]
                 numisokeys = [0, 2, 3, 4]
                 demisokeys = [1, 1, 1, 1]
                 if isref:

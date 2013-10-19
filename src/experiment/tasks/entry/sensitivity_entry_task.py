@@ -15,28 +15,27 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, on_trait_change
-from src.envisage.tasks.base_task import  BaseManagerTask
-from pyface.tasks.task_layout import TaskLayout, PaneItem, Splitter, Tabbed
+from src.envisage.tasks.base_task import BaseManagerTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-from src.processing.tasks.entry.sensitivity_entry_panes import SensitivityPane
-from src.processing.entry.sensitivity_entry import SensitivityEntry
+from src.experiment.tasks.entry.sensitivity_entry_panes import SensitivityPane
+from src.experiment.entry.sensitivity_entry import SensitivityEntry
 from pyface.tasks.action.schema import SToolBar
-from src.processing.tasks.entry.actions import SaveSensitivityAction, \
+from src.experiment.tasks.entry.actions import SaveSensitivityAction, \
     AddSensitivityAction
+
 
 class SensitivityEntryTask(BaseManagerTask):
     name = 'Sensitivity Entry'
 
     tool_bars = [
-                 SToolBar(
-                          SaveSensitivityAction(),
-                          AddSensitivityAction(),
-                          image_size=(16, 16)
-                          ),
-                 ]
+        SToolBar(
+            SaveSensitivityAction(),
+            AddSensitivityAction(),
+            image_size=(16, 16)
+        ),
+    ]
 
     def activated(self):
         self.manager.activate()
@@ -44,17 +43,17 @@ class SensitivityEntryTask(BaseManagerTask):
     def create_central_pane(self):
         return SensitivityPane(model=self.manager)
 
-#     def create_dock_panes(self):
-#         return [
-#                 IrradiationPane(model=self.manager),
-#                 ImporterPane(model=self.importer),
-#                 IrradiationEditorPane(model=self.manager)
-#                 ]
+    #     def create_dock_panes(self):
+    #         return [
+    #                 IrradiationPane(model=self.manager),
+    #                 ImporterPane(model=self.importer),
+    #                 IrradiationEditorPane(model=self.manager)
+    #                 ]
 
 
-#     @on_trait_change('importer:update_irradiations_needed')
-#     def _update_irradiations(self):
-#         self.manager.updated = True
+    #     @on_trait_change('importer:update_irradiations_needed')
+    #     def _update_irradiations(self):
+    #         self.manager.updated = True
     #===========================================================================
     # GenericActon Handlers
     #===========================================================================
@@ -69,13 +68,16 @@ class SensitivityEntryTask(BaseManagerTask):
     def add(self):
         self.debug('sensitivity entry add')
         self.manager.add()
-#===============================================================================
-# defaults
-#===============================================================================
+
+    #===============================================================================
+    # defaults
+    #===============================================================================
     def _manager_default(self):
         return SensitivityEntry()
-#
-    #     def _default_layout_default(self):
+
+        #
+        #     def _default_layout_default(self):
+
 #         return TaskLayout(
 #                           left=Splitter(
 #                                         PaneItem('pychron.labnumber.irradiation'),

@@ -15,18 +15,17 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Button, List, Instance, Property, Any, Event, Bool, Int, \
+from traits.api import Button, List, Instance, Property, Any, Event, Int, \
     Str
-from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, EnumEditor, ButtonEditor, \
-    Spring
+from traitsui.api import View, Item, UItem, HGroup, VGroup, spring, EnumEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
-from pyface.image_resource import ImageResource
 # from src.processing.search.previous_selection import PreviousSelection
 import os
 import shelve
 import hashlib
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.pane_helpers import new_button_editor
 from src.ui.custom_label_editor import CustomLabel
 from src.ui.tabular_editor import myTabularEditor
 from src.processing.tasks.analysis_edit.ianalysis_edit_tool import IAnalysisEditTool
@@ -34,18 +33,6 @@ from src.paths import paths
 from src.processing.analysis import Marker
 from src.processing.selection.previous_selection import PreviousSelection
 from src.column_sorter_mixin import ColumnSorterMixin
-
-
-def new_button_editor(trait, name, label=None, **kw):
-    kw['show_label'] = label is not None
-    kw['label'] = label or ''
-    name = '{}.png'.format(name)
-    return Item(trait, style='custom',
-                editor=ButtonEditor(image=ImageResource(name=name,
-                                                        search_path=paths.icon_search_path
-                )),
-                **kw
-    )
 
 
 class TablePane(TraitsDockPane):

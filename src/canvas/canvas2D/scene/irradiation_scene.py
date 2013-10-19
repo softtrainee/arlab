@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2012 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,28 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.viewable import Viewable
+from src.canvas.canvas2D.scene.loading_scene import LoadingScene
 
-class DBEntry(Viewable):
-    db = Any
-    def _db_default(self):
-        #=======================================================================
-        # debug
-        #=======================================================================
-        from src.database.adapters.isotope_adapter import IsotopeAdapter
-        db = IsotopeAdapter(name='isotopedb_dev',
-                          username='root',
-                          host='localhost',
-                          kind='mysql',
-                          password='Argon',
-                          save_username='root_debug'
-                          )
-        db.connect()
-        return db
-        #=======================================================================
-        #
-        #=======================================================================
+
+class IrradiationScene(LoadingScene):
+    def _get_holes(self, t):
+        return t
+
 #============= EOF =============================================

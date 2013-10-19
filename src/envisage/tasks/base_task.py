@@ -15,26 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, on_trait_change, Event, List, Unicode, DelegatesTo
+import os
+import subprocess
+from traits.api import Any, on_trait_change, List, Unicode, DelegatesTo
 # from traitsui.api import View, Item
 from pyface.tasks.task import Task
 from pyface.tasks.action.schema import SMenu, SMenuBar, SGroup
 # from pyface.tasks.action.task_toggle_group import TaskToggleGroup
 # from envisage.ui.tasks.action.task_window_toggle_group import TaskWindowToggleGroup
-from envisage.ui.tasks.action.api import TaskWindowLaunchGroup
 from pyface.action.api import ActionItem, Group
 # from pyface.tasks.action.task_action import TaskAction
 from envisage.ui.tasks.action.task_window_launch_group import TaskWindowLaunchAction
-from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.envisage.tasks.actions import GenericSaveAction, GenericSaveAsAction, \
     GenericFindAction, RaiseAction, RaiseUIAction, ResetLayoutAction, \
     MinimizeAction, PositionAction, IssueAction, CloseAction, CloseOthersAction
 from pyface.file_dialog import FileDialog
-from pyface.constant import OK, CANCEL
+from pyface.constant import OK, CANCEL, YES
 from itertools import groupby
 from pyface.confirmation_dialog import ConfirmationDialog
 from src.loggable import Loggable
-from pyface.timer.do_later import do_later
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -369,6 +368,50 @@ class BaseManagerTask(BaseTask):
     default_directory = Unicode
     wildcard = None
     manager = Any
+
+    @on_trait_change('window:closing')
+    def _on_close(self, event):
+        """ Prompt the user to save when exiting.
+        """
+        close = self._prompt_for_save()
+        event.veto = not close
+
+    def _handle_prompt_for_save(self, message):
+        result = self._confirmation(message)
+        if result == CANCEL:
+            return False
+        elif result == YES:
+            return 'save'
+
+        return True
+
+    def _prompt_for_save(self):
+        return True
+
+    def view_pdf(self, p):
+        self.view_file(p)
+
+    def view_xls(self, p):
+        application = 'Microsoft Office 2011/Microsoft Excel'
+        self.view_file(p, application)
+
+    #         self.view_file(p)
+
+    def view_csv(self, p):
+        application = 'TextWrangler'
+        self.view_file(p, application)
+
+    def view_file(self, p, application='Preview'):
+
+        app_path = '/Applications/{}.app'.format(application)
+        if not os.path.exists(app_path):
+            app_path = '/Applications/Preview.app'
+
+        try:
+            subprocess.call(['open', '-a', app_path, p])
+        except OSError:
+            self.debug('failed opening {} using {}'.format(p, app_path))
+            subprocess.call(['open', p])
 
     def open_file_dialog(self, action='open', **kw):
         if 'default_directory' not in kw:

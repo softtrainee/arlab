@@ -15,13 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from pyface.message_dialog import information, warning
 from traits.api import HasTraits, List, Any, Str, Enum, Bool, Button, \
     Int
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.processing.tasks.browser.table_configurer import TableConfigurer
+from src.experiment.tasks.browser.table_configurer import TableConfigurer
 
 
 class AnalysisTable(HasTraits):
@@ -97,18 +96,18 @@ class AnalysisTable(HasTraits):
 
             self.analysis_filter_values = vs
 
-#============= EOF =============================================
-        #def filter_invalid(self, ans):
-        #    if self.omit_invalid:
-        #        ans = filter(self._omit_invalid_filter, ans)
-        #    return ans
+            #============= EOF =============================================
+            #def filter_invalid(self, ans):
+            #    if self.omit_invalid:
+            #        ans = filter(self._omit_invalid_filter, ans)
+            #    return ans
 
-        #def _omit_invalid_filter(self, x):
-        #    return x.tag != 'invalid'
+            #def _omit_invalid_filter(self, x):
+            #    return x.tag != 'invalid'
 
-        #def _omit_invalid_changed(self, new):
-        #    if new:
-        #        self._
-        #        self.analyses = filter(self._omit_invalid_filter, self.oanalyses)
-        #    else:
-        #        self.analyses = self.oanalyses
+            #def _omit_invalid_changed(self, new):
+            #    if new:
+            #        self._
+            #        self.analyses = filter(self._omit_invalid_filter, self.oanalyses)
+            #    else:
+            #        self.analyses = self.oanalyses

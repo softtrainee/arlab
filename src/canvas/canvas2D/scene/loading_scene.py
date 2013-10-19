@@ -16,39 +16,47 @@
 
 #============= enthought library imports =======================
 #============= standard library imports ========================
-from numpy import Inf
 import os
+
+from numpy import Inf
+
 #============= local library imports  ==========================
 from src.canvas.canvas2D.scene.scene import Scene
 from src.paths import paths
 from src.lasers.stage_managers.stage_map import StageMap
 from src.canvas.canvas2D.scene.primitives.primitives import LoadIndicator
 
+
 class LoadingScene(Scene):
-    _xrange = -1, 1
-    _yrange = -1, 1
     def load(self, t, show_hole_numbers=True):
         self.reset_layers()
+        holes = self._get_holes(t)
 
+        self._load_holes(holes, show_hole_numbers)
+
+    def _get_holes(self, t):
         p = os.path.join(paths.map_dir, t)
         sm = StageMap(file_path=p)
+
+        holes = ((hi.x, hi.y, hi.dimension / 2.0, hi.id) for hi in sm.sample_holes)
+        return holes
+
+    def _load_holes(self, holes, show_hole_numbers=False):
         xmi, ymi, xma, yma = Inf, Inf, -Inf, -Inf
-        for hi in sm.sample_holes:
-            xmi = min(xmi, hi.x)
-            ymi = min(ymi, hi.y)
-            xma = max(xma, hi.x)
-            yma = max(yma, hi.y)
+        for x, y, r, n, in holes:
+            xmi = min(xmi, x)
+            ymi = min(ymi, y)
+            xma = max(xma, x)
+            yma = max(yma, y)
 
             v = LoadIndicator(
-                       x=hi.x,
-                       y=hi.y,
-                       radius=sm.g_dimension / 2.0,
-                       name_visible=show_hole_numbers,
-#                         identifier=hi.id,
-#                         identifier_visible=show_hole_numbers,
-                       name=hi.id,
-                       font='modern 10'
-                       )
+                x=x,
+                y=y,
+                radius=r,
+                name_visible=show_hole_numbers,
+                name=n,
+                font='modern 10'
+            )
             self.add_item(v)
 
         w = (xma - xmi) * 1.2
@@ -57,11 +65,6 @@ class LoadingScene(Scene):
         h /= 2.0
         self._xrange = -w, w
         self._yrange = -h, h
-
-    def get_xrange(self):
-        return self._xrange
-    def get_yrange(self):
-        return self._yrange
 
 
 #============= EOF =============================================

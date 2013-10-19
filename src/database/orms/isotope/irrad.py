@@ -17,17 +17,21 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 
+from datetime import datetime
+
 from sqlalchemy import Column, Integer, BLOB, Float
 from sqlalchemy.orm import relationship
-from datetime import datetime
+
 #============= local library imports  ==========================
 from src.database.orms.isotope.util import foreignkey
 from src.database.core.base_orm import BaseMixin, NameMixin
 from util import Base
 
+
 class irrad_HolderTable(Base, NameMixin):
     levels = relationship('irrad_LevelTable', backref='holder')
     geometry = Column(BLOB)
+
 
 class irrad_LevelTable(Base, NameMixin):
     z = Column(Float)
@@ -35,15 +39,17 @@ class irrad_LevelTable(Base, NameMixin):
     irradiation_id = foreignkey('irrad_IrradiationTable')
     positions = relationship('irrad_PositionTable', backref='level')
 
+
 class irrad_PositionTable(Base, BaseMixin):
     labnumber = relationship('gen_LabTable', backref='irradiation_position',
                              uselist=False
-                             )
+    )
     flux_histories = relationship('flux_HistoryTable', backref='position')
 
     level_id = foreignkey('irrad_LevelTable')
     position = Column(Integer)
     weight = Column(Float)
+
 
 class irrad_ProductionTable(Base, NameMixin):
     K4039 = Column(Float)
@@ -71,21 +77,24 @@ class irrad_ProductionTable(Base, NameMixin):
 
     irradiations = relationship('irrad_IrradiationTable', backref='production')
 
+
 class irrad_IrradiationTable(Base, NameMixin):
     levels = relationship('irrad_LevelTable', backref='irradiation')
     irradiation_production_id = foreignkey('irrad_ProductionTable')
     irradiation_chronology_id = foreignkey('irrad_ChronologyTable')
 
+
 class irrad_ChronologyTable(Base, BaseMixin):
     chronology = Column(BLOB)
     irradiation = relationship('irrad_IrradiationTable', backref='chronology')
 
-    def get_doses(self):
-        def convert(x):
-            return datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-
+    def get_doses(self, tofloat=True):
         doses = self.chronology.split('$')
         doses = [di.strip().split('%') for di in doses]
-        doses = [map(convert, d) for d in doses if d]
+        if tofloat:
+            convert = lambda x: datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+            doses = [map(convert, d) for d in doses if d]
+
         return doses
-#============= EOF =============================================
+
+    #============= EOF =============================================

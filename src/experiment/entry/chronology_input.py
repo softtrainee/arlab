@@ -29,17 +29,17 @@ class Dosage(HasTraits):
     starttime = Time
     endtime = Time
 
-#     def _startdate_default(self):
-#         return datetime.now().date()
-#
-#     def _starttime_default(self):
-#         return datetime.now().time()
-#
-#     def _enddate_default(self):
-#         return datetime.now().date()
-#
-#     def _endtime_default(self):
-#         return datetime.now().time()
+    #     def _startdate_default(self):
+    #         return datetime.now().date()
+    #
+    #     def _starttime_default(self):
+    #         return datetime.now().time()
+    #
+    #     def _enddate_default(self):
+    #         return datetime.now().date()
+    #
+    #     def _endtime_default(self):
+    #         return datetime.now().time()
 
     def validate_dosage(self, prev_dose):
         if self.startdate is None:
@@ -65,26 +65,28 @@ class Dosage(HasTraits):
 
     def traits_view(self):
         v = View(
+            HGroup(
                 HGroup(
-                    HGroup(
-                      Item('startdate', show_label=False),
-                      Item('starttime', show_label=False),
-                      ),
-                    HGroup(
-                      Item('enddate', show_label=False),
-                      Item('endtime', show_label=False),
-                      )
-                    )
+                    Item('startdate', show_label=False),
+                    Item('starttime', show_label=False),
+                ),
+                HGroup(
+                    Item('enddate', show_label=False),
+                    Item('endtime', show_label=False),
+                )
+            )
 
-               )
+        )
 
         return v
+
 
 class ChronologyInput(HasTraits):
     db = Instance(IsotopeAdapter)
     dosages = List(Dosage)
     add = Button('+')
     remove = Button('-')
+
     def set_dosages(self, ds):
         def dose_factory(di):
             s, e = di
@@ -92,7 +94,7 @@ class ChronologyInput(HasTraits):
                           starttime=s.time(),
                           enddate=e.date(),
                           endtime=e.time()
-                          )
+            )
 
         self.dosages = map(dose_factory, ds)
 
@@ -124,15 +126,16 @@ class ChronologyInput(HasTraits):
 
     def traits_view(self):
         v = View(VGroup(
-                        HGroup(spring, Label('Start'), spring, Label('End'), spring),
-                       listeditor('dosages'),
-                       spring,
-                       HGroup(spring, Item('add'), Item('remove',
-                                                        enabled_when='len(object.dosages)>1'
-                                                        ), show_labels=False)),
-                    height=350, resizable=True,
-                    title='Irradiation Chronology',
-                    buttons=['OK', 'Cancel']
-                    )
+            HGroup(spring, Label('Start'), spring, Label('End'), spring),
+            listeditor('dosages'),
+            spring,
+            HGroup(spring, Item('add'), Item('remove',
+                                             enabled_when='len(object.dosages)>1'
+            ), show_labels=False)),
+                 height=350, resizable=True,
+                 title='Irradiation Chronology',
+                 buttons=['OK', 'Cancel']
+        )
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================

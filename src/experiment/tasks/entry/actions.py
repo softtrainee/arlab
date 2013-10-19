@@ -15,8 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
 from pyface.action.action import Action
 from pyface.tasks.action.task_action import TaskAction
 from pyface.image_resource import ImageResource
@@ -33,6 +31,7 @@ class LabnumberEntryAction(Action):
         app = event.task.window.application
         app.get_task(pid)
 
+
 class SensitivityEntryAction(Action):
     name = 'Sensitivity'
     accelerator = 'Ctrl+Shift+\\'
@@ -42,15 +41,39 @@ class SensitivityEntryAction(Action):
         app = event.task.window.application
         app.get_task(pid)
 
+
 class SaveSensitivityAction(TaskAction):
     name = 'Save'
     image = ImageResource(name='database_save.png',
-                         search_path=paths.icon_search_path)
+                          search_path=paths.icon_search_path)
     method = 'save'
+
 
 class AddSensitivityAction(TaskAction):
     name = 'Add'
     image = ImageResource(name='database_add.png',
-                         search_path=paths.icon_search_path)
+                          search_path=paths.icon_search_path)
     method = 'add'
+
+
+class SavePDFAction(TaskAction):
+    name = 'Save PDF'
+    image = ImageResource(name='file_pdf.png',
+                          search_path=paths.icon_search_path)
+    method = 'save_pdf'
+
+
+class SaveLabbookPDFAction(TaskAction):
+    name = 'Save Labbook'
+    image = ImageResource(name='file_pdf.png',
+                          search_path=paths.icon_search_path)
+    method = 'save_labbook_pdf'
+
+
+class GenerateLabnumbersAction(TaskAction):
+    name = 'Generate Labnumbers'
+    image = ImageResource(name='table_lightning.png',
+                          search_path=paths.icon_search_path)
+    method = 'generate_labnumbers'
+
 #============= EOF =============================================

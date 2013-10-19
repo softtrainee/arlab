@@ -15,10 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, List, Button, Property, Str, Int, Float, \
+from traits.api import HasTraits, List, Str, Int, Float, \
     Date, Any, Bool
-from traitsui.api import View, Item, TabularEditor, HGroup
-from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.paths import paths
@@ -88,12 +86,12 @@ class SensitivityRecord(HasTraits):
 
 class SensitivityEntry(IsotopeDatabaseManager):
     records = List(SensitivityRecord)
-#     records = Property(List(SensitivityRecord),
-#                        depends_on='_records'
-#                        )
-#     _records = List
-#     add_button = Button('+')
-#     save_button = Button('save')
+    #     records = Property(List(SensitivityRecord),
+    #                        depends_on='_records'
+    #                        )
+    #     _records = List
+    #     add_button = Button('+')
+    #     save_button = Button('save')
     selected = Any
 
     def activate(self):
@@ -104,7 +102,7 @@ class SensitivityEntry(IsotopeDatabaseManager):
         with db.session_ctx():
             recs = self.db.get_sensitivities()
             self.records = [SensitivityRecord(ri)
-                                for ri in recs]
+                            for ri in recs]
 
     def save(self):
         db = self.db
@@ -178,8 +176,13 @@ class SensitivityEntry(IsotopeDatabaseManager):
 #                  )
 #         return v
 
+class SensitivitySelector(SensitivityEntry):
+    pass
+
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
+
     paths.build('_experiment')
 
     logging_setup('runid')

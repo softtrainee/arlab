@@ -15,40 +15,40 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Property, Str, cached_property, \
-    List, on_trait_change, Int, Bool, Event, Any, Button, Undefined, Float
-from traitsui.api import View, Item, EnumEditor, \
-     VGroup, HGroup, spring, Group, Image, ImageEditor, TabularEditor
+from apptools.preferences.preference_binding import bind_preference
+from traits.api import Property, Str, cached_property, \
+    List, Event, Any, Button, Undefined, Instance, Bool, on_trait_change
+from traitsui.api import Image
 from pyface.image_resource import ImageResource
 
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
+from src.canvas.canvas2D.irradiation_canvas import IrradiationCanvas
+from src.experiment.entry.irradiation_pdf_writer import IrradiationPDFWriter, LabbookPDFWriter
+from src.experiment.entry.irradiation_table_view import IrradiationTableView
+from src.experiment.entry.labnumber_generator import LabnumberGenerator
 from src.paths import paths
-from src.processing.entry.irradiation import Irradiation
-from src.processing.entry.level import Level
+from src.experiment.entry.irradiation import Irradiation
+from src.experiment.entry.level import Level
 # from src.processing.entry.flux_monitor import FluxMonitor
 # from src.processing.entry.db_entry import DBEntry
 # from src.irradiation.irradiated_position import IrradiatedPosition, \
 #    IrradiatedPositionAdapter
 from src.constants import NULL_STR, ALPHAS
 from src.database.isotope_database_manager import IsotopeDatabaseManager
-from src.processing.entry.irradiated_position import IrradiatedPosition
+from src.experiment.entry.irradiated_position import IrradiatedPosition
 # import math
 # from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
 # from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
 # from src.database.orms.isotope_orm import gen_ProjectTable, gen_SampleTable
 from src.database.orms.isotope.gen import gen_ProjectTable, gen_SampleTable
-from src.codetools.simple_timeit import timethis, simple_timer
 # from src.ui.thread import Thread
 # from pyface.timer.do_later import do_later
 import struct
 
 
-
-
 class LabnumberEntry(IsotopeDatabaseManager):
-
     irradiation_tray = Str
     trays = Property
 
@@ -63,6 +63,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
     add_irradiation_button = Button('Add Irradiation')
     add_level_button = Button('Add Level')
     edit_level_button = Button('Edit')
+
     load_file_button = Button('Load File')
     generate_labnumbers_button = Button('Generate Labnumbers')
     #===========================================================================
@@ -72,157 +73,73 @@ class LabnumberEntry(IsotopeDatabaseManager):
     refresh_table = Event
 
     #===========================================================================
-    # factory traits
-    #===========================================================================
-    sample = Str
-    samples = Property
-    add_sample_button = Button('+')
-
-    material = Str
-    materials = Property
-    add_material_button = Button('+')
-
-    project = Str
-    projects = Property
-    add_project_button = Button('+')
-
-
-    #===========================================================================
     #
     #===========================================================================
+    canvas = Instance(IrradiationCanvas, ())
+    show_canvas = Bool(True)
+
+    selected_sample = Any
+    irradiation_prefix = Str
+
+    dirty = False
+    initialized = False
 
     def __init__(self, *args, **kw):
         super(LabnumberEntry, self).__init__(*args, **kw)
-        self.populate_default_tables()
+        bind_preference(self, 'irradiation_prefix',
+                        'pychron.experiment.irradiation_prefix')
 
-    def make_table(self):
-        from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
-        from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
+    #    self.populate_default_tables()
+    def set_selected_sample(self, new):
+        self.selected_sample = new
+        #self.canvas.selected_sample=new
 
-        out = '/Users/ross/Sandbox/irradiation.pdf'
-        w = SimplePDFWriter(filename=out)
+    def make_labbook(self, out):
+        """
+            assemble a pdf of irradiations
+            ask user for list of irradiations
+        """
+        #if irradiations is None:
+        #    irradiations=['NM-257','NM-256']
 
-        irrad = self.db.get_irradiation(self.irradiation)
+        db = self.db
+        with db.session_ctx():
+            irrads = db.get_irradiations(order_func='asc')
+            irrads = [irrad.name for irrad in irrads]
+            table = IrradiationTableView(irradiations=irrads)
+            info = table.edit_traits()
+            if info.result:
+                if table.selected:
+                    w = LabbookPDFWriter()
+                    #for irrad in irradiations:
+                    #    irrad=db.get_irradiation(irrad)
+                    irrads = db.get_irradiations(names=table.selected,
+                                                 order_func='asc')
 
-        def make_row(pos):
-            ln = pos.labnumber
-            sample = ''
-            identifier = ''
-            if ln:
-                if ln.sample:
-                    sample = ln.sample.name
-                identifier = ln.identifier
+                    n = sum([len(irrad.levels) for irrad in irrads])
+                    prog = self.open_progress(n=n)
 
-            return [pos.position, identifier, sample]
+                    w.build(out, irrads, progress=prog)
+                    #w.add_irradiation(irrad)
+                    #w.build(out, irrad)
 
-        for level in irrad.levels:
-
-            t = IrradiationTable()
-            rows = sorted([make_row(pi) for pi in level.positions],
-                          key=lambda x:x[0]
-                          )
-            rows = [
-                    [self.irradiation, level.name, ''],
-                    ['Pos.', 'L#', 'Sample'],
-                    ] + rows
-
-
-            ta = t.make(rows)
-            w.add(ta)
-        w.publish(use_landscape=False)
+    def save_pdf(self, out):
+        db = self.db
+        with db.session_ctx():
+            name = self.irradiation
+            irrad = db.get_irradiation(name)
+            if irrad:
+                w = IrradiationPDFWriter()
+                w.build(out, irrad)
 
     def save(self):
         self._save_to_db()
 
-    def populate_default_tables(self):
-        db = self.db
-        if self.db:
-            if db.connect():
-
-                from src.database.defaults import load_isotopedb_defaults
-                load_isotopedb_defaults(db)
-
-    def finalize_irradiation(self, dry_run=False):
-        '''
-            generate labnumbers
-            
-            lock irradiation table
-            
-            make pdf table
-        '''
-        db = self.db
-        irrad = db.get_irradiation(self.irradiation)
-
-        offset = 0
-        level_offset = 0
-        self._generate_labnumbers(offset, level_offset, dry_run)
-
-        irrad.locked = True
-        if not dry_run:
-            db.commit()
-
-    def _generate_labnumbers(self, offset=0, level_offset=0, dry_run=False):
-        '''
-            get last labnumber 
-            
-            start numbering at add 1+offset
-            
-            add level_offset between each level
-        '''
-        ir = self.irradiation
-        lngen = self._labnumber_generator(ir,
-                                          offset,
-                                          level_offset
-                                          )
-        db = self.db
-        while 1:
-            try:
-                pos, ln = lngen.next()
-            except StopIteration:
-                break
-
-            pos.labnumber.identifier = ln
-            le = pos.level.name
-            pi = pos.position
-            self.info('setting irrad. pos. {} {}-{} labnumber={}'.format(ir, le, pi, ln))
-
-        if not dry_run:
-            db.commit()
+    def generate_labnumbers(self):
+        lg = LabnumberGenerator(db=self.db)
+        lg.generate_labnumbers(self.irradiation)
 
         self._update_level()
-
-    def _labnumber_generator(self, irradiation, offset, level_offset):
-
-        def gen(offset, level_offset):
-            db = self.db
-            last_ln = db.get_last_labnumber()
-            if last_ln:
-                last_ln = int(last_ln.identifier)
-            else:
-                last_ln = 0
-
-            i = 0
-            if not offset:
-                last_ln += 1
-
-            sln = last_ln + offset
-            irrad = db.get_irradiation(irradiation)
-
-#             for _ in range(3):
-#                 for _ in range(2):
-            for level in irrad.levels:
-                for position in level.positions:
-                    yield position, sln + i
-                    i += 1
-
-                if level_offset:
-                    sln = sln + level_offset
-                    i = 0
-                    if not offset:
-                        i = -1
-
-
-        return gen(offset, level_offset)
 
     def _load_positions_from_file(self, p, dry_run=False):
         '''
@@ -285,56 +202,67 @@ class LabnumberEntry(IsotopeDatabaseManager):
             pos = sheet.cell_value(ri, pos_idx)
 
             dbln = db.add_labnumber('', sample=sample,
-                                        unique=False)
+                                    unique=False)
 
             weight = None
             if weight_idx:
                 weight = sheet.cell_value(ri, weight_idx)
             db.add_irradiation_position(pos, dbln, irradiation, dblevel,
                                         weight=weight,
-                                        )
+            )
 
         if not dry_run:
             db.commit()
 
         self.updated = True
         self.level = level
-#         self._update_level()
 
-    # @simple_timer()
+        #         self._update_level()
+
+    def _load_holder_canvas(self, holder):
+        geom = holder.geometry
+        if geom:
+            canvas = self.canvas
+            holes = [(x, y, 0.175, str(c + 1)) for c, (x, y) in self._iter_geom(geom)]
+            canvas.load_scene(holes)
+
+    def _iter_geom(self, geom):
+        f = lambda x: struct.unpack('>ff', geom[x:x + 8])
+        return ((i, f(gi)) for i, gi in enumerate(xrange(0, len(geom), 8)))
+
     def _load_holder_positions(self, holder):
         self.irradiated_positions = []
         geom = holder.geometry
         if geom:
-            self.irradiated_positions = [IrradiatedPosition(hole=c + 1,
-                                                            pos=struct.unpack('>ff',
-                                                                              geom[i:i + 8]))
-                                        for c, i in enumerate(xrange(0, len(geom), 8))]
+            self.initialized = False
+            self.irradiated_positions = [IrradiatedPosition(hole=c + 1, pos=p)
+                                         for c, p in self._iter_geom(geom)]
+            self.initialized = True
 
 
         elif holder.name:
             self._load_holder_positons_from_file(holder.name)
 
     def _load_holder_positons_from_file(self, name):
-            p = os.path.join(self._get_map_path(), name)
-            self.irradiated_positions = []
-            with open(p, 'r') as f:
-                line = f.readline()
-                nholes, _diam = line.split(',')
-                self.irradiated_positions = [IrradiatedPosition(hole=ni + 1)
-                                             for ni in range(int(nholes))
-                                             ]
-
-#                 for ni in range(int(nholes)):
-#                     self.irradiated_positions.append(IrradiatedPosition(hole=ni + 1))
+        p = os.path.join(self._get_map_path(), name)
+        self.irradiated_positions = []
+        with open(p, 'r') as f:
+            line = f.readline()
+            nholes, _diam = line.split(',')
+            self.initialized = False
+            self.irradiated_positions = [IrradiatedPosition(hole=ni + 1)
+                                         for ni in range(int(nholes))]
+            self.initialized = True
 
     def _save_to_db(self):
         db = self.db
+
         with db.session_ctx():
+            n = len(self.irradiated_positions)
+            prog = self.open_progress(n)
+
             for irs in self.irradiated_positions:
                 ln = irs.labnumber
-                if not ln:
-                    continue
 
                 sam = irs.sample
                 proj = irs.project
@@ -349,52 +277,130 @@ class LabnumberEntry(IsotopeDatabaseManager):
                     sam = db.add_sample(sam,
                                         project=proj,
                                         material=mat,
-                                        )
+                    )
+                if ln:
+                    dbln = db.get_labnumber(ln)
+                    if dbln:
+                        pos = dbln.irradiation_position
+                        if pos is None:
+                            pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
+                        else:
+                            lev = pos.level
+                            irrad = lev.irradiation
+                            if self.irradiation != irrad.name:
+                                self.warning_dialog(
+                                    'Labnumber {} already exists in Irradiation {}'.format(ln, irrad.name))
+                                return
+                            if irs.hole != pos.position:
+                                pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
 
-                dbln = db.get_labnumber(ln)
-                if dbln:
-                    pos = dbln.irradiation_position
-                    if pos is None:
-                        pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
                     else:
-                        lev = pos.level
-                        irrad = lev.irradiation
-                        if self.irradiation != irrad.name:
-                            self.warning_dialog('Labnumber {} already exists in Irradiation {}'.format(ln, irrad.name))
-                            return
-                        if irs.hole!=pos.position:
-                            pos=db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
+                        dbln = db.add_labnumber(ln, sample=sam, )
+                        pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
 
-                    dbln.sample = db.get_sample(sam)
-                    dbln.note = irs.note
+                    def add_flux():
+                        hist = db.add_flux_history(pos)
+                        dbln.selected_flux_history = hist
+                        f = db.add_flux(irs.j, irs.j_err)
+                        f.history = hist
 
-                else:
-                    dbln = db.add_labnumber(ln, sample=sam,)
-                    pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
-
-                def add_flux():
-                    hist = db.add_flux_history(pos)
-                    dbln.selected_flux_history = hist
-                    f = db.add_flux(irs.j, irs.j_err)
-                    f.history = hist
-
-                if dbln.selected_flux_history:
-                    tol = 1e-10
-                    flux = dbln.selected_flux_history.flux
-                    if abs(flux.j - irs.j) > tol or abs(flux.j_err - irs.j_err) > tol:
+                    if dbln.selected_flux_history:
+                        tol = 1e-10
+                        flux = dbln.selected_flux_history.flux
+                        if abs(flux.j - irs.j) > tol or abs(flux.j_err - irs.j_err) > tol:
+                            add_flux()
+                    else:
                         add_flux()
                 else:
-                    add_flux()
+                    dbpos = db.get_irradiation_position(self.irradiation, self.level, irs.hole)
+                    if not dbpos or not dbpos.labnumber:
+                        dbln = db.add_labnumber('',
+                                                unique=False,
+                                                sample=sam,
+                                                note=irs.note)
 
-                self.info('changes saved to database')
+                        db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
+                    else:
+                        dbln = dbpos.labnumber
 
-#===============================================================================
-# handlers
-#===============================================================================
-    def _generate_labnumbers_button_fired(self):
-        self._generate_labnumbers(offset=0,
-                                  level_offset=0,
-                                  dry_run=False)
+                if sam:
+                    dbln.sample = sam
+
+                dbln.note = irs.note
+                prog.change_message('Saving {}{}{} labnumber={}'.format(self.irradiation,
+                                                                        self.level,
+                                                                        irs.hole,
+                                                                        dbln.identifier))
+                prog.increment()
+
+        self.dirty = False
+        self.info('chang saved to database')
+
+    def _increment(self, name):
+        """
+            convert name into an integer and add 1
+
+            potential forms
+            NM-001
+            NM001
+            NM-ABC-001
+
+        """
+
+        if '-' in name:
+            args = name.split('-')
+            last = args[-1]
+            head = '-'.join(args[:-1])
+            j = '-'
+        else:
+            j = ''
+            #remove leading chars
+            last = name
+            head = ''
+            while last:
+                try:
+                    last = int(last)
+                    break
+                except ValueError:
+                    head += last[0]
+                    last = last[1:]
+
+        try:
+            return j.join((head, '{:03n}'.format(int(last) + 1)))
+        except ValueError:
+            return name
+
+
+            #===============================================================================
+        # handlers
+        #===============================================================================
+
+    @on_trait_change('canvas:selected')
+    def _handle_canvas_selected(self, new):
+        if new:
+            self.selected = [next((ir for ir in self.irradiated_positions
+                                   if ir.hole == int(new.name)), None)]
+            if self.selected:
+                self._set_selected_values(self.selected[0])
+
+    def _set_selected_values(self, new):
+        sam = self.selected_sample
+        if sam:
+            ok = True
+            if new.labnumber:
+                ok = self.confirmation_dialog(
+                    'This position already has a labnumber. Are you sure you want to change the Sample info? THIS CHANGE CANNOT BE UNDONE')
+
+            if ok:
+                if new.sample == sam.name:
+                    new.sample = ''
+                    new.project = ''
+                    new.material = ''
+                else:
+                    new.sample = sam.name
+                    new.project = sam.project
+                    new.material = sam.material
+                self.refresh_table = True
 
     def _load_file_button_fired(self):
         p = self.open_file_dialog()
@@ -402,18 +408,35 @@ class LabnumberEntry(IsotopeDatabaseManager):
             self._load_positions_from_file(p)
 
     def _add_irradiation_button_fired(self):
+
+        lastname = self.irradiations[0]
+        #try to auto increment the irrad
+        if self.irradiation_prefix:
+            db = self.db
+            with db.session_ctx():
+                def f(table):
+                    return (table.name.startswith(self.irradiation_prefix),)
+
+                dbirrad = db.get_irradiations(names=f,
+                                              order_func='desc',
+                                              limit=1)
+                if dbirrad:
+                    lastname = dbirrad[0].name
+                    #try to increment lastname
+                    lastname = self._increment(lastname)
+
         irrad = Irradiation(db=self.db,
-                            trays=self.trays
-                            )
-
-
+                            trays=self.trays,
+                            name=lastname
+        )
         while 1:
             info = irrad.edit_traits(kind='livemodal')
             if info.result:
                 result = irrad.save_to_db()
                 if result is True:
                     self.irradiation = irrad.name
-                    self.saved = True
+                    self.dirty = True
+                    #self.saved = True
 
                     break
                 elif result is False:
@@ -425,7 +448,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
         irrad = Irradiation(db=self.db,
                             trays=self.trays,
                             name=self.irradiation
-                            )
+        )
         irrad.load_production_name()
         irrad.load_chronology()
 
@@ -434,13 +457,12 @@ class LabnumberEntry(IsotopeDatabaseManager):
             irrad.edit_db()
 
     def _edit_level_button_fired(self):
-
         _prev_tray = self.tray_name
         irradiation = self.irradiation
         level = Level(db=self.db,
                       name=self.level,
                       trays=self.trays
-                      )
+        )
         level.load(irradiation)
         info = level.edit_traits(kind='livemodal')
         if info.result:
@@ -459,58 +481,45 @@ class LabnumberEntry(IsotopeDatabaseManager):
                 if not self.confirmation_dialog('Irradiation Tray changed. Copy labnumbers to new tray'):
                     self._load_holder_positions(level.tray)
 
-
     def _add_level_button_fired(self):
         irrad = self.irradiation
-        irrad = self.db.get_irradiation(irrad)
-        try:
-            level = irrad.levels[-1]
-            lastlevel = level.name
-            lastz = level.z
-            nind = list(ALPHAS).index(lastlevel) + 1
-        except IndexError:
-            nind = 0
-            lastz = 0
+        db = self.db
+        with db.session_ctx():
+            irrad = db.get_irradiation(irrad)
+            try:
+                level = irrad.levels[-1]
+                lastlevel = level.name
+                lastz = level.z
+                nind = list(ALPHAS).index(lastlevel) + 1
+            except IndexError:
+                nind = 0
+                lastz = 0
 
-        try:
-            t = Level(name=ALPHAS[nind],
-                      z=lastz if lastz is not None else 0,
-                      tray=self.tray_name,
-                      trays=self.trays)
-        except IndexError:
-            self.warning_dialog('Too many Trays')
-            return
+            try:
+                t = Level(name=ALPHAS[nind],
+                          z=lastz if lastz is not None else 0,
+                          tray=self.tray_name,
+                          trays=self.trays)
+            except IndexError:
+                self.warning_dialog('Too many Trays')
+                return
 
-        info = t.edit_traits(kind='livemodal')
-        if info.result:
-            irrad = self.db.get_irradiation(irrad)
-            if not next((li for li in irrad.levels if li.name == t.name), None):
-                self.db.add_irradiation_level(t.name, irrad, t.tray, t.z)
-                self.db.commit()
-                self.level = t.name
-                self.saved = True
-            else:
-                self.warning_dialog('Level {} already exists for Irradiation {}'.format(self.irradiation))
+            info = t.edit_traits(kind='livemodal')
+            if info.result:
+                #irrad = self.db.get_irradiation(irrad)
+                if not next((li for li in irrad.levels if li.name == t.name), None):
+                    db.add_irradiation_level(t.name, irrad, t.tray, t.z)
+                    #self.db.commit()
+                    self.level = t.name
+                    self.dirty = True
+                else:
+                    self.warning_dialog('Level {} already exists for Irradiation {}'.format(self.irradiation))
 
-
-#         self.irradiated_positions = []
-
-
-#     _level_thread = None
     def _level_changed(self):
-#         if self._level_thread:
-#             if self._level_thread.isRunning():
-#                 return
         self.debug('level changed')
         self.irradiated_positions = []
         if self.level:
             self._update_level()
-
-#         from threading import Thread
-#         t = Thread(target=self._update_level)
-#         t.start()
-#         self._level_thread = t
-#         t.join()
 
     # @simple_timer()
     def _update_level(self, name=None):
@@ -529,13 +538,16 @@ class LabnumberEntry(IsotopeDatabaseManager):
             self.debug('holder {}'.format(level.holder))
             if level.holder:
                 self._load_holder_positions(level.holder)
+                self._load_holder_canvas(level.holder)
 
             positions = level.positions
             n = len(self.irradiated_positions)
             self.debug('positions in level {}.  \
-                        available holder positions{}'.format(n, len(self.irradiated_positions)))
+                        available holder positions {}'.format(n, len(self.irradiated_positions)))
             if positions:
+                self.initialized = False
                 self._make_positions(n, positions)
+                self.initialized = True
 
     # @simple_timer()
     def _make_positions(self, n, positions):
@@ -543,69 +555,48 @@ class LabnumberEntry(IsotopeDatabaseManager):
             hi = pi.position - 1
             if hi < n:
                 ir = self.irradiated_positions[hi]
-                self._position_factory(pi, ir)
+                self._sync_position(pi, ir)
             else:
                 self.debug('extra irradiation position for this tray {}'.format(hi))
 
-
-    @on_trait_change('project, sample')
-    def _edit_handler(self, name, new):
-        if self.selected:
-
-            for si in self.selected:
-                setattr(si, name, new)
-
-            if name == 'sample':
-                sample = self.db.get_sample(new)
-                material = sample.material
-                material = material.name if material else ''
-
-                for si in self.selected:
-                    setattr(si, 'material', material)
-
-
-        self.refresh_table = True
-
-#===============================================================================
-# factorys
-#===============================================================================
-    def _position_factory(self, dbpos, ir):
+    def _sync_position(self, dbpos, ir):
         ln = dbpos.labnumber
-        position = int(dbpos.position)
+        if ln:
+            position = int(dbpos.position)
 
-        labnumber = ln.identifier if ln else None
-        ir.trait_set(labnumber=str(labnumber), hole=position)
-#         ir = IrradiatedPosition(labnumber=str(labnumber), hole=position)
-#         if labnumber:
-        selhist = ln.selected_flux_history
-        if selhist:
-            flux = selhist.flux
-            if flux:
-                ir.j = flux.j
-                ir.j_err = flux.j_err
-#
-        sample = ln.sample
-        if sample:
-            ir.sample = sample.name
-            material = sample.material
-            project = sample.project
-            if project:
-                ir.project = project.name
-            if material:
-                ir.material = material.name
+            labnumber = ln.identifier if ln else None
+            ir.trait_set(labnumber=str(labnumber), hole=position)
+            #         ir = IrradiatedPosition(labnumber=str(labnumber), hole=position)
+            #         if labnumber:
+            selhist = ln.selected_flux_history
+            if selhist:
+                flux = selhist.flux
+                if flux:
+                    ir.j = flux.j
+                    ir.j_err = flux.j_err
+                    #
+            sample = ln.sample
+            if sample:
+                ir.sample = sample.name
+                material = sample.material
+                project = sample.project
+                if project:
+                    ir.project = project.name
+                if material:
+                    ir.material = material.name
 
-        if dbpos.weight:
-            ir.weight = str(dbpos.weight)
+            if dbpos.weight:
+                ir.weight = str(dbpos.weight)
 
-        note = ln.note
-        if note:
-            ir.note = note
+            note = ln.note
+            if note:
+                ir.note = note
 
-        return ir
 
-#===============================================================================
-# property get/set
-#===============================================================================
+                #===============================================================================
+                # property get/set
+                #===============================================================================
+
     @cached_property
     def _get_projects(self):
         order = gen_ProjectTable.name.asc()
@@ -636,8 +627,8 @@ class LabnumberEntry(IsotopeDatabaseManager):
             holder = holder if holder is not None else NULL_STR
             self.tray_name = holder
             im = ImageResource('{}.png'.format(holder),
-                                 search_path=[p]
-                                 )
+                               search_path=[p]
+            )
             return im
 
     @cached_property
@@ -649,10 +640,10 @@ class LabnumberEntry(IsotopeDatabaseManager):
             return Undefined
 
         ts = [os.path.splitext(pi)[0] for pi in os.listdir(p) if not pi.startswith('.')
-#                    if not (pi.endswith('.png')
-#                            or pi.endswith('.pct')
-#                            or pi.startswith('.'))
-              ]
+              #                    if not (pi.endswith('.png')
+              #                            or pi.endswith('.pct')
+              #                            or pi.startswith('.'))
+        ]
         if ts:
             self.tray = ts[-1]
 
@@ -668,15 +659,39 @@ class LabnumberEntry(IsotopeDatabaseManager):
         return self.level is not None
 
 
+    @on_trait_change('irradiated_positions:+')
+    def _set_dirty(self, name, new):
+        if self.initialized:
+            self.dirty = True
+
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
+
     paths.build('_experiment')
 
     logging_setup('runid')
     m = LabnumberEntry()
     m.configure_traits()
 #============= EOF =============================================
+#@on_trait_change('project, sample')
+#def _edit_handler(self, name, new):
+#    if self.selected:
+#
+#        for si in self.selected:
+#            setattr(si, name, new)
+#
+#        if name == 'sample':
+#            sample = self.db.get_sample(new)
+#            material = sample.material
+#            material = material.name if material else ''
+#
+#            for si in self.selected:
+#                setattr(si, 'material', material)
+#
+#
+#    self.refresh_table = True
+
 #     def _set_auto_params(self, s, rid):
 #         s.labnumber = rid
 #         s.sample = self.auto_sample
