@@ -15,33 +15,29 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str
+from traits.api import HasTraits, List
+from traitsui.api import View, ListStrEditor, UItem
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
+class IrradiationTableView(HasTraits):
+    irradiations = List
+    selected = List
 
-class RecordView(HasTraits):
-    def __init__(self, dbrecord):
-        self._create(dbrecord)
+    def traits_view(self):
+        v = View(UItem('irradiations',
+                       editor=ListStrEditor(selected='selected',
+                                            multi_select=True,
+                                            editable=False)
+        ),
+                 buttons=['OK', 'Cancel'],
+                 title='Irradiations',
+                 height=500,
+                 resizable=True,
+                 kind='modal'
+        )
+        return v
 
-    def _create(self, *args, **kw):
-        pass
+        #============= EOF =============================================
 
-
-class SampleRecordView(RecordView):
-    name = Str
-    material = Str
-
-    def _create(self, dbrecord):
-        self.name = dbrecord.name
-        if dbrecord.material:
-            self.material = dbrecord.material.name
-
-
-class ProjectRecordView(RecordView):
-    name = Str
-
-    def _create(self, dbrecord):
-        self.name = dbrecord.name
-
-    #============= EOF =============================================

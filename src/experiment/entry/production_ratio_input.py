@@ -18,22 +18,26 @@
 from traits.api import HasTraits, Float, Str, Instance, Unicode, Property, Event
 from traitsui.api import View, Item, HGroup, VGroup, CheckListEditor
 from traitsui.menu import Action
-from src.database.adapters.isotope_adapter import IsotopeAdapter
 from traits.trait_errors import TraitError
+
+from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.saveable import Saveable
 from src.helpers.traitsui_shortcuts import instance_item
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class ProductionRatio(HasTraits):
     value = Float
     error = Float
     name = Unicode
+
     def traits_view(self):
         v = View(HGroup(Item('name', style='readonly'),
-                      Item('value'),
-                      Item('error'),
-                      show_labels=False))
+                        Item('value'),
+                        Item('error'),
+                        show_labels=False))
         return v
+
 
 class ProductionRatioInput(Saveable):
     db = Instance(IsotopeAdapter)
@@ -43,22 +47,22 @@ class ProductionRatioInput(Saveable):
     names = Property(depends_on='saved')
     saved = Event
     # K interferences
-    k4039 = Instance(ProductionRatio, (), {'name':'K 40/39'})
-    k3839 = Instance(ProductionRatio, (), {'name':'K 38/39'})
-    k3739 = Instance(ProductionRatio, (), {'name':'K 37/39'})
+    k4039 = Instance(ProductionRatio, (), {'name': 'K 40/39'})
+    k3839 = Instance(ProductionRatio, (), {'name': 'K 38/39'})
+    k3739 = Instance(ProductionRatio, (), {'name': 'K 37/39'})
 
 
-#    #Ca interferences
-    ca3937 = Instance(ProductionRatio, (), {'name':'Ca 39/37'})
-    ca3837 = Instance(ProductionRatio, (), {'name':'Ca 38/37'})
-    ca3637 = Instance(ProductionRatio, (), {'name':'Ca 36/37'})
+    #    #Ca interferences
+    ca3937 = Instance(ProductionRatio, (), {'name': 'Ca 39/37'})
+    ca3837 = Instance(ProductionRatio, (), {'name': 'Ca 38/37'})
+    ca3637 = Instance(ProductionRatio, (), {'name': 'Ca 36/37'})
 
-#    #Cl interference
-    cl3638 = Instance(ProductionRatio, (), {'name':'Cl 36/38'})
+    #    #Cl interference
+    cl3638 = Instance(ProductionRatio, (), {'name': 'Cl 36/38'})
 
     # elemental production ratio
-    Ca_K = Instance(ProductionRatio, (), {'name':'Ca/K'})
-    Cl_K = Instance(ProductionRatio, (), {'name':'Cl/K'})
+    Ca_K = Instance(ProductionRatio, (), {'name': 'Ca/K'})
+    Cl_K = Instance(ProductionRatio, (), {'name': 'Cl/K'})
 
     def _get_names(self):
         db = self.db
@@ -70,10 +74,10 @@ class ProductionRatioInput(Saveable):
         db = self.db
 
         keys = [
-                'k4039', 'k3839', 'k3739',
-                'ca3937', 'ca3837', 'ca3637',
-                'cl3638'
-                ]
+            'k4039', 'k3839', 'k3739',
+            'ca3937', 'ca3837', 'ca3637',
+            'cl3638'
+        ]
         ekeys = ['{}_err'.format(ki) for ki in keys]
         values = [getattr(self, ki).value for ki in keys]
         errors = [getattr(self, ki).error for ki in keys]
@@ -93,11 +97,11 @@ class ProductionRatioInput(Saveable):
             params['name'] = self.name
             db.add_irradiation_production(**params)
 
-
         db.commit()
         self.saved = True
         self._db_name = '{}'.format(self.name)
-#        self.trait_set(_db_name='{}'.format(self.name), trait_change_notify=False)
+
+    #        self.trait_set(_db_name='{}'.format(self.name), trait_change_notify=False)
 
     def _get_db_name(self):
         return self._db_name
@@ -108,7 +112,8 @@ class ProductionRatioInput(Saveable):
     def _name_changed(self):
         if self.name in self.names:
             self._db_name = '{}'.format(self.name)
-#
+            #
+
     def __db_name_changed(self):
         ip = self.db.get_irradiation_production(self.db_name)
         self.name = self._db_name
@@ -139,50 +144,50 @@ class ProductionRatioInput(Saveable):
         except TraitError:
             pass
 
-#    def save_as(self):
-#        print 'asdfasd'
+            #    def save_as(self):
+            #        print 'asdfasd'
 
     def traits_view(self):
         kgrp = VGroup(instance_item('k4039'),
                       instance_item('k3839'),
                       instance_item('k3739'),
-                       label='K', show_border=True)
+                      label='K', show_border=True)
         cagrp = VGroup(
-                       instance_item('ca3937'),
-                       instance_item('ca3837'),
-                       instance_item('ca3637'),
-                       label='Ca', show_border=True)
+            instance_item('ca3937'),
+            instance_item('ca3837'),
+            instance_item('ca3637'),
+            label='Ca', show_border=True)
         clgrp = VGroup(
-                       instance_item('cl3638'),
-                       label='Cl', show_border=True)
+            instance_item('cl3638'),
+            label='Cl', show_border=True)
         elem_grp = VGroup(
-                        instance_item('Ca_K'),
-                        instance_item('Cl_K'),
-                        label='Elemental', show_border=True)
+            instance_item('Ca_K'),
+            instance_item('Cl_K'),
+            label='Elemental', show_border=True)
 
         v = View(
-                 VGroup(
-                     HGroup(Item('name'),
-                            Item('db_name',
-                                 show_label=False,
-                                 editor=CheckListEditor(name='names'))
-                            ),
-                     VGroup(kgrp,
-                            cagrp,
-                            clgrp,
-                            elem_grp
-                            )
-                        ),
-                 width=300,
-                 resizable=True,
-                 buttons=[Action(name='Save', action='save',
-#                                enabled_when='object.save_enabled'
-                                ),
-                          'Cancel'
-                          ],
-                 handler=self.handler_klass,
-                 title='Production Ratio Input'
-                 )
+            VGroup(
+                HGroup(Item('name'),
+                       Item('db_name',
+                            show_label=False,
+                            editor=CheckListEditor(name='names'))
+                ),
+                VGroup(kgrp,
+                       cagrp,
+                       clgrp,
+                       elem_grp
+                )
+            ),
+            width=300,
+            resizable=True,
+            buttons=[Action(name='Save', action='save',
+                            #                                enabled_when='object.save_enabled'
+            ),
+                     'Cancel'
+            ],
+            handler=self.handler_klass,
+            title='Production Ratio Input'
+        )
         return v
 
 #    def _db_default(self):

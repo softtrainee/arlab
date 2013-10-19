@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Float, Bool, Int, on_trait_change, Property
+from traits.api import HasTraits, Str, Float, Bool, Int, Property
 from traitsui.tabular_adapter import TabularAdapter
 from src.constants import PLUSMINUS
 #============= standard library imports ========================

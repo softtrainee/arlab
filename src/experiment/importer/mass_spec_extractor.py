@@ -15,24 +15,22 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from docutils.nodes import comment
 from traits.api import HasTraits, Str, Bool, Instance, Button
-from src.experiment.utilities.identifier import convert_labnumber
-from src.processing.importer.extractor import Extractor
-from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
-from src.database.database_connection_spec import DBConnectionSpec
+#============= standard library imports ========================
 import struct
 import datetime
 from sqlalchemy.sql.expression import and_, not_
+from sqlalchemy.orm.exc import NoResultFound
+#============= local library imports  ==========================
 from src.database.orms.massspec_orm import AnalysesTable, MachineTable, \
     LoginSessionTable, RunScriptTable
-from sqlalchemy.orm.exc import NoResultFound
-import time
 from src.helpers.filetools import unique_path
-import os
 from src.paths import paths
-#============= standard library imports ========================
-#============= local library imports  ==========================
+from src.experiment.importer.extractor import Extractor
+from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
+from src.database.database_connection_spec import DBConnectionSpec
+
+
 SAMPLE_DICT = {'ba': 'blank_air', 'bc': 'blank_cocktail', 'bu': 'blank_unknown',
                'a': 'air', 'c': 'cocktail'}
 

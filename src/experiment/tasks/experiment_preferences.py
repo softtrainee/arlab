@@ -15,12 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, Password, Enum, List, Button, Any, Int, \
-    on_trait_change, Bool
-from traitsui.api import View, Item, Group, VGroup, HGroup, ListStrEditor
-from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
-from traitsui.list_str_adapter import ListStrAdapter
+from traits.api import Str, Int, \
+    Bool
+from traitsui.api import View, Item, Group, VGroup
 from envisage.ui.tasks.preferences_pane import PreferencesPane
+
+from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
+
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -37,6 +38,8 @@ class ExperimentPreferences(BasePreferencesHelper):
 
     use_auto_save = Bool
     auto_save_delay = Int
+
+    irradiation_prefix = Str
 
 
 class ExperimentPreferencesPane(PreferencesPane):
@@ -66,9 +69,13 @@ class ExperimentPreferencesPane(PreferencesPane):
             ),
             label='Editor'
         )
+        irradiation_grp = Group(Item('irradiation_prefix',
+                                     label='Irradiation Prefix'), label='Irradiations')
+
         return View(
             auto_figure_grp,
-            editor_grp
+            editor_grp,
+            irradiation_grp,
         )
 
 #============= EOF =============================================

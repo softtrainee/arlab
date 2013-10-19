@@ -15,12 +15,33 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
-from src.loggable import Loggable
+from traits.api import List, Property, Int
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class Extractor(Loggable):
-    def import_irradiation(self):
-        pass
+
 #============= EOF =============================================
+from traitsui.tabular_adapter import TabularAdapter
+
+
+class BrowserAdapter(TabularAdapter):
+    font = 'arial 10'
+    all_columns = List
+    all_columns_dict = Property
+
+    def _get_all_columns_dict(self):
+        return dict(self.all_columns)
+
+
+class ProjectAdapter(BrowserAdapter):
+    columns = [('Name', 'name')]
+
+
+class SampleAdapter(BrowserAdapter):
+    columns = [('Sample', 'name'), ('Material', 'material')]
+    all_columns = [('Sample', 'name'), ('Material', 'material')]
+    #     material_text = Property
+    odd_bg_color = 'lightgray'
+
+    name_width = Int(150)
+    material_width = Int(100)

@@ -58,7 +58,7 @@ class InitializationParser(XMLParser):
 
     def __init__(self, *args, **kw):
         ver = '_proc'
-        #ver = '_exp'
+        ver = '_exp'
         #ver= '_spec'
         #ver = ''
         p = os.path.join(paths.setup_dir, 'initialization{}.xml'.format(ver))

@@ -17,11 +17,12 @@
 #============= enthought library imports =======================
 from traits.api import Color, Instance
 from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
-    ButtonEditor, EnumEditor, UCustom, Group, Spring, VFold, Label, InstanceEditor, \
+    EnumEditor, Group, Spring, VFold, Label, InstanceEditor, \
     CheckListEditor, VSplit, TabularEditor
 # from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from traitsui.tabular_adapter import TabularAdapter
+from src.envisage.tasks.pane_helpers import new_button_editor
 from src.experiment.utilities.identifier import SPECIAL_NAMES
 # from src.ui.tabular_editor import myTabularEditor
 # from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
@@ -29,8 +30,6 @@ from src.constants import MEASUREMENT_COLOR, EXTRACTION_COLOR, \
     NOT_EXECUTABLE_COLOR, SKIP_COLOR, SUCCESS_COLOR, CANCELED_COLOR, \
     TRUNCATED_COLOR, FAILED_COLOR, END_AFTER_COLOR
 from src.ui.custom_label_editor import CustomLabel
-from src.paths import paths
-from pyface.image_resource import ImageResource
 from src.experiment.plot_panel import PlotPanel
 
 #============= standard library imports ========================
@@ -68,16 +67,6 @@ def make_rt_name(name):
 
 def RTItem(name, **kw):
     return Item(make_rt_name(name), **kw)
-
-
-def new_button_editor(trait, name, **kw):
-    name = '{}.png'.format(name)
-    return UItem(trait, style='custom',
-                 editor=ButtonEditor(image=ImageResource(name=name,
-                                                         search_path=paths.icon_search_path
-                 )),
-                 **kw
-    )
 
 
 class ExperimentFactoryPane(TraitsDockPane):

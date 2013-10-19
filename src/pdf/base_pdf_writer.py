@@ -24,13 +24,40 @@ from reportlab.lib.styles import getSampleStyleSheet
 #============= local library imports  ==========================
 from src.loggable import Loggable
 from reportlab.platypus.frames import Frame
-from reportlab.platypus.flowables import Spacer
+from reportlab.platypus.flowables import Spacer, PageBreak
 from reportlab.lib import colors
 from src.pdf.items import Anchor, Row
 from reportlab.lib.pagesizes import landscape, letter
 from src.helpers.formatting import floatfmt
 
-# STYLES = getSampleStyleSheet()
+from reportlab.pdfgen import canvas
+from reportlab.lib.units import mm
+
+
+class NumberedCanvas(canvas.Canvas):
+    def __init__(self, *args, **kwargs):
+        canvas.Canvas.__init__(self, *args, **kwargs)
+        self._saved_page_states = []
+
+    def showPage(self):
+        self._saved_page_states.append(dict(self.__dict__))
+        self._startPage()
+
+    def save(self):
+        """add page info to each page (page x of y)"""
+        num_pages = len(self._saved_page_states)
+        for state in self._saved_page_states:
+            self.__dict__.update(state)
+            self.draw_page_number(num_pages)
+            canvas.Canvas.showPage(self)
+        canvas.Canvas.save(self)
+
+    def draw_page_number(self, page_count):
+        self.setFont("Helvetica", 7)
+        self.drawRightString(200 * mm, 20 * mm,
+                             "Page %d of %d" % (self._pageNumber, page_count))
+
+
 class BasePDFWriter(Loggable):
     _footnotes = None
     orientation = 'portrait'
@@ -41,6 +68,7 @@ class BasePDFWriter(Loggable):
     bottom_margin = 0.25
 
     use_alternating_background = True
+    show_page_numbers = False
 
     def _new_base_doc_template(self, path):
         pagesize = letter
@@ -71,7 +99,10 @@ class BasePDFWriter(Loggable):
         for ti in templates:
             doc.addPageTemplates(ti)
 
-        doc.build(flowables)
+        if self.show_page_numbers:
+            doc.build(flowables, canvasmaker=NumberedCanvas)
+        else:
+            doc.build(flowables)
 
     def _build(self, *args, **kw):
         raise NotImplementedError
@@ -152,6 +183,9 @@ class BasePDFWriter(Loggable):
 
         p = Paragraph(t, style)
         return p
+
+    def _page_break(self):
+        return PageBreak()
 
     def _default_frame(self, doc):
         return Frame(doc.leftMargin, doc.bottomMargin,

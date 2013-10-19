@@ -16,7 +16,6 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, on_trait_change, Any, Event
-from traitsui.api import TreeNode
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.canvas.canvas2D.scene.primitives.primitives import Primitive
@@ -42,6 +41,9 @@ class Scene(HasTraits):
     selected = Any
     layout_needed = Event
     font = None
+
+    _xrange = -1, 1
+    _yrange = -1, 1
 
     @on_trait_change('layers:visible')
     def _refresh(self):
@@ -207,6 +209,12 @@ class Scene(HasTraits):
                 yv = map(float, elm.text.split(','))
 
         return xv, yv
+
+    def get_xrange(self):
+        return self._xrange
+
+    def get_yrange(self):
+        return self._yrange
 
 #     def traits_view(self):
 #         nodes = [TreeNode(node_for=[SceneBrowser],

@@ -27,13 +27,13 @@ from src.envisage.tasks.base_task import BaseManagerTask
 from src.loading.panes import LoadPane, LoadControlPane, LoadTablePane
 from src.canvas.canvas2D.loading_canvas import LoadingCanvas
 from src.loading.actions import SaveLoadingAction
-from src.loading.loading_manager import LoadingManager, LoadPosition
 from src.loading.loading_pdf_writer import LoadingPDFWriter
 from apptools.preferences.preference_binding import bind_preference
 import os
 from src.paths import paths
 from datetime import datetime
 from pyface.timer.do_later import do_later
+
 
 class LoadingTask(BaseManagerTask):
     name = 'Loading'
@@ -48,13 +48,13 @@ class LoadingTask(BaseManagerTask):
 
     tool_bars = [SToolBar(SaveLoadingAction(),
                           image_size=(32, 32)
-                          )]
+    )]
 
     def activated(self):
-#         self.manager.tray = 'A'
-#         self.manager.irradiation = 'NM-251'
-#         self.manager.level = 'H'
-#         self.manager.labnumber = '61311'
+    #         self.manager.tray = 'A'
+    #         self.manager.irradiation = 'NM-251'
+    #         self.manager.level = 'H'
+    #         self.manager.labnumber = '61311'
 
         if self.manager.setup():
             bind_preference(self, 'save_directory', 'pychron.loading.save_directory')
@@ -62,14 +62,14 @@ class LoadingTask(BaseManagerTask):
             do_later(self.window.close)
 
 
-#     def _manager_default(self):
-#         return LoadingManager()
+            #     def _manager_default(self):
+            #         return LoadingManager()
 
     def _default_layout_default(self):
         return TaskLayout(
-                          left=PaneItem('pychron.loading.controls'),
-                          bottom=PaneItem('pychron.loading.positions')
-                          )
+            left=PaneItem('pychron.loading.controls'),
+            bottom=PaneItem('pychron.loading.positions')
+        )
 
     def prepare_destroy(self):
         pass
@@ -78,12 +78,12 @@ class LoadingTask(BaseManagerTask):
 
         self.control_pane = LoadControlPane(model=self.manager)
         self.table_pane = LoadTablePane(model=self.manager)
-#         self.irradiation_pane = LoadIrradiationPane(model=self.manager)
+        #         self.irradiation_pane = LoadIrradiationPane(model=self.manager)
         return [self.control_pane,
                 self.table_pane,
-#                 self.irradiation_pane
+                #                 self.irradiation_pane
 
-                ]
+        ]
 
     def create_central_pane(self):
         self.load_pane = LoadPane()
@@ -107,25 +107,26 @@ class LoadingTask(BaseManagerTask):
         meta = dict(load_name=ln, username=un,
                     load_date=date_str,
                     projects='Ross, Test'
-                    )
+        )
         path = os.path.join(root, '{}.pdf'.format(ln))
         p.build(path, positions, self.canvas, meta)
 
-#     @on_trait_change('manager:load_name')
-#     def _load_changed(self, new):
-#         if new:
-#             self.manager.tray = ''
-#             self.manager.load_load(new)
+    #     @on_trait_change('manager:load_name')
+    #     def _load_changed(self, new):
+    #         if new:
+    #             self.manager.tray = ''
+    #             self.manager.load_load(new)
 
     @on_trait_change('manager:tray')
     def _tray_changed(self, new):
         if new:
             c = LoadingCanvas(
-                              view_x_range=(-2.2, 2.2),
-                              view_y_range=(-2.2, 2.2),
+                view_x_range=(-2.2, 2.2),
+                view_y_range=(-2.2, 2.2),
 
-                              )
-            c.load_tray_map(new, self.manager.show_hole_numbers)
+            )
+            c.load_scene(new,
+                         show_hole_numbers=self.manager.show_hole_numbers)
 
             self.canvas = c
             self.load_pane.component = c

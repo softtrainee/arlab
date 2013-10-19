@@ -15,144 +15,104 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property
+from enable.component_editor import ComponentEditor
+from traits.api import Instance
 from traitsui.api import View, Item, TabularEditor, VGroup, spring, HGroup, \
-    EnumEditor, ImageEditor, VFold, UItem, Spring
+    EnumEditor, UItem, Label, VSplit
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 # from src.irradiation.irradiated_position import IrradiatedPositionAdapter
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 # from src.ui.custom_label_editor import CustomLabel
-from traitsui.tabular_adapter import TabularAdapter
-from src.processing.entry.irradiated_position import IrradiatedPositionAdapter
+from src.envisage.tasks.pane_helpers import new_button_editor, spacer
+from src.experiment.entry.irradiated_position import IrradiatedPositionAdapter
 # from traitsui.editors.progress_editor import ProgressEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.experiment.tasks.browser.adapters import ProjectAdapter, SampleAdapter
 
 
 class IrradiationEditorPane(TraitsDockPane):
     id = 'pychron.labnumber.editor'
     name = 'Editor'
+    sample_tabular_adapter = Instance(SampleAdapter, ())
 
     def traits_view(self):
-        v = View(
-            VGroup(
-                UItem('load_file_button'),
-                UItem('generate_labnumbers_button'),
-                HGroup(
-                    Item('project',
-                         editor=EnumEditor(name='projects')),
-                    UItem('add_project_button')
-                ),
-                HGroup(
-                    Item('material',
-                         editor=EnumEditor(name='materials')),
-                    UItem('add_material_button')
-                ),
-                HGroup(
-                    Item('sample',
-                         editor=EnumEditor(name='samples')),
-                    UItem('add_sample_button')
-                ),
+        project_grp = VGroup(
+            HGroup(spacer(),
+                   Label('Filter'),
+                   UItem('project_filter',
+                         width=75),
+                   new_button_editor('clear_selection_button',
+                                     'cross',
+                                     tooltip='Clear selected'),
+                   new_button_editor('edit_project_button', 'database_edit',
+                                     tooltip='Edit selected project in database'),
+                   new_button_editor('add_project_button', 'database_add',
+                                     tooltip='Add project to database')
             ),
+            UItem('projects',
+                  editor=TabularEditor(editable=False,
+                                       selected='selected_project',
+                                       adapter=ProjectAdapter(),
+                                       multi_select=False),
+                  width=75))
 
+        sample_grp = VGroup(
+            HGroup(
+                #Label('Filter'),
+                UItem('sample_filter_parameter',
+                      editor=EnumEditor(name='sample_filter_parameters')),
+                UItem('sample_filter',
+                      width=75),
+                UItem('sample_filter',
+                      editor=EnumEditor(name='sample_filter_values'),
+                      width=-25),
+                #UItem('filter_non_run_samples',
+                #      tooltip='Omit non-analyzed samples'),
+                new_button_editor('configure_sample_table',
+                                  'cog',
+                                  tooltip='Configure Sample Table'),
+                new_button_editor('edit_sample_button', 'database_edit',
+                                  tooltip='Edit sample in database'),
+                new_button_editor('add_sample_button', 'database_add',
+                                  tooltip='Add sample to database')),
+
+            UItem('samples',
+                  editor=TabularEditor(
+                      adapter=self.sample_tabular_adapter,
+                      editable=False,
+                      selected='selected_sample',
+                      multi_select=False,
+                      column_clicked='column_clicked',
+                      stretch_last_section=False
+                  ),
+                  width=75
+            )
         )
+        v = View(VSplit(project_grp,
+                        sample_grp))
         return v
-
-
-class ImportNameAdapter(TabularAdapter):
-    columns = [('Name', 'name')]
-
-
-class ImportedNameAdapter(TabularAdapter):
-    columns = [('Name', 'name'), ('Skipped', 'skipped')]
-    skipped_text = Property
-
-    def _get_skipped_text(self):
-        return 'Yes' if self.item.skipped else ''
-
-    def get_bg_color(self, obj, trait, row, column=0):
-        color = 'white'
-        if self.item.skipped:
-            color = 'red'
-        return color
 
 
 class LabnumbersPane(TraitsTaskPane):
     def traits_view(self):
-        v = View(Item('irradiated_positions',
-                      editor=TabularEditor(adapter=IrradiatedPositionAdapter(),
-                                           refresh='refresh_table',
-                                           multi_select=True,
-                                           selected='selected',
-                                           operations=['edit']
-                      ),
-                      show_label=False
-        )
+        v = View(UItem('irradiated_positions',
+                       editor=TabularEditor(adapter=IrradiatedPositionAdapter(),
+                                            refresh='refresh_table',
+                                            multi_select=True,
+                                            selected='selected',
+                                            operations=['edit'])),
         )
         return v
 
 
-class ImporterPane(TraitsDockPane):
-    name = 'Importer'
-    id = 'pychron.labnumber.importer'
+class IrradiationCanvasPane(TraitsDockPane):
+    name = 'Canvas'
+    id = 'pychron.entry.irradiation_canvas'
 
     def traits_view(self):
-        v = View(
-            VGroup(
-                HGroup(
-                    HGroup(Item('include_analyses', label='Analyses'),
-                           Item('include_blanks', label='Blanks'),
-                           Item('include_airs', label='Airs'),
-                           Item('include_cocktails', label='Cocktails'),
-                           label='Include',
-                           show_border=True,
-                    ),
-                    VGroup(
-                        HGroup(spring,
-                               UItem('import_button'),
-                               #Item('dry_run')
-                        ),
-                        label='Import',
-                        show_border=True
-                    )
-                ),
-                VGroup(
-                    HGroup(spring, Item('data_source')),
-                    #                         VFold(
-                    VGroup(
-                        VGroup(
-                            Item('object.importer.dbconn_spec', style='custom', show_label=False),
-                            HGroup(spring, Item('object.importer.connect_button', show_label=False)),
-                            label='Source'
-                        ),
-                        VGroup(
-
-                            HGroup(Item('import_kind', show_label=False),
-                                   UItem('open_button', visible_when='import_kind=="rid_list"'),
-                            ),
-                            UItem('text_selected'),
-                            HGroup(
-                                Item('names', show_label=False, editor=TabularEditor(adapter=ImportNameAdapter(),
-                                                                                     editable=False,
-                                                                                     selected='selected',
-                                                                                     multi_select=True,
-                                                                                     scroll_to_row='scroll_to_row'
-                                )),
-                                #                                    CustomLabel('custom_label1',
-                                #                                             color='blue',
-                                #                                             size=10),
-                                Item('imported_names', show_label=False,
-                                     editor=TabularEditor(adapter=ImportedNameAdapter(),
-                                                          editable=False,
-                                     ))
-                            ),
-                            #                                    HGroup(spring, Item('import_button', show_label=False)),
-                            label='Results'
-                        )
-                    )
-                )
-            )
-        )
+        v = View(UItem('canvas',
+                       editor=ComponentEditor()))
         return v
 
 
@@ -161,6 +121,30 @@ class IrradiationPane(TraitsDockPane):
     id = 'pychron.labnumber.irradiation'
 
     def traits_view(self):
+        irrad = HGroup(
+            spacer(),
+            Item('irradiation',
+                 width=-150,
+                 editor=EnumEditor(name='irradiations')),
+            new_button_editor('edit_irradiation_button', 'database_edit',
+                              enabled_when='edit_irradiation_enabled'),
+            new_button_editor('add_irradiation_button', 'database_add'))
+
+        level = HGroup(
+            spacer(),
+            Label('Level:'),
+            spacer(-23),
+            UItem('level',
+                  width=-150,
+                  editor=EnumEditor(name='levels')),
+            new_button_editor('edit_level_button', 'database_edit',
+                              enabled_when='edit_level_enabled'),
+            new_button_editor('add_level_button', 'database_add'))
+
+        v = View(VGroup(irrad, level))
+        return v
+
+    def traits_view2(self):
         v = View(
             HGroup(
                 VGroup(HGroup(Item('irradiation',
@@ -176,22 +160,22 @@ class IrradiationPane(TraitsDockPane):
                                    enabled_when='edit_level_enabled',
                                    show_label=False)
                        ),
-                       Item('add_irradiation_button', show_label=False),
-                       Item('add_level_button', show_label=False),
+                       #Item('add_irradiation_button', show_label=False),
+                       #Item('add_level_button', show_label=False),
                        #                                        Item('irradiation_tray',
                        #                                             editor=EnumEditor(name='irradiation_trays')
                        #                                             )
                 ),
-                spring,
-                VGroup(
-                    Item('tray_name', style='readonly', show_label=False),
-                    #                                  Item('irradiation_tray_image',
-                    #                                       editor=ImageEditor(),
-                    #                                       height=100,
-                    #                                       width=200,
-                    #                                       style='custom',
-                    #                                       show_label=False),
-                ),
+                #spring,
+                #VGroup(
+                #    Item('tray_name', style='readonly', show_label=False),
+                #                                  Item('irradiation_tray_image',
+                #                                       editor=ImageEditor(),
+                #                                       height=100,
+                #                                       width=200,
+                #                                       style='custom',
+                #                                       show_label=False),
+                #),
             ),
             #                            label='Irradiation',
             #                            show_border=True

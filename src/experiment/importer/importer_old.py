@@ -89,7 +89,7 @@ class Importer(Loggable):
         # make new h5 file
 
         def write_file(di, data, fit, grp, k):
-#            print di, fit, grp, k
+        #            print di, fit, grp, k
             di = di.replace(' ', '_')
             frame.createGroup('/{}'.format(grp), k)
             where = '/{}/{}'.format(grp, k)
@@ -97,7 +97,7 @@ class Importer(Loggable):
 
             tab.attrs.fit = fit
             for y, x in data:
-#                print y, x
+            #                print y, x
                 nrow = tab.row
                 nrow['time'] = x
                 nrow['value'] = y
@@ -113,50 +113,51 @@ class Importer(Loggable):
 
         dm.close()
 
-#        with zipfile.ZipFile('/Users/ross/Sandbox/importtest/archive.zip', 'a') as z:
-#            z.write(path, os.path.basename(path))
-#
-#        os.remove(path)
+        #        with zipfile.ZipFile('/Users/ross/Sandbox/importtest/archive.zip', 'a') as z:
+        #            z.write(path, os.path.basename(path))
+        #
+        #        os.remove(path)
 
         return name
 
     def traits_view(self):
         dategrp = HGroup(
-                    Item('start_date'),
-                    Item('end_date'),
-                    enabled_when='import_choice=="date"'
-                    )
+            Item('start_date'),
+            Item('end_date'),
+            enabled_when='import_choice=="date"'
+        )
         filegrp = Item('input_file',
-#                       editor=FileEditor(root_path=paths.root_dir),
+                       #                       editor=FileEditor(root_path=paths.root_dir),
                        enabled_when='import_choice=="file"'
-                       )
+        )
         labnumbergrp = Item('labnumber',
-                       enabled_when='import_choice=="labnumber"'
-                       )
+                            enabled_when='import_choice=="labnumber"'
+        )
         projectgrp = Item('project',
-                       enabled_when='import_choice=="project"'
-                       )
+                          enabled_when='import_choice=="project"'
+        )
 
         v = View(
-                 HGroup(Item('import_choice',
-                             show_label=False,
-                             style='custom',
-                             editor=EnumEditor(values=['date', 'file', 'labnumber', 'project'],
-                                               cols=1),
-                             ),
-                        VGroup(dategrp, filegrp, labnumbergrp,
-                               projectgrp)),
+            HGroup(Item('import_choice',
+                        show_label=False,
+                        style='custom',
+                        editor=EnumEditor(values=['date', 'file', 'labnumber', 'project'],
+                                          cols=1),
+            ),
+                   VGroup(dategrp, filegrp, labnumbergrp,
+                          projectgrp)),
 
-                 HGroup(spring, Item('import_button', show_label=False)),
-                 Item('display', show_label=False, style='custom', width=300, height=300)
-                 )
+            HGroup(spring, Item('import_button', show_label=False)),
+            Item('display', show_label=False, style='custom', width=300, height=300)
+        )
         return v
 
     def _display_default(self):
         d = RichTextDisplay(width=290, height=300,
                             bg_color='#FFFFCC'
-                            )
+        )
         return d
+
 
 class MassSpecImporter(Importer):
     def _import(self):
@@ -171,10 +172,10 @@ class MassSpecImporter(Importer):
         for item in items:
             if self._import_item(item):
                 self.destination.flush()
-#                self.destination.commit()
+                #                self.destination.commit()
         self.destination.commit()
-#        self.info('compress repository')
-#        self.repository.compress()
+        #        self.info('compress repository')
+        #        self.repository.compress()
 
         t = (time.time() - st) / 60.
         self.info('Import completed')
@@ -186,20 +187,20 @@ class MassSpecImporter(Importer):
         aliquot = msrecord.Aliquot
         step = msrecord.Increment
 
-#        monitors = self._get_monitors(msrecord)
-#        print monitors
-#        return
+        #        monitors = self._get_monitors(msrecord)
+        #        print monitors
+        #        return
 
-#        analyses = []
+        #        analyses = []
         dblabnumber = dest.get_labnumber(labnumber)
         if not dblabnumber:
             dblabnumber = dest.add_labnumber(labnumber)
             dest.flush()
-#            dest.commit()
+            #            dest.commit()
 
             self._import_irradiation(msrecord, dblabnumber)
 
-#            import_monitors = False
+            #            import_monitors = False
             import_monitors = True
             if import_monitors:
                 # get all the monitors and add
@@ -208,34 +209,34 @@ class MassSpecImporter(Importer):
                     for mi in monitors:
                         self._import_item(mi)
                         dest.flush()
-#                    dest.commit()
+                        #                    dest.commit()
 
-#            analyses += monitors
+                        #            analyses += monitors
 
-#        analyses = dblabnumber.analyses
+                        #        analyses = dblabnumber.analyses
 
-#        def test(ai):
-#            a = int(ai.aliquot) == int(aliquot)
-#            b = ai.step == step
-#            return a and b
+                        #        def test(ai):
+                        #            a = int(ai.aliquot) == int(aliquot)
+                        #            b = ai.step == step
+                        #            return a and b
 
-#        dbanal = next((ai for ai in analyses if test(ai)), None)
+                        #        dbanal = next((ai for ai in analyses if test(ai)), None)
         sess = dest.get_session()
         q = sess.query(meas_AnalysisTable)
         q = q.join(gen_LabTable)
         q = q.filter(gen_LabTable.identifier == dblabnumber.identifier)
         q = q.filter(and_(meas_AnalysisTable.aliquot == aliquot,
-                           meas_AnalysisTable.step == step))
+                          meas_AnalysisTable.step == step))
         try:
             dbanal = q.one()
         except Exception, e:
             dbanal = None
-#        print dbanal, dblabnumber.labnumber, step, aliquot
+            #        print dbanal, dblabnumber.labnumber, step, aliquot
         if not dbanal:
             self._import_analysis(msrecord, dblabnumber)
             dest.flush()
             return True
-#            print 'exception geting {}{}'.format(aliquot, step), e
+            #            print 'exception geting {}{}'.format(aliquot, step), e
 
     def _import_analysis(self, msrecord, dblabnumber):
         aliquot = msrecord.Aliquot
@@ -251,14 +252,14 @@ class MassSpecImporter(Importer):
                                    aliquot=aliquot,
                                    step=step,
                                    timestamp=rdt,
-#                                   runtime=rdt.time(),
-#                                   rundate=rdt.date(),
+                                   #                                   runtime=rdt.time(),
+                                   #                                   rundate=rdt.date(),
                                    status=status
-                                   )
+        )
         ms = msrecord.login_session.machine
         if ms:
             ms = ms.Label.lower()
-        # add measurement
+            # add measurement
         dest.add_measurement(dbanal, 'unknown', ms, 'MassSpec RunScript')
 
         if self._dbimport is None:
@@ -267,7 +268,7 @@ class MassSpecImporter(Importer):
                                     source=self.source.name,
                                     source_host=self.source.host
 
-                                    )
+            )
             self._dbimport = dbimp
         else:
             dbimp = self._dbimport
@@ -276,7 +277,7 @@ class MassSpecImporter(Importer):
 
         selhist = dest.add_selected_histories(dbanal)
         self._import_signals(msrecord, dbanal, selhist)
-#        dest.add_analysis_path(path, dbanal)
+        #        dest.add_analysis_path(path, dbanal)
 
         self._import_blanks(msrecord, dbanal, selhist)
 
@@ -307,7 +308,7 @@ class MassSpecImporter(Importer):
         isotopes = msrecord.isotopes
         dbhist = dest.add_fit_history(analysis, user=self.username)
 
-#        selhist.selected_fits = dbhist
+        #        selhist.selected_fits = dbhist
         for iso in isotopes:
             pt = iso.peak_time_series[0]
             det = iso.detector.detector_type.Label
@@ -319,7 +320,7 @@ class MassSpecImporter(Importer):
 
             v = iso.detector.ICFactor
             e = iso.detector.ICFactorEr
-#            dest.add_detector_intercalibration(ichist, det, user_value=v, user_error=e)
+            #            dest.add_detector_intercalibration(ichist, det, user_value=v, user_error=e)
             dest.add_detector_intercalibration(ichist, det, user_value=v, user_error=e)
 
             # need to get xs from PeakTimeBlob
@@ -357,9 +358,9 @@ class MassSpecImporter(Importer):
             for k, (xi, yi), fi in (('signal', (xs, ys), fit), ('baseline', (bxs, bys), bfit)):
                 data = ''.join([struct.pack('>ff', x, y) for x, y in zip(xi, yi)])
                 # add isotope
-#                print iso.Label
+                #                print iso.Label
                 smw = self.source.get_molecular_weight(iso.Label)
-#                print iso.Label, smw
+                #                print iso.Label, smw
                 molweight = dest.get_molecular_weight(iso.Label)
                 if not molweight:
                     smw = self.source.get_molecular_weight(iso.Label)
@@ -379,7 +380,7 @@ class MassSpecImporter(Importer):
                 dest.add_fit(dbhist, dbiso,
                              fit=fi, filter_outliers=True,
                              filter_outlier_iterations=1, filter_outlier_std_devs=2
-                             )
+                )
 
                 # do pychron fit of the data
                 sig = Signal(xs=xi, ys=yi, fit=fi,
@@ -387,7 +388,7 @@ class MassSpecImporter(Importer):
                              filter_outlier_iterations=1,
                              filter_outlier_std_devs=2)
 
-#                print sig.value
+                #                print sig.value
                 # add isotope result
                 try:
                     s, e = sig.value, sig.error
@@ -396,15 +397,15 @@ class MassSpecImporter(Importer):
                     print xi, yi
                     s, e = 0, 0
                 dest.add_isotope_result(dbiso,
-                                      dbhist,
-                                      signal_=s, signal_err=e,
-                                      )
+                                        dbhist,
+                                        signal_=s, signal_err=e,
+                )
                 dest.flush()
 
-#            signals[iso.Label] = det, zip(ys, xs), fit
-#            baselines[iso.Label] = det, data, 'average_SEM'
+                #            signals[iso.Label] = det, zip(ys, xs), fit
+                #            baselines[iso.Label] = det, data, 'average_SEM'
 
-#        return self._dump_file(signals, baselines)
+                #        return self._dump_file(signals, baselines)
 
     def _get_monitors(self, msrecord):
         irrad_level = self._get_irradiation_level(msrecord)
@@ -422,15 +423,15 @@ class MassSpecImporter(Importer):
             q = q.filter(SampleTable.Sample == 'FC-2')
             q = q.filter(ProjectTable.Project == 'J-Curve')
             return q.all()
-#            qs = q.all()
-#            for qi in qs:
-#                print qi
-#            q = sess.query(AnalysesTable)
-#            q = q.join(IrradiationPositionTable)
-#            q=q.filter(IrradiationPositionTable.IrradPosition=)
-#            q = q.join(IrradiationLevelTable)
-#            q = q.filter(IrradiationLevelTable.id == irrad_level.id)
-#            print q.all()
+            #            qs = q.all()
+            #            for qi in qs:
+            #                print qi
+            #            q = sess.query(AnalysesTable)
+            #            q = q.join(IrradiationPositionTable)
+            #            q=q.filter(IrradiationPositionTable.IrradPosition=)
+            #            q = q.join(IrradiationLevelTable)
+            #            q = q.filter(IrradiationLevelTable.id == irrad_level.id)
+            #            print q.all()
 
     def _get_irradiation_level(self, msrecord, name=None, level=None):
         # get irradiation level
@@ -441,7 +442,7 @@ class MassSpecImporter(Importer):
             level = irrad_position.IrradiationLevel[-1:]
 
         if name and level:
-#            irrad_level = self._get_irradiation_level(name, level)
+        #            irrad_level = self._get_irradiation_level(name, level)
 
             src = self.source
             sess = src.get_session()
@@ -452,15 +453,15 @@ class MassSpecImporter(Importer):
             return irrad_level
 
     def _import_irradiation(self, msrecord, dblabnumber):
-#        src = self.source
+    #        src = self.source
         dest = self.destination
         # get irradiation position
         irrad_position = msrecord.irradiation_position
-#
-#        #get irradiation level
+        #
+        #        #get irradiation level
         name, level = irrad_position.IrradiationLevel[:-1], irrad_position.IrradiationLevel[-1:]
-#        if name and level:
-#            irrad_level = self._get_irradiation_level(name, level)
+        #        if name and level:
+        #            irrad_level = self._get_irradiation_level(name, level)
         irrad_level = self._get_irradiation_level(msrecord, name=name, level=level)
         if irrad_level:
 
@@ -476,7 +477,7 @@ class MassSpecImporter(Importer):
                 prs = ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637',
                        ('P36Cl38Cl', 'Cl3638'),
                        ('Ca_K')
-                       ]
+                ]
                 for k in prs:
                     if not isinstance(k, tuple):
                         ko = k
@@ -525,7 +526,7 @@ class MassSpecImporter(Importer):
             # add the sample
             sam = irrad_position.sample
             dbproj = dest.add_project('{}-MassSpecImport'.format(sam.project.Project))
-#                proj = sam.project
+            #                proj = sam.project
             dbmat = dest.add_material(irrad_position.Material)
             dbsam = dest.add_sample(sam.Sample, material=dbmat,
                                     project=dbproj)
@@ -549,7 +550,7 @@ class MassSpecImporter(Importer):
             return self._gather_data_by_project(sess, self.project)
         elif import_choice == 'date':
             return self._gather_data_by_date_range(sess, self.start_date,
-                                                         self.end_date)
+                                                   self.end_date)
 
 
     def _gather_data_by_labnumber(self, sess, labnumber):
@@ -562,9 +563,9 @@ class MassSpecImporter(Importer):
 
         if not isinstance(labnumber, list):
             labnumber = [labnumber]
-#        ips = self._get_import_ids()
+            #        ips = self._get_import_ids()
         return [a for ip in labnumber
-                    for a in get_analyses(ip)]
+                for a in get_analyses(ip)]
 
     def _gather_data_by_project(self, sess, project):
         # get by project
@@ -578,12 +579,12 @@ class MassSpecImporter(Importer):
         if not isinstance(project, list):
             project = [project]
 
-#        prs = ['FC-Project']
+        #        prs = ['FC-Project']
         ips = [ip for pr in project
-                for ip in get_analyses(pr)
-               ]
+               for ip in get_analyses(pr)
+        ]
         ans = [a for ipi in ips
-                for a in ipi.analyses]
+               for a in ipi.analyses]
 
         return ans
 
@@ -602,7 +603,7 @@ class MassSpecImporter(Importer):
         return q.all()
 
     def _get_import_ids(self, p):
-#        p = '/Users/ross/Sandbox/importtest/importfile2.txt'
+    #        p = '/Users/ross/Sandbox/importtest/importfile2.txt'
 
         ips = []
         with open(p, 'r') as f:
@@ -615,29 +616,31 @@ class MassSpecImporter(Importer):
         ips = list(set(ips))
         return ips
 
+
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
+
     paths.build('_experiment')
     logging_setup('importer')
 
-#    repo = Repository(root='/Users/ross/Sandbox/importtest/data')
+    #    repo = Repository(root='/Users/ross/Sandbox/importtest/data')
     im = MassSpecImporter()
 
     s = MassSpecDatabaseAdapter(kind='mysql',
-#                                username='root',
-#                                password='Argon',
-#                                host='localhost',
-#                                name='massspecdata_local'
+                                #                                username='root',
+                                #                                password='Argon',
+                                #                                host='localhost',
+                                #                                name='massspecdata_local'
                                 username='massspec',
                                 password='DBArgon',
                                 host='129.138.12.131',
                                 name='massspecdata'
-                                )
+    )
     s.connect()
     d = IsotopeAdapter(kind='mysql',
                        username='root',
                        host='localhost',
-#                       host='129.138.12.131',
+                       #                       host='129.138.12.131',
                        password='Argon',
                        name='isotopedb_dev')
     d.connect()
@@ -645,7 +648,7 @@ if __name__ == '__main__':
     im.source = s
     im.destination = d
 
-#    im.repository = repo
+    #    im.repository = repo
     im.configure_traits()
 
 

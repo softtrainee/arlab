@@ -18,16 +18,15 @@
 # from traits.api import HasTraits
 #============= standard library imports ========================
 import os
-import yaml
 from datetime import datetime
-from datetime import timedelta
-
-from sqlalchemy.sql.expression import and_
 import time
+
+import yaml
+
 #============= local library imports  ==========================
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.paths import paths, rec_make
-from src.processing.importer.import_manager import ImportManager
+from src.experiment.importer.import_manager import ImportManager
 
 # from src.database.orms.isotope_orm import meas_AnalysisTable, \
 #     meas_MeasurementTable, gen_AnalysisTypeTable, irrad_IrradiationTable, \
@@ -51,6 +50,7 @@ from src.processing.tasks.smart_project.smart_flux import SmartFlux
 
 class SmartProjectTask(AnalysisEditTask):
     id = 'pychron.processing.smart_project'
+
     def process_project_file(self):
 
         p = os.path.join(paths.processed_dir, 'miller.yaml')
@@ -81,9 +81,10 @@ class SmartProjectTask(AnalysisEditTask):
             if setup['make_tables']:
                 self._make_tables(meta, project)
 
-#===============================================================================
-# import
-#===============================================================================
+                #===============================================================================
+                # import
+                #===============================================================================
+
     def _import_irradiations(self, meta):
         self.debug('importing analyses')
 
@@ -103,12 +104,12 @@ class SmartProjectTask(AnalysisEditTask):
 
     def _make_import_selection(self, meta):
         s = [(irrad['name'], irrad['levels'].split(','))
-                    for irrad in meta['irradiations']]
+             for irrad in meta['irradiations']]
         return s
 
     def _make_fit_selection(self, meta):
         s = [(irrad['name'], irrad['levels'].split(','))
-                    for irrad in meta['irradiations']]
+             for irrad in meta['irradiations']]
         return s
 
     def _set_importer(self, meta, im):
@@ -145,9 +146,9 @@ class SmartProjectTask(AnalysisEditTask):
         dbconn_spec.password = source['password']
         dbconn_spec.host = source['host']
 
-#===============================================================================
-# figures/tables
-#===============================================================================
+    #===============================================================================
+    # figures/tables
+    #===============================================================================
     def _make_figures(self, meta, project):
         '''
             figs: dict 
@@ -175,13 +176,14 @@ class SmartProjectTask(AnalysisEditTask):
 
     def _make_figure(self, fdict):
         pass
+
     def _make_table(self, tdict):
         pass
 
 
-#===============================================================================
-# fitting
-#===============================================================================
+    #===============================================================================
+    # fitting
+    #===============================================================================
     def _fit_isotopes(self, meta):
         fitting = meta['fitting']
         dry_run = fitting['dry_run']
@@ -192,17 +194,16 @@ class SmartProjectTask(AnalysisEditTask):
             irradiations = self._make_fit_selection(meta)
 
             sf.fit_irradiations(irradiations, projects, dry_run)
-#             self._fit_irradiations(irradiations, projects, dry_run)
+            #             self._fit_irradiations(irradiations, projects, dry_run)
 
         if meta.has_key('date_range'):
-
             dr = meta['date_range']
             posts = dr['start'], dr['end']
             at = dr['atypes']
             start, end = map(self._convert_date_str, posts)
 
             sf.fit_date_range(start, end, at, dry_run)
-#             self._fit_date_range(start, end, at, dry_run)
+            #             self._fit_date_range(start, end, at, dry_run)
 
     def _fit_blanks(self, meta, project):
         st = time.time()
@@ -229,19 +230,19 @@ class SmartProjectTask(AnalysisEditTask):
                 save_figure = f['save_figure']
                 with_table = f['with_table']
                 be = BlanksEditor(name='Blanks',
-                              auto_find=False,
-                              show_current=False)
+                                  auto_find=False,
+                                  show_current=False)
 
                 sb.editor = be
                 invoke_in_main_thread(self._open_editor, be)
                 time.sleep(1)
 
                 sb.interpolate_blanks(n, ans, fits, root, save_figure, with_table)
-    #             self._interpolate_blanks(n, ans, fits, root,
-    #                                      save_figure, with_table)
+                #             self._interpolate_blanks(n, ans, fits, root,
+                #                                      save_figure, with_table)
             else:
                 sb.simple_fit_blanks(n, ans, interp, dry_run)
-    #             self._simple_fit_blanks(n, ans, interp, dry_run)
+                #             self._simple_fit_blanks(n, ans, interp, dry_run)
 
             self._finish_db_session(dry_run)
             self.info('fit blanks finished elapsed time {}'.format(time.time() - st))
@@ -269,7 +270,7 @@ class SmartProjectTask(AnalysisEditTask):
         standard = f['standard']
         sdf = SmartDetectorIntercalibration(processor=self.manager,
 
-                                            )
+        )
         if f.has_key('value') and f['value']:
             v, e = map(float, f['value'].split(','))
             for ai in ans:
@@ -282,7 +283,7 @@ class SmartProjectTask(AnalysisEditTask):
                                               auto_find=False,
                                               show_current=False,
                                               standard=standard
-                                              )
+            )
 
             sdf.editor = be
             invoke_in_main_thread(self._open_editor, be)
@@ -301,7 +302,7 @@ class SmartProjectTask(AnalysisEditTask):
 
         sf = SmartFlux(processor=self.manager,
                        monitor_age=ff['age']
-                       )
+        )
 
         irrad, level = 'NM-251', 'H'
         ans = sf.fit_level(irrad, level)
@@ -310,7 +311,7 @@ class SmartProjectTask(AnalysisEditTask):
         task = self._open_ideogram_editor(ans, name)
 
         if save_fig:
-#             task.save(os.path.join(root, '{}.pdf'.format(name)))
+        #             task.save(os.path.join(root, '{}.pdf'.format(name)))
             p = os.path.join(root, '{}.pdf'.format(name))
             if ff['with_table']:
                 comp = task.active_editor.component
@@ -318,17 +319,18 @@ class SmartProjectTask(AnalysisEditTask):
                 self.view_pdf(p)
             else:
                 task.save(p)
-#===============================================================================
-# utilities
-#===============================================================================
+                #===============================================================================
+                # utilities
+                #===============================================================================
+
     def _finish_db_session(self, dry_run):
         if dry_run:
             self.manager.db.sess.rollback()
         else:
             self.manager.db.sess.commit()
 
-#     def _gather_analyses_for_blank_fit(self, irradiations, projects):
-#         return self._labnumber_generator(irradiations, projects)
+            #     def _gather_analyses_for_blank_fit(self, irradiations, projects):
+            #         return self._labnumber_generator(irradiations, projects)
 
     def _analysis_generator(self, irradiations, projects, atypes,
                             mass_spectrometers=None):
@@ -336,9 +338,9 @@ class SmartProjectTask(AnalysisEditTask):
 
         irrads = [irrad for irrad, _ in irradiations]
         levels = [level
-                    for _, levels in irradiations
-                        for level in levels
-                        ]
+                  for _, levels in irradiations
+                  for level in levels
+        ]
         sess = db.sess
         q = sess.query(meas_AnalysisTable)
         q = q.join(gen_LabTable)
@@ -360,6 +362,7 @@ class SmartProjectTask(AnalysisEditTask):
             q = q.filter(gen_MassSpectrometerTable.name.in_(mass_spectrometers))
 
         q = q.order_by(meas_AnalysisTable.analysis_timestamp.asc())
+
         def gen():
             for a in q:
                 yield a
@@ -369,7 +372,7 @@ class SmartProjectTask(AnalysisEditTask):
     def _convert_date_str(self, c):
         c = c.replace('/', '-')
         if c.count('-') == 2:
-                fmt = '%m-%d-%Y'
+            fmt = '%m-%d-%Y'
         elif c.count('-') == 1:
             fmt = '%m-%Y'
         else:
@@ -382,7 +385,7 @@ class SmartProjectTask(AnalysisEditTask):
             path = os.path.join(paths.processed_dir,
                                 project,
                                 path[2:])
-#             print path, project, paths.processed_dir
+            #             print path, project, paths.processed_dir
         rec_make(path)
         return path
 

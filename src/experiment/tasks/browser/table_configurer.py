@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Int, Any
-from traitsui.api import View, Item, UItem, CheckListEditor
+from traits.api import HasTraits, List, Any
+from traitsui.api import View, Item, UItem, CheckListEditor, VGroup
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -49,6 +49,9 @@ class TableConfigurer(HasTraits):
         d = self.adapter.all_columns_dict
         return [(k, d[k]) for k, _ in self.adapter.all_columns if k in self.columns]
 
+    def _get_columns_grp(self):
+        return
+
     def traits_view(self):
         v = View(UItem('columns',
                        style='custom',
@@ -61,7 +64,27 @@ class TableConfigurer(HasTraits):
         )
         return v
 
-#class SampleTableConfigurer(HasTraits):
+
+class SampleTableConfigurer(TableConfigurer):
+    parent = Any
+
+    def traits_view(self):
+        v = View(VGroup(
+            VGroup(UItem('columns',
+                         style='custom',
+                         editor=CheckListEditor(name='available_columns', cols=3)),
+                   label='Columns', show_border=True),
+            Item('object.parent.filter_non_run_samples',
+                 tooltip='Omit samples that have not been analyzed to date',
+                 label='Exclude Non-Run')),
+                 buttons=['OK', 'Cancel', 'Revert'],
+                 kind='livemodal',
+                 title=self.title,
+                 resizable=True,
+                 width=300)
+        return v
+
+
 #    column_mapper={'Sample':'name',
 #                   'Material':'material'}
 #    available_columns=(['Sample','Material'])

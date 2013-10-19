@@ -35,13 +35,14 @@ class FluxMonitor(HasTraits):
 
     def traits_view(self):
         v = View(VGroup(
-                        HGroup(Item('name'), Item('dbname', show_label=False, editor=EnumEditor(name='names'))),
-                        HGroup(Item('age'), Item('age_err', label=u'{}1{}'.format(PLUSMINUS, SIGMA))),
-                        HGroup(Item('decay_constant'), Item('decay_constant_err', label=u'{}1{}'.format(PLUSMINUS, SIGMA)))
-                        ),
-#                 HGroup(Item)
+            HGroup(Item('name'), Item('dbname', show_label=False, editor=EnumEditor(name='names'))),
+            HGroup(Item('age'), Item('age_err', label=u'{}1{}'.format(PLUSMINUS, SIGMA))),
+            HGroup(Item('decay_constant'), Item('decay_constant_err', label=u'{}1{}'.format(PLUSMINUS, SIGMA)))
+        ),
+                 #                 HGroup(Item)
                  buttons=['OK', 'Cancel'],
                  title='Edit Flux Monitor'
-                 )
+        )
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================

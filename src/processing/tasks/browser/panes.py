@@ -15,40 +15,27 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Property, Int, Bool, Str, Instance, List
+from traits.api import Int, Str, Instance
 from traitsui.api import View, Item, UItem, VGroup, HGroup, Label, spring, \
-    VSplit, TabularEditor, EnumEditor, Group, DateEditor, StyledDateEditor, Heading
+    VSplit, TabularEditor, EnumEditor, Group, DateEditor, Heading
 from pyface.tasks.traits_dock_pane import TraitsDockPane
-from traitsui.tabular_adapter import TabularAdapter
 # from src.experiment.utilities.identifier import make_runid
 # from traitsui.table_column import ObjectColumn
 # from traitsui.list_str_adapter import ListStrAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.experiment.tasks.browser.adapters import BrowserAdapter, SampleAdapter, ProjectAdapter
 from src.processing.tasks.analysis_edit.panes import new_button_editor
 from src.ui.tabular_editor import myTabularEditor
-
-
-class BrowserAdapter(TabularAdapter):
-    font = 'arial 10'
-    all_columns = List
-    all_columns_dict = Property
-
-    def _get_all_columns_dict(self):
-        return dict(self.all_columns)
-
-
-class ProjectAdapter(BrowserAdapter):
-    columns = [('Name', 'name')]
 
 
 class AnalysisAdapter(BrowserAdapter):
     all_columns = [('RunID', 'record_id'),
                    ('Tag', 'tag'),
                    ('Iso Fits', 'iso_fit_status'),
-               ('Blank', 'blank_fit_status'),
-               ('IC', 'ic_fit_status'),
-               ('Flux', 'flux_fit_status')]
+                   ('Blank', 'blank_fit_status'),
+                   ('IC', 'ic_fit_status'),
+                   ('Flux', 'flux_fit_status')]
 
     columns = [('RunID', 'record_id'),
                ('Tag', 'tag'),
@@ -58,37 +45,10 @@ class AnalysisAdapter(BrowserAdapter):
                #('Flux', 'flux_fit_status')
     ]
 
-    #def __init__(self, *args, **kw):
-    #super(AnalysisAdapter, self).__init__(*args, **kw)
-    #self.ocolumns=[c for c,_ in self.columns]
-    #self.columns=[('RunID','record_id'),('Tag','tag')]
-
-
-    #     record_id_text = Property
-    #     blank_fit_status_text = Property
-    #     flux_fit_status_text = Property
-    #     iso_fit_status_text = Property
-    #     ic_fit_status_text = Property
-
     record_id_width = Int(65)
     tag_width = Int(65)
     odd_bg_color = 'lightgray'
     font = 'arial 10'
-
-
-class SampleAdapter(BrowserAdapter):
-    columns = [('Sample', 'name'), ('Material', 'material')]
-    all_columns = [('Sample', 'name'), ('Material', 'material')]
-    #     material_text = Property
-    odd_bg_color = 'lightgray'
-
-    name_width = Int(150)
-    material_width = Int(100)
-
-#     def _get_material_text(self):
-#         n = ''
-#         n = self.item.material
-#         return n
 
 
 class BrowserPane(TraitsDockPane):
