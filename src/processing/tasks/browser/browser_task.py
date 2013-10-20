@@ -203,7 +203,7 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
         ans = self._get_sample_analyses(self.selected_sample[-1],
                                         include_invalid=not self.analysis_table.omit_invalid
         )
-        #print self.active_editor
+        print self.active_editor
         if self.active_editor:
             self.active_editor.unknowns = ans
             #self.unknowns_pane.items = self.active_editor.unknowns

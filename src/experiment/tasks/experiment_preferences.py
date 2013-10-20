@@ -40,6 +40,7 @@ class ExperimentPreferences(BasePreferencesHelper):
     auto_save_delay = Int
 
     irradiation_prefix = Str
+    monitor_name = Str
 
 
 class ExperimentPreferencesPane(PreferencesPane):
@@ -70,7 +71,9 @@ class ExperimentPreferencesPane(PreferencesPane):
             label='Editor'
         )
         irradiation_grp = Group(Item('irradiation_prefix',
-                                     label='Irradiation Prefix'), label='Irradiations')
+                                     label='Irradiation Prefix'),
+                                Item('monitor_name'),
+                                label='Irradiations')
 
         return View(
             auto_figure_grp,

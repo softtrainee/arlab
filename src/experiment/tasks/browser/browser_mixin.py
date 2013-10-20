@@ -41,6 +41,7 @@ class BrowserMixin(ColumnSorterMixin):
 
     selected_project = Any
     selected_sample = Any
+    dclicked_sample = Any
 
     auto_select_analysis = Bool(True)
 

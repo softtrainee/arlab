@@ -38,6 +38,8 @@ class ArduinoGPActuator(GPActuator):
     Abstract module for Arduino GP Actuator
 
     @todo: first command to arduino consistently times out
+
+    compatible with valvebox3.pde/Messenger.h
     """
 
     def open(self, **kw):

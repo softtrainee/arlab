@@ -88,7 +88,7 @@
 #            if not self.searcher:
 #                self.searcher = Searcher(parent = self)
 #
-#            #self.canvas.current_point=pts
+#            #self.canvas.current_screen_point=pts
 #
 #            self.searcher.id = self.canvas.add_triangles_group()
 #            self.canvas.request_redraw()
@@ -204,7 +204,7 @@
 # #        new_test_pt,popped=self.get_new_point(self.test_triangle.points)
 # #
 # #        #canvas.search_current_points[self.id]=new_test_pt
-# #        #canvas.current_point=new_test_pt
+# #        #canvas.current_screen_point=new_test_pt
 # #
 # #        if popped is not None:
 # #            t=Triangle()

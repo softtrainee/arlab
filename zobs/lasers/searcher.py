@@ -172,7 +172,7 @@
 #        if not self.found(new_test_pt):
 #
 #            #canvas.search_current_points[self.id]=new_test_pt
-#            #canvas.current_point=new_test_pt
+#            #canvas.current_screen_point=new_test_pt
 #
 #            if popped is not None:
 #                t = Triangle()

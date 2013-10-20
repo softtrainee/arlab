@@ -84,10 +84,17 @@ class LabnumberEntry(IsotopeDatabaseManager):
     dirty = False
     initialized = False
 
+    labnumber_generator = Instance(LabnumberGenerator)
+
     def __init__(self, *args, **kw):
         super(LabnumberEntry, self).__init__(*args, **kw)
+
+        self.labnumber_generator = LabnumberGenerator(db=self.db)
+
         bind_preference(self, 'irradiation_prefix',
                         'pychron.experiment.irradiation_prefix')
+        bind_preference(self.labnumber_generator, 'monitor_name',
+                        'pychron.experiment.monitor_name')
 
     #    self.populate_default_tables()
     def set_selected_sample(self, new):
@@ -136,8 +143,10 @@ class LabnumberEntry(IsotopeDatabaseManager):
         self._save_to_db()
 
     def generate_labnumbers(self):
-        lg = LabnumberGenerator(db=self.db)
-        lg.generate_labnumbers(self.irradiation)
+        lg = self.labnumber_generator
+
+        prog = self.open_progress()
+        lg.generate_labnumbers(self.irradiation, prog)
 
         self._update_level()
 
@@ -223,7 +232,8 @@ class LabnumberEntry(IsotopeDatabaseManager):
         geom = holder.geometry
         if geom:
             canvas = self.canvas
-            holes = [(x, y, 0.175, str(c + 1)) for c, (x, y) in self._iter_geom(geom)]
+            holes = [(x, y, 0.175, str(c + 1))
+                     for c, (x, y) in self._iter_geom(geom)]
             canvas.load_scene(holes)
 
     def _iter_geom(self, geom):
@@ -372,8 +382,8 @@ class LabnumberEntry(IsotopeDatabaseManager):
 
 
             #===============================================================================
-        # handlers
-        #===============================================================================
+            # handlers
+            #===============================================================================
 
     @on_trait_change('canvas:selected')
     def _handle_canvas_selected(self, new):
@@ -381,26 +391,32 @@ class LabnumberEntry(IsotopeDatabaseManager):
             self.selected = [next((ir for ir in self.irradiated_positions
                                    if ir.hole == int(new.name)), None)]
             if self.selected:
-                self._set_selected_values(self.selected[0])
+                fill = self._set_selected_values(self.selected[0])
+                new.fill = fill
 
     def _set_selected_values(self, new):
         sam = self.selected_sample
         if sam:
             ok = True
             if new.labnumber:
-                ok = self.confirmation_dialog(
-                    'This position already has a labnumber. Are you sure you want to change the Sample info? THIS CHANGE CANNOT BE UNDONE')
+                ok = self.confirmation_dialog('This position already has a labnumber. \
+Are you sure you want to change the Sample info? \
+THIS CHANGE CANNOT BE UNDONE')
 
             if ok:
                 if new.sample == sam.name:
                     new.sample = ''
                     new.project = ''
                     new.material = ''
+                    fill = False
                 else:
                     new.sample = sam.name
                     new.project = sam.project
                     new.material = sam.material
+                    fill = True
+
                 self.refresh_table = True
+                return fill
 
     def _load_file_button_fired(self):
         p = self.open_file_dialog()
@@ -564,8 +580,12 @@ class LabnumberEntry(IsotopeDatabaseManager):
         if ln:
             position = int(dbpos.position)
 
-            labnumber = ln.identifier if ln else None
+            labnumber = ln.identifier if ln else ''
             ir.trait_set(labnumber=str(labnumber), hole=position)
+
+            item = self.canvas.scene.get_item(str(position))
+            item.fill = ln.sample
+
             #         ir = IrradiatedPosition(labnumber=str(labnumber), hole=position)
             #         if labnumber:
             selhist = ln.selected_flux_history
