@@ -76,4 +76,18 @@ class GenerateLabnumbersAction(TaskAction):
                           search_path=paths.icon_search_path)
     method = 'generate_labnumbers'
 
+
+class ImportIrradiationLevelAction(TaskAction):
+    name = 'Import Level'
+    image = ImageResource(name='file_xls.png',
+                          search_path=paths.icon_search_path)
+    method = 'import_irradiation_load_xls'
+
+
+class MakeIrradiationTemplateAction(TaskAction):
+    name = 'Irradiation Template'
+    image = ImageResource(name='file_xls.png',
+                          search_path=paths.icon_search_path)
+    method = 'make_irradiation_load_template'
+
 #============= EOF =============================================

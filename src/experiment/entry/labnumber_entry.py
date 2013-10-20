@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from apptools.preferences.preference_binding import bind_preference
 from traits.api import Property, Str, cached_property, \
-    List, Event, Any, Button, Undefined, Instance, Bool, on_trait_change
+    List, Event, Any, Button, Instance, Bool, on_trait_change
 from traitsui.api import Image
 from pyface.image_resource import ImageResource
 
@@ -25,12 +25,13 @@ from pyface.image_resource import ImageResource
 import os
 #============= local library imports  ==========================
 from src.canvas.canvas2D.irradiation_canvas import IrradiationCanvas
+from src.experiment.entry.irradiation_loader import XLSIrradiationLoader
 from src.experiment.entry.irradiation_pdf_writer import IrradiationPDFWriter, LabbookPDFWriter
 from src.experiment.entry.irradiation_table_view import IrradiationTableView
 from src.experiment.entry.labnumber_generator import LabnumberGenerator
 from src.paths import paths
 from src.experiment.entry.irradiation import Irradiation
-from src.experiment.entry.level import Level
+from src.experiment.entry.level import Level, load_holder_canvas, iter_geom
 # from src.processing.entry.flux_monitor import FluxMonitor
 # from src.processing.entry.db_entry import DBEntry
 # from src.irradiation.irradiated_position import IrradiatedPosition, \
@@ -45,7 +46,6 @@ from src.experiment.entry.irradiated_position import IrradiatedPosition
 from src.database.orms.isotope.gen import gen_ProjectTable, gen_SampleTable
 # from src.ui.thread import Thread
 # from pyface.timer.do_later import do_later
-import struct
 
 
 class LabnumberEntry(IsotopeDatabaseManager):
@@ -84,16 +84,17 @@ class LabnumberEntry(IsotopeDatabaseManager):
     dirty = False
     initialized = False
 
-    labnumber_generator = Instance(LabnumberGenerator)
+    #labnumber_generator = Instance(LabnumberGenerator)
+    monitor_name = Str
 
     def __init__(self, *args, **kw):
         super(LabnumberEntry, self).__init__(*args, **kw)
 
-        self.labnumber_generator = LabnumberGenerator(db=self.db)
+        #self.labnumber_generator = LabnumberGenerator(db=self.db)
 
         bind_preference(self, 'irradiation_prefix',
                         'pychron.experiment.irradiation_prefix')
-        bind_preference(self.labnumber_generator, 'monitor_name',
+        bind_preference(self, 'monitor_name',
                         'pychron.experiment.monitor_name')
 
     #    self.populate_default_tables()
@@ -143,110 +144,44 @@ class LabnumberEntry(IsotopeDatabaseManager):
         self._save_to_db()
 
     def generate_labnumbers(self):
-        lg = self.labnumber_generator
+        lg = LabnumberGenerator(monitor_name=self.monitor_name,
+                                db=self.db)
 
         prog = self.open_progress()
         lg.generate_labnumbers(self.irradiation, prog)
 
         self._update_level()
 
-    def _load_positions_from_file(self, p, dry_run=False):
-        '''
-            use an xls file to enter irradiation positions
-            
-            sheet must be named IrradiationInfo or the first sheet
-            
-            add level
-            
-            add project
-            add sample
-            add material
-            
-            optional:
-                weight
-            
-            add irradiation_position
-            add labnumber.  since sample info is associated with labnumber table
-            need to add a labnumber entry now. dont set the identifier yet tho
-            
-            commit to database
-            
-            load positions from database into table for viewing
-            
-        '''
-        from src.managers.data_managers.xls_data_manager import XLSDataManager
+    def make_irradiation_load_template(self, p):
+        loader = XLSIrradiationLoader()
+        n = len(self.irradiated_positions)
+        loader.make_template(p, n, self.level)
 
-        db = self.db
-        irradiation = self.irradiation
+    def import_irradiation_load_xls(self, p):
+        loader = XLSIrradiationLoader(db=self.db,
+                                      monitor_name=self.monitor_name)
+        prog = self.open_progress()
+        loader.progress = prog
+        loader.canvas = self.canvas
 
-        dm = XLSDataManager()
-        dm.open(p)
+        loader.load(p, self.irradiated_positions,
+                    self.irradiation, self.level)
 
-        header_offset = 1
-        sheet = dm.get_sheet(('IrradiationInfo', 0))
-
-        project_idx = dm.get_column_idx('project', sheet=sheet)
-        sample_idx = dm.get_column_idx('sample', sheet=sheet)
-        material_idx = dm.get_column_idx('material', sheet=sheet)
-        level_idx = dm.get_column_idx('level', sheet=sheet)
-        holder_idx = dm.get_column_idx('holder', sheet=sheet)
-        pos_idx = dm.get_column_idx('position', sheet=sheet)
-        weight_idx = dm.get_column_idx('weight', sheet=sheet)
-
-        for ri in range(sheet.nrows - header_offset):
-            ri += header_offset
-            level = sheet.cell_value(ri, level_idx)
-            holder = sheet.cell_value(ri, holder_idx)
-
-            dblevel = db.add_irradiation_level(level, irradiation, holder)
-
-            project = sheet.cell_value(ri, project_idx)
-            material = sheet.cell_value(ri, material_idx)
-            sample = sheet.cell_value(ri, sample_idx)
-
-            prj = db.add_project(project)
-            mat = db.add_material(material)
-            db.add_sample(sample, project=prj, material=mat)
-
-            pos = sheet.cell_value(ri, pos_idx)
-
-            dbln = db.add_labnumber('', sample=sample,
-                                    unique=False)
-
-            weight = None
-            if weight_idx:
-                weight = sheet.cell_value(ri, weight_idx)
-            db.add_irradiation_position(pos, dbln, irradiation, dblevel,
-                                        weight=weight,
-            )
-
-        if not dry_run:
-            db.commit()
-
-        self.updated = True
-        self.level = level
-
-        #         self._update_level()
+        self.refresh_table = True
 
     def _load_holder_canvas(self, holder):
         geom = holder.geometry
         if geom:
             canvas = self.canvas
-            holes = [(x, y, 0.175, str(c + 1))
-                     for c, (x, y) in self._iter_geom(geom)]
-            canvas.load_scene(holes)
-
-    def _iter_geom(self, geom):
-        f = lambda x: struct.unpack('>ff', geom[x:x + 8])
-        return ((i, f(gi)) for i, gi in enumerate(xrange(0, len(geom), 8)))
+            load_holder_canvas(canvas, geom)
 
     def _load_holder_positions(self, holder):
         self.irradiated_positions = []
         geom = holder.geometry
         if geom:
             self.initialized = False
-            self.irradiated_positions = [IrradiatedPosition(hole=c + 1, pos=p)
-                                         for c, p in self._iter_geom(geom)]
+            self.irradiated_positions = [IrradiatedPosition(hole=c + 1, pos=(x, y))
+                                         for c, (x, y, r) in iter_geom(geom)]
             self.initialized = True
 
 
@@ -551,8 +486,8 @@ THIS CHANGE CANNOT BE UNDONE')
                 self.debug('no level for {}'.format(name))
                 return
 
-            self.debug('holder {}'.format(level.holder))
             if level.holder:
+                self.debug('holder {}'.format(level.holder.name))
                 self._load_holder_positions(level.holder)
                 self._load_holder_canvas(level.holder)
 
@@ -653,18 +588,22 @@ THIS CHANGE CANNOT BE UNDONE')
 
     @cached_property
     def _get_trays(self):
+        db = self.db
+        with db.session_ctx():
+            hs = db.get_irradiation_holders()
+            ts = [h.name for h in hs]
 
-        p = os.path.join(self._get_map_path(), 'images')
-        if not os.path.isdir(p):
-            self.warning_dialog('{} does not exist'.format(p))
-            return Undefined
-
-        ts = [os.path.splitext(pi)[0] for pi in os.listdir(p) if not pi.startswith('.')
-              #                    if not (pi.endswith('.png')
-              #                            or pi.endswith('.pct')
-              #                            or pi.startswith('.'))
-        ]
-        if ts:
+            #p = os.path.join(self._get_map_path(), 'images')
+            #if not os.path.isdir(p):
+            #    self.warning_dialog('{} does not exist'.format(p))
+            #    return Undefined
+            #
+            #ts = [os.path.splitext(pi)[0] for pi in os.listdir(p) if not pi.startswith('.')
+            #      #                    if not (pi.endswith('.png')
+            #      #                            or pi.endswith('.pct')
+            #      #                            or pi.startswith('.'))
+            #]
+            #if ts:
             self.tray = ts[-1]
 
         return ts

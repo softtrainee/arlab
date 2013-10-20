@@ -25,7 +25,7 @@ from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from src.experiment.entry.sensitivity_entry import SensitivitySelector
 from src.experiment.signal_calculator import SignalCalculator
 from src.experiment.image_browser import ImageBrowser
-from src.experiment.tasks.entry.actions import LabnumberEntryAction, SensitivityEntryAction, SaveLabbookPDFAction
+from src.experiment.tasks.entry.actions import LabnumberEntryAction, SensitivityEntryAction, SaveLabbookPDFAction, MakeIrradiationTemplateAction
 from src.experiment.tasks.experiment_task import ExperimentEditorTask
 from src.experiment.tasks.experiment_preferences import ExperimentPreferencesPane
 from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
@@ -55,7 +55,8 @@ class ExperimentPlugin(BaseTaskPlugin):
             ),
             TaskExtension(task_id='pychron.entry.labnumber',
                           actions=[
-                              SchemaAddition(factory=lambda: Group(SaveLabbookPDFAction()),
+                              SchemaAddition(factory=lambda: Group(SaveLabbookPDFAction(),
+                                                                   MakeIrradiationTemplateAction()),
                                              path='MenuBar/Tools'
                               ),
                           ],

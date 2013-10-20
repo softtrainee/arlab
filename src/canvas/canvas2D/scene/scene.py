@@ -113,8 +113,8 @@ class Scene(HasTraits):
 
     def get_item(self, name, layer=None, klass=None):
         def test(la):
-            nb = la.name == name
-            ib = la.identifier == name
+            nb = la.name == str(name)
+            ib = la.identifier == str(name)
             cb = True
             if klass is not None:
                 cb = isinstance(la, klass)
