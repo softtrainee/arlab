@@ -15,11 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
-from src.managers.data_managers.data_manager import DataManager
 import xlrd
 from xlrd.biffh import XLRDError
+
+from src.managers.data_managers.data_manager import DataManager
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -44,7 +44,7 @@ class XLSDataManager(DataManager):
 
                 return sheet
 
-    def get_column_idx(self, names, sheet=None):
+    def get_column_idx(self, names, sheet=None, optional=False):
         sheet = self.get_sheet(sheet)
         if sheet:
             header = sheet.row_values(0)
@@ -56,4 +56,9 @@ class XLSDataManager(DataManager):
                 for ai in (attr, attr.lower(), attr.upper(), attr.capitalize()):
                     if ai in header:
                         return header.index(ai)
+
+            if not optional:
+                cols = ','.join(names)
+                self.warning_dialog('Invalid sheet. No column named "{}"'.format(cols))
+
 #============= EOF =============================================

@@ -15,11 +15,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, List, Float, Any, Int
-from traitsui.api import View, Item, EnumEditor, HGroup
-from src.constants import NULL_STR
+import struct
+from enable.component_editor import ComponentEditor
+from traits.api import HasTraits, Str, List, Float, Any, Int, Instance
+from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, UItem
+from src.canvas.canvas2D.irradiation_canvas import IrradiationCanvas
 #============= standard library imports ========================
 #============= local library imports  ==========================
+
+def load_holder_canvas(canvas, geom):
+    if geom:
+        canvas = canvas
+        holes = [(x, y, r, str(c + 1))
+                 for c, (x, y, r) in iter_geom(geom)]
+        canvas.load_scene(holes)
+
+
+def iter_geom(geom):
+    f = lambda x: struct.unpack('>fff', geom[x:x + 12])
+    return ((i, f(gi)) for i, gi in enumerate(xrange(0, len(geom), 12)))
+
 
 class Level(HasTraits):
     name = Str
@@ -28,29 +43,38 @@ class Level(HasTraits):
     trays = List
     db = Any
     level_id = Int
-    #    irradiation=Str
-    #    dblevel = Any
+    canvas = Instance(IrradiationCanvas, ())
+    geometry = Any
+
     def load(self, irrad):
         db = self.db
         if not isinstance(irrad, (str, unicode)):
             irrad = irrad.name
 
-        #        self.irradiation=irrad
-        with db.session_ctx() as sess:
+        with db.session_ctx():
             level = db.get_irradiation_level(irrad, self.name)
             self.level_id = int(level.id)
             if level.holder:
                 name = level.holder.name
-                if not name in self.trays:
-                    name = NULL_STR
-                self.tray = name
+
+                if name in self.trays:
+                    self.tray = name
+
             z = level.z
             self.z = z if z is not None else 0
 
 
+    def _tray_changed(self):
+        with self.db.session_ctx():
+            holder = self.db.get_irradiation_holder(self.tray)
+            if holder:
+                self.geometry = holder.geometry
+
+    def _geometry_changed(self):
+        load_holder_canvas(self.canvas, self.geometry)
+
     def edit_db(self):
         db = self.db
-        #        irrad=self.irradiation
         with db.session_ctx():
             level = db.get_irradiation_level_byid(self.level_id)
 
@@ -59,19 +83,17 @@ class Level(HasTraits):
             holder = db.get_irradiation_holder(self.tray)
             if holder:
                 level.holder = holder
-                #            self.dblevel.name = self.name
-                #            self.dblevel.z = self.z
-                #            holder = self.db.get_irradiation_holder(self.tray)
-                #            if holder:
-                #                self.dblevel.holder = holder
-                #            self.db.commit()
 
     def traits_view(self):
-        v = View(HGroup(Item('name'),
-                        Item('z'),
+        v = View(VGroup(
+            HGroup(Item('name'),
+                   Item('z'),
                         Item('tray', show_label=False, editor=EnumEditor(name='trays'))),
+            UItem('canvas', editor=ComponentEditor())
+        ),
                  buttons=['OK', 'Cancel'],
-                 title='Edit Level'
+                 title='Edit Level',
+                 resizable=True
         )
         return v
 

@@ -42,12 +42,13 @@ class LoadingScene(Scene):
         return holes
 
     def _load_holes(self, holes, show_hole_numbers=False):
-        xmi, ymi, xma, yma = Inf, Inf, -Inf, -Inf
+        xmi, ymi, xma, yma, mr = Inf, Inf, -Inf, -Inf, -Inf
         for x, y, r, n, in holes:
             xmi = min(xmi, x)
             ymi = min(ymi, y)
             xma = max(xma, x)
             yma = max(yma, y)
+            mr = max(mr, r)
 
             v = LoadIndicator(
                 x=x,
@@ -59,8 +60,8 @@ class LoadingScene(Scene):
             )
             self.add_item(v)
 
-        w = (xma - xmi) * 1.2
-        h = (yma - ymi) * 1.2
+        w = (xma + mr - (xmi - mr)) * 1.2
+        h = (yma + mr - (ymi - mr)) * 1.2
         w /= 2.0
         h /= 2.0
         self._xrange = -w, w

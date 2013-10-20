@@ -29,7 +29,7 @@ from src.experiment.entry.sample_entry import SampleEntry
 from src.experiment.importer.import_manager import ImportManager
 from src.experiment.entry.labnumber_entry import LabnumberEntry
 from src.experiment.tasks.browser.browser_mixin import BrowserMixin
-from src.experiment.tasks.entry.actions import SavePDFAction, GenerateLabnumbersAction
+from src.experiment.tasks.entry.actions import SavePDFAction, GenerateLabnumbersAction, ImportIrradiationLevelAction
 from src.experiment.tasks.entry.importer_panes import ImporterPane
 from src.experiment.tasks.entry.labnumber_entry_panes import LabnumbersPane, \
     IrradiationPane, IrradiationEditorPane, IrradiationCanvasPane
@@ -48,10 +48,11 @@ class LabnumberEntryTask(BaseManagerTask, BrowserMixin):
     edit_sample_button = Button
 
     tool_bars = [SToolBar(SavePDFAction(),
-                          GenerateLabnumbersAction(),
                           DatabaseSaveAction(),
-                          image_size=(16, 16)
-    ), ]
+                          image_size=(16, 16)),
+                 SToolBar(GenerateLabnumbersAction(),
+                          ImportIrradiationLevelAction(),
+                          image_size=(16, 16))]
 
     def _prompt_for_save(self):
         if self.manager.dirty:
@@ -83,6 +84,16 @@ class LabnumberEntryTask(BaseManagerTask, BrowserMixin):
 
     def generate_labnumbers(self):
         self.manager.generate_labnumbers()
+
+    def import_irradiation_load_xls(self):
+        p = '/Users/ross/Sandbox/irrad_load_template.xls'
+        self.manager.import_irradiation_load_xls(p)
+
+    def make_irradiation_load_template(self):
+        p = '/Users/ross/Sandbox/irrad_load_template.xls'
+        self.manager.make_irradiation_load_template(p)
+        #self.information_dialog('Template saved to {}'.format(p))
+        self.view_xls(p)
 
     def _manager_default(self):
         return LabnumberEntry(application=self.application)

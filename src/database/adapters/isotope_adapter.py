@@ -1082,6 +1082,9 @@ class IsotopeAdapter(DatabaseAdapter):
         rewrite functionality if required
     '''
 
+    def get_irradiation_holders(self, **kw):
+        return self._retrieve_items(irrad_HolderTable, **kw)
+
     def get_analyses(self, **kw):
         """
             kw: meas_Analysis attributes

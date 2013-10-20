@@ -13,11 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 import struct
 import os
-from src.paths import paths
+
 from pyface.message_dialog import warning
+
+from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
+from src.paths import paths
 
 
 def iterdir(d, exclude=None):
@@ -25,6 +27,9 @@ def iterdir(d, exclude=None):
     #    exclude =tuple()
 
     for t in os.listdir(d):
+        p = os.path.join(d, t)
+        #print os.path.isfile(p), p
+
         if t.startswith('.'):
             continue
 
@@ -33,13 +38,11 @@ def iterdir(d, exclude=None):
             if ext in exclude:
                 continue
 
-        p = os.path.join(d, t)
         if not os.path.isfile(p):
             continue
 
         yield p, t
 
-#
 
 def load_isotopedb_defaults(db):
     with db.session_ctx() as sess:
@@ -84,7 +87,7 @@ def load_isotopedb_defaults(db):
             warning(None, 'No irradiation_tray_maps directory. add to .../setupfiles')
 
         else:
-            for p, name in iterdir(mdir, exclude='.zip'):
+            for p, name in iterdir(mdir, exclude=('.zip',)):
                 _load_irradiation_map(db, p, name)
 
         mdir = paths.map_dir
@@ -111,22 +114,33 @@ def _load_tray_map(db, p, name):
 
 
 def _load_irradiation_map(db, p, name):
+    overwrite_geometry = False
+
     with open(p, 'r') as f:
         try:
             h = f.readline()
-            nholes, _diam = h.split(',')
-            nholes = int(nholes)
+            _, diam = h.split(',')
 
             holes = []
             for i, l in enumerate(f):
                 try:
-                    holes.append(map(float, l.strip().split(',')))
+                    args = map(float, l.strip().split(','))
+                    if len(args) == 2:
+                        r = diam
+                    else:
+                        r = args[2]
+                    holes.append((args[0], args[1], float(r)))
+
                 except ValueError:
                     break
 
-            blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
+            blob = ''.join([struct.pack('>fff', x, y, r) for x, y, r in holes])
             name, _ = os.path.splitext(name)
-            db.add_irradiation_holder(name, geometry=blob)
+
+            h = db.add_irradiation_holder(name, geometry=blob)
+            if overwrite_geometry:
+                h.geometry = blob
+
         except Exception, e:
             print p, name, e
 
