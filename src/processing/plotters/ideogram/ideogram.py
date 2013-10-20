@@ -17,24 +17,17 @@
 #============= enthought library imports =======================
 from chaco.plot_label import PlotLabel
 from traits.api import Float, Array
-from chaco.array_data_source import ArrayDataSource
-from chaco.tools.broadcaster import BroadcasterTool
 #============= standard library imports ========================
 from numpy import linspace, pi, exp, zeros, ones, array, arange, \
     Inf
 #============= local library imports  ==========================
 
 from src.processing.plotters.arar_figure import BaseArArFigure
-from src.graph.error_bar_overlay import ErrorBarOverlay
 
-from src.graph.tools.rect_selection_tool import RectSelectionOverlay, \
-    RectSelectionTool
-from src.graph.tools.analysis_inspector import AnalysisPointInspector
-from src.graph.tools.point_inspector import PointInspectorOverlay
+from src.processing.plotters.ideogram.mean_indicator_overlay import MeanIndicatorOverlay
 from src.stats.peak_detection import find_peaks
 from src.stats.core import calculate_weighted_mean
-from src.processing.plotters.point_move_tool import PointMoveTool
-from chaco.data_label import DataLabel
+from src.processing.plotters.point_move_tool import PointMoveTool, OverlayMoveTool
 
 N = 500
 
@@ -163,7 +156,7 @@ class Ideogram(BaseArArFigure):
 
         ogid = self.group_id
         gid = ogid + 1
-        sgid = ogid * 3
+        sgid = ogid * 2
 
         scatter, _p = graph.new_series(x=bins, y=probs, plotid=pid)
         graph.set_series_label('Current-{}'.format(gid), series=sgid, plotid=pid)
@@ -199,29 +192,64 @@ class Ideogram(BaseArArFigure):
                            component=plot)
             plot.overlays.append(pl)
 
-    def _add_mean_indicator(self, g, scatter, bins, probs, pid):
+    def _add_mean_indicator(self, g, line, bins, probs, pid):
+        maxp = max(probs)
+        wm, we, mswd, valid_mswd = self._calculate_stats(self.xs, self.xes,
+                                                         bins, probs)
+        #ym = maxp * percentH + offset
+        #set ym in screen space
+        #convert to data space
+        ogid = self.group_id
+        gid = ogid + 1
+        sgid = ogid * 2
+
+        text = ''
+        if self.options.display_mean:
+            text = self._build_label_text(wm, we, mswd, valid_mswd, len(self.xs))
+
+        m = MeanIndicatorOverlay(component=line,
+                                 x=wm,
+                                 y=20 * gid,
+                                 error=we,
+                                 nsgima=self.options.nsigma,
+                                 color=line.color,
+                                 text=text,
+                                 visibile=self.options.display_mean_indicator
+        )
+        line.overlays.append(m)
+
+        line.tools.append(OverlayMoveTool(component=m,
+                                          constrain='x'))
+
+    def _add_mean_indicator2(self, g, scatter, bins, probs, pid):
         offset = 0
         percentH = 1 - 0.954  # 2sigma
 
         maxp = max(probs)
         wm, we, mswd, valid_mswd = self._calculate_stats(self.xs, self.xes,
                                                          bins, probs)
-        ym = maxp * percentH + offset
-
-        s, p = g.new_series([wm], [ym],
-                            type='scatter',
-                            marker='circle',
-                            selection_marker_size=3,
-                            marker_size=3,
-                            selection_marker='circle',
-                            selection_color=scatter.color,
-                            selection_outline_color=scatter.color,
-                            color=scatter.color,
-                            plotid=0
-        )
+        #ym = maxp * percentH + offset
+        #set ym in screen space
+        #convert to data space
         ogid = self.group_id
         gid = ogid + 1
         sgid = ogid * 3
+
+        ym = maxp * 0.1 * gid
+
+        s, p = g.new_series(
+            [wm], [ym],
+            type='scatter',
+                            marker='circle',
+                            #selection_marker_size=3,
+                            marker_size=3,
+                            #selection_marker='circle',
+                            #selection_color=scatter.color,
+                            #selection_outline_color=scatter.color,
+                            color=scatter.color,
+                            plotid=0
+        )
+
         g.set_series_label('Mean-{}'.format(gid), series=sgid + 2, plotid=pid)
 
         self._add_error_bars(s, [we], 'x', self.options.nsigma)
@@ -289,7 +317,7 @@ class Ideogram(BaseArArFigure):
         gid = self.group_id + 1
         lp = plot.plots['Current-{}'.format(gid)][0]
         dp = plot.plots['Original-{}'.format(gid)][0]
-        sp = plot.plots['Mean-{}'.format(gid)][0]
+        #sp = plot.plots['Mean-{}'.format(gid)][0]
 
         def f(a):
             i, _ = a
@@ -307,20 +335,28 @@ class Ideogram(BaseArArFigure):
             lp.value.set_data(ys)
             lp.index.set_data(xs)
 
-            sp.index.set_data([wm])
-            sp.xerror.set_data([we])
+            #sp.index.set_data([wm])
+            #sp.xerror.set_data([we])
 
             mi = min(ys)
             ma = max(ys)
             self._set_y_limits(mi, ma, min_=0)
 
+            n = len(fxs)
+            for ov in lp.overlays:
+                if isinstance(ov, MeanIndicatorOverlay):
+                    ov.set_x(wm)
+                    #ov.x=wm
+                    ov.error = we
+                    ov.label.text = self._build_label_text(wm, we, mswd, valid_mswd, n)
+
             # update the data label position
-            for ov in sp.overlays:
-                if isinstance(ov, DataLabel):
-                    _, y = ov.data_point
-                    ov.data_point = wm, y
-                    n = len(fxs)
-                    ov.label_text = self._build_label_text(wm, we, mswd, valid_mswd, n)
+            #for ov in sp.overlays:
+            #    if isinstance(ov, DataLabel):
+            #        _, y = ov.data_point
+            #        ov.data_point = wm, y
+            #        n = len(fxs)
+            #        ov.label_text = self._build_label_text(wm, we, mswd, valid_mswd, n)
 
             if sel:
                 dp.visible = True

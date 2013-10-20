@@ -833,10 +833,14 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_arar(self, k):
         return self._retrieve_item(proc_ArArTable, k, key='hash')
 
-    def get_last_labnumber(self):
+    def get_last_labnumber(self, sample=None):
         with self.session_ctx() as s:
         #         sess = self.get_session()
             q = s.query(gen_LabTable)
+            if sample:
+                q = q.join(gen_SampleTable)
+                q = q.filter(gen_SampleTable.name == sample)
+
             q = q.order_by(func.abs(gen_LabTable.identifier).desc())
             try:
                 return q.first()

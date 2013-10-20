@@ -16,13 +16,11 @@
 
 #============= enthought library imports =======================
 from pyface.tasks.action.schema import SToolBar
-from traits.api import Instance, on_trait_change, Any, List
-from src.envisage.tasks.editor_task import BaseEditorTask
+from traits.api import Instance, on_trait_change, List
 from src.processing.tasks.analysis_edit.actions import DatabaseSaveAction
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane, \
     TablePane
 from src.processing.tasks.browser.browser_task import BaseBrowserTask
-from src.processing.tasks.browser.panes import BrowserPane
 from src.processing.tasks.recall.recall_editor import RecallEditor
 from src.processing.tasks.search_panes import QueryPane
 from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
@@ -266,6 +264,7 @@ class AnalysisEditTask(BaseBrowserTask):
 
     @on_trait_change('unknowns_pane:[items, update_needed]')
     def _update_unknowns_runs(self, obj, name, old, new):
+        print obj, obj._no_update
         if not obj._no_update:
             #print 'upadte unkownasdf pane', new,
             if self.active_editor:

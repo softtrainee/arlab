@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Float
+from traits.api import Any, Float, Str
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -27,43 +27,49 @@ class LabnumberGenerator(Loggable):
     default_j = Float(1e-4)
     default_j_err = Float(1e-7)
 
-    def generate_labnumbers(self, irradiation):
+    monitor_name = Str
+
+    def generate_labnumbers(self, irradiation, prog):
         db = self.db
         ok = True
         #ok=self.confirmation_dialog('Are you sure you want to generate the labnumbers for this irradiation?')
         if ok:
             overwrite = False
             #overwrite=self.confirmation_dialog('Overwrite existing labnumbers?')
-            with db.session_ctx():
-                self._generate_labnumbers(irradiation, overwrite)
+            with db.session_ctx(commit=False):
+                self._generate_labnumbers(irradiation, overwrite, prog)
 
 
-    def _generate_labnumbers(self, ir, overwrite=False, offset=0, level_offset=0):
-        '''
+    def _generate_labnumbers(self, ir, overwrite=False, prog=None, offset=1, level_offset=10000):
+        """
             get last labnumber
 
             start numbering at 1+offset
 
             add level_offset between each level
-        '''
+        """
 
-        lngen = self._labnumber_generator(ir,
-                                          overwrite,
+        mongen, unkgen = self._labnumber_generator(ir,
+                                                   overwrite,
                                           offset,
-                                          level_offset
-        )
-        while 1:
-            try:
-                pos, ln = lngen.next()
-            except StopIteration:
-                break
+                                          level_offset)
+        mongen = list(mongen)
+        unkgen = list(unkgen)
+        n = len(mongen) + len(unkgen)
+        if n:
+            prog.max = n - 1
+            for gen in (mongen, unkgen):
+                for pos, ln in gen:
+                    pos.labnumber.identifier = ln
 
-            pos.labnumber.identifier = ln
-
-            le = pos.level.name
-            pi = pos.position
-            self._add_default_flux(pos)
-            self.info('setting irrad. pos. {} {}-{} labnumber={}'.format(ir, le, pi, ln))
+                    le = pos.level.name
+                    pi = pos.position
+                    self._add_default_flux(pos)
+                    msg = 'setting irrad. pos. {} {}-{} labnumber={}'.format(ir, le, pi, ln)
+                    self.info(msg)
+                    if prog:
+                        prog.change_message(msg)
+                        prog.increment()
 
     def _add_default_flux(self, pos):
         db = self.db
@@ -85,41 +91,64 @@ class LabnumberGenerator(Loggable):
             add_flux()
 
     def _labnumber_generator(self, irradiation, overwrite, offset, level_offset):
+        """
+            return 2 generators
+            monitors, unknowns
+        """
+        db = self.db
+        last_mon_ln = db.get_last_labnumber(self.monitor_name)
+        if last_mon_ln:
+            last_mon_ln = int(last_mon_ln.identifier)
+        else:
+            last_mon_ln = 0
 
-        def gen(offset, level_offset):
-            db = self.db
-            last_ln = db.get_last_labnumber()
-            if last_ln:
-                last_ln = int(last_ln.identifier)
-            else:
-                last_ln = 0
+        last_unk_ln = db.get_last_labnumber()
+        if last_unk_ln:
+            last_unk_ln = int(last_unk_ln.identifier)
+        else:
+            last_unk_ln = 0
 
+        irrad = db.get_irradiation(irradiation)
+        levels = irrad.levels
+
+        def monkey(invert=False):
+            def _monkey(x):
+                r = None
+                try:
+                    r = x.labnumber.sample.name == self.monitor_name
+                except AttributeError, e:
+                    pass
+
+                if invert:
+                    r = not r
+                return r
+
+            return _monkey
+
+        return self._ln_gen(irradiation, levels, last_mon_ln, monkey(), overwrite, offset, level_offset), \
+               self._ln_gen(irradiation, levels, last_unk_ln, monkey(True), overwrite, offset, level_offset)
+
+    def _ln_gen(self, irrad, levels, start, key, overwrite, offset, level_offset):
+        offset = max(1, offset)
+        level_offset = max(1, level_offset)
+        sln = start + offset
+        for level in levels:
             i = 0
-            if not offset:
-                last_ln += 1
+            for position in level.positions:
+                if not key(position):
+                    continue
 
-            sln = last_ln + offset
-            irrad = db.get_irradiation(irradiation)
+                if position.labnumber.identifier and not overwrite:
+                    le = '{}{}-{}'.format(irrad.name, position.level.name, position.position)
+                    ln = position.labnumber.identifier
+                    self.warning('skipping position {} already has labnumber {}'.format(le, ln))
+                    continue
 
-            for level in irrad.levels:
-                for position in level.positions:
-                    if position.labnumber.identifier and not overwrite:
-                        le = '{}{}-{}'.format(irrad.name, level.name, position.position)
-                        ln = position.labnumber.identifier
-                        self.warning('skipping position {} already has labnumber {}'.format(le, ln))
-                        continue
+                yield position, i + sln
+                i += 1
 
-                    yield position, sln + i
-                    i += 1
-
-                if level_offset:
-                    sln = sln + level_offset
-                    i = 0
-                    if not offset:
-                        i = -1
+            sln = sln + i + level_offset - 1
 
 
-        return gen(offset, level_offset)
-
-        #============= EOF =============================================
+            #============= EOF =============================================
 
