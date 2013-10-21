@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, String, Str, Property, Any, Either, Long, \
-    Float, Instance, Int, List, cached_property, on_trait_change, Bool, Button, \
+from traits.api import String, Str, Property, Any, Float, Instance, Int, List, cached_property, on_trait_change, Bool, Button, \
     Event, Enum
 # from traitsui.api import View, Item, EnumEditor, HGroup, VGroup, Group, Spring, spring, \
 #    UItem, ButtonEditor, Label
@@ -25,8 +24,7 @@ import os
 #============= local library imports  ==========================
 from src.constants import NULL_STR, SCRIPT_KEYS, SCRIPT_NAMES, LINE_STR
 from src.experiment.automated_run.factory_view import FactoryView
-from src.experiment.utilities.identifier import SPECIAL_NAMES, SPECIAL_MAPPING, \
-    convert_identifier, convert_special_name, ANALYSIS_MAPPING, NON_EXTRACTABLE, \
+from src.experiment.utilities.identifier import convert_special_name, ANALYSIS_MAPPING, NON_EXTRACTABLE, \
     make_special_identifier, make_standard_identifier
 from src.experiment.automated_run.spec import AutomatedRunSpec
 from src.regex import TRANSECT_REGEX, POSITION_REGEX, SLICE_REGEX, PSLICE_REGEX, \
@@ -35,8 +33,6 @@ from src.regex import TRANSECT_REGEX, POSITION_REGEX, SLICE_REGEX, PSLICE_REGEX,
 from src.paths import paths
 from src.experiment.script.script import Script
 from src.experiment.queue.increment_heat_template import IncrementalHeatTemplate
-from src.viewable import Viewable
-from src.ui.thread import Thread
 from src.loggable import Loggable
 import yaml
 from src.experiment.utilities.human_error_checker import HumanErrorChecker
@@ -61,7 +57,22 @@ class UpdateSelectedCTX(object):
 def EKlass(klass):
     return klass(enter_set=True, auto_set=False)
 
-# class AutomatedRunFactory(Viewable, ScriptMixin):
+
+def increment_value(self, m, increment=1):
+    s = ','
+    if s not in m:
+        m = (m,)
+        s = ''
+    else:
+        m = m.split(s)
+    ms = []
+    for mi in m:
+        try:
+            ms.append(str(int(mi) + increment))
+        except ValueError:
+            return s.join(m)
+
+    return s.join(ms)
 
 
 class AutomatedRunFactory(Loggable):
@@ -83,7 +94,6 @@ class AutomatedRunFactory(Loggable):
     update_labnumber = Event
 
     aliquot = EKlass(Int)
-    user_defined_aliquot = False
     special_labnumber = Str('Special Labnumber')
 
     _labnumber = String
@@ -228,16 +238,6 @@ class AutomatedRunFactory(Loggable):
     def load_from_run(self, run):
         self._clone_run(run)
 
-    #    def commit_changes(self, runs):
-    #        for i, ri in enumerate(runs):
-    #            self._set_run_values(ri, excludes=['labnumber', 'position', 'mass_spectrometer', 'extract_device'])
-    #
-    #            if self.aliquot:
-    #                ri.aliquot = int(self.aliquot + i)
-    #                ri.user_defined_aliquot = True
-    #            else:
-    #                ri.user_defined_aliquot = False
-
     def set_selected_runs(self, runs):
         self.debug('len selected runs {}'.format(len(runs)))
         if runs:
@@ -259,66 +259,6 @@ class AutomatedRunFactory(Loggable):
         if run and self.edit_mode:
             self._end_after = run.end_after
 
-    def new_runs(self, positions=None, auto_increment_position=False,
-                 auto_increment_id=False,
-                 extract_group_cnt=0):
-        '''
-            returns a list of runs even if its only one run 
-                    also returns self.frequency if using special labnumber else None
-        '''
-        _ln, special = self._make_short_labnumber()
-        freq = self.frequency if special else None
-
-        #         if self._use_template() and not freq and not special:
-        # #        if self.template and self.template  and not freq and not special :
-        #             arvs = self._render_template(extract_group_cnt,
-        #                                          positions=positions
-        #                                          )
-        #         else:
-
-        arvs = self._new_runs(positions=positions,
-                              special=special,
-                              freq=freq,
-                              extract_group_cnt=extract_group_cnt
-        )
-
-        if auto_increment_id:
-            self._labnumber = self._increment(self.labnumber)
-            #print self.labnumber
-
-        if auto_increment_position:
-            pos = self.position
-            if pos:
-                increment = 1
-                #                 s, e = 0, 0
-                if ',' in pos:
-                    spos = map(int, pos.split(','))
-                    increment = spos[-1] - spos[0] + 1
-                    self.position = self._increment(pos, increment)
-                else:
-                    s = None
-                    if SLICE_REGEX.match(pos):
-                        s, e = map(int, pos.split('-'))
-                    elif SSLICE_REGEX.match(pos) or PSLICE_REGEX.match(pos):
-                        s, e = map(int, pos.split(':'))[:2]
-
-                    if s is not None:
-                        d = e - s
-                        ns = e + 1
-                        ne = ns + d
-                        self.position = '{}-{}'.format(ns, ne)
-
-                        #                 e = int(self.endposition)
-                        #                 if e:
-                        #                     self.position = str(e + 1)
-                        #                 else:
-                        #                     self.position = self._increment(self.position, increment=increment)
-                        #
-                        #                 if self.endposition:
-                        #                     self.endposition = 2 * e + 1 - s
-
-        return arvs, freq
-
     def set_mass_spectrometer(self, new):
         new = new.lower()
         self.mass_spectrometer = new
@@ -333,62 +273,64 @@ class AutomatedRunFactory(Loggable):
             s = getattr(self, '{}_script'.format(s))
             s.extract_device = new
 
+    def new_runs(self, positions=None, auto_increment_position=False,
+                 auto_increment_id=False,
+                 extract_group_cnt=0):
+        """
+            returns a list of runs even if its only one run
+            also returns self.frequency if using special labnumber else None
+        """
+
+        arvs, freq = self._new_runs(positions=positions,
+                                    extract_group_cnt=extract_group_cnt)
+
+        if auto_increment_id:
+            self._labnumber = increment_value(self.labnumber)
+
+        if auto_increment_position:
+            pos = self.position
+            if pos:
+                if ',' in pos:
+                    spos = map(int, pos.split(','))
+                    increment = spos[-1] - spos[0] + 1
+                    self.position = increment_value(pos, increment)
+                else:
+                    s = None
+                    if SLICE_REGEX.match(pos):
+                        s, e = map(int, pos.split('-'))
+                    elif SSLICE_REGEX.match(pos) or PSLICE_REGEX.match(pos):
+                        s, e = map(int, pos.split(':'))[:2]
+
+                    if s is not None:
+                        d = e - s
+                        ns = e + 1
+                        ne = ns + d
+                        self.position = '{}-{}'.format(ns, ne)
+
+        return arvs, freq
+
             #===============================================================================
             # private
             #===============================================================================
 
-    def _make_short_labnumber(self, labnumber=None):
-        if labnumber is None:
-            labnumber = self.labnumber
-        if '-' in labnumber:
-            labnumber = labnumber.split('-')[0]
+    def _new_runs(self, positions, extract_group_cnt=0):
+        _ln, special = self._make_short_labnumber()
+        freq = self.frequency if special else None
 
-        special = labnumber in ANALYSIS_MAPPING
-        return labnumber, special
+        arvs = None
+        if not special:
+            if not positions:
+                positions = self.position
 
-    def _new_pattern(self):
-        pm = PatternMakerView()
+            template = self._use_template() and not freq
+            arvs = self._new_runs_by_position(positions, template, extract_group_cnt)
 
-        if self._use_pattern():
-            if pm.load_pattern(self.pattern):
-                return pm
-        else:
-            return pm
+        if not arvs:
+            arvs = [self._new_run()]
 
-    def _new_template(self):
-        template = IncrementalHeatTemplate()
-        if self._use_template():
-            t = self.template
-            if not t.endswith('.txt'):
-                t = '{}.txt'.format(t)
-            t = os.path.join(paths.incremental_heat_template_dir, t)
-            template.load(t)
+        return arvs, freq
 
-        return template
-
-    def _render_template(self, cnt, position=None):
-        if position is None:
-            position = self.position
-
-        arvs = []
-        template = self._new_template()
-
-        for st in template.steps:
-            if st.value or st.duration or st.cleanup:
-                arv = self._new_run(extract_group=cnt + 1,
-                                    step=st.step_id,
-                                    position=position,
-                                    excludes=['position']
-                )
-                arv.trait_set(**st.make_dict(self.duration, self.cleanup))
-                arvs.append(arv)
-
-                #        self._extract_group_cnt += 1
-        return arvs
-
-    def _new_runs_by_position(self, template=False, extract_group_cnt=0):
-        pos = self.position
-
+    def _new_runs_by_position(self, pos, template=False, extract_group_cnt=0):
         arvs = []
         s = None
         e = None
@@ -406,7 +348,6 @@ class AutomatedRunFactory(Loggable):
             except ValueError:
                 pass
 
-                #         if s is not None:
         if e < s:
             self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
             return
@@ -418,112 +359,17 @@ class AutomatedRunFactory(Loggable):
             set_pos = False
             positions = [0]
 
-        #             print e - s + 1, inc, template
         p = ''
         for i in positions:
             if set_pos:
                 p = str(i)
-                #             print 'poss',p
             if template:
-                arvs.extend(self._render_template(extract_group_cnt,
-                                                  position=p
-                ))
+                arvs.extend(self._render_template(p, extract_group_cnt))
                 extract_group_cnt += 1
             else:
                 arvs.append(self._new_run(position=str(p),
                                           excludes=['position']))
-            '''
-                clear user_defined_aliquot flag
-                if adding multiple runs this allows
-                the subsequent runs to have there aliquots defined by db
-            '''
-            self.user_defined_aliquot = False
-            #         print arvs
         return arvs
-
-    def _new_runs(self, positions, special=False,
-                  freq=None, extract_group_cnt=0):
-    #         s = 0
-    #         e = 0
-        _ln, special = self._make_short_labnumber()
-        arvs = None
-        if not special:
-            if positions:
-                arvs = [self._new_run(position=pi, excludes=['position'])
-                        for pi in positions]
-            else:
-            #             elif self.position:
-                template = self._use_template() and not freq and not special
-
-                arvs = self._new_runs_by_position(template, extract_group_cnt)
-
-                #         print arvs
-        if not arvs:
-            arvs = [self._new_run()]
-
-        return arvs
-
-
-    #         arvs = [self._new_run()]
-    #         if special:
-    #             arvs = [self._new_run()]
-    #         else:
-    #             if positions:
-    #                 arvs = [self._new_run(position=pi, excludes=['position'])
-    #                                         for pi in positions]
-    #             elif self.position:
-    #                 pos = self.position
-    #                 if self._is_named_position(pos):
-    #                     arvs = [self._new_run()]
-    #
-    #
-    # #                 pos = self.position
-    # #                 if not self._is_named_position(pos):
-    # #                     # is position a int or list of ints
-    # #                     if ',' in pos:
-    # #                         s = int(pos.split(',')[0])
-    # #                     else:
-    # #                         s = int(pos)
-    # #                         e = int(self.endposition)
-    # #                 s, e = self._get_position_start_end()
-    #
-    # #                 if e:
-    # #                     if e < s:
-    # #                         self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
-    # #                         return
-    # #                     arvs = []
-    # #                     for i in range(e - s + 1):
-    # #                         arvs.append(self._new_run(position=str(s + i), excludes=['position']))
-    # #                         '''
-    # #                             clear user_defined_aliquot flag
-    # #                             if adding multiple runs this allows
-    # #                             the subsequent runs to have there aliquots defined by db
-    # #                         '''
-    # #                         self.user_defined_aliquot = False
-    #
-    # #                 else:
-    # #                     arvs = [self._new_run()]
-    # #             else:
-    # #                 arvs = [self._new_run()]
-    #
-    #         return arvs
-
-    def _increment(self, m, increment=1):
-
-        s = ','
-        if s not in m:
-            m = (m,)
-            s = ''
-        else:
-            m = m.split(s)
-        ms = []
-        for mi in m:
-            try:
-                ms.append(str(int(mi) + increment))
-            except ValueError:
-                return s.join(m)
-
-        return s.join(ms)
 
     def _make_irrad_level(self, ln):
         il = ''
@@ -577,14 +423,13 @@ class AutomatedRunFactory(Loggable):
             if attr=='pattern':
                 if not self._use_pattern():
                     v=''
-                    
+
             setattr(arv, attr, v)
             setattr(arv, '_prev_{}'.format(attr), v)
 
-        if self.user_defined_aliquot:
+        if self.aliquot:
             self.debug('setting user defined aliquot')
-            arv.user_defined_aliquot = True
-            arv.aliquot = int(self.aliquot)
+            arv.user_defined_aliquot = int(self.aliquot)
 
         for si in SCRIPT_KEYS:
             name = '{}_script'.format(si)
@@ -627,6 +472,51 @@ class AutomatedRunFactory(Loggable):
                                        label=si,
                                        application=self.application,
                                        mass_spectrometer=self.mass_spectrometer))
+
+    def _new_pattern(self):
+        pm = PatternMakerView()
+
+        if self._use_pattern():
+            if pm.load_pattern(self.pattern):
+                return pm
+        else:
+            return pm
+
+    def _new_template(self):
+        template = IncrementalHeatTemplate()
+        if self._use_template():
+            t = self.template
+            if not t.endswith('.txt'):
+                t = '{}.txt'.format(t)
+            t = os.path.join(paths.incremental_heat_template_dir, t)
+            template.load(t)
+
+        return template
+
+    def _render_template(self, position, cnt):
+        arvs = []
+        template = self._new_template()
+        self.debug('rendering template {}'.format(template.name))
+
+        for st in template.steps:
+            if st.value or st.duration or st.cleanup:
+                arv = self._new_run(extract_group=cnt + 1,
+                                    step=st.step_id,
+                                    position=position,
+                                    excludes=['position'])
+                arv.trait_set(**st.make_dict(self.duration, self.cleanup))
+                arvs.append(arv)
+
+        return arvs
+
+    def _make_short_labnumber(self, labnumber=None):
+        if labnumber is None:
+            labnumber = self.labnumber
+        if '-' in labnumber:
+            labnumber = labnumber.split('-')[0]
+
+        special = labnumber in ANALYSIS_MAPPING
+        return labnumber, special
 
     def _load_extraction_info(self, script=None):
         if script is None:
@@ -1211,6 +1101,7 @@ post_equilibration_script:name
 
             self.update_info_needed = True
             self.refresh_table_needed = True
+
 
             #def _edit_mode_changed(self):
 

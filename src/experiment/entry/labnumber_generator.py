@@ -29,15 +29,10 @@ class LabnumberGenerator(Loggable):
 
     monitor_name = Str
 
-    def generate_labnumbers(self, irradiation, prog):
+    def generate_labnumbers(self, irradiation, prog, overwrite):
         db = self.db
-        ok = True
-        #ok=self.confirmation_dialog('Are you sure you want to generate the labnumbers for this irradiation?')
-        if ok:
-            overwrite = False
-            #overwrite=self.confirmation_dialog('Overwrite existing labnumbers?')
-            with db.session_ctx(commit=False):
-                self._generate_labnumbers(irradiation, overwrite, prog)
+        with db.session_ctx(commit=True):
+            self._generate_labnumbers(irradiation, overwrite, prog)
 
 
     def _generate_labnumbers(self, ir, overwrite=False, prog=None, offset=1, level_offset=10000):
@@ -51,8 +46,8 @@ class LabnumberGenerator(Loggable):
 
         mongen, unkgen = self._labnumber_generator(ir,
                                                    overwrite,
-                                          offset,
-                                          level_offset)
+                                                   offset,
+                                                   level_offset)
         mongen = list(mongen)
         unkgen = list(unkgen)
         n = len(mongen) + len(unkgen)

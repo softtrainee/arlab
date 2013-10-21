@@ -25,19 +25,15 @@ import shutil
 import weakref
 import os
 #============= local library imports  ==========================
-# from src.envisage.tasks.base_task import BaseManagerTask
 from src.experiment.health.analysis_health import AnalysisHealth
 from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPane, \
-    ControlsPane, ConsolePane, ExplanationPane, WaitPane, IsotopeEvolutionPane, \
-    SummaryPane, AnalysisHealthPane
-# from pyface.tasks.task_window_layout import TaskWindowLayout
+    ControlsPane, ConsolePane, WaitPane, IsotopeEvolutionPane
+
 from src.envisage.tasks.editor_task import EditorTask
 from src.experiment.tasks.experiment_editor import ExperimentEditor, UVExperimentEditor
 from src.paths import paths
 from src.helpers.filetools import add_extension
 from src.ui.gui import invoke_in_main_thread
-from src.loading.panes import LoadDockPane, LoadTablePane
-from src.loading.loading_manager import LoadingManager
 from src.messaging.notify.notifier import Notifier
 from src.lasers.pattern.pattern_maker_view import PatternMakerView
 
@@ -56,48 +52,6 @@ class ExperimentEditorTask(EditorTask):
     notifier = Instance(Notifier)
     analysis_health = Instance(AnalysisHealth)
 
-    def _analysis_health_default(self):
-        ah = AnalysisHealth(db=self.manager.db)
-        return ah
-
-    def _loading_manager_default(self):
-        lm = self.window.application.get_service('src.loading.loading_manager.LoadingManager')
-        if lm:
-            lm.trait_set(db=self.manager.db,
-                         show_group_positions=True,
-            )
-            #         lm = LoadingManager(db=self.manager.db,
-            #                             show_group_positions=True
-            #                             )
-            return lm
-
-    def _default_directory_default(self):
-        return paths.experiment_dir
-
-    def _default_layout_default(self):
-        return TaskLayout(
-            left=Splitter(
-                PaneItem('pychron.experiment.wait', height=100),
-                Tabbed(
-                    PaneItem('pychron.experiment.factory'),
-                    PaneItem('pychron.experiment.isotope_evolution'),
-                    #                                                PaneItem('pychron.experiment.summary'),
-                ),
-                orientation='vertical'
-            ),
-            right=Splitter(
-                Tabbed(
-                    PaneItem('pychron.experiment.stats'),
-                    PaneItem('pychron.experiment.console', height=425),
-                    PaneItem('pychron.experiment.explanation', height=425),
-                ),
-                #                                          PaneItem('pychron.extraction_line.canvas_dock'),
-                #                                         PaneItem('pychron.experiment.wait'),
-                orientation='vertical'
-            ),
-            top=PaneItem('pychron.experiment.controls')
-        )
-
     def new_pattern(self):
         pm = PatternMakerView()
         self.window.application.open_view(pm)
@@ -112,7 +66,6 @@ class ExperimentEditorTask(EditorTask):
         db = self.manager.db
         #         an=db.get_last_analysis('bu-FD-o')
         an = db.get_last_analysis('ba-01-o')
-        #an = self.manager.make_analyses([an])[0]
         an = self.manager.make_analysis(an)
         if an:
             self.debug('test push {}'.format(an.record_id))
@@ -196,7 +149,6 @@ class ExperimentEditorTask(EditorTask):
 
         return panes
 
-
     #===============================================================================
     # generic actions
     #===============================================================================
@@ -215,20 +167,9 @@ class ExperimentEditorTask(EditorTask):
                 editor.dirty = False
 
     def open(self, path=None):
-
-    #         self._test_auto_figure()
-    #         return
-
-    #        import os
-    #        ps = (os.path.join(paths.experiment_dir, 'demo.txt'),)
         if path is None:
             ps = self.open_file_dialog(action='open files',
-                                       #                                        default_path='Current Experiment.txt',
-                                       default_filename='Current Experiment.txt',
-                                       #                                        default_path=
-                                       #                                        default_filename=
-                                       #                                        default_directroy=
-            )
+                                       default_filename='Current Experiment.txt')
         else:
             ps = (path,)
 
@@ -279,23 +220,6 @@ class ExperimentEditorTask(EditorTask):
 
         ex.end_at_run_completion = False
         ex.set_extract_state('')
-
-    #     def merge(self):
-    #         eqs = [self.active_editor.queue]
-    #         self.active_editor.merge_id = 1
-    #         self.active_editor.group = self.group_count
-    #         self.group_count += 1
-    #         for i, ei in enumerate(self.editor_area.editors):
-    #             if not ei == self.active_editor:
-    #                 eqs.append(ei.queue)
-    #                 ei.merge_id = i + 2
-    #                 ei.group = self.group_count
-    #
-    #         path = self.save_file_dialog()
-    #         if path:
-    #             self.active_editor.save(path, eqs)
-    #             for ei in self.editor_area.editors:
-    #                 ei.path = path
 
     def new(self):
 
@@ -440,14 +364,6 @@ class ExperimentEditorTask(EditorTask):
         self.manager.update_info()
         if self.active_editor.queue.initialized:
             self.active_editor.dirty = True
-            #        self.debug('runs changed {}'.format(len(new)))
-            #        executor = self.manager.executor
-            #        if executor.isAlive():
-            #            executor.end_at_run_completion = True
-            #            executor.changed_flag = True
-            #        else:
-            #            self.manager.executor.executable = False
-            #        self.manager.experiment_queues = [ei.queue for ei in self.editor_area.editors]
 
     @on_trait_change('editor_area:editors[]')
     def _update_editors(self, new):
@@ -482,10 +398,8 @@ class ExperimentEditorTask(EditorTask):
 
     @on_trait_change('manager:activate_editor_event')
     def _set_active_editor(self, new):
-    #        self.debug('activating editor {}'.format(new))
         for ei in self.editor_area.editors:
             if id(ei.queue) == new:
-            #                self.debug('editor {} activated'.format(new))
                 try:
                     self.editor_area.activate_editor(ei)
                 except AttributeError:
@@ -538,60 +452,35 @@ class ExperimentEditorTask(EditorTask):
         self._show_pane(p)
 
 
-    #         editor = self.active_editor
-    #         if editor is None:
-    #             if self.editor_area.editors:
-    #                 editor = self.editor_area.editors[0]
-    #
-    #         if editor:
-    #             p = editor.path
-    #             p = add_extension(p, '.txt')
-    #
-    #             if os.path.isfile(p):
-    #                 # make a backup copy of the original experiment file
-    #                 shutil.copyfile(p, '{}.orig'.format(p))
-    #
-    # #                 group = editor.group
-    # #                 min_idx = editor.merge_id
-    # #                 text = open(p, 'r').read()
-    # #                 hash_val = hashlib.sha1(text).hexdigest()
-    # #                 qs = [ei.queue
-    # #                         for ei in self.editor_area.editors
-    # #                             if ei.group == group and ei.merge_id >= min_idx]
-    #                 qs = [ei.queue for ei in self.editor_area.editors]
-    #                 # launch execution thread
-    #                 # if successful open an auto figure task
-    # #                 if self.manager.execute_queues(qs, p, text, hash_val):
-    #                 if self.manager.execute_queues(qs, p):
-    #                     self._open_auto_figure()
-
     @on_trait_change('manager:[save_event, executor:auto_save_event]')
     def _save_queue(self):
         self.save()
 
-    @on_trait_change('window:closing')
-    def _prompt_on_close(self, event):
-        '''
+    def _prompt_for_save(self):
+        """
             Prompt the user to save when exiting.
-        '''
+        """
         if self.manager.executor.isAlive():
             name = self.manager.executor.experiment_queue.name
             result = self._confirmation('{} is running. Are you sure you want to quit?'.format(name))
-
             if result in (CANCEL, NO):
-                event.veto = True
+                return True
             else:
-                self.manager.executor.cancel(confirm=False)
+                ret = super(ExperimentEditorTask, self)._prompt_for_save()
+                if ret:
+                    self.manager.executor.cancel(confirm=False)
+                return
         else:
-            super(ExperimentEditorTask, self)._prompt_on_close(event)
+            return super(ExperimentEditorTask, self)._prompt_for_save()
 
     @on_trait_change('active_editor:dirty')
     def _update_active_editor_dirty(self):
         if self.active_editor.dirty:
             self.manager.executor.executable = False
-            #===============================================================================
-            # default/factory
-            #===============================================================================
+
+        #===============================================================================
+        # default/factory
+        #===============================================================================
 
     def _notifier_factory(self):
         n = Notifier()
@@ -611,9 +500,7 @@ class ExperimentEditorTask(EditorTask):
             app = self.window.application
 
         exp = Experimentor(application=app,
-                           mode=mode,
-                           #                            connect=False
-        )
+                           mode=mode)
 
         return exp
 
@@ -623,4 +510,88 @@ class ExperimentEditorTask(EditorTask):
     def _notifier_default(self):
         return self._notifier_factory()
 
+    def _analysis_health_default(self):
+        ah = AnalysisHealth(db=self.manager.db)
+        return ah
+
+    def _loading_manager_default(self):
+        lm = self.window.application.get_service('src.loading.loading_manager.LoadingManager')
+        if lm:
+            lm.trait_set(db=self.manager.db,
+                         show_group_positions=True,
+            )
+            #         lm = LoadingManager(db=self.manager.db,
+            #                             show_group_positions=True
+            #                             )
+            return lm
+
+    def _default_directory_default(self):
+        return paths.experiment_dir
+
+    def _default_layout_default(self):
+        return TaskLayout(
+            left=Splitter(
+                PaneItem('pychron.experiment.wait', height=100),
+                Tabbed(
+                    PaneItem('pychron.experiment.factory'),
+                    PaneItem('pychron.experiment.isotope_evolution'),
+                    #                                                PaneItem('pychron.experiment.summary'),
+                ),
+                orientation='vertical'
+            ),
+            right=Splitter(
+                Tabbed(
+                    PaneItem('pychron.experiment.stats'),
+                    PaneItem('pychron.experiment.console', height=425),
+                    PaneItem('pychron.experiment.explanation', height=425),
+                ),
+                #                                          PaneItem('pychron.extraction_line.canvas_dock'),
+                #                                         PaneItem('pychron.experiment.wait'),
+                orientation='vertical'
+            ),
+            top=PaneItem('pychron.experiment.controls')
+        )
         #============= EOF =============================================
+        #         editor = self.active_editor
+        #         if editor is None:
+        #             if self.editor_area.editors:
+        #                 editor = self.editor_area.editors[0]
+        #
+        #         if editor:
+        #             p = editor.path
+        #             p = add_extension(p, '.txt')
+        #
+        #             if os.path.isfile(p):
+        #                 # make a backup copy of the original experiment file
+        #                 shutil.copyfile(p, '{}.orig'.format(p))
+        #
+        # #                 group = editor.group
+        # #                 min_idx = editor.merge_id
+        # #                 text = open(p, 'r').read()
+        # #                 hash_val = hashlib.sha1(text).hexdigest()
+        # #                 qs = [ei.queue
+        # #                         for ei in self.editor_area.editors
+        # #                             if ei.group == group and ei.merge_id >= min_idx]
+        #                 qs = [ei.queue for ei in self.editor_area.editors]
+        #                 # launch execution thread
+        #                 # if successful open an auto figure task
+        # #                 if self.manager.execute_queues(qs, p, text, hash_val):
+        #                 if self.manager.execute_queues(qs, p):
+        #                     self._open_auto_figure()
+
+        #     def merge(self):
+        #         eqs = [self.active_editor.queue]
+        #         self.active_editor.merge_id = 1
+        #         self.active_editor.group = self.group_count
+        #         self.group_count += 1
+        #         for i, ei in enumerate(self.editor_area.editors):
+        #             if not ei == self.active_editor:
+        #                 eqs.append(ei.queue)
+        #                 ei.merge_id = i + 2
+        #                 ei.group = self.group_count
+        #
+        #         path = self.save_file_dialog()
+        #         if path:
+        #             self.active_editor.save(path, eqs)
+        #             for ei in self.editor_area.editors:
+        #                 ei.path = path

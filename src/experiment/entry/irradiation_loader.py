@@ -95,13 +95,7 @@ class XLSIrradiationLoader(Loggable):
 
         for ri in rows:
             ri += header_offset
-            #for ri in range(sheet.nrows - header_offset):
-            #    ri += header_offset
-            #    slevel = sheet.cell_value(ri, idxs['level'])
-            #    if slevel==level:
-            #holder = sheet.cell_value(ri, holder_idx)
 
-            #dblevel = db.add_irradiation_level(level, irradiation, holder)
             project, material = None, None
             sample = sheet.cell_value(ri, idxs['sample'])
             if sample.lower() == 'monitor':
@@ -154,4 +148,4 @@ class XLSIrradiationLoader(Loggable):
             cr = self.canvas.scene.get_item(pid)
         return ir, cr
 
-    #============= EOF =============================================
+        #============= EOF =============================================

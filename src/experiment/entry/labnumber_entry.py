@@ -16,6 +16,7 @@
 
 #============= enthought library imports =======================
 from apptools.preferences.preference_binding import bind_preference
+from pyface.constant import YES, CANCEL
 from traits.api import Property, Str, cached_property, \
     List, Event, Any, Button, Instance, Bool, on_trait_change
 from traitsui.api import Image
@@ -107,8 +108,6 @@ class LabnumberEntry(IsotopeDatabaseManager):
             assemble a pdf of irradiations
             ask user for list of irradiations
         """
-        #if irradiations is None:
-        #    irradiations=['NM-257','NM-256']
 
         db = self.db
         with db.session_ctx():
@@ -119,8 +118,6 @@ class LabnumberEntry(IsotopeDatabaseManager):
             if info.result:
                 if table.selected:
                     w = LabbookPDFWriter()
-                    #for irrad in irradiations:
-                    #    irrad=db.get_irradiation(irrad)
                     irrads = db.get_irradiations(names=table.selected,
                                                  order_func='asc')
 
@@ -128,8 +125,6 @@ class LabnumberEntry(IsotopeDatabaseManager):
                     prog = self.open_progress(n=n)
 
                     w.build(out, irrads, progress=prog)
-                    #w.add_irradiation(irrad)
-                    #w.build(out, irrad)
 
     def save_pdf(self, out):
         db = self.db
@@ -144,13 +139,18 @@ class LabnumberEntry(IsotopeDatabaseManager):
         self._save_to_db()
 
     def generate_labnumbers(self):
-        lg = LabnumberGenerator(monitor_name=self.monitor_name,
-                                db=self.db)
-
-        prog = self.open_progress()
-        lg.generate_labnumbers(self.irradiation, prog)
-
-        self._update_level()
+        ok = True
+        ok = self.confirmation_dialog('Are you sure you want to generate the labnumbers for this irradiation?')
+        if ok:
+            ret = YES
+            ret = self.confirmation_dialog('Overwrite existing labnumbers?', return_retval=True, cancel=True)
+            if ret != CANCEL:
+                overwrite = ret == YES
+                lg = LabnumberGenerator(monitor_name=self.monitor_name,
+                                        db=self.db)
+                prog = self.open_progress()
+                lg.generate_labnumbers(self.irradiation, prog, overwrite)
+                self._update_level()
 
     def make_irradiation_load_template(self, p):
         loader = XLSIrradiationLoader()
@@ -172,8 +172,9 @@ class LabnumberEntry(IsotopeDatabaseManager):
     def _load_holder_canvas(self, holder):
         geom = holder.geometry
         if geom:
-            canvas = self.canvas
+            canvas = IrradiationCanvas()
             load_holder_canvas(canvas, geom)
+            self.canvas = canvas
 
     def _load_holder_positions(self, holder):
         self.irradiated_positions = []
@@ -470,10 +471,10 @@ THIS CHANGE CANNOT BE UNDONE')
         self.debug('level changed')
         self.irradiated_positions = []
         if self.level:
-            self._update_level()
+            self._update_level(debug=True)
 
     # @simple_timer()
-    def _update_level(self, name=None):
+    def _update_level(self, name=None, debug=False):
 
         if name is None:
             name = self.level
@@ -490,11 +491,13 @@ THIS CHANGE CANNOT BE UNDONE')
                 self.debug('holder {}'.format(level.holder.name))
                 self._load_holder_positions(level.holder)
                 self._load_holder_canvas(level.holder)
+                #if debug:
+            #    return
 
             positions = level.positions
             n = len(self.irradiated_positions)
             self.debug('positions in level {}.  \
-                        available holder positions {}'.format(n, len(self.irradiated_positions)))
+available holder positions {}'.format(n, len(self.irradiated_positions)))
             if positions:
                 self.initialized = False
                 self._make_positions(n, positions)
