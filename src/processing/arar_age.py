@@ -597,13 +597,12 @@ class ArArAge(Loggable):
         return self._sensitivity_multiplier
 
     def _get_arar_result_attr(self, key):
-
+#        print self.arar_result.keys()
         if key in self.arar_result:
             return self.arar_result[key]
         elif key in self.isotopes:
             return self.isotopes[key].uvalue
         else:
-
             keys = self.arar_result.keys()
             #self.warning('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ NO KEY {} {}'.format(key, keys))
             return ufloat(0, 1e-20)

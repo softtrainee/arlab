@@ -21,7 +21,6 @@ from chaco.array_data_source import ArrayDataSource
 #============= standard library imports ========================
 from numpy import array, linspace, delete
 #============= local library imports  ==========================
-from uncertainties import ufloat
 from src.codetools.simple_timeit import timethis
 
 from src.helpers.formatting import calc_percent_error, floatfmt
@@ -72,8 +71,7 @@ class InverseIsochron(Isochron):
         #for si in self.sorted_analyses:
         #    print si.record_id, si.group_id
 
-        omit = self._get_omitted(self.sorted_analyses,
-                                 omit='omit_iso')
+        omit = self._get_omitted(self.sorted_analyses)
         #print 'iso omit', omit
         if omit:
             self._rebuild_iso(omit)
@@ -173,18 +171,21 @@ class InverseIsochron(Isochron):
         except ZeroDivisionError:
             v, e, p = 'NaN', 'NaN', 'NaN'
         ratio_line = 'Ar40/Ar36= {} +/-{} ({}%)'.format(v, e, p)
+        try:
+            xt = 1 / reg.x_intercept
+        except ZeroDivisionError:
+            xt=0
 
-        xt = ufloat(reg.x_intercept, reg.x_intercept_error)
-
+#        reg.predict_error()
         j = self._ref_j
         s = self._ref_age_scalar
         u = self._ref_age_units
 
-        age = age_equation(j, xt ** -1, scalar=s)
-        v = age.nominal_value
-        e = age.std_dev
-        p = calc_percent_error(v, e)
-
+        #age = age_equation(j, xt ** -1, scalar=s)
+        #v = age.nominal_value
+        #e = age.std_dev
+        #p = calc_percent_error(v, e)
+        #print 'age', v, e, j
         ages, errors = zip(*[(ai.age.nominal_value, ai.age_error_wo_j)
                              for ai in self.analyses
                              if ai.temp_status == 0
@@ -263,7 +264,9 @@ class InverseIsochron(Isochron):
         if obj:
             self._filter_metadata_changes(obj, self._rebuild_iso, self.analyses)
 
-    #===============================================================================
+            #
+
+        #===============================================================================
     # utils
     #===============================================================================
     def _get_age_errors(self, ans):
@@ -307,7 +310,7 @@ class InverseIsochron(Isochron):
         #            a = mswd ** 0.5
         #    return we * a * n
         #def _calculate_individual_ages(self, include_j_err=False):
-        from numpy import polyfit
+        #from numpy import polyfit
         #reg=ReedYorkRegressor()
         #def func(ai):
         #    a40,a39,a36=ai.Ar40, ai.Ar39, ai.Ar36

@@ -60,10 +60,12 @@ class BaseArArFigure(HasTraits):
         """
         self._plots = plots
 
-        def _setup_plot(pp):
+        def _setup_plot(pp, po):
             pp.value_range.tight_bounds = False
             pp.x_grid.visible = self.x_grid_visible
             pp.y_grid.visible = self.y_grid_visible
+            if po:
+                pp.value_scale=po.scale
 
             if self.use_sparse_ticks:
                 if pp.value_scale == 'log':
@@ -75,15 +77,15 @@ class BaseArArFigure(HasTraits):
 
         p = graph.new_plot(ytitle=self.ytitle,
                            padding=self.padding)
-        _setup_plot(p)
-
+        _setup_plot(p, None)
+        
         for po in plots:
             p = graph.new_plot(padding=self.padding,
                                bounds=[50, po.height],
-                               value_scale=po.scale,
+#                               value_scale=po.scale,
                                ytitle=po.name)
-            _setup_plot(p)
-
+            _setup_plot(p, po)
+            
     def plot(self, *args, **kw):
         pass
 

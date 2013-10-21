@@ -377,6 +377,7 @@ class Ideogram(BaseArArFigure):
     def _add_aux_plot(self, ys, title, pid, **kw):
         plot = self.graph.plots[pid]
         if plot.value_scale == 'log':
+            ys=array(ys)
             ys[ys < 0] = 1e-20
 
         graph = self.graph
