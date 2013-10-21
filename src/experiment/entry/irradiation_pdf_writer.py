@@ -22,6 +22,9 @@ from traits.api import Bool
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.canvas.canvas2D.irradiation_canvas import IrradiationCanvas
+from src.experiment.entry.level import load_holder_canvas
+from src.loading.component_flowable import ComponentFlowable
 from src.pdf.base_pdf_writer import BasePDFWriter
 from src.pdf.items import Row
 
@@ -42,41 +45,53 @@ class IrradiationPDFWriter(BasePDFWriter):
                 progress.change_message('Making {}{}'.format(irradname, level.name))
                 progress.increment()
 
-            rows = []
-            flowables.append(self._make_table_title(irrad, level))
-            row = Row()
-            for v in ('Pos.', 'L#', 'Sample', 'Note'):
-                row.add_item(value=self._new_paragraph('<b>{}</b>'.format(v)))
-            rows.append(row)
+            c = self._make_canvas(level)
+            fs = self._make_level_table(irrad, level, c)
+            if c:
+                c = ComponentFlowable(c, bounds=(200, 200),
+                                      fixed_scale=True)
+                flowables.append(c)
 
-            srows = sorted([self._make_row(pi) for pi in level.positions],
-                           key=lambda x: x[0])
-
-            rows.extend(srows)
-
-            ts = self._new_style(header_line_idx=0, header_line_width=2)
-
-            ts.add('LINEBELOW', (0, 1), (-1, -1), 1.0, colors.black)
-
-            t = self._new_table(ts, rows)
-            t._argW[0] = 0.35 * inch
-            t._argW[1] = 1. * inch
-            t._argW[2] = 2 * inch
-
-            flowables.append(t)
-            if self.page_break_between_levels:
-                flowables.append(self._page_break())
-            else:
-                flowables.append(self._new_spacer(0, 0.25 * inch))
+            flowables.extend(fs)
 
         return flowables, None
+
+    def _make_level_table(self, irrad, level, c):
+        rows = []
+        flowables = []
+        flowables.append(self._make_table_title(irrad, level))
+        row = Row()
+        for v in ('Pos.', 'L#', 'Sample', 'Note'):
+            row.add_item(value=self._new_paragraph('<b>{}</b>'.format(v)))
+        rows.append(row)
+
+        srows = sorted([self._make_row(pi, c) for pi in level.positions],
+                       key=lambda x: x[0])
+
+        rows.extend(srows)
+
+        ts = self._new_style(header_line_idx=0, header_line_width=2)
+
+        ts.add('LINEBELOW', (0, 1), (-1, -1), 1.0, colors.black)
+
+        t = self._new_table(ts, rows)
+        t._argW[0] = 0.35 * inch
+        t._argW[1] = 1. * inch
+        t._argW[2] = 2 * inch
+
+        flowables.append(t)
+        if self.page_break_between_levels:
+            flowables.append(self._page_break())
+        else:
+            flowables.append(self._new_spacer(0, 0.25 * inch))
+        return flowables
 
     def _make_table_title(self, irrad, level):
         t = '{}{}'.format(irrad.name, level.name)
         p = self._new_paragraph(t, s='Heading1')
         return p
 
-    def _make_row(self, pos):
+    def _make_row(self, pos, canvas):
         ln = pos.labnumber
         sample = ''
         identifier = ''
@@ -91,7 +106,18 @@ class IrradiationPDFWriter(BasePDFWriter):
         r.add_item(value=sample)
         r.add_item(value='')
 
+        if sample:
+            item = canvas.scene.get_item(pos.position)
+            item.fill = True
+
         return r
+
+    def _make_canvas(self, level):
+        if level.holder:
+            geom = level.holder.geometry
+            canvas = IrradiationCanvas()
+            load_holder_canvas(canvas, geom)
+            return canvas
 
 
 class LabbookPDFWriter(IrradiationPDFWriter):

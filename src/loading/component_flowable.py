@@ -22,24 +22,34 @@ from reportlab.platypus.flowables import Flowable
 
 class ComponentFlowable(Flowable):
     component = None
-    def __init__(self, component=None, hAlign='CENTER'):
+    fixed_scale = None
+
+    def __init__(self, component=None, bounds=None,
+                 fixed_scale=None, hAlign='CENTER'):
+        self.fixed_scale = fixed_scale
         self.component = component
+        if bounds is None:
+            bounds = (500, 500)
+
+        self.component.outer_bounds = bounds
+        self.component.do_layout(force=True)
         Flowable.__init__(self)
         if hAlign:
             self.hAlign = hAlign
 
     def _compute_scale(self, page_width, page_height,
-                            width, height):
+                       width, height):
+        scale = self.fixed_scale
+        if not scale:
+            aspect = float(width) / float(height)
 
-        aspect = float(width) / float(height)
-
-        if aspect >= page_width / page_height:
-            # We are limited in width, so use widths to compute the scale
-            # factor between pixels to page units.  (We want square pixels,
-            # so we re-use this scale for the vertical dimension.)
-            scale = float(page_width) / float(width)
-        else:
-            scale = page_height / height
+            if aspect >= page_width / page_height:
+                # We are limited in width, so use widths to compute the scale
+                # factor between pixels to page units.  (We want square pixels,
+                # so we re-use this scale for the vertical dimension.)
+                scale = float(page_width) / float(width)
+            else:
+                scale = page_height / height
 
         self._scale = scale
         return scale
@@ -56,7 +66,7 @@ class ComponentFlowable(Flowable):
         if self.component:
             gc = PdfPlotGraphicsContext(pdf_canvas=self.canv)
 
-#             print self.component.x, self.component.y
+            #             print self.component.x, self.component.y
             scale = self._scale
             gc.scale_ctm(scale, scale)
             gc.translate_ctm(-self.component.x, -self.component.y)

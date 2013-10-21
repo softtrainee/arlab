@@ -18,17 +18,19 @@
 from traits.api import Instance
 from src.canvas.canvas2D.base_data_canvas import BaseDataCanvas
 from src.canvas.canvas2D.scene.scene import Scene
-import weakref
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class SceneCanvas(BaseDataCanvas):
     scene = Instance(Scene)
     _frozen = False
 
-    def _scene_changed(self):
+    def _scene_changed(self, name, old, new):
+
         self.scene.on_trait_change(self.request_redraw,
-                                   'layout_needed'
-        )
+                                   'layout_needed')
+        if old:
+            old.on_trait_change(self.request_redraw,
+                                'layout_needed', remove=True)
 
     def freeze(self):
         self._frozen = True
@@ -37,7 +39,8 @@ class SceneCanvas(BaseDataCanvas):
         self._frozen = False
 
     def clear_all(self):
-        self.scene.reset_layers()
+        if self.scene:
+            self.scene.reset_layers()
 
     def show_all(self):
         if self.scene:
