@@ -19,7 +19,7 @@ from chaco.scatterplot import ScatterPlot
 from enable.colors import color_table
 from traits.api import Instance, Any, Bool, \
     List, Str, Property, Dict, Callable
-from traitsui.api import View, Item, Handler
+from traitsui.api import View, Item
 
 from enable.component_editor import ComponentEditor
 from chaco.api import OverlayPlotContainer, \
@@ -45,17 +45,12 @@ from tools.contextual_menu_tool import ContextualMenuTool
 from tools.pan_tool import MyPanTool as PanTool
 
 from chaco.data_label import DataLabel
-from src.loggable import Loggable
 from src.graph.context_menu_mixin import ContextMenuMixin
 from chaco.plot_graphics_context import PlotGraphicsContext
 from src.viewable import Viewable
-import tempfile
-import os
-from src.paths import paths
 from src.graph.tools.point_inspector import PointInspector, \
     PointInspectorOverlay
 from chaco.array_data_source import ArrayDataSource
-from src.ui.gui import invoke_in_main_thread
 import weakref
 # from chaco.tools.pan_tool import PanTool
 VALID_FONTS = [
@@ -986,8 +981,12 @@ class Graph(Viewable, ContextMenuMixin):
                   **kw):
 
         #         def add(datum):
-        #         print plotid, series, self.series
+        #print plotid, series, self.series
+        #try:
         names = self.series[plotid][series]
+        #except:
+        #    print series, self.series[plotid]
+
         plot = self.plots[plotid]
 
         if not hasattr(datum, '__iter__'):

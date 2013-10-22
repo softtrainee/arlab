@@ -15,27 +15,22 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, Int, Property, List, on_trait_change, Dict, Bool, \
-    Str, CInt, Int, Tuple, DelegatesTo
-from traitsui.api import View, Item, Group, VSplit, UItem, VGroup, HGroup, spring
+from traits.api import Instance, Property, List, on_trait_change, Bool, \
+    Str, CInt, Int, Tuple
+from traitsui.api import View, UItem, VGroup, HGroup, spring
 from src.graph.graph import Graph
 
 from src.graph.regression_graph import StackedRegressionGraph
-from uncertainties import ufloat
 # from src.helpers.traitsui_shortcuts import instance_item
 from src.constants import PLUSMINUS
-from src.processing.analyses.analysis_view import AnalysisView, AutomatedRunAnalysisView
+from src.processing.analyses.analysis_view import AutomatedRunAnalysisView
 from src.processing.arar_age import ArArAge
 # from src.helpers.formatting import floatfmt
-from src.displays.display import DisplayController
-from src.ui.text_table import RatiosAdapter, ValueErrorAdapter, MultiTextTableAdapter
-from src.ui.qt.text_table_editor import FastTextTableEditor
+from src.ui.text_table import MultiTextTableAdapter
 # from src.database.records.ui.analysis_summary import SignalAdapter
-from src.experiment.display_signal import DisplaySignal, DisplayRatio, DisplayValue
 from src.loggable import Loggable
 from src.ui.custom_label_editor import CustomLabel
 from src.ui.gui import invoke_in_main_thread
-from pyface.timer.do_later import do_later
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -193,6 +188,9 @@ class PlotPanel(Loggable):
     ncounts = Property(Int(enter_set=True, auto_set=False), depends_on='_ncounts')
     _ncounts = CInt
 
+    ncycles = Property(Int(enter_set=True, auto_set=False), depends_on='_ncounts')
+    _ncycles = CInt
+
     detectors = List
     #fits = List
     isotopes = Property(depends_on='detectors')
@@ -211,6 +209,7 @@ class PlotPanel(Loggable):
     #    refresh = Event
 
     isbaseline = Bool(False)
+    is_peak_hop = Bool(False)
 
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
     info_func = None
@@ -393,6 +392,13 @@ class PlotPanel(Loggable):
     def _set_ncounts(self, v):
         self.info('{} set to terminate after {} counts'.format(self.plot_title, v))
         self._ncounts = v
+
+    def _get_ncycles(self):
+        return self._ncycles
+
+    def _set_ncycles(self, v):
+        self.info('{} set to terminate after {} ncycles'.format(self.plot_title, v))
+        self._ncycles = v
 
     def _graph_factory(self):
         return StackedRegressionGraph(container_dict=dict(padding=5, bgcolor='gray',
