@@ -378,11 +378,13 @@ class MeasurementParameterEditor(ParameterEditor):
 
     def _extract_hops(self, hl):
         hops = []
-        for _, (hi, cnts) in enumerate(hl):
+        for _, (hi, cnts, settle) in enumerate(hl):
             poss, dets = zip(*[it.split(':') for it in hi.split(',')])
             pos = poss[0]
             dets = ','.join(map(str.strip, dets))
-            hop = Hop(position=pos, detectors=dets, counts=cnts)
+            hop = Hop(position=pos, detectors=dets,
+                      counts=cnts,
+                      settling_time=settle)
             hops.append(hop)
 
         return hops

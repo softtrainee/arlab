@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, List, CInt, Str, Int
+from traits.api import Any, List, CInt, Str, Int, Bool
 # from traitsui.api import View, Item
 # from pyface.timer.do_later import do_after
 #============= standard library imports ========================
@@ -35,6 +35,7 @@ class DataCollector(Loggable):
     arar_age = Any
 
     detectors = List
+    check_conditions = Bool(True)
     truncation_conditions = List
     terminations_conditions = List
     action_conditions = List
@@ -50,6 +51,11 @@ class DataCollector(Loggable):
     starttime = None
     _alive = False
     _evt = None
+    _completed = False
+
+    def _detectors_changed(self):
+        self._idx_func = self._get_idx_func()
+
     def wait(self):
         st = time.time()
         self.debug('wait started')
@@ -61,15 +67,21 @@ class DataCollector(Loggable):
     def set_truncated(self):
         self._truncate_signal = True
 
-    def stop(self):
+    def stop(self, wait_for_completion=True):
         self._alive = False
         if self._evt:
             self._evt.set()
+
+        if wait_for_completion:
+            if self._evt:
+                while not self._completed:
+                    time.sleep(0.1)
 
     def measure(self):
         if self.canceled:
             return
 
+        self._completed = False
         self._truncate_signal = False
 
         st = time.time()
@@ -91,32 +103,29 @@ class DataCollector(Loggable):
         evt.wait(0.05)
 
         self._alive = True
-        with consumable(func=self._iter_step, main=True) as con:
-            self._alive = True
-            self._iter(con, evt, 1)
-            evt.wait(et * 1.1)
+        self._measure(evt, et)
 
         tt = time.time() - st
         self.debug('estimated time: {:0.3f} actual time: :{:0.3f}'.format(et, tt))
         return self.total_counts
 
+    def _measure(self, evt, et):
+        with consumable(func=self._iter_step, main=True) as con:
+            self._iter(con, evt, 1)
+            evt.wait(et * 1.1)
+        self._completed = True
+
     def _iter(self, con, evt, i, prev=0):
-        ot = time.time()
+
         if not self._check_iteration(i):
-            if i % 50 == 0:
-                self.info('collecting point {}'.format(i))
-#                mem_log('point {}'.format(i), verbose=True)
-
-            # get the data
-            data = self._get_data()
-
-            con.add_consumable((time.time() - self.starttime, data, i))
+            self._iter_hook(con, i)
+            ot = time.time()
 
             p = self.period_ms * 0.001
             p -= prev
             p = max(0, p)
 
-#             self.debug('period {}'.format(p))
+            #self.debug('period {} {} {}'.format(p,prev, self.period_ms))
             t = Timer(p, self._iter, args=(con, evt, i + 1,
                                            time.time() - ot))
 
@@ -126,44 +135,75 @@ class DataCollector(Loggable):
         else:
             evt.set()
 
+    def _iter_hook(self, con, i):
+        pass
+
     def _iter_step(self, data):
-        x, data, i = data
+        pass
 
-        # save the data
-        self._save_data(x, *data)
-        # plot the data
-        self._plot_data(i, x, *data)
+    def _get_data(self, dets=None):
+        data = self.data_generator.next()
+        if dets:
+            data = zip(*[(k, s) for k, s in zip(*data)
+                         if k in dets])
 
-    def _get_data(self):
-        return self.data_generator.next()
+        return data
 
     def _save_data(self, x, keys, signals):
         self.data_writer(self.detectors, x, keys, signals)
 
+    def _get_detector(self, d):
+        if isinstance(d, str):
+            d = next((di for di in self.detectors
+                      if di.name == d), None)
+        return d
 
     def _plot_data(self, i, x, keys, signals):
         if globalv.experiment_debug:
             x *= (self.period_ms * 0.001) ** -1
-        dets = self.detectors
+
+        #dets = self.detectors
         graph = self.plot_panel.isotope_graph
 
         nfs = self.get_fit_block(i)
         if self.grpname == 'signal':
             self.plot_panel.fits = nfs
 
-        for pi, (fi, dn) in enumerate(zip(nfs, dets)):
+        np = len(graph.plots)
+        idx_func = self._idx_func
 
-            self.arar_age.isotopes[dn.isotope].fit = fi
+        for dn in keys:
+        #for pi, (fi, dn) in enumerate(zip(nfs, keys)):
+            dn = self._get_detector(dn)
+            if dn:
+                iso = dn.isotope
+                pi = idx_func(iso)
+                fi = nfs[pi]
 
-            signal = signals[keys.index(dn.name)]
-            graph.add_datum((x, signal),
-                            series=self.series_idx,
-                            plotid=pi,
-                            update_y_limits=True,
-                            ypadding='0.1'
-                            )
-            if fi:
-                graph.set_fit(fi, plotid=pi, series=0)
+                if pi >= np:
+                    graph.new_plot()
+                    graph.new_series(type='scatter',
+                                     marker='circle',
+                                     plotid=pi)
+                    dn.series_idx = 0
+                    #
+                series = self.series_idx
+                if hasattr(dn, 'series_idx'):
+                    series = dn.series_idx
+
+                self.arar_age.isotopes[iso].fit = fi
+
+                signal = signals[keys.index(dn.name)]
+
+                #print i, x, pi, dn
+                graph.add_datum((x, signal),
+                                series=series,
+                                plotid=pi,
+                                update_y_limits=True,
+                                ypadding='0.1')
+                if fi:
+                    graph.set_fit(fi, plotid=pi, series=0)
+
         graph.refresh()
 
 #===============================================================================
@@ -177,7 +217,6 @@ class DataCollector(Loggable):
     def _get_fit_block(self, iter_cnt, fits):
         for sli, fs in fits:
             if sli:
-
                 s, e = sli
                 if s is None:
                     s = 0
@@ -246,7 +285,8 @@ class DataCollector(Loggable):
                     return 'break'
 
         if i > self.measurement_script.ncounts:
-            self.info('script termination. measurement iteration executed {}/{} counts'.format(j, ncounts))
+            self.info('script termination. measurement iteration executed {}/{} counts'.format(j,
+                                                                                               self.measurement_script.ncounts))
             return 'break'
 
         if pc:
@@ -264,4 +304,19 @@ class DataCollector(Loggable):
         if not self._alive:
             self.info('measurement iteration executed {}/{} counts'.format(j, ncounts))
             return 'cancel'
-#============= EOF =============================================
+
+    def _get_idx_func(self):
+        original_idx = [(di.name, di.isotope) for di in self.detectors]
+
+        def idx_func(isot):
+            #for i, di in enumerate(self.detectors):
+            #    print i, di,di.isotope, di.isotope==isot, isot
+            #return next((i for i,di in enumerate(self.detectors)
+            #                    if di.isotope==isot), None)
+
+            return next((i for i, (n, ii) in enumerate(original_idx)
+                         if ii == isot), None)
+
+        return idx_func
+
+        #============= EOF =============================================

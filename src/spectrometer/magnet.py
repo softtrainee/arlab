@@ -30,7 +30,6 @@ from src.paths import paths
 # import math
 # from src.graph.graph import Graph
 from src.spectrometer.spectrometer_device import SpectrometerDevice
-from src.codetools.memory_usage import mem_log
 # from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS
 # from src.regression.ols_regressor import PolynomialRegressor
 
@@ -50,15 +49,6 @@ def get_float(func):
 
 
 class Magnet(SpectrometerDevice):
-#     mftable = List(
-#                    # [[40, 39, 38, 36], [2, 5, 10, 26]]
-#                    )
-# regressor = Instance(PolynomialRegressor, ())
-#     mftable=Array
-
-#     mf_masses=Array
-#     mf_dacs=Array
-#     mf_isos=List
 
     _mftable = None
 
@@ -79,21 +69,14 @@ class Magnet(SpectrometerDevice):
 
     calibration_points = List  # Property(depends_on='mftable')
     detector = Any
-    #    graph = Instance(Graph, ())
 
     dac_changed = Event
 
-    #    def update_graph(self):
-    #        pts = self._get_calibration_points()
-    #        self.set_graph(pts)
-    #        return pts
-
-
     def update_field_table(self, isotope, dac):
-        '''
-        
+        """
+
             dac needs to be in axial units
-        '''
+        """
 
         self.info('update mftable {} {}'.format(isotope, dac))
 
@@ -101,15 +84,11 @@ class Magnet(SpectrometerDevice):
 
         try:
             refindex = min(nonzero(isos == isotope)[0])
-            #             refindex = isos.index(isotope)
 
             delta = dac - ys[refindex]
             # need to calculate all ys
             # using simple linear offset
             ys += delta
-
-            #         for di,ci in zip(self.mf_dacs, self.calibration_points):
-            #             ci.y=di
 
             self.dump(isos, xs, ys)
 
@@ -120,30 +99,6 @@ class Magnet(SpectrometerDevice):
 
             e = traceback.format_exc()
             self.debug('Magnet update field table {}'.format(e))
-
-        #    def set_graph(self, pts):
-        #
-        #        g = Graph(container_dict=dict(padding=10))
-        #        g.clear()
-        #        g.new_plot(xtitle='Mass',
-        #                   ytitle='DAC',
-        #                   padding=[30, 0, 0, 30],
-        #                   zoom=True,
-        #                   pan=True
-        #                   )
-        #        g.set_x_limits(0, 150)
-        #        g.set_y_limits(0, 100)
-        #        xs = [cp.x for cp in pts]
-        #        ys = [cp.y * 10 for cp in pts]
-        #
-        #        reg = self.regressor
-        #        rdict = reg.parabolic(xs, ys, data_range=(0, 150), npts=5000)
-        #
-        #        g.new_series(x=xs, y=ys, type='scatter')
-        #
-        #
-        #        g.new_series(x=rdict['x'], y=rdict['y'])
-        #        self.graph = g
 
     def mftable_view(self):
         cols = [ObjectColumn(name='x', label='Mass'),
@@ -164,27 +119,6 @@ class Magnet(SpectrometerDevice):
     #===============================================================================
     # ##positioning
     #===============================================================================
-    #    def calculate_dac(self, pos):
-    #        #is pos a number
-    #        if not isinstance(pos, (float, int)):
-    #            #is pos a isokey or a masskey
-    #            # eg. Ar40, or 39.962
-    #            mass = None
-    #            isokeys = {'Ar40':39.962}
-    #            try:
-    #                mass = isokeys[pos]
-    #            except KeyError:
-    #                try:
-    #                    mass = float(pos)
-    #                except:
-    #                    self.debug('invalid magnet position {}'.format(pos))
-    #
-    #            print 'ionpt', mass, pos,
-    #            pos = self.map_mass_to_dac(mass)
-    #            print pos
-
-    #        return pos
-
     def set_dac(self, v, verbose=False):
         micro = self.microcontroller
         unblank = False
@@ -259,10 +193,7 @@ class Magnet(SpectrometerDevice):
         p = os.path.join(paths.spectrometer_dir, 'mftable.csv')
         with open(p, 'w') as f:
             writer = csv.writer(f)
-            #             for a in zip(self.mf_isos,self.mf_dacs):
             for a in zip(isos, ys):
-            #             for x,y in self.mftable.T:
-            #             for x, y in zip(self.mftable[0], self.mftable[1]):
                 writer.writerow(a)
 
             #===============================================================================
@@ -433,3 +364,46 @@ if __name__ == '__main__':
 #        #print x, dac_value, hv_correction
 #
 #        self.set_dac(dac)
+    #    def set_graph(self, pts):
+    #
+    #        g = Graph(container_dict=dict(padding=10))
+    #        g.clear()
+    #        g.new_plot(xtitle='Mass',
+    #                   ytitle='DAC',
+    #                   padding=[30, 0, 0, 30],
+    #                   zoom=True,
+    #                   pan=True
+    #                   )
+    #        g.set_x_limits(0, 150)
+    #        g.set_y_limits(0, 100)
+    #        xs = [cp.x for cp in pts]
+    #        ys = [cp.y * 10 for cp in pts]
+    #
+    #        reg = self.regressor
+    #        rdict = reg.parabolic(xs, ys, data_range=(0, 150), npts=5000)
+    #
+    #        g.new_series(x=xs, y=ys, type='scatter')
+    #
+    #
+    #        g.new_series(x=rdict['x'], y=rdict['y'])
+    #        self.graph = g
+    #    def calculate_dac(self, pos):
+    #        #is pos a number
+    #        if not isinstance(pos, (float, int)):
+    #            #is pos a isokey or a masskey
+    #            # eg. Ar40, or 39.962
+    #            mass = None
+    #            isokeys = {'Ar40':39.962}
+    #            try:
+    #                mass = isokeys[pos]
+    #            except KeyError:
+    #                try:
+    #                    mass = float(pos)
+    #                except:
+    #                    self.debug('invalid magnet position {}'.format(pos))
+    #
+    #            print 'ionpt', mass, pos,
+    #            pos = self.map_mass_to_dac(mass)
+    #            print pos
+
+    #        return pos

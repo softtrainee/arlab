@@ -182,15 +182,16 @@ class Ideogram(BaseArArFigure):
     # overlays
     #===============================================================================
     def _add_info(self, g, plot):
-        m = self.options.mean_calculation_kind
-        e = self.options.error_calc_method
-        s = self.options.nsigma
-        if self.options.show_info:
-            pl = PlotLabel(text=u'Mean: {} +/-{}s\nError Type: {}'.format(m, s, e),
-                           overlay_position='inside top',
-                           hjustify='left',
-                           component=plot)
-            plot.overlays.append(pl)
+        if self.group_id == 0:
+            m = self.options.mean_calculation_kind
+            e = self.options.error_calc_method
+            s = self.options.nsigma
+            if self.options.show_info:
+                pl = PlotLabel(text=u'Mean: {} +/-{}s\nError Type: {}'.format(m, s, e),
+                               overlay_position='inside top',
+                               hjustify='left',
+                               component=plot)
+                plot.overlays.append(pl)
 
     def _add_mean_indicator(self, g, line, bins, probs, pid):
         maxp = max(probs)

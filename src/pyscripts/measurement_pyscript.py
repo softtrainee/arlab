@@ -15,7 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, on_trait_change
 #============= standard library imports ========================
 
 import time
@@ -27,7 +26,6 @@ from src.pyscripts.pyscript import verbose_skip, count_verbose_skip, \
 from src.paths import paths
 from src.pyscripts.valve_pyscript import ValvePyScript
 from src.constants import MEASUREMENT_COLOR
-import weakref
 
 ESTIMATED_DURATION_FF = 1.045
 
@@ -157,23 +155,30 @@ class MeasurementPyScript(ValvePyScript):
         if hops is None:
             return
 
+        counts = sum([ci + s for _h, ci, s in hops]) * ncycles
+        tt = 0
+        #for h,ci, s in hops:
+        #print ci, s, ci+s
+        #tt+=ci+s
+        #print 'tttt', tt, tt, tt*ncycles
         if calc_time:
             # counts = sum of counts for each hop
-            counts = sum([ci for _h, ci in hops])
-            self._estimated_duration += (ncycles * counts * ESTIMATED_DURATION_FF)
+            self._estimated_duration += (counts * ESTIMATED_DURATION_FF)
             return
 
         group = 'signal'
         if baseline:
             group = 'baseline'
 
+        self.ncounts += counts
         if not self._automated_run_call('py_peak_hop', ncycles, hops,
                                         self._time_zero,
+                                        self._time_zero_offset,
                                         self._series_count,
-                                        group=group
-        ):
+                                        group=group):
             self.cancel()
-        self._series_count += 4
+        self._series_count += 2
+        #self._series_count += 4
 
     #    @count_verbose_skip
     #    @command_register
