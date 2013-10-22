@@ -27,12 +27,13 @@ import yaml
 import struct
 from threading import Thread, Event as TEvent
 from uncertainties import ufloat
-from numpy import Inf, inf
+from numpy import Inf
 import gc
 # from memory_profiler import profile
 import weakref
 from itertools import groupby
 #============= local library imports  ==========================
+from src.experiment.automated_run.peak_hop_collector import PeakHopCollector
 from src.globals import globalv
 from src.loggable import Loggable
 from src.processing.analyses.analysis_view import AutomatedRunAnalysisView
@@ -48,18 +49,17 @@ from src.paths import paths
 from src.managers.data_managers.data_manager import DataManager
 from src.database.adapters.isotope_adapter import IsotopeAdapter
 from src.constants import NULL_STR, MEASUREMENT_COLOR, \
-    EXTRACTION_COLOR, SCRIPT_NAMES, SCRIPT_KEYS
+    EXTRACTION_COLOR, SCRIPT_KEYS
 from src.experiment.automated_run.condition import TruncationCondition, \
     ActionCondition, TerminationCondition
 from src.processing.arar_age import ArArAge
 from src.processing.isotope import IsotopicMeasurement
 from src.experiment.export.export_spec import ExportSpec
 from src.ui.gui import invoke_in_main_thread
-from src.consumer_mixin import consumable
-from src.codetools.memory_usage import mem_log, measure_type, calc_growth
+from src.codetools.memory_usage import mem_log
 from src.codetools.file_log import file_log
 from src.pyscripts.uv_extraction_line_pyscript import UVExtractionPyScript
-from src.experiment.automated_run.data_collector import DataCollector
+from src.experiment.automated_run.multi_collector import MultiCollector
 from src.processing.analyses.analysis import DBAnalysis
 
 DEBUG = False
@@ -102,7 +102,10 @@ class AutomatedRun(Loggable):
     experiment_manager = Any
     ion_optics_manager = Any
     data_manager = Instance(DataManager)
-    data_collector = Instance(DataCollector)
+
+    multi_collector = Instance(MultiCollector, ())
+    peak_hop_collector = Instance(PeakHopCollector, ())
+    collector = Property
 
     db = Instance(IsotopeAdapter)
     local_lab_db = Instance(LocalLabAdapter)
@@ -179,6 +182,7 @@ class AutomatedRun(Loggable):
     warned_scripts = []
 
     is_last = False
+    is_peak_hop = Bool(False)
     #===============================================================================
     # pyscript interface
     #===============================================================================
@@ -303,7 +307,7 @@ class AutomatedRun(Loggable):
             return
 
         if self.plot_panel:
-            self.plot_panel._ncounts = ncounts
+            #self.plot_panel._ncounts = ncounts
             self.plot_panel.isbaseline = False
 
         gn = 'signal'
@@ -320,9 +324,7 @@ class AutomatedRun(Loggable):
                                self._get_data_writer(gn),
                                ncounts, starttime, starttime_offset,
                                series, fits,
-                               check_conditions,
-                               True  # refresh graph after each iteration
-        )
+                               check_conditions)
         mem_log('post data collection')
         return result
 
@@ -371,15 +373,9 @@ class AutomatedRun(Loggable):
                                writer,
                                ncounts, starttime, starttime_offset,
                                series, fits,
-                               check_conditions,
-                               False  # dont refresh after each iteration
-        )
+                               check_conditions)
         mem_log('post sniff')
 
-        #        if self.plot_panel:
-        #            self.plot_panel.correct_for_blank = True if (not self.spec.analysis_type.startswith('blank') \
-        #                                                         and not self.spec.analysis_type.startswith('background')) else False
-        # #            self.plot_panel.correct_for_baseline = True
 
         return result
 
@@ -405,8 +401,11 @@ class AutomatedRun(Loggable):
 
                 msg = 'Delaying {}s for detectors to settle'.format(settling_time)
                 self.info(msg)
-                self.data_collector.total_counts += settling_time
-                self.experiment_manager.wait(settling_time, msg)
+                self.collector.total_counts += settling_time
+                #self.multi_collector.total_counts += settling_time
+
+                self.wait(settling_time, msg)
+                #self.experiment_manager.wait(settling_time, msg)
                 #                 self._wait(settling_time)
 
         if self.plot_panel:
@@ -425,7 +424,6 @@ class AutomatedRun(Loggable):
                                starttime_offset,
                                series, fits,
                                check_conditions,
-                               True  # dont refresh after each iteration
         )
 
         if self.plot_panel:
@@ -435,16 +433,34 @@ class AutomatedRun(Loggable):
 
         return result
 
-    def py_peak_hop(self, cycles, hops, starttime, series=0, group='signal'):
+    def py_peak_hop(self, cycles, hops, starttime, starttime_offset,
+                    series=0, group='signal'):
+
         if not self._alive:
             return
+
+        isbaseline = group == 'baseline'
+
+        if self.plot_panel:
+            self.plot_panel.isbaseline = isbaseline
+            self.plot_panel._ncycles = cycles
+
+        self.is_peak_hop = True
+
+        fits = self.fits
+        if fits is None:
+            fits = [(None, ['linear', ] * len(self._active_detectors))]
+        if isbaseline:
+            fits = [(None, ['average', ] * len(self._active_detectors))]
 
         self._build_peak_hop_tables(group, hops)
         writer = self._get_data_writer(group)
 
-        return self._peak_hop(cycles, hops, writer,
-                              starttime, series)
-
+        check_conditions = True
+        ret = self._peak_hop(cycles, hops, group, writer,
+                             starttime, starttime_offset, series,
+                             fits, check_conditions)
+        return ret
 
     def py_peak_center(self, detector=None, **kw):
         mem_log('pre peak center')
@@ -559,7 +575,8 @@ class AutomatedRun(Loggable):
             don't save run
             
         '''
-        self.data_collector.canceled = True
+        #self.multi_collector.canceled = True
+        self.collector.canceled = True
 
         #        self.aliquot='##'
         self._save_enabled = False
@@ -598,7 +615,8 @@ class AutomatedRun(Loggable):
                 self.measurement_script.truncate('quick')
 
             #             self._truncate_signal = True
-            self.data_collector.set_truncated()
+            #self.multi_collector.set_truncated()
+            self.collector.set_truncated()
             self.truncated = True
             self.state = 'truncated'
             #===============================================================================
@@ -660,7 +678,8 @@ class AutomatedRun(Loggable):
 
     def stop(self):
         self._alive = False
-        self.data_collector.stop()
+        self.collector.stop()
+        #self.multi_collector.stop()
 
     def info(self, msg, color=None, *args, **kw):
         super(AutomatedRun, self).info(msg, *args, **kw)
@@ -675,6 +694,9 @@ class AutomatedRun(Loggable):
 
     def isAlive(self):
         return self._alive
+
+    def set_magnet_position(self, *args, **kw):
+        self._set_magnet_position(*args, **kw)
 
     def start(self):
         if self.monitor is None:
@@ -740,8 +762,11 @@ class AutomatedRun(Loggable):
 
         self.overlap_evt = TEvent()
         self._alive = True
-        self.data_collector.total_counts = 0
-        self.data_collector.canceled = False
+
+        self.multi_collector.total_counts = 0
+        self.multi_collector.canceled = False
+
+
         #        self._total_counts = 0
         self._equilibration_done = False
         self.refresh_scripts()
@@ -1069,14 +1094,9 @@ anaylsis_type={}
 
             self.py_add_truncation(attr, comp, value, int(start), freq, acr)
 
-    def _wait(self, t):
-        st = time.time()
-        while 1:
-            if not self._alive or time.time() - st > t:
-                break
+    def wait(self, t, msg=''):
+        self.experiment_manager.wait(t, msg)
 
-            #             gc.collect()
-            time.sleep(0.01)
 
     def _make_iterable(self, pos):
         if '(' in pos and ')' in pos and ',' in pos:
@@ -1168,7 +1188,8 @@ anaylsis_type={}
 
             self.overlap_evt.set()
 
-    def _set_magnet_position(self, pos, detector, dac=False, update_labels=True):
+    def _set_magnet_position(self, pos, detector,
+                             dac=False, update_labels=True):
         ion = self.ion_optics_manager
         if ion is not None:
             ion.position(pos, detector, dac)
@@ -1193,108 +1214,31 @@ anaylsis_type={}
                     self.plot_panel.analysis_view.load(self)
                     self.plot_panel.analysis_view.refresh_needed = True
 
-    def _peak_hop(self, ncycles, hops, data_write_hook, starttime, series):
+    def _peak_hop(self, ncycles, hops, grpname, data_writer,
+                  starttime, starttime_offset, series,
+                  fits, check_conditions):
         '''
             ncycles: int
             hops: list of tuples 
             
-                hop = 'Isotope:Det[,Isotope:Det,...]', Count
+                hop = 'Isotope:Det[,Isotope:Det,...]', Count, Settling Time(s)
                 
                 ex. 
-                hop = 'Ar40:H1,Ar36:CDD', 10
+                hop = 'Ar40:H1,Ar36:CDD', 10, 1
         '''
-        if not self.spectrometer_manager:
-            self.warning('not spectrometer manager')
-            return
 
-        spec = self.spectrometer_manager.spectrometer
-
-        graph = self.plot_panel.isotope_graph
-
-        integration_time = 1 / 2.
-        settle_time = 2 / 10.
-
-        ncounts = sum([ci for _h, ci in hops]) * ncycles
-        #        self._total_counts += ncounts
-        mi, ma = graph.get_x_limits()
-        dev = (ma - mi) * 0.05
-        if (self._total_counts + dev) > ma:
-            graph.set_x_limits(0, self._total_counts + (ma - mi) * 0.25)
-
-        original_idx = [(di.name, di.isotope) for di in self._active_detectors]
-
-        def idx_func(isot):
-            '''
-            '''
-            return next((i for i, (n, ii) in enumerate(original_idx)
-                         if ii == isot))
-
-        iter_count = 1
-        while 1:
-            ck = self._check_iteration(iter_count, ncounts, True)
-            if ck == 'break':
-                break
-            elif ck == 'cancel':
-                return False
-
-            for hopstr, counts in hops:
-                if not self._alive:
-                    return False
-
-                his = hopstr.split(',')
-                isos, dets = zip(*[map(str.strip, hi.split(':')) for hi in his])
-                #                dets = [hi.split(':')[1] for hi in  his]
-                #                dets = detstr.split(',')
-                fits = [fi for fi, di in zip(self.fits,
-                                             self._active_detectors)
-                        if di.name in dets]
-
-                detector = dets[0]
-                isotope = isos[0]
-
-                self._set_magnet_position(isotope, detector, update_labels=False)
-                time.sleep(settle_time)
-                for _ in xrange(int(counts)):
-                    if not self._alive:
-                        return False
-
-                    if starttime is None:
-                        starttime = time.time()
-
-                    x = time.time() - starttime
-                    data = spec.get_intensity(dets)
-                    if data is not None:
-                        keys, signals = data
-                    else:
-                        keys, signals = ('H2', 'H1', 'AX', 'L1', 'L2', 'CDD'), (1, 2, 3, 4, 5, 6)
-
-                    self.signals = dict(zip(dets, signals))
-
-                    for signal, fi, iso in zip(signals, fits, isos):
-                        pi = idx_func(iso)
-                        if len(graph.series[pi]) < series + 1:
-                            graph_kw = dict(marker='circle', type='scatter', marker_size=1.25)
-                            func = lambda xi, yi, kw: graph.new_series(x=[xi],
-                                                                       y=[yi],
-                                                                       use_error_envelope=False,
-                                                                       **kw
-                            )
-                        else:
-                            graph_kw = dict(series=series,
-                                            #                                             do_after=100,
-                                            update_y_limits=True,
-                                            ypadding='0.5')
-                            func = lambda xi, yi, kw: graph.add_datum((xi, yi), **kw)
-
-                        #                        print di, isotope, pi
-                        graph_kw['plotid'] = pi
-                        graph_kw['fit'] = fi
-                        func(x, signal, graph_kw)
-
-                    data_write_hook(x, dets, signals)
-                    invoke_in_main_thread(graph._update_graph)
-                    #                     do_after(100, graph._update_graph)
-                    time.sleep(integration_time)
+        self.peak_hop_collector.trait_set(ncycles=ncycles,
+                                          parent=self, )
+        self.peak_hop_collector.set_hops(hops)
+        #self.peak_hop_collector.stop()
+        #ncounts = sum([ci+s for _h, ci, s in hops]) * ncycles
+        ncounts = self.measurement_script.ncounts
+        check_conditions = True
+        return self._measure(grpname,
+                             data_writer,
+                             ncounts,
+                             starttime, starttime_offset,
+                             series, fits, check_conditions)
 
         return True
 
@@ -1309,23 +1253,29 @@ anaylsis_type={}
 
     def _measure(self, grpname, data_writer,
                  ncounts, starttime, starttime_offset,
-                 series, fits, check_conditions, refresh):
+                 series, fits, check_conditions,
+    ):
+
         mem_log('pre measure')
         if not self.spectrometer_manager:
             self.warning('no spectrometer manager')
             return True
+
+        #give the collector a chance to stop if it was running
+        self.collector.stop()
 
         self.info('measuring {}. ncounts={}'.format(grpname, ncounts),
                   color=MEASUREMENT_COLOR)
 
         get_data = self._get_data_generator()
         debug = globalv.experiment_debug
+
         if debug:
             period = 1
         else:
             period = self.integration_time
 
-        m = self.data_collector
+        m = self.collector
         m.trait_set(
             plot_panel=self.plot_panel,
             arar_age=self.arar_age,
@@ -1338,18 +1288,19 @@ anaylsis_type={}
             grpname=grpname,
             series_idx=series,
             fits=fits,
-            #                    check_conditions=check_conditions,
-            check_conditions=False,
+            check_conditions=check_conditions,
+            #check_conditions=,
             ncounts=ncounts,
             period_ms=period * 1000,
             data_generator=get_data,
             data_writer=data_writer,
-            starttime=starttime,
-        )
+            starttime=starttime)
 
         m.total_counts += ncounts
         if self.plot_panel:
-            invoke_in_main_thread(self._setup_isotope_graph, fits, starttime_offset)
+            self.plot_panel._ncounts = ncounts
+            invoke_in_main_thread(self._setup_isotope_graph,
+                                  fits, starttime_offset)
 
         dm = self.data_manager
         with dm.open_file(self._current_data_frame):
@@ -1358,6 +1309,7 @@ anaylsis_type={}
         mem_log('post measure')
         return True
 
+
     def _setup_isotope_graph(self, fits, starttime_offset):
         """
             execute in main thread is necessary.
@@ -1365,14 +1317,14 @@ anaylsis_type={}
             set 0-count fits
 
         """
-        m = self.data_collector
+
         graph = self.plot_panel.isotope_graph
         # update limits
         mi, ma = graph.get_x_limits()
 
         max_ = ma
         min_ = mi
-        tc = m.total_counts
+        tc = self.collector.total_counts
         if tc > ma or ma == Inf:
             max_ = tc * 1.05
             #         if tc > ma or (ma - tc) < tc * 2 or ma == inf:
@@ -1384,18 +1336,22 @@ anaylsis_type={}
 
         graph.set_x_limits(min_=min_, max_=max_)
 
+        nfs = self.collector.get_fit_block(0, fits)
         # update fits
-        nfs = m.get_fit_block(0, fits)
         for pi, fi in enumerate(nfs):
-            graph.new_series(marker='circle', type='scatter',
+            graph.new_series(marker='circle',
+                             type='scatter',
                              marker_size=1.25,
                              fit=fi,
                              plotid=pi,
                              add_inspector=False,
-                             add_tools=False
-            )
-            #===============================================================================
-            # save
+                             add_tools=False)
+
+        return graph
+
+
+        #===============================================================================
+        # save
             #===============================================================================
 
     def _pre_extraction_save(self):
@@ -1576,6 +1532,9 @@ anaylsis_type={}
             self._save_to_massspec(cp)
             self.debug('mass spec save time= {:0.3f}'.format(time.time() - mt))
             mem_log('post mass spec save')
+
+        #clear is_peak hop flag
+        self.is_peak_hop = False
 
     def _preliminary_processing(self, p):
         self.info('organizing data for database save')
@@ -1935,7 +1894,9 @@ anaylsis_type={}
 
         rs_name, rs_text = self._assemble_script_blob()
         rid = self.runid
-        dc = self.data_collector
+
+        #dc = self.multi_collector
+        dc = self.collector
         fb = dc.get_fit_block(dc.total_counts, self.fits)
 
         exp = ExportSpec(rid=rid,
@@ -2222,17 +2183,19 @@ anaylsis_type={}
 
     def _build_peak_hop_tables(self, gn, hops):
         dm = self.data_manager
-        dm.new_group(gn)
 
-        for hopstr, _cnt in hops:
-            for hi in hopstr.split(','):
-                iso, det = map(str.strip, hi.split(':'))
-                isogrp = dm.new_group(iso, parent='/{}'.format(gn))
-                _t = dm.new_table(isogrp, det)
-                self.debug('add group {} table {}'.format(iso, det))
+        with dm.open_file(self._current_data_frame):
+            dm.new_group(gn)
 
-                #===============================================================================
-                # property get/set
+            for hopstr, _cnt, _s in hops:
+                for hi in hopstr.split(','):
+                    iso, det = map(str.strip, hi.split(':'))
+                    isogrp = dm.new_group(iso, parent='/{}'.format(gn))
+                    _t = dm.new_table(isogrp, det)
+                    self.debug('add group {} table {}'.format(iso, det))
+
+                    #===============================================================================
+                    # property get/set
                 #===============================================================================
 
     def refresh_scripts(self):
@@ -2259,7 +2222,11 @@ anaylsis_type={}
     def _get_analysis_type(self):
         return get_analysis_type(self.spec.labnumber)
 
-    #===============================================================================
+    def _get_collector(self):
+        return self.peak_hop_collector if self.is_peak_hop else self.multi_collector
+
+        #===============================================================================
+
     # handlers
     #===============================================================================
     def _state_changed(self, old, new):
@@ -2274,12 +2241,15 @@ anaylsis_type={}
             if sc is not None:
                 setattr(sc, 'runner', new)
 
-                #===============================================================================
-                # defaults
+    def _is_peak_hop_changed(self, new):
+        if self.plot_panel:
+            self.plot_panel.is_peak_hop = new
+            #===============================================================================
+            # defaults
                 #===============================================================================
 
-    def _data_collector_default(self):
-        return DataCollector()
+            #def _multi_collector_default(self):
+            #    return MultiCollector()
 
 #============= EOF =============================================
 #     def _get_fit_block(self, iter_cnt, fits):

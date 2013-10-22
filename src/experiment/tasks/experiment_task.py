@@ -464,12 +464,12 @@ class ExperimentEditorTask(EditorTask):
             name = self.manager.executor.experiment_queue.name
             result = self._confirmation('{} is running. Are you sure you want to quit?'.format(name))
             if result in (CANCEL, NO):
-                return True
+                return False
             else:
                 ret = super(ExperimentEditorTask, self)._prompt_for_save()
                 if ret:
                     self.manager.executor.cancel(confirm=False)
-                return
+                return ret
         else:
             return super(ExperimentEditorTask, self)._prompt_for_save()
 
@@ -478,9 +478,9 @@ class ExperimentEditorTask(EditorTask):
         if self.active_editor.dirty:
             self.manager.executor.executable = False
 
-        #===============================================================================
-        # default/factory
-        #===============================================================================
+            #===============================================================================
+            # default/factory
+            #===============================================================================
 
     def _notifier_factory(self):
         n = Notifier()

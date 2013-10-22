@@ -447,9 +447,14 @@ class IsotopeEvolutionPane(TraitsDockPane):
                       style='custom',
                       height=0.75),
                 VGroup(
-                    HGroup(Spring(springy=False, width=-5), Label('Counts'),
-                           UItem('object.plot_panel.ncounts', label='Counts',
-                                 tooltip='Set the number of measurement points')),
+                    HGroup(Spring(springy=False, width=-5),
+                           Item('object.plot_panel.ncycles', label='Cycles',
+                                tooltip='Set the number of measurement cycles',
+                                visible_when='object.is_peak_hop'),
+                           Item('object.plot_panel.ncounts', label='Counts',
+                                tooltip='Set the number of measurement points'),
+
+                    ),
                     UItem('object.plot_panel.analysis_view',
                           style='custom',
                           #editor=InstanceEditor(view='plot_panel_view'),
