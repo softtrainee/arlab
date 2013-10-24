@@ -15,18 +15,23 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Float, Property, Any, Instance, \
-    Bool, Int, Array, cached_property, String
+from traits.api import HasTraits, Str, Float, Property, Instance, \
+    Bool, Int, Array, String
 
 #============= standard library imports ========================
 from uncertainties import ufloat
 from numpy import array, delete
-from src.helpers.logger_setup import new_logger
 from src.regression.mean_regressor import MeanRegressor
 from src.regression.ols_regressor import PolynomialRegressor
 import struct
 #============= local library imports  ==========================
 #logger = new_logger('isotopes')
+
+def fit_abbreviation(fit):
+    f = ''
+    if fit:
+        f = fit[0].upper()
+    return f
 
 
 class BaseMeasurement(HasTraits):
@@ -169,11 +174,7 @@ class IsotopicMeasurement(BaseMeasurement):
         return ufloat(self.value, self.error)
 
     def _get_fit_abbreviation(self):
-        f = ''
-        if self.fit:
-            f = self.fit[0].upper()
-
-        return f
+        return fit_abbreviation(self.fit)
 
     #===============================================================================
     # arthmetic
@@ -249,6 +250,8 @@ class Isotope(IsotopicMeasurement):
     age_error_component = Float(0.0)
     temporary_ic_factor = None
 
+    baseline_fit_abbreviation = Property(depends_on='baseline:fit')
+
     def ic_corrected_value(self):
         return self.get_corrected_value() * self.ic_factor
 
@@ -270,5 +273,8 @@ class Isotope(IsotopicMeasurement):
 
     def _background_default(self):
         return Background()
+
+    def _get_baseline_fit_abbreviation(self):
+        return fit_abbreviation(self.baseline.fit)
 
         #============= EOF =============================================

@@ -22,15 +22,16 @@ from src.constants import EXTRACTION_COLOR, MEASUREMENT_COLOR, SUCCESS_COLOR, \
     SKIP_COLOR, NOT_EXECUTABLE_COLOR, CANCELED_COLOR, TRUNCATED_COLOR, \
     FAILED_COLOR, END_AFTER_COLOR
 #============= local library imports  ==========================
-COLORS = {'success':SUCCESS_COLOR,
-                'extraction':EXTRACTION_COLOR,
-                'measurement':MEASUREMENT_COLOR,
-                'canceled':CANCELED_COLOR,
-                'truncated':TRUNCATED_COLOR,
-                'failed':FAILED_COLOR,
-                'end_after':END_AFTER_COLOR,
-                'invalid':'red'
-                }
+COLORS = {'success': SUCCESS_COLOR,
+          'extraction': EXTRACTION_COLOR,
+          'measurement': MEASUREMENT_COLOR,
+          'canceled': CANCELED_COLOR,
+          'truncated': TRUNCATED_COLOR,
+          'failed': FAILED_COLOR,
+          'end_after': END_AFTER_COLOR,
+          'invalid': 'red'
+}
+
 
 class AutomatedRunSpecAdapter(TabularAdapter):
     font = 'arial 10'
@@ -51,17 +52,17 @@ class AutomatedRunSpecAdapter(TabularAdapter):
     pattern_width = Int(80)
     beam_diameter_width = Int(65)
 
-#    overlap_width = Int(50)
-#    autocenter_width = Int(70)
-#    extract_device_width = Int(125)
+    #    overlap_width = Int(50)
+    #    autocenter_width = Int(70)
+    #    extract_device_width = Int(125)
     extraction_script_width = Int(80)
     measurement_script_width = Int(90)
     post_measurement_script_width = Int(90)
     post_equilibration_script_width = Int(90)
-#    extraction_script_width = Int(125)
-#    measurement_script_width = Int(125)
-#    post_measurement_script_width = Int(125)
-#    post_equilibration_script_width = Int(125)
+    #    extraction_script_width = Int(125)
+    #    measurement_script_width = Int(125)
+    #    post_measurement_script_width = Int(125)
+    #    post_equilibration_script_width = Int(125)
 
     comment_width = Int(125)
     #===========================================================================
@@ -108,7 +109,7 @@ class AutomatedRunSpecAdapter(TabularAdapter):
         it = self.item
         if it.aliquot != 0:
             al = it.aliquot
-#            if isinstance(al, int):
+            #            if isinstance(al, int):
             al = '{:03n}'.format(al)
         if it.step:
             al = '{}{}'.format(al, it.step)
@@ -151,37 +152,42 @@ class AutomatedRunSpecAdapter(TabularAdapter):
 
     def _columns_factory(self):
         cols = [
-#                ('', 'state'),
-                 ('Labnumber', 'labnumber'),
-                 ('Aliquot', 'aliquot'),
-                 ('Sample', 'sample'),
-                 ('Position', 'position'),
-# #                 ('Autocenter', 'autocenter'),
-# #                 ('Overlap', 'overlap'),
-                 ('Extract', 'extract_value'),
-                 ('Units', 'extract_units'),
-                 ('Group', 'extract_group'),
-                 ('Ramp (s)', 'ramp_duration'),
-                 ('Duration (s)', 'duration'),
-                 ('Cleanup (s)', 'cleanup'),
-                 ('Beam (mm)', 'beam_diameter'),
-                 ('Pattern', 'pattern'),
-                 ('Extraction', 'extraction_script'),
-                 ('Measurement', 'measurement_script'),
-                 ('Truncate', 'truncate_condition'),
-                 ('Post Eq.', 'post_equilibration_script'),
-                 ('Post Meas.', 'post_measurement_script'),
-                 ('Comment', 'comment')
-                 ]
+            #                ('', 'state'),
+            ('Labnumber', 'labnumber'),
+            ('Aliquot', 'aliquot'),
+            ('Sample', 'sample'),
+            ('Position', 'position'),
+            # #                 ('Autocenter', 'autocenter'),
+            # #                 ('Overlap', 'overlap'),
+            ('Extract', 'extract_value'),
+            ('Units', 'extract_units'),
+            ('Group', 'extract_group'),
+            ('Ramp (s)', 'ramp_duration'),
+            ('Duration (s)', 'duration'),
+            ('Cleanup (s)', 'cleanup'),
+            ('Beam (mm)', 'beam_diameter'),
+            ('Pattern', 'pattern'),
+            ('Extraction', 'extraction_script'),
+            ('Measurement', 'measurement_script'),
+            ('Truncate', 'truncate_condition'),
+            ('Post Eq.', 'post_equilibration_script'),
+            ('Post Meas.', 'post_measurement_script'),
+            ('Comment', 'comment')
+        ]
 
         return cols
+
 
 class UVAutomatedRunSpecAdapter(AutomatedRunSpecAdapter):
     def _columns_factory(self):
         cols = super(UVAutomatedRunSpecAdapter, self)._columns_factory()
+
         cols.insert(7, ('Rep. Rate', 'reprate'))
         cols.insert(8, ('Mask', 'mask'))
         cols.insert(9, ('Attenuator', 'attenuator'))
+
+        cols.pop(10)
+
         return cols
 
 #============= EOF =============================================

@@ -33,7 +33,7 @@ import gc
 import weakref
 from itertools import groupby
 #============= local library imports  ==========================
-from src.experiment.automated_run.peak_hop_collector import PeakHopCollector
+from src.experiment.automated_run.peak_hop_collector import PeakHopCollector, parse_hops
 from src.globals import globalv
 from src.loggable import Loggable
 from src.processing.analyses.analysis_view import AutomatedRunAnalysisView
@@ -43,7 +43,7 @@ from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabas
 from src.helpers.datetime_tools import get_datetime
 from src.experiment.plot_panel import PlotPanel
 from src.experiment.utilities.identifier import convert_identifier, \
-    make_runid, get_analysis_type
+    make_runid, get_analysis_type, convert_extract_device
 from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.managers.data_managers.data_manager import DataManager
@@ -188,7 +188,7 @@ class AutomatedRun(Loggable):
     #===============================================================================
     def py_is_last_run(self):
         return self.is_last
-    
+
     def py_position_magnet(self, pos, detector, dac=False):
         if not self._alive:
             return
@@ -308,7 +308,7 @@ class AutomatedRun(Loggable):
 
         if self.plot_panel:
             #self.plot_panel._ncounts = ncounts
-            self.plot_panel.isbaseline = False
+            self.plot_panel.is_baseline = False
 
         gn = 'signal'
         fits = self.fits
@@ -320,6 +320,7 @@ class AutomatedRun(Loggable):
 
         self._add_truncate_condition()
 
+        self.multi_collector.is_baseline = False
         result = self._measure(gn,
                                self._get_data_writer(gn),
                                ncounts, starttime, starttime_offset,
@@ -358,7 +359,7 @@ class AutomatedRun(Loggable):
         p = self.plot_panel
         if p:
             p._ncounts = ncounts
-            p.isbaseline = False
+            p.is_baseline = False
             p.isotope_graph.set_x_limits(min_=0, max_=1, plotid=0)
 
         fits = [(None, ['', ] * len(self._active_detectors))]
@@ -375,7 +376,6 @@ class AutomatedRun(Loggable):
                                series, fits,
                                check_conditions)
         mem_log('post sniff')
-
 
         return result
 
@@ -401,7 +401,7 @@ class AutomatedRun(Loggable):
 
                 msg = 'Delaying {}s for detectors to settle'.format(settling_time)
                 self.info(msg)
-                self.collector.total_counts += settling_time
+                #self.collector.total_counts += settling_time
                 #self.multi_collector.total_counts += settling_time
 
                 self.wait(settling_time, msg)
@@ -410,21 +410,21 @@ class AutomatedRun(Loggable):
 
         if self.plot_panel:
             self.plot_panel._ncounts = ncounts
-            self.plot_panel.isbaseline = True
+            self.plot_panel.is_baseline = True
 
         gn = 'baseline'
         fits = [(None, [fit, ] * len(self._active_detectors))]
 
         self._build_tables(gn)
 
+        self.multi_collector.is_baseline = True
         check_conditions = True
         result = self._measure(gn,
                                self._get_data_writer(gn),
                                ncounts, starttime,
                                starttime_offset,
                                series, fits,
-                               check_conditions,
-        )
+                               check_conditions)
 
         if self.plot_panel:
             bs = dict([(iso.name, iso.baseline.uvalue) for iso in
@@ -433,33 +433,41 @@ class AutomatedRun(Loggable):
 
         return result
 
-    def py_peak_hop(self, cycles, hops, starttime, starttime_offset,
+    def py_peak_hop(self, cycles, counts, hops, starttime, starttime_offset,
                     series=0, group='signal'):
 
         if not self._alive:
             return
 
-        isbaseline = group == 'baseline'
+        is_baseline = group == 'baseline'
+
+        self.peak_hop_collector.is_baseline = is_baseline
 
         if self.plot_panel:
-            self.plot_panel.isbaseline = isbaseline
-            self.plot_panel._ncycles = cycles
+            self.plot_panel.trait_set(is_baseline=is_baseline,
+                                      _ncycles=cycles)
 
         self.is_peak_hop = True
 
         fits = self.fits
         if fits is None:
             fits = [(None, ['linear', ] * len(self._active_detectors))]
-        if isbaseline:
+        if is_baseline:
             fits = [(None, ['average', ] * len(self._active_detectors))]
 
         self._build_peak_hop_tables(group, hops)
         writer = self._get_data_writer(group)
 
         check_conditions = True
-        ret = self._peak_hop(cycles, hops, group, writer,
+        ret = self._peak_hop(cycles, counts, hops, group, writer,
                              starttime, starttime_offset, series,
                              fits, check_conditions)
+
+        if is_baseline:
+            if self.plot_panel:
+                bs = dict([(iso.name, iso.baseline.uvalue) for iso in
+                           self.arar_age.isotopes.values()])
+                self.experiment_manager._prev_baselines = bs
         return ret
 
     def py_peak_center(self, detector=None, **kw):
@@ -695,8 +703,14 @@ class AutomatedRun(Loggable):
     def isAlive(self):
         return self._alive
 
+    def get_detector(self, det):
+        return self.spectrometer_manager.spectrometer.get_detector(det)
+
     def set_magnet_position(self, *args, **kw):
         self._set_magnet_position(*args, **kw)
+
+    def set_deflection(self, det, defl):
+        self.py_set_spectrometer_parameter('SetDeflection', '{},{}'.format(det, defl))
 
     def start(self):
         if self.monitor is None:
@@ -763,7 +777,11 @@ class AutomatedRun(Loggable):
         self.overlap_evt = TEvent()
         self._alive = True
 
-        self.multi_collector.total_counts = 0
+        if self.plot_panel:
+            self.plot_panel.total_counts = 0
+
+        #self.multi_collector.total_counts = 0
+        #self.peak_hop_collector.total_counts=0
         self.multi_collector.canceled = False
 
 
@@ -774,8 +792,8 @@ class AutomatedRun(Loggable):
         # setup the scripts
         if self.measurement_script:
             self.measurement_script.reset(weakref.ref(self)())
-#            self.debug('XXXXXXXXXXXXXXXXXXXXXXXXX Setting measurement script is_last {}'.format(self.is_last))
-#            self.measurement_script.setup_context(is_last=self.is_last)
+        #            self.debug('XXXXXXXXXXXXXXXXXXXXXXXXX Setting measurement script is_last {}'.format(self.is_last))
+        #            self.measurement_script.setup_context(is_last=self.is_last)
 
         for si in ('extraction', 'post_measurement', 'post_equilibration'):
             script = getattr(self, '{}_script'.format(si))
@@ -1202,19 +1220,19 @@ anaylsis_type={}
                         for i, det in enumerate(self._active_detectors):
                             if i < n:
                                 plots[i].y_axis.title = '{} {}'.format(det.name, det.isotope)
-        
+
                             self.arar_age.set_isotope_detector(det)
-    
+
                     #remove non active isotopes
                     for iso in self.arar_age.isotopes.keys():
                         det = next((di for di in self._active_detectors if di.isotope == iso), None)
                         if det is None:
                             self.arar_age.isotopes.pop(iso)
-    
+
                     self.plot_panel.analysis_view.load(self)
                     self.plot_panel.analysis_view.refresh_needed = True
 
-    def _peak_hop(self, ncycles, hops, grpname, data_writer,
+    def _peak_hop(self, ncycles, ncounts, hops, grpname, data_writer,
                   starttime, starttime_offset, series,
                   fits, check_conditions):
         '''
@@ -1228,11 +1246,12 @@ anaylsis_type={}
         '''
 
         self.peak_hop_collector.trait_set(ncycles=ncycles,
-                                          parent=self, )
+                                          parent=self,
+        )
         self.peak_hop_collector.set_hops(hops)
         #self.peak_hop_collector.stop()
         #ncounts = sum([ci+s for _h, ci, s in hops]) * ncycles
-        ncounts = self.measurement_script.ncounts
+        #ncounts = self.measurement_script.ncounts
         check_conditions = True
         return self._measure(grpname,
                              data_writer,
@@ -1253,16 +1272,12 @@ anaylsis_type={}
 
     def _measure(self, grpname, data_writer,
                  ncounts, starttime, starttime_offset,
-                 series, fits, check_conditions,
-    ):
+                 series, fits, check_conditions):
 
         mem_log('pre measure')
         if not self.spectrometer_manager:
             self.warning('no spectrometer manager')
             return True
-
-        #give the collector a chance to stop if it was running
-        self.collector.stop()
 
         self.info('measuring {}. ncounts={}'.format(grpname, ncounts),
                   color=MEASUREMENT_COLOR)
@@ -1285,20 +1300,20 @@ anaylsis_type={}
             termination_conditions=self.termination_conditions,
             action_conditions=self.action_conditions,
 
-            grpname=grpname,
+            #grpname=grpname,
             series_idx=series,
             fits=fits,
             check_conditions=check_conditions,
-            #check_conditions=,
             ncounts=ncounts,
             period_ms=period * 1000,
             data_generator=get_data,
             data_writer=data_writer,
             starttime=starttime)
 
-        m.total_counts += ncounts
+        #m.total_counts += ncounts
         if self.plot_panel:
             self.plot_panel._ncounts = ncounts
+            self.plot_panel.total_counts += ncounts
             invoke_in_main_thread(self._setup_isotope_graph,
                                   fits, starttime_offset)
 
@@ -1324,21 +1339,18 @@ anaylsis_type={}
 
         max_ = ma
         min_ = mi
-        tc = self.collector.total_counts
+        tc = self.plot_panel.total_counts
         if tc > ma or ma == Inf:
             max_ = tc * 1.05
-            #         if tc > ma or (ma - tc) < tc * 2 or ma == inf:
-        #             graph.set_x_limits(-starttime_offset, tc * 1.05)
 
         if starttime_offset > mi:
             min_ = -starttime_offset
-            #             graph.set_x_limits(min_=-starttime_offset)
 
         graph.set_x_limits(min_=min_, max_=max_)
 
         nfs = self.collector.get_fit_block(0, fits)
         # update fits
-        for pi, fi in enumerate(nfs):
+        for pi, (fi, dn) in enumerate(zip(nfs, self._active_detectors)):
             graph.new_series(marker='circle',
                              type='scatter',
                              marker_size=1.25,
@@ -1352,7 +1364,7 @@ anaylsis_type={}
 
         #===============================================================================
         # save
-            #===============================================================================
+        #===============================================================================
 
     def _pre_extraction_save(self):
         d = get_datetime()
@@ -1551,8 +1563,15 @@ anaylsis_type={}
                   if kind == 'sniff']
 
         rsignals = dict()
-        fits = self.plot_panel.fits
-        for fit, (iso, detname) in zip(fits, signals):
+
+        #fits = self.plot_panel.fits
+        #for fit, (iso, detname) in zip(fits, signals):
+        for iso, detname in signals:
+            try:
+                fit = self.arar_age.isotopes[iso]
+            except (AttributeError, KeyError):
+                fit = 'linear'
+
             tab = dm.get_table(detname, '/signal/{}'.format(iso))
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
             #            if iso=='Ar40':
@@ -1561,8 +1580,14 @@ anaylsis_type={}
             s = IsotopicMeasurement(xs=x, ys=y, fit=fit)
             rsignals['{}signal'.format(iso)] = s
 
-        baseline_fits = ['average_SEM', ] * len(baselines)
-        for fit, (iso, detname) in zip(baseline_fits, baselines):
+        #baseline_fits = ['average_SEM', ] * len(baselines)
+        #for fit, (iso, detname) in zip(baseline_fits, baselines):
+        for iso, detname in baselines:
+            try:
+                fit = self.arar_age.isotopes[iso]
+            except (AttributeError, KeyError):
+                fit = 'average_SEM'
+
             tab = dm.get_table(detname, '/baseline/{}'.format(iso))
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
             bs = IsotopicMeasurement(xs=x, ys=y, fit=fit)
@@ -1897,7 +1922,8 @@ anaylsis_type={}
 
         #dc = self.multi_collector
         dc = self.collector
-        fb = dc.get_fit_block(dc.total_counts, self.fits)
+
+        fb = dc.get_fit_block(-1, self.fits)
 
         exp = ExportSpec(rid=rid,
                          runscript_name=rs_name,
@@ -2024,7 +2050,7 @@ anaylsis_type={}
                                  name=sname,
                                  runner=self.runner,
         )
-#        ms.setup_context(is_last=self.is_last)
+        #        ms.setup_context(is_last=self.is_last)
 
         return ms
 
@@ -2071,7 +2097,8 @@ anaylsis_type={}
             setup_context to expose variables to the pyscript
         """
         spec = self.spec
-        hdn = spec.extract_device.replace(' ', '_').lower()
+        hdn = convert_extract_device(spec.extract_device)
+        #hdn = spec.extract_device.replace(' ', '_').lower()
         an = spec.analysis_type.split('_')[0]
         script.setup_context(tray=spec.tray,
                              position=self.get_position_list(),
@@ -2187,16 +2214,14 @@ anaylsis_type={}
         with dm.open_file(self._current_data_frame):
             dm.new_group(gn)
 
-            for hopstr, _cnt, _s in hops:
-                for hi in hopstr.split(','):
-                    iso, det = map(str.strip, hi.split(':'))
-                    isogrp = dm.new_group(iso, parent='/{}'.format(gn))
-                    _t = dm.new_table(isogrp, det)
-                    self.debug('add group {} table {}'.format(iso, det))
+            for iso, det in parse_hops(hops, ret='iso,det'):
+            #for hopstr, _cnt, _s in hops:
+            #    for hi in hopstr.split(','):
+            #        args = map(str.strip, hi.split(':'))
+                isogrp = dm.new_group(iso, parent='/{}'.format(gn))
+                _t = dm.new_table(isogrp, det)
+                self.debug('add group {} table {}'.format(iso, det))
 
-                    #===============================================================================
-                    # property get/set
-                #===============================================================================
 
     def refresh_scripts(self):
         for name in SCRIPT_KEYS:
@@ -2243,10 +2268,11 @@ anaylsis_type={}
 
     def _is_peak_hop_changed(self, new):
         if self.plot_panel:
+            self.debug('Setting is_peak_hop {}'.format(new))
             self.plot_panel.is_peak_hop = new
             #===============================================================================
             # defaults
-                #===============================================================================
+            #===============================================================================
 
             #def _multi_collector_default(self):
             #    return MultiCollector()

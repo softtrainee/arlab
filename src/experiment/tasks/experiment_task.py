@@ -25,12 +25,17 @@ import shutil
 import weakref
 import os
 #============= local library imports  ==========================
+import xlrd
 from src.experiment.health.analysis_health import AnalysisHealth
+from src.experiment.queue.base_queue import extract_meta
 from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPane, \
     ControlsPane, ConsolePane, WaitPane, IsotopeEvolutionPane
 
 from src.envisage.tasks.editor_task import EditorTask
 from src.experiment.tasks.experiment_editor import ExperimentEditor, UVExperimentEditor
+from src.experiment.utilities.identifier import convert_extract_device
+from src.image.tasks.video_pane import VideoDockPane
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.paths import paths
 from src.helpers.filetools import add_extension
 from src.ui.gui import invoke_in_main_thread
@@ -130,22 +135,25 @@ class ExperimentEditorTask(EditorTask):
         panes = self._add_canvas_pane(panes)
 
         app = self.window.application
-        from src.lasers.laser_managers.ilaser_manager import ILaserManager
-
         man = app.get_service(ILaserManager)
         if man:
             if hasattr(man.stage_manager, 'video'):
-                from src.image.tasks.video_task import VideoTask
-
-                vt = VideoTask()
+                #vt = VideoTask()
                 #             plugin = app.get_plugin('pychron.video')
                 #             task = plugin.tasks[0].factory()
                 #             self.window.add_task(task)
 
                 video = man.stage_manager.video
                 man.initialize_video()
-                pane = vt.new_video_dock_pane(video=video)
+                pane = VideoDockPane(video=video)
+                #pane = vt.new_video_dock_pane(video=video)
                 panes.append(pane)
+
+            from src.lasers.tasks.laser_panes import ClientDockPane
+
+            lc = ClientDockPane(model=man)
+            self.laser_control_client_pane = lc
+            panes.append(lc)
 
         return panes
 
@@ -153,23 +161,70 @@ class ExperimentEditorTask(EditorTask):
     # generic actions
     #===============================================================================
     def _open_experiment(self, path, **kw):
+        if path.endswith('.xls'):
+            txt, is_uv = self._open_xls(path)
+        else:
+            txt, is_uv = self._open_txt(path)
+
+        klass = UVExperimentEditor if is_uv else ExperimentEditor
+        editor = klass(path=path)
+        editor.new_queue(txt)
+        self._open_editor(editor)
+        # loading queue editor set dirty
+        # clear dirty flag
+        editor.dirty = False
+
+    def _open_xls(self, path):
+        """
+            open the workbook and convert it to text
+            construct the text to mimic a normal experiment file
+        """
+        wb = xlrd.open_workbook(path)
+        sh = wb.sheet_by_index(0)
+        #write meta
+        meta_rows = 7
+        rows = []
+        is_uv = False
+        for r in range(meta_rows):
+            attr = sh.cell_value(r, 0)
+            v = sh.cell_value(r, 1)
+            if attr == 'extract_device':
+                is_uv = v == 'Fusions UV'
+
+            rows.append('{}: {}'.format(attr,
+                                        v))
+        rows.append('#{}'.format('=' * 80))
+
+        header = sh.row_values(meta_rows)
+        rows.append('\t'.join(header))
+        for r in range(meta_rows + 2, sh.nrows):
+            t = '\t'.join(map(str, sh.row_values(r)))
+            rows.append(t)
+
+        txt = '\n'.join(map(str, rows))
+        return txt, is_uv
+
+    def _open_txt(self, path):
         with open(path, 'r') as fp:
             txt = fp.read()
 
-            qtexts = self._split_text(txt)
-            for qi in qtexts:
-                editor = ExperimentEditor(path=path)
-                editor.new_queue(qi)
-                self._open_editor(editor)
+            f = (l for l in txt.split('\n'))
+            meta, metastr = extract_meta(f)
+            is_uv = False
+            if meta.has_key('extract_device'):
+                is_uv = meta['extract_device'] in ('Fusions UV')
 
-                # loading queue editor set dirty
-                # clear dirty flag
-                editor.dirty = False
+        return txt, is_uv
 
     def open(self, path=None):
+
+        #path='/Users/ross/Pychrondata_dev/experiments/uv.xls'
+        path = '/Users/ross/Pychrondata_dev/experiments/uv.txt'
         if path is None:
             ps = self.open_file_dialog(action='open files',
-                                       default_filename='Current Experiment.txt')
+                                       default_path='/Users/ross/Pychrondata_dev/experiments/Current Experiment.txt',
+                                       #default_filename='Current Experiment.txt'
+            )
         else:
             ps = (path,)
 
@@ -192,20 +247,20 @@ class ExperimentEditorTask(EditorTask):
 
             return True
 
-    def _split_text(self, txt):
-        ts = []
-        tis = []
-        a = ''
-        for l in txt.split('\n'):
-            a += l
-            if l.startswith('*' * 80):
-                ts.append(''.join(tis))
-                tis = []
-                continue
-
-            tis.append(l)
-        ts.append('\n'.join(tis))
-        return ts
+    #def _split_text(self, txt):
+    #    ts = []
+    #    tis = []
+    #    a = ''
+    #    for l in txt.split('\n'):
+    #        a += l
+    #        if l.startswith('*' * 80):
+    #            ts.append(''.join(tis))
+    #            tis = []
+    #            continue
+    #
+    #        tis.append(l)
+    #    ts.append('\n'.join(tis))
+    #    return ts
 
     def reset_queues(self):
         for editor in self.editor_area.editors:
@@ -329,21 +384,36 @@ class ExperimentEditorTask(EditorTask):
 
     @on_trait_change('manager.experiment_factory:extract_device')
     def _handle_extract_device(self, new):
+        app = self.window.application
+        if new:
+            ed = convert_extract_device(new)
+            man = app.get_service(ILaserManager, 'name=="{}"'.format(ed))
+            if man:
+                self.laser_control_client_pane.model = man
+
         if new == 'Fusions UV':
-            editor = UVExperimentEditor()
-            editor.new_queue()
-            editor.dirty = False
-            if self.active_editor:
+            if self.active_editor and not isinstance(self.active_editor, UVExperimentEditor):
+                editor = UVExperimentEditor()
+
+                ms = self.manager.experiment_factory.queue_factory.mass_spectrometer
+                editor.new_queue(mass_spectrometer=ms)
+                editor.dirty = False
+
+                #print self.active_editor
                 #ask user to copy runs into the new editor
                 ans = self.active_editor.queue.cleaned_automated_runs
                 if ans:
                     if self.confirmation_dialog('Copy runs to the new UV Editor?'):
-                        self.warning_dialog('Copying runs not yet implemented')
+                        #editor.queue.executed_runs=self.active_editor.queue.executed_runs
+                        editor.queue.automated_runs = self.active_editor.queue.automated_runs
+
+                        #self.warning_dialog('Copying runs not yet implemented')
+
                 self.active_editor.close()
 
-            self._open_editor(editor)
-            if not self.manager.executor.isAlive():
-                self.manager.executor.executable = False
+                self._open_editor(editor)
+                if not self.manager.executor.isAlive():
+                    self.manager.executor.executable = False
 
 
     @on_trait_change('manager.experiment_factory:queue_factory:load_name')

@@ -16,8 +16,8 @@
 
 #=============enthought library imports=======================
 from traits.api import DelegatesTo, Property, Instance, Str, List, Dict, \
-    on_trait_change, Event, Bool, Float, Any
-from traitsui.api import VGroup, Item, HGroup, spring, EnumEditor, InstanceEditor, View, Group
+    on_trait_change, Event, Bool, Any
+from traitsui.api import VGroup, Item, HGroup, spring
 from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports ========================
 # from threading import Thread, Timer as DoLaterTimer, Lock
@@ -277,7 +277,8 @@ class FusionsLaserManager(LaserManager):
 #===============================================================================
 # pyscript interface
 #===============================================================================
-    def _move_to_position(self, position):
+
+    def _move_to_position(self, position, autocenter):
 
         if self.stage_manager is not None:
             if isinstance(position, tuple):

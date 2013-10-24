@@ -15,22 +15,27 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Int, Str, cached_property
 from src.experiment.automated_run.automated_run import AutomatedRun
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class UVAutomatedRun(AutomatedRun):
-    reprate = Int
-    mask = Str
-    attenuator = Str
-    image = Str
+    #reprate = Int
+    #mask = Str
+    #attenuator = Str
+    #image = Str
 
     #    masks = Property
     #    extract_units_names = List([NULL_STR, 'burst', 'continuous'])
     #    _default_extract_units = 'burst'
     #    browser_button = Button('Browse')
     #    run_klass = UVAutomatedRun
+    def _setup_context(self, script):
+        super(UVAutomatedRun, self)._setup_context(script)
+        script.setup_context(reprate=self.spec.reprate,
+                             mask=self.spec.mask,
+                             attenuator=self.spec.attenuator)
+
 
     def _save_extraction(self, analysis):
         ext = super(UVAutomatedRun, self)._save_extraction(analysis)

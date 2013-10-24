@@ -309,9 +309,9 @@ class AutomatedRunFactory(Loggable):
 
         return arvs, freq
 
-            #===============================================================================
-            # private
-            #===============================================================================
+        #===============================================================================
+        # private
+        #===============================================================================
 
     def _new_runs(self, positions, extract_group_cnt=0):
         _ln, special = self._make_short_labnumber()
@@ -335,6 +335,8 @@ class AutomatedRunFactory(Loggable):
         s = None
         e = None
         inc = 1
+        #(SLICE_REGEX, SSLICE_REGEX, PSLICE_REGEX,
+        #          TRANSECT_REGEX, POSITION_REGEX)
         if SLICE_REGEX.match(pos):
             s, e = map(int, pos.split('-'))
         elif SSLICE_REGEX.match(pos):
@@ -356,8 +358,11 @@ class AutomatedRunFactory(Loggable):
         if s is not None and e is not None:
             positions = range(s, e + 1, inc)
         else:
-            set_pos = False
-            positions = [0]
+            if TRANSECT_REGEX.match(pos):
+                positions = [pos]
+            else:
+                set_pos = False
+                positions = [0]
 
         p = ''
         for i in positions:
@@ -400,6 +405,14 @@ class AutomatedRunFactory(Loggable):
         self._set_run_values(arv, excludes=excludes)
         return arv
 
+    def _get_run_attr(self):
+        return ['position',
+                'extract_value', 'extract_units', 'cleanup', 'duration',
+                'pattern', 'beam_diameter',
+                'weight', 'comment',
+                'sample', 'irradiation',
+                'skip', 'mass_spectrometer', 'extract_device']
+
     def _set_run_values(self, arv, excludes=None):
         if excludes is None:
             excludes = []
@@ -408,21 +421,21 @@ class AutomatedRunFactory(Loggable):
             if run is not an unknown and not a degas then don't copy evalue, eunits and pattern
             if runs is an unknown but is part of an extract group dont copy the evalue
         '''
-
-        for attr in (
-            'position',
-            'extract_value', 'extract_units', 'cleanup', 'duration',
-            'pattern', 'beam_diameter',
-            'weight', 'comment',
-            'sample', 'irradiation',
-            'skip', 'mass_spectrometer', 'extract_device'
-        ):
+        for attr in self._get_run_attr():
+        #for attr in (
+        #'position',
+        #'extract_value', 'extract_units', 'cleanup', 'duration',
+        #'pattern', 'beam_diameter',
+        #'weight', 'comment',
+        #'sample', 'irradiation',
+        #'skip', 'mass_spectrometer', 'extract_device'
+        #):
             if attr in excludes:
                 continue
-            v=getattr(self, attr)
-            if attr=='pattern':
+            v = getattr(self, attr)
+            if attr == 'pattern':
                 if not self._use_pattern():
-                    v=''
+                    v = ''
 
             setattr(arv, attr, v)
             setattr(arv, '_prev_{}'.format(attr), v)
@@ -605,17 +618,15 @@ class AutomatedRunFactory(Loggable):
     #        if not self.edit_mode:
     #            return
 
-        '''
-            load default scripts if 
+        """
+            load default scripts if
                 1. labnumber is special
                 2. labnumber was a special and now unknown
-                
+
             dont load if was unknown and now unknown
-            this preserves the users changes 
-        '''
-        if not old:
-            return
-            # if new is special e.g bu-01-01
+            this preserves the users changes
+        """
+        # if new is special e.g bu-01-01
         if '-' in new:
             new = new.split('-')[0]
         if '-' in old:
@@ -755,8 +766,7 @@ class AutomatedRunFactory(Loggable):
             return ''
 
         for r in (SLICE_REGEX, SSLICE_REGEX, PSLICE_REGEX,
-                  TRANSECT_REGEX, POSITION_REGEX
-        ):
+                  TRANSECT_REGEX, POSITION_REGEX):
             if r.match(pos):
                 return pos
         else:
@@ -1105,8 +1115,9 @@ post_equilibration_script:name
 
             #def _edit_mode_changed(self):
 
-        #    if self.edit_mode:
-    #        self._load_default_scripts(self.labnumber)
+            #    if self.edit_mode:
+
+        #        self._load_default_scripts(self.labnumber)
 
     def _save_flux_button_fired(self):
         self._save_flux()

@@ -44,10 +44,11 @@ class MeasurementPyScript(ValvePyScript):
 
     _detectors = None
     abbreviated_count_ratio = None
+
     def gosub(self, *args, **kw):
-        kw['automated_run']=self.automated_run
+        kw['automated_run'] = self.automated_run
         super(MeasurementPyScript, self).gosub(*args, **kw)
-        
+
     def reset(self, arun):
         self.automated_run = arun
 
@@ -124,9 +125,9 @@ class MeasurementPyScript(ValvePyScript):
     def baselines(self, ncounts=1, mass=None, detector='',
                   integration_time=1.04,
                   settling_time=4, calc_time=False):
-        '''
+        """
             if detector is not none then it is peak hopped
-        '''
+        """
         if self.abbreviated_count_ratio:
             ncounts *= self.abbreviated_count_ratio
 
@@ -151,11 +152,27 @@ class MeasurementPyScript(ValvePyScript):
 
     @count_verbose_skip
     @command_register
+    def load_hops(self, p, *args, **kw):
+        if not os.path.isfile(p):
+            p = os.path.join(self.root, p)
+
+        if os.path.isfile(p):
+            with open(p, 'r') as fp:
+                hops = [eval(line) for line in fp if not line.strip().startswith('#')]
+                return hops
+
+        else:
+            self.warning_dialog('No such file {}'.format(p))
+
+    @count_verbose_skip
+    @command_register
     def peak_hop(self, ncycles=5, hops=None, calc_time=False, baseline=False):
         if hops is None:
             return
 
-        counts = sum([ci + s for _h, ci, s in hops]) * ncycles
+        integration_time = 1.1
+
+        counts = sum([ci * integration_time + s for _h, ci, s in hops]) * ncycles
         tt = 0
         #for h,ci, s in hops:
         #print ci, s, ci+s
@@ -170,8 +187,10 @@ class MeasurementPyScript(ValvePyScript):
         if baseline:
             group = 'baseline'
 
-        self.ncounts += counts
-        if not self._automated_run_call('py_peak_hop', ncycles, hops,
+        self.ncounts = counts
+        if not self._automated_run_call('py_peak_hop', ncycles,
+                                        counts,
+                                        hops,
                                         self._time_zero,
                                         self._time_zero_offset,
                                         self._series_count,
@@ -286,14 +305,15 @@ class MeasurementPyScript(ValvePyScript):
         return self._automated_run_call('py_get_spectrometer_parameter', *args, **kw)
 
         #===============================================================================
+
     # set commands
     #===============================================================================
-    
+
     @verbose_skip
     @command_register
     def is_last_run(self):
         return self._automated_run_call('py_is_last_run')
-        
+
     @verbose_skip
     @command_register
     def clear_conditions(self):
@@ -401,8 +421,8 @@ class MeasurementPyScript(ValvePyScript):
     @command_register
     def set_deflection(self, detname, v=''):
 
-        if v =='':
-            v=self._get_deflection_from_file(detname)
+        if v == '':
+            v = self._get_deflection_from_file(detname)
 
         if v is not None:
             v = '{},{}'.format(detname, v)

@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, Property, List, on_trait_change, Bool, \
-    Str, CInt, Int, Tuple
+    Str, CInt, Int, Tuple, Color
 from traitsui.api import View, UItem, VGroup, HGroup, spring
 from src.graph.graph import Graph
 
@@ -188,8 +188,12 @@ class PlotPanel(Loggable):
     ncounts = Property(Int(enter_set=True, auto_set=False), depends_on='_ncounts')
     _ncounts = CInt
 
-    ncycles = Property(Int(enter_set=True, auto_set=False), depends_on='_ncounts')
+    ncycles = Property(Int(enter_set=True, auto_set=False),
+                       depends_on='_ncycles')
     _ncycles = CInt
+
+    current_cycle = Str
+    current_color = Color
 
     detectors = List
     #fits = List
@@ -207,14 +211,15 @@ class PlotPanel(Loggable):
     #display_ratios = List
     #display_summary = List
     #    refresh = Event
+    total_counts = CInt
 
-    isbaseline = Bool(False)
+    is_baseline = Bool(False)
     is_peak_hop = Bool(False)
 
     ratios = ['Ar40:Ar36', 'Ar40:Ar39', ]
     info_func = None
-    
-    refresh_age=True
+
+    refresh_age = True
 
     def set_peak_center_graph(self, graph):
         self.peak_center_graph = graph
@@ -255,8 +260,7 @@ class PlotPanel(Loggable):
                 ytitle='{} {} (fA)'.format(det.name, det.isotope),
                 xtitle='time (s)',
                 padding_left=70,
-                padding_right=10,
-            )
+                padding_right=10)
         self.detectors = dets
 
         #def clear_displays(self):
@@ -426,7 +430,7 @@ class PlotPanel(Loggable):
             p.page_name = 'Peak Center'
             self.graphs = [g, p]
 
-        #            self.graph_container.graphs = [g, p]
+            #            self.graph_container.graphs = [g, p]
 
     def _plot_title_changed(self, new):
         self.graph_container.label = new
@@ -439,7 +443,7 @@ class PlotPanel(Loggable):
                 try:
                     vv = reg.predict(0)
                     ee = reg.predict_error(0)
-                    if self.isbaseline:
+                    if self.is_baseline:
                         arar_age.set_baseline(iso, (vv, ee))
                     else:
                         arar_age.set_isotope(iso, (vv, ee))
@@ -458,9 +462,9 @@ class PlotPanel(Loggable):
                 self.analysis_view.load_computed(arar_age, new_list=False)
                 self.analysis_view.refresh_needed = True
 
-            #===============================================================================
-            # defaults
-            #===============================================================================
+                #===============================================================================
+                # defaults
+                #===============================================================================
 
     def _isotope_graph_default(self):
         return self._graph_factory()
@@ -475,4 +479,4 @@ class PlotPanel(Loggable):
     def _graphs_default(self):
         return [self.isotope_graph, self.peak_center_graph]
 
-    #============= EOF =============================================
+        #============= EOF =============================================

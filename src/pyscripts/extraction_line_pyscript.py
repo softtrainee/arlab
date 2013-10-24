@@ -18,7 +18,6 @@
 from traits.api import List
 #============= standard library imports ========================
 import time
-from numpy import linspace
 #============= local library imports  ==========================
 from src.pyscripts.pyscript import verbose_skip, makeRegistry
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
@@ -249,6 +248,16 @@ class ExtractionPyScript(ValvePyScript):
                 self._manager_action([('set_motor', (name, value), {})],
                                  protocol=ILaserManager,
                                  name=self.extract_device)
+
+    @verbose_skip
+    @command_register
+    def get_value(self, name):
+        try:
+            print name, self.get_context()[name]
+            return self.get_context()[name]
+        except KeyError:
+            self.warning('no name {} in context'.format(name))
+            pass
 
     @verbose_skip
     @command_register

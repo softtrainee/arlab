@@ -149,7 +149,6 @@ class ExperimentEditor(BaseTraitsEditor):
 
             return True
 
-
     def _validate_experiment_queues(self, eqs):
         # check runs
         hec = HumanErrorChecker()
@@ -163,7 +162,7 @@ class ExperimentEditor(BaseTraitsEditor):
                 qi.executable = False
                 qi.initialized = False
                 hec.report_errors(err)
-                self.information_dialog(err)
+                #self.information_dialog(err)
                 break
 
             err = hec.check_queue(qi)

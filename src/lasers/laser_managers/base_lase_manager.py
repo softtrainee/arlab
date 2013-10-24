@@ -20,7 +20,6 @@ from traits.api import Instance, Event, Bool, Any, Property, Str, implements, \
 
 from src.lasers.stage_managers.stage_manager import StageManager
 from src.lasers.pattern.pattern_executor import PatternExecutor
-from src.lasers.pattern.pattern_maker_view import PatternMakerView
 from src.managers.manager import Manager
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.ui.led_editor import LED
@@ -138,6 +137,9 @@ class BaseLaserManager(Manager):
             self._move_to_position(pi, autocenter)
 
         return True
+
+    def _move_to_position(self, *args, **kw):
+        pass
 
     def trace_path(self, *args, **kw):
         pass

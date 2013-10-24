@@ -16,17 +16,50 @@
 
 #============= enthought library imports =======================
 import time
-from traits.api import List, Int
+from traits.api import List, Int, Instance
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.experiment.automated_run.data_collector import DataCollector
+from src.ui.gui import invoke_in_main_thread
+
+
+def parse_hops(hops, ret=None):
+    for hopstr, cnt, s in hops:
+        for iso, det, defl in split_hopstr(hopstr):
+        #for hi in hopstr.split(','):
+        #    args = map(str.strip, hi.split(':'))
+        #    defl=None
+        #    if len(args)==3:
+        #        iso,det, defl=args
+        #    else:
+        #        iso,det=args
+
+            if ret:
+                loc = locals()
+                r = [loc[ri] for ri in ret.split(',')]
+                yield r
+            else:
+                yield iso, det, defl, cnt, s
+
+
+def split_hopstr(hop):
+    for hi in hop.split(','):
+        args = map(str.strip, hi.split(':'))
+        defl = None
+        if len(args) == 3:
+            iso, det, defl = args
+        else:
+            iso, det = args
+        yield iso, det, defl
 
 
 class PeakHopCollector(DataCollector):
     hops = List
     settling_time = 0
     ncycles = Int
+    parent = Instance('src.experiment.automated_run.automated_run.AutomatedRun')
+    _was_deflected = False
 
     def set_hops(self, hops):
         self.hops = hops
@@ -55,38 +88,61 @@ class PeakHopCollector(DataCollector):
             is it time for a magnet move
         """
         try:
-            cycle, dets, isos, settle, move = self.hop_generator.next()
+            cycle, dets, isos, defls, settle, count = self.hop_generator.next()
         except StopIteration:
             self.stop()
             return
 
+        detector = dets[0]
+        isotope = isos[0]
         if cycle > self.plot_panel.ncycles:
             self.info('user termination. measurement iteration executed {} cycles'.format(cycle - 1, self.ncycles))
             self.stop()
             return
         else:
-            if move:
-                detector = dets[0]
-                isotope = isos[0]
+            if count == 0:
+                #set deflections
+                # only set deflections deflections were changed or need changing
+                deflect = len([d for d in defls if d is not None])
+                if deflect or self._was_deflected:
+                    self._was_deflected = False
+                    for det, defl in zip(dets, defls):
+                        #use the measurement script to set the deflections
+                        #this way defaults from the config can be used
+                        if defl is None:
+                            defl = ''
+                        else:
+                            self._was_deflected = True
 
-                #self.parent.set_magnet_position(isotope, detector, update_labels=False)
+                        self.measurement_script.set_deflection(det, defl)
+
+                self.parent.set_magnet_position(isotope, detector, update_labels=False)
                 msg = 'delaying {} for detectors to settle after peak hop'.format(settle)
                 self.parent.wait(settle, msg)
                 self.debug(msg)
 
+        d = self.parent.get_detector(detector)
+
+        self.debug('cycle {} count {}'.format(cycle, count))
+        if self.plot_panel.is_baseline:
+            isotope = '{}bs'.format(isotope)
+
+        invoke_in_main_thread(self.plot_panel.trait_set,
+                              current_cycle='{} cycle={} count={}'.format(isotope, cycle + 1, count + 1),
+                              current_color=d.color
+        )
+
         return dets, isos
 
     def _generator_hops(self):
+
         for c in xrange(self.ncycles):
             for hopstr, counts, settle in self.hops:
-                his = hopstr.split(',')
-                isos, dets = zip(*[map(str.strip, hi.split(':')) for hi in his])
-
+                isos, dets, defls = zip(*split_hopstr(hopstr))
                 for i in xrange(int(counts)):
-                    self.debug('cycle {} count {}'.format(c, i))
-                    yield c, dets, isos, settle, i == 0
+                    yield c, dets, isos, defls, settle, i
 
-
+                    #============= EOF =============================================
                     #def _measure2(self, evt):
                     #    graph=self.plot_panel.isotope_graph
                     #
@@ -166,5 +222,3 @@ class PeakHopCollector(DataCollector):
                     #                time.sleep(self.period_ms/1000.)
                     #
                     #    return True
-
-#============= EOF =============================================
