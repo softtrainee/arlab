@@ -15,18 +15,17 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Button, Bool, Property, \
-    on_trait_change, String, Int, Any, DelegatesTo, List, Str
-from traitsui.api import View, Item, HGroup, VGroup, UItem, UCustom, spring
+from traits.api import Instance, Button, Bool, Property, \
+    on_trait_change, String, Any, DelegatesTo, List, Str
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.experiment.automated_run.uv.factory import UVAutomatedRunFactory
 from src.experiment.automated_run.factory import AutomatedRunFactory
 from src.experiment.queue.factory import ExperimentQueueFactory
 from src.experiment.queue.experiment_queue import ExperimentQueue
-from src.constants import NULL_STR, LINE_STR
+from src.constants import LINE_STR
+from src.experiment.utilities.identifier import convert_extract_device
 from src.loggable import Loggable
-import time
 from src.consumer_mixin import ConsumerMixin
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 from src.ui.gui import invoke_in_main_thread
@@ -163,16 +162,19 @@ extract_device, delay_+, tray, username, load_name]''')
         self.extract_device = ed
         self.run_factory = self._run_factory_factory()
         #         self.run_factory.update_templates_needed = True
+
         self.run_factory.load_templates()
-        self.run_factory.load_patterns()
+
         self.run_factory.remote_patterns = self._get_patterns(ed)
+        self.run_factory.load_patterns()
 
         if self.queue:
             self.queue.set_extract_device(ed)
 
     def _get_patterns(self, ed):
         ps = []
-        service_name = ed.replace(' ', '_').lower()
+        service_name = convert_extract_device(ed)
+        #service_name = ed.replace(' ', '_').lower()
         man = self.application.get_service(ILaserManager, 'name=="{}"'.format(service_name))
         if man:
             ps = man.get_pattern_names()

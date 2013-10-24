@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, List, CInt, Str, Int, Bool
+from traits.api import Any, List, CInt, Int, Bool
 # from traitsui.api import View, Item
 # from pyface.timer.do_later import do_after
 #============= standard library imports ========================
@@ -40,10 +40,12 @@ class DataCollector(Loggable):
     terminations_conditions = List
     action_conditions = List
     ncounts = CInt
-    grpname = Str
+    #grpname = Str
+
+    is_baseline = Bool(False)
     fits = List
     series_idx = Int
-    total_counts = CInt
+    #total_counts = CInt
 
     canceled = False
 
@@ -81,6 +83,9 @@ class DataCollector(Loggable):
         if self.canceled:
             return
 
+        #stop and wait for completion if already running
+        self.stop()
+
         self._completed = False
         self._truncate_signal = False
 
@@ -99,7 +104,7 @@ class DataCollector(Loggable):
         self._evt = evt
         evt.clear()
 
-#         wait for graphs to be fully constructed in the MainThread
+        #         wait for graphs to be fully constructed in the MainThread
         evt.wait(0.05)
 
         self._alive = True
@@ -107,7 +112,7 @@ class DataCollector(Loggable):
 
         tt = time.time() - st
         self.debug('estimated time: {:0.3f} actual time: :{:0.3f}'.format(et, tt))
-        return self.total_counts
+        #return self.total_counts
 
     def _measure(self, evt, et):
         with consumable(func=self._iter_step, main=True) as con:
@@ -162,18 +167,16 @@ class DataCollector(Loggable):
         if globalv.experiment_debug:
             x *= (self.period_ms * 0.001) ** -1
 
-        #dets = self.detectors
         graph = self.plot_panel.isotope_graph
 
         nfs = self.get_fit_block(i)
-        if self.grpname == 'signal':
-            self.plot_panel.fits = nfs
+        #if self.grpname == 'signal':
+        #self.plot_panel.fits = nfs
 
         np = len(graph.plots)
         idx_func = self._idx_func
 
         for dn in keys:
-        #for pi, (fi, dn) in enumerate(zip(nfs, keys)):
             dn = self._get_detector(dn)
             if dn:
                 iso = dn.isotope
@@ -186,12 +189,16 @@ class DataCollector(Loggable):
                                      marker='circle',
                                      plotid=pi)
                     dn.series_idx = 0
-                    #
+
                 series = self.series_idx
                 if hasattr(dn, 'series_idx'):
                     series = dn.series_idx
 
-                self.arar_age.isotopes[iso].fit = fi
+                miso = self.arar_age.isotopes[iso]
+                if self.is_baseline:
+                    miso.baseline.fit = fi
+                else:
+                    miso.fit = fi
 
                 signal = signals[keys.index(dn.name)]
 
@@ -206,16 +213,18 @@ class DataCollector(Loggable):
 
         graph.refresh()
 
-#===============================================================================
-#
-#===============================================================================
+    #===============================================================================
+    #
+    #===============================================================================
     def get_fit_block(self, iter_cnt, fits=None):
         if fits is None:
             fits = self.fits
         return self._get_fit_block(iter_cnt, fits)
 
     def _get_fit_block(self, iter_cnt, fits):
-        for sli, fs in fits:
+        midx = None
+        me = -Inf
+        for i, (sli, fs) in enumerate(fits):
             if sli:
                 s, e = sli
                 if s is None:
@@ -223,14 +232,23 @@ class DataCollector(Loggable):
                 if e is None:
                     e = Inf
 
-                if iter_cnt > s and iter_cnt < e:
-                    break
+                if iter_cnt < 0:
+                    if me < e:
+                        me = e
+                        midx = i
+                else:
+                    if iter_cnt > s and iter_cnt < e:
+                        break
 
-#        self.debug('fs {}'.format(fs))
+        if midx is not None:
+            fs = fits[midx]
+
+        #        self.debug('fs {}'.format(fs))
         return fs
-#===============================================================================
-# checks
-#===============================================================================
+
+    #===============================================================================
+    # checks
+    #===============================================================================
     def _check_conditions(self, conditions, cnt):
         for ti in conditions:
             if ti.check(self.arar_age, cnt):
@@ -238,8 +256,8 @@ class DataCollector(Loggable):
 
     def _check_iteration(self, i):
 
-#         if self.plot_panel is None:
-#             return 'break'
+    #         if self.plot_panel is None:
+    #             return 'break'
         if self._evt:
             if self._evt.isSet():
                 return True
@@ -252,34 +270,37 @@ class DataCollector(Loggable):
 
         ncounts = self.ncounts
         maxcounts = max(ncounts, pc)
-#         print i, maxcounts
         if i > maxcounts:
             return 'break'
 
         if self.check_conditions:
             termination_condition = self._check_conditions(self.termination_conditions, i)
             if termination_condition:
-                self.info('termination condition {}. measurement iteration executed {}/{} counts'.format(termination_condition.message, j, ncounts),
+                self.info('termination condition {}. measurement iteration executed {}/{} counts'.format(
+                    termination_condition.message, j, ncounts),
                           color='red'
-                          )
+                )
                 return 'cancel'
 
             truncation_condition = self._check_conditions(self.truncation_conditions, i)
             if truncation_condition:
-                self.info('truncation condition {}. measurement iteration executed {}/{} counts'.format(truncation_condition.message, j, ncounts),
+                self.info('truncation condition {}. measurement iteration executed {}/{} counts'.format(
+                    truncation_condition.message, j, ncounts),
                           color='red'
-                          )
+                )
                 self.state = 'truncated'
                 self.measurement_script.abbreviated_count_ratio = truncation_condition.abbreviated_count_ratio
 
-#                self.condition_truncated = True
+                #                self.condition_truncated = True
                 return 'break'
 
             action_condition = self._check_conditions(self.action_conditions, i)
             if action_condition:
-                self.info('action condition {}. measurement iteration executed {}/{} counts'.format(action_condition.message, j, ncounts),
-                          color='red'
-                          )
+                self.info(
+                    'action condition {}. measurement iteration executed {}/{} counts'.format(action_condition.message,
+                                                                                              j, ncounts),
+                    color='red'
+                )
                 action_condition.perform(self.measurement_script)
                 if not action_condition.resume:
                     return 'break'
@@ -292,7 +313,7 @@ class DataCollector(Loggable):
         if pc:
             if i > pc:
                 self.info('user termination. measurement iteration executed {}/{} counts'.format(j, ncounts))
-                self.total_counts -= (ncounts - i)
+                self.plot_panel.total_counts -= (ncounts - i)
                 return 'break'
 
         if self._truncate_signal:
@@ -309,11 +330,6 @@ class DataCollector(Loggable):
         original_idx = [(di.name, di.isotope) for di in self.detectors]
 
         def idx_func(isot):
-            #for i, di in enumerate(self.detectors):
-            #    print i, di,di.isotope, di.isotope==isot, isot
-            #return next((i for i,di in enumerate(self.detectors)
-            #                    if di.isotope==isot), None)
-
             return next((i for i, (n, ii) in enumerate(original_idx)
                          if ii == isot), None)
 

@@ -15,7 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from src.constants import NULL_STR
 from src.helpers.filetools import str_to_bool
 #============= standard library imports ========================
 import re
@@ -183,7 +182,7 @@ class RunParser(Loggable):
 
 class UVRunParser(RunParser):
     def parse(self, header, line, meta, delim='\t'):
-        params = super(UVRunParser, self).parse(header, line, meta, delim)
+        script_info, params = super(UVRunParser, self).parse(header, line, meta, delim)
         if not isinstance(line, list):
             line = line.split(delim)
 
@@ -191,9 +190,11 @@ class UVRunParser(RunParser):
 
         def _set(attr, cast):
             try:
-                v = args[header.index(attr)]
+                idx = self._get_idx(header, attr)
+                v = args[idx]
                 params[attr] = cast(v)
-            except (IndexError, ValueError, TypeError):
+            except (IndexError, ValueError, TypeError), e:
+                #print e
                 pass
 
         _set('reprate', int)
@@ -201,5 +202,6 @@ class UVRunParser(RunParser):
         _set('mask', str)
         _set('image', str)
 
-        return params
-#============= EOF =============================================
+        return script_info, params
+
+    #============= EOF =============================================

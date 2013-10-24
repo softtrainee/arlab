@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Event, Button, Float, String, \
+from traits.api import Event, Button, String, \
     Bool, Enum, Property, Instance, Int, List, Any, Color, Dict, on_trait_change
 # from traitsui.api import View, Item
 from apptools.preferences.preference_binding import bind_preference
@@ -28,11 +28,11 @@ import weakref
 import time
 from sqlalchemy.orm.exc import NoResultFound
 import os
-import gc
 #============= local library imports  ==========================
 # from src.ui.thread import Thread as uThread
 # from src.loggable import Loggable
 from src.displays.display import DisplayController
+from src.experiment.utilities.identifier import convert_extract_device
 from src.initialization_parser import InitializationParser
 from src.pyscripts.pyscript_runner import RemotePyScriptRunner, PyScriptRunner
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
@@ -1012,7 +1012,8 @@ If "No" select from database
             nonfound.append('extraction_line')
 
         if exp.extract_device and exp.extract_device != NULL_STR:
-            extract_device = exp.extract_device.replace(' ', '_').lower()
+            extract_device = convert_extract_device(exp.extract_device)
+            #extract_device = exp.extract_device.replace(' ', '_').lower()
             man = None
             if self.application:
                 man = self.application.get_service(ILaserManager, 'name=="{}"'.format(extract_device))

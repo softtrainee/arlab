@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Color, Instance
+from traits.api import Color, Instance, DelegatesTo
 from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
     EnumEditor, Group, Spring, VFold, Label, InstanceEditor, \
     CheckListEditor, VSplit, TabularEditor
@@ -439,6 +439,7 @@ class IsotopeEvolutionPane(TraitsDockPane):
     id = 'pychron.experiment.isotope_evolution'
     name = 'Isotope Evolutions'
     plot_panel = Instance(PlotPanel, ())
+    is_peak_hop = DelegatesTo('plot_panel')
 
     def traits_view(self):
         v = View(
@@ -450,24 +451,24 @@ class IsotopeEvolutionPane(TraitsDockPane):
                     HGroup(Spring(springy=False, width=-5),
                            Item('object.plot_panel.ncycles', label='Cycles',
                                 tooltip='Set the number of measurement cycles',
-                                visible_when='object.is_peak_hop'),
+                                visible_when='is_peak_hop',
+                                width=-100),
+                           Spring(springy=False, width=-10),
+                           CustomLabel('object.plot_panel.current_cycle',
+                                       color='blue',
+                                       color_name='object.plot_panel.current_color',
+                                       width=175,
+                                       visible_when='is_peak_hop'),
+                           Spring(springy=False, width=-10),
                            Item('object.plot_panel.ncounts', label='Counts',
                                 tooltip='Set the number of measurement points'),
-
+                           Spring(springy=False, width=-5),
                     ),
                     UItem('object.plot_panel.analysis_view',
                           style='custom',
-                          #editor=InstanceEditor(view='plot_panel_view'),
                           height=0.25),
                 )
             )
-
-            #                  UItem('plot_panel',
-            # #                        editor=InstanceEditor(view='graph_view'),
-            #                        style='custom',
-            #                        width=600
-            #                        ),
-
         )
         return v
 

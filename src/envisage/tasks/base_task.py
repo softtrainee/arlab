@@ -421,8 +421,9 @@ class BaseManagerTask(BaseTask):
             if self.wildcard:
                 kw['wildcard'] = self.wildcard
 
-        dialog = FileDialog(parent=self.window.control,
-                            action=action,
+        dialog = FileDialog(
+            #parent=self.window.control,
+            action=action,
                             **kw)
         if dialog.open() == OK:
             r = dialog.path

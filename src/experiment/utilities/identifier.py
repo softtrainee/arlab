@@ -18,7 +18,6 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.constants import LINE_STR
-from src.deprecate import deprecated
 
 ANALYSIS_MAPPING = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
                         bg='Background', u='Unknown', c='Cocktail', a='Air',
@@ -56,10 +55,10 @@ if os.path.isfile(p):
     cp.read(p)
     for option in cp.options('AnalysisNames'):
         v = cp.get('AnalysisNames', option)
-        labnumber, name = v.split(',')
-        ANALYSIS_MAPPING[option] = name
-        SPECIAL_NAMES.append(name)
-        SPECIAL_MAPPING[name] = option
+        labnumber, kname = v.split(',')
+        ANALYSIS_MAPPING[option] = kname
+        SPECIAL_NAMES.append(kname)
+        SPECIAL_MAPPING[kname] = option
 
 #        SPECIAL_IDS[int(labnumber)] = name
 
@@ -262,13 +261,39 @@ def convert_labnumber(ln):
 
 # @deprecated
 def convert_shortname(ln):
-    '''
+    """
         convert number to shortname (a for air, bg for background...)
-    '''
+    """
     name = convert_labnumber(ln)
     if name is not None:
         ln = next((k for k, v in ANALYSIS_MAPPING.iteritems()
                    if v == name), ln)
     return ln
+
+
+def convert_extract_device(name):
+    """
+        change Fusions UV to fusions_uv, etc
+    """
+    n = ''
+    if name:
+        n = name.lower().replace(' ', '_')
+    return n
+
+
+def pretty_extract_device(ident):
+    """
+        change fusions_uv to Fusions UV, etc
+    """
+    n = ''
+    if ident:
+        args = ident.split('_')
+        if args[-1] in ('uv, co2'):
+            n = ' '.join(map(str.capitalize, args[:-1]))
+            n = '{} {}'.format(n, args[-1].upper())
+        else:
+            n = ' '.join(map(str.capitalize, args))
+            #n=ident.replace(' ', '_')
+    return n
 
 #============= EOF =============================================

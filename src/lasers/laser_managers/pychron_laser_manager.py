@@ -18,13 +18,13 @@
 from traits.api import Int, CInt, Str, String, on_trait_change, Button, Float, \
     Property, Event, Bool, Enum, cached_property, Range
 
-from traitsui.api import View, Item, VGroup, HGroup, spring, RangeEditor, EnumEditor, \
-    TextEditor
+from traitsui.api import View, Item, VGroup, HGroup, RangeEditor, EnumEditor
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import time
 from threading import Thread
 #============= local library imports  ==========================
+from src.globals import globalv
 from src.hardware.core.communicators.ethernet_communicator import EthernetCommunicator
 from src.lasers.laser_managers.laser_manager import BaseLaserManager
 from src.helpers.filetools import str_to_bool
@@ -70,6 +70,7 @@ class PychronLaserManager(BaseLaserManager):
     _z = Float
     connected = Bool
     test_connection_button = Button('Test Connection')
+    use_autocenter = Bool(False)
 
     mode = 'client'
 
@@ -239,6 +240,9 @@ class PychronLaserManager(BaseLaserManager):
         cnt = 0
         tries = 0
         maxtries = 200  # timeout after 50 s
+        if globalv.experiment_debug:
+            maxtries = 1
+
         nsuccess = 1
         self._cancel_blocking = False
         ask = self._ask
@@ -389,7 +393,8 @@ class PychronLaserManager(BaseLaserManager):
 
     def _position_changed(self):
         if self.position is not None:
-            t = Thread(target=self._move_to_position, args=(self.position,))
+            t = Thread(target=self._move_to_position,
+                       args=(self.position, self.use_autocenter))
             t.start()
             self._position_thread = t
             #     def traits_view(self):

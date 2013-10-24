@@ -15,7 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
 from src.pyscripts.extraction_line_pyscript import ExtractionPyScript
 from src.pyscripts.pyscript import verbose_skip, makeRegistry
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
@@ -23,7 +22,14 @@ from src.lasers.laser_managers.ilaser_manager import ILaserManager
 #============= local library imports  ==========================
 command_register = makeRegistry()
 
+
 class UVExtractionPyScript(ExtractionPyScript):
+    def set_default_context(self):
+        super(UVExtractionPyScript, self).set_default_context()
+        self.setup_context(reprate=0,
+                           mask=0,
+                           attenuator=0)
+
     @verbose_skip
     @command_register
     def drill_point(self, value='', name=''):

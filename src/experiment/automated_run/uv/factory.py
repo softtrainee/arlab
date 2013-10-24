@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Str, Property, Int, List, Button, \
-     cached_property
+    cached_property, on_trait_change
 from traitsui.api import Item, EnumEditor, HGroup, VGroup, Group
 #============= standard library imports ========================
 import os
@@ -42,9 +42,14 @@ class UVAutomatedRunFactory(AutomatedRunFactory):
     _spec_klass = UVAutomatedRunSpec
     factory_view_klass = UVFactoryView
 
+    def _get_run_attr(self):
+        r = super(UVAutomatedRunFactory, self)._get_run_attr()
+        r.extend(['mask', 'attenuator', ])
+        return r
+
     @cached_property
     def _get_masks(self):
-        p = os.path.join(paths.device_dir, 'uv', 'masks.txt')
+        p = os.path.join(paths.device_dir, 'uv', 'mask_names.txt')
         masks = []
         if os.path.isfile(p):
             with open(p, 'r') as fp:
@@ -55,27 +60,30 @@ class UVAutomatedRunFactory(AutomatedRunFactory):
                     masks.append(lin)
 
         return masks
+
     def _get_supplemental_extract_group(self):
         g = VGroup(Item('reprate'),
                    Item('mask', editor=EnumEditor(name='masks')),
                    Item('attenuator'),
                    HGroup(Item('image', springy=True), Item('browser_button', show_label=False)),
                    label='UV'
-                   )
+        )
         return g
 
     def _get_extract_group(self):
         sgrp = self._get_supplemental_extract_group()
         grp = super(UVAutomatedRunFactory, self)._get_extract_group()
         grp.show_border = False
-#        grp.label = ''
 
         ngrp = Group(
-                     grp,
-                     sgrp,
-                     layout='tabbed')
+            grp,
+            sgrp,
+            layout='tabbed')
 
         return ngrp
 
+    @on_trait_change('mask, attenuator, reprate')
+    def _uv_edit_handler(self, name, new):
+        self._update_run_values(name, new)
 
-#============= EOF =============================================
+    #============= EOF =============================================

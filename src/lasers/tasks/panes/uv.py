@@ -15,13 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
 from traitsui.api import View, Item, VGroup, \
-    InstanceEditor, HGroup, spring, UItem, ButtonEditor
-from src.lasers.tasks.laser_panes import BaseLaserPane, ClientPane, \
-    StageControlPane, ControlPane, AxesPane, SupplementalPane
+    HGroup, spring, UItem, ButtonEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
+
+from src.lasers.tasks.laser_panes import BaseLaserPane, ClientPane, \
+    StageControlPane, AxesPane, SupplementalPane
 from src.ui.led_editor import LEDEditor
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class FusionsUVClientPane(ClientPane):

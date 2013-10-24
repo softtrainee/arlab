@@ -15,20 +15,31 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, Str, Int, \
-    Property, Event, Bool, String, List
+from traits.api import Instance, Str, Property, Event, Bool, String, List, CInt
 #============= standard library imports ========================
 import yaml
 import os
 import datetime
 #============= local library imports  ==========================
 from src.constants import NULL_STR, LINE_STR
+from src.experiment.automated_run.uv.spec import UVAutomatedRunSpec
 from src.experiment.stats import ExperimentStats
 from src.paths import paths
 from src.experiment.automated_run.spec import AutomatedRunSpec
 from src.loggable import Loggable
 from src.experiment.queue.parser import RunParser, UVRunParser
 from src.helpers.ctx_managers import no_update
+
+
+def extract_meta(line_gen):
+    metastr = ''
+    # read until break
+    for line in line_gen:
+        if line.startswith('#====='):
+            break
+        metastr += '{}\n'.format(line)
+
+    return yaml.load(metastr), metastr
 
 
 class BaseExperimentQueue(Loggable):
@@ -39,8 +50,8 @@ class BaseExperimentQueue(Loggable):
     extract_device = String
     username = String
     tray = Str
-    delay_before_analyses = Int(5)
-    delay_between_analyses = Int(30)
+    delay_before_analyses = CInt(5)
+    delay_between_analyses = CInt(30)
 
     stats = Instance(ExperimentStats, ())
 
@@ -109,23 +120,12 @@ class BaseExperimentQueue(Loggable):
 
     def load(self, txt):
         self.initialized = False
-
         self.stats.delay_between_analyses = self.delay_between_analyses
-
         aruns = self._load_runs(txt)
         if aruns:
             with no_update(self):
                 self.automated_runs = aruns
-
             self.initialized = True
-
-            #            lm = self.sample_map
-            #            if lm:
-            #                for ai in self.automated_runs:
-            #                    if ai.position:
-
-            #                        lm.set_hole_labnumber(ai)
-
             return True
 
     def dump(self, stream):
@@ -162,15 +162,7 @@ class BaseExperimentQueue(Loggable):
 
         return stream
 
-    def _extract_meta(self, line_gen):
-        metastr = ''
-        # read until break
-        for line in line_gen:
-            if line.startswith('#====='):
-                break
-            metastr += '{}\n'.format(line)
 
-        return yaml.load(metastr), metastr
 
     def _load_meta(self, meta):
         # load sample map
@@ -192,8 +184,8 @@ class BaseExperimentQueue(Loggable):
     def _load_runs(self, txt):
         aruns = []
         f = (l for l in txt.split('\n'))
+        meta, metastr = extract_meta(f)
 
-        meta, metastr = self._extract_meta(f)
         if meta is None:
             self.warning_dialog('Invalid experiment set file. Poorly formatted metadata {}'.format(metastr))
             return
@@ -231,7 +223,13 @@ class BaseExperimentQueue(Loggable):
                 params['username'] = self.username
                 params['skip'] = skip
 
-                arun = self._automated_run_factory(script_info, params)
+                klass = AutomatedRunSpec
+                if self.extract_device == 'Fusions UV':
+                    klass = UVAutomatedRunSpec
+
+                arun = klass()
+                arun.load(script_info, params)
+                #arun = self._automated_run_factory(script_info, params, klass)
 
                 aruns.append(arun)
 
@@ -244,12 +242,6 @@ class BaseExperimentQueue(Loggable):
                 return
 
         return aruns
-
-    def _automated_run_factory(self, script_info, params):
-        arv = AutomatedRunSpec()
-        arv.load(script_info, params)
-
-        return arv
 
     def _load_map(self, meta):
         from src.lasers.stage_managers.stage_map import StageMap

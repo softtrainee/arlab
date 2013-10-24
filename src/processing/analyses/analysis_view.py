@@ -15,9 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Str, Property, Event, Float, \
-    Either, Int, Float
-from traitsui.api import View, UItem, TabularEditor, HGroup, Group
+from traits.api import HasTraits, List, Str, Property, Event, Either, Int, Float
+from traitsui.api import View, UItem, HGroup, Group
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -46,6 +45,7 @@ class IsotopeTabularAdapter(BaseTabularAdapter):
                ('Int.', 'value'),
                (SIGMA_1, 'error'),
                ('%', 'value_percent_error'),
+               ('Fit', 'baseline_fit_abbreviation'),
                ('Base.', 'base_value'),
                (SIGMA_1, 'base_error'),
                ('%', 'baseline_percent_error'),
@@ -69,6 +69,7 @@ class IsotopeTabularAdapter(BaseTabularAdapter):
 
     name_width = Int(40)
     fit_abbreviation_width = Int(25)
+    baseline_fit_abbreviation_width = Int(25)
     detector_width = Int(40)
 
     value_width = vwidth
@@ -132,27 +133,29 @@ class CompuatedValueTabularAdapter(BaseTabularAdapter):
 class DetectorRatioTabularAdapter(BaseTabularAdapter):
     columns = [('Name', 'name'),
                ('Value', 'value'),
-               (SIGMA_1, 'error'),               
+               (SIGMA_1, 'error'),
                ('Calc. IC', 'calc_ic'),
                ('ICFactor', 'ic_factor'),
                ('Ref. Ratio', 'ref_ratio'),
 
                ('Non IC Corrected', 'noncorrected_value'),
                (SIGMA_1, 'noncorrected_error'),
-               ]
-    calc_ic_text=Property
-    
-    noncorrected_value_text=Property
-    noncorrected_error_text=Property
-    
+    ]
+    calc_ic_text = Property
+
+    noncorrected_value_text = Property
+    noncorrected_error_text = Property
+
     def _get_calc_ic_text(self):
         return floatfmt(self.item.calc_ic)
-    
+
     def _get_noncorrected_value_text(self):
         return floatfmt(self.item.noncorrected_value)
+
     def _get_noncorrected_error_text(self):
         return floatfmt(self.item.noncorrected_error)
-    
+
+
 class ExtractionTabularAdapter(BaseTabularAdapter):
     columns = [('Name', 'name'),
                ('Value', 'value'),
@@ -185,8 +188,9 @@ class DetectorRatio(ComputedValue):
     detectors = Str
     noncorrected_value = Float
     noncorrected_error = Float
-    calc_ic=Property(depends_on='value')
-    ref_ratio=Float
+    calc_ic = Property(depends_on='value')
+    ref_ratio = Float
+
     def _get_calc_ic(self):
         return self.noncorrected_value / self.ref_ratio
 
@@ -271,7 +275,7 @@ class AnalysisView(HasTraits):
     def load_computed(self, an, new_list=True):
         if self.analysis_type == 'unknown':
             self._load_unknown_computed(an, new_list)
-        elif self.analysis_type in ('air','blank_air','blank_unknown','blank_cocktail'):
+        elif self.analysis_type in ('air', 'blank_air', 'blank_unknown', 'blank_cocktail'):
             self._load_air_computed(an, new_list)
         elif self.analysis_type == 'cocktail':
             self._load_cocktail_computed(an, new_list)
@@ -282,29 +286,29 @@ class AnalysisView(HasTraits):
     def _make_ratios(self, an, ratios):
         cv = []
         for name, nd, ref in ratios:
-#            n, d = nd.split('/')
-#            r = self._get_non_corrected_ratio(nd)
-#            if r is not None:
-#            d_iso = self._get_isotope(d)
-#            n_iso = self._get_isotope(n)
-#            ic = d_iso.ic_factor / n_iso.ic_factor
-#                try:
-#                    rr = n_iso.ic_corrected_value() / d_iso.ic_corrected_value()
-#                except ZeroDivisionError:
-#                    rr=ufloat(0,1e-20)
-            
+        #            n, d = nd.split('/')
+        #            r = self._get_non_corrected_ratio(nd)
+        #            if r is not None:
+        #            d_iso = self._get_isotope(d)
+        #            n_iso = self._get_isotope(n)
+        #            ic = d_iso.ic_factor / n_iso.ic_factor
+        #                try:
+        #                    rr = n_iso.ic_corrected_value() / d_iso.ic_corrected_value()
+        #                except ZeroDivisionError:
+        #                    rr=ufloat(0,1e-20)
+
             dr = DetectorRatio(name=name,
-                               value='',#floatfmt(rr.nominal_value),
-                               error='',#floatfmt(rr.std_dev),
-                               noncorrected_value=0,#floatfmt(r.nominal_value),
-                               noncorrected_error=0,#floatfmt(r.std_dev),
+                               value='', #floatfmt(rr.nominal_value),
+                               error='', #floatfmt(rr.std_dev),
+                               noncorrected_value=0, #floatfmt(r.nominal_value),
+                               noncorrected_error=0, #floatfmt(r.std_dev),
                                ic_factor='',
                                ref_ratio=ref,
                                detectors=nd)
             cv.append(dr)
 
         return cv
-    
+
     def _get_non_corrected_ratio(self, nd):
         n, d = nd.split('/')
         niso, diso = self._get_isotope(n), self._get_isotope(d)
@@ -319,7 +323,7 @@ class AnalysisView(HasTraits):
         niso, diso = self._get_isotope(n), self._get_isotope(d)
         if niso and diso:
             try:
-                return niso.ic_corrected_value() / diso.ic_corrected_value(), diso.ic_factor/niso.ic_factor
+                return niso.ic_corrected_value() / diso.ic_corrected_value(), diso.ic_factor / niso.ic_factor
             except ZeroDivisionError:
                 return ufloat(0, 1e-20), 1
 
@@ -327,8 +331,8 @@ class AnalysisView(HasTraits):
         for ci in self.computed_values:
             nd = ci.detectors
             r = self._get_non_corrected_ratio(nd)
-            rr,ic=self._get_corrected_ratio(nd)
-            
+            rr, ic = self._get_corrected_ratio(nd)
+
             ci.trait_set(value=floatfmt(rr.nominal_value),
                          error=floatfmt(rr.std_dev),
                          noncorrected_value=r.nominal_value,
@@ -386,7 +390,7 @@ class AnalysisView(HasTraits):
                                   refresh='refresh_needed')
 
         adapter = CompuatedValueTabularAdapter
-        if self.analysis_type in ('air', 'cocktail', 
+        if self.analysis_type in ('air', 'cocktail',
                                   'blank_unknown', 'blank_air',
                                   'blank_cocktail'):
             adapter = DetectorRatioTabularAdapter
