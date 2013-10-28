@@ -46,7 +46,7 @@ def make():
     apps = args.applications
     for name in apps:
         template = None
-        flavors = ('diode', 'co2', 'valve', 'uv', 'experiment')
+        flavors = ('diode', 'co2', 'valve', 'uv', 'experiment', 'view')
         if name in flavors:
             template = Template()
             template.root = args.root[0]
