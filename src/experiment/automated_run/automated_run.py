@@ -401,6 +401,8 @@ class AutomatedRun(Loggable):
 
                 msg = 'Delaying {}s for detectors to settle'.format(settling_time)
                 self.info(msg)
+                if self.plot_panel:
+                    self.plot_panel.total_counts+=settling_time
                 #self.collector.total_counts += settling_time
                 #self.multi_collector.total_counts += settling_time
 
@@ -1342,7 +1344,7 @@ anaylsis_type={}
         min_ = mi
         tc = self.plot_panel.total_counts
         if tc > ma or ma == Inf:
-            max_ = tc * 1.05
+            max_ = tc * 1.1
 
         if starttime_offset > mi:
             min_ = -starttime_offset
@@ -1577,21 +1579,22 @@ anaylsis_type={}
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
             #            if iso=='Ar40':
             #                print 'prelim signal,',len(x), x[0], x[-1]
-
             s = IsotopicMeasurement(xs=x, ys=y, fit=fit)
+#            print 'signal',iso, s.value, y
             rsignals['{}signal'.format(iso)] = s
 
         #baseline_fits = ['average_SEM', ] * len(baselines)
         #for fit, (iso, detname) in zip(baseline_fits, baselines):
         for iso, detname in baselines:
             try:
-                fit = self.arar_age.isotopes[iso]
+                fit = self.arar_age.isotopes[iso].baseline.fit
             except (AttributeError, KeyError):
                 fit = 'average_SEM'
 
             tab = dm.get_table(detname, '/baseline/{}'.format(iso))
             x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
             bs = IsotopicMeasurement(xs=x, ys=y, fit=fit)
+#            print 'baseline',iso, bs.value, y
 
             rsignals['{}baseline'.format(iso)] = bs
 
@@ -1883,16 +1886,17 @@ anaylsis_type={}
         for isotope, detname, kind in self._save_isotopes:
             if kind == 'signal':
                 detectors.append((detname, isotope))
-
                 table = dm.get_table(detname, '/baseline/{}'.format(isotope))
                 if table:
                     bi = [(row['time'], row['value']) for row in table.iterrows()]
                     baselines.append(bi)
-
+                    
                 table = dm.get_table(detname, '/signal/{}'.format(isotope))
                 if table:
                     si = [(row['time'], row['value']) for row in table.iterrows()]
                     signals.append(si)
+                    
+                    
         dm.close_file()
 
         blanks = []

@@ -26,9 +26,16 @@ from threading import Thread
 from src.envisage.tasks.pane_helpers import new_button_editor
 from src.paths import paths
 
-
-class UVLaserControlsClient(HasTraits):
+class LaserClient(HasTraits):
     parent = Any
+
+class LaserControlsClient(LaserClient):
+    pass
+class LaserOpticsClient(LaserClient):
+    pass
+
+class UVLaserControlsClient(LaserControlsClient):
+    
     fire = Event
     stop = Event
     #fire_label = Property(depends_on='firing')
@@ -65,8 +72,7 @@ class UVLaserControlsClient(HasTraits):
         self.firing = False
 
 
-class UVLaserOpticsClient(HasTraits):
-    parent = Any
+class UVLaserOpticsClient(LaserOpticsClient):
 
     mask = Property(String(enter_set=True, auto_set=False),
                     depends_on='_mask')

@@ -302,6 +302,7 @@ class ClientDockPane(TraitsDockPane):
         ogrp = Group(UItem('optics_client', style='custom'),
                      label='Optics')
         cgrp = Group(UItem('controls_client', style='custom'),
+                     defined_when='controls_client',
                      label='Controls')
 
         tgrp = Group(cgrp,
