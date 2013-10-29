@@ -101,15 +101,19 @@ class Experimentor(IsotopeDatabaseManager):
     #===============================================================================
     # info update
     #===============================================================================
-    def _get_all_automated_runs(self, queues=None):
+    def _get_all_runs(self, queues=None):
         if queues is None:
             queues = self.experiment_queues
 
         return [ai for ei in self.experiment_queues
                 for ai in ei.executed_runs + ei.automated_runs
-                if ai.executable
-        ]
-
+                if ai.executable]
+    
+    def _get_all_automated_runs(self):
+        return [ai for ei in self.experiment_queues
+                for ai in ei.automated_runs
+                    if ai.executable]
+        
     def _update(self, queues=None):
         if queues is None:
             queues = self.experiment_queues
@@ -122,7 +126,7 @@ class Experimentor(IsotopeDatabaseManager):
         self.debug('updating stats')
         self.stats.calculate()
 
-        ans = self._get_all_automated_runs(queues)
+        ans = self._get_all_runs(queues)
         #         print len([i for i in ans])
         exclude = ('dg', 'pa')
         #        timethis(self._modify_aliquots_steps, args=(ans,), kwargs=dict(exclude=exclude))
@@ -184,12 +188,18 @@ class Experimentor(IsotopeDatabaseManager):
         cache = dict()
         ecache = dict()
         db = self.db
+        
+        aruns=self._get_all_automated_runs()
+        def _not_run(a):
+            return a in aruns
+          
         with db.session_ctx():
             for ai in ans:
                 if ai.skip:
                     continue
 
                 ln = ai.labnumber
+                
                 # is run in cache
                 if not ln in cache:
                     sample, irrad, material, aliquot, step = self._get_analysis_info(ln)
@@ -201,7 +211,6 @@ class Experimentor(IsotopeDatabaseManager):
                                      egrp=-1)
 
                 last = cache[ln]
-
                 aq = ai.aliquot
                 s = -1
                 #egrp = -1
@@ -237,8 +246,8 @@ class Experimentor(IsotopeDatabaseManager):
                                 if dban:
                                     if dban.step:
                                         s = LAlphas.index(dban.step) + 1
-
-                    if ai.state != 'not run':
+                    if not _not_run(ai):
+#                    if ai.state != 'not run':
                         s = LAlphas.index(ai.step)
 
                     elast['step'] = s
@@ -259,7 +268,8 @@ class Experimentor(IsotopeDatabaseManager):
                     s = ''
                     egrp = -1
 
-                if ai.state == 'not run':
+                if _not_run(ai):
+#                if ai.state == 'not run':
                     ai.trait_set(aliquot=int(aq),
                                  sample=last['sample'] or '',
                                  irradiation=last['irradiation'] or '',

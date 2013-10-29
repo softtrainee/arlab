@@ -212,14 +212,14 @@ class ExperimentEditorTask(EditorTask):
             meta, metastr = extract_meta(f)
             is_uv = False
             if meta.has_key('extract_device'):
-                is_uv = meta['extract_device'] in ('Fusions UV')
+                is_uv = meta['extract_device'] in ('Fusions UV', )
 
         return txt, is_uv
 
     def open(self, path=None):
 
         path = '/Users/ross/Pychrondata_dev/experiments/uv.xls'
-        path = '/Users/ross/Pychrondata_dev/experiments/uv.txt'
+#        path = '/Users/ross/Pychrondata_dev/experiments/uv.txt'
         #path='/Users/ross/Pychrondata_dev/experiments/Current Experiment.txt'
         if path is None:
             ps = self.open_file_dialog(action='open files',
