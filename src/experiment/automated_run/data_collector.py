@@ -172,10 +172,11 @@ class DataCollector(Loggable):
         idx_func = self._idx_func
 
         for dn in keys:
+            
             dn = self._get_detector(dn)
             if dn:
                 iso = dn.isotope
-                pi = idx_func(iso)
+                pi = idx_func(iso,dn.name)
                 fi = nfs[pi]
 
                 if pi >= np:
@@ -323,11 +324,14 @@ class DataCollector(Loggable):
 
     def _get_idx_func(self):
         original_idx = [(di.name, di.isotope) for di in self.detectors]
-
-        def idx_func(isot):
-            return next((i for i, (n, ii) in enumerate(original_idx)
+        def idx_func(isot, detname):
+            idx=next((i for i, (n, ii) in enumerate(original_idx)
                          if ii == isot), None)
-
+#            if idx is None:
+#                idx=next((i for i, (n, ii) in enumerate(original_idx)
+#                         if n == detname), None)
+            return idx
+        
         return idx_func
 
         #============= EOF =============================================

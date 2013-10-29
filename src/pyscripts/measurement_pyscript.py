@@ -163,7 +163,12 @@ class MeasurementPyScript(ValvePyScript):
 
         else:
             self.warning_dialog('No such file {}'.format(p))
-
+    
+    @count_verbose_skip
+    @command_register
+    def define_detectors(self, isotope, det, *args, **kw):
+        self._automated_run_call('py_define_detectors', isotope, det)
+        
     @count_verbose_skip
     @command_register
     def peak_hop(self, ncycles=5, hops=None, calc_time=False, baseline=False):

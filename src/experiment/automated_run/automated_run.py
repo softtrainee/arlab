@@ -188,7 +188,10 @@ class AutomatedRun(Loggable):
     #===============================================================================
     def py_is_last_run(self):
         return self.is_last
-
+    
+    def py_define_detectors(self, isotope, det):
+        self._define_detectors(isotope, det)
+        
     def py_position_magnet(self, pos, detector, dac=False):
         if not self._alive:
             return
@@ -397,7 +400,7 @@ class AutomatedRun(Loggable):
                 if detector is None:
                     detector = self._active_detectors[0].name
 
-                ion.position(mass, detector, False)
+                ion.position(mass, detector)
 
                 msg = 'Delaying {}s for detectors to settle'.format(settling_time)
                 self.info(msg)
@@ -1008,7 +1011,11 @@ anaylsis_type={}
     def _set_active_detectors(self, dets):
         spec = self.spectrometer_manager.spectrometer
         self._active_detectors = [spec.get_detector(n) for n in dets]
-
+    
+    def _define_detectors(self, isotope, det):
+        spec = self.spectrometer_manager.spectrometer
+        spec.update_isotopes(isotope, det)
+        
     def _activate_detectors(self, dets):
         """
             !!! this is a potential problem !!!
@@ -1294,7 +1301,7 @@ anaylsis_type={}
             period = self.integration_time
 
         m = self.collector
-
+        
         m.trait_set(
             plot_panel=self.plot_panel,
             arar_age=self.arar_age,
