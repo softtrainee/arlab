@@ -69,6 +69,47 @@ class XYPlotLabel(PlotLabel, Movable):
         self.altered_screen_point = (self.x, self.y)
 
 
+def render_vertical_marker(gc, points, color, line_width, outline_color):
+    with gc:
+        gc.set_line_width(line_width)
+        gc.set_stroke_color(outline_color)
+        gc.set_fill_color(color)
+        x, y = points[0]
+        d = 5
+        gc.begin_path()
+        gc.move_to(x, y - d)
+        gc.line_to(x, y + d)
+        gc.draw_path()
+
+
+def render_error_bar(gc, x1, x2, y, color, line_width=1, end_caps=True):
+    with gc:
+        gc.set_line_width(line_width)
+        gc.set_stroke_color(color)
+        gc.begin_path()
+        gc.set_stroke_color(color)
+        gc.move_to(x1, y)
+        gc.line_to(x2, y)
+        gc.draw_path()
+        if end_caps:
+            if not isinstance(end_caps, (float, int)):
+                end_caps = 3
+
+            render_end_cap(gc, x1, y, length=end_caps)
+            render_end_cap(gc, x2, y, length=end_caps)
+
+
+def render_end_cap(gc, x, y, length=3):
+    with gc:
+        l = length
+        #gc.translate_ctm(x, y)
+        gc.begin_path()
+        gc.move_to(x, y - l)
+        gc.line_to(x, y + l)
+        print x, y, y - l, y + l
+        gc.draw_path()
+
+
 class MeanIndicatorOverlay(AbstractOverlay, Movable):
     color = Color
     label = Instance(PlotLabel)
@@ -77,6 +118,8 @@ class MeanIndicatorOverlay(AbstractOverlay, Movable):
     x = Float
     error = Float
     nsigma = Int
+
+    marker = Str('vertical')
 
     def clear(self):
         self.altered_screen_point = None
@@ -110,24 +153,25 @@ class MeanIndicatorOverlay(AbstractOverlay, Movable):
         with gc:
             points = self._gather_data()
             #print points, self.x, self.y
-            marker = 'circle'
-            marker_size = 3
-            color = self._color#color_table['black']
+            marker = self.marker
+
+            color = self._color
             line_width = 1
-            outline_color = self._color#color_table['black']
-            render_markers(gc, points, marker, marker_size,
-                           color, line_width, outline_color)
+            outline_color = self._color
+            if marker != 'vertical':
+                marker_size = 3
+                render_markers(gc, points, marker, marker_size,
+                               color, line_width, outline_color)
+            else:
+                render_vertical_marker(gc, points,
+                                       color, line_width, outline_color)
 
             x, y = self.get_current_point()
 
             e = self.error / 2.0 * max(1, self.nsigma)
             p1, p2 = self.component.map_screen([(self.x - e, 0), (self.x + e, 0)])
 
-            gc.begin_path()
-            gc.set_stroke_color(self._color)
-            gc.move_to(p1[0], y)
-            gc.line_to(p2[0], y)
-            gc.draw_path()
+            render_error_bar(gc, p1[0], p2[0], y, self._color)
 
         for o in self.overlays:
             o.overlay(other_component, gc, view_bounds=view_bounds, mode=mode)

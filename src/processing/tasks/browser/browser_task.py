@@ -96,8 +96,7 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
             self._load_extraction_devices()
         self._set_db()
 
-        bind_preference(self.recent_hours, 'recent_hours', 'pychron.processing')
-
+        bind_preference(self, 'recent_hours', 'pychron.processing')
 
     def _set_db(self):
         self.analysis_table.db = self.manager.db

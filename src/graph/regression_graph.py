@@ -202,7 +202,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
         if self.suppress_regression:
             return
 
-        self.regressors = []
+        #self.regressors = []
+        regs = []
         for plot in self.plots:
             ps = plot.plots
             ks = ps.keys()
@@ -210,13 +211,16 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 scatters, idxes = zip(*[(ps[k][0], k[4:]) for k in ks if k.startswith('data')])
                 idx = idxes[0]
                 fls = (ps[kk][0] for kk in ks if kk == 'fit{}'.format(idx))
+
                 for si, fl in zip(scatters, fls):
-                    self._plot_regression(plot, si, fl)
-                    #
+                    r = self._plot_regression(plot, si, fl)
+                    regs.append(r)
+
             except ValueError, e:
                 break
-        else:
-            self.regression_results = self.regressors
+
+        self.regressors = regs
+        self.regression_results = regs
 
     def _plot_regression(self, plot, scatter, line):
     #         try:
@@ -224,7 +228,7 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
             self.regressors.append(None)
             return
 
-        self._regress(plot, scatter, line)
+        return self._regress(plot, scatter, line)
 
     #             if args:
     #                 r, fx, fy, ly, uy = args
@@ -330,7 +334,8 @@ class RegressionGraph(Graph, RegressionContextMenuMixin):
                 line.error_envelope.upper = uy
                 line.error_envelope.invalidate()
 
-        self.regressors.append(r)
+        return r
+        #self.regressors.append(r)
 
     def _least_square_regress(self, r, x, y, ox, oy, index,
                               fit, fod, apply_filter):

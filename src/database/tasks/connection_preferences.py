@@ -35,7 +35,7 @@ def button_editor(name, editor_kw=None, **kw):
 
     image = ImageResource(name=name,
                           search_path=paths.icon_search_path)
-    return Item(trait, style='custom',
+    return Item(name, style='custom',
                 editor=ButtonEditor(image=image, **editor_kw),
                 **kw)
 
