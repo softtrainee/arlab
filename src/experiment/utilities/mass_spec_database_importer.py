@@ -246,7 +246,7 @@ class MassSpecDatabaseImporter(Loggable):
 
 #        from src.codetools.simple_timeit import timethis
         for ((det, isok), si, bi, ublank, signal, baseline, sfit, bfit) in spec.iter():
-
+            print 'ffff',det, isok, signal.nominal_value, baseline.nominal_value, sfit, bfit
             #===================================================================
             # isotopes
             #===================================================================
@@ -317,9 +317,7 @@ class MassSpecDatabaseImporter(Loggable):
                                   baseline,
                                   ublank,
                                   sfit,
-                                  dbdet,
-
-                                  )
+                                  dbdet,)
 
 #         if commit:
 #             self.debug('commit')

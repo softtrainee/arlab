@@ -79,10 +79,10 @@ class PeakHopCollector(DataCollector):
             return True
 
     def _iter_step(self, data):
-        x, data, dets, isos, i = data
-        keys, signals = data
-
-        self._plot_data(i, x, keys, signals)
+        x, k_s, dets, isos, i = data
+#        keys, signals = data
+        self._save_data(x, *k_s)
+        self._plot_data(i, x, *k_s)
 
     def _do_hop(self, cnt):
         """
