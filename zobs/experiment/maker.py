@@ -16,18 +16,19 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Button, Bool, on_trait_change, Any, \
-    Instance, String, Property, cached_property, Float, List
-from traitsui.api import View, Item, TableEditor, VGroup, HGroup, Spring, spring, \
-EnumEditor, UItem
+import os
+
+from traits.api import Any, \
+    Instance, cached_property
+from traitsui.api import View, UItem
+
 from src.experiment.script_editable import ScriptEditable
-from src.experiment.utilities.identifier import convert_identifier, SPECIAL_NAMES, \
-    SPECIAL_MAPPING, convert_special_name
+from src.experiment.utilities.identifier import convert_identifier, SPECIAL_MAPPING, convert_special_name
 from src.experiment.automated_run.automated_run import AutomatedRun
 from src.paths import paths
-from src.constants import NULL_STR, SCRIPT_KEYS
-import os
+from src.pychron_constants import NULL_STR, SCRIPT_KEYS
 from src.regex import ALIQUOT_REGEX
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # class AutomatedRunSpec(HasTraits):
@@ -81,7 +82,7 @@ class AutomatedRunMaker(ScriptEditable):
                      'duration',
                      'extract_value',
                      'extract_units',
-                     ):
+        ):
             setattr(self, attr, getattr(ar, attr))
 
     def _extract_device_changed(self):
@@ -90,48 +91,48 @@ class AutomatedRunMaker(ScriptEditable):
 
 
 
-#    @on_trait_change('labnumber')
-#    def _labnumber_changed(self):
-#
-#        arun = self.automated_run
-        # check for id in labtable
-#        self._ok_to_add = False
-#        db = self.db
-#
-# #        arun.run_info.sample = ''
-# #        arun.aliquot = 0
-# #        arun.irrad_level = ''
-#        self.irrad_level = ''
-#        self.sample = ''
-#        labnumber = self.labnumber
-#        print self.labnumber
-#        if labnumber:
-#
-#            # convert labnumber (a, bg, or 10034 etc)
-#            clabnumber = convert_identifier(labnumber)
-# #            if isinstance(convert_identifier(labnumber), int):
-# #                self._ok_to_add = True
-# # #                arun.sample = convert_labnumber(convert_identifier(labnumber))
-# #                self._load_default_scripts()
-# #                return
-#
-#            ln = db.get_labnumber(clabnumber)
-#            if ln:
-#                self._ok_to_add = True
-#                # set sample and irrad info
-#                try:
-# #                    arun.run_info.sample = ln.sample.name
-#                    self.sample = ln.sample.name
-#                except AttributeError:
-#                    pass
-#
-# #                arun.run_info.irrad_level = self._make_irrad_level(ln)
-#                self.irrad_level = self._make_irrad_level(ln)
-#                print 'asdf', self.automated_run.labnumber, labnumber
-#                # set default scripts
-#                self._load_default_scripts(key=labnumber)
-#            else:
-#                self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
+            #    @on_trait_change('labnumber')
+            #    def _labnumber_changed(self):
+            #
+            #        arun = self.automated_run
+            # check for id in labtable
+            #        self._ok_to_add = False
+            #        db = self.db
+            #
+            # #        arun.run_info.sample = ''
+            # #        arun.aliquot = 0
+            # #        arun.irrad_level = ''
+            #        self.irrad_level = ''
+            #        self.sample = ''
+            #        labnumber = self.labnumber
+            #        print self.labnumber
+            #        if labnumber:
+            #
+            #            # convert labnumber (a, bg, or 10034 etc)
+            #            clabnumber = convert_identifier(labnumber)
+            # #            if isinstance(convert_identifier(labnumber), int):
+            # #                self._ok_to_add = True
+            # # #                arun.sample = convert_labnumber(convert_identifier(labnumber))
+            # #                self._load_default_scripts()
+            # #                return
+            #
+            #            ln = db.get_labnumber(clabnumber)
+            #            if ln:
+            #                self._ok_to_add = True
+            #                # set sample and irrad info
+            #                try:
+            # #                    arun.run_info.sample = ln.sample.name
+            #                    self.sample = ln.sample.name
+            #                except AttributeError:
+            #                    pass
+            #
+            # #                arun.run_info.irrad_level = self._make_irrad_level(ln)
+            #                self.irrad_level = self._make_irrad_level(ln)
+            #                print 'asdf', self.automated_run.labnumber, labnumber
+            #                # set default scripts
+            #                self._load_default_scripts(key=labnumber)
+            #            else:
+            #                self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 
     def _make_irrad_level(self, ln):
         il = ''
@@ -146,11 +147,11 @@ class AutomatedRunMaker(ScriptEditable):
         '''
             return:  List AutomatedRun
         '''
-#    def _add_fired(self):
-#         ars = self.automated_runs
-#        ar = self.automated_run
+        #    def _add_fired(self):
+        #         ars = self.automated_runs
+        #        ar = self.automated_run
         # labnumber is a property so its not cloned by clone_traits
-#        ln = ar.labnumber
+        #        ln = ar.labnumber
         if self.position:
             s = int(self.position)
             e = int(self.endposition)
@@ -160,7 +161,7 @@ class AutomatedRunMaker(ScriptEditable):
                     return
                 nruns = []
                 for i in range(e - s + 1):
-#                    ar.position = str(s + i)
+                #                    ar.position = str(s + i)
                     position = str(s + i)
                     nruns.extend(self._add_run(position))
 
@@ -172,9 +173,9 @@ class AutomatedRunMaker(ScriptEditable):
         return nruns
 
     def _add_run(self, position=0):
-#        ars = self.automated_runs
-#        nar = ar.clone_traits()
-#        ln = ar.labnumber
+    #        ars = self.automated_runs
+    #        nar = ar.clone_traits()
+    #        ln = ar.labnumber
         nar = AutomatedRun(position=str(position),
                            extract_value=self.extract_value,
                            extract_units=self.extract_units,
@@ -182,7 +183,7 @@ class AutomatedRunMaker(ScriptEditable):
                            cleanup=self.cleanup,
                            mass_spectrometer=self.mass_spectrometer,
                            extract_device=self.extract_device
-                           )
+        )
         ln = self.labnumber  # ar.labnumber
         if ALIQUOT_REGEX.match(ln):
             ln, a = ln.split('-')
@@ -191,38 +192,38 @@ class AutomatedRunMaker(ScriptEditable):
 
         nar.labnumber = ln
 
-#        if ar.analysis_type.startswith('blank') or ar.analysis_type == 'background':
-#            nar.extract_value = 0
-#            nar.extract_units = ''
+        #        if ar.analysis_type.startswith('blank') or ar.analysis_type == 'background':
+        #            nar.extract_value = 0
+        #            nar.extract_units = ''
 
-#        if self.schedule_block and self.schedule_block != NULL_STR:
-# #            print self.schedule_block
-#            block = self._block_factory(self.schedule_block)
-#            nruns = block.render(ar, self._current_group_id)
-# #            ars.extend(nruns)
-#            self._current_group_id += 1
-#        else:
+        #        if self.schedule_block and self.schedule_block != NULL_STR:
+        # #            print self.schedule_block
+        #            block = self._block_factory(self.schedule_block)
+        #            nruns = block.render(ar, self._current_group_id)
+        # #            ars.extend(nruns)
+        #            self._current_group_id += 1
+        #        else:
         nruns = [nar]
 
-#        else:
-#            if self.selected:
-#                ind = self.automated_runs.index(self.selected[-1])
-#                ars.insert(ind + 1, nar)
-#            else:
-#                ars.append(nar)
+        #        else:
+        #            if self.selected:
+        #                ind = self.automated_runs.index(self.selected[-1])
+        #                ars.insert(ind + 1, nar)
+        #            else:
+        #                ars.append(nar)
 
-#        kw = dict()
-#        if self.auto_increment:
-#            rid = self._auto_increment(ar.labnumber)
-#            npos = self._auto_increment(ar.position)
-#            if rid:
-#                kw['labnumber'] = rid
-#            if npos:
-#                kw['position'] = npos
-#        else:
-#            self._ok_to_add = False
+        #        kw = dict()
+        #        if self.auto_increment:
+        #            rid = self._auto_increment(ar.labnumber)
+        #            npos = self._auto_increment(ar.position)
+        #            if rid:
+        #                kw['labnumber'] = rid
+        #            if npos:
+        #                kw['position'] = npos
+        #        else:
+        #            self._ok_to_add = False
         for ar in nruns:
-#            self._add_hook(ar, **kw)
+        #            self._add_hook(ar, **kw)
             self._set_script_info(ar.script_info)
         return nruns
 
@@ -231,31 +232,32 @@ class AutomatedRunMaker(ScriptEditable):
         for sn in SCRIPT_KEYS:
             v = getattr(self, '{}_script'.format(sn))
             setattr(info, '{}_script_name'.format(sn), v.name)
-#
-#    def _add_hook(self, ar, **kw):
-#        self._set_script_info(ar.script_info)
-# #        self.automated_run = ar.clone_traits()
-#        # if analysis type is bg, b- or a overwrite a few defaults
-# #        if not ar.analysis_type == 'unknown':
-# #            kw['position'] = ''
-# #            kw['extract_value'] = 0
-#
-#        if not 'labnumber' in kw:
-#            keys = SPECIAL_MAPPING.values()
-#            if not ar.labnumber in keys:
-#                kw['special_labnumber'] = NULL_STR
-#            else:
-#                kw['special_labnumber'] = ar.special_labnumber
-#
-#            kw['labnumber'] = ar.labnumber
-#            kw['_labnumber'] = ar._labnumber
-#
-# #        self.automated_run.trait_set(**kw)
-# #        self.trait_set(**kw)
-# #        self._bind_automated_run(self.automated_run)
-#===============================================================================
-# handlers
-#===============================================================================
+            #
+            #    def _add_hook(self, ar, **kw):
+            #        self._set_script_info(ar.script_info)
+            # #        self.automated_run = ar.clone_traits()
+            #        # if analysis type is bg, b- or a overwrite a few defaults
+            # #        if not ar.analysis_type == 'unknown':
+            # #            kw['position'] = ''
+            # #            kw['extract_value'] = 0
+            #
+            #        if not 'labnumber' in kw:
+            #            keys = SPECIAL_MAPPING.values()
+            #            if not ar.labnumber in keys:
+            #                kw['special_labnumber'] = NULL_STR
+            #            else:
+            #                kw['special_labnumber'] = ar.special_labnumber
+            #
+            #            kw['labnumber'] = ar.labnumber
+            #            kw['_labnumber'] = ar._labnumber
+            #
+            # #        self.automated_run.trait_set(**kw)
+            # #        self.trait_set(**kw)
+            # #        self._bind_automated_run(self.automated_run)
+            #===============================================================================
+            # handlers
+            #===============================================================================
+
     def __labnumber_changed(self):
         if self._labnumber != NULL_STR:
             self.labnumber = self._labnumber
@@ -272,9 +274,9 @@ class AutomatedRunMaker(ScriptEditable):
         self._ok_to_add = False
         db = self.db
 
-#        arun.run_info.sample = ''
-#        arun.aliquot = 0
-#        arun.irrad_level = ''
+        #        arun.run_info.sample = ''
+        #        arun.aliquot = 0
+        #        arun.irrad_level = ''
         self.irrad_level = ''
         self.sample = ''
         labnumber = self.labnumber
@@ -282,30 +284,31 @@ class AutomatedRunMaker(ScriptEditable):
 
             # convert labnumber (a, bg, or 10034 etc)
             clabnumber = convert_identifier(labnumber)
-#            if isinstance(convert_identifier(labnumber), int):
-#                self._ok_to_add = True
-# #                arun.sample = convert_labnumber(convert_identifier(labnumber))
-#                self._load_default_scripts()
-#                return
+            #            if isinstance(convert_identifier(labnumber), int):
+            #                self._ok_to_add = True
+            # #                arun.sample = convert_labnumber(convert_identifier(labnumber))
+            #                self._load_default_scripts()
+            #                return
 
             ln = db.get_labnumber(clabnumber)
             if ln:
                 self._ok_to_add = True
                 # set sample and irrad info
                 try:
-#                    arun.run_info.sample = ln.sample.name
+                #                    arun.run_info.sample = ln.sample.name
                     self.sample = ln.sample.name
                 except AttributeError:
                     pass
 
-#                arun.run_info.irrad_level = self._make_irrad_level(ln)
+                #                arun.run_info.irrad_level = self._make_irrad_level(ln)
                 self.irrad_level = self._make_irrad_level(ln)
-#                print 'asdf', self.automated_run.labnumber, labnumber
-#                print self.mass_spectrometer, 'asfdd'
+                #                print 'asdf', self.automated_run.labnumber, labnumber
+                #                print self.mass_spectrometer, 'asfdd'
                 # set default scripts
                 self._load_default_scripts(key=labnumber)
             else:
-                self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
+                self.warning_dialog(
+                    '{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
 
     def _special_labnumber_changed(self):
         if self.special_labnumber != NULL_STR:
@@ -314,9 +317,10 @@ class AutomatedRunMaker(ScriptEditable):
                 self.labnumber = ln
                 self._labnumber = NULL_STR
 
-#===============================================================================
-# property get/st
-#===============================================================================
+                #===============================================================================
+                # property get/st
+                #===============================================================================
+
     def _validate_extract_value(self, d):
         return self._validate_float(d)
 
@@ -332,9 +336,9 @@ class AutomatedRunMaker(ScriptEditable):
 
     def _set_extract_value(self, t):
         if t is not None:
-#            if self.heat_step:
-#                self.heat_step.extract_value = t
-#            else:
+        #            if self.heat_step:
+        #                self.heat_step.extract_value = t
+        #            else:
             self._extract_value = t
             if not t:
                 self.extract_units = '---'
@@ -354,8 +358,8 @@ class AutomatedRunMaker(ScriptEditable):
         lns = []
         if self.project:
             lns = [str(ln.labnumber)
-                    for s in self.project.samples
-                        for ln in s.labnumbers]
+                   for s in self.project.samples
+                   for ln in s.labnumbers]
         return [NULL_STR] + sorted(lns)
 
     @cached_property
@@ -370,13 +374,15 @@ class AutomatedRunMaker(ScriptEditable):
 
         return patterns
 
-#===============================================================================
-# views
-#===============================================================================
+    #===============================================================================
+    # views
+    #===============================================================================
     def traits_view(self):
         v = View(UItem('template_automated_run', style='custom'))
         return v
-#    def _get_position_group(self):
+
+        #    def _get_position_group(self):
+
 #        grp = VGroup(
 # #                         Item('autocenter',
 # #                              tooltip='Should the extract device try to autocenter on the sample'

@@ -21,7 +21,7 @@ import yaml
 import os
 import datetime
 #============= local library imports  ==========================
-from src.constants import NULL_STR, LINE_STR
+from src.pychron_constants import NULL_STR, LINE_STR
 from src.experiment.automated_run.uv.spec import UVAutomatedRunSpec
 from src.experiment.stats import ExperimentStats
 from src.paths import paths
@@ -161,7 +161,6 @@ class BaseExperimentQueue(Loggable):
             tab(vals, comment=arun.skip)
 
         return stream
-
 
 
     def _load_meta(self, meta):
@@ -367,7 +366,8 @@ load: {}
 
             # property get/set
 
-        #===============================================================================
+            #===============================================================================
+
     def _get_cleaned_automated_runs(self):
         return [ci for ci in self.automated_runs
                 if not ci.skip and ci.state == 'not run']

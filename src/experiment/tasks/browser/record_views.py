@@ -45,6 +45,9 @@ class ProjectRecordView(RecordView):
     name = Str
 
     def _create(self, dbrecord):
-        self.name = dbrecord.name
+        if not isinstance(dbrecord, str):
+            self.name = dbrecord.name
+        else:
+            self.name = dbrecord
 
-        #============= EOF =============================================
+            #============= EOF =============================================

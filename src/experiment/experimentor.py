@@ -25,7 +25,7 @@ from itertools import groupby
 from src.experiment.queue.experiment_queue import ExperimentQueue
 
 from src.experiment.factory import ExperimentFactory
-from src.constants import ALPHAS, NULL_STR
+from src.pychron_constants import ALPHAS
 from src.experiment.stats import StatsGroup
 from src.experiment.experiment_executor import ExperimentExecutor
 # from src.experiment.executor import ExperimentExecutor
@@ -188,7 +188,7 @@ class Experimentor(IsotopeDatabaseManager):
             for ai in ans:
                 if ai.skip:
                     continue
-                
+
                 ln = ai.labnumber
                 # is run in cache
                 if not ln in cache:

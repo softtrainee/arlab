@@ -21,14 +21,15 @@ from traitsui.api import View, Item, EnumEditor, TabularEditor, HGroup
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
 from src.database.records.figure_record import FigureRecord
 from src.managers.manager import Manager
+
 
 class FigureAdapter(TabularAdapter):
     columns = [('Name', 'name'),
                ('Date', 'create_date'),
-               ]
+    ]
 
 
 class FigureManager(Manager):
@@ -64,17 +65,18 @@ class FigureManager(Manager):
                                                                                                ai.graph_id,
                                                                                                ai.group_id,
                                                                                                ai.temp_status
-                                                                                               ))
+                ))
                 db.add_figure_analysis(fig,
-                                        ai.dbrecord.dbrecord,
-                                        graph=ai.graph_id,
-                                        group=ai.group_id,
-                                        status=ai.temp_status
-                                        )
+                                       ai.dbrecord.dbrecord,
+                                       graph=ai.graph_id,
+                                       group=ai.group_id,
+                                       status=ai.temp_status
+                )
             db.commit()
-#===============================================================================
-# handlers
-#===============================================================================
+            #===============================================================================
+            # handlers
+            #===============================================================================
+
     def _dclicked_changed(self):
         if self.selected:
             self.processing_manager.open_figure(self.selected)
@@ -99,22 +101,23 @@ class FigureManager(Manager):
                  Item('new_figure_name', label='Name'),
                  kind='livemodal',
                  buttons=['OK', 'Cancel']
-                 )
+        )
         return v
 
     def traits_view(self):
         v = self.view_factory(
-                              HGroup(Item('project',
-#                                   show_label=False,
-                                    editor=EnumEditor(name='projects'))),
-                              Item('figures', show_label=False,
-                                   editor=TabularEditor(editable=False,
-                                           selected='selected',
-                                           dclicked='dclicked',
-                                           adapter=FigureAdapter()
-                                           ),
-                                   ),
+            HGroup(Item('project',
+                        #                                   show_label=False,
+                        editor=EnumEditor(name='projects'))),
+            Item('figures', show_label=False,
+                 editor=TabularEditor(editable=False,
+                                      selected='selected',
+                                      dclicked='dclicked',
+                                      adapter=FigureAdapter()
+                 ),
+            ),
 
-                              )
+        )
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================

@@ -60,6 +60,7 @@ class InvalidSampleHolderErrorCode(ErrorCode):
 class LaserMonitorErrorCode(ErrorCode):
     msg = 'emergency shutdown. {}'
     code = '105'
+
     def __init__(self, sh, *args, **kw):
         self.msg = self.msg.format(sh)
         super(LaserMonitorErrorCode, self).__init__(*args, **kw)
@@ -69,14 +70,16 @@ class LaserMonitorErrorCode(ErrorCode):
 class SetpointErrorCode(ErrorCode):
     msg = 'failed to reach setpoint {}'
     code = '106'
+
     def __init__(self, sh, *args, **kw):
         self.msg = self.msg.format(sh)
         super(SetpointErrorCode, self).__init__(*args, **kw)
 
 # @generate_code
 class InvalidMotorErrorCode(ErrorCode):
-    msg = 'not motor named {} available'
+    msg = 'no motor named {} available'
     code = '107'
+
     def __init__(self, sh, *args, **kw):
         self.msg = self.msg.format(sh)
         super(InvalidMotorErrorCode, self).__init__(*args, **kw)

@@ -23,7 +23,7 @@ from src.experiment.automated_run.uv.factory import UVAutomatedRunFactory
 from src.experiment.automated_run.factory import AutomatedRunFactory
 from src.experiment.queue.factory import ExperimentQueueFactory
 from src.experiment.queue.experiment_queue import ExperimentQueue
-from src.constants import LINE_STR
+from src.pychron_constants import LINE_STR
 from src.experiment.utilities.identifier import convert_extract_device
 from src.loggable import Loggable
 from src.consumer_mixin import ConsumerMixin

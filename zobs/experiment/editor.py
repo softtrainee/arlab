@@ -16,14 +16,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance
-from traitsui.api import View, Item, VGroup, HGroup, InstanceEditor
-from src.viewable import Viewable
+from traits.api import Instance
+from traitsui.api import Item, VGroup, InstanceEditor
 from src.experiment.automated_run.automated_run import AutomatedRun
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # from src.experiment.script_editable import ScriptEditable
-from src.constants import SCRIPT_KEYS
+from src.pychron_constants import SCRIPT_KEYS
 from src.loggable import Loggable
 
 # class AutomatedRunEditor(ScriptEditable):
@@ -31,6 +30,7 @@ class AutomatedRunEditor(Loggable):
     id = 'automated_run_editor'
     title = 'Edit Automated Runs'
     run = Instance(AutomatedRun)
+
     def commit_changes(self, runs):
         for ri in runs:
             for si in SCRIPT_KEYS:
@@ -48,15 +48,16 @@ class AutomatedRunEditor(Loggable):
             if sc:
                 n = self._clean_script_name(sc.name)
                 setattr(getattr(self, sname), 'name', n)
-#                 setattr(self, sname, n)
+                #                 setattr(self, sname, n)
 
     def traits_view(self):
-#        v = VGroup(Item('extract_value'))
+    #        v = VGroup(Item('extract_value'))
         g = VGroup(Item('run', show_label=False,
                         style='custom',
                         editor=InstanceEditor(view='simple_view')),
                    self._get_script_group()
-                   )
+        )
 
         return self.view_factory(g, buttons=['OK', 'Cancel'])
-#============= EOF =============================================
+
+        #============= EOF =============================================

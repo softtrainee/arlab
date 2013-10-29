@@ -15,8 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Str, Bool, Any, Enum, Button
+from traits.api import List, Str, Bool, Any, Enum, Button, Int
 #============= standard library imports ========================
+from datetime import timedelta, datetime
 #============= local library imports  ==========================
 from src.column_sorter_mixin import ColumnSorterMixin
 from src.database.orms.isotope.gen import gen_ProjectTable
@@ -57,6 +58,8 @@ class BrowserMixin(ColumnSorterMixin):
 
     sample_tabular_adapter = Any
 
+    recent_hours = Int(480)
+
     def set_projects(self, ps, sel):
         self.oprojects = ps
         self.projects = ps
@@ -75,7 +78,8 @@ class BrowserMixin(ColumnSorterMixin):
         with db.session_ctx():
             ps = db.get_projects(order=gen_ProjectTable.name.asc())
 
-            ad = [ProjectRecordView(p) for p in ps]
+            ad = [ProjectRecordView('Recent')] + [ProjectRecordView(p) for p in ps]
+
             self.projects = ad
             self.oprojects = ad
 
@@ -83,13 +87,28 @@ class BrowserMixin(ColumnSorterMixin):
         if new:
             db = self.manager.db
             with db.session_ctx():
-                self._set_samples()
-                sams = self.samples
-                if sams:
-                    self.selected_sample = sams[:1]
+                if new[0].name == 'Recent':
+                    sams = self._set_recent_samples()
+                else:
+                    sams = self._set_samples()
 
-                p = self._get_sample_filter_parameter()
-                self.sample_filter_values = [getattr(si, p) for si in sams]
+            self.samples = sams
+            self.osamples = sams
+            if sams:
+                self.selected_sample = sams[:1]
+
+            p = self._get_sample_filter_parameter()
+            self.sample_filter_values = [getattr(si, p) for si in sams]
+
+    def _set_recent_samples(self):
+        db = self.manager.db
+        with db.session_ctx():
+            lpost = datetime.now() - timedelta(hours=self.recent_hours)
+            ss = db.get_recent_samples(lpost)
+            sams = [SampleRecordView(s)
+                    for s in ss]
+
+        return sams
 
     def _filter_non_run_samples_changed(self):
         self._set_samples()
@@ -104,8 +123,8 @@ class BrowserMixin(ColumnSorterMixin):
 
     def _set_samples(self):
         db = self.manager.db
+        sams = []
         with db.session_ctx():
-            sams = []
             sp = self.selected_project
             if not hasattr(sp, '__iter__'):
                 sp = (sp,)
@@ -120,9 +139,9 @@ class BrowserMixin(ColumnSorterMixin):
 
                 ss = [SampleRecordView(s) for s in ss if test(s)]
                 sams.extend(ss)
-
-            self.samples = sams
-            self.osamples = sams
+        return sams
+        #self.samples = sams
+        #self.osamples = sams
 
     def _filter_func(self, new, attr=None, comp=None):
         comp_keys = {'=': '__eq__',

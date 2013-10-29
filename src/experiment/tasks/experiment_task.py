@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import on_trait_change, Bool, Instance, Int
+from traits.api import on_trait_change, Bool, Instance
 # from traitsui.api import View, Item
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Splitter, Tabbed
 from pyface.constant import CANCEL, NO
@@ -51,10 +51,10 @@ class ExperimentEditorTask(EditorTask):
     auto_figure_window = None
     use_auto_figure = Bool
     use_notifications = Bool
-    notifications_port = Int
+    #notifications_port = Int
 
     loading_manager = Instance('src.loading.loading_manager.LoadingManager')
-    notifier = Instance(Notifier)
+    notifier = Instance(Notifier, ())
     analysis_health = Instance(AnalysisHealth)
 
     def new_pattern(self):
@@ -99,7 +99,7 @@ class ExperimentEditorTask(EditorTask):
         bind_preference(self, 'use_notifications',
                         'pychron.experiment.use_notifications')
 
-        bind_preference(self, 'notifications_port',
+        bind_preference(self.notifier, 'port',
                         'pychron.experiment.notifications_port')
 
         bind_preference(self.manager.executor, 'use_auto_save',
@@ -218,13 +218,13 @@ class ExperimentEditorTask(EditorTask):
 
     def open(self, path=None):
 
-        #path='/Users/ross/Pychrondata_dev/experiments/uv.xls'
+        path = '/Users/ross/Pychrondata_dev/experiments/uv.xls'
         path = '/Users/ross/Pychrondata_dev/experiments/uv.txt'
+        #path='/Users/ross/Pychrondata_dev/experiments/Current Experiment.txt'
         if path is None:
             ps = self.open_file_dialog(action='open files',
-                                       default_path='/Users/ross/Pychrondata_dev/experiments/Current Experiment.txt',
-                                       #default_filename='Current Experiment.txt'
-            )
+                                       #default_path='/Users/ross/Pychrondata_dev/experiments/Current Experiment.txt',
+                                       default_filename='Current Experiment.txt')
         else:
             ps = (path,)
 
@@ -300,9 +300,10 @@ class ExperimentEditorTask(EditorTask):
             self.manager.experiment_queue = self.active_editor.queue
 
     def _publish_notification(self, run):
-        msg = 'RunAdded {}'.format(run.uuid)
-        self.info('pushing notification {}'.format(msg))
-        self.notifier.send_notification(msg)
+        if self.use_notifications:
+            #msg = 'RunAdded {}'.format(run.uuid)
+            #self.info('pushing notification {}'.format(msg))
+            self.notifier.send_notification(run.uuid)
 
     def _open_auto_figure(self):
         if self.use_auto_figure:
@@ -453,8 +454,7 @@ class ExperimentEditorTask(EditorTask):
             task = self.auto_figure_window.active_task
             invoke_in_main_thread(task.refresh_plots, new)
 
-        if self.use_notifications:
-            self._publish_notification(new)
+        self._publish_notification(new)
 
         load_name = self.manager.executor.experiment_queue.load_name
         if load_name:
@@ -552,10 +552,9 @@ class ExperimentEditorTask(EditorTask):
             # default/factory
             #===============================================================================
 
-    def _notifier_factory(self):
-        n = Notifier()
-        n.setup(self.notifications_port)
-        return n
+    #def _notifier_factory(self):
+    #    n = Notifier(port=self.notifications_port)
+    #    return n
 
     def _manager_factory(self):
         from src.experiment.experimentor import Experimentor
@@ -577,8 +576,8 @@ class ExperimentEditorTask(EditorTask):
     def _manager_default(self):
         return self._manager_factory()
 
-    def _notifier_default(self):
-        return self._notifier_factory()
+    #def _notifier_default(self):
+    #    return self._notifier_factory()
 
     def _analysis_health_default(self):
         ah = AnalysisHealth(db=self.manager.db)
@@ -599,6 +598,8 @@ class ExperimentEditorTask(EditorTask):
         return paths.experiment_dir
 
     def _default_layout_default(self):
+        return TaskLayout(left=PaneItem('pychron.lasers.client'))
+
         return TaskLayout(
             left=Splitter(
                 PaneItem('pychron.experiment.wait', height=100),

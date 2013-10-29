@@ -37,7 +37,7 @@ from src.experiment.entry.level import Level, load_holder_canvas, iter_geom
 # from src.processing.entry.db_entry import DBEntry
 # from src.irradiation.irradiated_position import IrradiatedPosition, \
 #    IrradiatedPositionAdapter
-from src.constants import NULL_STR, ALPHAS
+from src.pychron_constants import NULL_STR, ALPHAS
 from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.entry.irradiated_position import IrradiatedPosition
 # import math

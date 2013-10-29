@@ -15,10 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Property, Str, cached_property, \
+from traits.api import Property, Str, cached_property, \
     List, on_trait_change, Int, Bool, Event, Any, Button, Undefined, Float
 from traitsui.api import View, Item, EnumEditor, \
-     VGroup, HGroup, spring, Group, Image, ImageEditor, TabularEditor
+    VGroup, HGroup, spring, Group, Image, ImageEditor, TabularEditor
 from pyface.image_resource import ImageResource
 
 #============= standard library imports ========================
@@ -31,7 +31,7 @@ from src.processing.entry.flux_monitor import FluxMonitor
 from src.processing.entry.db_entry import DBEntry
 # from src.irradiation.irradiated_position import IrradiatedPosition, \
 #    IrradiatedPositionAdapter
-from src.constants import NULL_STR, ALPHAS
+from src.pychron_constants import NULL_STR, ALPHAS
 from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 from src.processing.entry.irradiated_position import IrradiatedPositionAdapter, \
     IrradiatedPosition
@@ -44,15 +44,15 @@ class LabnumberEntry(IsotopeDatabaseManager):
 #    level = Str
     irradiation_tray = Str
 
-#    irradiations = Property(depends_on='saved, updated')
-#    levels = Property(depends_on='irradiation,saved, updated')
+    #    irradiations = Property(depends_on='saved, updated')
+    #    levels = Property(depends_on='irradiation,saved, updated')
     trays = Property
     edit_irradiation_button = Button('Edit')
     edit_level_enabled = Property(depends_on='level')
     edit_irradiation_enabled = Property(depends_on='irradiation')
-#    saved = Event
-#    updated = Event
-#    irradiation_trays = Property
+    #    saved = Event
+    #    updated = Event
+    #    irradiation_trays = Property
     tray_name = Str
     irradiation_tray_image = Property(Image, depends_on='level, irradiation, saved')
     irradiated_positions = List(IrradiatedPosition)
@@ -75,7 +75,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
 
     _update_sample_table = Event
 
-#    save_button = Button('Save')
+    #    save_button = Button('Save')
     add_irradiation_button = Button('Add Irradiation')
     add_level_button = Button('Add Level')
     edit_level_button = Button('Edit')
@@ -96,24 +96,24 @@ class LabnumberEntry(IsotopeDatabaseManager):
         db = self.db
         if self.db:
             if db.connect():
-
                 from src.database.defaults import load_isotopedb_defaults
-                load_isotopedb_defaults(db)
-#        self._load_default_holders()
 
-#    def _load_default_holders(self):
-#        db = self.db
-#        for t in self.trays:
-#            p = os.path.join(self._get_map_path(), t)
-#            with open(p, 'r') as f:
-#                h = f.readline()
-#                nholes, _diam = h.split(',')
-#                nholes = int(nholes)
-#                holes = [map(float, l.strip().split(',')) for i, l in enumerate(f) if i < nholes]
-#                blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
-#                db.add_irradiation_holder(t, geometry=blob)
-#
-#        db.commit()
+                load_isotopedb_defaults(db)
+                #        self._load_default_holders()
+
+                #    def _load_default_holders(self):
+                #        db = self.db
+                #        for t in self.trays:
+                #            p = os.path.join(self._get_map_path(), t)
+                #            with open(p, 'r') as f:
+                #                h = f.readline()
+                #                nholes, _diam = h.split(',')
+                #                nholes = int(nholes)
+                #                holes = [map(float, l.strip().split(',')) for i, l in enumerate(f) if i < nholes]
+                #                blob = ''.join([struct.pack('>ff', x, y) for x, y in holes])
+                #                db.add_irradiation_holder(t, geometry=blob)
+                #
+                #        db.commit()
 
     def _set_auto_params(self, s, rid):
         s.labnumber = rid
@@ -126,6 +126,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
     def _load_holder_positions(self, holder):
         self.irradiated_positions = []
         import struct
+
         geom = holder.geometry
         if geom:
             geom = [struct.unpack('>ff', geom[i:i + 8]) for i in xrange(0, len(geom), 8)]
@@ -149,23 +150,23 @@ class LabnumberEntry(IsotopeDatabaseManager):
                 pr = r
 
                 self.irradiated_positions.append(IrradiatedPosition(
-                                                                    hole=c,
-                                                                    alt_hole=c + offset,
-                                                                    x=x, y=y
-                                                                    ))
+                    hole=c,
+                    alt_hole=c + offset,
+                    x=x, y=y
+                ))
                 c += 1
 
         elif holder.name:
             self._load_holder_positons_from_file(holder.name)
 
     def _load_holder_positons_from_file(self, name):
-            p = os.path.join(self._get_map_path(), name)
-            self.irradiated_positions = []
-            with open(p, 'r') as f:
-                line = f.readline()
-                nholes, diam = line.split(',')
-                for ni in range(int(nholes)):
-                    self.irradiated_positions.append(IrradiatedPosition(hole=ni + 1))
+        p = os.path.join(self._get_map_path(), name)
+        self.irradiated_positions = []
+        with open(p, 'r') as f:
+            line = f.readline()
+            nholes, diam = line.split(',')
+            for ni in range(int(nholes)):
+                self.irradiated_positions.append(IrradiatedPosition(hole=ni + 1))
 
     def _save_to_db(self):
         db = self.db
@@ -188,7 +189,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
                 sam = db.add_sample(sam,
                                     project=proj,
                                     material=mat,
-                                    )
+                )
 
             dbln = db.get_labnumber(ln)
             if dbln:
@@ -203,7 +204,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
                 dbln.note = irs.note
 
             else:
-                dbln = db.add_labnumber(ln, sample=sam,)
+                dbln = db.add_labnumber(ln, sample=sam, )
                 pos = db.add_irradiation_position(irs.hole, dbln, self.irradiation, self.level)
 
             def add_flux():
@@ -225,9 +226,10 @@ class LabnumberEntry(IsotopeDatabaseManager):
             self.info('changes saved to database')
 
 
-#===============================================================================
-# handlers
-#===============================================================================
+            #===============================================================================
+            # handlers
+            #===============================================================================
+
     def _calculate_flux_button_fired(self):
         print 'fasd'
 
@@ -237,38 +239,38 @@ class LabnumberEntry(IsotopeDatabaseManager):
             if fx:
                 self.flux_monitor_age = fx.age
 
-#    def _edit_monitor_button_fired(self):
-#
-#        names = self.flux_monitors
-#        monitor = FluxMonitor(names=names)
-#        info = monitor.edit_traits(kind='livemodal')
-#        if info.result:
-#            db = self.db
-#            kw = dict(age=monitor.age,
-#                       age_err=monitor.age_err,
-#                       decay_constant=monitor.decay_constant,
-#                       decay_constant_err=monitor.decay_constant_err)
-#
-#            dbmonitor = db.get_flux_monitor(monitor.name)
-#            if dbmonitor:
-#                for k, v in kw.iteritems():
-#                    setattr(dbmonitor, k, v)
-#            else:
-#                db.add_flux_monitor(monitor.name, **kw)
-#                self.flux_monitor = monitor.name
-#
-#            db.commit()
-#            self.saved = True
+                #    def _edit_monitor_button_fired(self):
+                #
+                #        names = self.flux_monitors
+                #        monitor = FluxMonitor(names=names)
+                #        info = monitor.edit_traits(kind='livemodal')
+                #        if info.result:
+                #            db = self.db
+                #            kw = dict(age=monitor.age,
+                #                       age_err=monitor.age_err,
+                #                       decay_constant=monitor.decay_constant,
+                #                       decay_constant_err=monitor.decay_constant_err)
+                #
+                #            dbmonitor = db.get_flux_monitor(monitor.name)
+                #            if dbmonitor:
+                #                for k, v in kw.iteritems():
+                #                    setattr(dbmonitor, k, v)
+                #            else:
+                #                db.add_flux_monitor(monitor.name, **kw)
+                #                self.flux_monitor = monitor.name
+                #
+                #            db.commit()
+                #            self.saved = True
 
     def _add_irradiation_button_fired(self):
         irrad = Irradiation(db=self.db,
                             trays=self.trays
-                            )
+        )
         while 1:
             info = irrad.edit_traits(kind='livemodal')
             if info.result:
                 if irrad.save_to_db():
-    #            self._add_irradiation(irrad)
+                #            self._add_irradiation(irrad)
                     self.irradiation = irrad.name
                     self.saved = True
                     break
@@ -277,7 +279,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
         irrad = Irradiation(db=self.db,
                             trays=self.trays,
                             name=self.irradiation
-                            )
+        )
         irrad.load_production_name()
         irrad.load_chronology()
 
@@ -292,7 +294,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
         level = Level(db=self.db,
                       name=self.level,
                       trays=self.trays
-                      )
+        )
         level.load(irradiation)
         info = level.edit_traits(kind='livemodal')
         if info.result:
@@ -344,8 +346,8 @@ class LabnumberEntry(IsotopeDatabaseManager):
             else:
                 self.warning_dialog('Level {} already exists for Irradiation {}'.format(self.irradiation))
 
-#    def _save_button_fired(self):
-#        self._save_to_db()
+                #    def _save_button_fired(self):
+                #        self._save_to_db()
 
     def _freeze_button_fired(self):
         for si in self.selected:
@@ -359,7 +361,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
     @on_trait_change('auto+')
     def _auto_update(self, obj, name, old, new):
         cnt = 0
-#        print name, old, new
+        #        print name, old, new
         if self.auto_assign:
             for s in self.irradiated_positions:
                 rid = str(self.auto_startrid + cnt)
@@ -374,22 +376,22 @@ class LabnumberEntry(IsotopeDatabaseManager):
                     cnt += 1
 
 
-#                if self.auto_assign:
-#                if s.labnumber:
-#                    if self.auto_assign_overwrite or name != 'auto_assign':
-#                        self._set_auto_params(s, rid)
-#                        cnt += 1
-#                else:
-#                    self._set_auto_params(s, rid)
-#                    cnt += 1
+                    #                if self.auto_assign:
+                    #                if s.labnumber:
+                    #                    if self.auto_assign_overwrite or name != 'auto_assign':
+                    #                        self._set_auto_params(s, rid)
+                    #                        cnt += 1
+                    #                else:
+                    #                    self._set_auto_params(s, rid)
+                    #                    cnt += 1
 
         self._update_sample_table = True
 
-#    @on_trait_change('level, irradiation')
-#    @on_trait_change('level')
-#    def irrad_change(self, obj, name, old, new):
-#    def _irradiation_changed(self):
-#        self.level = ''
+    #    @on_trait_change('level, irradiation')
+    #    @on_trait_change('level')
+    #    def irrad_change(self, obj, name, old, new):
+    #    def _irradiation_changed(self):
+    #        self.level = ''
 
     def _level_changed(self):
         if self.level == NULL_STR:
@@ -403,8 +405,8 @@ class LabnumberEntry(IsotopeDatabaseManager):
 
         if level:
             if level.holder:
-#                holder = level.holder.name
-#                if level.holder:
+            #                holder = level.holder.name
+            #                if level.holder:
                 self._load_holder_positions(level.holder)
 
             positions = level.positions
@@ -413,17 +415,17 @@ class LabnumberEntry(IsotopeDatabaseManager):
                     ir = self._position_factory(pi)
                     hi = pi.position - 1
                     self.irradiated_positions[hi] = ir
-#        else:
-#            self.trait_set(level='', trait_change_notify=False)
+                    #        else:
+                    #            self.trait_set(level='', trait_change_notify=False)
 
 
     def _position_factory(self, dbpos):
         ln = dbpos.labnumber
         position = int(dbpos.position)
 
-#        sample = None
-#        material = None
-#        project = None
+        #        sample = None
+        #        material = None
+        #        project = None
         labnumber = ln.identifier if ln else None
         ir = IrradiatedPosition(labnumber=str(labnumber), hole=position)
         if labnumber:
@@ -433,10 +435,10 @@ class LabnumberEntry(IsotopeDatabaseManager):
                 if flux:
                     ir.j = flux.j
                     ir.j_err = flux.j_err
-#            p = next((pi for pi in ln.irradiation.positions if pi.position == position), None)
-#            if p:
-#                p.flux
-#
+                    #            p = next((pi for pi in ln.irradiation.positions if pi.position == position), None)
+                    #            if p:
+                    #                p.flux
+                    #
             sample = ln.sample
             if sample:
                 ir.sample = sample.name
@@ -444,48 +446,48 @@ class LabnumberEntry(IsotopeDatabaseManager):
                 project = sample.project
                 if project:
                     ir.project = project.name
-#                    project = project.name
+                    #                    project = project.name
                 if material:
                     ir.material = material.name
-#                    material = material.name
+                    #                    material = material.name
             note = ln.note
             if note:
                 ir.note = note
 
 
-#        ir = IrradiatedSample(labnumber=str(labnumber),
-#                              sample=sample if sample else '',
-#                              material=material if material else '',
-#                              project=project if project else '',
-#                              hole=position)
+                #        ir = IrradiatedSample(labnumber=str(labnumber),
+                #                              sample=sample if sample else '',
+                #                              material=material if material else '',
+                #                              project=project if project else '',
+                #                              hole=position)
         return ir
 
-#===============================================================================
-# property get/set
-#===============================================================================
-#    @cached_property
-#    def _get_irradiations(self):
-#        self.irradiation = NULL_STR
-# #        r = ['NM-Test', 'NM-100', 'NM-200']
-#        r = [NULL_STR] + [str(ri.name) for ri in self.db.get_irradiations() if ri.name]
-# #        if r and not self.irradiation:
-# #            self.irradiation = r[-1]
-#        return r
-#
-#    @cached_property
-#    def _get_levels(self):
-#        self.level = NULL_STR
-#        r = []
-#        irrad = self.db.get_irradiation(self.irradiation)
-#        if irrad:
-#            r = [NULL_STR] + sorted([str(ri.name) for ri in irrad.levels])
-# #            if r and not self.level:
-#
-#        return r
+    #===============================================================================
+    # property get/set
+    #===============================================================================
+    #    @cached_property
+    #    def _get_irradiations(self):
+    #        self.irradiation = NULL_STR
+    # #        r = ['NM-Test', 'NM-100', 'NM-200']
+    #        r = [NULL_STR] + [str(ri.name) for ri in self.db.get_irradiations() if ri.name]
+    # #        if r and not self.irradiation:
+    # #            self.irradiation = r[-1]
+    #        return r
+    #
+    #    @cached_property
+    #    def _get_levels(self):
+    #        self.level = NULL_STR
+    #        r = []
+    #        irrad = self.db.get_irradiation(self.irradiation)
+    #        if irrad:
+    #            r = [NULL_STR] + sorted([str(ri.name) for ri in irrad.levels])
+    # #            if r and not self.level:
+    #
+    #        return r
 
     def _get_irradiation_tray_image(self):
         p = self._get_map_path()
-#        ir = self.db.get_irradiation(self.irradiation)
+        #        ir = self.db.get_irradiation(self.irradiation)
 
         level = self.db.get_irradiation_level(self.irradiation, self.level)
         holder = None
@@ -495,8 +497,8 @@ class LabnumberEntry(IsotopeDatabaseManager):
         holder = holder if holder is not None else NULL_STR
         self.tray_name = holder
         im = ImageResource('{}.png'.format(holder),
-                             search_path=[p]
-                             )
+                           search_path=[p]
+        )
         return im
 
     @cached_property
@@ -518,10 +520,10 @@ class LabnumberEntry(IsotopeDatabaseManager):
             return Undefined
 
         ts = [os.path.splitext(pi)[0] for pi in os.listdir(p) if not pi.startswith('.')
-#                    if not (pi.endswith('.png')
-#                            or pi.endswith('.pct')
-#                            or pi.startswith('.'))
-              ]
+              #                    if not (pi.endswith('.png')
+              #                            or pi.endswith('.pct')
+              #                            or pi.startswith('.'))
+        ]
         if ts:
             self.tray = ts[-1]
 
@@ -542,109 +544,111 @@ class LabnumberEntry(IsotopeDatabaseManager):
 
     def traits_view(self):
         irradiation = Group(
-                            HGroup(
-                                   VGroup(HGroup(Item('irradiation',
-                                                      editor=EnumEditor(name='irradiations')
-                                                      ),
-                                                 Item('edit_irradiation_button',
-                                                      enabled_when='edit_irradiation_enabled',
-                                                      show_label=False)
-                                                 ),
-                                          HGroup(Item('level', editor=EnumEditor(name='levels')),
-                                                 spring,
-                                                 Item('edit_level_button',
-                                                      enabled_when='edit_level_enabled',
-                                                      show_label=False)
-                                                 ),
-                                          Item('add_irradiation_button', show_label=False),
-                                          Item('add_level_button', show_label=False),
-#                                        Item('irradiation_tray',
-#                                             editor=EnumEditor(name='irradiation_trays')
-#                                             )
-                                          ),
-                                   spring,
-                                   VGroup(
-                                          Item('tray_name', style='readonly', show_label=False),
-                                          Item('irradiation_tray_image',
-                                               editor=ImageEditor(),
-                                               height=200,
-                                               width=200,
-                                               style='custom',
-                                               show_label=False),
-                                          ),
-                                        ),
-                            label='Irradiation',
-                            show_border=True
-                            )
+            HGroup(
+                VGroup(HGroup(Item('irradiation',
+                                   editor=EnumEditor(name='irradiations')
+                ),
+                              Item('edit_irradiation_button',
+                                   enabled_when='edit_irradiation_enabled',
+                                   show_label=False)
+                ),
+                       HGroup(Item('level', editor=EnumEditor(name='levels')),
+                              spring,
+                              Item('edit_level_button',
+                                   enabled_when='edit_level_enabled',
+                                   show_label=False)
+                       ),
+                       Item('add_irradiation_button', show_label=False),
+                       Item('add_level_button', show_label=False),
+                       #                                        Item('irradiation_tray',
+                       #                                             editor=EnumEditor(name='irradiation_trays')
+                       #                                             )
+                ),
+                spring,
+                VGroup(
+                    Item('tray_name', style='readonly', show_label=False),
+                    Item('irradiation_tray_image',
+                         editor=ImageEditor(),
+                         height=200,
+                         width=200,
+                         style='custom',
+                         show_label=False),
+                ),
+            ),
+            label='Irradiation',
+            show_border=True
+        )
 
         auto = Group(
-                    Item('auto_assign', label='Auto-assign Labnumbers'),
-                    Item('auto_startrid', label='Start Labnumber',
-                         enabled_when='auto_assign'
-                         ),
-                    Item('auto_project', label='Project',
-                         enabled_when='auto_assign'
-                         ),
-                    Item('auto_sample', label='Sample',
-                         enabled_when='auto_assign'
-                         ),
-                    Item('auto_material', label='Material',
-                         enabled_when='auto_assign'
-                         ),
-                     Item('auto_j', format_str='%0.2e', label='Nominal J.'),
-                     Item('auto_j_err', format_str='%0.2e', label='Nominal J Err.'),
-                    Item('auto_assign_overwrite', label='Overwrite exisiting Labnumbers',
-                         enabled_when='auto_assign'
-                         ),
-                      HGroup(Item('freeze_button', show_label=False), Item('thaw_button', show_label=False),
-                              enabled_when='selected'),
-                      show_border=True,
-                      label='Auto-Assign'
+            Item('auto_assign', label='Auto-assign Labnumbers'),
+            Item('auto_startrid', label='Start Labnumber',
+                 enabled_when='auto_assign'
+            ),
+            Item('auto_project', label='Project',
+                 enabled_when='auto_assign'
+            ),
+            Item('auto_sample', label='Sample',
+                 enabled_when='auto_assign'
+            ),
+            Item('auto_material', label='Material',
+                 enabled_when='auto_assign'
+            ),
+            Item('auto_j', format_str='%0.2e', label='Nominal J.'),
+            Item('auto_j_err', format_str='%0.2e', label='Nominal J Err.'),
+            Item('auto_assign_overwrite', label='Overwrite exisiting Labnumbers',
+                 enabled_when='auto_assign'
+            ),
+            HGroup(Item('freeze_button', show_label=False), Item('thaw_button', show_label=False),
+                   enabled_when='selected'),
+            show_border=True,
+            label='Auto-Assign'
 
-                      )
+        )
 
         samples = Group(
 
-                        Item('irradiated_positions',
-                             editor=TabularEditor(adapter=IrradiatedPositionAdapter(),
-                                                  update='_update_sample_table',
-                                                  multi_select=True,
-                                                  selected='selected',
-                                                  operations=['edit']
-                                                  ),
-                             show_label=False
-                             ),
-                        label='Lab Numbers',
-                        show_border=True
-                        )
-#        flux = Group(
-#                     HGroup(
-#                            Item('flux_monitor', show_label=False, editor=EnumEditor(name='flux_monitors')),
-#                            Item('edit_monitor_button', show_label=False)),
-#                     Item('flux_monitor_age', format_str='%0.3f', style='readonly', label='Monitor Age (Ma)'),
-#                     Spring(height=50, springy=False),
-#                     Item('calculate_flux_button',
-#                          enabled_when='calculate_flux_enabled',
-#                          show_label=False),
-#                     label='Flux',
-#                     show_border=True
-#                     )
+            Item('irradiated_positions',
+                 editor=TabularEditor(adapter=IrradiatedPositionAdapter(),
+                                      update='_update_sample_table',
+                                      multi_select=True,
+                                      selected='selected',
+                                      operations=['edit']
+                 ),
+                 show_label=False
+            ),
+            label='Lab Numbers',
+            show_border=True
+        )
+        #        flux = Group(
+        #                     HGroup(
+        #                            Item('flux_monitor', show_label=False, editor=EnumEditor(name='flux_monitors')),
+        #                            Item('edit_monitor_button', show_label=False)),
+        #                     Item('flux_monitor_age', format_str='%0.3f', style='readonly', label='Monitor Age (Ma)'),
+        #                     Spring(height=50, springy=False),
+        #                     Item('calculate_flux_button',
+        #                          enabled_when='calculate_flux_enabled',
+        #                          show_label=False),
+        #                     label='Flux',
+        #                     show_border=True
+        #                     )
         v = View(VGroup(
-                        HGroup(auto, irradiation,
-#                               flux
-                               ),
-                        samples,
-                        HGroup(spring, Item('save_button', show_label=False))
-                        ),
+            HGroup(auto, irradiation,
+                   #                               flux
+            ),
+            samples,
+            HGroup(spring, Item('save_button', show_label=False))
+        ),
                  resizable=True,
                  width=0.75,
                  height=600,
                  title='Labnumber Entry'
-                 )
+        )
         return v
+
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
+
     paths.build('_experiment')
 
     logging_setup('runid')

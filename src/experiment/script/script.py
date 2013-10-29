@@ -15,14 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Any, Property, Button, cached_property, \
-    String, Bool
-from traitsui.api import View, Item, HGroup, Label, spring, EnumEditor, UItem
+from traits.api import Str, Any, Property, Button, cached_property, \
+    String
+from traitsui.api import View, HGroup, Label, spring, EnumEditor, UItem
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
 from src.paths import paths
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
 from src.loggable import Loggable
 import ast
 import yaml

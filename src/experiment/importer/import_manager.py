@@ -24,7 +24,7 @@ import time
 from src.experiment.importer.mass_spec_extractor import Extractor, \
     MassSpecExtractor
 from src.database.isotope_database_manager import IsotopeDatabaseManager
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
 from src.ui.qt.thread import Thread
 from src.ui.gui import invoke_in_main_thread
 

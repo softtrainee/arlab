@@ -22,7 +22,7 @@
 # import os
 # #============= local library imports  ==========================
 # from src.paths import paths
-# from src.constants import NULL_STR, SCRIPT_KEYS, SCRIPT_NAMES
+# from src.pychron_constants import NULL_STR, SCRIPT_KEYS, SCRIPT_NAMES
 # from src.experiment.script.script import Script
 # import yaml
 #

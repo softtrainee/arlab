@@ -284,6 +284,7 @@ class ClientPane(TraitsTaskPane):
 
 class ClientDockPane(TraitsDockPane):
     name = Property(depends_on='model')
+    id = 'pychron.lasers.client'
 
     def _get_name(self):
         n = 'Laser Client'
@@ -292,18 +293,28 @@ class ClientDockPane(TraitsDockPane):
         return n
 
     def traits_view(self):
-
         pos_grp = VGroup(HGroup(Item('position'), Item('use_autocenter', label='Autocenter')),
                          Item('x', editor=RangeEditor(low=-25.0, high=25.0)),
                          Item('y', editor=RangeEditor(low=-25.0, high=25.0)),
-                         Item('z', editor=RangeEditor(low=-25.0, high=25.0)), )
+                         Item('z', editor=RangeEditor(low=-25.0, high=25.0)),
+                         label='Positioning')
 
-        add_grp = self._get_additional_grp()
-        if add_grp:
-            pos_grp.label = 'Positioning'
-            tgrp = Group(add_grp, pos_grp, layout='tabbed')
-        else:
-            tgrp = pos_grp
+        ogrp = Group(UItem('optics_client', style='custom'),
+                     label='Optics')
+        cgrp = Group(UItem('controls_client', style='custom'),
+                     label='Controls')
+
+        tgrp = Group(cgrp,
+                     ogrp,
+                     #cgrp,
+                     pos_grp, layout='tabbed')
+
+        #add_grp = self._get_additional_grp()
+        #if add_grp:
+        #    pos_grp.label = 'Positioning'
+        #    tgrp = Group(pos_grp, add_grp,pos_grp, layout='tabbed')
+        #else:
+        #    tgrp = pos_grp
 
         egrp = HGroup(UItem('enabled_led', editor=LEDEditor()),
                       UItem('enable', editor=ButtonEditor(label_value='enable_label')),
@@ -313,13 +324,6 @@ class ClientDockPane(TraitsDockPane):
         )
         v = View(VGroup(egrp, tgrp))
         return v
-
-    def _get_additional_grp(self):
-
-        g = Group(label='Optics',
-                  visible_when='name=="Fusions UV"')
-
-        return g
 
 
 class AuxilaryGraphPane(TraitsDockPane):

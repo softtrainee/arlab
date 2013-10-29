@@ -15,13 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Instance
-from traitsui.api import View, Item
-from src.constants import DETECTOR_MAP, IC_ANALYSIS_TYPE_MAP
+from traits.api import Instance
+from src.pychron_constants import IC_ANALYSIS_TYPE_MAP
 from src.processing.tasks.analysis_edit.interpolation_editor import InterpolationEditor
 #============= standard library imports ========================
-from numpy import array, Inf
-from src.helpers.isotope_utils import sort_isotopes, sort_detectors
+from numpy import array
+from src.helpers.isotope_utils import sort_detectors
 #============= local library imports  ==========================
 from src.processing.tasks.detector_calibration.detector_calibration_tool import DetectorCalibrationTool
 

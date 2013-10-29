@@ -18,11 +18,10 @@
 from traits.api import HasTraits, Array, List, Event, Property, cached_property
 #============= standard library imports ========================
 import math
-from numpy import array, asarray, where, vectorize
+from numpy import array, where
 #============= local library imports  ==========================
 from tinv import tinv
-from src.loggable import Loggable
-from src.constants import PLUSMINUS, ALPHAS
+from src.pychron_constants import ALPHAS
 
 
 class BaseRegressor(HasTraits):
@@ -179,8 +178,8 @@ class BaseRegressor(HasTraits):
             if rmodel.shape[0] and cors.shape[0]:
                 return rmodel - cors, rmodel + cors
 
-            #                 lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
-            #                 return asarray(lci), asarray(uci)
+                #                 lci, uci = zip(*[(yi - ci, yi + ci) for yi, ci in zip(rmodel, cors)])
+                #                 return asarray(lci), asarray(uci)
 
     def _calculate_ci(self, rx, rmodel):
         if isinstance(rx, (float, int)):

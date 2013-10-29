@@ -15,11 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
 from src.loggable import Loggable
 from src.experiment.utilities.identifier import get_analysis_type
-from src.constants import NULL_STR, LINE_STR
+from src.pychron_constants import LINE_STR
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

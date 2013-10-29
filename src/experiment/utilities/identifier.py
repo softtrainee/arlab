@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.constants import LINE_STR
+from src.pychron_constants import LINE_STR
 
 ANALYSIS_MAPPING = dict(ba='Blank Air', bc='Blank Cocktail', bu='Blank Unknown',
                         bg='Background', u='Unknown', c='Cocktail', a='Air',
@@ -105,12 +105,12 @@ def convert_identifier(identifier):
         except ValueError:
             return identifier
 
-        #        identifier=identifier.split('-')[0]
+            #        identifier=identifier.split('-')[0]
 
 
-        #    if identifier in ANALYSIS_MAPPING:
-        #        sname = ANALYSIS_MAPPING[identifier]
-        #        identifier = next((k for k, v in SPECIAL_IDS.iteritems() if v == sname), identifier)
+            #    if identifier in ANALYSIS_MAPPING:
+            #        sname = ANALYSIS_MAPPING[identifier]
+            #        identifier = next((k for k, v in SPECIAL_IDS.iteritems() if v == sname), identifier)
 
     return identifier
 

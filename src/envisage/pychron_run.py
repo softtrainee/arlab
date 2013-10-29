@@ -17,7 +17,6 @@
 
 from envisage.core_plugin import CorePlugin
 from envisage.api import Plugin
-from envisage.ui.tasks.tasks_plugin import TasksPlugin
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.displays.gdisplays import gTraceDisplay
@@ -61,8 +60,8 @@ PACKAGE_DICT = dict(
     MediaServerPlugin='src.media_server.tasks.media_server_plugin',
     PyScriptPlugin='src.pyscripts.tasks.pyscript_plugin',
     DatabasePlugin='src.database.tasks.database_plugin',
-    CanvasDesignerPlugin='src.canvas.tasks.canvas_plugin'
-
+    CanvasDesignerPlugin='src.canvas.tasks.canvas_plugin',
+    ArArConstantsPlugin='src.constants.tasks.arar_constants_plugin'
 )
 
 
@@ -108,21 +107,10 @@ def get_klass(package, name):
 
 
 def get_plugin(pname):
-    gdict = globals()
     klass = None
-    if not pname.endswith('Plugin'):
-        pname = '{}Plugin'.format(pname)
-
-    if pname in gdict:
-        klass = gdict[pname]
-    elif pname in PACKAGE_DICT:
+    if pname in PACKAGE_DICT:
         package = PACKAGE_DICT[pname]
         klass = get_klass(package, pname)
-    elif not pname.endswith('UIPlugin'):
-        # dont warn if uiplugin not available
-        logger.warning('***** {} not available ******'.format(pname),
-                       extra={'threadName_': 'Launcher'}
-        )
 
     if klass is not None:
         plugin = klass()
@@ -166,13 +154,12 @@ def get_user_plugins():
 def app_factory(klass):
     """
         assemble the plugins
-        return a Pychron WorkbenchApplication
+        return a Pychron TaskApplication
     """
     plugins = [
         CorePlugin(),
         myTasksPlugin(),
-        LoggerPlugin()
-    ]
+        LoggerPlugin()]
 
     plugins += get_hardware_plugins()
     plugins += get_user_plugins()

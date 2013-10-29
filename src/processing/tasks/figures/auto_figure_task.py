@@ -15,18 +15,19 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Instance, List, Dict, Bool, Str, Int
-from traitsui.api import View, Item
+from traits.api import on_trait_change, Instance, Dict, Bool, Str, Int
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed
+from apptools.preferences.preference_binding import bind_preference
+
 from src.processing.tasks.figures.panes import PlotterOptionsPane
 from src.processing.tasks.figures.figure_task import FigureTask
 from src.processing.tasks.figures.auto_figure_panes import AutoFigureControlPane
 from src.messaging.notify.subscriber import Subscriber
 from src.ui.gui import invoke_in_main_thread
-from apptools.preferences.preference_binding import bind_preference
 from src.processing.tasks.figures.editors.series_editor import AutoSeriesEditor
 from src.processing.tasks.figures.editors.spectrum_editor import AutoSpectrumEditor
 from src.processing.tasks.figures.editors.ideogram_editor import AutoIdeogramEditor
+
 # from src.processing.tasks.analysis_edit.plot_editor_pane import EditorPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -44,6 +45,7 @@ class AutoFigureTask(FigureTask):
 
     host = Str('129.138.12.141')
     port = Int(8101)
+
     def __init__(self, *args, **kw):
         super(AutoFigureTask, self).__init__(*args, **kw)
 
@@ -53,12 +55,6 @@ class AutoFigureTask(FigureTask):
 
     def activated(self):
         if not self.attached:
-
-            '''
-                ask user for connection information when opening 
-                
-                allow to save and select from favorites    
-            '''
             sub_str = 'RunAdded'
             self.info('starting subscription to {}:{} "{}"'.format(self.host, self.port, sub_str))
             sub = Subscriber(host=self.host,
@@ -66,6 +62,8 @@ class AutoFigureTask(FigureTask):
             sub.connect()
             sub.subscribe(sub_str)
             sub.listen(self.sub_refresh_plots)
+
+            self.attached = True
 
     def sub_refresh_plots(self, last_run):
         self.manager.db.reset()
@@ -112,7 +110,7 @@ class AutoFigureTask(FigureTask):
             sample = ''
             if an.labnumber.sample:
                 sample = an.labnumber.sample.name
-#
+                #
             eg = an.step
             al = an.aliquot
             ms = an.measurement.mass_spectrometer.name
@@ -178,12 +176,12 @@ class AutoFigureTask(FigureTask):
             unks = self.manager.load_series(at, ms, ed,
                                             **kw)
             if unks:
-#                 self.manager.load_analyses(unks)
+            #                 self.manager.load_analyses(unks)
                 self.new_series(unks, klass,
-#                                add_baseline_fits=True,
-#                                add_derivate_fits=True,
+                                #                                add_baseline_fits=True,
+                                #                                add_derivate_fits=True,
                                 name='Series {}'.format(ln))
-#
+                #
                 editor = self.active_editor
                 tool = editor.tool
 
@@ -207,11 +205,11 @@ class AutoFigureTask(FigureTask):
                         break
                 else:
                     return True
-#                         getattr(editor, k)==v
+                    #                         getattr(editor, k)==v
 
 
         return next((editor for editor in self.editor_area.editors
-                        if test(editor)), None)
+                     if test(editor)), None)
 
     def plot_sample_spectrum(self, sample, aliquot):
         self.debug('auto plot sample spectrum sample={} aliquot={}'.format(sample, aliquot))
@@ -225,7 +223,7 @@ class AutoFigureTask(FigureTask):
 
         else:
             unks = self.manager.load_sample_analyses(sample, aliquot)
-#             self.manager.load_analyses(unks)
+            #             self.manager.load_analyses(unks)
             self.new_spectrum(unks, klass)
         self.group_by_aliquot()
 
@@ -235,7 +233,7 @@ class AutoFigureTask(FigureTask):
         if self.use_single_ideogram:
             editor = self._get_editor(klass)
         else:
-#             editor = self._get_editor(klass, labnumber=labnumber)
+        #             editor = self._get_editor(klass, labnumber=labnumber)
             editor = self._get_editor(klass, sample=sample)
 
         if editor:
@@ -247,11 +245,11 @@ class AutoFigureTask(FigureTask):
 
         else:
             unks = self.manager.load_sample_analyses(ln, sample)
-#             self.manager.load_analyses(unks)
-#             self.new_ideogram(unks, klass, name='Ideo. {}'.format(labnumber))
+            #             self.manager.load_analyses(unks)
+            #             self.new_ideogram(unks, klass, name='Ideo. {}'.format(labnumber))
             self.new_ideogram(unks, klass, name='Ideo. {}'.format(sample),
                               plotter_kw=dict(color_map_analysis_number=False)
-                              )
+            )
             self.active_editor.sample = sample
 
         if self.use_single_ideogram:
@@ -266,9 +264,10 @@ class AutoFigureTask(FigureTask):
 
         self.auto_figure_control_pane = AutoFigureControlPane()
         return panes + [self.auto_figure_control_pane]
-#         self.plotter_options_pane = PlotterOptionsPane()
-#         return panes + [self.plotter_options_pane,
-#                         ]
+
+    #         self.plotter_options_pane = PlotterOptionsPane()
+    #         return panes + [self.plotter_options_pane,
+    #                         ]
 
     def _active_editor_changed(self):
         if self.active_editor:
@@ -290,11 +289,11 @@ group_by_labnumber]''')
     @on_trait_change('active_editor:auto_figure_control:[hours, days]')
     def _update_series_limits(self, name, new):
         self.unknowns_pane.items = []
-        self.plot_series(**{name:new})
+        self.plot_series(**{name: new})
 
-#     @on_trait_change('active_editor:plotter:recall_event')
-#     def _recall(self, new):
-#         print new
+    #     @on_trait_change('active_editor:plotter:recall_event')
+    #     def _recall(self, new):
+    #         print new
 
     @on_trait_change('plotter_options_pane:pom:plotter_options:[+, aux_plots:+]')
     def _options_update(self, name, new):
@@ -303,30 +302,31 @@ group_by_labnumber]''')
 
         self.active_editor.rebuild(refresh_data=False)
 
-#        po = self.plotter_options_pane.pom.plotter_options
-#        comp = self.active_editor.make_func(ans=ans, plotter_options=po)
-#        self.active_editor.component = comp
+    #        po = self.plotter_options_pane.pom.plotter_options
+    #        comp = self.active_editor.make_func(ans=ans, plotter_options=po)
+    #        self.active_editor.component = comp
 
 
     def _default_layout_default(self):
         return TaskLayout(
-                          id='pychron.analysis_edit',
-                          left=Splitter(
-                                     Tabbed(
-                                            PaneItem('pychron.analysis_edit.unknowns'),
-                                            PaneItem('pychron.processing.figures.plotter_options')
-                                            ),
-                                     Tabbed(
-                                            PaneItem('pychron.analysis_edit.controls'),
-                                            PaneItem('pychron.processing.editor'),
-                                            PaneItem('pychron.processing.auto_figure_controls')
-                                            ),
-                                     orientation='vertical'
-                                     ),
+            id='pychron.analysis_edit',
+            left=Splitter(
+                Tabbed(
+                    PaneItem('pychron.analysis_edit.unknowns'),
+                    PaneItem('pychron.processing.figures.plotter_options')
+                ),
+                Tabbed(
+                    PaneItem('pychron.analysis_edit.controls'),
+                    PaneItem('pychron.processing.editor'),
+                    PaneItem('pychron.processing.auto_figure_controls')
+                ),
+                orientation='vertical'
+            ),
 
-                          right=Splitter(
-                                         PaneItem('pychron.search.query'),
-                                         orientation='vertical'
-                                         )
-                          )
-#============= EOF =============================================
+            right=Splitter(
+                PaneItem('pychron.search.query'),
+                orientation='vertical'
+            )
+        )
+
+        #============= EOF =============================================

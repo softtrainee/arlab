@@ -48,7 +48,7 @@ from src.database.adapters.local_lab_adapter import LocalLabAdapter
 from src.paths import paths
 from src.managers.data_managers.data_manager import DataManager
 from src.database.adapters.isotope_adapter import IsotopeAdapter
-from src.constants import NULL_STR, MEASUREMENT_COLOR, \
+from src.pychron_constants import NULL_STR, MEASUREMENT_COLOR, \
     EXTRACTION_COLOR, SCRIPT_KEYS
 from src.experiment.automated_run.condition import TruncationCondition, \
     ActionCondition, TerminationCondition
@@ -792,7 +792,7 @@ class AutomatedRun(Loggable):
         # setup the scripts
         if self.measurement_script:
             self.measurement_script.reset(weakref.ref(self)())
-        #            self.debug('XXXXXXXXXXXXXXXXXXXXXXXXX Setting measurement script is_last {}'.format(self.is_last))
+            #            self.debug('XXXXXXXXXXXXXXXXXXXXXXXXX Setting measurement script is_last {}'.format(self.is_last))
         #            self.measurement_script.setup_context(is_last=self.is_last)
 
         for si in ('extraction', 'post_measurement', 'post_equilibration'):
@@ -1291,6 +1291,7 @@ anaylsis_type={}
             period = self.integration_time
 
         m = self.collector
+
         m.trait_set(
             plot_panel=self.plot_panel,
             arar_age=self.arar_age,

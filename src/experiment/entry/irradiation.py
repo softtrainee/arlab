@@ -25,7 +25,7 @@ from src.experiment.entry.chronology_input import ChronologyInput
 from src.experiment.entry.production_ratio_input import ProductionRatioInput
 from src.paths import paths
 from src.saveable import Saveable
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
 
 
 class Irradiation(Saveable):

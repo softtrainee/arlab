@@ -23,16 +23,15 @@ from traitsui.api import View, Item, InstanceEditor, HGroup, VGroup, \
 #============= local library imports  ==========================
 from src.experiment.blocks.base_schedule import BaseSchedule, RunAdapter
 from src.experiment.automated_run.automated_run import AutomatedRun
-from src.ui.tabular_editor import myTabularEditor
-from src.experiment.utilities.identifier import ANALYSIS_MAPPING, convert_special_name, \
-    convert_identifier
+from src.experiment.utilities.identifier import ANALYSIS_MAPPING
 
 import os
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 from src.paths import paths
-from src.constants import SCRIPT_KEYS, NULL_STR
+from src.pychron_constants import NULL_STR
 from src.saveable import SaveableButtons
+
 
 def line_generator(path, delim='\t'):
     with open(path, 'r') as fp:
@@ -44,13 +43,14 @@ def line_generator(path, delim='\t'):
 
 
 class Block(BaseSchedule):
-
     analysis_type = Str  # ('bg')#Enum(ANALYSIS_MAPPING)
     _path = None
+
     def __init__(self, *args, **kw):
         super(Block, self).__init__(*args, **kw)
         self.analysis_type = 'bg'
-#        self._load_default_scripts(key=self.analysis_type)
+
+    #        self._load_default_scripts(key=self.analysis_type)
 
     @property
     def name(self):
@@ -77,9 +77,10 @@ class Block(BaseSchedule):
             except KeyError:
                 pass
 
-#===============================================================================
-# persistence
-#===============================================================================
+                #===============================================================================
+                # persistence
+                #===============================================================================
+
     def save(self):
         if os.path.isfile(self._path):
             self._save(self._path)
@@ -91,7 +92,7 @@ class Block(BaseSchedule):
         if dlg.open() == OK:
             self._save(dlg.path)
 
-#        self._save(os.path.join(paths.block_dir, 'foo'))
+            #        self._save(os.path.join(paths.block_dir, 'foo'))
 
     def _save(self, path):
         if path:
@@ -104,13 +105,13 @@ class Block(BaseSchedule):
         '''
             load from file
         '''
-#        delim = '\t'
+        #        delim = '\t'
         header = None
         line_gen = line_generator(path)
-#        with open(path, 'r') as fp:
+        #        with open(path, 'r') as fp:
         meta = dict(mass_spectrometer=self.mass_spectrometer,
                     extract_device=self.extract_device
-                    )
+        )
 
         for line in line_gen:
             if header is None:
@@ -131,9 +132,9 @@ class Block(BaseSchedule):
 
         return True
 
-#===============================================================================
-# render
-#===============================================================================
+    #===============================================================================
+    # render
+    #===============================================================================
     def render(self, run, extract_group_id):
         return [self._render(ai, run, extract_group_id) for ai in self.automated_runs]
 
@@ -143,9 +144,9 @@ class Block(BaseSchedule):
             template_run.extract_group = extract_group_id
         return template_run
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
 
     def _analysis_type_changed(self):
         if self.analysis_type != NULL_STR:
@@ -153,77 +154,78 @@ class Block(BaseSchedule):
             ar._labnumber = self.analysis_type  # convert_identifier(self.analysis_type)
             self._load_default_scripts(key=self.analysis_type)
 
-#            ar.configuration = self.make_configuration()
+            #            ar.configuration = self.make_configuration()
 
-#            ar.extraction_script_dirty = True
-#            ar.measurement_script_dirty = True
-#            ar.post_measurement_script_dirty = True
-#            ar.post_equilibration_script_dirty = True
-#            ar.create_scripts()
+            #            ar.extraction_script_dirty = True
+            #            ar.measurement_script_dirty = True
+            #            ar.post_measurement_script_dirty = True
+            #            ar.post_equilibration_script_dirty = True
+            #            ar.create_scripts()
 
 
     def _add_fired(self):
-#        ar = self.automated_run
+    #        ar = self.automated_run
         ars = self.automated_runs
 
-#        print self.automated_run.scripts
-#        self._bind_automated_run(self.automated_run, remove=True)
+        #        print self.automated_run.scripts
+        #        self._bind_automated_run(self.automated_run, remove=True)
 
         ar = self.automated_run.clone_traits()
-#        print ar.scripts, self.loaded_scripts
-#        ar.configuration = self.make_configuration()
+        #        print ar.scripts, self.loaded_scripts
+        #        ar.configuration = self.make_configuration()
 
-#        ar.extraction_script_dirty = True
-#        ar.measurement_script_dirty = True
-#        ar.post_measurement_script_dirty = True
-#        ar.post_equilibration_script_dirty = True
-#        ar.create_scripts()
+        #        ar.extraction_script_dirty = True
+        #        ar.measurement_script_dirty = True
+        #        ar.post_measurement_script_dirty = True
+        #        ar.post_equilibration_script_dirty = True
+        #        ar.create_scripts()
 
-#        print ar.extraction_script
+        #        print ar.extraction_script
         if ar.executable:
             ars.append(ar)
 
-#        self._bind_automated_run(self.automated_run)
-#            self.automated_run = ar.clone_traits()
+        #        self._bind_automated_run(self.automated_run)
+        #            self.automated_run = ar.clone_traits()
         self._set_script_info(ar.script_info)
-#        self._add_hook(ar)
+
+    #        self._add_hook(ar)
 
 
-#===============================================================================
-# views
-#===============================================================================
+    #===============================================================================
+    # views
+    #===============================================================================
     def traits_view(self):
         new_analysis = VGroup(
-                              Item('automated_run',
-                                   show_label=False,
-                                   style='custom',
-                                   editor=InstanceEditor(view='simple_view')
-                                   ),
-                              enabled_when='mass_spectrometer and mass_spectrometer!="---"'
-                              )
+            Item('automated_run',
+                 show_label=False,
+                 style='custom',
+                 editor=InstanceEditor(view='simple_view')
+            ),
+            enabled_when='mass_spectrometer and mass_spectrometer!="---"'
+        )
 
         analysis_table = VGroup(
-                                self._get_copy_paste_group(),
-                                Item('runs_table', show_label=False, style='custom'),
-                                show_border=True,
-                                label='Analyses',
-                                )
+            self._get_copy_paste_group(),
+            Item('runs_table', show_label=False, style='custom'),
+            show_border=True,
+            label='Analyses',
+        )
         script_grp = self._get_script_group()
-#        vs = {'---':NULL_STR}
-#        vs.update(ANALYSIS_MAPPING)
+        #        vs = {'---':NULL_STR}
+        #        vs.update(ANALYSIS_MAPPING)
         lgrp = VGroup(
 
-                      Item('analysis_type',
-#                           editor=EnumEditor(values=vs),
-                           editor=EnumEditor(values=ANALYSIS_MAPPING),
-                           show_label=False),
-                      new_analysis,
-#                      Item('automated_run', style='custom',
-#                           show_label=False,
-#                           editor=InstanceEditor(view='simple_view')),
-                      script_grp,
-                      HGroup(spring, Item('add', show_label=False))
-                      )
+            Item('analysis_type',
+                 #                           editor=EnumEditor(values=vs),
+                 editor=EnumEditor(values=ANALYSIS_MAPPING),
+                 show_label=False),
+            new_analysis,
+            #                      Item('automated_run', style='custom',
+            #                           show_label=False,
+            #                           editor=InstanceEditor(view='simple_view')),
+            script_grp,
+            HGroup(spring, Item('add', show_label=False))
+        )
 
         v = View(HGroup(lgrp, analysis_table),
                  handler=self.handler_klass,
@@ -231,16 +233,20 @@ class Block(BaseSchedule):
                  resizable=True,
                  width=1000,
                  height=500
-                 )
+        )
         return v
+
+
 if __name__ == '__main__':
     from launchers.helpers import build_version
+
     build_version('_experiment')
     from src.helpers.logger_setup import logging_setup
+
     logging_setup('block')
 
     s = Block(mass_spectrometer='obama', extract_devic='Fusions CO2')
     s.load(os.path.join(paths.block_dir, 'foo'))
-#    s.automated_runs = [AutomatedRun(check_executable=False) for _ in range(4)]
+    #    s.automated_runs = [AutomatedRun(check_executable=False) for _ in range(4)]
     s.configure_traits()
 #============= EOF =============================================

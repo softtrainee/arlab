@@ -36,6 +36,7 @@ from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     BatchEditAction, TagAction, DatabaseSaveAction
 from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
 from src.processing.tasks.figures.auto_figure_preferences import AutoFigurePreferencesPane
+from src.processing.tasks.processing_preferences import ProcessingPreferencesPane
 from src.processing.tasks.smart_project.smart_project_task import SmartProjectTask
 #from src.processing.tasks.browser.browser_task import BrowserTask
 from pyface.message_dialog import warning
@@ -269,7 +270,6 @@ Install to enable MS Excel export''')
     #        return ProcessingTask(manager=self._processor_factory())
 
     def _preferences_panes_default(self):
-        return [AutoFigurePreferencesPane,
-        ]
+        return [AutoFigurePreferencesPane, ProcessingPreferencesPane]
 
         #============= EOF =============================================

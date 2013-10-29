@@ -16,26 +16,26 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from src.constants import NULL_STR, SCRIPT_KEYS
+from traits.api import Any, Instance, List, Str, Button, Dict, \
+    DelegatesTo, on_trait_change, Event
+from traitsui.api import Item, HGroup
+
+from src.pychron_constants import NULL_STR, SCRIPT_KEYS
 from src.experiment.automated_run.automated_run import AutomatedRun
 from src.experiment.automated_run.tabular_adapter import AutomatedRunAdapter
 from src.experiment.blocks.parser import RunParser, UVRunParser
-from src.experiment.utilities.identifier import SPECIAL_NAMES, SPECIAL_MAPPING
+from src.experiment.utilities.identifier import SPECIAL_MAPPING
 from src.experiment.runs_table import RunsTable
 from src.experiment.script_editable import ScriptEditable
-from src.paths import paths
-from traits.api import Any, Instance, List, Str, Property, Button, Dict, \
-    DelegatesTo, on_trait_change, Event
-from traitsui.api import Item, EnumEditor, VGroup, HGroup
-import os
-import yaml
 from src.experiment.automated_run.maker import AutomatedRunMaker
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 
 class RunAdapter(AutomatedRunAdapter):
     can_edit = True
+
     def _columns_default(self):
         cf = self._columns_factory()
         # remove state
@@ -84,9 +84,9 @@ class BaseSchedule(ScriptEditable):
 
     automated_run_maker = Instance(AutomatedRunMaker, ())
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
     @on_trait_change('''automated_run_maker:[extract_value, extract_units, cleanup,
 duration]''')
     def _value_update(self, name, value):
@@ -111,67 +111,68 @@ duration]''')
         self._script_changed('post_measurement', new)
 
     def _script_changed(self, sname, name):
-#         name = name[:-7]
+    #         name = name[:-7]
         if self.selected_runs is not None:
             for si in self.selected_runs:
                 self._update_run_script(si, sname, name)
 
         self.runs_table.update_needed = True
-#        if self.automated_run is not None:
-#            self._update_run_script(self.automated_run, sname)
+
+    #        if self.automated_run is not None:
+    #            self._update_run_script(self.automated_run, sname)
 
     def _selected_changed(self, new):
-#        print new
+    #        print new
         self.selected_runs = new
         if len(new) == 1:
             run = new[0]
             if run.state == 'not run':
-#                self.automated_run = run.clone_traits()
+            #                self.automated_run = run.clone_traits()
                 self.automated_run_maker.load_run(run)
                 for si in SCRIPT_KEYS:
                     try:
                         n = self._clean_script_name(getattr(run.script_info, '{}_script_name'.format(si)))
-#                        n = self._clean_script_name(getattr(run, '{}_script'.format(si)).name)
+                        #                        n = self._clean_script_name(getattr(run, '{}_script'.format(si)).name)
                         s = getattr(self, '{}_script'.format(si))
                         setattr(s, 'name', n)
                     except AttributeError:
                         pass
 
-#    @on_trait_change('''automated_run:[_position, extract_+, cleanup,
-#    duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
-#    def _sync_selected_runs(self, name, new):
-#        if self.selected_runs:
-#            for si in self.selected_runs:
-#                si.trait_set(**{name:new})
+                        #    @on_trait_change('''automated_run:[_position, extract_+, cleanup,
+                        #    duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
+                        #    def _sync_selected_runs(self, name, new):
+                        #        if self.selected_runs:
+                        #            for si in self.selected_runs:
+                        #                si.trait_set(**{name:new})
 
-#    def make_configuration(self):
-#        extraction = self.extraction_script
-#        measurement = self.measurement_script
-#        post_measurement = self.post_measurement_script
-#        post_equilibration = self.post_equilibration_script
-#
-#        if not extraction:
-#            extraction = self.extraction_scripts[0]
-#        if not measurement:
-#            measurement = self.measurement_scripts[0]
-#        if not post_measurement:
-#            post_measurement = self.post_measurement_scripts[0]
-#        if not post_equilibration:
-#            post_equilibration = self.post_equilibration_scripts[0]
-#
-#        names = dict(extraction=extraction,
-#                           measurement=measurement,
-#                           post_measurement=post_measurement,
-#                           post_equilibration=post_equilibration
-#                           )
-#        def make_script_name(ni):
-#            na = names[ni]
-#            if na is NULL_STR:
-#                return na
-#            if not na.startswith(self.mass_spectrometer):
-#                na = '{}_{}'.format(self.mass_spectrometer, na)
-#            return na
-#        return self._build_configuration(make_script_name)
+                        #    def make_configuration(self):
+                        #        extraction = self.extraction_script
+                        #        measurement = self.measurement_script
+                        #        post_measurement = self.post_measurement_script
+                        #        post_equilibration = self.post_equilibration_script
+                        #
+                        #        if not extraction:
+                        #            extraction = self.extraction_scripts[0]
+                        #        if not measurement:
+                        #            measurement = self.measurement_scripts[0]
+                        #        if not post_measurement:
+                        #            post_measurement = self.post_measurement_scripts[0]
+                        #        if not post_equilibration:
+                        #            post_equilibration = self.post_equilibration_scripts[0]
+                        #
+                        #        names = dict(extraction=extraction,
+                        #                           measurement=measurement,
+                        #                           post_measurement=post_measurement,
+                        #                           post_equilibration=post_equilibration
+                        #                           )
+                        #        def make_script_name(ni):
+                        #            na = names[ni]
+                        #            if na is NULL_STR:
+                        #                return na
+                        #            if not na.startswith(self.mass_spectrometer):
+                        #                na = '{}_{}'.format(self.mass_spectrometer, na)
+                        #            return na
+                        #        return self._build_configuration(make_script_name)
 
     def _set_script_info(self, info):
         for sn in SCRIPT_KEYS:
@@ -182,9 +183,9 @@ duration]''')
         self._set_script_info(ar.script_info)
         self.automated_run = ar.clone_traits()
         # if analysis type is bg, b- or a overwrite a few defaults
-#        if not ar.analysis_type == 'unknown':
-#            kw['position'] = ''
-#            kw['extract_value'] = 0
+        #        if not ar.analysis_type == 'unknown':
+        #            kw['position'] = ''
+        #            kw['extract_value'] = 0
 
         if not 'labnumber' in kw:
             keys = SPECIAL_MAPPING.values()
@@ -208,71 +209,72 @@ duration]''')
             if self.automated_run:
                 self.automated_run.scripts = self.loaded_scripts
 
-#    def _load_default_scripts(self, setter=None, key=None):
-#        if key is None:
-#            if self.automated_run is None:
-#                return
-#            key = self.automated_run.labnumber
-#
-#        if setter is None:
-# #            def setter(ski, sci):
-# #                v = getattr(self, '{}_script'.format(ski))
-#
-#            setter = lambda ski, sci:setattr(getattr(self, '{}_script'.format(ski)), 'name', sci)
-#
-#        # open the yaml config file
-# #        import yaml
-#        p = os.path.join(paths.scripts_dir, 'defaults.yaml')
-#        if not os.path.isfile(p):
-#            return
-#
-#        with open(p, 'r') as fp:
-#            defaults = yaml.load(fp)
-#
-#        # convert keys to lowercase
-#        defaults = dict([(k.lower(), v) for k, v in defaults.iteritems()])
-#
-#        # if labnumber is int use key='U'
-#        try:
-#            _ = int(key)
-#            key = 'u'
-#        except ValueError:
-#            pass
-#
-#        key = key.lower()
-#
-# #        print key, defaults
-#        if not key in defaults:
-#            return
-#
-#        scripts = defaults[key]
-#        for sk in SCRIPT_KEYS:
-#
-#            sc = NULL_STR
-#            try:
-#                sc = scripts[sk]
-#                sc = sc if sc else NULL_STR
-#            except KeyError:
-#                pass
-#
-#            sc = self._remove_file_extension(sc)
-#            if key.lower() in ['u', 'bu'] and self.extract_device != NULL_STR:
-#                e = self.extract_device.split(' ')[1].lower()
-#                if sk == 'extraction':
-#                    sc = e
-#                elif sk == 'post_equilibration':
-#                    sc = 'pump_{}'.format(e)
-#
-#            script = getattr(self, '{}_script'.format(sk))
-#            if not sc in script.names:
-# #            if not sc in getattr(self, '{}_scripts'.format(sk)):
-#                sc = NULL_STR
-# #            print setter, sk, sc
-#            setter(sk, sc)
+                #    def _load_default_scripts(self, setter=None, key=None):
+                #        if key is None:
+                #            if self.automated_run is None:
+                #                return
+                #            key = self.automated_run.labnumber
+                #
+                #        if setter is None:
+                # #            def setter(ski, sci):
+                # #                v = getattr(self, '{}_script'.format(ski))
+                #
+                #            setter = lambda ski, sci:setattr(getattr(self, '{}_script'.format(ski)), 'name', sci)
+                #
+                #        # open the yaml config file
+                # #        import yaml
+                #        p = os.path.join(paths.scripts_dir, 'defaults.yaml')
+                #        if not os.path.isfile(p):
+                #            return
+                #
+                #        with open(p, 'r') as fp:
+                #            defaults = yaml.load(fp)
+                #
+                #        # convert keys to lowercase
+                #        defaults = dict([(k.lower(), v) for k, v in defaults.iteritems()])
+                #
+                #        # if labnumber is int use key='U'
+                #        try:
+                #            _ = int(key)
+                #            key = 'u'
+                #        except ValueError:
+                #            pass
+                #
+                #        key = key.lower()
+                #
+                # #        print key, defaults
+                #        if not key in defaults:
+                #            return
+                #
+                #        scripts = defaults[key]
+                #        for sk in SCRIPT_KEYS:
+                #
+                #            sc = NULL_STR
+                #            try:
+                #                sc = scripts[sk]
+                #                sc = sc if sc else NULL_STR
+                #            except KeyError:
+                #                pass
+                #
+                #            sc = self._remove_file_extension(sc)
+                #            if key.lower() in ['u', 'bu'] and self.extract_device != NULL_STR:
+                #                e = self.extract_device.split(' ')[1].lower()
+                #                if sk == 'extraction':
+                #                    sc = e
+                #                elif sk == 'post_equilibration':
+                #                    sc = 'pump_{}'.format(e)
+                #
+                #            script = getattr(self, '{}_script'.format(sk))
+                #            if not sc in script.names:
+                # #            if not sc in getattr(self, '{}_scripts'.format(sk)):
+                #                sc = NULL_STR
+                # #            print setter, sk, sc
+                #            setter(sk, sc)
 
-#===============================================================================
-# persistence
-#===============================================================================
+                #===============================================================================
+                # persistence
+                #===============================================================================
+
     def dump(self, stream):
         header, attrs = self._get_dump_attrs()
 
@@ -302,7 +304,8 @@ duration]''')
             tab(vals)
 
         return stream
-#
+
+    #
     def _get_dump_attrs(self):
         header = ['labnumber',
                   'pattern',
@@ -317,22 +320,22 @@ duration]''')
                   'extraction', 'measurement', 'post_eq', 'post_meas',
                   'dis_btw_pos',
                   'weight', 'comment'
-                  ]
+        ]
         attrs = ['labnumber',
-                  'pattern',
-                  'position',
-                  'overlap',
-                  'extract_group',
-                  'extract_value',
-                  'extract_units',
-                  'duration',
-                  'cleanup',
-                  'autocenter',
-                  'extraction_script', 'measurement_script',
-                  'post_equilibration_script', 'post_measurement_script',
-                  'disable_between_positions',
-                  'weight', 'comment'
-                  ]
+                 'pattern',
+                 'position',
+                 'overlap',
+                 'extract_group',
+                 'extract_value',
+                 'extract_units',
+                 'duration',
+                 'cleanup',
+                 'autocenter',
+                 'extraction_script', 'measurement_script',
+                 'post_equilibration_script', 'post_measurement_script',
+                 'disable_between_positions',
+                 'weight', 'comment'
+        ]
 
         if self.extract_device == 'Fusions UV':
             header.extend(('reprate', 'mask', 'attenuator', 'image'))
@@ -353,9 +356,9 @@ duration]''')
 
         return self.parser.parse(*args, **kw)
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
     def _copy_button_fired(self):
         def factory(ai):
             na = ai.clone_traits()
@@ -384,45 +387,47 @@ duration]''')
 
     def _rearranged_fired(self):
         self.update_aliquots_needed = True
-#===============================================================================
-# views
-#===============================================================================
+
+    #===============================================================================
+    # views
+    #===============================================================================
 
 
-#===============================================================================
-# scripts
-#===============================================================================
-#    @classmethod
-#    def _build_configuration(cls, make_script_name):
-#        def make_path(dname, name):
-#            return os.path.join(getattr(paths, '{}_dir'.format(dname)), name)
-#        args = [('{}_script'.format(ni), make_path(ni, make_script_name(ni)))
-#                for ni in SCRIPT_KEYS]
-#        return dict(args)
+    #===============================================================================
+    # scripts
+    #===============================================================================
+    #    @classmethod
+    #    def _build_configuration(cls, make_script_name):
+    #        def make_path(dname, name):
+    #            return os.path.join(getattr(paths, '{}_dir'.format(dname)), name)
+    #        args = [('{}_script'.format(ni), make_path(ni, make_script_name(ni)))
+    #                for ni in SCRIPT_KEYS]
+    #        return dict(args)
 
     def _bind_automated_run(self, a, remove=False):
         a.on_trait_change(self.update_loaded_scripts, '_measurement_script', remove=remove)
         a.on_trait_change(self.update_loaded_scripts, '_extraction_script', remove=remove)
         a.on_trait_change(self.update_loaded_scripts, '_post_measurement_script', remove=remove)
         a.on_trait_change(self.update_loaded_scripts, '_post_equilibration_script', remove=remove)
-#        a.on_trait_change(self.update_loaded_scripts, 'scripts', remove=remove)
+
+    #        a.on_trait_change(self.update_loaded_scripts, 'scripts', remove=remove)
 
 
 
-#===============================================================================
-# views
-#===============================================================================
+    #===============================================================================
+    # views
+    #===============================================================================
     def _get_copy_paste_group(self):
         return HGroup(
-             Item('copy_button', enabled_when='object.selected'),
-             Item('paste_button', enabled_when='object._copy_cache'),
-             Item('update_aliquots'),
-              show_labels=False)
+            Item('copy_button', enabled_when='object.selected'),
+            Item('paste_button', enabled_when='object._copy_cache'),
+            Item('update_aliquots'),
+            show_labels=False)
 
     def _automated_run_maker_default(self):
         return AutomatedRunMaker(
-                             mass_spectrometer=self.mass_spectrometer,
-                             extract_device=self.extract_device,
-                             )
+            mass_spectrometer=self.mass_spectrometer,
+            extract_device=self.extract_device,
+        )
 
 #============= EOF =============================================

@@ -24,28 +24,31 @@ from uncertainties import ufloat
 from src.processing.autoupdate_parser import AutoupdateParser
 from src.processing.publisher.analysis import Marker, PubAnalysis, ComputedValues  # , \
 #    PubAnalysisMean
-from src.constants import ARGON_KEYS, IRRADIATION_KEYS, DECAY_KEYS
+from src.pychron_constants import ARGON_KEYS, IRRADIATION_KEYS, DECAY_KEYS
 from src.ui.tabular_editor import myTabularEditor
 from src.processing.publisher.loaded_table import LoadedTableAdapter
+
 
 class Group(HasTraits):
     analyses = List
     name = Str
     selected = Any
     right_clicked = Any
+
     def traits_view(self):
         self._loaded_table_adapter = LoadedTableAdapter()
         v = View(
-               UItem('analyses', editor=myTabularEditor(
-                                                  multi_select=True,
-                                                  editable=False,
-                                                  selected='selected',
-                                                  adapter=self._loaded_table_adapter,
-                                                  right_clicked='right_clicked'
-                                                  )
-                     ),
-               )
+            UItem('analyses', editor=myTabularEditor(
+                multi_select=True,
+                editable=False,
+                selected='selected',
+                adapter=self._loaded_table_adapter,
+                right_clicked='right_clicked'
+            )
+            ),
+        )
         return v
+
 
 class TableModel(HasTraits):
     groups = List
@@ -53,6 +56,7 @@ class TableModel(HasTraits):
 
 class LoadedTable(TableModel):
     computed_values = Property(depends_on='groups, groups[]')
+
     @cached_property
     def _get_computed_values(self):
         return [ComputedValues(analyses=gi.analyses) for gi in self.groups]
@@ -64,7 +68,7 @@ class LoadedTable(TableModel):
             for i, si in enumerate(samples):
                 self.groups.append(Group(analyses=si.analyses,
                                          name=si.analyses[0].labnumber
-                                         ))
+                ))
 
     def _analysis_factory(self, params):
         a = PubAnalysis()
@@ -84,7 +88,7 @@ class LoadedTable(TableModel):
         for si in ARGON_KEYS:
             v = params[si]
             e = params['{}Er'.format(si)]
-#            print v, e
+            #            print v, e
             setattr(a, si, ufloat(v, e))
             v = params['{}_blank'.format(si)]
             e = params['{}_blankerr'.format(si)]
@@ -96,8 +100,9 @@ class LoadedTable(TableModel):
         for ir, _ in IRRADIATION_KEYS:
             setattr(a, ir, ufloat(params[ir],
                                   params['{}_err'.format(ir)]
-                                  ))
+            ))
         return a
+
 
 class SelectedTable(TableModel):
     pass

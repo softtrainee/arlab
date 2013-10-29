@@ -19,14 +19,13 @@
 from traits.api import HasTraits, Dict, Property, cached_property, \
     Event, Bool, Instance, Float, Any, Str, Tuple, on_trait_change
 from apptools.preferences.preference_binding import bind_preference, PreferenceBinding
-from src.constants import ARGON_KEYS
+from src.pychron_constants import ARGON_KEYS
 from src.ui.preference_binding import bind_preference as mybind_preference
 #============= standard library imports ========================
 from datetime import datetime
 from uncertainties import ufloat
 
 #============= local library imports  ==========================
-from src.codetools.simple_timeit import timethis
 from src.processing.argon_calculations import calculate_arar_age
 from src.processing.arar_constants import ArArConstants
 from src.processing.isotope import Isotope
@@ -597,7 +596,7 @@ class ArArAge(Loggable):
         return self._sensitivity_multiplier
 
     def _get_arar_result_attr(self, key):
-#        print self.arar_result.keys()
+    #        print self.arar_result.keys()
         if key in self.arar_result:
             return self.arar_result[key]
         elif key in self.isotopes:

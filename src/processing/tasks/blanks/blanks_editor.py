@@ -15,13 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Str, on_trait_change, Bool
+from traits.api import Str
 # from chaco.array_data_source import ArrayDataSource
 
 #============= standard library imports ========================
 # from numpy import asarray, Inf
 #============= local library imports  ==========================
-# from src.constants import FIT_TYPES
+# from src.pychron_constants import FIT_TYPES
 # from src.processing.tasks.analysis_edit.ianalysis_edit_tool import IAnalysisEditTool
 from src.graph.regression_graph import StackedRegressionGraph
 # from src.regression.interpolation_regressor import InterpolationRegressor
@@ -30,7 +30,6 @@ from src.graph.regression_graph import StackedRegressionGraph
 # from src.helpers.datetime_tools import convert_timestamp
 # from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 from src.processing.tasks.analysis_edit.interpolation_editor import InterpolationEditor
-from src.helpers.isotope_utils import sort_isotopes
 
 
 class BlanksEditor(InterpolationEditor):

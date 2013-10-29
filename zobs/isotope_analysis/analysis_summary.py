@@ -23,7 +23,7 @@
 # # from traitsui.tabular_adapter import TabularAdapter
 # from src.helpers.formatting import floatfmt, errorfmt, calc_percent_error, \
 #    pfloatfmt
-# from src.constants import PLUSMINUS
+# from src.pychron_constants import PLUSMINUS
 # from src.ui.qt.text_table_editor import TextTableEditor
 # from kiva.fonttools import Font
 ##============= standard library imports ========================

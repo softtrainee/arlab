@@ -16,15 +16,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Instance, DelegatesTo, Str, Property
+from traits.api import Instance, DelegatesTo, Str, Property
 from traitsui.api import View, Item, VGroup, HGroup, \
-    EnumEditor, InstanceEditor, Label, Heading
+    EnumEditor, InstanceEditor, Label
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.core.database_selector import ColumnSorterMixin
 from src.viewable import Viewable
 from src.database.core.database_adapter import DatabaseAdapter
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
 
 
 class SearchManager(Viewable, ColumnSorterMixin):
@@ -38,9 +38,9 @@ class SearchManager(Viewable, ColumnSorterMixin):
     analysis_type = Str('---')
     analysis_types = Property
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
     def _analysis_type_changed(self):
         self._refresh_results()
 
@@ -75,9 +75,10 @@ class SearchManager(Viewable, ColumnSorterMixin):
                 qq = selector.queries
                 selector.execute_query(queries=qq + qs, load=False)
 
-#===============================================================================
-# property get/set
-#===============================================================================
+                #===============================================================================
+                # property get/set
+                #===============================================================================
+
     def _get_projects(self):
         db = self.db
         prs = [NULL_STR, 'recent']
@@ -101,21 +102,22 @@ class SearchManager(Viewable, ColumnSorterMixin):
         if ai:
             ats += [aii.name.capitalize() for aii in ai]
         return ats
+
     def _get_control_group(self):
         cntrl_grp = VGroup(
-                           Label('Project'),
-                           Item('project', editor=EnumEditor(name='projects'),
-                                show_label=False,
-                                ),
-                           Label('Spectrometer'),
-                           Item('machine', editor=EnumEditor(name='machines'),
-                                show_label=False,
-                                ),
-                           Label('Analysis Type'),
-                           Item('analysis_type', editor=EnumEditor(name='analysis_types'),
-                                show_label=False,
-                                ),
-                           )
+            Label('Project'),
+            Item('project', editor=EnumEditor(name='projects'),
+                 show_label=False,
+            ),
+            Label('Spectrometer'),
+            Item('machine', editor=EnumEditor(name='machines'),
+                 show_label=False,
+            ),
+            Label('Analysis Type'),
+            Item('analysis_type', editor=EnumEditor(name='analysis_types'),
+                 show_label=False,
+            ),
+        )
         return cntrl_grp
 
     def modal_view(self):
@@ -127,17 +129,18 @@ class SearchManager(Viewable, ColumnSorterMixin):
     def traits_view(self):
         cntrl_grp = self._get_control_group()
         v = View(
-                 HGroup(
-                        cntrl_grp,
-                        Item('selector',
-                              show_label=False,
-                              style='custom',
-                              editor=InstanceEditor(view='panel_view'),
-                              height=500
-                              )
-                        ),
-                 resizable=True,
-                 title='Find Analyses'
-                 )
+            HGroup(
+                cntrl_grp,
+                Item('selector',
+                     show_label=False,
+                     style='custom',
+                     editor=InstanceEditor(view='panel_view'),
+                     height=500
+                )
+            ),
+            resizable=True,
+            title='Find Analyses'
+        )
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================

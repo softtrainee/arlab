@@ -21,7 +21,7 @@ from traitsui.api import View, HGroup, UItem, EnumEditor, spring, Item
 from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 
-from src.constants import FIT_TYPES, FIT_TYPES_INTERPOLATE
+from src.pychron_constants import FIT_TYPES, FIT_TYPES_INTERPOLATE
 from src.ui.table_editor import myTableEditor
 
 #============= standard library imports ========================

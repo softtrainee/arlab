@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Bool, Str, Float, Int, Enum
 from traitsui.api import View, HGroup, UItem, EnumEditor
-from src.constants import NULL_STR, FIT_TYPES
+from src.pychron_constants import NULL_STR, FIT_TYPES
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -28,20 +28,21 @@ class Detector(HasTraits):
     ref = Bool
     isotope = Str
     isotopes = [NULL_STR, 'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
+
     def traits_view(self):
         v = View(HGroup(
-                        UItem('use'),
-                        UItem('label',
-                              width=-30,
-                              style='readonly'),
-                        UItem('isotope',
-                             editor=EnumEditor(name='isotopes'),
-                             enabled_when='use'),
-                        UItem('fit',
-                            enabled_when='use',
-                            editor=EnumEditor(values=[NULL_STR] + FIT_TYPES))
-                        )
-                 )
+            UItem('use'),
+            UItem('label',
+                  width=-30,
+                  style='readonly'),
+            UItem('isotope',
+                  editor=EnumEditor(name='isotopes'),
+                  enabled_when='use'),
+            UItem('fit',
+                  enabled_when='use',
+                  editor=EnumEditor(values=[NULL_STR] + FIT_TYPES))
+        )
+        )
         return v
 
     def _use_changed(self):
@@ -52,47 +53,54 @@ class Detector(HasTraits):
 class MeasurementCondition(HasTraits):
     name = Str
     use = Bool
-    key = Enum('age',)
+    key = Enum('age', )
     comparator = Enum('<', '>', '<=', '>=')
     criterion = Float(enter_set=True, auto_set=False)
     start_count = Int(enter_set=True, auto_set=False)
     frequency = Int(enter_set=True, auto_set=False)
+
     def to_string(self):
         return "({}, ('{}','{}',{},{},{}))".format(self.use,
-                                               self.key,
-                                               self.comparator,
-                                               self.criterion,
-                                               self.start_count,
-                                               self.frequency,
-                                               )
+                                                   self.key,
+                                                   self.comparator,
+                                                   self.criterion,
+                                                   self.start_count,
+                                                   self.frequency,
+        )
 
 
 class MeasurementAction(MeasurementCondition):
     action = Str
     resume = Bool(True)
+
     def to_string(self):
         return "({}, ('{}','{}',{},{},{},'{}',{}))".format(self.use,
-                                               self.key,
-                                               self.comparator,
-                                               self.criterion,
-                                               self.start_count,
-                                               self.frequency,
-                                               self.action,
-                                               self.resume
-                                               )
+                                                           self.key,
+                                                           self.comparator,
+                                                           self.criterion,
+                                                           self.start_count,
+                                                           self.frequency,
+                                                           self.action,
+                                                           self.resume
+        )
+
 
 class MeasurementTruncation(MeasurementCondition):
     pass
+
 
 class MeasurementTermination(MeasurementCondition):
     pass
 
 
 DETORDER = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
+
+
 class Hop(HasTraits):
     position = Str
     detectors = Str
     counts = Int
+
     def to_string(self):
         if not (self.position and self.detectors and self.counts):
             return
@@ -143,7 +151,8 @@ class Hop(HasTraits):
         v = View(HGroup(UItem('position', width=-60),
                         UItem('detectors', width=250),
                         UItem('counts', width=-60)
-                        )
-                 )
+        )
+        )
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================

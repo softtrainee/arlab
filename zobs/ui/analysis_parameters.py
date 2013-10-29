@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Float, Bool, Property
 from traitsui.api import View, Item, HGroup, Label, Spring, EnumEditor
-from src.constants import FIT_TYPES, PLUSMINUS
+from src.pychron_constants import FIT_TYPES, PLUSMINUS
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -29,14 +29,14 @@ class BaseParameters(HasTraits):
     error = Property(depends_on='_error')
     _intercept = Float
     _error = Float
-#    analysis = Any
-#    fittypes = List(FIT_TYPES)
+    #    analysis = Any
+    #    fittypes = List(FIT_TYPES)
     show = Bool(True)
     filter_outliers = Bool(True)
 
     def _get_intercept(self):
 
-        return'{:<12s}'.format('{:0.5f}'.format(self._intercept))
+        return '{:<12s}'.format('{:0.5f}'.format(self._intercept))
 
     def _get_error(self):
         e = self._error
@@ -48,9 +48,9 @@ class BaseParameters(HasTraits):
         e = '{:0.6f}'.format(e)
         return u'{}{:<12s}({}%)'.format(PLUSMINUS, e, ee)
 
-#    def _name_changed(self):
-#        if self.name == 'Ar40':
-#            self.show = True
+    #    def _name_changed(self):
+    #        if self.name == 'Ar40':
+    #            self.show = True
 
     def traits_view(self):
         v = View(HGroup(Label(self.name),
@@ -59,30 +59,35 @@ class BaseParameters(HasTraits):
                         Item('fit', editor=EnumEditor(values=FIT_TYPES),
                              show_label=False,
                              enabled_when='show'
-                             ),
-#                        Item('fit[]', style='custom',
-#                              editor=BoundEnumEditor(values=['linear', 'parabolic', 'cubic'],
-#
-#                                                     )),
+                        ),
+                        #                        Item('fit[]', style='custom',
+                        #                              editor=BoundEnumEditor(values=['linear', 'parabolic', 'cubic'],
+                        #
+                        #                                                     )),
                         Item('filterstr[]', enabled_when='show'),
                         Item('filter_outliers',
                              enabled_when='show',
                              show_label=False),
                         Spring(width=20, springy=False),
                         Item('intercept',
-                              style='readonly',
-                              show_label=False,
-                              ),
+                             style='readonly',
+                             show_label=False,
+                        ),
                         Item('error',
-                              show_label=False,
-                              style='readonly')
-                        )
-                 )
+                             show_label=False,
+                             style='readonly')
+        )
+        )
         return v
+
+
 class BaselineParameters(BaseParameters):
     pass
+
+
 class AnalysisParameters(BaseParameters):
     show_sniff = Bool(True)
+
     def traits_view(self):
         v = View(HGroup(Label(self.name),
                         Spring(width=50 - 10 * len(self.name), springy=False),
@@ -90,7 +95,7 @@ class AnalysisParameters(BaseParameters):
                         Item('fit', editor=EnumEditor(values=FIT_TYPES),
                              show_label=False,
                              enabled_when='show'
-                             ),
+                        ),
                         Item('show_sniff', show_label=False, enabled_when='show'),
                         Item('filterstr[]', enabled_when='show'),
                         Item('filter_outliers',
@@ -98,14 +103,14 @@ class AnalysisParameters(BaseParameters):
                              show_label=False),
                         Spring(width=20, springy=False),
                         Item('intercept',
-                              style='readonly',
-                              show_label=False,
-                              ),
+                             style='readonly',
+                             show_label=False,
+                        ),
                         Item('error',
-                              show_label=False,
-                              style='readonly')
-                        )
-                 )
+                             show_label=False,
+                             style='readonly')
+        )
+        )
         return v
 
 #============= EOF =============================================

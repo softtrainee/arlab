@@ -15,12 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance
-from traitsui.api import View, Item, VGroup, Spring, HGroup, ButtonEditor, EnumEditor
+from traits.api import Instance
+from traitsui.api import Item, VGroup, Spring, HGroup, ButtonEditor, EnumEditor
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.experiment.automated_run.factory_view import FactoryView, POSITION_TOOLTIP
+from src.experiment.automated_run.factory_view import FactoryView, POSITION_TOOLTIP, PATTERN_TOOLTIP
 
 
 class UVFactoryView(FactoryView):
@@ -55,7 +55,15 @@ class UVFactoryView(FactoryView):
             ),
             HGroup(
                 Item('position',
-                     tooltip=POSITION_TOOLTIP)),
+                     tooltip=POSITION_TOOLTIP),
+                Item('pattern',
+                     show_label=False,
+                     tooltip=PATTERN_TOOLTIP,
+                     editor=EnumEditor(name='patterns')),
+                Item('edit_pattern',
+                     show_label=False,
+                     editor=ButtonEditor(label_value='edit_pattern_label')
+                )),
             label='Extract',
             show_border=True
         )

@@ -24,23 +24,21 @@ from traitsui.api import View, Item, \
 #============= local library imports  ==========================
 from src.database.core.database_adapter import DatabaseAdapter
 
-
 from src.database.core.query import Query, compile_query
 from src.viewable import Viewable
 
-from traits.api import HasTraits
 from src.ui.tabular_editor import myTabularEditor
 # from src.database.core.base_results_adapter import BaseResultsAdapter
 from src.ui.custom_label_editor import CustomLabel
 from traitsui.tabular_adapter import TabularAdapter
 from src.ui.gui import invoke_in_main_thread
-from pyface.timer.do_later import do_later
 from src.column_sorter_mixin import ColumnSorterMixin
+
 
 class BaseTabularAdapter(TabularAdapter):
     columns = [('ID', 'record_id'),
                ('Timestamp', 'timestamp')
-               ]
+    ]
 
 # class ColumnSorterMixin(HasTraits):
 #     _sort_field = None
@@ -71,7 +69,9 @@ class BaseTabularAdapter(TabularAdapter):
 class SelectorHandler(Handler):
     def init(self, info):
         pass
-# #        if info.initialized:
+
+        # #        if info.initialized:
+
 #        import wx
 #        for control in info.ui.control.GetChildren()[0].GetChildren():
 #            if isinstance(control, wx.Button):
@@ -111,7 +111,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     query_klass = None
 
     limit = Int(200, enter_set=True, auto_set=False)
-    date_str = 'Run Date'
+    date_str = 'Run Date/Time'
 
     add_query_button = Button('+')
     delete_query_button = Button('-')
@@ -133,10 +133,10 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             self.records = []
 
         self._load_records(dbs)
-#        self._sort_columns(self.records)
+        #        self._sort_columns(self.records)
         if self.scroll_to_bottom:
             self.scroll_to_row = len(self.records) - 1
-#         self.debug('scb= {}, scroll to row={}'.format(self.scroll_to_bottom, self.scroll_to_row))
+            #         self.debug('scb= {}, scroll to row={}'.format(self.scroll_to_bottom, self.scroll_to_row))
 
     def table_add_query(self):
         self._add_query(add=False)
@@ -146,8 +146,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     def add_query(self, parent_query, parameter, criterion, add=True):
         q = self._query_factory(
-                                parent_parameters=parent_query.parent_parameters + [parameter],
-                                parent_criterions=parent_query.parent_criterions + [criterion])
+            parent_parameters=parent_query.parent_parameters + [parameter],
+            parent_criterions=parent_query.parent_criterions + [criterion])
         if add:
             self.queries.append(q)
         parent_query.on_trait_change(q._update_parent_parameter, 'parameter')
@@ -167,7 +167,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             dbs, _stmt = self._get_selector_records(limit=n)
             self.load_records(dbs, load=False)
 
-#    def execute_query(self, filter_str=None):
+            #    def execute_query(self, filter_str=None):
+
     def execute_query(self, queries=None, load=True, use_filters=True):
         with self.db.session_ctx():
             dbs = self._execute_query(queries, use_filters=use_filters)
@@ -181,9 +182,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         qe = self.query_factory(criterion=end, parameter=self.date_str, comparator='<=')
         return self._execute_query([qs, qe], **kw)
 
-#===============================================================================
-# private
-#===============================================================================
+    #===============================================================================
+    # private
+    #===============================================================================
     def _add_query(self, add=True):
         pq = None
         if self.queries:
@@ -231,12 +232,12 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
         if limit is None:
             limit = self.limit
-        # @todo: only get displayed columns
+            # @todo: only get displayed columns
 
         dbs, query_str = self._get_selector_records(limit=limit,
                                                     queries=queries,
                                                     use_filters=use_filters,
-                                                    )
+        )
 
         if not self.verbose:
             query_str = str(query_str)
@@ -244,7 +245,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             query_str = query_str.split('ORDER BY')[0]
 
         self.info('query {} returned {} records'.format(query_str,
-                                len(dbs) if dbs else 0))
+                                                        len(dbs) if dbs else 0))
         return dbs
 
     def _load_records(self, records):
@@ -262,7 +263,8 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             self.opened_windows.pop(sid)
 
         obj.on_trait_change(self._record_closed, 'close_event', remove=True)
-#        obj.on_trait_change(self._changed, '_changed', remove=True)
+
+    #        obj.on_trait_change(self._changed, '_changed', remove=True)
 
     def _record_view_factory(self, dbrecord):
         if hasattr(self, 'record_view_klass'):
@@ -272,9 +274,10 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         else:
             return self.record_klass(_dbrecord=dbrecord)
 
-#===============================================================================
-# open window
-#===============================================================================
+            #===============================================================================
+            # open window
+            #===============================================================================
+
     def _open_selected(self, records=None):
         self.debug('open selected')
         if records is None:
@@ -303,14 +306,15 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             si.load_graph()
             si.window_x = self.wx
             si.window_y = self.wy
+
             def do(si, sid):
-#                app = self.db.application
-#                from pyface.tasks.task_window_layout import TaskWindowLayout
-#                win = app.create_window(TaskWindowLayout('pychron.recall'))
-#                win.active_task.record = si
-#                print win.active_task.record
-#                win.open()
-#                self.debug('{}'.format(si))
+            #                app = self.db.application
+            #                from pyface.tasks.task_window_layout import TaskWindowLayout
+            #                win = app.create_window(TaskWindowLayout('pychron.recall'))
+            #                win.active_task.record = si
+            #                print win.active_task.record
+            #                win.open()
+            #                self.debug('{}'.format(si))
                 info = si.edit_traits()
                 self._open_window(sid, info)
 
@@ -319,6 +323,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
         except Exception, e:
             import traceback
+
             traceback.print_exc()
             self.warning(e)
 
@@ -360,9 +365,10 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     def _get_num_records(self):
         return 'Number Results: {}'.format(len(self.records))
-#===============================================================================
-# handlers
-#===============================================================================
+
+    #===============================================================================
+    # handlers
+    #===============================================================================
     def _delete_query_button_fired(self):
         self.remove_query(self.selected_query)
 
@@ -370,7 +376,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         self._add_query()
 
     def _dclicked_changed(self):
-#        self.debug('dclicked changed {}'.format(self.dclicked))
+    #        self.debug('dclicked changed {}'.format(self.dclicked))
         if self.dclicked and self.dclick_recall_enabled:
             self._open_selected()
 
@@ -381,10 +387,10 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
     def _search_fired(self):
         self.execute_query(load=False)
 
-#        if self.records:
-#            self.selected = self.records[-1:]
-#            self.scroll_to_row = len(self.records) - 1
-#            print self.records.index(self.selected[0])
+    #        if self.records:
+    #            self.selected = self.records[-1:]
+    #            self.scroll_to_row = len(self.records) - 1
+    #            print self.records.index(self.selected[0])
 
     def _limit_changed(self):
         self.execute_query(load=False)
@@ -396,21 +402,22 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         else:
             self.id_string = 'Database: {}'.format(self.db.name)
 
-#    def _selected_changed(self):
-#        if self.selected:
-#            sel = self.selected
-#            if self.style != 'single':
-#                sel = sel[0]
-#            self.selected_row = self.records.index(sel)
-#            self.update = True
-#===============================================================================
-# factories
-#===============================================================================
+            #    def _selected_changed(self):
+            #        if self.selected:
+            #            sel = self.selected
+            #            if self.style != 'single':
+            #                sel = sel[0]
+            #            self.selected_row = self.records.index(sel)
+            #            self.update = True
+            #===============================================================================
+            # factories
+            #===============================================================================
+
     def _query_factory(self, removable=True, **kw):
         q = self.query_klass(selector=self,
-                  removable=removable,
-                  date_str=self.date_str,
-                  )
+                             removable=removable,
+                             date_str=self.date_str,
+        )
 
         q.trait_set(trait_change_notify=False, **kw)
         return q
@@ -419,9 +426,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         di.on_trait_change(self._record_closed, 'close_event')
         return di
 
-#===============================================================================
-# views
-#===============================================================================
+    #===============================================================================
+    # views
+    #===============================================================================
     def _get_button_grp(self):
         return HGroup(spring, Item('search', show_label=False), defined_when='style=="normal"')
 
@@ -441,51 +448,51 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
 
     def _view_factory(self):
         editor = myTabularEditor(adapter=self.tabular_adapter(),
-                               dclicked='object.dclicked',
-                               selected='object.selected',
-                               selected_row='object.selected_row',
-                               update='update',
-                               scroll_to_row='scroll_to_row',
-#                               auto_update=True,
-                               column_clicked='object.column_clicked',
-                               editable=False,
-                               multi_select=not self.style == 'single',
+                                 dclicked='object.dclicked',
+                                 selected='object.selected',
+                                 selected_row='object.selected_row',
+                                 update='update',
+                                 scroll_to_row='scroll_to_row',
+                                 #                               auto_update=True,
+                                 column_clicked='object.column_clicked',
+                                 editable=False,
+                                 multi_select=not self.style == 'single',
 
-                               )
+        )
 
         button_grp = self._get_button_grp()
         v = View(
-                VGroup(
-                       CustomLabel('id_string', color='red'),
-                       VSplit(
-                              Item('records',
-                                   style='custom',
-                                   editor=editor,
-                                   show_label=False,
-                                   height=0.75,
-                                   width=600,
-                                   ),
-                              Item('queries', show_label=False,
-                                   style='custom',
-                                   height=0.25,
-                                   editor=ListEditor(mutable=False,
-                                                  style='custom',
-                                                  editor=InstanceEditor()),
-                                 defined_when='style in ["normal","panel"]')
-                              ),
-                          button_grp,
+            VGroup(
+                CustomLabel('id_string', color='red'),
+                VSplit(
+                    Item('records',
+                         style='custom',
+                         editor=editor,
+                         show_label=False,
+                         height=0.75,
+                         width=600,
                     ),
-                 resizable=True,
-                 handler=SelectorHandler
-                 )
+                    Item('queries', show_label=False,
+                         style='custom',
+                         height=0.25,
+                         editor=ListEditor(mutable=False,
+                                           style='custom',
+                                           editor=InstanceEditor()),
+                         defined_when='style in ["normal","panel"]')
+                ),
+                button_grp,
+            ),
+            resizable=True,
+            handler=SelectorHandler
+        )
 
         if self.style == 'single':
             v.buttons = ['OK', 'Cancel']
         return v
 
-#===============================================================================
-# defaults
-#===============================================================================
+    #===============================================================================
+    # defaults
+    #===============================================================================
     def _queries_default(self):
         return [self._query_factory(removable=False)]
 

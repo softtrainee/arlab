@@ -18,7 +18,7 @@
 from traits.api import Property, Int
 from traitsui.tabular_adapter import TabularAdapter
 #============= standard library imports ========================
-from src.constants import EXTRACTION_COLOR, MEASUREMENT_COLOR, SUCCESS_COLOR, \
+from src.pychron_constants import EXTRACTION_COLOR, MEASUREMENT_COLOR, SUCCESS_COLOR, \
     SKIP_COLOR, NOT_EXECUTABLE_COLOR, CANCELED_COLOR, TRUNCATED_COLOR, \
     FAILED_COLOR, END_AFTER_COLOR
 #============= local library imports  ==========================

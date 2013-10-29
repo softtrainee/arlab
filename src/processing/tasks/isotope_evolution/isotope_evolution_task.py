@@ -20,8 +20,7 @@ from pyface.tasks.task_layout import PaneItem, TaskLayout, Tabbed, HSplitter, \
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.processing.tasks.analysis_edit.panes import ControlsPane
 
-#from src.constants import MINNA_BLUFF_IRRADIATIONS
-import time
+#from src.pychron_constants import MINNA_BLUFF_IRRADIATIONS
 from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
 #============= standard library imports ========================
 #============= local library imports  ==========================

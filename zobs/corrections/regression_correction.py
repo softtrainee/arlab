@@ -16,12 +16,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Str
+from traits.api import Str
 from traitsui.api import View, Item, EnumEditor, HGroup, spring, Spring
-from src.constants import FIT_TYPES_INTERPOLATE
+from src.pychron_constants import FIT_TYPES_INTERPOLATE
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.corrections.correction import Correction
+
 
 class RegressionCorrection(Correction):
     fit = Str(FIT_TYPES_INTERPOLATE[0])
@@ -33,9 +34,10 @@ class RegressionCorrection(Correction):
                         Item('fit', editor=EnumEditor(values=FIT_TYPES_INTERPOLATE),
                              show_label=False,
                              enabled_when='use'
-                             ),
+                        ),
                         Spring(springy=False, width=100)
-                        )
-                 )
+        )
+        )
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================

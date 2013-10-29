@@ -19,7 +19,6 @@
 #============= enthought library imports =======================
 from traits.api import Instance, Enum, Bool, Button, Str, DelegatesTo, Event, Property, \
     Int
-from traitsui.api import Item, HGroup, VGroup, spring
 
 #============= standard library imports ========================
 import time
@@ -35,7 +34,6 @@ from src.lasers.laser_managers.uv_gas_handler_manager import UVGasHandlerManager
 from src.lasers.stage_managers.stage_map import UVStageMap
 from src.lasers.laser_managers.laser_script_executor import UVLaserScriptExecutor
 from src.geometry.geometry import calc_point_along_line
-from src.ui.led_editor import LEDEditor
 from src.paths import paths
 from threading import Thread
 
@@ -82,9 +80,9 @@ class FusionsUVManager(FusionsLaserManager):
     burst_shot = Int(enter_set=True, auto_set=False)
     reprate = Int(enter_set=True, auto_set=False)
 
-#     execute_button = DelegatesTo('laser_script_executor')
-#     execute_label = DelegatesTo('laser_script_executor')
-#     names = DelegatesTo('laser_script_executor')
+    #     execute_button = DelegatesTo('laser_script_executor')
+    #     execute_label = DelegatesTo('laser_script_executor')
+    #     names = DelegatesTo('laser_script_executor')
 
     _is_tracing = False
     _cancel_tracing = False
@@ -383,45 +381,46 @@ class FusionsUVManager(FusionsLaserManager):
     def _get_fire_label(self):
         return 'Fire' if not self.firing else 'Stop'
 
-    #===============================================================================
-    # views
-    #===============================================================================
-#     def get_control_group(self):
-#         cg = VGroup(
-#             HGroup(
-#                 Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
-#                 self._button_factory('enable', 'enable_label'),
-#                 self._button_factory('execute_button', 'execute_label'),
-#                 Item('names', show_label=False),
-#                 spring
-#             ),
-#             #                      Item('execute_button', show_label=False, editor=ButtonEditor(label_value='execute_label')),
-#             HGroup(
-#                 Item('action_readback', width=100, style='readonly', label='Action'),
-#                 Item('status_readback', style='readonly', label='Status'),
-#             ),
-#             HGroup(self._button_factory('fire_button', 'fire_label'),
-#                    Item('mode', show_label=False),
-#                    enabled_when='object.enabled and object.status_readback=="Laser On"'
-#             ),
-#             HGroup(
-#                 Item('burst_shot', label='N Burst', enabled_when='mode=="Burst"'),
-#                 Item('reprate', label='Rep. Rate')
-#             ),
-#             HGroup(
-#                 Item('burst_readback', label='Burst Rem.', width=50, style='readonly'),
-#                 Item('energy_readback', label='Energy (mJ)',
-#                      style='readonly', format_str='%0.2f'),
-#                 Item('pressure_readback', label='Pressure (mbar)',
-#                      style='readonly', width=100, format_str='%0.1f'),
-#                 spring,
-#                 enabled_when='object.enabled'
-#             ),
-#             show_border=True,
-#             label='Power')
-#
-#         ac = self.get_additional_group()
-#         return HGroup(cg, ac)
+        #===============================================================================
+        # views
+        #===============================================================================
+
+    #     def get_control_group(self):
+    #         cg = VGroup(
+    #             HGroup(
+    #                 Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
+    #                 self._button_factory('enable', 'enable_label'),
+    #                 self._button_factory('execute_button', 'execute_label'),
+    #                 Item('names', show_label=False),
+    #                 spring
+    #             ),
+    #             #                      Item('execute_button', show_label=False, editor=ButtonEditor(label_value='execute_label')),
+    #             HGroup(
+    #                 Item('action_readback', width=100, style='readonly', label='Action'),
+    #                 Item('status_readback', style='readonly', label='Status'),
+    #             ),
+    #             HGroup(self._button_factory('fire_button', 'fire_label'),
+    #                    Item('mode', show_label=False),
+    #                    enabled_when='object.enabled and object.status_readback=="Laser On"'
+    #             ),
+    #             HGroup(
+    #                 Item('burst_shot', label='N Burst', enabled_when='mode=="Burst"'),
+    #                 Item('reprate', label='Rep. Rate')
+    #             ),
+    #             HGroup(
+    #                 Item('burst_readback', label='Burst Rem.', width=50, style='readonly'),
+    #                 Item('energy_readback', label='Energy (mJ)',
+    #                      style='readonly', format_str='%0.2f'),
+    #                 Item('pressure_readback', label='Pressure (mbar)',
+    #                      style='readonly', width=100, format_str='%0.1f'),
+    #                 spring,
+    #                 enabled_when='object.enabled'
+    #             ),
+    #             show_border=True,
+    #             label='Power')
+    #
+    #         ac = self.get_additional_group()
+    #         return HGroup(cg, ac)
 
 
     #===============================================================================
@@ -432,7 +431,7 @@ class FusionsUVManager(FusionsLaserManager):
         '''
         '''
         args = dict(name='stage',
-                    configuration_dir_name='uv',
+                    configuration_dir_name='fusions_uv',
                     stage_controller_class='Aerotech',
                     stage_map_klass=UVStageMap,
                     use_modified=False
@@ -453,13 +452,13 @@ class FusionsUVManager(FusionsLaserManager):
         '''
         '''
         return FusionsUVLogicBoard(name='laser_controller',
-                                   configuration_dir_name='uv')
+                                   configuration_dir_name='fusions_uv')
 
     def _atl_controller_default(self):
         '''
         '''
         return ATLLaserControlUnit(name='atl_controller',
-                                   configuration_dir_name='uv',
+                                   configuration_dir_name='fusions_uv',
         )
 
     def _gas_handler_default(self):

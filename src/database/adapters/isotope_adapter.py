@@ -217,10 +217,10 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def _add_history(self, name, analysis, **kw):
         name = 'proc_{}HistoryTable'.format(name)
-        mod_path = 'src.database.orms.isotope.proc'
-        mod = __import__(mod_path, fromlist=[name])
-        table = getattr(mod, name)
-
+        #mod_path = 'src.database.orms.isotope.proc'
+        #mod = __import__(mod_path, fromlist=[name])
+        #table = getattr(mod, name)
+        table = self.__import_proctable(name)
         #table = globals()['proc_{}HistoryTable'.format(name)]
         analysis = self.get_analysis(analysis, )
         h = table(analysis=analysis, **kw)
@@ -232,7 +232,11 @@ class IsotopeAdapter(DatabaseAdapter):
             name: e.g Blanks
             key:
         """
-        table = globals()['proc_{}SetTable'.format(name)]
+
+        name = 'proc_{}SetTable'.format(name)
+        table = self.__import_proctable(name)
+
+        #table = globals()['proc_{}SetTable'.format(name)]
         nset = table(**kw)
         pa = getattr(self, 'get_{}'.format(key))(value)
 
@@ -247,8 +251,18 @@ class IsotopeAdapter(DatabaseAdapter):
 
         return nset
 
+    def __import_proctable(self, name):
+        mod_path = 'src.database.orms.isotope.proc'
+        mod = __import__(mod_path, fromlist=[name])
+        table = getattr(mod, name)
+        return table
+
     def _add_series_item(self, name, key, history, **kw):
-        item = globals()['proc_{}Table'.format(name)](**kw)
+        name = 'proc_{}Table'.format(name)
+        #item = globals()['proc_{}Table'.format(name)](**kw)
+        table = self.__import_proctable(name)
+        item = table(**kw)
+
         history = getattr(self, 'get_{}_history'.format(key))(history, )
         if history:
             try:
@@ -257,7 +271,7 @@ class IsotopeAdapter(DatabaseAdapter):
             except AttributeError, e:
                 self.debug('add_series_item key={}, error={}'.format(key, e))
                 setattr(history, key, item)
-            self._add_item(item, )
+            self._add_item(item)
 
         return item
 
@@ -267,7 +281,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def add_import(self, **kw):
         dbimport = gen_ImportTable(**kw)
-        self._add_item(dbimport, )
+        self._add_item(dbimport)
         return dbimport
 
     def add_snapshot(self, path, **kw):
@@ -1088,7 +1102,7 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_analyses(self, **kw):
         """
             kw: meas_Analysis attributes
-                or callable predicate that accepts "meas_AnalysisTable"
+                or callable predicate that accepts "meas_AnalysisTable" and "gen_LabTable"
         """
         with self.session_ctx() as sess:
             q = sess.query(meas_AnalysisTable)
@@ -1129,7 +1143,19 @@ class IsotopeAdapter(DatabaseAdapter):
     def get_materials(self, **kw):
         return self._retrieve_items(gen_MaterialTable, **kw)
 
+    def get_recent_samples(self, lpost):
+        with self.session_ctx() as sess:
+            q = sess.query(gen_SampleTable).join(gen_LabTable)
+            q = q.join(meas_AnalysisTable)
+
+            q = q.filter(meas_AnalysisTable.analysis_timestamp >= lpost)
+            q = q.order_by(meas_AnalysisTable.analysis_timestamp.asc())
+
+            return self._query_all(q)
+
+
     def get_samples(self, project=None, **kw):
+
         if project:
             f = []
             if 'filters' in kw:

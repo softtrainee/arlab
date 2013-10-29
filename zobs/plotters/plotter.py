@@ -15,13 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, List, Any, Dict, Instance, Event
+from traits.api import Property, List, Any, Instance, Event
 # from traitsui.api import View, Item, VGroup, TabularEditor
 from chaco.array_data_source import ArrayDataSource
 from chaco.tools.broadcaster import BroadcasterTool
 from chaco.plot_containers import GridPlotContainer
 from chaco.data_label import DataLabel
-from chaco.tools.data_label_tool import DataLabelTool
 from sqlalchemy.orm.session import object_session
 # from chaco.scatterplot import ScatterPlot
 #============= standard library imports ========================
@@ -40,7 +39,7 @@ from src.processing.plotters.graph_panel_info import GraphPanelInfo
 from src.graph.tools.point_inspector import PointInspectorOverlay
 from src.graph.tools.analysis_inspector import AnalysisPointInspector
 from src.helpers.formatting import floatfmt
-# from src.constants import PLUSMINUS
+# from src.pychron_constants import PLUSMINUS
 from uncertainties import ufloat
 from src.stats.core import validate_mswd, calculate_mswd
 from src.codetools.simple_timeit import simple_timer
@@ -49,6 +48,7 @@ from src.codetools.simple_timeit import simple_timer
 class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
     plotter = Any
     selected_analysis = Property
+
     def _get_selected_analysis(self):
         if self.plotter:
             if self.plotter.selected_analysis:
@@ -82,9 +82,9 @@ class mStackedGraph(StackedGraph, IsotopeContextMenuMixin):
 
 class Plotter(Viewable):
     adapter = Property
-#     results = List(BaseResults)
+    #     results = List(BaseResults)
     graphs = List
-#    graph = Any
+    #    graph = Any
     db = Any
     processing_manager = Any
     selected_analysis = Any
@@ -115,9 +115,9 @@ class Plotter(Viewable):
             self.recall_event = iso_record
 
 
-#         if iso_record.initialize():
-#             iso_record.load_graph()
-#             iso_record.edit_traits()
+            #         if iso_record.initialize():
+            #             iso_record.load_graph()
+            #             iso_record.edit_traits()
 
     def set_status(self, status):
         sa = self.selected_analysis
@@ -161,7 +161,7 @@ class Plotter(Viewable):
               options=None,
               plotter_options=None,
               new_container=True
-              ):
+    ):
 
         if analyses is None:
             analyses = self.analyses
@@ -176,11 +176,12 @@ class Plotter(Viewable):
         self.analyses = analyses
 
         graph_ids = sorted(list(set([a.graph_id for a in analyses])))
+
         def get_analyses(gii):
             return [a for a in analyses if a.graph_id == gii]
 
         graph_groups = [get_analyses(gi)
-                            for gi in graph_ids]
+                        for gi in graph_ids]
         self._ngroups = n = len(graph_groups)
 
         op, r, c = self._create_grid_container(n)
@@ -191,7 +192,7 @@ class Plotter(Viewable):
             op.remove(*op.components)
 
         self.graphs = []
-#         self.results = []
+        #         self.results = []
         plots = []
 
         title = self._get_plot_option(options, 'title')
@@ -213,7 +214,7 @@ class Plotter(Viewable):
 
                 g = self._build(ans, aux_plots=aux_plots,
                                 title=title
-                                )
+                )
                 if i == r - 1:
                     self._build_xtitle(g, xtitle_font, xtick_font, age_unit=age_unit)
 
@@ -228,7 +229,7 @@ class Plotter(Viewable):
                 for pi in g.plots:
                     plots.append(pi)
 
-#         op.invalidate_and_redraw()
+                    #         op.invalidate_and_redraw()
         self._plots = plots
         return op, plots
 
@@ -252,20 +253,20 @@ class Plotter(Viewable):
 
                 if name == 'radiogenic':
                     d = dict(name='radiogenic_percent',
-                              ytitle='40Ar* %',
-                              )
+                             ytitle='40Ar* %',
+                    )
                 elif name == 'analysis_number':
                     d = dict(name='analysis_number',
-                         ytitle='Analysis #',
-                         )
+                             ytitle='Analysis #',
+                    )
                 elif name == 'kca':
                     d = dict(name='kca',
-                         ytitle='K/Ca',
-                         )
+                             ytitle='K/Ca',
+                    )
                 elif name == 'moles_K39':
                     d = dict(name='moles_K39',
                              ytitle='K39 moles'
-                             )
+                    )
                 else:
                     continue
 
@@ -278,6 +279,7 @@ class Plotter(Viewable):
 
     def _build_xtitle(self, *args, **kw):
         pass
+
     def _build_ytitle(self, *args, **kw):
         pass
 
@@ -286,10 +288,10 @@ class Plotter(Viewable):
             aux_plots = []
 
         g = mStackedGraph(panel_height=200,
-                            equi_stack=False,
-                            container_dict=dict(padding=0),
-                            plotter=self
-                            )
+                          equi_stack=False,
+                          container_dict=dict(padding=0),
+                          plotter=self
+        )
         g.clear()
         g._has_title = True
 
@@ -353,8 +355,8 @@ class Plotter(Viewable):
 
         if calculate:
             ages = [(ai.calculate_age(
-                         include_irradiation_error=iie,
-                         include_decay_error=ide)) for ai in analyses]
+                include_irradiation_error=iie,
+                include_decay_error=ide)) for ai in analyses]
         else:
             ages = [ai.age for ai in analyses]
 
@@ -391,7 +393,7 @@ class Plotter(Viewable):
                                add_tool=True,
                                value_format=None,
                                additional_info=None
-                               ):
+    ):
         if add_tool:
             broadcaster = BroadcasterTool()
             scatter.tools.append(broadcaster)
@@ -403,19 +405,19 @@ class Plotter(Viewable):
             broadcaster.tools.append(rect_tool)
 
             if value_format is None:
-                value_format = lambda x:'{:0.5f}'.format(x)
+                value_format = lambda x: '{:0.5f}'.format(x)
             point_inspector = AnalysisPointInspector(scatter,
                                                      analyses=[a for a in self.sorted_analyses
-                                                                    if a.group_id == group_id],
+                                                               if a.group_id == group_id],
                                                      convert_index=lambda x: '{:0.3f}'.format(x),
                                                      value_format=value_format,
                                                      additional_info=additional_info
-                                                     )
+            )
 
             pinspector_overlay = PointInspectorOverlay(component=scatter,
                                                        tool=point_inspector,
-                                                       )
-#
+            )
+            #
             scatter.overlays.append(pinspector_overlay)
             broadcaster.tools.append(point_inspector)
 
@@ -440,7 +442,7 @@ class Plotter(Viewable):
                           # if the arrow is not drawn
                           arrow_visible=False,
                           **kw
-                          )
+        )
         s.overlays.append(label)
         tool = mDataLabelTool(label)
         if append:
@@ -453,17 +455,17 @@ class Plotter(Viewable):
         return sorted([a for a in self.analyses],
                       key=self._cmp_analyses,
                       reverse=self._reverse_sorted_analyses
-                      )
+        )
 
     def get_labnumber(self, analyses):
         return ', '.join(sorted(list(set(['{}-{}'.format(a.labnumber, a.aliquot) for a in analyses]))))
 
     def update_graph_metadata(self, scatter, group_id, obj, name, old, new):
-#         self.debug('update graph metadata')
-#         return
+    #         self.debug('update graph metadata')
+    #         return
 
         sorted_ans = [a for a in self.sorted_analyses if a.group_id == group_id]
-#        hover = scatter.value.metadata.get('hover')
+        #        hover = scatter.value.metadata.get('hover')
         hover = scatter.index.metadata.get('hover')
         if hover:
             hoverid = hover[0]
@@ -515,7 +517,7 @@ class Plotter(Viewable):
         ustr = self.metadata_label_text
         self.plot_label = g.add_plot_label(ustr, 0, 0,
                                            font=font
-                                           )
+        )
 
     def _get_grouped_analyses(self):
         analyses = self.analyses
@@ -523,21 +525,22 @@ class Plotter(Viewable):
 
         return [[ai for ai in analyses if ai.group_id == gid]
                 for gid in group_ids
-                ]
-#===============================================================================
-# views
-#===============================================================================
-#     def traits_view(self):
-#         content = self._get_content()
-#         tb = self._get_toolbar()
-#
-#         vg = VGroup(tb, content) if tb is not None else VGroup(content)
-#         v = View(vg)
-#         return v
+        ]
 
-#===============================================================================
-# factories
-#===============================================================================
+    #===============================================================================
+    # views
+    #===============================================================================
+    #     def traits_view(self):
+    #         content = self._get_content()
+    #         tb = self._get_toolbar()
+    #
+    #         vg = VGroup(tb, content) if tb is not None else VGroup(content)
+    #         v = View(vg)
+    #         return v
+
+    #===============================================================================
+    # factories
+    #===============================================================================
     def _get_plot_option(self, options, attr, default=None):
         option = None
         if options is not None:
@@ -568,7 +571,7 @@ class Plotter(Viewable):
                                bgcolor='white',
                                fill_padding=True,
                                padding_top=10
-                               )
+        )
         return op, r, c
 
 #============= EOF =============================================

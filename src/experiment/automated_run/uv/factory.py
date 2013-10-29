@@ -22,7 +22,7 @@ from traitsui.api import Item, EnumEditor, HGroup, VGroup, Group
 import os
 #============= local library imports  ==========================
 from src.experiment.automated_run.factory import AutomatedRunFactory
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
 from src.experiment.automated_run.uv.factory_view import UVFactoryView
 from src.experiment.automated_run.uv.spec import UVAutomatedRunSpec
 from src.paths import paths
@@ -49,7 +49,7 @@ class UVAutomatedRunFactory(AutomatedRunFactory):
 
     @cached_property
     def _get_masks(self):
-        p = os.path.join(paths.device_dir, 'uv', 'mask_names.txt')
+        p = os.path.join(paths.device_dir, 'fusions_uv', 'mask_names.txt')
         masks = []
         if os.path.isfile(p):
             with open(p, 'r') as fp:
@@ -86,4 +86,4 @@ class UVAutomatedRunFactory(AutomatedRunFactory):
     def _uv_edit_handler(self, name, new):
         self._update_run_values(name, new)
 
-    #============= EOF =============================================
+        #============= EOF =============================================

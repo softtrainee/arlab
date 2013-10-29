@@ -24,7 +24,7 @@ from src.pyscripts.commands.core import Command
 from src.paths import paths
 import os
 from src.pyscripts.commands.valve import ValveCommand
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
 
 DETS = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 
@@ -33,6 +33,7 @@ DETS = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
 #===============================================================================
 class ValueCommand(Command):
     value = Float
+
     def _get_view(self):
         v = VGroup('value')
         return v
@@ -40,40 +41,47 @@ class ValueCommand(Command):
     def _to_string(self):
         return self.value
 
+
 class ConditionCommand(Command):
     attribute = Str
     comparison = Enum('<', '>', '=', '<=', '>=')
     value = Float
     start_count = Int(0)
     frequency = Int(10)
+
     def _get_condition_group(self):
         g = HGroup('attribute',
-                      'comparison',
-                      'value'
-                      )
+                   'comparison',
+                   'value'
+        )
         o = HGroup('start_count', 'frequency')
         return VGroup(g, o)
 
     def _to_string(self):
         return '"{}","{}","{}", start_count={}, frequency={}'.format(self.attribute,
-                                                               self.comparison,
-                                                               self.value,
-                                                               self.start_count,
-                                                               self.frequency)
-#===============================================================================
+                                                                     self.comparison,
+                                                                     self.value,
+                                                                     self.start_count,
+                                                                     self.frequency)
+
+        #===============================================================================
+
 # condition commands
 #===============================================================================
 class AddTermination(ConditionCommand):
     description = 'Add termination condition'
     example = ''' '''
+
     def _get_view(self):
         return self._get_condition_group()
+
 
 class AddAction(ConditionCommand):
     action = Str
     resume = Bool(False)
     description = 'Add action condition'
     example = ''' '''
+
     def _get_view(self):
         g = self._get_condition_group()
         return VGroup(g, 'action', 'resume')
@@ -82,25 +90,31 @@ class AddAction(ConditionCommand):
         s = super(AddAction, self)._to_string()
         return '{}, action="{}", resume={}'.format(s, self.action, self.resume)
 
+
 class AddTruncation(ConditionCommand):
     description = 'Add truncation condition'
     example = ''' '''
+
 
 class ClearConditions(Command):
     description = 'Clear all conditions'
     example = ''' '''
 
+
 class ClearActions(Command):
     description = 'Clear actions'
     example = ''' '''
+
 
 class ClearTruncations(Command):
     description = 'Clear truncations'
     example = ''' '''
 
+
 class ClearTerminations(Command):
     description = 'Clear terminations'
     example = ''' '''
+
 #===============================================================================
 #
 #===============================================================================
@@ -119,10 +133,10 @@ class Equilibrate(ValveCommand):
 
     def _get_view(self):
         v = VGroup(Item('eqtime', label='Equilibration Time (s)'),
-                 Item('inlet', editor=EnumEditor(name='valve_name_dict')),
-                 Item('outlet', editor=EnumEditor(name='valve_name_dict')),
-                 'do_post_equilibration'
-                 )
+                   Item('inlet', editor=EnumEditor(name='valve_name_dict')),
+                   Item('outlet', editor=EnumEditor(name='valve_name_dict')),
+                   'do_post_equilibration'
+        )
 
         return v
 
@@ -141,11 +155,13 @@ class Equilibrate(ValveCommand):
 
         return self._keywords(words)
 
+
 class ExtractionGosub(Command):
     description = 'Execute an extraction gosub'
     example = ''' '''
     gosub = Str
     names = Property
+
     def _get_names(self):
         p = os.path.join(paths.extraction_dir)
         names = [pi for pi in os.listdir(p) if pi.endswith('.py')]
@@ -157,6 +173,7 @@ class ExtractionGosub(Command):
 
     def _to_string(self):
         return self.gosub
+
 
 class GetIntensity(Command):
     description = 'Get detector intensity'
@@ -186,11 +203,12 @@ Example 2. peak hops activated isotopes on the CDD. In this case <mass> is relat
     <counts> is the number of integrates per cycle
     <cycles> is the total number of peak jumps 
 '''
+
     def _get_view(self):
         return VGroup(Item('ncounts'),
                       Item('position'),
                       Item('detector', editor=EnumEditor(values=DETS))
-                      )
+        )
 
     def _to_string(self):
         pos = self.position
@@ -198,9 +216,9 @@ Example 2. peak hops activated isotopes on the CDD. In this case <mass> is relat
             pos = None
 
         words = [('ncounts', self.ncounts, True),
-               ('position', pos, True),
-               ('detector', self.detector)
-               ]
+                 ('position', pos, True),
+                 ('detector', self.detector)
+        ]
 
         return self._keywords(words)
 
@@ -253,6 +271,7 @@ Example 1. Scan Ar40 over the AX detector
 
 Example 2. Scan Ar39 over the H1 detector
 '''
+
     def _get_view(self):
         pass
 
@@ -269,6 +288,7 @@ class ActivateDetectors(Command):
     description = 'Define list of detector to record'
     example = '''activate_detectors('H1','AX','CDD')
 '''
+
     def _toggle_fired(self):
         if not self._toggled:
             self.detectors = DETS
@@ -281,15 +301,15 @@ class ActivateDetectors(Command):
 
     def _get_view(self):
         return VGroup(Item('detectors',
-                    show_label=False,
-                    style='custom',
-                    editor=CheckListEditor(values=DETS,
-                                           cols=1
-                                           )),
+                           show_label=False,
+                           style='custom',
+                           editor=CheckListEditor(values=DETS,
+                                                  cols=1
+                           )),
                       Item('toggle',
                            show_label=False,
                            editor=ButtonEditor(label_value='toggle_label'))
-                      )
+        )
 
     def _to_string(self):
         return ', '.join([self._quote(di) for di in self.detectors])
@@ -306,13 +326,14 @@ class Multicollect(Command):
 !!setting the integration_time is currently not available because of a bug in Qtegra/RCS!!
     .
 '''
+
     def _get_view(self):
         return VGroup(Item('ncounts'), Item('integration_time'))
 
     def _to_string(self):
         words = [('ncounts', self.ncounts, True),
-               ('integration_time', self.integration_time, True)
-               ]
+                 ('integration_time', self.integration_time, True)
+        ]
         return self._keywords(words)
 
 
@@ -361,16 +382,19 @@ class PeakHop(Command):
     peak hops isotopes Ar40, Ar39 on the CDD.
     <counts> is the number of integrates per cycle --default=5
     <cycles> is the total number of peak jumps --default=5'''
+
     def _get_view(self):
         pass
 
     def _to_string(self):
         pass
 
+
 class Coincidence(Command):
     description = '''A coincidence scan is similar to a peak_center 
 however all peak centers for all activated detectors are determined'''
     example = 'coincidence()'
+
     def _get_view(self):
         pass
 
@@ -389,16 +413,18 @@ class SetDeflection(ValueCommand):
     def _get_view(self):
         v = VGroup(Item('detector', editor=EnumEditor(values=DETS)),
                    'value'
-                   )
+        )
         return v
 
     def _to_string(self):
         return '"{}", {}'.format(self.detector, self.value)
 
+
 class SetNcounts(Command):
     description = 'Set number of counts'
     example = ''' '''
     counts = Int
+
     def _get_view(self):
         v = VGroup('counts')
         return v
@@ -406,33 +432,41 @@ class SetNcounts(Command):
     def _to_string(self):
         return self.counts
 
+
 class SetDeflections(Command):
     description = 'Set detector deflections'
     example = ''' '''
+
 
 class SetSourceOptics(Command):
     description = 'Set Source Optics'
     example = ''' '''
 
+
 class SetSourceParameters(Command):
     description = 'Set source parameters'
     example = ''' '''
+
 
 class SetCddOperatingVoltage(ValueCommand):
     description = 'Set CDD operating voltage'
     example = ''' '''
 
+
 class SetYsymmetry(ValueCommand):
     description = 'Set y-symmetry'
     example = 'set_y_symmetry(10.1)'
+
 
 class SetZsymmetry(ValueCommand):
     description = 'Set z-symmetry'
     example = 'set_z_symmetry(10.1)'
 
+
 class SetZfocus(ValueCommand):
     description = 'Set z-focus'
     example = 'set_z_focus(10.1)'
+
 
 class SetExtractionLens(ValueCommand):
     description = 'Set extraction lens'

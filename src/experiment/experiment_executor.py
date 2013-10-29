@@ -38,7 +38,7 @@ from src.pyscripts.pyscript_runner import RemotePyScriptRunner, PyScriptRunner
 from src.monitors.automated_run_monitor import AutomatedRunMonitor, \
     RemoteAutomatedRunMonitor
 from src.experiment.stats import StatsGroup
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
 from src.lasers.laser_managers.ilaser_manager import ILaserManager
 
 from src.database.orms.isotope.meas import meas_AnalysisTable, meas_MeasurementTable, meas_ExtractionTable
@@ -1042,10 +1042,10 @@ If "No" select from database
     def _update_automated_runs(self):
         if self.isAlive():
             is_last = len(self.experiment_queue.cleaned_automated_runs) == 0
-            self.current_run.is_last=is_last
-#            if self.current_run.measurement_script:
-#                self.current_run.measurement_script.setup_context(is_last=is_last)
-#                self.debug('$$$$$$$$$$$$$$$$$$$$$$ Setting is_last {}'.format(is_last))
+            self.current_run.is_last = is_last
+            #            if self.current_run.measurement_script:
+            #                self.current_run.measurement_script.setup_context(is_last=is_last)
+            #                self.debug('$$$$$$$$$$$$$$$$$$$$$$ Setting is_last {}'.format(is_last))
 
     def _cancel_run_button_fired(self):
         self.debug('cancel run {}'.format(self.isAlive()))

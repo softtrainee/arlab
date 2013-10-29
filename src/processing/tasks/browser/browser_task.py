@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from apptools.preferences.preference_binding import bind_preference
 from traits.api import List, Str, Bool, Any, String, \
     on_trait_change, Date, Int, Time, Instance
 from pyface.tasks.action.schema import SToolBar
@@ -95,6 +96,9 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
             self._load_extraction_devices()
         self._set_db()
 
+        bind_preference(self.recent_hours, 'recent_hours', 'pychron.processing')
+
+
     def _set_db(self):
         self.analysis_table.db = self.manager.db
         self.danalysis_table.db = self.manager.db
@@ -124,8 +128,11 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
         db = self.manager.db
         with db.session_ctx():
             for project in self.selected_project:
+                pname = project.name
+                if pname == 'Recent':
+                    pname = None
                 sample = db.get_sample(srv.name,
-                                       project=project.name)
+                                       project=pname)
                 if sample:
                     break
             else:

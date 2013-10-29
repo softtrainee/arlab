@@ -29,7 +29,7 @@ from src.processing.analyses.summary import AnalysisSummary
 from src.processing.analyses.db_summary import DBAnalysisSummary
 from src.experiment.utilities.identifier import make_runid, make_aliquot_step
 from src.processing.isotope import Isotope, Blank, Baseline, Sniff
-from src.constants import ARGON_KEYS
+from src.pychron_constants import ARGON_KEYS
 from src.helpers.formatting import calc_percent_error
 from src.regex import ISOREGEX
 

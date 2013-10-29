@@ -20,8 +20,7 @@
 
 #============= standard library imports ========================
 import csv
-from src.stats.core import calculate_mswd
-from src.constants import ARGON_KEYS, IRRADIATION_KEYS, DECAY_KEYS
+from src.pychron_constants import ARGON_KEYS, IRRADIATION_KEYS, DECAY_KEYS
 #============= local library imports  ==========================
 # from src.stats import calculate_mswd, calculate_weighted_mean
 # from src.data_processing.argon_calculations import calculate_arar_age, find_plateaus
@@ -34,7 +33,7 @@ from src.constants import ARGON_KEYS, IRRADIATION_KEYS, DECAY_KEYS
 
 class Sample(object):
     analyses = None
-#    info = None
+    #    info = None
     def __init__(self, name):
         self.name = name
         self.analyses = []
@@ -66,7 +65,7 @@ class AutoupdateParser(object):
             samples = []
             print header
             sample_group = 0
-#            sample_idx = header.index('Sample')
+            #            sample_idx = header.index('Sample')
             for line in reader:
                 get_value = lambda x, **kw: self._get_value(x, header, line, **kw)
 
@@ -106,7 +105,6 @@ class AutoupdateParser(object):
                     params['{}_blank'.format(si)] = get_value('{}_Bkgd'.format(si))
                     params['{}_blankerr'.format(si)] = get_value('{}_BkgdEr'.format(si))
 
-
                 for attr, key in DECAY_KEYS:
                     params[attr] = float(get_value(key))
 
@@ -117,6 +115,7 @@ class AutoupdateParser(object):
                 sampleObj.add_analysis(params, factory)
 
             return samples
+
 
 if __name__ == '__main__':
     p = AutoupdateParser()

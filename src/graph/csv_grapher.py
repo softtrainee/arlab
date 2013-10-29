@@ -30,7 +30,7 @@ import os
 
 from src.graph.graph import Graph
 from src.graph.regression_graph import StackedRegressionGraph, RegressionGraph
-from src.constants import FIT_TYPES, NULL_STR, DELIMITERS
+from src.pychron_constants import FIT_TYPES, NULL_STR, DELIMITERS
 from src.paths import paths
 from src.loggable import Loggable
 from src.time_series.time_series import smooth
@@ -48,6 +48,7 @@ class DataSelector(HasTraits):
     fit = Enum([NULL_STR] + FIT_TYPES)
     plot_type = Enum('line', 'scatter')
     use_filter = Bool(True)
+
     def traits_view(self):
         header = HGroup(Label('X'), Spring(width=60, springy=False),
                         Label('Y'), Spring(width=60, springy=False),
@@ -56,21 +57,21 @@ class DataSelector(HasTraits):
                         Label('Filter'),
                         spring,
                         defined_when='not removable'
-                        )
+        )
 
         v = View(VGroup(header,
                         HGroup(
-                               Item('index', editor=EnumEditor(name='column_names')),
-                               Item('value', editor=EnumEditor(name='column_names')),
-                               Item('fit'),
-                               Item('plot_type'),
-                               Item('use_filter'),
-                               Item('add_button'),
-                               Item('remove_button', defined_when='removable'),
-                               show_labels=False
-                               )
-                        ),
-                 )
+                            Item('index', editor=EnumEditor(name='column_names')),
+                            Item('value', editor=EnumEditor(name='column_names')),
+                            Item('fit'),
+                            Item('plot_type'),
+                            Item('use_filter'),
+                            Item('add_button'),
+                            Item('remove_button', defined_when='removable'),
+                            show_labels=False
+                        )
+        ),
+        )
         return v
 
     def _add_button_fired(self):
@@ -78,6 +79,7 @@ class DataSelector(HasTraits):
 
     def _remove_button_fired(self):
         self.parent.remove_column_selector(self)
+
 
 class StatsGraph(HasTraits):
     graph = Instance(Graph)
@@ -90,7 +92,7 @@ class StatsGraph(HasTraits):
 
     def _update_stats(self, new):
         self.stats = ''
-#        new = reversed(new)
+        #        new = reversed(new)
         ss = ['{}. {}'.format(i + 1, ni.tostring(sig_figs=self.sig_figs,
                                                  error_sig_figs=self.esig_figs)) for i, ni in enumerate(new)]
         self.stats = '\n'.join(ss)
@@ -100,24 +102,24 @@ class StatsGraph(HasTraits):
 
     def traits_view(self):
         v = View(VGroup(
-                     Item('graph',
-                          style='custom', show_label=False,
-                          height=500, width=700),
-                     HGroup(
-                            Item('stats', show_label=False, style='readonly',
-                                 height=50,
-                                 width=1.0
-                                 ),
-                            show_border=True,
-                            label='Stats',
+            Item('graph',
+                 style='custom', show_label=False,
+                 height=500, width=700),
+            HGroup(
+                Item('stats', show_label=False, style='readonly',
+                     height=50,
+                     width=1.0
+                ),
+                show_border=True,
+                label='Stats',
 
-                            )
-                        ),
+            )
+        ),
                  x=self.window_x,
                  y=self.window_y,
                  title=self.window_title,
                  resizable=True
-                 )
+        )
         return v
 
 
@@ -137,14 +139,15 @@ class CSVGrapher(Loggable):
 
     _graph_count = 0
     delimiter = Str(',')
+
     def quick_graph(self, p):
         kind = 'scatter'
-#        for det in ['H2']:
+        #        for det in ['H2']:
         for det in ['H2', 'H1', 'AX', 'L1', 'L2']:
             g = self._gc(p, det, kind)
             info = g.edit_traits()
             g.save_pdf('/Users/argonlab2/Sandbox/baselines/auto-down50/{}_obama{}'.format(kind, det))
-#            info.dispose()
+            #            info.dispose()
 
     def _gc(self, p, det, kind):
         g = Graph(container_dict=dict(padding=5),
@@ -152,7 +155,7 @@ class CSVGrapher(Loggable):
                   window_height=800,
                   window_x=40,
                   window_y=20
-                  )
+        )
         with open(p, 'r') as fp:
             # gather data
             reader = csv.reader(fp)
@@ -179,8 +182,8 @@ class CSVGrapher(Loggable):
         g.new_plot(zoom=True, xtitle='Time (s)', ytitle='{} Baseline Intensity (fA)'.format(det))
         g.new_series(x, y, type=kind, marker='dot', marker_size=2)
         g.new_series(x, sy, line_width=2)
-#        g.set_x_limits(500, 500 + 60 * 30)
-#        g.edit_traits()
+        #        g.set_x_limits(500, 500 + 60 * 30)
+        #        g.edit_traits()
         return g
 
     def add_column_selector(self):
@@ -201,14 +204,14 @@ class CSVGrapher(Loggable):
     def remove_column_selector(self, cs):
         self.data_selectors.remove(cs)
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
     def _open_button_fired(self):
         self.data_selectors = []
-#        p = '/Users/ross/Sandbox/csvdata.txt'
-#        self._path = p
-#        self._path=os.path.join(paths.data_dir,'spectrometer_scans','scan007.txt')
+        #        p = '/Users/ross/Sandbox/csvdata.txt'
+        #        self._path = p
+        #        self._path=os.path.join(paths.data_dir,'spectrometer_scans','scan007.txt')
         dlg = FileDialog(action='open', default_directory=paths.data_dir)
         if dlg.open() == OK:
             self._path = dlg.path
@@ -220,17 +223,17 @@ class CSVGrapher(Loggable):
             self.column_names = names = reader.next()
             try:
                 cs = DataSelector(column_names=names,
-                                    index=names[0],
-                                    value=names[1],
-                                    removable=False,
-                                    parent=self,
-                                    )
+                                  index=names[0],
+                                  value=names[1],
+                                  removable=False,
+                                  parent=self,
+                )
                 self.data_selectors.append(cs)
             except IndexError:
 
                 self.warning_dialog('Invalid delimiter {} for {}'.format(DELIMITERS[self.delimiter],
                                                                          os.path.basename(self._path)
-                                                                         ))
+                ))
 
     def _parse_data(self, reader):
         groups = []
@@ -245,11 +248,11 @@ class CSVGrapher(Loggable):
                     break
                 lines.append(l)
             else:
-#                print lines
-#                for l in lines:
-#                    print l
-#                    print map(float, l)
-#
+            #                print lines
+            #                for l in lines:
+            #                    print l
+            #                    print map(float, l)
+            #
                 data = np.array([map(float, l) for l in lines])
                 data = data.transpose()
                 groups.append(data)
@@ -262,9 +265,9 @@ class CSVGrapher(Loggable):
             reader = csv.reader(fp, delimiter=self.delimiter)
             _header = reader.next()
             groups = self._parse_data(reader)
-#            print groups
+            #            print groups
             for data in groups:
-#                print data
+            #                print data
                 self._show_plot(data)
 
     def _show_plot(self, data):
@@ -277,14 +280,14 @@ class CSVGrapher(Loggable):
             g = RegressionGraph(container_dict=cd)
             p = g.new_plot(padding=[50, 5, 5, 50],
                            xtitle=''
-                           )
+            )
             p.value_range.tight_bounds = False
             p.value_range.margin = 0.1
         else:
             g = StackedRegressionGraph(container_dict=cd)
 
         regressable = False
-#        metadata = None
+        #        metadata = None
         for i, csi in enumerate(self.data_selectors):
             if not self.as_series:
                 p = g.new_plot(padding=[50, 5, 5, 50])
@@ -332,9 +335,9 @@ class CSVGrapher(Loggable):
 
         show(gii)
 
-#===============================================================================
-# property get/set
-#===============================================================================
+    #===============================================================================
+    # property get/set
+    #===============================================================================
     def _get_file_name(self):
         if os.path.isfile(self._path):
             return os.path.relpath(self._path, paths.data_dir)
@@ -346,31 +349,33 @@ class CSVGrapher(Loggable):
             return os.path.basename(self._path)
         else:
             return ''
-#===============================================================================
-# views
-#===============================================================================
+            #===============================================================================
+            # views
+            #===============================================================================
+
     def traits_view(self):
         v = View(Item('as_series'), Item('delimiter', editor=EnumEditor(values=DELIMITERS)),
                  HGroup(Item('open_button', show_label=False),
                         Item('plot_button', enabled_when='_path', show_label=False),
                         Item('file_name', show_label=False, style='readonly')),
                  Item('data_selectors', show_label=False, editor=ListEditor(mutable=False,
-                                                                              style='custom',
-                                                            editor=InstanceEditor())),
+                                                                            style='custom',
+                                                                            editor=InstanceEditor())),
 
 
                  resizable=True,
                  width=525,
                  height=225,
                  title='CSV Plotter'
-                 )
+        )
         return v
+
 
 if __name__ == '__main__':
     cs = CSVGrapher()
-#    cs.quick_graph('/Users/ross/Sandbox/scan007.txt')
+    #    cs.quick_graph('/Users/ross/Sandbox/scan007.txt')
     # do_later(cs.quick_graph, '/Users/ross/Sandbox/baselines/scan013.txt')
-#    do_later(cs.quick_graph, '/Users/ross/Sandbox/baselines/scan011.txt')
+    #    do_later(cs.quick_graph, '/Users/ross/Sandbox/baselines/scan011.txt')
     do_later(cs.quick_graph, '/Users/argonlab2/Pychrondata/data/spectrometer_scans/scan017.txt')
     cs.configure_traits()
 #============= EOF =============================================

@@ -29,7 +29,7 @@ import re
 from src.database.isotope_analysis.summary import Summary
 from src.graph.graph import Graph
 from src.database.orms.isotope_orm import proc_SelectedHistoriesTable
-from src.constants import PLUSMINUS
+from src.pychron_constants import PLUSMINUS
 import time
 
 
@@ -54,22 +54,23 @@ class HistoryView(HasTraits):
 
     def traits_view(self):
         v = View(Group(
-                          Item('object.summary.histories', show_label=False,
-                          editor=TabularEditor(
-                                     adapter=HistoryTabularAdapter(),
-                                     editable=False,
-                                     operations=[],
-                                     auto_update=True,
-                                     horizontal_lines=True,
-                                     selected='object.selected_history')),
-                          Item('apply',
-                               enabled_when='summary.selected_history!=summary.oselected_history',
-                               show_label=False),
-                          show_border=True,
-                          label='histories',
-                        )
-                 )
+            Item('object.summary.histories', show_label=False,
+                 editor=TabularEditor(
+                     adapter=HistoryTabularAdapter(),
+                     editable=False,
+                     operations=[],
+                     auto_update=True,
+                     horizontal_lines=True,
+                     selected='object.selected_history')),
+            Item('apply',
+                 enabled_when='summary.selected_history!=summary.oselected_history',
+                 show_label=False),
+            show_border=True,
+            label='histories',
+        )
+        )
         return v
+
 
 class HistoryTabularAdapter(TabularAdapter):
     columns = [('User', 'user'), ('Date', 'create_date')]
@@ -79,7 +80,6 @@ class HistoryTabularAdapter(TabularAdapter):
     create_date_width = Int(120)
 
     def get_font(self, obj, trait, row):
-        import wx
         s = 9
         name = 'Bitstream Vera Sans Mono'
         return Font(name)
@@ -88,6 +88,7 @@ class HistoryTabularAdapter(TabularAdapter):
     def _get_user_text(self):
         u = self.item.user
         return u if u is not None else '---'
+
 
 class History(HasTraits):
     history = Any
@@ -103,12 +104,14 @@ class History(HasTraits):
     def __getattr__(self, attr):
         return getattr(self.history, attr)
 
+
 class HistorySummary(Summary):
     histories = Property
     graph = Instance(Graph)
     history_view = Instance(HistoryView)
     selected_history = DelegatesTo('history_view')
     history_name = ''
+
     def _graph_default(self):
         g = Graph(container_dict=dict(padding=5, stack_order='top_to_bottom'))
         g.width = self.record.item_width * 0.73
@@ -132,13 +135,12 @@ class HistorySummary(Summary):
             self.selected_history = sh
 
 
-
     def _get_isotope_keys(self, history, name):
         isokeys = sorted([bi.isotope for bi in getattr(history, name)
-#                              if bi.use_set
-                          ],
-                         key=lambda x:re.sub('\D', '', x),
-                       reverse=True)
+                          #                              if bi.use_set
+                         ],
+                         key=lambda x: re.sub('\D', '', x),
+                         reverse=True)
         return isokeys
 
     @on_trait_change('selected_history')
@@ -164,10 +166,10 @@ class HistorySummary(Summary):
     def _build_graph(self, hi):
         hn = self.history_name
         dbr = self.record
-#
+        #
         g = self.graph
         g.clear()
-#        self.graph = g
+        #        self.graph = g
         isokeys = self._get_isotope_keys(hi, hn)
         xma = -Inf
         xmi = Inf
@@ -179,11 +181,11 @@ class HistorySummary(Summary):
             g.new_plot(padding=[50, 5, 30, 5],
                        title=iso
 
-                       )
+            )
             if bi.use_set:
-#                xs = [dbr.make_timestamp(str(bs.analysis.rundate),
-#                                         str(bs.analysis.runtime)) for bs in bi.sets]
-                xs = [time.mktime(bs.analysis.analysis_timestamp.timetuple()) for bs in bi.sets ]
+            #                xs = [dbr.make_timestamp(str(bs.analysis.rundate),
+            #                                         str(bs.analysis.runtime)) for bs in bi.sets]
+                xs = [time.mktime(bs.analysis.analysis_timestamp.timetuple()) for bs in bi.sets]
                 xs = array(xs)
                 if xs.shape[0]:
                     xs = xs - min(xs)
@@ -208,15 +210,16 @@ class HistorySummary(Summary):
 
     def traits_view(self):
         v = View(HGroup(
-                        Item('history_view', style='custom',
-                             show_label=False,
-                             width=0.27),
-                        Item('graph', show_label=False,
-                             style='custom',
-                             width=0.73
-                             )
-                        )
-                 )
+            Item('history_view', style='custom',
+                 show_label=False,
+                 width=0.27),
+            Item('graph', show_label=False,
+                 style='custom',
+                 width=0.73
+            )
+        )
+        )
 
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================

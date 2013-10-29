@@ -15,38 +15,36 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Property, Button, List, cached_property
-from traitsui.api import View, Item, TableEditor
+from traits.api import Str, Button, List
 #============= standard library imports ========================
-import os
 #============= local library imports  ==========================
-from src.paths import paths
 from src.experiment.automated_run.spec import AutomatedRunSpec
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
+
 
 class UVAutomatedRunSpec(AutomatedRunSpec):
     mask = Str
     attenuator = Str
     reprate = Str
-    masks = Property
+    #masks = Property
     extract_units_names = List([NULL_STR, 'burst', 'continuous'])
     _default_extract_units = 'burst'
     browser_button = Button('Browse')
     image = Str
 
-    @cached_property
-    def _get_masks(self):
-        p = os.path.join(paths.device_dir, 'uv', 'masks.txt')
-        masks = []
-        if os.path.isfile(p):
-            with open(p, 'r') as fp:
-                for lin in fp:
-                    lin = lin.strip()
-                    if not lin or lin.startswith('#'):
-                        continue
-                    masks.append(lin)
-
-        return masks
+    #@cached_property
+    #def _get_masks(self):
+    #    p = os.path.join(paths.device_dir, 'fusions_uv', 'mask_names.txt')
+    #    masks = []
+    #    if os.path.isfile(p):
+    #        with open(p, 'r') as fp:
+    #            for lin in fp:
+    #                lin = lin.strip()
+    #                if not lin or lin.startswith('#'):
+    #                    continue
+    #                masks.append(lin)
+    #
+    #    return masks
 
     def _image_browser_factory(self):
         b = self.application.get_service('src.media_server.browser.MediaBrowser')
@@ -61,14 +59,15 @@ class UVAutomatedRunSpec(AutomatedRunSpec):
         nattrs = ('reprate', 'mask', 'attenuator', 'image')
         return list(attrs).extend(nattrs)
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
     def _browser_button_fired(self):
         browser = self._image_browser_factory()
-#        browser.root='images/fusions_uv'
+        #        browser.root='images/fusions_uv'
         browser.load_remote_directory('images/fusions_uv')
         info = browser.edit_traits(view='modal_view', kind='livemodal')
         if info.result:
             self.image = browser.get_selected_image_name()
+
 #============= EOF =============================================

@@ -15,16 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Property, cached_property, Int, \
-    Any, String
-from traitsui.api import View, Item, EnumEditor, VGroup
-from src.loggable import Loggable
-from src.constants import NULL_STR, LINE_STR
 import os
-from src.paths import paths
 from ConfigParser import ConfigParser
-from matplotlib.mlab import ma
-from src.lasers.laser_managers.ilaser_manager import ILaserManager
+
+from traits.api import Str, Property, cached_property, Int, \
+    Any, String
+
+from src.loggable import Loggable
+from src.pychron_constants import NULL_STR, LINE_STR
+from src.paths import paths
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -50,9 +50,9 @@ class ExperimentQueueFactory(Loggable):
 
     ok_make = Property(depends_on='mass_spectrometer, username')
 
-#===============================================================================
-# property get/set
-#===============================================================================
+    #===============================================================================
+    # property get/set
+    #===============================================================================
 
     @cached_property
     def _get_load_names(self):
@@ -63,11 +63,12 @@ class ExperimentQueueFactory(Loggable):
     def _get_ok_make(self):
         ms = self.mass_spectrometer.strip()
         un = self.username.strip()
-#        ed = self.extract_device.strip()
+        #        ed = self.extract_device.strip()
 
-        return ms and not ms in ('Spectrometer', LINE_STR)  and un
-#                ed and ed != NULL_STR and  \
-#                    un
+        return ms and not ms in ('Spectrometer', LINE_STR) and un
+
+    #                ed and ed != NULL_STR and  \
+    #                    un
 
     @cached_property
     def _get_trays(self):
@@ -113,6 +114,7 @@ class ExperimentQueueFactory(Loggable):
         config.read(cp)
         if config.has_section(section):
             return [config.get(section, option) for option in config.options(section)]
+
 
 if __name__ == '__main__':
     g = ExperimentQueueFactory()
