@@ -1569,7 +1569,7 @@ anaylsis_type={}
         #for fit, (iso, detname) in zip(fits, signals):
         for iso, detname in signals:
             try:
-                fit = self.arar_age.isotopes[iso]
+                fit = self.arar_age.isotopes[iso].fit
             except (AttributeError, KeyError):
                 fit = 'linear'
 
