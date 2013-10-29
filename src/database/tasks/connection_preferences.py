@@ -15,27 +15,45 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from pyface.image_resource import ImageResource
 from traits.api import Str, Password, Enum, List, Button, Any, Int, \
-    on_trait_change, Bool
-from traitsui.api import View, Item, Group, VGroup, HGroup, ListStrEditor
-from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
+    on_trait_change
+from traitsui.api import View, Item, Group, VGroup, HGroup, ListStrEditor, ButtonEditor
 from traitsui.list_str_adapter import ListStrAdapter
 from envisage.ui.tasks.preferences_pane import PreferencesPane
 
+from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.paths import paths
+
+
+def button_editor(name, editor_kw=None, **kw):
+    if editor_kw is None:
+        editor_kw = {}
+
+    image = ImageResource(name=name,
+                          search_path=paths.icon_search_path)
+    return Item(trait, style='custom',
+                editor=ButtonEditor(image=image, **editor_kw),
+                **kw)
+
+
 class FavoritesAdapter(ListStrAdapter):
     columns = [('', 'name')]
     can_edit = False
+
     def get_text(self, obj, tr, ind):
         o = getattr(obj, tr)[ind]
         return o.split(',')[0]
+
 
 class ConnectionPreferences(BasePreferencesHelper):
     name = 'Connection'
     preferences_path = 'pychron.database'
     id = 'pychron.database.preferences_page'
-#    username = Str
+    #    username = Str
 
     db_fav_name = Str
     db_name = Str
@@ -44,12 +62,12 @@ class ConnectionPreferences(BasePreferencesHelper):
     db_host = Str
     db_kind = Enum('---', 'mysql', 'sqlite')
 
-#    repo_kind = Enum('---', 'local', 'FTP')
-#
-#    ftp_username = Str
-#    ftp_password = Password
-#    ftp_host = Str
-#    repo_root = Str
+    #    repo_kind = Enum('---', 'local', 'FTP')
+    #
+    #    ftp_username = Str
+    #    ftp_password = Password
+    #    ftp_host = Str
+    #    repo_root = Str
 
     massspec_dbname = Str
     massspec_username = Str
@@ -60,7 +78,7 @@ class ConnectionPreferences(BasePreferencesHelper):
     add_favorite = Button('+')
     delete_favorite = Button('-')
     selected = Any
-#    selected_live = Any
+    #    selected_live = Any
     selected_index = Int
 
     @on_trait_change('db+')
@@ -99,7 +117,7 @@ class ConnectionPreferences(BasePreferencesHelper):
             else:
                 vs = ['', '---', '', '', '', '']
                 for v, attr in zip(vs, ['fav_name', 'kind', 'username',
-                                    'host', 'name', 'password']):
+                                        'host', 'name', 'password']):
                     setattr(self, 'db_{}'.format(attr), str(v))
 
 
@@ -110,7 +128,7 @@ class ConnectionPreferences(BasePreferencesHelper):
                            self.db_username, self.db_host,
                            self.db_name,
                            self.db_password
-                           ])
+            ])
 
             pf = next((f for f in self.favorites if f.split(',')[0] == self.db_fav_name), None)
             if pf:
@@ -127,65 +145,62 @@ class ConnectionPreferences(BasePreferencesHelper):
 class ConnectionPreferencesPane(PreferencesPane):
     model_factory = ConnectionPreferences
     category = 'Database'
+
     def traits_view(self):
-
         db_auth_grp = Group(
-                            Item('db_host', width=125, label='Host'),
-                            Item('db_username', label='User'),
-                            Item('db_password', label='Password'),
-                            enabled_when='db_kind=="mysql"',
-                            show_border=True,
-                            label='Authentication'
-                            )
+            Item('db_host', width=125, label='Host'),
+            Item('db_username', label='User'),
+            Item('db_password', label='Password'),
+            enabled_when='db_kind=="mysql"',
+            show_border=True,
+            label='Authentication'
+        )
 
-#        ftp_auth_grp = Group(Item('ftp_host', label='Host'),
-#                             Item('ftp_username', label='Name'),
-#                             Item('ftp_password', label='Password'),
-#                             Item('repo_root', label='Data directory'),
-#                             enabled_when='repo_kind=="FTP"',
-#                             show_border=True,
-#                             label='Authentication'
-#                             )
+        #        ftp_auth_grp = Group(Item('ftp_host', label='Host'),
+        #                             Item('ftp_username', label='Name'),
+        #                             Item('ftp_password', label='Password'),
+        #                             Item('repo_root', label='Data directory'),
+        #                             enabled_when='repo_kind=="FTP"',
+        #                             show_border=True,
+        #                             label='Authentication'
+        #                             )
 
         fav_grp = VGroup(Item('db_fav_name',
-#                              editor=EnumEditor(name='favorites'),
+                              #                              editor=EnumEditor(name='favorites'),
                               show_label=False),
                          Item('favorites',
                               show_label=False,
                               width=100,
                               editor=ListStrEditor(
-                                                   editable=False,
-                                                   adapter=FavoritesAdapter(),
-                                                   selected='object.selected',
-                                                   )),
+                                  editable=False,
+                                  adapter=FavoritesAdapter(),
+                                  selected='object.selected',
+                              )),
                          HGroup(
-                                Item('add_favorite'),
-                                Item('delete_favorite'),
-                                show_labels=False
-
-                                )
-                         )
+                             Item('add_favorite'),
+                             Item('delete_favorite'),
+                             show_labels=False))
 
         db_grp = Group(HGroup(Item('db_kind', show_label=False)),
                        Item('db_name', label='Name'),
                        HGroup(fav_grp, db_auth_grp),
-                       show_border=True, label='Database')
+                       show_border=True, label='Main DB')
 
         massspec_grp = Group(
-                             Group(
-                                 Item('massspec_dbname', label='Database'),
-                                 Item('massspec_host', label='Host'),
-                                 Item('massspec_username', label='Name'),
-                                 Item('massspec_password', label='Password'),
-                                 show_border=True,
-                                 label='MassSpec Authentication'
-                                 ),
-                             label='MassSpec'
-                             )
+            Group(
+                Item('massspec_dbname', label='Database'),
+                Item('massspec_host', label='Host'),
+                Item('massspec_username', label='Name'),
+                Item('massspec_password', label='Password'),
+                show_border=True,
+                label='MassSpec Authentication'
+            ),
+            label='MassSpec DB'
+        )
 
         return View(
-                        db_grp,
-                        massspec_grp,
-                    )
+            db_grp,
+            massspec_grp,
+        )
 
 #============= EOF =============================================

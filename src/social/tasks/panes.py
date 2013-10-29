@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,3 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+
+#============= enthought library imports =======================
+from pyface.tasks.traits_task_pane import TraitsTaskPane
+from traitsui.api import View
+
+#============= standard library imports ========================
+#============= local library imports  ==========================
+
+class EmailPane(TraitsTaskPane):
+    def traits_view(self):
+        v = View()
+        return v
+
+        #============= EOF =============================================
