@@ -48,8 +48,7 @@ class AnalysisEditTask(BaseBrowserTask):
     ic_factor_editor_count = 0
 
     tool_bars = [SToolBar(DatabaseSaveAction(),
-                          image_size=(16, 16)
-    )]
+                          image_size=(16, 16))]
 
     external_recall_window = True
 
@@ -107,7 +106,7 @@ class AnalysisEditTask(BaseBrowserTask):
             items = [i for i in self.unknowns_pane.items if i.temp_status != 0]
 
         if items:
-            tag = self._get_tag()
+            tag = self._get_tagname()
             if tag:
                 db = self.manager.db
                 name = tag.name
@@ -117,7 +116,6 @@ class AnalysisEditTask(BaseBrowserTask):
                         x.tag = name
 
                         ai.set_tag(tag)
-
 
                     for it in items:
                         ma = db.get_analysis_uuid(it.uuid)

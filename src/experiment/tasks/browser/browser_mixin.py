@@ -58,7 +58,7 @@ class BrowserMixin(ColumnSorterMixin):
 
     sample_tabular_adapter = Any
 
-    recent_hours = Int(480)
+    recent_hours = Int(48)
 
     def set_projects(self, ps, sel):
         self.oprojects = ps

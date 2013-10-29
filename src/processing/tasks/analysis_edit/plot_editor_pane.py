@@ -15,14 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Event, Instance, List, on_trait_change
-from traitsui.api import View, Item, UItem, Group
+from traits.api import Any, Event, Instance, List
+from traitsui.api import View, UItem, Group
 from enable.base_tool import BaseTool
 from chaco.abstract_overlay import AbstractOverlay
 from enable.colors import ColorTrait
 from pyface.tasks.traits_dock_pane import TraitsDockPane
-from src.processing.tasks.plot_editor import PlotEditor, AnnotationEditor
 from chaco.plot import Plot
+
+from src.processing.tasks.plot_editor import PlotEditor, AnnotationEditor
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class SelectorTool(BaseTool):
@@ -120,7 +122,8 @@ class PlotEditorPane(TraitsDockPane):
                     so = SelectorOverlay(tool=st, component=plot)
 
                     plot.tools.append(st)
-                    plot.overlays.append(so)
+                    plot.overlays.insert(0, so)
+                    #plot.overlays.append(so)
                     self.selectors.append(so)
 
     def set_editor(self, new):

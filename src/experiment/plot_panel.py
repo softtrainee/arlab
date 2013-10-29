@@ -221,6 +221,8 @@ class PlotPanel(Loggable):
 
     refresh_age = True
 
+    _plot_keys = List
+
     def set_peak_center_graph(self, graph):
         self.peak_center_graph = graph
         self.show_graph(graph)
@@ -255,12 +257,15 @@ class PlotPanel(Loggable):
         g = self.isotope_graph
         self.selected_graph = g
 
+        self._plot_keys = []
         for det in dets:
             g.new_plot(
                 ytitle='{} {} (fA)'.format(det.name, det.isotope),
                 xtitle='time (s)',
                 padding_left=70,
                 padding_right=10)
+            self._plot_keys.append(det.isotope)
+
         self.detectors = dets
 
         #def clear_displays(self):
@@ -439,7 +444,11 @@ class PlotPanel(Loggable):
     def _update_display(self, new):
         if new:
             arar_age = self.arar_age
-            for iso, reg in zip(self.isotopes, new):
+
+            for iso, reg in zip(self._plot_keys, new):
+                if reg is None:
+                    continue
+
                 try:
                     vv = reg.predict(0)
                     ee = reg.predict_error(0)
