@@ -1010,8 +1010,8 @@ If "No" select from database
         nonfound = []
         if self.extraction_line_manager is None:
             nonfound.append('extraction_line')
-
-        if exp.extract_device and exp.extract_device != NULL_STR:
+        
+        if exp.extract_device and exp.extract_device not in (NULL_STR, 'Extract Device'):
             extract_device = convert_extract_device(exp.extract_device)
             #extract_device = exp.extract_device.replace(' ', '_').lower()
             man = None

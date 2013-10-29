@@ -448,7 +448,7 @@ class AutomatedRun(Loggable):
         if self.plot_panel:
             self.plot_panel.trait_set(is_baseline=is_baseline,
                                       _ncycles=cycles)
-
+        
         self.is_peak_hop = True
 
         fits = self.fits
@@ -470,6 +470,8 @@ class AutomatedRun(Loggable):
                 bs = dict([(iso.name, iso.baseline.uvalue) for iso in
                            self.arar_age.isotopes.values()])
                 self.experiment_manager._prev_baselines = bs
+        
+        self.is_peak_hop = False
         return ret
 
     def py_peak_center(self, detector=None, **kw):
@@ -1248,8 +1250,8 @@ anaylsis_type={}
         '''
 
         self.peak_hop_collector.trait_set(ncycles=ncycles,
-                                          parent=self,
-        )
+                                          parent=self)
+        
         self.peak_hop_collector.set_hops(hops)
         #self.peak_hop_collector.stop()
         #ncounts = sum([ci+s for _h, ci, s in hops]) * ncycles
@@ -1261,7 +1263,6 @@ anaylsis_type={}
                              starttime, starttime_offset,
                              series, fits, check_conditions)
 
-        return True
 
     def _get_data_generator(self):
         def gen():
@@ -1344,7 +1345,7 @@ anaylsis_type={}
         min_ = mi
         tc = self.plot_panel.total_counts
         if tc > ma or ma == Inf:
-            max_ = tc * 1.1
+            max_ = tc * 1.05
 
         if starttime_offset > mi:
             min_ = -starttime_offset
@@ -1924,7 +1925,7 @@ anaylsis_type={}
 
         rs_name, rs_text = self._assemble_script_blob()
         rid = self.runid
-
+        
         #dc = self.multi_collector
         dc = self.collector
 
