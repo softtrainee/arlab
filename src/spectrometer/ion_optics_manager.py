@@ -93,7 +93,7 @@ class IonOpticsManager(Manager):
         molweights = spec.molecular_weights
         return molweights[isotope_key]
 
-    def position(self, pos, detector, use_dac=False):
+    def position(self, pos, detector, use_dac=False, update_isotopes=True):
         if pos == NULL_STR:
             return
 
@@ -103,6 +103,7 @@ class IonOpticsManager(Manager):
         if use_dac:
             dac = pos
         else:
+            self.debug('POSITION {} {}'.format(pos, detector))
             if isinstance(pos, str):
                 # if the pos is an isotope then update the detectors
                 spec.update_isotopes(pos, detector)

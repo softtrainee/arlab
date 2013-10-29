@@ -220,7 +220,7 @@ class ExperimentEditorTask(EditorTask):
 
         #path = '/Users/ross/Pychrondata_dev/experiments/uv.xls'
 #        path = '/Users/ross/Pychrondata_dev/experiments/uv.txt'
-        path = '/Users/ross/Pychrondata_dev/experiments/Current Experiment.txt'
+        #path = '/Users/ross/Pychrondata_dev/experiments/Current Experiment.txt'
         if path is None:
             ps = self.open_file_dialog(action='open files',
                                        #default_path='/Users/ross/Pychrondata_dev/experiments/Current Experiment.txt',
