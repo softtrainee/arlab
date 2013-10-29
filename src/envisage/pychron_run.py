@@ -53,8 +53,8 @@ PACKAGE_DICT = dict(
     #                   GraphPlugin='src.graph.plugins.graph_plugin',
 
     #                   TwitterPlugin='src.social.plugins.twitter_plugin',
-    #                   EmailPlugin='src.social.plugins.email_plugin',
 
+    EmailPlugin='src.social.tasks.email_plugin',
     ProcessingPlugin='src.processing.tasks.processing_plugin',
 
     MediaServerPlugin='src.media_server.tasks.media_server_plugin',
@@ -62,6 +62,7 @@ PACKAGE_DICT = dict(
     DatabasePlugin='src.database.tasks.database_plugin',
     CanvasDesignerPlugin='src.canvas.tasks.canvas_plugin',
     ArArConstantsPlugin='src.constants.tasks.arar_constants_plugin'
+
 )
 
 
@@ -108,6 +109,11 @@ def get_klass(package, name):
 
 def get_plugin(pname):
     klass = None
+    if not pname.endswith('Plugin'):
+        pname = '{}Plugin'.format(pname)
+
+    #print PACKAGE_DICT.keys()
+    #print pname,pname in PACKAGE_DICT.keys()
     if pname in PACKAGE_DICT:
         package = PACKAGE_DICT[pname]
         klass = get_klass(package, pname)
@@ -169,9 +175,9 @@ def app_factory(klass):
 
 
 def check_dependencies():
-    '''
+    """
         check the dependencies and
-    '''
+    """
     from pyface.api import warning
 
     try:
@@ -196,8 +202,8 @@ def check_dependencies():
 
 
 def launch(klass):
-    '''
-    '''
+    """
+    """
 
     if not check_dependencies():
         return

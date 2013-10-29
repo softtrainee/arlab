@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,3 +13,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
+
+#============= enthought library imports =======================
+
+#============= standard library imports ========================
+#============= local library imports  ==========================
+from src.envisage.tasks.base_task import BaseManagerTask
+from src.social.tasks.panes import EmailPane
+
+
+class EmailTask(BaseManagerTask):
+    def create_central_pane(self):
+        return EmailPane()
+
+#============= EOF =============================================
