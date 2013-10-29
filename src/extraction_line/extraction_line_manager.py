@@ -20,7 +20,6 @@ import os
 import time
 from threading import Thread
 from socket import gethostbyname, gethostname
-import weakref
 #=============local library imports  ==========================
 from src.extraction_line.explanation.extraction_line_explanation import ExtractionLineExplanation
 from src.extraction_line.extraction_line_canvas import ExtractionLineCanvas
@@ -158,23 +157,23 @@ class ExtractionLineManager(Manager):
             self.warning('{} not initialized'.format(subsystem))
 
     def _create_manager(self, klass, manager, params, **kw):
-        gdict = globals()
-        if klass in gdict:
-            class_factory = gdict[klass]
+        #gdict = globals()
+        #if klass in gdict:
+        #    class_factory = gdict[klass]
+        #else:
+        # try a lazy load of the required module
+        if 'fusions' in manager:
+            package = 'src.managers.laser_managers.{}'.format(manager)
+            self.laser_manager_id = manager
+        elif 'rpc' in manager:
+            package = 'src.rpc.manager'
         else:
-            # try a lazy load of the required module
-            if 'fusions' in manager:
-                package = 'src.managers.laser_managers.{}'.format(manager)
-                self.laser_manager_id = manager
-            elif 'rpc' in manager:
-                package = 'src.rpc.manager'
-            else:
-                package = 'src.managers.{}'.format(manager)
+            package = 'src.managers.{}'.format(manager)
 
-            class_factory = self.get_manager_factory(package, klass, warn=False)
-            if class_factory is None:
-                package = 'src.extraction_line.{}'.format(manager)
-                class_factory = self.get_manager_factory(package, klass)
+        class_factory = self.get_manager_factory(package, klass, warn=False)
+        if class_factory is None:
+            package = 'src.extraction_line.{}'.format(manager)
+            class_factory = self.get_manager_factory(package, klass)
 
         if class_factory:
         #            params['application'] = self.application
@@ -193,6 +192,8 @@ class ExtractionLineManager(Manager):
             # m.exit_on_close = False
 
             return m
+        else:
+            self.debug('could not create manager {}, {},{},{}'.format(klass, manager, params, kw))
 
     def refresh_canvas(self):
         for ci in self._canvases:

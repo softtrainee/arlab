@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Range, Instance, Bool, \
-     Button, Any, Str, Float, Enum, HasTraits, List
+    Button, Any, Str, Float, Enum, HasTraits, List
 from traitsui.api import View, Item, EnumEditor, Handler
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
@@ -26,7 +26,7 @@ from src.graph.graph import Graph
 from src.spectrometer.jobs.peak_center import PeakCenter
 # from threading import Thread
 from src.spectrometer.detector import Detector
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
 from src.ui.thread import Thread
 from src.paths import paths
 import os
@@ -40,6 +40,7 @@ class PeakCenterConfigHandler(Handler):
             info.object.dump()
         return isok
 
+
 class PeakCenterConfig(HasTraits):
     detectors = List(transient=True)
     detector = Instance(Detector, transient=True)
@@ -49,6 +50,7 @@ class PeakCenterConfig(HasTraits):
     dac = Float
 
     directions = Enum('Increase', 'Decrease', 'Oscillate')
+
     def dump(self):
         p = os.path.join(paths.hidden_dir, 'peak_center_config')
         with open(p, 'wb') as fp:
@@ -60,14 +62,14 @@ class PeakCenterConfig(HasTraits):
 
     def traits_view(self):
         v = View(Item('detector', editor=EnumEditor(name='detectors')),
-               Item('isotope', editor=EnumEditor(name='isotopes')),
-               Item('dac'),
-               Item('directions'),
-               buttons=['OK', 'Cancel'],
-               kind='livemodal',
-               title='Peak Center',
-               handler=PeakCenterConfigHandler
-               )
+                 Item('isotope', editor=EnumEditor(name='isotopes')),
+                 Item('dac'),
+                 Item('directions'),
+                 buttons=['OK', 'Cancel'],
+                 kind='livemodal',
+                 title='Peak Center',
+                 handler=PeakCenterConfigHandler
+        )
         return v
 
 
@@ -102,7 +104,6 @@ class IonOpticsManager(Manager):
             dac = pos
         else:
             if isinstance(pos, str):
-
                 # if the pos is an isotope then update the detectors
                 spec.update_isotopes(pos, detector)
 
@@ -137,16 +138,16 @@ class IonOpticsManager(Manager):
                        confirm_save=False,
                        warn=False,
                        new_thread=True,
-#                       plot_panel=None,
-                       ):
-#        spec = self.spectrometer
+                       #                       plot_panel=None,
+    ):
+    #        spec = self.spectrometer
         self.debug('doing pc')
 
         self.canceled = False
         self.alive = True
 
-#        self._setup_peak_center(detectors, isotope, period,
-#                                      center_dac, directions, plot_panel)
+        #        self._setup_peak_center(detectors, isotope, period,
+        #                                      center_dac, directions, plot_panel)
 
         args = (save, confirm_save, warn)
         if new_thread:
@@ -165,7 +166,7 @@ class IonOpticsManager(Manager):
         if detector is None or isotope is None:
             pcc = self.peak_center_config
             info = pcc.edit_traits()
-#             info = self.edit_traits(view='peak_center_config_view')
+            #             info = self.edit_traits(view='peak_center_config_view')
             if not info.result:
                 return
             else:
@@ -189,7 +190,7 @@ class IonOpticsManager(Manager):
             center_dac = self.get_center_dac(ref, isotope)
 
         self._setup_peak_center(detectors, isotope, period,
-                                      center_dac, directions, plot_panel)
+                                center_dac, directions, plot_panel)
         return self.peak_center
 
     def _setup_peak_center(self, detectors, isotope, period,
@@ -212,17 +213,17 @@ class IonOpticsManager(Manager):
             pc = PeakCenter()
 
         pc.trait_set(center_dac=center_dac,
-                   period=period,
-                   directions=directions,
-                   reference_detector=ref,
-                   additional_detectors=ad,
-                   reference_isotope=isotope,
-                   spectrometer=spec)
+                     period=period,
+                     directions=directions,
+                     reference_detector=ref,
+                     additional_detectors=ad,
+                     reference_isotope=isotope,
+                     spectrometer=spec)
 
         self.peak_center = pc
         graph = pc.graph
         if plot_panel:
-#             plot_panel.peak_center_graph = graph
+        #             plot_panel.peak_center_graph = graph
             plot_panel.set_peak_center_graph(graph)
         else:
             # bind to the graphs close_func
@@ -261,7 +262,7 @@ class IonOpticsManager(Manager):
             dac_a = dac_d / det.relative_position
 
             self.info('converted to axial units {}'.format(dac_a))
-#             args = ref, isotope, dac_a
+            #             args = ref, isotope, dac_a
 
             if save:
                 save = True
@@ -278,9 +279,9 @@ class IonOpticsManager(Manager):
                 self.warning_dialog(msg)
             self.warning(msg)
 
-        # needs to be called on the main thread to properly update
-        # the menubar actions. alive=False enables IonOptics>Peak Center
-#        d = lambda:self.trait_set(alive=False)
+            # needs to be called on the main thread to properly update
+            # the menubar actions. alive=False enables IonOptics>Peak Center
+        #        d = lambda:self.trait_set(alive=False)
         # still necessary with qt? and tasks
 
         self.trait_set(alive=False)
@@ -295,9 +296,9 @@ class IonOpticsManager(Manager):
         self.peak_center.stop()
         self.info('peak center canceled')
 
-#===============================================================================
-# handler
-#===============================================================================
+    #===============================================================================
+    # handler
+    #===============================================================================
     def _peak_center_config_default(self):
         config = None
         p = os.path.join(paths.hidden_dir, 'peak_center_config')
@@ -319,8 +320,8 @@ class IonOpticsManager(Manager):
         keys = self.spectrometer.molecular_weights.keys()
         config.isotopes = sort_isotopes(keys)
 
-
         return config
+
 
 if __name__ == '__main__':
     io = IonOpticsManager()

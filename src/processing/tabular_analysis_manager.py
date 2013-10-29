@@ -24,9 +24,10 @@ from src.viewable import Viewable, ViewableHandler
 from src.processing.analysis_means import AnalysisRatioMean, \
     AnalysisIntensityMean, Marker
 from src.database.core.database_selector import ColumnSorterMixin
-from src.constants import PLUSMINUS
+from src.pychron_constants import PLUSMINUS
 from src.helpers.formatting import floatfmt
 from src.helpers.color_generators import colornames
+
 
 class AnalysisAdapter(TabularAdapter):
 #    columns = [('Status', 'status'),
@@ -42,17 +43,17 @@ class AnalysisAdapter(TabularAdapter):
     status_width = Int(40)
     age_text = Property
     age_error_text = Property
-#    age_error_format = Str('%0.4f')
-#    age_width = Int(80)
-#    age_error_width = Int(80)
+    #    age_error_format = Str('%0.4f')
+    #    age_width = Int(80)
+    #    age_error_width = Int(80)
     @cached_property
     def _get_columns(self):
         columns = [('Status', 'status'),
-                 ('ID', 'record_id')]
+                   ('ID', 'record_id')]
         columns.extend(self._construct_columns())
         if self.include_age:
             a = [('Age', 'age'),
-               (u'{}1s'.format(PLUSMINUS), 'age_error')]
+                 (u'{}1s'.format(PLUSMINUS), 'age_error')]
             columns.extend(a)
         return columns
 
@@ -73,6 +74,7 @@ class AnalysisAdapter(TabularAdapter):
 
     def get_font(self, obj, trait, row):
         import wx
+
         s = 9
         f = wx.FONTFAMILY_DEFAULT
         st = wx.FONTSTYLE_NORMAL
@@ -114,9 +116,8 @@ class AnalysisAdapter(TabularAdapter):
             e = self._floatfmt(ee.std_dev, n=6)
         return e
 
+
 class AnalysisIntensityAdapter(AnalysisAdapter):
-
-
     Ar40_text = Property
     Ar40_error_text = Property
     Ar39_text = Property
@@ -130,21 +131,21 @@ class AnalysisIntensityAdapter(AnalysisAdapter):
 
     def _construct_columns(self):
         columns = [
-#               ('Status', 'status'),
-#               ('ID', 'record_id'),
-               ('Ar40', 'Ar40'),
-               (u'{}1s'.format(PLUSMINUS), 'Ar40_error'),
-               ('Ar39', 'Ar39'),
-               (u'{}1s'.format(PLUSMINUS), 'Ar39_error'),
-               ('Ar38', 'Ar38'),
-               (u'{}1s'.format(PLUSMINUS), 'Ar38_error'),
-               ('Ar37', 'Ar37'),
-               (u'{}1s'.format(PLUSMINUS), 'Ar37_error'),
-               ('Ar36', 'Ar36'),
-               (u'{}1s'.format(PLUSMINUS), 'Ar36_error'),
-#               ('Age', 'age'),
-#               (u'{}1s'.format(PLUSMINUS), 'age_error'),
-               ]
+            #               ('Status', 'status'),
+            #               ('ID', 'record_id'),
+            ('Ar40', 'Ar40'),
+            (u'{}1s'.format(PLUSMINUS), 'Ar40_error'),
+            ('Ar39', 'Ar39'),
+            (u'{}1s'.format(PLUSMINUS), 'Ar39_error'),
+            ('Ar38', 'Ar38'),
+            (u'{}1s'.format(PLUSMINUS), 'Ar38_error'),
+            ('Ar37', 'Ar37'),
+            (u'{}1s'.format(PLUSMINUS), 'Ar37_error'),
+            ('Ar36', 'Ar36'),
+            (u'{}1s'.format(PLUSMINUS), 'Ar36_error'),
+            #               ('Age', 'age'),
+            #               (u'{}1s'.format(PLUSMINUS), 'age_error'),
+        ]
         return columns
 
     def _get_Ar40_text(self):
@@ -179,8 +180,6 @@ class AnalysisIntensityAdapter(AnalysisAdapter):
 
 
 class AnalysisRatioAdapter(AnalysisAdapter):
-
-
     Ar40_39_text = Property
     Ar40_39_error_text = Property
     Ar37_39_text = Property
@@ -191,23 +190,24 @@ class AnalysisRatioAdapter(AnalysisAdapter):
     kca_error_text = Property
     kcl_text = Property
     kcl_error_text = Property
+
     def _construct_columns(self):
         columns = [
-#               ('Status', 'status'),
-#               ('ID', 'record_id'),
-               ('40*/K39', 'Ar40_39'),
-               (u'{}1s'.format(PLUSMINUS), 'Ar40_39_error'),
-               ('Ar37/Ar39', 'Ar37_39'),
-               (u'{}1s'.format(PLUSMINUS), 'Ar37_39_error'),
-               ('Ar36/Ar39', 'Ar36_39'),
-               (u'{}1s'.format(PLUSMINUS), 'Ar36_39_error'),
-               ('K/Ca', 'kca'),
-               (u'{}1s'.format(PLUSMINUS), 'kca_error'),
-               ('K/Cl', 'kcl'),
-               (u'{}1s'.format(PLUSMINUS), 'kcl_error'),
-#               ('Age', 'age'),
-#               (u'{}1s'.format(PLUSMINUS), 'age_error'),
-               ]
+            #               ('Status', 'status'),
+            #               ('ID', 'record_id'),
+            ('40*/K39', 'Ar40_39'),
+            (u'{}1s'.format(PLUSMINUS), 'Ar40_39_error'),
+            ('Ar37/Ar39', 'Ar37_39'),
+            (u'{}1s'.format(PLUSMINUS), 'Ar37_39_error'),
+            ('Ar36/Ar39', 'Ar36_39'),
+            (u'{}1s'.format(PLUSMINUS), 'Ar36_39_error'),
+            ('K/Ca', 'kca'),
+            (u'{}1s'.format(PLUSMINUS), 'kca_error'),
+            ('K/Cl', 'kcl'),
+            (u'{}1s'.format(PLUSMINUS), 'kcl_error'),
+            #               ('Age', 'age'),
+            #               (u'{}1s'.format(PLUSMINUS), 'age_error'),
+        ]
         return columns
 
     def _get_Ar40_39_text(self):
@@ -248,6 +248,7 @@ class MeanAdapter(AnalysisAdapter):
     arith_age_text = Property
     age_se_text = Property
     age_sd_text = Property
+
     def get_text_color(self, *args):
         return 'black'
 
@@ -269,74 +270,77 @@ class MeanAdapter(AnalysisAdapter):
             bgcolor = '#F0F8FF'
 
         return bgcolor
+
     @cached_property
     def _get_columns(self):
         columns = [('N', 'nanalyses'),
-                 ('ID', 'identifier')]
+                   ('ID', 'identifier')]
         columns.extend(self._construct_columns())
         if self.include_age:
             a = [
-                 ('Wtd. Age', 'weighted_age'),
-                 ('S.E', 'age_se'),
-                 ('Arith. Age', 'arith_age'),
-                 ('S.D', 'age_sd')
-#                 (u'{}1s'.format(PLUSMINUS), 'age_error')
-                 ]
+                ('Wtd. Age', 'weighted_age'),
+                ('S.E', 'age_se'),
+                ('Arith. Age', 'arith_age'),
+                ('S.D', 'age_sd')
+                #                 (u'{}1s'.format(PLUSMINUS), 'age_error')
+            ]
             columns.extend(a)
         return columns
 
-class AnalysisRatioMeanAdapter(MeanAdapter, AnalysisRatioAdapter):
 
+class AnalysisRatioMeanAdapter(MeanAdapter, AnalysisRatioAdapter):
     def _construct_columns(self):
         columns = [
-#                   ('N', 'nanalyses'),
-#                   ('ID', 'identifier'),
-                   ('40*/K39', 'Ar40_39'),
-                   ('S.E.', 'Ar40_39_error'),
-#                   (u'{}1s'.format(PLUSMINUS), 'Ar40_39_error'),
-                   ('Ar37/Ar39', 'Ar37_39'),
-#                   (u'{}1s'.format(PLUSMINUS), 'Ar37_39_error'),
-                   ('S.E.', 'Ar37_39_error'),
-                   ('Ar36/Ar39', 'Ar36_39'),
-#                   (u'{}1s'.format(PLUSMINUS), 'Ar36_39_error'),
-                   ('S.E.', 'Ar36_39_error'),
-                   ('K/Ca', 'kca'),
-#                   (u'{}1s'.format(PLUSMINUS), 'kca_error'),
-                   ('S.E.', 'kca_error'),
-                   ('K/Cl', 'kcl'),
-#                   (u'{}1s'.format(PLUSMINUS), 'kcl_error'),
-                   ('S.E.', 'kcl_error'),
-#                   ('Age', 'age'),
-#                   (u'{}1s'.format(PLUSMINUS), 'age_error'),
-                   ]
+            #                   ('N', 'nanalyses'),
+            #                   ('ID', 'identifier'),
+            ('40*/K39', 'Ar40_39'),
+            ('S.E.', 'Ar40_39_error'),
+            #                   (u'{}1s'.format(PLUSMINUS), 'Ar40_39_error'),
+            ('Ar37/Ar39', 'Ar37_39'),
+            #                   (u'{}1s'.format(PLUSMINUS), 'Ar37_39_error'),
+            ('S.E.', 'Ar37_39_error'),
+            ('Ar36/Ar39', 'Ar36_39'),
+            #                   (u'{}1s'.format(PLUSMINUS), 'Ar36_39_error'),
+            ('S.E.', 'Ar36_39_error'),
+            ('K/Ca', 'kca'),
+            #                   (u'{}1s'.format(PLUSMINUS), 'kca_error'),
+            ('S.E.', 'kca_error'),
+            ('K/Cl', 'kcl'),
+            #                   (u'{}1s'.format(PLUSMINUS), 'kcl_error'),
+            ('S.E.', 'kcl_error'),
+            #                   ('Age', 'age'),
+            #                   (u'{}1s'.format(PLUSMINUS), 'age_error'),
+        ]
         return columns
+
 
 class AnalysisIntensityMeanAdapter(MeanAdapter, AnalysisIntensityAdapter):
-
     def _construct_columns(self):
         columns = [
-                   ('Ar40', 'Ar40'),
-                   ('S.E.', 'Ar40_error'),
-#                   (u'{}1s'.format(PLUSMINUS), 'Ar40_error'),
-                   ('Ar39', 'Ar39'),
-                   ('S.E.', 'Ar39_error'),
-#                   (u'{}1s'.format(PLUSMINUS), 'Ar39_error'),
-                   ('Ar38', 'Ar38'),
-                   ('S.E.', 'Ar38_error'),
-#                   (u'{}1s'.format(PLUSMINUS), 'Ar38_error'),
-                   ('Ar37', 'Ar37'),
-                   ('S.E.', 'Ar37_error'),
-#                   (u'{}1s'.format(PLUSMINUS), 'Ar37_error'),
-                   ('Ar36', 'Ar36'),
-                   ('S.E.', 'Ar36_error')
-#                   (u'{}1s'.format(PLUSMINUS), 'Ar36_error')
-                   ]
+            ('Ar40', 'Ar40'),
+            ('S.E.', 'Ar40_error'),
+            #                   (u'{}1s'.format(PLUSMINUS), 'Ar40_error'),
+            ('Ar39', 'Ar39'),
+            ('S.E.', 'Ar39_error'),
+            #                   (u'{}1s'.format(PLUSMINUS), 'Ar39_error'),
+            ('Ar38', 'Ar38'),
+            ('S.E.', 'Ar38_error'),
+            #                   (u'{}1s'.format(PLUSMINUS), 'Ar38_error'),
+            ('Ar37', 'Ar37'),
+            ('S.E.', 'Ar37_error'),
+            #                   (u'{}1s'.format(PLUSMINUS), 'Ar37_error'),
+            ('Ar36', 'Ar36'),
+            ('S.E.', 'Ar36_error')
+            #                   (u'{}1s'.format(PLUSMINUS), 'Ar36_error')
+        ]
         return columns
+
 
 class TabularAnalysisHandler(ViewableHandler):
     def object_title_changed(self, info):
         if info.initialized:
             info.ui.title = info.object.title
+
 
 class TabularAnalysisManager(Viewable, ColumnSorterMixin):
     analyses = List
@@ -380,15 +384,17 @@ class TabularAnalysisManager(Viewable, ColumnSorterMixin):
     @cached_property
     def _get_ratio_means(self):
         return self._get_means(AnalysisRatioMean)
-#        means = [AnalysisRatioMean(analyses=ans) for ans in grps]
-#        means = [AnalysisRatioMean(analyses=self.analyses)]
-#        return means
+
+    #        means = [AnalysisRatioMean(analyses=ans) for ans in grps]
+    #        means = [AnalysisRatioMean(analyses=self.analyses)]
+    #        return means
 
     @cached_property
     def _get_intensity_means(self):
         return self._get_means(AnalysisIntensityMean)
-#        means = [AnalysisIntensityMean(analyses=self.analyses)]
-#        return means
+
+    #        means = [AnalysisIntensityMean(analyses=self.analyses)]
+    #        return means
 
     def _get_means(self, klass):
         means = []
@@ -396,7 +402,7 @@ class TabularAnalysisManager(Viewable, ColumnSorterMixin):
         for ai in self.analyses:
             if isinstance(ai, Marker):
                 means.append(klass(analyses=grp))
-#                grps.append(grp)
+                #                grps.append(grp)
                 grp = []
             else:
                 grp.append(ai)
@@ -407,11 +413,11 @@ class TabularAnalysisManager(Viewable, ColumnSorterMixin):
     def _editor_factory(self, adapter_klass, **kw):
 
         ta = TabularEditor(adapter=adapter_klass(include_age=self.include_age),
-                                   column_clicked='column_clicked',
-                                   editable=False,
-                                   auto_update=True,
-                                   **kw
-                                   )
+                           column_clicked='column_clicked',
+                           editable=False,
+                           auto_update=True,
+                           **kw
+        )
         return ta
 
     def traits_view(self):
@@ -421,43 +427,43 @@ class TabularAnalysisManager(Viewable, ColumnSorterMixin):
                                 height=300,
                                 show_label=False,
                                 editor=self._editor_factory(AnalysisIntensityAdapter,
-                                                          dclicked='update_selected_analysis',
-                                                          selected='selected_analysis')
-                                ),
+                                                            dclicked='update_selected_analysis',
+                                                            selected='selected_analysis')
+        ),
                            Item('intensity_means',
                                 height=100,
                                 show_label=False,
                                 editor=self._editor_factory(AnalysisIntensityMeanAdapter)
-                                )
                            )
+        )
         ratio = VGroup(
-                       Item('analyses',
-                            height=300,
-                            show_label=False,
-                            editor=self._editor_factory(AnalysisRatioAdapter,
-                                                        dclicked='update_selected_analysis',
-                                                        selected='selected_analysis'
-                                                        )
-                            ),
-                       Item('ratio_means',
-                          height=100,
-                          show_label=False,
-                          editor=self._editor_factory(AnalysisRatioMeanAdapter)
-#                          editor=TabularEditor(adapter=AnalysisRatioMeanAdapter(),
-#                                               editable=False,
-#                                               auto_update=True,
-#                                               column_clicked='column_clicked',
-#                                               )
-                            )
+            Item('analyses',
+                 height=300,
+                 show_label=False,
+                 editor=self._editor_factory(AnalysisRatioAdapter,
+                                             dclicked='update_selected_analysis',
+                                             selected='selected_analysis'
+                 )
+            ),
+            Item('ratio_means',
+                 height=100,
+                 show_label=False,
+                 editor=self._editor_factory(AnalysisRatioMeanAdapter)
+                 #                          editor=TabularEditor(adapter=AnalysisRatioMeanAdapter(),
+                 #                                               editable=False,
+                 #                                               auto_update=True,
+                 #                                               column_clicked='column_clicked',
+                 #                                               )
+            )
 
-                       )
+        )
 
         return self.view_factory(Group(
-                                       Group(intensity, label='Intensities'),
-                                       Group(ratio, label='Ratios'),
-                                       layout='tabbed'
-                                       ),
-                                 )
+            Group(intensity, label='Intensities'),
+            Group(ratio, label='Ratios'),
+            layout='tabbed'
+        ),
+        )
 
     def _update_selected_analysis_fired(self):
         sa = self.selected_analysis
@@ -465,6 +471,7 @@ class TabularAnalysisManager(Viewable, ColumnSorterMixin):
             dbr = sa.isotope_record
             if self.db:
                 self.db.selector.open_record(dbr)
+
 #            dbr.load_graph()
 #            dbr.edit_traits()
 #============= EOF =============================================

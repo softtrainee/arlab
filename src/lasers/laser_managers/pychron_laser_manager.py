@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Int, CInt, Str, String, on_trait_change, Button, Float, \
-    Property, Event, Bool, Enum, cached_property, Range
+from traits.api import CInt, Str, String, on_trait_change, Button, Float, \
+    Property, Bool, Instance
 
 from traitsui.api import View, Item, VGroup, HGroup, RangeEditor, EnumEditor
 import apptools.sweet_pickle as pickle
@@ -26,6 +26,7 @@ from threading import Thread
 #============= local library imports  ==========================
 from src.globals import globalv
 from src.hardware.core.communicators.ethernet_communicator import EthernetCommunicator
+from src.lasers.laser_managers.client import UVLaserOpticsClient, UVLaserControlsClient
 from src.lasers.laser_managers.laser_manager import BaseLaserManager
 from src.helpers.filetools import str_to_bool
 import os
@@ -450,18 +451,14 @@ class PychronLaserManager(BaseLaserManager):
 
 
 class PychronUVLaserManager(PychronLaserManager):
-    fire = Event
-    fire_label = Property(depends_on='firing')
-    firing = Bool
-    fire_mode = Enum('Burst', 'Continuous')
-    nburst = Property(depends_on='_nburst')
-    _nburst = Int
+    optics_client = Instance(UVLaserOpticsClient)
+    controls_client = Instance(UVLaserControlsClient)
 
-    mask = Str(enter_set=True, auto_set=False)
-    masks = Property
-    attenuator = Str(enter_set=True, auto_set=False)
-    attenuators = Property
-    zoom = Range(0.0, 100.0)
+    def _controls_client_default(self):
+        return UVLaserControlsClient(parent=self)
+
+    def _optics_client_default(self):
+        return UVLaserOpticsClient(parent=self)
 
     def extract(self, power, **kw):
         self._set_nburst(power)
@@ -504,21 +501,15 @@ class PychronUVLaserManager(PychronLaserManager):
 
         self._ask('Fire {}'.format(mode))
 
-    #     def _position_changed(self):
-    #         if self.position is not None:
-    #             t = Thread(target=self._move_to_position, args=(self.position,))
-    #             t.start()
-    # #            self._move_to_position(self.position)
+        #     def _position_changed(self):
+        #         if self.position is not None:
+        #             t = Thread(target=self._move_to_position, args=(self.position,))
+        #             t.start()
+        # #            self._move_to_position(self.position)
 
-    @on_trait_change('mask, attenuator, zoom')
-    def _motor_changed(self, name, new):
-        if new is not None:
-            t = Thread(target=self.set_motor, args=(name, new))
-            t.start()
-
-            #===============================================================================
-            #
-            #===============================================================================
+        #===============================================================================
+        #
+        #===============================================================================
 
     def _opened_hook(self):
         nb = self._ask('GetNBurst')
@@ -582,30 +573,9 @@ class PychronUVLaserManager(PychronLaserManager):
         )
         return v
 
-
     #===============================================================================
     # property get/set
     #===============================================================================
-    @cached_property
-    def _get_masks(self):
-        return self._get_motor_values('masks')
-
-    @cached_property
-    def _get_attenuators(self):
-        return self._get_motor_values('attenuators')
-
-    def _get_motor_values(self, name):
-        p = os.path.join(paths.device_dir, 'uv', '{}.txt'.format(name))
-        values = []
-        if os.path.isfile(p):
-            with open(p, 'r') as fp:
-                for lin in fp:
-                    lin = lin.strip()
-                    if not lin or lin.startswith('#'):
-                        continue
-                    values.append(lin)
-
-        return values
 
 
     def _get_int(self, resp):

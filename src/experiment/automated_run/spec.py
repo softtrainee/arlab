@@ -24,7 +24,7 @@ import uuid
 from src.experiment.automated_run.automated_run import AutomatedRun
 from src.experiment.utilities.identifier import get_analysis_type, make_rid, \
     make_runid
-from src.constants import SCRIPT_KEYS, SCRIPT_NAMES, ALPHAS
+from src.pychron_constants import SCRIPT_KEYS, SCRIPT_NAMES, ALPHAS
 from src.loggable import Loggable
 import weakref
 

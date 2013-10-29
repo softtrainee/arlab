@@ -15,18 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Button, Any, Dict, cached_property, Property, \
+from traits.api import List, Button, Any, Dict, cached_property, Property, \
     on_trait_change
-from traitsui.api import View, Item, Controller, SetEditor, UItem, \
-    HGroup, spring, ListEditor, InstanceEditor
+from traitsui.api import View, Controller, UItem, \
+    HGroup, spring, ListEditor
 #============= standard library imports ========================
-import os
-from uncertainties import ufloat
 from functools import partial
 #============= local library imports  ==========================
-from src.processing.autoupdate_parser import AutoupdateParser
 from src.processing.publisher.analysis import PubAnalysis, Marker
-from src.constants import ARGON_KEYS, PLUSMINUS
+from src.pychron_constants import PLUSMINUS
 from src.ui.tabular_editor import myTabularEditor
 from traitsui.tabular_adapter import TabularAdapter
 from pyface.action.menu_manager import MenuManager
@@ -37,17 +34,18 @@ from src.helpers.formatting import floatfmt
 class LoadedTableAdapter(TabularAdapter):
     columns = Property(depends_on='visible_columns,visible_columns[]')
     visible_columns = List(['runid', 'status', 'age', 'age_error', 'k_ca'])
-    column_m = {'runid':('RunID', 'runid'),
-                'status':('Status', 'status'),
-                'age':('Age', 'age'),
-                'age_error':(u'{}1s'.format(PLUSMINUS), 'age_error'),
-                'k_ca':('K/Ca', 'k_ca'),
-                'labnumber':('Lab. #', 'labnumber')
-                }
+    column_m = {'runid': ('RunID', 'runid'),
+                'status': ('Status', 'status'),
+                'age': ('Age', 'age'),
+                'age_error': (u'{}1s'.format(PLUSMINUS), 'age_error'),
+                'k_ca': ('K/Ca', 'k_ca'),
+                'labnumber': ('Lab. #', 'labnumber')
+    }
     age_text = Property
     age_error_text = Property
     status_text = Property
     k_ca_text = Property
+
     def _get_k_ca_text(self):
         return floatfmt(self._get_nominal_value('k_ca'), n=2)
 
@@ -84,6 +82,7 @@ class LoadedTableAdapter(TabularAdapter):
 
         return cols
 
+
 class ComputedValuesTabularAdapter(TabularAdapter):
     columns = [('Lab. #', 'labnumber'),
                ('Sample', 'sample'),
@@ -93,13 +92,14 @@ class ComputedValuesTabularAdapter(TabularAdapter):
                ('Integrated', 'integrated_age'),
                ('{}1s'.format(PLUSMINUS), 'integrated_error'),
                ('Weighted Mean Age.', 'wm_age'),
-               ]
+    ]
 
     plateau_age_text = Property
     plateau_error_text = Property
     integrated_age_text = Property
     integrated_error_text = Property
     plateau_steps_text = Property
+
     def _get_plateau_steps_text(self):
         s = self.item.plateau_steps
         n = self.item.plateau_nsteps
@@ -138,7 +138,9 @@ class ComputedValuesTabularAdapter(TabularAdapter):
         else:
             m = ''
         return m
-# class MeanLoadedTableAdapter(LoadedTableAdapter):
+
+        # class MeanLoadedTableAdapter(LoadedTableAdapter):
+
 #    visible_columns = ['labnumber', 'age']
 
 class LoadedTableController(Controller):
@@ -146,11 +148,11 @@ class LoadedTableController(Controller):
     selected = Any
     columns_button = Button('Columns')
     columns = List
-    column_dict = Dict({'RunID':'runid',
-                        'Age':'age',
-                        'AgeError':'age_error',
-                        'K/Ca':'k_ca'
-                        })
+    column_dict = Dict({'RunID': 'runid',
+                        'Age': 'age',
+                        'AgeError': 'age_error',
+                        'K/Ca': 'k_ca'
+    })
 
     @on_trait_change('model:groups:right_clicked')
     def _right_clicked_handler(self, new):
@@ -171,12 +173,13 @@ class LoadedTableController(Controller):
     def _include(self, selected):
         def __include():
             print 'asdfasdfasdf', selected
+
         return __include
 
     def _menu_factory(self, selected):
         actions = [('Include', self._include(selected))]
         menu = [self._action_factory(*action)
-            for action in actions]
+                for action in actions]
 
         return MenuManager(*menu)
 
@@ -186,47 +189,48 @@ class LoadedTableController(Controller):
 
         return Action(name=name,
                       on_perform=func,
-#                   visible_when='0',
-                       **kw)
+                      #                   visible_when='0',
+                      **kw)
 
     def controller_load_button_changed(self, info):
         p = '/Users/ross/Sandbox/autoupdate_stepheat_61526.txt'
         self.model.load(p)
 
-#    def controller_columns_button_changed(self, info):
-#        v = View(Item('controller.columns',
-#                      editor=SetEditor(ordered=True,
-#                                       values=['RunID', 'Age', 'AgeError', 'K/Ca']),
-#                      ),
-#                 buttons=['OK', 'Cancel'],
-#                 kind='livemodal'
-#                 )
-#        info = self.edit_traits(v)
-#        if info.result:
-#            cs = [self.column_dict[ci] for ci in self.columns]
-#            self._loaded_table_adapter.visible_columns = cs
+    #    def controller_columns_button_changed(self, info):
+    #        v = View(Item('controller.columns',
+    #                      editor=SetEditor(ordered=True,
+    #                                       values=['RunID', 'Age', 'AgeError', 'K/Ca']),
+    #                      ),
+    #                 buttons=['OK', 'Cancel'],
+    #                 kind='livemodal'
+    #                 )
+    #        info = self.edit_traits(v)
+    #        if info.result:
+    #            cs = [self.column_dict[ci] for ci in self.columns]
+    #            self._loaded_table_adapter.visible_columns = cs
 
     def traits_view(self):
-#        self._loaded_table_adapter = LoadedTableAdapter()
-#        self._mean_loaded_table_adapter = MeanLoadedTableAdapter()
+    #        self._loaded_table_adapter = LoadedTableAdapter()
+    #        self._mean_loaded_table_adapter = MeanLoadedTableAdapter()
         self._computed_values_adapter = ComputedValuesTabularAdapter()
         v = View(
-                 HGroup(UItem('controller.columns_button'),
-                        spring, UItem('controller.load_button')),
-                 UItem('groups',
-                       style='custom',
-                       editor=ListEditor(use_notebook=True,
-                                        page_name='.name',
-                                        style='custom',
-                                        selected='controller.selected'
-    #                                                   editor=InstanceEditor()
-                                           )
-                       ),
-                 UItem('computed_values', editor=myTabularEditor(
-                                                                 editable=False,
-                                                                 adapter=self._computed_values_adapter)),
+            HGroup(UItem('controller.columns_button'),
+                   spring, UItem('controller.load_button')),
+            UItem('groups',
+                  style='custom',
+                  editor=ListEditor(use_notebook=True,
+                                    page_name='.name',
+                                    style='custom',
+                                    selected='controller.selected'
+                                    #                                                   editor=InstanceEditor()
+                  )
+            ),
+            UItem('computed_values', editor=myTabularEditor(
+                editable=False,
+                adapter=self._computed_values_adapter)),
 
-                 )
+        )
 
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================

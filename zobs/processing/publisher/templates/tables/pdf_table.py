@@ -20,17 +20,17 @@ from traits.api import HasTraits, Any
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.platypus import Paragraph
 from reportlab.platypus.tables import Table
-from reportlab.lib.units import inch
-from src.constants import PLUSMINUS, SIGMA
+from src.pychron_constants import PLUSMINUS, SIGMA
 #============= local library imports  ==========================
 STYLES = getSampleStyleSheet()
 
-class PDFTable(HasTraits):
 
+class PDFTable(HasTraits):
     add_title = True
     add_header = True
     number = 1
     colwidths = None
+
     def _new_paragraph(self, t, s='Normal'):
         style = STYLES[s]
         p = Paragraph(t, style)
@@ -52,10 +52,10 @@ class PDFTable(HasTraits):
                 self.sample_rowids[-1] += 1
                 trows.insert(-1, [])
 
-#    def floatfmt(self, v, n=5, scale=1):
-#        fmt = '{{:0.{}f}}'.format(n)
-#        nv = fmt.format(v / scale)
-#        if len(nv)>n+2:
+                #    def floatfmt(self, v, n=5, scale=1):
+                #        fmt = '{{:0.{}f}}'.format(n)
+                #        nv = fmt.format(v / scale)
+                #        if len(nv)>n+2:
 
     def _make(self, rows):
         print self.colwidths
@@ -70,12 +70,14 @@ class PDFTable(HasTraits):
         return ta
 
     def _get_idxs(self, rows, klass):
-            return [(i, v) for i, v in enumerate(rows)
-                      if isinstance(v, klass)]
+        return [(i, v) for i, v in enumerate(rows)
+                if isinstance(v, klass)]
+
     def _set_column_widths(self, ta):
         pass
-#         ta._argW[0] = 0.17 * inch
-#        ta._argW[2] = 0.5 * inch
+
+    #         ta._argW[0] = 0.17 * inch
+    #        ta._argW[2] = 0.5 * inch
 
     def _set_row_heights(self, ta, rows):
         pass
@@ -84,13 +86,16 @@ class PDFTable(HasTraits):
     def _get_style(self, rows):
         pass
 
+
 from traits.api import Either, Str, Callable, List, Int
+
 
 class Row(HasTraits):
     items = List
     fontsize = Int
     fontname = Str
     spans = List
+
     def render(self):
         return [it.render() for it in self.items]
 
@@ -114,17 +119,21 @@ class Row(HasTraits):
     def __iter__(self):
         return (it.render() for it in self.items)
 
+
 def Superscript(v):
     return '<super>{}</super>'.format(v)
 
+
 def Subscript(v):
     return '<sub>{}</sub>'.format(v)
+
 
 class BaseItem(HasTraits):
     value = Any
     fmt = Either(Str, Callable)
     fontsize = Int(8)
     fontname = 'Helvetica'
+
     def render(self):
         v = self.value
         if not isinstance(v, Paragraph):
@@ -158,28 +167,41 @@ class BaseItem(HasTraits):
         p = Paragraph(t, style)
         return p
 
+
 class SummaryRow(Row):
     pass
+
+
 class AnalysisRow(Row):
     pass
+
+
 class FootNoteRow(Row):
     pass
+
+
 class FooterRow(Row):
     pass
 
+
 class Title(Row):
     fontname = 'Helvetica-bold'
+
     def __init__(self, value='', **kw):
         super(Title, self).__init__(**kw)
         self.add_item(value=value, **kw)
+
     def __iter__(self):
         return (self.render() for i in (1,))
+
 
 class RowItem(BaseItem):
     pass
 
+
 def NamedParameter(name, value):
     return '<b>{}</b>: {}'.format(name, value)
+
 
 def Anchor(tagname, num, s='Normal'):
     snum = Superscript(num)
@@ -194,7 +216,7 @@ def Anchor(tagname, num, s='Normal'):
             f = u'{}{}'.format(f, extra)
         return Paragraph(f, style)
 
-#    p1 = lambda x: Paragraph(link.format(x), style)
+    #    p1 = lambda x: Paragraph(link.format(x), style)
     p2 = lambda n, v: Paragraph(tag.format(n, v), style)
 
     return flink, p2

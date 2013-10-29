@@ -26,10 +26,10 @@ from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
 
 
 class AutoFigurePreferences(BasePreferencesHelper):
-    name = 'AutoFigure Client'
+    #name = 'AutoFigure Client'
     preferences_path = 'pychron.auto_figure'
     id = 'pychron.auto_figure.preferences_page'
-#    username = Str
+    #    username = Str
 
     host = Str
     port = Int
@@ -38,16 +38,16 @@ class AutoFigurePreferences(BasePreferencesHelper):
 class AutoFigurePreferencesPane(PreferencesPane):
     model_factory = AutoFigurePreferences
     category = 'Processing'
-    def traits_view(self):
 
+    def traits_view(self):
         server_grp = Group(
-                            Item('host', width=125, label='Host'),
-                            Item('port',),
-                            show_border=True,
-                            label='Server'
-                            )
+            Item('host', width=125, label='Host'),
+            Item('port', ),
+            show_border=True,
+            label='AutoFigure Server'
+        )
 
         return View(server_grp,
-                    )
+        )
 
 #============= EOF =============================================

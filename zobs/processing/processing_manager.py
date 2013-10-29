@@ -27,10 +27,9 @@ from src.processing.database_manager import DatabaseManager
 # from src.processing.processing_selector import ProcessingSelector
 from src.processing.analysis import Analysis, NonDBAnalysis
 # from src.processing.script import ProcessScript
-# from src.constants import NULL_STR
+# from src.pychron_constants import NULL_STR
 # from src.progress_dialog import myProgressDialog
-from src.processing.plotter_options_manager import PlotterOptionsManager, \
-    IdeogramOptionsManager, SpectrumOptionsManager, IsochronOptionsManager
+from src.processing.plotter_options_manager import IdeogramOptionsManager, SpectrumOptionsManager, IsochronOptionsManager
 from src.processing.window import Window
 from src.processing.tabular_analysis_manager import TabularAnalysisManager
 from src.processing.plotters.series import Series
@@ -70,16 +69,18 @@ class ProcessingManager(BaseAnalysisManager):
     ideogram_options_manager = Instance(IdeogramOptionsManager, ())
     spectrum_options_manager = Instance(SpectrumOptionsManager, ())
     isochron_options_manager = Instance(IsochronOptionsManager, ())
-#    spectrum_plotter_options_manager = Instance(PlotterOptionsManager, ())
-#    isochron_plotter_options_manager = Instance(PlotterOptionsManager, ())
+    #    spectrum_plotter_options_manager = Instance(PlotterOptionsManager, ())
+    #    isochron_plotter_options_manager = Instance(PlotterOptionsManager, ())
 
     figure_manager = Instance(FigureManager)
     figures = List
 
     _window_count = 0
+
     def database_plot(self):
         if self.db.connect():
             from src.processing.database_plotter import DatabasePlotter
+
             db = DatabasePlotter()
             self.open_view(db)
 
@@ -119,6 +120,7 @@ class ProcessingManager(BaseAnalysisManager):
 
                         # copy from previous
                         nfitnames = [fi.name for fi in nfits]
+
                         def exists(na, ki):
                             if ki == 'baseline':
                                 na = '{} baseline'.format(na)
@@ -134,8 +136,8 @@ class ProcessingManager(BaseAnalysisManager):
 
                                 self.info('setting analysis {} {}  {} isotope result'.format(ai.record_id, name, kind))
                                 dbresult = next((ri for ri in phist.results
-                                                      if ri.isotope.molecular_weight.name == name and \
-                                                            ri.isotope.kind == kind), None)
+                                                 if ri.isotope.molecular_weight.name == name and \
+                                                    ri.isotope.kind == kind), None)
                                 if dbresult is not None:
                                     db.add_isotope_result(dbiso, hist, signal_=dbresult.signal_,
                                                           signal_err=dbresult.signal_err)
@@ -146,7 +148,7 @@ class ProcessingManager(BaseAnalysisManager):
         self.info('setting analysis {} {} {}'.format(record.record_id, name, fit))
         db = self.db
         dbiso = next((iso for iso in record.dbrecord.isotopes
-                              if iso.molecular_weight.name == name and iso.kind == kind), None)
+                      if iso.molecular_weight.name == name and iso.kind == kind), None)
 
         db.add_fit(history, dbiso, fit=fit)
         return dbiso
@@ -155,9 +157,10 @@ class ProcessingManager(BaseAnalysisManager):
         db = self.db
         history = db.add_fit_history(dbrecord, user=db.save_username)
         return history
-#===============================================================================
-# flux
-#===============================================================================
+
+    #===============================================================================
+    # flux
+    #===============================================================================
     def calculate_flux(self):
         '''
             1. select tray to calculate flux
@@ -168,24 +171,26 @@ class ProcessingManager(BaseAnalysisManager):
         '''
         if self.db.connect():
             pass
-#            fm = FluxManager(db=self.db)
-#            fm.edit_traits()
+            #            fm = FluxManager(db=self.db)
+            #            fm.edit_traits()
 
 
-#===============================================================================
-# find/display analysis
-#===============================================================================
+            #===============================================================================
+            # find/display analysis
+            #===============================================================================
+
     def open_search(self):
         if self.db.connect():
             ps = self.search_manager
             ps.selected = None
-    #        ps.selector.load_recent()
+            #        ps.selector.load_recent()
             ps.selector.load_last(n=20)
             self.open_view(ps)
 
-#===============================================================================
-# figures
-#===============================================================================
+            #===============================================================================
+            # figures
+            #===============================================================================
+
     def open_figures(self):
         fm = self.figure_manager
         fm.edit_traits()
@@ -216,9 +221,10 @@ class ProcessingManager(BaseAnalysisManager):
             po = pom.plotter_options
             if func(ans, po):
                 self._display_tabular_data()
-#===============================================================================
-# export
-#===============================================================================
+                #===============================================================================
+                # export
+                #===============================================================================
+
     def export_figure(self, kind='pdf'):
         '''
             save figure as a pdf
@@ -226,12 +232,13 @@ class ProcessingManager(BaseAnalysisManager):
         win = self._get_active_window()
         if win:
             from chaco.pdf_graphics_context import PdfPlotGraphicsContext
+
             p = self.save_file_dialog()
-#            p = '/Users/ross/Sandbox/figure_export.pdf'
+            #            p = '/Users/ross/Sandbox/figure_export.pdf'
             if p:
                 gc = PdfPlotGraphicsContext(filename=p,
-                                              pagesize='letter',
-                                              dest_box_units='inch')
+                                            pagesize='letter',
+                                            dest_box_units='inch')
                 gc.render_component(win.container, valign='center')
                 gc.save()
                 self.info('saving figure to {}'.format(p))
@@ -252,22 +259,25 @@ class ProcessingManager(BaseAnalysisManager):
                 group_ids = list(set([a.group_id for a in ans]))
 
                 grouped_analyses = [[ai for ai in ans if ai.group_id == gid]
-                                  for gid in group_ids
-                                  ]
+                                    for gid in group_ids
+                ]
 
         if grouped_analyses:
             p = self.save_file_dialog()
-#            p = '/Users/ross/Sandbox/figure_export.csv'
+            #            p = '/Users/ross/Sandbox/figure_export.csv'
             if p:
                 if kind == 'csv':
                     from src.processing.publisher.writers.csv_writer import CSVWriter
+
                     klass = CSVWriter
                 elif kind == 'pdf':
-#                    p = '/Users/ross/Sandbox/figure_export.pdf'
+                #                    p = '/Users/ross/Sandbox/figure_export.pdf'
                     from src.processing.publisher.writers.pdf_writer import PDFWriter
+
                     klass = PDFWriter
                 elif kind == 'massspec':
                     from src.processing.publisher.writers.mass_spec_writer import MassSpecCSVWriter
+
                     klass = MassSpecCSVWriter
 
                 self._export(klass, p, grouped_analyses)
@@ -275,9 +285,10 @@ class ProcessingManager(BaseAnalysisManager):
 
 
 
-#===============================================================================
-# tables
-#===============================================================================
+                #===============================================================================
+                # tables
+                #===============================================================================
+
     def open_table(self):
         if self._gather_data():
             ans = self._get_analyses()
@@ -308,9 +319,10 @@ class ProcessingManager(BaseAnalysisManager):
                 table.set_title(title)
                 table.analyses = analyses
 
-#===============================================================================
-# apply corrections
-#===============================================================================
+                #===============================================================================
+                # apply corrections
+                #===============================================================================
+
     def apply_blank_correction(self):
         bm = self.blank_corrections_manager
         self._apply_correction(bm)
@@ -324,10 +336,9 @@ class ProcessingManager(BaseAnalysisManager):
         self._apply_correction(bm)
 
 
-
-#===============================================================================
-# display
-#===============================================================================
+    #===============================================================================
+    # display
+    #===============================================================================
     def new_series(self):
         self._new_figure('series')
 
@@ -340,21 +351,21 @@ class ProcessingManager(BaseAnalysisManager):
     def new_isochron(self):
         self._new_figure('isochron')
 
-#===============================================================================
-# private
-#===============================================================================
+    #===============================================================================
+    # private
+    #===============================================================================
     def _apply_correction(self, bm):
         if self._gather_data('database'):
-
             ans = self._get_analyses()
             self._load_analyses(ans)
             bm.analyses = ans
             self.open_view(bm)
 
-#            self._load_analyses(ans)
-#            info = bm.edit_traits(kind='livemodal')
-#            if info.result:
-#                bm.apply_correction()
+            #            self._load_analyses(ans)
+            #            info = bm.edit_traits(kind='livemodal')
+            #            if info.result:
+            #                bm.apply_correction()
+
     def _open_sample_ideogram(self, new):
         pv = self.project_view
         ans = pv.get_filtered_analyses()
@@ -376,7 +387,7 @@ class ProcessingManager(BaseAnalysisManager):
 
     def _get_active_item(self, ind):
         args = next(((win, plotter, table) for win, plotter, table in self.figures
-                       if win.ui.control.IsActive()), None)
+                     if win.ui.control.IsActive()), None)
         if args:
             return args[ind]
 
@@ -386,10 +397,10 @@ class ProcessingManager(BaseAnalysisManager):
         for i, ans in enumerate(grouped_analyses):
 
             canceled = pub.add_ideogram_table(ans,
-                                   configure_table=i == 0,
-                                   add_title=i == 0,
-                                   add_header=i == 0,
-                                   add_group_marker=i < n - 1)
+                                              configure_table=i == 0,
+                                              add_title=i == 0,
+                                              add_header=i == 0,
+                                              add_group_marker=i < n - 1)
             if canceled:
                 break
         else:
@@ -401,7 +412,7 @@ class ProcessingManager(BaseAnalysisManager):
             ask for plot options first
         '''
         if name != 'series':
-#                pom = self.plotter_options_manager
+        #                pom = self.plotter_options_manager
             pom = getattr(self, '{}_options_manager'.format(name))
             po = pom.plotter_options
             info = pom.edit_traits(kind='livemodal')
@@ -432,7 +443,7 @@ class ProcessingManager(BaseAnalysisManager):
                 # open manual entry plotter
                 mep = ManualEntryManager(processing_manager=self,
                                          plotter_options_manager=pom
-                                         )
+                )
                 mep.update = True
                 self.open_view(mep)
 
@@ -442,9 +453,9 @@ class ProcessingManager(BaseAnalysisManager):
         self.figures.append((fig, obj, table))
         self.open_view(fig)
 
-#===============================================================================
-#
-#===============================================================================
+    #===============================================================================
+    #
+    #===============================================================================
     def _gather_data(self, data_type='database'):
         '''
             open a data selector view
@@ -454,7 +465,7 @@ class ProcessingManager(BaseAnalysisManager):
                     path for data_file
                     
         '''
-#        return True
+        #        return True
         if data_type == 'database':
             d = self.selector_manager
             if self.db.connect():
@@ -489,9 +500,9 @@ Use 'g' to separate groups''', title='Select a DataFile'):
             g, isochron = rr
             return self._display_figure_and_table(g, isochron, data_type, ans, title)
 
-#            self._display_tabular_data(ans, title)
-#            self._open_figure(g, isochron)
-#            return isochron
+            #            self._display_tabular_data(ans, title)
+            #            self._open_figure(g, isochron)
+            #            return isochron
 
     def _display_spectrum(self, ans, po, title, data_type='database'):
         rr = self._spectrum(ans, po)
@@ -504,10 +515,10 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                             po,
                             title=title,
                             highlight_omitted=highlight_omitted,
-#                            aux_plots=po.get_aux_plots(),
+                            #                            aux_plots=po.get_aux_plots(),
                             probability_curve_kind=po.probability_curve_kind,
                             mean_calculation_kind=po.mean_calculation_kind
-                            )
+        )
         if rr is not None:
             g, ideo = rr
             return self._display_figure_and_table(g, ideo, data_type, ans, title)
@@ -547,10 +558,11 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                 self._build_peak_center_series(ans, sm.peak_center_option)
 
 
-#                return s
-#            return sm
-#    def _calculate_window_xy(self, i, cnt, offsetcnt,
-#                             xstep=0.25, ystep=0.2, xstart=0.25, ystart=0.25):
+                #                return s
+                #            return sm
+                #    def _calculate_window_xy(self, i, cnt, offsetcnt,
+                #                             xstep=0.25, ystep=0.2, xstart=0.25, ystart=0.25):
+
     def _increment_window_xy(self, wx, wy, cnt, xstep=0.025, ystep=0.025, ystart=0.25):
         wx += xstep
         wy += ystep
@@ -572,7 +584,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
         elif options.plot_scans:
             if options.overlay:
                 g = Graph(container_dict=dict(padding=5))
-#                import numpy as np
+                #                import numpy as np
                 g.new_plot(xtitle='DAC', ytitle='Intensity')
                 for ai in ans:
                     args = ai._get_peakcenter()
@@ -582,13 +594,13 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                         g.add_vertical_rule(c)
                 self.open_view(g)
             else:
-#                import numpy as np
+            #                import numpy as np
                 wx, wy, cnt = 0.25, 0.25, 1
                 for i, ai in enumerate(ans):
                     args = ai._get_peakcenter()
-#                    x = np.linspace(0, 10, 100)
-#                    y = -(x - 5) ** 2
-#                    c = np.random.random() * 10
+                    #                    x = np.linspace(0, 10, 100)
+                    #                    y = -(x - 5) ** 2
+                    #                    c = np.random.random() * 10
                     args = x, y, c
                     if args:
                         x, y, c = args[0], args[1], args[2]
@@ -599,7 +611,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                                   window_x=wx,
                                   window_y=wy,
                                   window_title=str(i)
-                                  )
+                        )
                         g.new_plot(xtitle='DAC', ytitle='Intensity')
                         g.new_series(x, y)
                         g.add_vertical_rule(c)
@@ -615,13 +627,15 @@ Use 'g' to separate groups''', title='Select a DataFile'):
             g = s.build(ans, si)
             self._open_figure(g, s)
         return s
-#            self._set_window_xy(g)
-#            self.open_view(g)
+
+    #            self._set_window_xy(g)
+    #            self.open_view(g)
 
     def _get_analyses(self, use_db_or_path=True):
         if isinstance(use_db_or_path, bool):
             ps = self.selector_manager
             db = self.db
+
             def factory(pi):
                 rec = IsotopeRecord(_dbrecord=db.get_analysis_uuid(pi.uuid),
                                     graph_id=pi.graph_id,
@@ -629,7 +643,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                 return Analysis(isotope_record=rec)
 
             ans = [factory(ri) for ri in ps.selected_records
-                                if not isinstance(ri, Marker)]
+                   if not isinstance(ri, Marker)]
         else:
             ans = self._parse_data_file(use_db_or_path)
             if isinstance(ans, str):
@@ -655,8 +669,8 @@ Use 'g' to separate groups''', title='Select a DataFile'):
             ans = []
             group_id = 0
             for line in reader:
-#                status = str_to_bool(line[status_index])
-#                if status:
+            #                status = str_to_bool(line[status_index])
+            #                if status:
                 if line[0].strip().lower() == 'g':
                     group_id += 1
                     continue
@@ -675,7 +689,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                                    analysis_type='unknown',
                                    age=(age, error),
                                    group_id=group_id
-                                   )
+                )
                 ans.append(ai)
             return ans
 
@@ -687,26 +701,27 @@ Use 'g' to separate groups''', title='Select a DataFile'):
         obj.window_x = x + xoff * self._window_count
         obj.window_y = y + yoff * self._window_count
         self._window_count += 1
-#        do_later(g.edit_traits)
+
+    #        do_later(g.edit_traits)
 
     def _sort_analyses(self):
-        self.analyses.sort(key=lambda x:x.age)
+        self.analyses.sort(key=lambda x: x.age)
 
-#===============================================================================
-# figures
-#===============================================================================
+    #===============================================================================
+    # figures
+    #===============================================================================
     def _window_factory(self):
-#        w = self.get_parameter('window', 'width', default=500)
-#        h = self.get_parameter('window', 'height', default=600)
-#        x = self.get_parameter('window', 'x', default=20)
-#        y = self.get_parameter('window', 'y', default=20)
+    #        w = self.get_parameter('window', 'width', default=500)
+    #        h = self.get_parameter('window', 'height', default=600)
+    #        x = self.get_parameter('window', 'x', default=20)
+    #        y = self.get_parameter('window', 'y', default=20)
         x, y, w, h = 20, 20, 500, 600
         g = Window(
-                   manager=self,
-                   window_width=w,
-                   window_height=h,
-                   window_x=x, window_y=y
-                   )
+            manager=self,
+            window_width=w,
+            window_height=h,
+            window_x=x, window_y=y
+        )
         self.window = g
         return g
 
@@ -714,18 +729,18 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                   plotter_options,
                   probability_curve_kind='cumulative',
                   mean_calculation_kind='weighted_mean',
-#                  aux_plots=None,
+                  #                  aux_plots=None,
                   title=None,
-#                  xtick_font=None,
-#                  xtitle_font=None,
-#                  ytick_font=None,
-#                  ytitle_font=None,
+                  #                  xtick_font=None,
+                  #                  xtitle_font=None,
+                  #                  ytick_font=None,
+                  #                  ytitle_font=None,
                   data_label_font=None,
                   metadata_label_font=None,
                   highlight_omitted=True,
                   display_mean_indicator=True,
                   display_mean_text=True
-                  ):
+    ):
         '''
         '''
         from src.processing.plotters.ideogram import Ideogram
@@ -735,25 +750,25 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                      processing_manager=self,
                      probability_curve_kind=probability_curve_kind,
                      mean_calculation_kind=mean_calculation_kind
-                     )
+        )
 
-#        ps = self._build_aux_plots(plotter_options.get_aux_plots())
+        #        ps = self._build_aux_plots(plotter_options.get_aux_plots())
         options = dict(
-#                       aux_plots=ps,
-#                       use_centered_range=plotter_options.use_centered_range,
-#                       centered_range=plotter_options.centered_range,
-#                       xmin=plotter_options.xmin,
-#                       xmax=plotter_options.xmax,
-#                       xtitle_font=xtitle_font,
-#                       xtick_font=xtick_font,
-#                       ytitle_font=ytitle_font,
-#                       ytick_font=ytick_font,
-                       data_label_font=data_label_font,
-                       metadata_label_font=metadata_label_font,
-                       title=title,
-                       display_mean_text=display_mean_text,
-                       display_mean_indicator=display_mean_indicator,
-                       )
+            #                       aux_plots=ps,
+            #                       use_centered_range=plotter_options.use_centered_range,
+            #                       centered_range=plotter_options.centered_range,
+            #                       xmin=plotter_options.xmin,
+            #                       xmax=plotter_options.xmax,
+            #                       xtitle_font=xtitle_font,
+            #                       xtick_font=xtick_font,
+            #                       ytitle_font=ytitle_font,
+            #                       ytick_font=ytick_font,
+            data_label_font=data_label_font,
+            metadata_label_font=metadata_label_font,
+            title=title,
+            display_mean_text=display_mean_text,
+            display_mean_indicator=display_mean_indicator,
+        )
 
         gideo = p.build(analyses, options=options, plotter_options=plotter_options)
         if gideo:
@@ -761,7 +776,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
             g.container.add(gideo)
 
             if highlight_omitted:
-                ta = sorted(analyses, key=lambda x:x.age)
+                ta = sorted(analyses, key=lambda x: x.age)
                 # find omitted ans
                 sel = [i for i, ai in enumerate(ta) if ai.status != 0]
                 p.set_excluded_points(sel, 0)
@@ -770,22 +785,24 @@ Use 'g' to separate groups''', title='Select a DataFile'):
 
     def _spectrum(self, analyses, plotter_options):
         from src.processing.plotters.spectrum import Spectrum
+
         g = self._window_factory()
         spec = Spectrum(db=self.db)
 
-#        options = dict(aux_plots=self._build_aux_plots(aux_plots))
+        #        options = dict(aux_plots=self._build_aux_plots(aux_plots))
 
         spec_graph = spec.build(analyses, plotter_options=plotter_options)
 
         if spec_graph:
             spec_graph, _plots = spec_graph
-#            self._figure = spec_graph.plotcontainer
+            #            self._figure = spec_graph.plotcontainer
             g.container.add(spec_graph)
 
             return g, spec
 
     def _isochron(self, analyses, show=False):
         from src.processing.plotters.inverse_isochron import InverseIsochron
+
         g = self._window_factory()
         isochron = InverseIsochron(db=self.db)
         graph = isochron.build(analyses)
@@ -797,10 +814,10 @@ Use 'g' to separate groups''', title='Select a DataFile'):
             return g, isochron
 
 
-#    def make_title(self, analyses=None):
-#        if analyses is None:
-#            analyses = self.analyses
-#        return self._make_title(analyses)
+            #    def make_title(self, analyses=None):
+            #        if analyses is None:
+            #            analyses = self.analyses
+            #        return self._make_title(analyses)
 
     def _make_title(self, analyses):
         def make_bounds(gi, sep='-'):
@@ -832,7 +849,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
         def _make_group_title(ans):
             lns = dict()
             for ai in ans:
-    #            v = '{}{}'.format(ai.aliquot, ai.step)
+            #            v = '{}{}'.format(ai.aliquot, ai.step)
                 v = (ai.aliquot, ai.step)
                 if ai.labnumber in lns:
                     lns[ai.labnumber].append(v)
@@ -892,7 +909,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
                         pa = sgi[0]
                     ggrps.append(cgrp)
                     ss = ['{}-{}'.format(make_step_bounds(gi[0]),
-                            make_step_bounds(gi[-1])) for gi in ggrps]
+                                         make_step_bounds(gi[-1])) for gi in ggrps]
                     fs.extend(ss)
 
                 als = ','.join(fs)
@@ -908,31 +925,32 @@ Use 'g' to separate groups''', title='Select a DataFile'):
             gtitles.append(_make_group_title(anss))
 
         return ', '.join(gtitles)
-#===============================================================================
-# defaults
-#===============================================================================
-#    def _selector_manager_default(self):
-#        db = self.db
-#        d = SelectorManager(db=db)
-# #        if not db.connected:
-# #            db.connect()
-#
-# #        d.select_labnumber([61541])
-# #        d.select_labnumber([22233])
-#        return d
-#
-#    def _search_manager_default(self):
-#        db = self.db
-#        d = SearchManager(db=db)
-#        if not db.connected:
-#            db.connect()
-#        return d
+
+    #===============================================================================
+    # defaults
+    #===============================================================================
+    #    def _selector_manager_default(self):
+    #        db = self.db
+    #        d = SelectorManager(db=db)
+    # #        if not db.connected:
+    # #            db.connect()
+    #
+    # #        d.select_labnumber([61541])
+    # #        d.select_labnumber([22233])
+    #        return d
+    #
+    #    def _search_manager_default(self):
+    #        db = self.db
+    #        d = SearchManager(db=db)
+    #        if not db.connected:
+    #            db.connect()
+    #        return d
 
     def _figure_manager_default(self):
         db = self.db
         fm = FigureManager(db=db,
                            processing_manager=self
-                           )
+        )
         if not db.connected:
             db.connect()
         return fm
@@ -941,7 +959,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
     def _blank_corrections_manager_default(self):
         bm = BlankCorrectionsManager(db=self.db,
                                      processing_manager=self
-                                     )
+        )
         return bm
 
     def _background_corrections_manager_default(self):
@@ -952,7 +970,7 @@ Use 'g' to separate groups''', title='Select a DataFile'):
     def _detector_intercalibration_corrections_manager_default(self):
         bm = DetectorIntercalibrationCorrectionsManager(db=self.db,
                                                         processing_manager=self,
-                                                        )
+        )
         return bm
 
     def _project_view_default(self):

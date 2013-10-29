@@ -17,9 +17,11 @@
 #============= enthought library imports =======================
 from traits.api import Bool
 from traitsui.api import View, Item
-from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
 from envisage.ui.tasks.preferences_pane import PreferencesPane
-# from src.constants import PLUSMINUS
+
+from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
+
+# from src.pychron_constants import PLUSMINUS
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -28,10 +30,13 @@ class PyScriptPreferences(BasePreferencesHelper):
     preferences_path = 'pychron.pyscript'
     auto_detab = Bool(True)
 
+
 class PyScriptPreferencesPane(PreferencesPane):
     category = 'Scripts'
     model_factory = PyScriptPreferences
+
     def traits_view(self):
         v = View(Item('auto_detab'))
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================

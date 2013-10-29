@@ -37,7 +37,7 @@
 # from src.saveable import Saveable
 # from src.experiment.isotope_database_manager import IsotopeDatabaseManager
 # from src.experiment.queue.experiment_queue import ExperimentQueue
-# from src.constants import ALPHAS
+# from src.pychron_constants import ALPHAS
 # from src.envisage.credentials import Credentials
 # from src.globals import globalv
 # from src.experiment.utilities.identifier import convert_identifier, \

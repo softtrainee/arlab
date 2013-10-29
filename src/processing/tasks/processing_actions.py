@@ -17,7 +17,6 @@
 #============= enthought library imports =======================
 from traits.api import Str
 from pyface.action.action import Action
-from pyface.tasks.task_window_layout import TaskWindowLayout
 from pyface.tasks.action.task_action import TaskAction
 
 #============= standard library imports ========================
@@ -178,7 +177,7 @@ class RecallAction(Action):
         app = event.task.window.application
         task = app.get_task('pychron.recall')
 
-        task.activate(load=True)
+        task.activated(load=True)
 
 
 class SmartProjectAction(Action):

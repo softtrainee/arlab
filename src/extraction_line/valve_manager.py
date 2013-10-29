@@ -33,7 +33,7 @@ from src.extraction_line.explanation.explanable_item import ExplanableValve
 from src.hardware.valve import HardwareValve
 from src.paths import paths
 from src.loggable import Loggable
-from src.constants import ALPHAS
+from src.pychron_constants import ALPHAS
 from src.extraction_line.pipettes.tracking import PipetteTracker
 from valve_parser import ValveParser
 
@@ -85,7 +85,7 @@ class ValveManager(Manager):
         if 'actuator' in name or 'controller' in name:
             if dev is not None:
                 self.actuators.append(dev)
-            #        if name in ['valve_actuator', 'valve_controller']:
+                #        if name in ['valve_actuator', 'valve_controller']:
             #            self.actuator = dev
             return dev
 
@@ -109,14 +109,14 @@ class ValveManager(Manager):
             self._load_soft_lock_states()
 
             # load the pipette trackers
-        #         for p in self.pipette_trackers:
-        #             p.load()
+            #         for p in self.pipette_trackers:
+            #             p.load()
 
-        #         self._load_system_dict()
-        # self.info('loading section definitions file')
-        # open config file
-        # setup_file = os.path.join(paths.extraction_line_dir, 'section_definitions.cfg')
-        # self._load_sections_from_file(setup_file)
+            #         self._load_system_dict()
+            # self.info('loading section definitions file')
+            # open config file
+            # setup_file = os.path.join(paths.extraction_line_dir, 'section_definitions.cfg')
+            # self._load_sections_from_file(setup_file)
 
     def _save_soft_lock_states(self):
 
@@ -179,7 +179,7 @@ class ValveManager(Manager):
         if not owners:
             #self.debug('didnt not parse owners word')
             return
-        #         print owners
+            #         print owners
         changed = False
         ip = gethostbyname(gethostname())
         for owner, valves in owners:
@@ -259,7 +259,7 @@ class ValveManager(Manager):
                             if state in ('0', '1'):
                                 d[key] = bool(int(state))
 
-                            #                    d = dict([(word[i:i + 2][0], bool(int(word[i:i + 2][1]))) for i in xrange(0, len(word), 2)])
+                                #                    d = dict([(word[i:i + 2][0], bool(int(word[i:i + 2][1]))) for i in xrange(0, len(word), 2)])
                 return d
             except ValueError:
                 pass
@@ -269,7 +269,7 @@ class ValveManager(Manager):
         for k, v in self.valves.iteritems():
             s = v.get_hardware_state()
             elm.update_valve_state(k, s, refresh=False)
-        #             time.sleep(0.025)
+            #             time.sleep(0.025)
 
     def _load_soft_lock_states(self):
         if self.extraction_line_manager.mode == 'client':
@@ -277,7 +277,7 @@ class ValveManager(Manager):
                 s = v.get_lock_state()
                 func = self.lock if s else self.unlock
                 func(k, save=False)
-            #                 time.sleep(0.025)
+                #                 time.sleep(0.025)
 
         else:
             p = os.path.join(paths.hidden_dir, '{}_soft_lock_state'.format(self.name))
@@ -683,10 +683,10 @@ class ValveManager(Manager):
         #        v.evalve = weakref.ref(ev)()
         self.explanable_items.append(ev)
 
-    #===============================================================================
-    # deprecated
-    #===============================================================================
-    #     def claim_section(self, section, addr=None, name=None):
+        #===============================================================================
+        # deprecated
+        #===============================================================================
+        #     def claim_section(self, section, addr=None, name=None):
 
 #         try:
 #             vg = self.valve_groups[section]
@@ -789,9 +789,9 @@ if __name__ == '__main__':
             self.info('states = {}'.format(s))
             return s
 
-        #    v = ValveManager()
-        #    p = os.path.join(paths.extraction_line_dir, 'valves.xml')
-        #    v._load_valves_from_file(p)
+            #    v = ValveManager()
+            #    p = os.path.join(paths.extraction_line_dir, 'valves.xml')
+            #    v._load_valves_from_file(p)
 
     from src.helpers.logger_setup import logging_setup
 

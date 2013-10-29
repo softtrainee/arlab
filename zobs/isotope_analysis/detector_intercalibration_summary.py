@@ -24,8 +24,7 @@ import numpy as np
 #============= local library imports  ==========================
 from src.database.isotope_analysis.history_summary import HistorySummary
 from src.graph.graph import Graph
-import time
-from src.constants import PLUSMINUS
+from src.pychron_constants import PLUSMINUS
 
 # from src.graph.graph import Graph
 # from src.graph.stacked_graph import StackedGraph
@@ -37,28 +36,30 @@ class DetGraph(HasTraits):
 
     def traits_view(self):
         v = View(
-                 VGroup(
-                        HGroup(
-                               Item('value',
-                                    label='IC Factor',
-                                    style='readonly',
-                                    ),
-                               ),
-                      Item('graph',
-                           show_label=False, style='custom',
-                           height=0.95,
-#                           width=700,
-                      ),
+            VGroup(
+                HGroup(
+                    Item('value',
+                         label='IC Factor',
+                         style='readonly',
                     ),
-#                 width=700,
-                 )
+                ),
+                Item('graph',
+                     show_label=False, style='custom',
+                     height=0.95,
+                     #                           width=700,
+                ),
+            ),
+            #                 width=700,
+        )
 
         return v
+
 
 class DetectorIntercalibrationSummary(HistorySummary):
     history_name = 'detector_intercalibration'
     graph = Instance(DetGraph)
     apply_name = 'selected_detector_intercalibration'
+
     def _graph_default(self):
         g = super(DetectorIntercalibrationSummary, self)._graph_default()
         return DetGraph(graph=g)
@@ -74,7 +75,7 @@ class DetectorIntercalibrationSummary(HistorySummary):
             return
 
         det = next((iso.detector for iso in dbr.dbrecord.isotopes
-                      if iso.molecular_weight.name == 'Ar36'), None)
+                    if iso.molecular_weight.name == 'Ar36'), None)
         bi = next((item for item in bi if item.detector == det), None)
         uv = bi.user_value
         ue = bi.user_error
@@ -110,7 +111,7 @@ class DetectorIntercalibrationSummary(HistorySummary):
 
             s.index_range.trait_set(tight_bounds=False,
                                     margin=0.1
-                                    )
+            )
 
             mi = max(0, uv - ue * 1.1)
             ma = (uv + ue * 1.1)
@@ -119,7 +120,8 @@ class DetectorIntercalibrationSummary(HistorySummary):
         g.redraw()
         v = '{:0.5f} {}{:0.5f}'.format(uv, PLUSMINUS, ue)
         self.graph.value = v
-#        g.redraw()
+
+        #        g.redraw()
 
 #    history_names = Property(depends_on='histories')
 #    histories = List

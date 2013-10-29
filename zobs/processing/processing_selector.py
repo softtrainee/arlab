@@ -29,7 +29,7 @@ import os
 from src.viewable import Viewable
 from src.database.core.database_selector import ColumnSorterMixin
 from src.database.core.database_adapter import DatabaseAdapter
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
 from src.paths import paths
 from src.deprecate import deprecate_klass
 # from traitsui.wx.tabular_editor import TabularEditor as wxTabularEditor
@@ -74,30 +74,30 @@ class SelectedrecordsAdapter(TabularAdapter):
     rid_width = Int(50)
 
     aliquot_text = Property
-#    rid_text = Property
+    #    rid_text = Property
     text_color = Property
     font = 'monospace'
 
     def _get_text_color(self):
         return self.item.color
 
-#    def _get_rid_text(self):
-#        if self.item.rid == ' ':
-#            return ' '
-#            return '---'
-#        elif self.item.rid == '***':
-#            return '***'
-#        else:
-#            return '{:05n}'.format(self.item.rid)
+    #    def _get_rid_text(self):
+    #        if self.item.rid == ' ':
+    #            return ' '
+    #            return '---'
+    #        elif self.item.rid == '***':
+    #            return '***'
+    #        else:
+    #            return '{:05n}'.format(self.item.rid)
 
     def _columns_default(self):
         cols = [
-                # ('ID', 'rid'),
-                ('Labnumber', 'labnumber'),
-                ('Aliquot', 'aliquot'),
-                ('Group', 'group_id'),
-                ('Graph', 'graph_id')
-                ]
+            # ('ID', 'rid'),
+            ('Labnumber', 'labnumber'),
+            ('Aliquot', 'aliquot'),
+            ('Group', 'group_id'),
+            ('Graph', 'graph_id')
+        ]
         return cols
 
     def _get_aliquot_text(self, trait, item):
@@ -106,11 +106,14 @@ class SelectedrecordsAdapter(TabularAdapter):
 
 class Marker(HasTraits):
     color = 'white'
+
     def __getattr__(self, attr):
         return ' '
 
+
 class StoredSelection(HasTraits):
     analysis_ids = List
+
 
 @deprecate_klass()
 class ProcessingSelector(Viewable, ColumnSorterMixin):
@@ -135,9 +138,9 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
     group_by_labnumber = Button('Group By Labnumber')
     _grouped_by_labnumber = Bool(False)
     _graphed_by_labnumber = Bool(False)
-#    add_mean_marker = Button('Set Mean')
+    #    add_mean_marker = Button('Set Mean')
 
-#    update_data = Event
+    #    update_data = Event
 
     dclicked = Any
 
@@ -174,12 +177,11 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
         p = os.path.join(paths.hidden_dir, 'stored_selections')
         if os.path.isfile(p):
             pass
-#        for si in os.listdir(p):
-#            if si.startswith('.'):
-#                continue
-#            ss = StoredSelection()
-#            ss
-
+            #        for si in os.listdir(p):
+            #            if si.startswith('.'):
+            #                continue
+            #            ss = StoredSelection()
+            #            ss
 
 
     def _load_selected_records(self):
@@ -190,10 +192,10 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
         self.selected_row = self.selected_records[-1]
 
 
-#    def close(self, isok):
-#        if isok:
-#            self.update_data = True
-#        return True
+    #    def close(self, isok):
+    #        if isok:
+    #            self.update_data = True
+    #        return True
 
     def _group_by_labnumber(self):
 
@@ -216,7 +218,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
                 continue
 
             setattr(ri, attr, keys.index(ri.labnumber))
-#            ri.group_id = keys.index(ri.labnumber)
+            #            ri.group_id = keys.index(ri.labnumber)
             if getattr(ri, attr) != pid:
                 inserts.append(i)
                 pid = getattr(ri, attr)
@@ -233,9 +235,9 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 
         self.selected_records = nri
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
     def _group_by_labnumber_fired(self):
         if self._grouped_by_labnumber:
             self._reset_grouping('group_id')
@@ -263,7 +265,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
         self.group_cnt += 1
         for r in self.selected:
             r.group_id = self.group_cnt
-#            r.color = 'red'
+            #            r.color = 'red'
 
         oruns = set(self.selected_records) ^ set(self.selected)
         self.selected_records = list(oruns) + [Marker()] + self.selected
@@ -272,13 +274,13 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
         self.graph_cnt += 1
         for r in self.selected:
             r.graph_id = self.graph_cnt
-#            r.color = 'red'
+            #            r.color = 'red'
 
         oruns = set(self.selected_records) ^ set(self.selected)
         self.selected_records = list(oruns) + [Marker()] + self.selected
 
-#    def _add_mean_marker_fired(self):
-#        pass
+    #    def _add_mean_marker_fired(self):
+    #        pass
 
     def _append_fired(self):
         self._load_selected_records()
@@ -319,107 +321,106 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
     def _dclicked_changed(self):
         self.selector.open_record(self.selected)
 
-#===============================================================================
-# view
-#===============================================================================
+    #===============================================================================
+    # view
+    #===============================================================================
     def traits_view(self):
 
         cntrl_grp = VGroup(
-                           Item('project', editor=EnumEditor(name='projects'),
-                                show_label=False,
-#                                width= -80
-                                ),
-                           Item('machine', editor=EnumEditor(name='machines'),
-                                show_label=False,
-#                                width= -80
-                                ),
-                           Item('analysis_type', editor=EnumEditor(name='analysis_types'),
-                                show_label=False,
-#                                width= -80
-                                ),
+            Item('project', editor=EnumEditor(name='projects'),
+                 show_label=False,
+                 #                                width= -80
+            ),
+            Item('machine', editor=EnumEditor(name='machines'),
+                 show_label=False,
+                 #                                width= -80
+            ),
+            Item('analysis_type', editor=EnumEditor(name='analysis_types'),
+                 show_label=False,
+                 #                                width= -80
+            ),
 
-                           )
+        )
         selector_grp = VGroup(
-                              HGroup(
-                                     Item('append', show_label=False, width=-80),
-                                     Item('replace', show_label=False, width=-80),
-#                                     Spring(springy=False, width= -50),
-                                     Item('object.selector.limit')
-                                     ),
-                              Item('selector',
-                                   show_label=False, style='custom',
-                                   editor=InstanceEditor(view='panel_view'),
-                                   width=300
-#                                   width=0.75,
-                                )
-                              )
+            HGroup(
+                Item('append', show_label=False, width=-80),
+                Item('replace', show_label=False, width=-80),
+                #                                     Spring(springy=False, width= -50),
+                Item('object.selector.limit')
+            ),
+            Item('selector',
+                 show_label=False, style='custom',
+                 editor=InstanceEditor(view='panel_view'),
+                 width=300
+                 #                                   width=0.75,
+            )
+        )
 
         grouping_grp = VGroup(
-                              HGroup(Item('set_group', show_label=False),
-                                     Item('group_by_labnumber', show_label=False)),
-                              HGroup(Item('set_graph', show_label=False),
-                                     Item('graph_by_labnumber', show_label=False))
-                              )
+            HGroup(Item('set_group', show_label=False),
+                   Item('group_by_labnumber', show_label=False)),
+            HGroup(Item('set_graph', show_label=False),
+                   Item('graph_by_labnumber', show_label=False))
+        )
 
         selected_grp = VGroup(
-#                              Item('stored_selection', show_label=False,
-#                                   editor=EnumEditor(name='stored_selections')
-#                                   ),
+            #                              Item('stored_selection', show_label=False,
+            #                                   editor=EnumEditor(name='stored_selections')
+            #                                   ),
 
-                              Item('selected_records',
-                                          show_label=False,
-                                          style='custom',
-                                          editor=TabularEditor(
-                                                               multi_select=True,
-                                                               auto_update=True,
-                                                        editable=False,
-#                                                        drag_move=True,
-                                                        dclicked='object.dclicked',
-                                                        selected='object.selected',
-                                                        selected_row='object.selected_row',
-                                                        column_clicked='object.column_clicked',
-#                                                        operations=['drag']
-                                                        adapter=SelectedrecordsAdapter(
-#                                                                                       can_drop=True,
-#                                                                                       can_edit=True
-                                                                                       ),
-                                                        ),
-#                                          width=0.25,
-                                          width=-140
-                                          ),
-                                grouping_grp
-                              )
-
+            Item('selected_records',
+                 show_label=False,
+                 style='custom',
+                 editor=TabularEditor(
+                     multi_select=True,
+                     auto_update=True,
+                     editable=False,
+                     #                                                        drag_move=True,
+                     dclicked='object.dclicked',
+                     selected='object.selected',
+                     selected_row='object.selected_row',
+                     column_clicked='object.column_clicked',
+                     #                                                        operations=['drag']
+                     adapter=SelectedrecordsAdapter(
+                         #                                                                                       can_drop=True,
+                         #                                                                                       can_edit=True
+                     ),
+                 ),
+                 #                                          width=0.25,
+                 width=-140
+            ),
+            grouping_grp
+        )
 
         v = View(HGroup(
-                        spring,
-                        cntrl_grp,
-                        HSplit(selector_grp,
-                               selected_grp)
+            spring,
+            cntrl_grp,
+            HSplit(selector_grp,
+                   selected_grp)
 
-#                        selection_grp,
+            #                        selection_grp,
 
-                      ),
-                  handler=self.handler_klass,
-                  buttons=['OK', 'Cancel'],
-#                  width=900,
-                  height=500,
-                  resizable=True,
-                  id='processing_selector',
-                  title='Select Data'
+        ),
+                 handler=self.handler_klass,
+                 buttons=['OK', 'Cancel'],
+                 #                  width=900,
+                 height=500,
+                 resizable=True,
+                 id='processing_selector',
+                 title='Select Data'
 
-               )
+        )
 
         return v
 
-#===============================================================================
-# property get/set
-#===============================================================================
+    #===============================================================================
+    # property get/set
+    #===============================================================================
 
 
     def _get_projects(self):
         db = self.db
-#        db.reset()
+        #        db.reset()
         prs = ['---', 'recent']
         ps = db.get_projects()
         if ps:
@@ -428,7 +429,7 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
 
     def _get_machines(self):
         db = self.db
-#        db.reset()
+        #        db.reset()
         mas = ['---']
         ms = db.get_mass_spectrometers()
         if ms:
@@ -443,7 +444,8 @@ class ProcessingSelector(Viewable, ColumnSorterMixin):
             ats += [aii.name.capitalize() for aii in ai]
 
         return ats
-#        return ['Blank', 'Air', 'Unknown']
+
+    #        return ['Blank', 'Air', 'Unknown']
 
     def _get_selected_record_labels(self):
         return ['{} {}'.format(r.rid, r.labnumber) for r in self.selected_records]

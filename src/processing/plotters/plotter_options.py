@@ -17,14 +17,12 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Property, Str, Enum, Int, Float, Bool
 from traitsui.api import View, Item, HGroup, Label, Group, \
-    ListEditor, InstanceEditor, EnumEditor, Spring, spring, VGroup, UItem
+    EnumEditor, Spring, spring, VGroup, UItem
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.constants import NULL_STR, FIT_TYPES
-from src.paths import paths
-from src.viewable import Viewable
+from src.pychron_constants import NULL_STR, FIT_TYPES
 from traitsui.table_column import ObjectColumn
 from traitsui.editors.table_editor import TableEditor
 from traitsui.extras.checkbox_column import CheckboxColumn

@@ -16,15 +16,17 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Property, List, Button, Instance, Any, cached_property
-from traitsui.api import View, Item, VGroup, EnumEditor, HGroup, spring, Label
-from src.saveable import Saveable
 import os
-from src.paths import paths
-from src.constants import NULL_STR, SCRIPT_KEYS
-from src.pyscripts.pyscript_editor import PyScriptManager
-from src.loggable import Loggable
+
+from traits.api import Str, Instance, Any
+from traitsui.api import Item, VGroup
 import yaml
+
+from src.saveable import Saveable
+from src.paths import paths
+from src.pychron_constants import NULL_STR, SCRIPT_KEYS
+from src.pyscripts.pyscript_editor import PyScriptManager
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 # class ScriptMixin(object):
@@ -134,11 +136,11 @@ class ScriptEditable(Saveable, ScriptMixin):
 
     def _script_factory(self, label, name, kind='ExtractionLine'):
         return Script(label=label,
-#                      names=getattr(self, '{}_scripts'.format(name)),
+                      #                      names=getattr(self, '{}_scripts'.format(name)),
                       application=self.application,
                       mass_spectrometer=self.mass_spectrometer,
                       kind=kind
-                      )
+        )
 
     def _extraction_script_default(self):
         return self._script_factory('Extraction', 'extraction')
@@ -171,13 +173,13 @@ class ScriptEditable(Saveable, ScriptMixin):
 
     def _update_run_script(self, run, sname, name):
         if run.state == 'not run':
-#            ssname = '{}_script'.format(sname)
-#            script = getattr(self, ssname)
-#            print script, script.name
-#            if script:
+        #            ssname = '{}_script'.format(sname)
+        #            script = getattr(self, ssname)
+        #            print script, script.name
+        #            if script:
             setattr(run.script_info, '{}_script_name'.format(sname), name)
 
-#                setattr(run, '{}_dirty'.format(ssname), True)
+            #                setattr(run, '{}_dirty'.format(ssname), True)
 
     def _load_default_scripts(self, setter=None, key=None):
         if key is None:
@@ -186,13 +188,13 @@ class ScriptEditable(Saveable, ScriptMixin):
             key = self.automated_run.labnumber
 
         if setter is None:
-#            def setter(ski, sci):
-#                v = getattr(self, '{}_script'.format(ski))
+        #            def setter(ski, sci):
+        #                v = getattr(self, '{}_script'.format(ski))
 
-            setter = lambda ski, sci:setattr(getattr(self, '{}_script'.format(ski)), 'name', sci)
+            setter = lambda ski, sci: setattr(getattr(self, '{}_script'.format(ski)), 'name', sci)
 
-        # open the yaml config file
-#        import yaml
+            # open the yaml config file
+        #        import yaml
         p = os.path.join(paths.scripts_dir, 'defaults.yaml')
         if not os.path.isfile(p):
             self.warning('Script defaults file does not exist {}'.format(p))
@@ -235,21 +237,23 @@ class ScriptEditable(Saveable, ScriptMixin):
 
             script = getattr(self, '{}_script'.format(sk))
             if not sc in script.names:
-#            if not sc in getattr(self, '{}_scripts'.format(sk)):
+            #            if not sc in getattr(self, '{}_scripts'.format(sk)):
                 sc = NULL_STR
-#            print setter, sk, sc
+                #            print setter, sk, sc
             setter(sk, sc)
-#===============================================================================
-# property get/set
-#===============================================================================
+            #===============================================================================
+            # property get/set
+            #===============================================================================
+
     def _get_script_group(self):
         script_grp = VGroup(
-                        Item('extraction_script', style='custom', show_label=False),
-                        Item('measurement_script', style='custom', show_label=False),
-                        Item('post_equilibration_script', style='custom', show_label=False),
-                        Item('post_measurement_script', style='custom', show_label=False),
-                        show_border=True,
-                        label='Scripts'
-                        )
+            Item('extraction_script', style='custom', show_label=False),
+            Item('measurement_script', style='custom', show_label=False),
+            Item('post_equilibration_script', style='custom', show_label=False),
+            Item('post_measurement_script', style='custom', show_label=False),
+            show_border=True,
+            label='Scripts'
+        )
         return script_grp
-#============= EOF =============================================
+
+        #============= EOF =============================================

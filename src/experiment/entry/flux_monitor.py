@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Str, List
 from traitsui.api import View, Item, HGroup, VGroup, EnumEditor
-from src.constants import PLUSMINUS, SIGMA
+from src.pychron_constants import PLUSMINUS, SIGMA
 #============= standard library imports ========================
 #============= local library imports  ==========================
 

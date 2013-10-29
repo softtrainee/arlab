@@ -27,17 +27,17 @@ def spacer(width=-1, **kw):
     return Spring(springy=False, width=width, **kw)
 
 
-def new_button_editor(trait, name, label=None, **kw):
+def new_button_editor(trait, name, label=None, editor_kw=None, **kw):
+    if editor_kw is None:
+        editor_kw = {}
     name = '{}.png'.format(name)
     kw['show_label'] = label is not None
     kw['label'] = label or ''
+    image = ImageResource(name=name, search_path=paths.icon_search_path)
 
     return Item(trait, style='custom',
-                editor=ButtonEditor(image=ImageResource(name=name,
-                                                        search_path=paths.icon_search_path
-                )),
-                **kw
-    )
+                editor=ButtonEditor(image=image, **editor_kw),
+                **kw)
 
 
 #============= EOF =============================================

@@ -40,7 +40,7 @@ import time
 from threading import Thread
 from Queue import Queue
 from src.helpers.timer import Timer
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
 from src.spectrometer.readout_view import ReadoutView
 from src.deprecate import deprecated
 from src.graph.tools.data_tool import DataTool, DataToolOverlay

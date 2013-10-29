@@ -76,6 +76,7 @@ class PeakHopCollector(DataCollector):
             data = self._get_data(dets)
             con.add_consumable((time.time() - self.starttime,
                                 data, dets, isos, i))
+            return True
 
     def _iter_step(self, data):
         x, data, dets, isos, i = data
@@ -90,7 +91,7 @@ class PeakHopCollector(DataCollector):
         try:
             cycle, dets, isos, defls, settle, count = self.hop_generator.next()
         except StopIteration:
-            self.stop()
+            #self.stop()
             return
 
         detector = dets[0]
@@ -123,7 +124,7 @@ class PeakHopCollector(DataCollector):
 
         d = self.parent.get_detector(detector)
 
-        self.debug('cycle {} count {}'.format(cycle, count))
+        self.debug('cycle {} count {} {}'.format(cycle, count, id(self)))
         if self.plot_panel.is_baseline:
             isotope = '{}bs'.format(isotope)
 

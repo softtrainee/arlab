@@ -22,7 +22,7 @@ from traits.api import String, Str, Property, Any, Float, Instance, Int, List, c
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.constants import NULL_STR, SCRIPT_KEYS, SCRIPT_NAMES, LINE_STR
+from src.pychron_constants import NULL_STR, SCRIPT_KEYS, SCRIPT_NAMES, LINE_STR
 from src.experiment.automated_run.factory_view import FactoryView
 from src.experiment.utilities.identifier import convert_special_name, ANALYSIS_MAPPING, NON_EXTRACTABLE, \
     make_special_identifier, make_standard_identifier
@@ -814,8 +814,8 @@ class AutomatedRunFactory(Loggable):
         p = paths.pattern_dir
         extension = '.lp'
         patterns = list_directory(p, extension)
-        return ['Pattern', 'None', LINE_STR, 'Remote Patterns', ''] + self.remote_patterns + \
-               ['Local Patterns', ''] + patterns
+        return ['Pattern', 'None', LINE_STR, 'Remote Patterns'] + self.remote_patterns + \
+               [LINE_STR, 'Local Patterns'] + patterns
 
     def _get_templates(self):
         p = paths.incremental_heat_template_dir
@@ -1117,7 +1117,7 @@ post_equilibration_script:name
 
             #    if self.edit_mode:
 
-        #        self._load_default_scripts(self.labnumber)
+            #        self._load_default_scripts(self.labnumber)
 
     def _save_flux_button_fired(self):
         self._save_flux()

@@ -24,7 +24,7 @@
 # from src.regression.ols_regressor import PolynomialRegressor
 # import struct
 # from src.regression.interpolation_regressor import InterpolationRegressor
-# from src.constants import INTERPOLATE_TYPES
+# from src.pychron_constants import INTERPOLATE_TYPES
 #
 ##============= local library imports  ==========================
 #

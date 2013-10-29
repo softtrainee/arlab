@@ -22,51 +22,50 @@ from traitsui.api import View, UItem, VSplit, VGroup, HSplit
 # from traitsui.tabular_adapter import TabularAdapter
 from src.helpers.formatting import floatfmt, errorfmt, calc_percent_error, \
     pfloatfmt
-from src.constants import PLUSMINUS, NULL_STR, SIGMA
+from src.pychron_constants import PLUSMINUS, NULL_STR, SIGMA
 from src.ui.qt.text_table_editor import TextTableEditor
 
 from src.ui.text_table import BoldCell, TextCell, TextRow, \
-    TextTable, TextTableAdapter, SimpleTextTableAdapter, RatiosAdapter, HtmlCell, \
-    HeaderRow
+    TextTable, TextTableAdapter, SimpleTextTableAdapter, HeaderRow
 from src.experiment.display_signal import DisplaySignal, DisplayRatio, \
     DisplayEntry
-from src.codetools.simple_timeit import timethis
 #============= standard library imports ========================
 #============= local library imports  ==========================
 PLUSMINUS_SIGMA = u'{}1{}'.format(PLUSMINUS, SIGMA)
 
+
 class RawAdapter(SimpleTextTableAdapter):
     columns = [
-               ('Isotope', 'isotope', str),
-               ('Detector', 'detector', str),
-               ('Raw (fA)', 'raw_value'),
-               (PLUSMINUS_SIGMA, 'raw_error'),
-               (u'{}%  '.format(PLUSMINUS), 'raw_error_percent', str),
-               ('Fit', 'fit', str),
+        ('Isotope', 'isotope', str),
+        ('Detector', 'detector', str),
+        ('Raw (fA)', 'raw_value'),
+        (PLUSMINUS_SIGMA, 'raw_error'),
+        (u'{}%  '.format(PLUSMINUS), 'raw_error_percent', str),
+        ('Fit', 'fit', str),
 
-               ('Baseline (fA)', 'baseline_value'),
-               (PLUSMINUS_SIGMA, 'baseline_error'),
-               (u'{}%  '.format(PLUSMINUS), 'baseline_error_percent', str),
+        ('Baseline (fA)', 'baseline_value'),
+        (PLUSMINUS_SIGMA, 'baseline_error'),
+        (u'{}%  '.format(PLUSMINUS), 'baseline_error_percent', str),
 
-               ('Blank (fA)', 'blank_value'),
-               (PLUSMINUS_SIGMA, 'blank_error'),
-               (u'{}%  '.format(PLUSMINUS), 'blank_error_percent', str),
-             ]
+        ('Blank (fA)', 'blank_value'),
+        (PLUSMINUS_SIGMA, 'blank_error'),
+        (u'{}%  '.format(PLUSMINUS), 'blank_error_percent', str),
+    ]
+
+
 class SignalAdapter(SimpleTextTableAdapter):
     columns = [
-               ('Isotope', 'isotope', str),
-               ('Detector', 'detector', str),
-               ('Signal (fA)  ', 'signal_value'),
-               (PLUSMINUS_SIGMA, 'signal_error'),
-               ('Error Comp. %', 'error_component', pfloatfmt(n=1)),
-               ('IC Factor', 'ic_factor_value'),
-               (PLUSMINUS_SIGMA, 'ic_factor_error')
-               ]
+        ('Isotope', 'isotope', str),
+        ('Detector', 'detector', str),
+        ('Signal (fA)  ', 'signal_value'),
+        (PLUSMINUS_SIGMA, 'signal_error'),
+        ('Error Comp. %', 'error_component', pfloatfmt(n=1)),
+        ('IC Factor', 'ic_factor_value'),
+        (PLUSMINUS_SIGMA, 'ic_factor_error')
+    ]
 
 
 class AgeAdapter(TextTableAdapter):
-
-
     def _make_tables(self, record):
         age = record.age.nominal_value
         age_error = record.age.std_dev
@@ -79,33 +78,34 @@ class AgeAdapter(TextTableAdapter):
         ar40_39_perror = calc_percent_error(ar40_39, ar40_39_error, n=3)
 
         tt = TextTable(
-                       HeaderRow(TextCell(''), TextCell('Value'),
-                                 TextCell(u'{}1{}'.format(PLUSMINUS, SIGMA)),
-                                 TextCell('% error')
-                                 ),
-                       TextRow(
-                               BoldCell('Age ({}):'.format(record.age_units)),
-                               TextCell(floatfmt(age)),
-                               TextCell(floatfmt(age_error)),
-                               TextCell(age_perror, n=2)
-                               ),
-                       TextRow(
-                               BoldCell('w/o J err:'),
-                               TextCell(''),
-                               TextCell(floatfmt(woj_age_error)),
-                               TextCell(woj_age_perror)
-                               ),
-                       TextRow(
-                               BoldCell('40Ar*/39Ar:'),
-                               TextCell(floatfmt(record.Ar40_39.nominal_value)),
-                               TextCell(floatfmt(record.Ar40_39.std_dev)),
-                               TextCell(ar40_39_perror),
-#                                HtmlCell('<sup>40</sup>Ar*/<sup>39</sup>Ar',
-#                                         bold=True)
-                               ),
-                       border=True
-                       )
+            HeaderRow(TextCell(''), TextCell('Value'),
+                      TextCell(u'{}1{}'.format(PLUSMINUS, SIGMA)),
+                      TextCell('% error')
+            ),
+            TextRow(
+                BoldCell('Age ({}):'.format(record.age_units)),
+                TextCell(floatfmt(age)),
+                TextCell(floatfmt(age_error)),
+                TextCell(age_perror, n=2)
+            ),
+            TextRow(
+                BoldCell('w/o J err:'),
+                TextCell(''),
+                TextCell(floatfmt(woj_age_error)),
+                TextCell(woj_age_perror)
+            ),
+            TextRow(
+                BoldCell('40Ar*/39Ar:'),
+                TextCell(floatfmt(record.Ar40_39.nominal_value)),
+                TextCell(floatfmt(record.Ar40_39.std_dev)),
+                TextCell(ar40_39_perror),
+                #                                HtmlCell('<sup>40</sup>Ar*/<sup>39</sup>Ar',
+                #                                         bold=True)
+            ),
+            border=True
+        )
         return [tt]
+
 
 class AnalysisSummaryAdapter(TextTableAdapter):
     def _make_tables(self, record):
@@ -122,8 +122,8 @@ class AnalysisSummaryAdapter(TextTableAdapter):
         return BoldCell('{}:'.format(name)), TextCell(value, **kw)
 
     def _make_keyword_row(self, keys):
-        cells = [ci  for pairs in map(self._keyword, keys)
-                        for ci in pairs]
+        cells = [ci for pairs in map(self._keyword, keys)
+                 for ci in pairs]
         return TextRow(*cells)
 
     def _make_info_table(self, record):
@@ -141,34 +141,34 @@ class AnalysisSummaryAdapter(TextTableAdapter):
         disc = u'{} {}{}'.format(floatfmt(disc), PLUSMINUS, errorfmt(disc, disc_err))
 
         tt = TextTable(
-                       self._make_keyword_row([('Analysis ID', record.record_id),
-                                              ('Irradiation', irrad),
-                                              ('Sample', record.sample),
-                                              ]),
-                       self._make_keyword_row([('Comment',
-                                                record.comment, {'col_span':-1})]),
-                       self._make_keyword_row(
-                                              [('Date', record.rundate),
-                                               ('Time', record.runtime),
-                                               ('Disc.', disc),
-                                               ]
-                                              ),
-                       self._make_keyword_row(
-                                              [('Spectrometer', record.mass_spectrometer),
-                                               ('Device', record.extract_device)]
-                                              ),
-                       self._make_keyword_row([('Position', record.position),
-                                               ('Extract ({})'.format(record.extract_units),
-                                                record.extract_value),
-                                               ('Duration (s)', record.extract_duration),
-                                               ('Cleanup (s)', record.cleanup_duration)
-                                               ]
-                                              ),
-                       self._make_keyword_row([('J', flux, {'col_span':2}),
-                                               ('Sensitivity', sens, {'col_span':2})
-                                               ]),
-                       border=False
-                       )
+            self._make_keyword_row([('Analysis ID', record.record_id),
+                                    ('Irradiation', irrad),
+                                    ('Sample', record.sample),
+            ]),
+            self._make_keyword_row([('Comment',
+                                     record.comment, {'col_span': -1})]),
+            self._make_keyword_row(
+                [('Date', record.rundate),
+                 ('Time', record.runtime),
+                 ('Disc.', disc),
+                ]
+            ),
+            self._make_keyword_row(
+                [('Spectrometer', record.mass_spectrometer),
+                 ('Device', record.extract_device)]
+            ),
+            self._make_keyword_row([('Position', record.position),
+                                    ('Extract ({})'.format(record.extract_units),
+                                     record.extract_value),
+                                    ('Duration (s)', record.extract_duration),
+                                    ('Cleanup (s)', record.cleanup_duration)
+            ]
+            ),
+            self._make_keyword_row([('J', flux, {'col_span': 2}),
+                                    ('Sensitivity', sens, {'col_span': 2})
+            ]),
+            border=False
+        )
         return tt
 
 # ERROR_PERCENT_WIDTH = 50
@@ -184,8 +184,8 @@ class AnalysisSummary(HasTraits):
     update_needed = Event
     signals = Property(List, depends_on='record, update_needed')
     raw_signals = Property(List, depends_on='record, update_needed')
-#     aux_values = Property(List, depends_on='record, update_needed')
-#     ratios = Property(List, depends_on='record, update_needed')
+    #     aux_values = Property(List, depends_on='record, update_needed')
+    #     ratios = Property(List, depends_on='record, update_needed')
     def refresh(self):
         pass
 
@@ -196,46 +196,46 @@ class AnalysisSummary(HasTraits):
         except ZeroDivisionError:
             v, e = 0, 0
         r = DisplayRatio(
-                  name=name,
-                  value=v,
-                  error=e
-                )
+            name=name,
+            value=v,
+            error=e
+        )
         return r
 
-#     @cached_property
-#     def _get_ratios(self):
-#
-#
-#         def func():
-#             ratios = []
-#             self.record.age
-#             record = self.record
-#             arar_result = record.arar_result
-#             if arar_result:
-#                 rad40 = arar_result['rad40']
-#                 k39 = arar_result['k39']
-#                 s36 = arar_result['s36']
-#                 s39dec_cor = arar_result['s39decay_cor']
-#                 s40 = arar_result['s40']
-#
-#                 ratios = [
-#                         self._make_ratio('40Ar%', rad40, s40, scalar=100),
-#                         self._make_ratio('40/36', s40, s36),
-#                         self._make_ratio('40/39K', s40, k39),
-#                         self._make_ratio('40/39', s40, s39dec_cor),
-#                         self._make_ratio('40*/36', rad40, s36),
-#                         self._make_ratio('40*/39K', rad40, k39),
-#                         self._make_ratio('K/Ca', record.kca, 1),
-#                         self._make_ratio('K/Cl', record.kcl, 1),
-#
-#                         ]
-#
-#     #            self._make_ratio('%40*', rad40, s40, scalar=100)
-#             return ratios
-#         print 'ffff'
-#         return timethis(func)
+    #     @cached_property
+    #     def _get_ratios(self):
+    #
+    #
+    #         def func():
+    #             ratios = []
+    #             self.record.age
+    #             record = self.record
+    #             arar_result = record.arar_result
+    #             if arar_result:
+    #                 rad40 = arar_result['rad40']
+    #                 k39 = arar_result['k39']
+    #                 s36 = arar_result['s36']
+    #                 s39dec_cor = arar_result['s39decay_cor']
+    #                 s40 = arar_result['s40']
+    #
+    #                 ratios = [
+    #                         self._make_ratio('40Ar%', rad40, s40, scalar=100),
+    #                         self._make_ratio('40/36', s40, s36),
+    #                         self._make_ratio('40/39K', s40, k39),
+    #                         self._make_ratio('40/39', s40, s39dec_cor),
+    #                         self._make_ratio('40*/36', rad40, s36),
+    #                         self._make_ratio('40*/39K', rad40, k39),
+    #                         self._make_ratio('K/Ca', record.kca, 1),
+    #                         self._make_ratio('K/Cl', record.kcl, 1),
+    #
+    #                         ]
+    #
+    #     #            self._make_ratio('%40*', rad40, s40, scalar=100)
+    #             return ratios
+    #         print 'ffff'
+    #         return timethis(func)
 
-#     @cached_property
+    #     @cached_property
     def _get_raw_signals(self):
         return self._get_signal_values()
 
@@ -243,11 +243,12 @@ class AnalysisSummary(HasTraits):
         record = self.record
         ec = record.get_error_component('j')
         return self._get_signal_values() + [DisplayEntry(isotope='J',
-                                                 error_component=ec
-                                                 )]
+                                                         error_component=ec
+        )]
 
     def _get_signal_values(self):
         record = self.record
+
         def factory(k):
             iso = record.isotopes[k]
             name = iso.name
@@ -263,31 +264,31 @@ class AnalysisSummary(HasTraits):
                 fit = fit[0].upper()
 
             return DisplaySignal(isotope=name,
-                                   detector=det,
-                                   raw_value=rv,
-                                   raw_error=re,
-                                   fit=fit,
-                                   baseline_value=bv,
-                                   baseline_error=be,
-                                   blank_value=blv,
-                                   blank_error=ble,
-                                   signal_value=s.nominal_value,
-                                   signal_error=s.std_dev,
-                                   error_component=record.get_error_component(k),
-                                   ic_factor_value=icv,
-                                   ic_factor_error=ice
-                                   )
+                                 detector=det,
+                                 raw_value=rv,
+                                 raw_error=re,
+                                 fit=fit,
+                                 baseline_value=bv,
+                                 baseline_error=be,
+                                 blank_value=blv,
+                                 blank_error=ble,
+                                 signal_value=s.nominal_value,
+                                 signal_error=s.std_dev,
+                                 error_component=record.get_error_component(k),
+                                 ic_factor_value=icv,
+                                 ic_factor_error=ice
+            )
 
         keys = record.isotope_keys
-#         isotopes = []
-#         return isotopes
+        #         isotopes = []
+        #         return isotopes
         return [factory(k) for k in keys]
 
-#     def _get_aux_values(self):
-#         record = self.record
-#         return [DisplayEntry(name='j',
-#                              error_component=record.get_error_component('j')
-#                              )]
+    #     def _get_aux_values(self):
+    #         record = self.record
+    #         return [DisplayEntry(name='j',
+    #                              error_component=record.get_error_component('j')
+    #                              )]
 
 
     def traits_view(self):
@@ -295,54 +296,55 @@ class AnalysisSummary(HasTraits):
         BG_COLOR = 'light yellow'
         HEADER_COLOR = 'lightgray'
         summary = UItem('record',
-                              editor=TextTableEditor(adapter=AnalysisSummaryAdapter(),
-                                                     bg_color=BG_COLOR
-                                                     ),
-                              height=0.3
-                              )
+                        editor=TextTableEditor(adapter=AnalysisSummaryAdapter(),
+                                               bg_color=BG_COLOR
+                        ),
+                        height=0.3
+        )
 
         raw = UItem('raw_signals',
-                           editor=TextTableEditor(adapter=RawAdapter(),
-                                                 bg_color=BG_COLOR,
-                                                 odd_color=ODD_COLOR,
-                                                 header_color=HEADER_COLOR,
-                                                 ),
-                          height=0.3
-                          )
+                    editor=TextTableEditor(adapter=RawAdapter(),
+                                           bg_color=BG_COLOR,
+                                           odd_color=ODD_COLOR,
+                                           header_color=HEADER_COLOR,
+                    ),
+                    height=0.3
+        )
         signal = UItem('signals', editor=TextTableEditor(adapter=SignalAdapter(),
-                                                               bg_color=BG_COLOR,
-                                                               odd_color=ODD_COLOR,
-                                                               header_color=HEADER_COLOR
-                                                ),
-                          height=0.3,
-                          width=0.75
-                      )
+                                                         bg_color=BG_COLOR,
+                                                         odd_color=ODD_COLOR,
+                                                         header_color=HEADER_COLOR
+        ),
+                       height=0.3,
+                       width=0.75
+        )
 
         '''
             changes to the intensities will not trigger this editor to update
             use "refresh" extended trait name to force editor to redraw.  
         '''
         age = UItem('record',
-                     editor=TextTableEditor(adapter=AgeAdapter(),
-                                               bg_color=BG_COLOR,
-                                               refresh='update_needed'
-                                               ),
-                        width=0.25
-                        )
+                    editor=TextTableEditor(adapter=AgeAdapter(),
+                                           bg_color=BG_COLOR,
+                                           refresh='update_needed'
+                    ),
+                    width=0.25
+        )
 
         v = View(
-                 VSplit(
-                        summary,
-                        VGroup(raw,
-                               HSplit(
-                                      signal,
-                                      age
-                                      )
-                               )
-                        )
-                 )
+            VSplit(
+                summary,
+                VGroup(raw,
+                       HSplit(
+                           signal,
+                           age
+                       )
+                )
+            )
+        )
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================
 
 #
 # class AnalysisSummary(Summary):

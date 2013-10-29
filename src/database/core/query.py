@@ -15,25 +15,27 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from datetime import datetime, timedelta
+
 from traits.api import HasTraits, String, Property, Str, List, Button, Any, \
     Bool, cached_property, Event
 from traitsui.api import View, Item, EnumEditor, HGroup, CheckListEditor, \
     VGroup
-from src.helpers.datetime_tools import get_date
-from datetime import datetime, timedelta
 from sqlalchemy.sql.expression import and_
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class NItem(Item):
     pass
     padding = -15
 
+
 def compile_query(query):
     from sqlalchemy.sql import compiler
-#    try:
-#        from MySQLdb.converters import conversions, escape
-#    except ImportError:
-#        return 'no sql conversion available'
+    #    try:
+    #        from MySQLdb.converters import conversions, escape
+    #    except ImportError:
+    #        return 'no sql conversion available'
 
     dialect = query.session.bind.dialect
     statement = query.statement
@@ -45,14 +47,15 @@ def compile_query(query):
         if isinstance(v, unicode):
             v = v.encode(enc)
         params.append(v)
-#        params.append(
-#                      escape(v, conversions)
-#                      )
+        #        params.append(
+    #                      escape(v, conversions)
+    #                      )
 
     comp = comp.string.encode(enc)
     comp = comp.replace('?', '%s')
 
     return (comp % tuple(params)).decode(enc)
+
 
 class TableSelector(HasTraits):
     parameter = String
@@ -60,54 +63,55 @@ class TableSelector(HasTraits):
 
     def _get_parameters(self):
         params = [
-                  'Analysis',
-                'Material',
-                'Sample',
-                'Detector',
-                'IrradiationPosition',
-                ]
+            'Analysis',
+            'Material',
+            'Sample',
+            'Detector',
+            'IrradiationPosition',
+        ]
         self.parameter = params[0]
         return params
 
     def traits_view(self):
         v = View(Item('parameter',
                       show_label=False,
-                       editor=EnumEditor(name='parameters')),
+                      editor=EnumEditor(name='parameters')),
                  buttons=['OK', 'Cancel'],
                  kind='livemodal'
-                 )
+        )
         return v
+
 
 class Query(HasTraits):
     use = Bool(True)
     parameter = String
-#    parameters = Property(depends_on='query_table')
+    #    parameters = Property(depends_on='query_table')
     parameters = Property
 
     comparator = Str('=')
     comparisons = List(['=', '<', '>', '<=', '>=', 'not =',
-                         'starts with',
-                         'contains'
-                         ])
+                        'starts with',
+                        'contains'
+    ])
     criterion = String('')
-#    criterion = String('')
+    #    criterion = String('')
     criteria = Property(depends_on='parameter,criteria_dirty')
     criteria_dirty = Event
-#    query_table = Any
+    #    query_table = Any
 
     selector = Any
 
     add = Button('+')
     remove = Button('-')
-#     removable = Bool(True)
+    #     removable = Bool(True)
 
     parent_parameters = List(String)
     parent_criterions = List(String)
-#    date_str = 'rundate'
+    #    date_str = 'rundate'
 
     def assemble_filter(self, query, attr):
         comp = self.comparator
-        if self.parameter == 'Run Date':
+        if self.parameter == 'Run Date/Time':
             query = self.date_query(query, attr)
         else:
             c = self.criterion
@@ -124,26 +128,38 @@ class Query(HasTraits):
 
         return query
 
-    def date_query(self, query, attr):
-        criterion = self.criterion
-        comp = self.comparator
-        c = criterion.replace('/', '-')
-        if criterion == 'today':
-            c = get_date()
-        elif criterion == 'this month':
+    def _named_date_query(self, query, attr, comp, crit):
+        today = datetime.today()
+        if crit == 'this month':
             d = datetime.today()
-            today = datetime.today()  # .date()#.datetime()
             if '=' in comp:
                 d = d - timedelta(days=d.day, seconds=d.second, hours=d.hour, minutes=d.minute)
                 query = query.filter(and_(attr <= today,
-                                   attr >= d
-                                   ))
+                                          attr >= d))
+                return query
+
             else:
-                comp = self._convert_comparator(comp)
-                c = d - timedelta(days=d.day - 1)
-                query = query.filter(getattr(attr, comp)(c))
+                dt = d - timedelta(days=d.day - 1)
+
+        elif crit == 'this week':
+            days = today.weekday()
+            dt = timedelta(days=days)
+
+        elif crit == 'yesterday':
+            dt = today - timedelta(days=1)
+
+        query = query.filter(getattr(attr, comp)(dt))
+        return query
+
+    def date_query(self, query, attr):
+        criterion = self.criterion
+        comp = self.comparator
+        comp = self._convert_comparator(comp)
+        c = criterion.replace('/', '-')
+        if c in ('this month', 'yesterday', 'this week'):
+            return self._named_date_query(query, attr, comp, c)
         else:
-            comp = self._convert_comparator(comp)
+
             if c.count('-') == 2:
                 fmt = '%m-%d-%Y'
             elif c.count('-') == 1:
@@ -153,15 +169,15 @@ class Query(HasTraits):
             d = datetime.strptime(c, fmt)
             print attr, comp, c, d
             query = query.filter(getattr(attr, comp)(d))
-#        c = '{}'.format(c)
+            #        c = '{}'.format(c)
         return query
 
-#
-#===============================================================================
-# private
-#===============================================================================
-#    def _between(self, p, l, g):
-#        return '{}<="{}" AND {}>="{}"'.format(p, l, p, g)
+    #
+    #===============================================================================
+    # private
+    #===============================================================================
+    #    def _between(self, p, l, g):
+    #        return '{}<="{}" AND {}>="{}"'.format(p, l, p, g)
 
     def _convert_comparator(self, c):
         if c == '=':
@@ -174,29 +190,29 @@ class Query(HasTraits):
             c = '__le__'
         elif c == '>=':
             c = '__ge__'
-#        elif c=='like':
+            #        elif c=='like':
 
         return c
 
-#    @cached_property
+    #    @cached_property
     def _get_parameters(self):
 
-#        b = self.query_table
-#        params = [str(fi.column).split('.')[0].replace('Table', '').lower() for fi in b.__table__.foreign_keys]
-#
-#        params += [str(col) for col in b.__table__.columns]
-# #        f = lambda x:[str(col)
-# #                           for col in x.__table__.columns]
-# #        params = list(f(b))
+    #        b = self.query_table
+    #        params = [str(fi.column).split('.')[0].replace('Table', '').lower() for fi in b.__table__.foreign_keys]
+    #
+    #        params += [str(col) for col in b.__table__.columns]
+    # #        f = lambda x:[str(col)
+    # #                           for col in x.__table__.columns]
+    # #        params = list(f(b))
         params = self.__params__
         if not self.parameter:
             self.parameter = params[0]
 
         return params
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
     def _add_fired(self):
         self.selector.add_query(self, self.parameter, self.criterion)
 
@@ -217,16 +233,16 @@ class Query(HasTraits):
         self.parent_criterions.append(new)
         self.criteria_dirty = True
 
-#===============================================================================
-# property get/set
-#===============================================================================
+    #===============================================================================
+    # property get/set
+    #===============================================================================
     @cached_property
     def _get_criteria(self):
         cs = []
         db = self.selector.db
         param = self.parameter.lower()
         if param == 'run date/time':
-            cs = ['2013', '2012', 'last month', 'yesterday', 'last week']
+            cs = ['2013', '2012', 'this month', 'yesterday', 'this week']
         else:
             funcname = 'get_{}s'.format(param)
             if hasattr(db, funcname):
@@ -265,81 +281,91 @@ class Query(HasTraits):
                     tfs.append(fi == ci)
             return tfs
 
-#===============================================================================
-# views
-#===============================================================================
+            #===============================================================================
+            # views
+            #===============================================================================
+
     def traits_view(self):
 
         top = HGroup(
 
-                NItem('parameter', editor=EnumEditor(name='parameters'),
-#                     width= -100
-                     ),
-#                Spring(springy=False,
-#                       width= -5),
-                NItem('comparator',
-                     editor=EnumEditor(name='comparisons'),
-                     ),
-#                NItem('add'),
-#                Spring(springy=False,
-#                       width=50, visible_when='not removable'),
-                show_labels=False,
+            NItem('parameter', editor=EnumEditor(name='parameters'),
+                  #                     width= -100
+            ),
+            #                Spring(springy=False,
+            #                       width= -5),
+            NItem('comparator',
+                  editor=EnumEditor(name='comparisons'),
+            ),
+            #                NItem('add'),
+            #                Spring(springy=False,
+            #                       width=50, visible_when='not removable'),
+            show_labels=False,
 
-                )
+        )
 
         bottom = HGroup(
-                        NItem('add',
-                              ),
-                        NItem('remove',
-                               visible_when='removable'),
-                        NItem('criterion',
-                              ),
-                        NItem('criterion', width=-30,
-                             editor=CheckListEditor(name='criteria')),
-                        show_labels=False
-                        )
+            NItem('add',
+            ),
+            NItem('remove',
+                  visible_when='removable'),
+            NItem('criterion',
+            ),
+            NItem('criterion', width=-30,
+                  editor=CheckListEditor(name='criteria')),
+            show_labels=False
+        )
 
         v = View(VGroup(top, bottom,
                         show_border=True
-                        ))
+        ))
         return v
+
 
 class IsotopeQuery(Query):
     __params__ = [
-                'Irradiation',
-                'Labnumber',
-                'Run Date/Time',
-                'Irradiation Level',
-                'Irradiation Position',
-                'Sample',
-                'Project',
-                'Experiment',
-                'Aliquot',
-                'Step'
-                ]
+        'Irradiation',
+        'Labnumber',
+        'Run Date/Time',
+        'Irradiation Level',
+        'Irradiation Position',
+        'Sample',
+        'Project',
+        'Experiment',
+        'Aliquot',
+        'Step'
+    ]
+
 
 class DateQuery(Query):
     __params__ = ['Run Date/Time', ]
 
+
 class DeviceScanQuery(DateQuery):
     pass
+
 
 class PowerRecordQuery(DateQuery):
     pass
 
+
 class PowerCalibrationQuery(DateQuery):
     pass
+
 
 class PowerMapQuery(DateQuery):
     pass
 
+
 class VideoQuery(DateQuery):
     pass
+
 
 class BakeoutQuery(Query):
     __params__ = ['Run Date/Time',
                   'Controller'
-                  ]
+    ]
+
 #============= EOF =============================================
 #        elif 'runtime' in param:
 #    def time_query(self):

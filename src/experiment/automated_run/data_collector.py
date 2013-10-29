@@ -53,7 +53,6 @@ class DataCollector(Loggable):
     starttime = None
     _alive = False
     _evt = None
-    _completed = False
 
     def _detectors_changed(self):
         self._idx_func = self._get_idx_func()
@@ -69,24 +68,15 @@ class DataCollector(Loggable):
     def set_truncated(self):
         self._truncate_signal = True
 
-    def stop(self, wait_for_completion=True):
+    def stop(self):
         self._alive = False
         if self._evt:
             self._evt.set()
-
-        if wait_for_completion:
-            if self._evt:
-                while not self._completed:
-                    time.sleep(0.1)
 
     def measure(self):
         if self.canceled:
             return
 
-        #stop and wait for completion if already running
-        self.stop()
-
-        self._completed = False
         self._truncate_signal = False
 
         st = time.time()
@@ -108,6 +98,7 @@ class DataCollector(Loggable):
         evt.wait(0.05)
 
         self._alive = True
+
         self._measure(evt, et)
 
         tt = time.time() - st
@@ -115,15 +106,18 @@ class DataCollector(Loggable):
         #return self.total_counts
 
     def _measure(self, evt, et):
+        self.debug('starting measurment')
         with consumable(func=self._iter_step, main=True) as con:
             self._iter(con, evt, 1)
             evt.wait(et * 1.1)
-        self._completed = True
+        self.debug('measurement finished')
 
     def _iter(self, con, evt, i, prev=0):
+        if not self._check_iteration(evt, i):
+            if not self._iter_hook(con, i):
+                evt.set()
+                return
 
-        if not self._check_iteration(i):
-            self._iter_hook(con, i)
             ot = time.time()
 
             p = self.period_ms * 0.001
@@ -138,10 +132,11 @@ class DataCollector(Loggable):
             t.start()
 
         else:
+            #self.debug('no more iter')
             evt.set()
 
     def _iter_hook(self, con, i):
-        pass
+        return True
 
     def _iter_step(self, data):
         pass
@@ -254,12 +249,12 @@ class DataCollector(Loggable):
             if ti.check(self.arar_age, cnt):
                 return ti
 
-    def _check_iteration(self, i):
+    def _check_iteration(self, evt, i):
 
     #         if self.plot_panel is None:
     #             return 'break'
-        if self._evt:
-            if self._evt.isSet():
+        if evt:
+            if evt.isSet():
                 return True
 
         j = i - 1

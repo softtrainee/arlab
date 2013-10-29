@@ -20,7 +20,6 @@ from traits.api import Callable
 from numpy import where, abs
 #============= local library imports  ==========================
 from src.graph.tools.info_inspector import InfoInspector, InfoOverlay
-from src.constants import PLUSMINUS
 
 
 class PointInspector(InfoInspector):

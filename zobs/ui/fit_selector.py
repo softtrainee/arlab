@@ -19,9 +19,10 @@ from traits.api import HasTraits, List, Any, on_trait_change
 from traitsui.api import View, Item, ListEditor, InstanceEditor, Group
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.constants import PLUSMINUS
+from src.pychron_constants import PLUSMINUS
 from src.database.records.ui.analysis_parameters import BaseParameters, \
     BaselineParameters, AnalysisParameters
+
 
 class FitSelector(HasTraits):
     analysis = Any
@@ -59,11 +60,11 @@ class FitSelector(HasTraits):
         er = iso.error
 
         obj = klass(name=name,
-                                 fit=fit,
-                                 filter_outliers=bool(fo),
-                                 _intercept=inte,
-                                 _error=er,
-                                 )
+                    fit=fit,
+                    filter_outliers=bool(fo),
+                    _intercept=inte,
+                    _error=er,
+        )
         return obj
 
     @on_trait_change('fits:[show,show_sniff]')
@@ -77,10 +78,10 @@ class FitSelector(HasTraits):
             self._plot_cache = comps
 
         plots = [p for p, a in zip(self._plot_cache, reversed(self.fits)) if a.show]
-#        plots = [p for p, a in zip(self._plot_cache, self.fits) if a.show]
+        #        plots = [p for p, a in zip(self._plot_cache, self.fits) if a.show]
 
         for p, a in zip(self._plot_cache, reversed(self.fits)):
-#        for p, a in zip(self._plot_cache, self.fits):
+        #        for p, a in zip(self._plot_cache, self.fits):
 
             if not a.show:
                 p.visible = False
@@ -90,30 +91,31 @@ class FitSelector(HasTraits):
                     if 'sniff' in p.plots:
                         sp = p.plots['sniff'][0]
                         sp.visible = a.show_sniff
-#                    if a.show_sniff:
+                        #                    if a.show_sniff:
 
 
 
 
-#                if not len(p.plots['data0'][0].index.get_data()):
-#                    self.analysis.set_isotope_graph_data(a.name, self.kind)
+                        #                if not len(p.plots['data0'][0].index.get_data()):
+                        #                    self.analysis.set_isotope_graph_data(a.name, self.kind)
 
-#        self._plot_cache = [p for p, a in zip(comps, self.fits) if not a.show]
+                        #        self._plot_cache = [p for p, a in zip(comps, self.fits) if not a.show]
 
         self.graph.plotcontainer._components = plots
         self.graph.set_paddings()
         self.graph._update_bounds(self.graph.plotcontainer.bounds, plots)
 
         for i, p in enumerate(reversed(plots)):
-#        for i, p in enumerate(plots):
+        #        for i, p in enumerate(plots):
             params = dict(orientation='right' if i % 2 else 'left',
                           axis_line_visible=False
-                          )
+            )
             pi = self._plot_cache.index(p)
             self.graph.set_axis_traits(pi, 'y', **params)
 
         self.graph.redraw()
-#        self._plot_cache = [self.graph.plotcontainer.components
+
+    #        self._plot_cache = [self.graph.plotcontainer.components
 
     @on_trait_change('fits:[fit,filterstr,filter_outliers]')
     def _changed(self, obj, name, new):
@@ -158,17 +160,18 @@ class FitSelector(HasTraits):
 
     def traits_view(self):
         v = View(
-                 Group(
-                       Item('fits',
-                            style='custom',
-                            show_label=False,
-                            editor=ListEditor(mutable=False,
-                                                editor=InstanceEditor(),
-                                                style='custom'
-                                                )),
-                       show_border=True,
-                       label='{} Fits'.format(self.name)
-                       )
-                 )
+            Group(
+                Item('fits',
+                     style='custom',
+                     show_label=False,
+                     editor=ListEditor(mutable=False,
+                                       editor=InstanceEditor(),
+                                       style='custom'
+                     )),
+                show_border=True,
+                label='{} Fits'.format(self.name)
+            )
+        )
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================

@@ -16,8 +16,8 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Float, Enum, List, Int, \
-     File, Property, Button, on_trait_change, Any, Event
-from traitsui.api import View, Item, UItem, HGroup
+    File, Property, Button, on_trait_change, Any, Event
+from traitsui.api import View, UItem, HGroup
 from pyface.file_dialog import FileDialog
 from pyface.constant import OK
 from traitsui.tabular_adapter import TabularAdapter
@@ -28,7 +28,7 @@ import os
 from src.ui.tabular_editor import myTabularEditor
 from src.paths import paths
 from src.viewable import Viewable
-from src.constants import alphas
+from src.pychron_constants import alphas
 # paths.build('_experiment')
 # build_directories(paths)
 class IncrementalHeatAdapter(TabularAdapter):
@@ -37,11 +37,13 @@ class IncrementalHeatAdapter(TabularAdapter):
                ('Units', 'units'),
                ('Duration (s)', 'duration'),
                ('Cleanup (s)', 'cleanup'),
-             ]
+    ]
 
     step_id_text = Property
+
     def _get_step_id_text(self):
         return alphas(self.item.step_id - 1)
+
 
 class IncrementalHeatStep(HasTraits):
     step_id = Int
@@ -49,7 +51,7 @@ class IncrementalHeatStep(HasTraits):
     cleanup = Float
     value = Float
     units = Enum('watts', 'temp', 'percent')
-#    is_ok = Property
+    #    is_ok = Property
 
 
     def make_row(self):
@@ -111,9 +113,10 @@ class IncrementalHeatTemplate(Viewable):
 
     def _get_name(self):
         return os.path.basename(self.path)
-#===============================================================================
-# persistence
-#===============================================================================
+
+    #===============================================================================
+    # persistence
+    #===============================================================================
     def load(self, path):
 
         self.path = path
@@ -126,13 +129,13 @@ class IncrementalHeatTemplate(Viewable):
                 if row:
                     params = dict()
                     for a, cast in (('value', float), ('units', str),
-                              ('duration', float), ('cleanup', float)):
+                                    ('duration', float), ('cleanup', float)):
                         idx = header.index(a)
                         params[a] = cast(row[idx])
 
                     step = IncrementalHeatStep(step_id=cnt,
                                                **params
-                                               )
+                    )
                     self.steps.append(step)
                     cnt += 1
 
@@ -143,9 +146,10 @@ class IncrementalHeatTemplate(Viewable):
             writer.writerow(header)
             for step in self.steps:
                 writer.writerow(step.make_row())
-#===============================================================================
-# handlers
-#===============================================================================
+                #===============================================================================
+                # handlers
+                #===============================================================================
+
     @on_trait_change('steps[]')
     def _steps_updated(self):
         for i, si in enumerate(self.steps):
@@ -171,7 +175,7 @@ class IncrementalHeatTemplate(Viewable):
     def _save_as_button_fired(self):
         dlg = FileDialog(action='save as',
                          default_directory=paths.incremental_heat_template_dir
-                         )
+        )
         if dlg.open() == OK:
             path = dlg.path
             if not path.endswith('.txt'):
@@ -187,31 +191,31 @@ class IncrementalHeatTemplate(Viewable):
                                  copy_cache='copy_cache',
                                  pasted='pasted',
                                  multi_select=True
-                                 )
+        )
         v = View(
-                 HGroup(UItem('add_row')),
-                 UItem('steps',
-                       style='custom',
-                       editor=editor),
+            HGroup(UItem('add_row')),
+            UItem('steps',
+                  style='custom',
+                  editor=editor),
 
-                 HGroup(UItem('save_button', enabled_when='path'),
-                        UItem('save_as_button')),
-                 height=500,
-                 width=600,
-                 resizable=True,
-                 title=self.title,
-                 handler=self.handler_klass
-                 )
+            HGroup(UItem('save_button', enabled_when='path'),
+                   UItem('save_as_button')),
+            height=500,
+            width=600,
+            resizable=True,
+            title=self.title,
+            handler=self.handler_klass
+        )
         return v
 
-if __name__ == '__main__':
 
+if __name__ == '__main__':
     im = IncrementalHeatTemplate()
     im.load(os.path.join(paths.incremental_heat_template_dir,
-                          'asdf.txt'
-                          ))
+                         'asdf.txt'
+    ))
 
-#    for i in range(10):
-#        im.steps.append(IncrementalHeatStep(step_id=i + 1))
+    #    for i in range(10):
+    #        im.steps.append(IncrementalHeatStep(step_id=i + 1))
     im.configure_traits()
 #============= EOF =============================================

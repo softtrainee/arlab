@@ -16,7 +16,7 @@
 ##===============================================================================
 #
 ##============= enthought library imports =======================
-# from src.constants import NULL_STR
+# from src.pychron_constants import NULL_STR
 # from src.helpers.filetools import str_to_bool
 ##============= standard library imports ========================
 ##============= local library imports  ==========================

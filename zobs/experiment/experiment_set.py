@@ -16,7 +16,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  List, Instance, Str, Button, Any, \
+from traits.api import List, Instance, Str, Button, Any, \
     Bool, Property, Float, on_trait_change, cached_property, \
     Event
 from traitsui.api import View, Item, VGroup, HGroup, spring, \
@@ -31,13 +31,11 @@ from src.paths import paths
 from src.experiment.stats import ExperimentStats
 # from src.experiment.automated_run_tabular_adapter import AutomatedRunAdapter
 # from src.ui.tabular_editor import myTabularEditor
-from src.experiment.utilities.identifier import convert_identifier
-from src.constants import NULL_STR, SCRIPT_KEYS
+from src.pychron_constants import NULL_STR, SCRIPT_KEYS
 from src.experiment.blocks.base_schedule import BaseSchedule
 # from src.experiment.blocks.parser import RunParser, UVRunParser
 from src.experiment.blocks.block import Block
 from src.experiment.runs_table import RunsTable
-from src.regex import ALIQUOT_REGEX
 from src.experiment.automated_run.maker import AutomatedRunMaker
 
 
@@ -56,23 +54,23 @@ class ExperimentSet(BaseSchedule):
     delay_before_analyses = Float(5)
     name = Property(depends_on='path')
     path = Str
-#    ok_to_add = Property(depends_on='_ok_to_add')
-#    _ok_to_add = Bool(False)
+    #    ok_to_add = Property(depends_on='_ok_to_add')
+    #    _ok_to_add = Bool(False)
 
     dirty = Bool(False)
 
     executable = Bool(True)
-#    auto_increment = Bool(False)
+    #    auto_increment = Bool(False)
     auto_increment = Bool(True)
 
-#    mass_spectrometer = Str('jan')
+    #    mass_spectrometer = Str('jan')
     mass_spectrometer = Str('obama')
-#    mass_spectrometer = Str(NULL_STR)
+    #    mass_spectrometer = Str(NULL_STR)
     mass_spectrometers = Property
-#    tray = Str(NULL_STR)
+    #    tray = Str(NULL_STR)
     trays = Property
     extract_device = Str('Fusions Diode')
-#    extract_device = Str(NULL_STR)
+    #    extract_device = Str(NULL_STR)
     extract_devices = Property
 
     right_clicked = Any
@@ -97,17 +95,17 @@ class ExperimentSet(BaseSchedule):
                 return
         return True
 
-#    def automated_run_factory(self, copy_automated_run=False, **params):
-#        arun = self.automated_run
-#        if arun and copy_automated_run:
-#            params.update(dict(
-#                               labnumber=arun.labnumber,
-#                               position=arun.position,
-#                               aliquot=arun.aliquot))
-#
-#        params['db'] = self.db
-#        params['mass_spectrometer'] = self.mass_spectrometer
-#        return self._automated_run_factory({}, params)
+    #    def automated_run_factory(self, copy_automated_run=False, **params):
+    #        arun = self.automated_run
+    #        if arun and copy_automated_run:
+    #            params.update(dict(
+    #                               labnumber=arun.labnumber,
+    #                               position=arun.position,
+    #                               aliquot=arun.aliquot))
+    #
+    #        params['db'] = self.db
+    #        params['mass_spectrometer'] = self.mass_spectrometer
+    #        return self._automated_run_factory({}, params)
 
     def save_to_db(self):
         self.info('saving experiment {} to database'.format(self.name))
@@ -133,22 +131,22 @@ class ExperimentSet(BaseSchedule):
         traits = dict([('{}_script'.format(k), get_name(k)) for k in SCRIPT_KEYS])
         self.trait_set(**traits)
 
-#===============================================================================
-# execution
-#===============================================================================
+    #===============================================================================
+    # execution
+    #===============================================================================
     def truncate_run(self, style):
         self.current_run.truncate(style)
 
     def new_runs_generator(self, last_ran=None):
-#        runs = [ai for ai in self.automated_runs if ai.executable and not ai.skip]
+    #        runs = [ai for ai in self.automated_runs if ai.executable and not ai.skip]
         runs = [ai for ai in self.cleaned_automated_runs]
 
         n = len(runs)
         rgen = (r for r in runs)
         if last_ran is not None:
-            # get index of last run in self.automated_runs
-#            startid = next((i for i, r in enumerate(runs) if r.runid == last_ran.runid), None)
-#            if startid is not None:
+        # get index of last run in self.automated_runs
+        #            startid = next((i for i, r in enumerate(runs) if r.runid == last_ran.runid), None)
+        #            if startid is not None:
             if self._cached_runs:
                 startid = self._cached_runs.index(last_ran) + 1
                 # for graphic clarity load the finished runs back in
@@ -167,7 +165,7 @@ class ExperimentSet(BaseSchedule):
 
                         ai.aliquot = crun.aliquot + cnt
                         cnts[ai.labnumber] = cnt
-#                        print 'setting ', crun.aliquot
+                        #                        print 'setting ', crun.aliquot
 
                 newruns = runs[startid:]
                 self.info('starting at analysis {} (startid={} of {})'.format(newruns[0].runid, startid + 1, n))
@@ -178,9 +176,9 @@ class ExperimentSet(BaseSchedule):
 
         return rgen, n
 
-#===============================================================================
-# load runs
-#===============================================================================
+    #===============================================================================
+    # load runs
+    #===============================================================================
     def load_automated_runs(self, text):
         if self.automated_runs is not None:
             self._cached_runs = self.automated_runs
@@ -277,12 +275,13 @@ class ExperimentSet(BaseSchedule):
 
             except Exception, e:
                 import traceback
+
                 print traceback.print_exc()
                 self.warning_dialog('Invalid Experiment file {}\nlinenum= {}\nline= {}'.format(e, linenum, line))
 
                 return
 
-#        aruns = self._add_frequency_runs(meta, aruns)
+                #        aruns = self._add_frequency_runs(meta, aruns)
         return aruns
 
     def _auto_increment(self, m):
@@ -297,7 +296,7 @@ class ExperimentSet(BaseSchedule):
     def _block_factory(self, name=None):
         s = Block(mass_spectrometer=self.mass_spectrometer,
                   extract_device=self.extract_device
-                  )
+        )
 
         if name is not None:
             s.load(os.path.join(paths.block_dir, name))
@@ -325,19 +324,20 @@ tray: {}
            self.delay_between_analyses,
            self.extract_device,
            self.tray if self.tray else '',
-#           make_frequency_runs('blanks'),
-#           make_frequency_runs('airs'),
-#           make_frequency_runs('cocktails'),
-#           make_frequency_runs('backgrounds'),
-           )
+           #           make_frequency_runs('blanks'),
+           #           make_frequency_runs('airs'),
+           #           make_frequency_runs('cocktails'),
+           #           make_frequency_runs('backgrounds'),
+        )
 
         if fp:
             fp.write(s)
         else:
             return s
-#===============================================================================
-# handlers
-#===============================================================================
+            #===============================================================================
+            # handlers
+            #===============================================================================
+
     def _new_schedule_block_fired(self):
         b = self._block_factory()
         info = b.edit_traits(kind='livemodal')
@@ -354,7 +354,7 @@ tray: {}
         nars = self.automated_run_maker.new_runs()
         self.automated_runs.extend(nars)
 
-#        ar = self.automated_run_maker.automated_run
+        #        ar = self.automated_run_maker.automated_run
         arm = self.automated_run_maker
         self.update_aliquots_needed = True
         if self.auto_increment and nars[0].analysis_type == 'unknown':
@@ -367,84 +367,84 @@ tray: {}
             else:
                 s = e
 
-#            ar = self.automated_run
+            #            ar = self.automated_run
             arm.position = str(e + 1)
-#            print ar.position
+            #            print ar.position
             arm.endposition = str(e + 1 + e - s)
             nn = self._auto_increment(arm.labnumber)
             arm._labnumber = '---'
             arm.labnumber = nn
 
-#    def _add_fired(self):
-# #        ars = self.automated_runs
-#        ar = self.automated_run
-#        # labnumber is a property so its not cloned by clone_traits
-# #        ln = ar.labnumber
-#
-#        s = int(ar.position)
-#        e = int(ar.endposition)
-#        if e:
-#            if e < s:
-#                self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
-#                return
-#
-#            for i in range(e - s + 1):
-#                ar.position = str(s + i)
-#                self._add_run(ar)
-#        else:
-#            self._add_run(ar)
-#
-#        self.update_aliquots_needed = True
-#        if self.auto_increment and ar.analysis_type == 'unknown':
-#            ar = self.automated_run
-#            ar.position = str(e + 1)
-# #            print ar.position
-#            ar.endposition = e + 1 + e - s
-#            nn = self._auto_increment(ar.labnumber)
-#            ar.labnumber = nn
-#            ar._labnumber = nn
-#
-#
-#    def _add_run(self, ar):
-#        ars = self.automated_runs
-#        nar = ar.clone_traits()
-#        ln = ar.labnumber
-#        if ALIQUOT_REGEX.match(ln):
-#            ln, a = ln.split('-')
-#            nar.aliquot = int(a)
-#            nar.user_defined_aliquot = True
-#        nar.labnumber = ln
-#
-#        if ar.analysis_type.startswith('blank') or ar.analysis_type == 'background':
-#            nar.extract_value = 0
-#            nar.extract_units = ''
-#
-#        if self.schedule_block and self.schedule_block != NULL_STR:
-# #            print self.schedule_block
-#            block = self._block_factory(self.schedule_block)
-#            nruns = block.render(ar, self._current_group_id)
-#            ars.extend(nruns)
-#            self._current_group_id += 1
-#
-#        else:
-#            if self.selected:
-#                ind = self.automated_runs.index(self.selected[-1])
-#                ars.insert(ind + 1, nar)
-#            else:
-#                ars.append(nar)
-#
-#        kw = dict()
-# #        if self.auto_increment:
-# #            rid = self._auto_increment(ar.labnumber)
-# #            npos = self._auto_increment(ar.position)
-# #            if rid:
-# #                kw['labnumber'] = rid
-# #            if npos:
-# #                kw['position'] = npos
-# #        else:
-# #            self._ok_to_add = False
-#
-#        self._add_hook(ar, **kw)
+            #    def _add_fired(self):
+            # #        ars = self.automated_runs
+            #        ar = self.automated_run
+            #        # labnumber is a property so its not cloned by clone_traits
+            # #        ln = ar.labnumber
+            #
+            #        s = int(ar.position)
+            #        e = int(ar.endposition)
+            #        if e:
+            #            if e < s:
+            #                self.warning_dialog('Endposition {} must greater than start position {}'.format(e, s))
+            #                return
+            #
+            #            for i in range(e - s + 1):
+            #                ar.position = str(s + i)
+            #                self._add_run(ar)
+            #        else:
+            #            self._add_run(ar)
+            #
+            #        self.update_aliquots_needed = True
+            #        if self.auto_increment and ar.analysis_type == 'unknown':
+            #            ar = self.automated_run
+            #            ar.position = str(e + 1)
+            # #            print ar.position
+            #            ar.endposition = e + 1 + e - s
+            #            nn = self._auto_increment(ar.labnumber)
+            #            ar.labnumber = nn
+            #            ar._labnumber = nn
+            #
+            #
+            #    def _add_run(self, ar):
+            #        ars = self.automated_runs
+            #        nar = ar.clone_traits()
+            #        ln = ar.labnumber
+            #        if ALIQUOT_REGEX.match(ln):
+            #            ln, a = ln.split('-')
+            #            nar.aliquot = int(a)
+            #            nar.user_defined_aliquot = True
+            #        nar.labnumber = ln
+            #
+            #        if ar.analysis_type.startswith('blank') or ar.analysis_type == 'background':
+            #            nar.extract_value = 0
+            #            nar.extract_units = ''
+            #
+            #        if self.schedule_block and self.schedule_block != NULL_STR:
+            # #            print self.schedule_block
+            #            block = self._block_factory(self.schedule_block)
+            #            nruns = block.render(ar, self._current_group_id)
+            #            ars.extend(nruns)
+            #            self._current_group_id += 1
+            #
+            #        else:
+            #            if self.selected:
+            #                ind = self.automated_runs.index(self.selected[-1])
+            #                ars.insert(ind + 1, nar)
+            #            else:
+            #                ars.append(nar)
+            #
+            #        kw = dict()
+            # #        if self.auto_increment:
+            # #            rid = self._auto_increment(ar.labnumber)
+            # #            npos = self._auto_increment(ar.position)
+            # #            if rid:
+            # #                kw['labnumber'] = rid
+            # #            if npos:
+            # #                kw['position'] = npos
+            # #        else:
+            # #            self._ok_to_add = False
+            #
+            #        self._add_hook(ar, **kw)
 
     @on_trait_change('current_run,automated_runs[]')
     def _update_stats(self, obj, name, old, new):
@@ -453,120 +453,120 @@ tray: {}
         else:
             self.dirty = False
 
-#    @on_trait_change('automated_runs:')
-#    def _update_skip(self):
-#        self.update_aliquots_needed = True
+            #    @on_trait_change('automated_runs:')
+            #    def _update_skip(self):
+            #        self.update_aliquots_needed = True
 
-#    @on_trait_change('automated_run:labnumber')
-#    def _update_labnumber(self, labnumber):
-#
-#        arun = self.automated_run
-#        # check for id in labtable
-#        self._ok_to_add = False
-#        db = self.db
-#
-#        arun.run_info.sample = ''
-#        arun.aliquot = 0
-#        arun.irrad_level = ''
-#        if labnumber:
-#
-#            # convert labnumber (a, bg, or 10034 etc)
-#            labnumber = convert_identifier(labnumber)
-# #            if isinstance(convert_identifier(labnumber), int):
-# #                self._ok_to_add = True
-# # #                arun.sample = convert_labnumber(convert_identifier(labnumber))
-# #                self._load_default_scripts()
-# #                return
-#
-#            ln = db.get_labnumber(labnumber)
-#            if ln:
-#                self._ok_to_add = True
-#                # set sample and irrad info
-#                try:
-#                    arun.run_info.sample = ln.sample.name
-#                except AttributeError:
-#                    pass
-#
-#                arun.run_info.irrad_level = self._make_irrad_level(ln)
-#
-#                # set default scripts
-#                self._load_default_scripts()
-#            else:
-#                self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
-#
-#    def _make_irrad_level(self, ln):
-#        il = ''
-#        ipos = ln.irradiation_position
-#        if not ipos is None:
-#            level = ipos.level
-#            irrad = level.irradiation
-#            il = '{}{}'.format(irrad.name, level.name)
-#        return il
+            #    @on_trait_change('automated_run:labnumber')
+            #    def _update_labnumber(self, labnumber):
+            #
+            #        arun = self.automated_run
+            #        # check for id in labtable
+            #        self._ok_to_add = False
+            #        db = self.db
+            #
+            #        arun.run_info.sample = ''
+            #        arun.aliquot = 0
+            #        arun.irrad_level = ''
+            #        if labnumber:
+            #
+            #            # convert labnumber (a, bg, or 10034 etc)
+            #            labnumber = convert_identifier(labnumber)
+            # #            if isinstance(convert_identifier(labnumber), int):
+            # #                self._ok_to_add = True
+            # # #                arun.sample = convert_labnumber(convert_identifier(labnumber))
+            # #                self._load_default_scripts()
+            # #                return
+            #
+            #            ln = db.get_labnumber(labnumber)
+            #            if ln:
+            #                self._ok_to_add = True
+            #                # set sample and irrad info
+            #                try:
+            #                    arun.run_info.sample = ln.sample.name
+            #                except AttributeError:
+            #                    pass
+            #
+            #                arun.run_info.irrad_level = self._make_irrad_level(ln)
+            #
+            #                # set default scripts
+            #                self._load_default_scripts()
+            #            else:
+            #                self.warning_dialog('{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
+            #
+            #    def _make_irrad_level(self, ln):
+            #        il = ''
+            #        ipos = ln.irradiation_position
+            #        if not ipos is None:
+            #            level = ipos.level
+            #            irrad = level.irradiation
+            #            il = '{}{}'.format(irrad.name, level.name)
+            #        return il
 
     def _mass_spectrometer_changed(self):
-#        if self.automated_run is None:
-#            return
+    #        if self.automated_run is None:
+    #            return
 
-#        for ai in self.automated_runs:
-#            ai.mass_spectrometer = self.mass_spectrometer
+    #        for ai in self.automated_runs:
+    #            ai.mass_spectrometer = self.mass_spectrometer
 
-#        if self.automated_run.labnumber:
-#            self._load_default_scripts()
-#        else:
-#            self.clear_script_names()
+    #        if self.automated_run.labnumber:
+    #            self._load_default_scripts()
+    #        else:
+    #            self.clear_script_names()
 
-#        self.set_scripts_mass_spectrometer()
+    #        self.set_scripts_mass_spectrometer()
         self.automated_run_maker.mass_spectrometer = self.mass_spectrometer
 
     def _extract_device_changed(self):
 
         if self.extract_device != NULL_STR:
-
             runs = self.automated_runs
             self.runs_table = RunsTable(extract_device=self.extract_device)
             self.runs_table.set_runs(runs)
 
             self.automated_run_maker.extract_device = self.extract_device
-#            self.automated_run_maker.
-#            self.automated_run = self.automated_run_factory(copy_automated_run=False)
-#            self.automated_run_maker.automated_run = self.automated_run_factory(copy_automated_run=False)
+            #            self.automated_run_maker.
+            #            self.automated_run = self.automated_run_factory(copy_automated_run=False)
+            #            self.automated_run_maker.automated_run = self.automated_run_factory(copy_automated_run=False)
 
-#            if self.mass_spectrometer:
-#                self._load_default_scripts()
+            #            if self.mass_spectrometer:
+            #                self._load_default_scripts()
 
-#        self.automated_run.mass_spectrometer = self.mass_spectrometer
+            #        self.automated_run.mass_spectrometer = self.mass_spectrometer
 
-#    def _selected_changed(self, new):
-# #        print new
-#        self.selected_runs = new
-#        if len(new) == 1:
-#            run = new[0]
-#            if run.state == 'not run':
-#                self.automated_run = run.clone_traits()
-#                for si in SCRIPT_KEYS:
-#                    try:
-#                        n = self._clean_script_name(getattr(run, '{}_script'.format(si)).name)
-#                        setattr(self, '{}_script'.format(si), n)
-#                    except AttributeError:
-#                        pass
-#
-#    @on_trait_change('''automated_run:[_position, extract_+, cleanup,
-#    duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
-#    def _sync_selected_runs(self, name, new):
-#        if self.selected_runs:
-#            for si in self.selected_runs:
-#                si.trait_set(**{name:new})
+            #    def _selected_changed(self, new):
+            # #        print new
+            #        self.selected_runs = new
+            #        if len(new) == 1:
+            #            run = new[0]
+            #            if run.state == 'not run':
+            #                self.automated_run = run.clone_traits()
+            #                for si in SCRIPT_KEYS:
+            #                    try:
+            #                        n = self._clean_script_name(getattr(run, '{}_script'.format(si)).name)
+            #                        setattr(self, '{}_script'.format(si), n)
+            #                    except AttributeError:
+            #                        pass
+            #
+            #    @on_trait_change('''automated_run:[_position, extract_+, cleanup,
+            #    duration, autocenter, overlap, ramp_rate, weight, comment, pattern]''')
+            #    def _sync_selected_runs(self, name, new):
+            #        if self.selected_runs:
+            #            for si in self.selected_runs:
+            #                si.trait_set(**{name:new})
 
-#===============================================================================
-# property get/set
-#===============================================================================
+            #===============================================================================
+            # property get/set
+            #===============================================================================
+
     def _get_name(self):
         if self.path:
             return os.path.splitext(os.path.basename(self.path))[0]
         else:
             return ''
-#        else:
-#            return 'New ExperimentSet'
+            #        else:
+            #            return 'New ExperimentSet'
 
     def _get_measuring(self):
         if self.current_run:
@@ -587,8 +587,8 @@ tray: {}
     def _get_trays(self):
         condition = lambda x: x.endswith('.txt')
         ts = [NULL_STR] + self._list_dir(paths.map_dir, condition)
-#        ts = [NULL_STR] + [s for s in os.listdir(paths.map_dir)
-#                if not s.startswith('.') and s.endswith('.txt')]
+        #        ts = [NULL_STR] + [s for s in os.listdir(paths.map_dir)
+        #                if not s.startswith('.') and s.endswith('.txt')]
         return ts
 
     def _get_extract_devices(self):
@@ -597,7 +597,8 @@ tray: {}
     @cached_property
     def _get_schedule_blocks(self):
         return [NULL_STR] + self._list_dir(os.path.join(paths.block_dir),
-                                           )
+        )
+
     def _get_ok_to_add(self):
         b = False
         if self.schedule_block != NULL_STR:
@@ -609,77 +610,77 @@ tray: {}
     def _get_cleaned_automated_runs(self):
         return [ci for ci in self.automated_runs if not ci.skip]
 
-#===============================================================================
-# factories
-#===============================================================================
+    #===============================================================================
+    # factories
+    #===============================================================================
 
-#    def _automated_run_factory(self, script_params, params):
-#        '''
-#             always use this factory for new AutomatedRuns
-#             it sets the configuration, loaded scripts and binds our update_loaded_script
-#             handler so we are aware of scripts that have been tested
-#        '''
-#        # copy some of the last runs values
-#        if self.automated_runs:
-#            pa = self.automated_runs[-1]
-#            for k in ['extract_device', 'autocenter']:
-#                if not k in params:
-#                    params[k] = getattr(pa, k)
-#
-#        if self.extract_device == 'Fusions UV':
-#            from src.experiment.uv_automated_run import UVAutomatedRun
-#            klass = UVAutomatedRun
-#        else:
-#            klass = AutomatedRun
-#
-#        a = klass(scripts=self.loaded_scripts,
-#                  application=self.application,
-#                  **params)
-#
-#        for k, v in script_params.iteritems():
-#            setattr(a.script_info, '{}_script_name'.format(k), v)
-#
-#
-# #        a = klass(scripts=self.loaded_scripts,
-# #                  labnumber=labnumber if labnumber else '',
-# #                  **kw)
-#        if 'labnumber' in params:
-#            labnumber = params['labnumber']
-#        else:
-#            labnumber = ''
-#
-#        if labnumber:
-#            ln = self.db.get_labnumber(labnumber)
-#
-#            if ln is None:
-#                # check to see if we have already warned for this labnumber
-#                if not labnumber in self._warned_labnumbers:
-#                    self.warning_dialog('Invalid labnumber {}. Add it using "Labnumber Entry" or "Utilities>>Impprt"'.format(labnumber))
-#                    self._warned_labnumbers.append(labnumber)
-#                a._executable = False
-# #            else:
-# #                if ln.sample:
-# #                    a.run_info.sample = ln.sample.name
-# #                a.run_info.irrad_level = self._make_irrad_level(ln)
-# #            else:
-# #                self._bind_automated_run(a)
-# #                a.create_scripts()
-# #        else:
-#        self._bind_automated_run(a)
-# #            a.create_scripts()
-#
-#        return a
+    #    def _automated_run_factory(self, script_params, params):
+    #        '''
+    #             always use this factory for new AutomatedRuns
+    #             it sets the configuration, loaded scripts and binds our update_loaded_script
+    #             handler so we are aware of scripts that have been tested
+    #        '''
+    #        # copy some of the last runs values
+    #        if self.automated_runs:
+    #            pa = self.automated_runs[-1]
+    #            for k in ['extract_device', 'autocenter']:
+    #                if not k in params:
+    #                    params[k] = getattr(pa, k)
+    #
+    #        if self.extract_device == 'Fusions UV':
+    #            from src.experiment.uv_automated_run import UVAutomatedRun
+    #            klass = UVAutomatedRun
+    #        else:
+    #            klass = AutomatedRun
+    #
+    #        a = klass(scripts=self.loaded_scripts,
+    #                  application=self.application,
+    #                  **params)
+    #
+    #        for k, v in script_params.iteritems():
+    #            setattr(a.script_info, '{}_script_name'.format(k), v)
+    #
+    #
+    # #        a = klass(scripts=self.loaded_scripts,
+    # #                  labnumber=labnumber if labnumber else '',
+    # #                  **kw)
+    #        if 'labnumber' in params:
+    #            labnumber = params['labnumber']
+    #        else:
+    #            labnumber = ''
+    #
+    #        if labnumber:
+    #            ln = self.db.get_labnumber(labnumber)
+    #
+    #            if ln is None:
+    #                # check to see if we have already warned for this labnumber
+    #                if not labnumber in self._warned_labnumbers:
+    #                    self.warning_dialog('Invalid labnumber {}. Add it using "Labnumber Entry" or "Utilities>>Impprt"'.format(labnumber))
+    #                    self._warned_labnumbers.append(labnumber)
+    #                a._executable = False
+    # #            else:
+    # #                if ln.sample:
+    # #                    a.run_info.sample = ln.sample.name
+    # #                a.run_info.irrad_level = self._make_irrad_level(ln)
+    # #            else:
+    # #                self._bind_automated_run(a)
+    # #                a.create_scripts()
+    # #        else:
+    #        self._bind_automated_run(a)
+    # #            a.create_scripts()
+    #
+    #        return a
 
-#===============================================================================
-# defaults
-#===============================================================================
-#    def _automated_run_default(self):
-#
-#        es = self.extraction_scripts[0]
-#        ms = self.measurement_scripts[0]
-#
-#
-#        return self._automated_run_factory(extraction=es, measurement=ms)
+    #===============================================================================
+    # defaults
+    #===============================================================================
+    #    def _automated_run_default(self):
+    #
+    #        es = self.extraction_scripts[0]
+    #        ms = self.measurement_scripts[0]
+    #
+    #
+    #        return self._automated_run_factory(extraction=es, measurement=ms)
     def _stats_default(self):
         return ExperimentStats(experiment_set=self)
 
@@ -687,80 +688,81 @@ tray: {}
         return AutomatedRunMaker(db=self.db,
                                  mass_spectrometer=self.mass_spectrometer,
                                  extract_device=self.extract_device,
-                                 )
-#===============================================================================
-# views
-#===============================================================================
+        )
+
+    #===============================================================================
+    # views
+    #===============================================================================
     def _get_global_parameters_group(self):
         gparams_grp = VGroup(
-              Item('mass_spectrometer',
-                   editor=EnumEditor(name='mass_spectrometers'),
-                   tooltip='Select a mass spectrometer for this set'
-                   ),
-              Item('extract_device',
-                   editor=EnumEditor(name='extract_devices'),
-                   tooltip='Select an extraction device for this set'
-                   ),
-              Item('tray',
-                   editor=EnumEditor(name='trays'),
-                   tooltip='Select an sample tray for this set'
-                   ),
-              Item('delay_between_analyses',
-                   tooltip='Set the delay between analysis in seconds',
-                   label='Delay between Analyses (s)')
-              )
+            Item('mass_spectrometer',
+                 editor=EnumEditor(name='mass_spectrometers'),
+                 tooltip='Select a mass spectrometer for this set'
+            ),
+            Item('extract_device',
+                 editor=EnumEditor(name='extract_devices'),
+                 tooltip='Select an extraction device for this set'
+            ),
+            Item('tray',
+                 editor=EnumEditor(name='trays'),
+                 tooltip='Select an sample tray for this set'
+            ),
+            Item('delay_between_analyses',
+                 tooltip='Set the delay between analysis in seconds',
+                 label='Delay between Analyses (s)')
+        )
         return gparams_grp
 
     def traits_view(self):
         new_analysis = VGroup(
-                              Item('automated_run_maker',
-                                   show_label=False,
-                                   style='custom',
-                                   ),
-                              enabled_when='mass_spectrometer and mass_spectrometer!="---"'
-                              )
+            Item('automated_run_maker',
+                 show_label=False,
+                 style='custom',
+            ),
+            enabled_when='mass_spectrometer and mass_spectrometer!="---"'
+        )
 
         analysis_table = VGroup(
-                                self._get_copy_paste_group(),
-                                Item('runs_table', show_label=False, style='custom'),
-                                show_border=True,
-                                label='Analyses',
-                                )
+            self._get_copy_paste_group(),
+            Item('runs_table', show_label=False, style='custom'),
+            show_border=True,
+            label='Analyses',
+        )
 
         gparams_grp = self._get_global_parameters_group()
-#        script_grp = self._get_script_group()
-#        block_grp = HGroup(Item('schedule_block',
-#                                label='Block',
-#                                editor=EnumEditor(name='schedule_blocks')),
-#                          Item('edit_schedule_block',
-#                               enabled_when='object.schedule_block!="---"',
-#                                show_label=False),
-#                          Item('new_schedule_block', show_label=False),
-#                          enabled_when='mass_spectrometer and mass_spectrometer!="---"'
-#                          )
+        #        script_grp = self._get_script_group()
+        #        block_grp = HGroup(Item('schedule_block',
+        #                                label='Block',
+        #                                editor=EnumEditor(name='schedule_blocks')),
+        #                          Item('edit_schedule_block',
+        #                               enabled_when='object.schedule_block!="---"',
+        #                                show_label=False),
+        #                          Item('new_schedule_block', show_label=False),
+        #                          enabled_when='mass_spectrometer and mass_spectrometer!="---"'
+        #                          )
         v = View(
-                 HGroup(
-                        VGroup(
-                               gparams_grp,
-#                               block_grp,
-                               new_analysis,
-#                               script_grp,
-                               HGroup(Item('auto_increment'),
-                                     spring,
-                                     Item('add', show_label=False,
-#                                          enabled_when='ok_to_add'
-                                          ),
-                                     ),
-                               ),
-                        analysis_table
+            HGroup(
+                VGroup(
+                    gparams_grp,
+                    #                               block_grp,
+                    new_analysis,
+                    #                               script_grp,
+                    HGroup(Item('auto_increment'),
+                           spring,
+                           Item('add', show_label=False,
+                                #                                          enabled_when='ok_to_add'
+                           ),
+                    ),
+                ),
+                analysis_table
 
-#                        VGroup(
-#                               schedule_grp,
-#                               analysis_table
-#                               )
+                #                        VGroup(
+                #                               schedule_grp,
+                #                               analysis_table
+                #                               )
 
-                        )
-                 )
+            )
+        )
 
         return v
 

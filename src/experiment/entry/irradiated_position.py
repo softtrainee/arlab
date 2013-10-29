@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Float, Bool, Int, Property
 from traitsui.tabular_adapter import TabularAdapter
-from src.constants import PLUSMINUS
+from src.pychron_constants import PLUSMINUS
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class BaseIrradiatedPosition(HasTraits):

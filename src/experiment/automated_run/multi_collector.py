@@ -32,6 +32,7 @@ class MultiCollector(DataCollector):
         data = self._get_data()
 
         con.add_consumable((time.time() - self.starttime, data, i))
+        return True
 
     def _iter_step(self, data):
         x, data, i = data

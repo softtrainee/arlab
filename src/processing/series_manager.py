@@ -23,10 +23,11 @@ import apptools.sweet_pickle as pickle
 import re
 #============= local library imports  ==========================
 from src.helpers.traitsui_shortcuts import listeditor
-from src.constants import FIT_TYPES
+from src.pychron_constants import FIT_TYPES
 import os
 from src.paths import paths
 from src.viewable import Viewable
+
 
 class SeriesOptions(HasTraits):
     name = Str
@@ -36,6 +37,7 @@ class SeriesOptions(HasTraits):
     nsigma = Int(1)
     key = Property
     _key = Str
+
     def traits_view(self):
         v = View(HGroup(Label(self.name),
                         spring,
@@ -43,8 +45,8 @@ class SeriesOptions(HasTraits):
                         Item('fit', editor=EnumEditor(values=FIT_TYPES),
                              show_label=False,
                              enabled_when='show'
-                             ))
-                        )
+                        ))
+        )
         return v
 
     def _fit_default(self):
@@ -58,6 +60,8 @@ class SeriesOptions(HasTraits):
             return self._key
         else:
             return self.name
+
+
 class PeakCenterOption(HasTraits):
     show = Bool(True)
     plot_centers = Bool(False)
@@ -75,41 +79,42 @@ class PeakCenterOption(HasTraits):
 
     def traits_view(self):
         v = View(Item('show', label='Display Peak Center'),
-                HGroup(
-                       VGroup(HGroup(Label('Plot Centers')),
-                              spring,
-                              HGroup(Label('Plot Scans'))
-                              ),
-                       VGroup(
-                              HGroup(Item('plot_centers',
-                                          tooltip='Display a time series of peak center values',
-                                          show_label=False)),
-                              HGroup(
-                                     Item('plot_scans',
-                                          tooltip='Plot peak center scans (DAC vs Intensity)',
-                                          show_label=False),
-                                     Item('overlay',
-                                          tooltip='Overlay all scans on one graph',
-                                          enabled_when='plot_scans')
-                                     )
-                              ),
-                       show_border=True,
-                       enabled_when='show'
-                       )
-
-#                 Group(
-#                       Item('plot_centers',
-#                            tooltip='Display a time series of peak center values'
-#                            ),
-#                       HGroup(Item('plot_scan', tooltip='Plot peak center scans (DAC vs Intensity)'),
-#                              Item('overlay',
-#                                   enabled_when='plot_scan',
-#                                   tooltip='Overlay all scans on one graph')
-#                              ),
-#                       show_border=True,
-#                       enabled_when='show')
+                 HGroup(
+                     VGroup(HGroup(Label('Plot Centers')),
+                            spring,
+                            HGroup(Label('Plot Scans'))
+                     ),
+                     VGroup(
+                         HGroup(Item('plot_centers',
+                                     tooltip='Display a time series of peak center values',
+                                     show_label=False)),
+                         HGroup(
+                             Item('plot_scans',
+                                  tooltip='Plot peak center scans (DAC vs Intensity)',
+                                  show_label=False),
+                             Item('overlay',
+                                  tooltip='Overlay all scans on one graph',
+                                  enabled_when='plot_scans')
+                         )
+                     ),
+                     show_border=True,
+                     enabled_when='show'
                  )
+
+                 #                 Group(
+                 #                       Item('plot_centers',
+                 #                            tooltip='Display a time series of peak center values'
+                 #                            ),
+                 #                       HGroup(Item('plot_scan', tooltip='Plot peak center scans (DAC vs Intensity)'),
+                 #                              Item('overlay',
+                 #                                   enabled_when='plot_scan',
+                 #                                   tooltip='Overlay all scans on one graph')
+                 #                              ),
+                 #                       show_border=True,
+                 #                       enabled_when='show')
+        )
         return v
+
 
 class SeriesManager(Viewable):
     analyses = List
@@ -122,9 +127,9 @@ class SeriesManager(Viewable):
     peak_center_option = Instance(PeakCenterOption, ())
     use_single_window = Bool(False)
 
-#===============================================================================
-# viewable
-#===============================================================================
+    #===============================================================================
+    # viewable
+    #===============================================================================
     def close(self, isok):
         if isok:
             self.dump()
@@ -133,9 +138,9 @@ class SeriesManager(Viewable):
     def opened(self, ui):
         self.load()
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
     def _analyses_changed(self):
         if self.analyses:
             keys = None
@@ -149,7 +154,7 @@ class SeriesManager(Viewable):
             keys = sorted(keys,
                           key=lambda x: re.sub('\D', '', x),
                           reverse=True
-                          )
+            )
 
             self.calculated_values = cv = [SeriesOptions(name=ki, key=ki.replace('Ar', 's')) for ki in keys]
             self.measured_values = [SeriesOptions(name=ki) for ki in keys]
@@ -163,14 +168,15 @@ class SeriesManager(Viewable):
 
             cv.append(SeriesOptions(name='IC', key='Ar40/Ar36', scalar=295.5))
 
-#===============================================================================
-# persistence
-#===============================================================================
+            #===============================================================================
+            # persistence
+            #===============================================================================
+
     def dump(self):
         for ai in ['calculated_values', 'measured_values',
-                    'baseline_values', 'blank_values', 'background_values',
-                    'peak_center_option'
-                    ]:
+                   'baseline_values', 'blank_values', 'background_values',
+                   'peak_center_option'
+        ]:
             self._dump(ai)
 
         p = os.path.join(paths.hidden_dir, 'series_manager.traits')
@@ -185,7 +191,7 @@ class SeriesManager(Viewable):
 
     def load(self):
         for ai in ['calculated_values', 'measured_values',
-                    'baseline_values', 'blank_values', 'background_values']:
+                   'baseline_values', 'blank_values', 'background_values']:
             self._load(ai, self._load_values)
 
         self._load('peak_center_option', self._load_peak_center)
@@ -219,32 +225,33 @@ class SeriesManager(Viewable):
     def _load_peak_center(self, pobj, attr):
         self.peak_center_option = pobj
 
-#===============================================================================
-# property get/set
-#===============================================================================
-#    def _get_series(self):
-#        return self.calculated_values + self.measured_values + \
-#                self.baseline_values + self.blank_values
-#===============================================================================
-# views
-#===============================================================================
+    #===============================================================================
+    # property get/set
+    #===============================================================================
+    #    def _get_series(self):
+    #        return self.calculated_values + self.measured_values + \
+    #                self.baseline_values + self.blank_values
+    #===============================================================================
+    # views
+    #===============================================================================
     def traits_view(self):
         v = View(
-                 Group(
-                     Group(Item('peak_center_option', show_label=False, style='custom'),
-                           label='Peak Centers'),
-                     Group(listeditor('calculated_values'), label='Calculated'),
-                     Group(listeditor('measured_values'), label='Measured'),
-                     Group(listeditor('baseline_values'), label='Baseline'),
-                     Group(listeditor('blank_values'), label='Blanks'),
-                     Group(listeditor('background_values'), label='Backgrounds'),
-                     layout='tabbed'
-                     ),
-                 buttons=['OK', 'Cancel'],
-                 handler=self.handler_klass,
-                 title='Select Series',
-                 width=500
+            Group(
+                Group(Item('peak_center_option', show_label=False, style='custom'),
+                      label='Peak Centers'),
+                Group(listeditor('calculated_values'), label='Calculated'),
+                Group(listeditor('measured_values'), label='Measured'),
+                Group(listeditor('baseline_values'), label='Baseline'),
+                Group(listeditor('blank_values'), label='Blanks'),
+                Group(listeditor('background_values'), label='Backgrounds'),
+                layout='tabbed'
+            ),
+            buttons=['OK', 'Cancel'],
+            handler=self.handler_klass,
+            title='Select Series',
+            width=500
 
-                 )
+        )
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================

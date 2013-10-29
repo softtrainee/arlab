@@ -25,7 +25,7 @@ import os
 #============= local library imports  ==========================
 from src.irradiation.irradiated_position import IrradiatedPosition
 from src.paths import paths
-from src.constants import PLUSMINUS
+from src.pychron_constants import PLUSMINUS
 
 
 class IrradiationLevelView(HasTraits):
@@ -62,13 +62,12 @@ class IrradiationLevelView(HasTraits):
                 line = f.readline()
                 x, y = map(float, line.split(delim))
 
-
                 use = True if ni < 3 else False
                 self.irradiated_positions.append(IrradiatedPosition(hole=ni + 1,
                                                                     x=x,
                                                                     y=y,
                                                                     use=use
-                                                                    ))
+                ))
 
     def _position_factory(self, dbpos, x, y):
         ln = dbpos.labnumber
@@ -76,11 +75,11 @@ class IrradiationLevelView(HasTraits):
 
         labnumber = ln.labnumber if ln else None
         ir = IrradiatedPosition(
-                                labnumber=str(labnumber),
-                                hole=position,
-                                x=x,
-                                y=y,
-                                )
+            labnumber=str(labnumber),
+            hole=position,
+            x=x,
+            y=y,
+        )
         if labnumber:
             selhist = ln.selected_flux_history
             if selhist:
@@ -92,37 +91,35 @@ class IrradiationLevelView(HasTraits):
 
     def traits_view(self):
         cols = [
-              ObjectColumn(name='hole', width=30, editable=False),
-              ObjectColumn(name='x', format='%0.1f', width=40, editable=False),
-              ObjectColumn(name='y', format='%0.1f', width=40, editable=False),
-              ObjectColumn(name='j', format='%0.4e', width=100),
-              ObjectColumn(name='j_err', format='%0.4e', label=u'{}J'.format(PLUSMINUS), width=100),
-              CheckboxColumn(name='use', label='Use', width=30),
-              ObjectColumn(name='pred_j', format='%0.4e', label='Pred. J', width=100),
-              ObjectColumn(name='pred_j_err', format='%0.4e', label=u'{}Pred. J'.format(PLUSMINUS), width=100),
-              ObjectColumn(name='residual', format='%0.5f', label='Residual', width=100),
-              CheckboxColumn(name='save', width=30)
-              ]
+            ObjectColumn(name='hole', width=30, editable=False),
+            ObjectColumn(name='x', format='%0.1f', width=40, editable=False),
+            ObjectColumn(name='y', format='%0.1f', width=40, editable=False),
+            ObjectColumn(name='j', format='%0.4e', width=100),
+            ObjectColumn(name='j_err', format='%0.4e', label=u'{}J'.format(PLUSMINUS), width=100),
+            CheckboxColumn(name='use', label='Use', width=30),
+            ObjectColumn(name='pred_j', format='%0.4e', label='Pred. J', width=100),
+            ObjectColumn(name='pred_j_err', format='%0.4e', label=u'{}Pred. J'.format(PLUSMINUS), width=100),
+            ObjectColumn(name='residual', format='%0.5f', label='Residual', width=100),
+            CheckboxColumn(name='save', width=30)
+        ]
 
         editor = TableEditor(columns=cols,
-                                         auto_size=False,
-                                         row_height=18,
-                                         )
-#        editor = TabularEditor(adapter=BaseIrradiatedPositionAdapter(),
-# #                                                  update='_update_sample_table',
-#                          multi_select=True,
-#                          selected='object.selected',
-#                          operations=[]
-#                          )
+                             auto_size=False,
+                             row_height=18,
+        )
+        #        editor = TabularEditor(adapter=BaseIrradiatedPositionAdapter(),
+        # #                                                  update='_update_sample_table',
+        #                          multi_select=True,
+        #                          selected='object.selected',
+        #                          operations=[]
+        #                          )
 
         pos = Item('irradiated_positions',
-                    show_label=False,
-                    editor=editor
-                    )
+                   show_label=False,
+                   editor=editor
+        )
         v = View(pos)
         return v
-
-
 
 
 #============= EOF =============================================

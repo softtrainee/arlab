@@ -18,7 +18,7 @@
 from traits.api import Password, Bool, Str, on_trait_change, Any, Property, cached_property
 #=============standard library imports ========================
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session, subqueryload
+from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError, InvalidRequestError, StatementError, \
     DBAPIError
 import os
@@ -26,10 +26,8 @@ import os
 
 from src.loggable import Loggable
 from src.database.core.base_orm import MigrateVersionTable
-from src.deprecate import deprecated
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 import weakref
-from sqlalchemy.sql.expression import subquery
 
 ATTR_KEYS = ['kind', 'username', 'host', 'name', 'password']
 
@@ -461,7 +459,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             if limit is not None:
                 q = q.limit(limit)
 
-            r = q.all()
+            r = self._query_all(q)
             return r
 
     def _retrieve_first(self, table, value, key='name', order_by=None):
@@ -482,6 +480,12 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
             print e
             return
 
+    def _query_all(self, q):
+        try:
+            return q.all()
+        except SQLAlchemyError:
+            return []
+
     def _retrieve_item(self, table, value, key='name', last=None,
                        joins=None, filters=None, options=None):
     #         sess = self.get_session()
@@ -493,6 +497,7 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
 
         if not isinstance(value, (list, tuple)):
             value = (value,)
+
         if not isinstance(key, (list, tuple)):
             key = (key,)
 

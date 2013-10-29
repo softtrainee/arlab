@@ -26,6 +26,7 @@
 from PySide import QtCore
 from PySide.QtGui import QColor
 
+
 class InvokeEvent(QtCore.QEvent):
     EVENT_TYPE = QtCore.QEvent.Type(QtCore.QEvent.registerEventType())
 
@@ -35,13 +36,16 @@ class InvokeEvent(QtCore.QEvent):
         self.args = args
         self.kwargs = kwargs
 
+
 class Invoker(QtCore.QObject):
     def event(self, event):
         event.fn(*event.args, **event.kwargs)
         del event
         return True
 
+
 _invoker = Invoker()
+
 
 def invoke_in_main_thread(fn, *args, **kwargs):
 #     invoker = Invoker()
@@ -49,6 +53,9 @@ def invoke_in_main_thread(fn, *args, **kwargs):
                                       InvokeEvent(fn, *args, **kwargs))
 
     QtCore.QCoreApplication.processEvents()
+
+#def invoke_in_main_thread2(fn, *args, **kw):
+#    _FutureCall(1, fn, *args, **kw)
 
 def convert_color(color, output='rgbF'):
     if isinstance(color, QColor):

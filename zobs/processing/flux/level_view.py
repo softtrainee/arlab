@@ -24,7 +24,7 @@ from traitsui.tabular_adapter import TabularAdapter
 import struct
 from uncertainties import ufloat
 #============= local library imports  ==========================
-from src.constants import PLUSMINUS
+from src.pychron_constants import PLUSMINUS
 from src.ui.tabular_editor import myTabularEditor
 
 
@@ -37,7 +37,7 @@ class LevelAdapter(TabularAdapter):
                (u'{}1s'.format(PLUSMINUS), 'jerr'),
                ('Pred. J', 'pred_j'),
                (u'{}1s'.format(PLUSMINUS), 'jerr')
-               ]
+    ]
 
     position_width = Int(30)
     labnumber_width = Int(80)
@@ -46,6 +46,7 @@ class LevelAdapter(TabularAdapter):
     use_text = Property
     jerr_text = Property
     j_text = Property
+
     def _get_jerr_text(self):
         v = ''
         if self.item.j:
@@ -98,6 +99,7 @@ class LevelView(HasTraits):
     calc_j = Button
     age = Float(28)
     db = Any
+
     def _set_button_fired(self):
         if self.selected:
             for si in self.selected:
@@ -115,7 +117,7 @@ class LevelView(HasTraits):
                 ir = self.positions[hi]
 
                 ir = self._position_factory(pi, ir.x, ir.y)
-#                ir.use = True if hi < 3 else False
+                #                ir.use = True if hi < 3 else False
                 self.positions[hi] = ir
 
     def _load_holder(self, holder):
@@ -123,12 +125,11 @@ class LevelView(HasTraits):
             return
         geom = holder.geometry
         for i, (x, y) in enumerate([struct.unpack('>ff', geom[i:i + 8]) for i in xrange(0, len(geom), 8)]):
-
             ip = IrradiationPosition(position=i + 1,
-                                    x=x,
-                                    y=y,
-                                    use=False
-                                    )
+                                     x=x,
+                                     y=y,
+                                     use=False
+            )
             self.positions.append(ip)
 
     def _position_factory(self, dbpos, x, y):
@@ -137,18 +138,18 @@ class LevelView(HasTraits):
 
         labnumber = ln.identifier if ln else None
         ir = IrradiationPosition(
-                                labnumber=str(labnumber),
-                                position=position,
-                                x=x,
-                                y=y,
-                                )
+            labnumber=str(labnumber),
+            position=position,
+            x=x,
+            y=y,
+        )
         if labnumber:
             selhist = ln.selected_flux_history
             if selhist:
                 flux = selhist.flux
                 if flux:
                     ir.j = ufloat(flux.j, flux.j_err)
-#                    ir.j_err = flux.j_err
+                    #                    ir.j_err = flux.j_err
         return ir
 
 
@@ -156,12 +157,13 @@ class LevelView(HasTraits):
         v = View(UItem('set_button'),
                  UItem('calc_j'),
                  UItem('positions', style='custom',
-                     editor=myTabularEditor(multi_select=True,
-                                            selected='selected',
-                                            update='update',
-                                            adapter=LevelAdapter())
-                     )
-               )
+                       editor=myTabularEditor(multi_select=True,
+                                              selected='selected',
+                                              update='update',
+                                              adapter=LevelAdapter())
+                 )
+        )
 
         return v
-#============= EOF =============================================
+
+        #============= EOF =============================================

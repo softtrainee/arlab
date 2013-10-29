@@ -19,7 +19,8 @@
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.isotope_analysis.summary import Summary
-from src.constants import PLUSMINUS
+from src.pychron_constants import PLUSMINUS
+
 PRS = ['K4039', 'K3839', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']
 
 
@@ -33,9 +34,9 @@ class IrradiationSummary(Summary):
 
             irrad = level.irradiation
             self._add_keyword_value('{}{} hole= '.format(irrad.name, level.name), str(pos))
-#            d.add_text('{}{} hole={}'.format(irrad.name, level.name, pos))
+            #            d.add_text('{}{} hole={}'.format(irrad.name, level.name, pos))
             self._add_keyword_value('Production Ratio= ', irrad.production.name)
-#            d.add_text('Production Ratio= {}'.format(irrad.production.name))
+            #            d.add_text('Production Ratio= {}'.format(irrad.production.name))
 
             a39 = self.record.arar_result['ar39decayfactor']
             a37 = self.record.arar_result['ar37decayfactor']

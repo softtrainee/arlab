@@ -15,12 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
 import re
-from src.constants import DETECTOR_MAP
+from src.pychron_constants import DETECTOR_MAP
 
 
 def rank_func(x):

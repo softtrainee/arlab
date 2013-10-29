@@ -15,10 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import  Float, Str, Bool, Property, Color, \
+from traits.api import Float, Str, Bool, Property, Color, \
     Int, on_trait_change, Array
 from traitsui.api import View, Item, VGroup, HGroup, \
-     spring, Spring
+    spring, Spring
 #============= standard library imports ========================
 import os
 from numpy import loadtxt, polyfit, polyval, hstack, poly1d
@@ -26,11 +26,13 @@ from scipy import optimize
 #============= local library imports  ==========================
 from src.spectrometer.spectrometer_device import SpectrometerDevice
 from src.paths import paths
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
 from src.ui.qt.color_square_editor import ColorSquareEditor
 
 
 charge = 1.6021764874e-19
+
+
 class Detector(SpectrometerDevice):
     name = Str
     relative_position = Float(1)
@@ -39,9 +41,9 @@ class Detector(SpectrometerDevice):
     deflection = Property(Float(enter_set=True, auto_set=False), depends_on='_deflection')
     _deflection = Float
 
-#    intensity = Property(depends_on='spectrometer:intensity_dirty')
-#    intensity = Float
-#    std = Float
+    #    intensity = Property(depends_on='spectrometer:intensity_dirty')
+    #    intensity = Float
+    #    std = Float
     intensity = Str
     std = Str
     intensities = Array
@@ -54,9 +56,9 @@ class Detector(SpectrometerDevice):
 
     isotopes = Property
     color_square = None
-#    @cached_property
-#    def _get_intensity(self):
-#        return self.spectrometer.get_intensity(self.name)
+    #    @cached_property
+    #    def _get_intensity(self):
+    #        return self.spectrometer.get_intensity(self.name)
     @on_trait_change('spectrometer:intensity_dirty')
     def _intensity_changed(self, new):
         if new:
@@ -87,19 +89,19 @@ class Detector(SpectrometerDevice):
 
         x, y = loadtxt(p, delimiter=',', unpack=True)
 
-#        x, y = data.transpose()
+        #        x, y = data.transpose()
 
-#        y = [yi - y[0] for yi in y]
+        #        y = [yi - y[0] for yi in y]
         y -= y[0]
         coeffs = polyfit(x, y, 1)
 
-#        plot(x, y, '+')
-#
-#        coeffs = polyfit(x, y, 1)
-#        xf = linspace(min(x), max(x), 100)
-#        plot(xf, polyval(coeffs, xf))
-#
-#        show()
+        #        plot(x, y, '+')
+        #
+        #        coeffs = polyfit(x, y, 1)
+        #        xf = linspace(min(x), max(x), 100)
+        #        plot(xf, polyval(coeffs, xf))
+        #
+        #        show()
         self._deflection_correction_factors = coeffs
 
     def _set_deflection(self, v):
@@ -127,71 +129,73 @@ class Detector(SpectrometerDevice):
         c[-1] -= dac
         return optimize.newton(poly1d(c), 1)
 
-#    def color_square_factory(self, width=10, height=10):
-#        def color_factory(window, editor):
-# #            panel = wx.Panel(window,
-# #                           - 1,
-# #                           size=(width, height)
-# #                           )
-# #            panel.SetBackgroundColour(self.color)
-#            from PySide.QtGui import QWidget, QPalette, QLabel
-#            panel = QLabel()
-#
-#            panel.setFixedWidth(width)
-#            panel.setFixedHeight(height)
-# #            panel.setGeometry(0, 0, width, height)
-#            p = QPalette()
-#            p.setColor(QPalette.Base, self.color)
-#            panel.setPalette(p)
-#            print self.color
-#            return panel
-#
-#        return color_factory
+    #    def color_square_factory(self, width=10, height=10):
+    #        def color_factory(window, editor):
+    # #            panel = wx.Panel(window,
+    # #                           - 1,
+    # #                           size=(width, height)
+    # #                           )
+    # #            panel.SetBackgroundColour(self.color)
+    #            from PySide.QtGui import QWidget, QPalette, QLabel
+    #            panel = QLabel()
+    #
+    #            panel.setFixedWidth(width)
+    #            panel.setFixedHeight(height)
+    # #            panel.setGeometry(0, 0, width, height)
+    #            p = QPalette()
+    #            p.setColor(QPalette.Base, self.color)
+    #            panel.setPalette(p)
+    #            print self.color
+    #            return panel
+    #
+    #        return color_factory
 
     def intensity_view(self):
         v = View(HGroup(
-                        Item('color',
-                             editor=ColorSquareEditor(),
-#                             editor=CustomEditor(factory=self.color_square_factory()),
-                             width=20,
-                             ),
-                        Item('name', style='readonly'),
-#                         Spring(width=25, springy=False),
-                        spring,
-                        Item('intensity', style='readonly',
-                             ),
-                        Spring(springy=False, width=150),
-                        Item('std', style='readonly',
-                             ),
-#                        spring,
-                        Spring(springy=False, width=100),
-                        show_labels=False
-                        )
-                 )
+            Item('color',
+                 editor=ColorSquareEditor(),
+                 #                             editor=CustomEditor(factory=self.color_square_factory()),
+                 width=20,
+            ),
+            Item('name', style='readonly'),
+            #                         Spring(width=25, springy=False),
+            spring,
+            Item('intensity', style='readonly',
+            ),
+            Spring(springy=False, width=150),
+            Item('std', style='readonly',
+            ),
+            #                        spring,
+            Spring(springy=False, width=100),
+            show_labels=False
+        )
+        )
         return v
 
     def traits_view(self):
         v = View(VGroup(
-                        HGroup(
-                                Item('color',
-                                     width=40,
-                                     editor=ColorSquareEditor(),
-#                                     editor=CustomEditor(factory=self.color_square_factory(width=30))
-                                     ),
-                                Item('name', style='readonly'),
-                                spring,
+            HGroup(
+                Item('color',
+                     width=40,
+                     editor=ColorSquareEditor(),
+                     #                                     editor=CustomEditor(factory=self.color_square_factory(width=30))
+                ),
+                Item('name', style='readonly'),
+                spring,
 
-#                                Item('isotope', width= -75,
-#                                     editor=EnumEditor(name='isotopes')
-#                                     ),
-                                Item('active',),
-                                Item('deflection'),
-                                show_labels=False
-                                )
-                      )
-               )
+                #                                Item('isotope', width= -75,
+                #                                     editor=EnumEditor(name='isotopes')
+                #                                     ),
+                Item('active', ),
+                Item('deflection'),
+                show_labels=False
+            )
+        )
+        )
 
         return v
+
+
 if __name__ == '__main__':
     d = Detector()
 

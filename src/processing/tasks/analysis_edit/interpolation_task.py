@@ -16,9 +16,8 @@
 
 #============= enthought library imports =======================
 from datetime import timedelta
-from traits.api import HasTraits, Instance, on_trait_change
+from traits.api import on_trait_change
 from traits.api import Any
-from traitsui.api import View, Item
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.processing.tasks.analysis_edit.panes import ReferencesPane
 from src.processing.tasks.analysis_edit.adapters import ReferencesAdapter
@@ -55,6 +54,9 @@ class InterpolationTask(AnalysisEditTask):
     @on_trait_change('references_pane:[append_button, replace_button]')
     def _append_references(self, obj, name, old, new):
         s = self.data_selector.selector.selected
+        if not hasattr(s, '__iter__'):
+            s = (s,)
+
         if name == 'append_button':
             self.references_pane.items.extend(s)
         else:

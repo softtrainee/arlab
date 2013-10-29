@@ -15,31 +15,31 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change
-from traitsui.api import View, Item
-from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
+from traits.api import on_trait_change
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
-from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane
+
+from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
+from src.processing.tasks.analysis_edit.panes import ControlsPane
 from src.processing.tasks.search_panes import QueryPane
-from src.constants import ARGON_KEYS, IRRADIATION_KEYS, DECAY_KEYS
+from src.pychron_constants import ARGON_KEYS, IRRADIATION_KEYS, DECAY_KEYS
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class PublisherTask(AnalysisEditTask):
-
     def _default_layout_default(self):
         return TaskLayout(
-                          id='pychron.processing.publisher',
-                          left=Splitter(
-                                     PaneItem('pychron.analysis_edit.unknowns'),
-                                     PaneItem('pychron.analysis_edit.controls'),
-                                     orientation='vertical'
-                                     ),
-                          right=Splitter(
-                                         PaneItem('pychron.search.query'),
-                                         orientation='vertical'
-                                         )
-                          )
+            id='pychron.processing.publisher',
+            left=Splitter(
+                PaneItem('pychron.analysis_edit.unknowns'),
+                PaneItem('pychron.analysis_edit.controls'),
+                orientation='vertical'
+            ),
+            right=Splitter(
+                PaneItem('pychron.search.query'),
+                orientation='vertical'
+            )
+        )
 
     def create_dock_panes(self):
 
@@ -47,15 +47,16 @@ class PublisherTask(AnalysisEditTask):
         self.controls_pane = ControlsPane()
         selector = self.manager.db.selector
         return [
-                self.unknowns_pane,
-                self.controls_pane,
-                QueryPane(model=selector)
-                ]
+            self.unknowns_pane,
+            self.controls_pane,
+            QueryPane(model=selector)
+        ]
 
     def new_sclf_table(self):
         from src.processing.tasks.publisher.sclf_table_editor import SCLFTableEditor
+
         editor = SCLFTableEditor()
-#        editor.table_image_source = '/Users/ross/Sandbox/publish.png'
+        #        editor.table_image_source = '/Users/ross/Sandbox/publish.png'
         self._open_editor(editor)
 
     def _active_editor_changed(self):
@@ -66,8 +67,8 @@ class PublisherTask(AnalysisEditTask):
     def _make_table(self):
         items = self.unknowns_pane.items
         if items:
-
             from src.processing.publisher.writers.pdf_writer import PDFWriter
+
             out = '/Users/ross/Sandbox/testtable.pdf'
             writer = PDFWriter(filename=out)
 
@@ -78,11 +79,11 @@ class PublisherTask(AnalysisEditTask):
                                       add_title=True,
                                       add_header=True,
                                       alternate_row_colors=False
-                                      )
+            )
             writer.publish(leftMargin=0.001,
                            rightMargin=0.001,
                            topMargin=0.001,
-                           )
+            )
 
             self.active_editor.load(out)
 
@@ -91,6 +92,7 @@ class PublisherTask(AnalysisEditTask):
         items = self.unknowns_pane.items
         if items:
             from src.processing.publisher.writers.pdf_writer import PDFWriter
+
             out = '/Users/ross/Sandbox/testtable.pdf'
             writer = PDFWriter(filename=out)
             analyses = self.manager.make_analyses(items)
@@ -99,19 +101,20 @@ class PublisherTask(AnalysisEditTask):
             writer.add_ideogram_table(analyses,
                                       add_title=True,
                                       add_header=True,
-                                      )
+            )
             writer.publish()
 
 
     def _analysis_factory(self, analysis):
         from src.processing.publisher.analysis import PubAnalysis
+
         a = PubAnalysis()
         for attr in ('sample', 'labnumber',
                      'aliquot',
                      'material', 'age', 'j', 'k_ca',
                      'rad40_percent',
                      'rad40', 'extract_value', 'duration', 'cleanup'
-                     ):
+        ):
             setattr(a, attr, getattr(analysis, attr))
         for attr, _ in DECAY_KEYS + IRRADIATION_KEYS:
             setattr(a, attr, getattr(analysis, attr))
@@ -126,4 +129,5 @@ class PublisherTask(AnalysisEditTask):
                 setattr(a, '{}_blank_err'.format(attr), e)
 
         return a
-#============= EOF =============================================
+
+        #============= EOF =============================================

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Float, Range, Int
+from traits.api import Int
 from traitsui.api import View, Item, VGroup, HGroup, Label, spring, RangeEditor
 #============= standard library imports ========================
 from reportlab.platypus.tables import TableStyle
@@ -26,11 +26,13 @@ from src.stats.core import calculate_weighted_mean, calculate_mswd
 from src.processing.publisher.templates.tables.pdf_table import PDFTable, \
     RowItem, Row, Superscript, Title, Subscript, SummaryRow, NamedParameter, \
     AnalysisRow, Anchor, FootNoteRow, FooterRow
-from src.constants import PLUSMINUS, ARGON_KEYS
+from src.pychron_constants import PLUSMINUS, ARGON_KEYS
 from src.helpers.formatting import floatfmt
-from reportlab.platypus.paragraph import Paragraph
+
+
 def DefaultInt(value=40):
     return Int(value)
+
 
 class IdeogramTable(PDFTable):
     status_width = Int(5)
@@ -55,6 +57,7 @@ class IdeogramTable(PDFTable):
     _sample_summary_row2 = None
     _footnotes = None
     alternate_row_colors = True
+
     def make(self, analyses):
         self._footnotes = []
 
@@ -70,8 +73,8 @@ class IdeogramTable(PDFTable):
                                               a.material,
                                               '---',
                                               a.ic_factor
-                                              )
-                    )
+        )
+        )
         if self.add_header:
             rows.extend(self._make_header())
 
@@ -96,7 +99,7 @@ class IdeogramTable(PDFTable):
         a39 = Superscript(39)
         v = 'Table {}. {}Ar/{}Ar analytical data'.format(self.number, a40, a39)
         return [Title(value=v, fontsize=10,
-                       fontname='Helvetica-Bold')]
+                      fontname='Helvetica-Bold')]
 
     def _make_sample_summary(self, sample, labnumber, j, material, igsn, ic):
         if not isinstance(j, tuple):
@@ -136,32 +139,32 @@ class IdeogramTable(PDFTable):
         minus_102fa = '(10{} fA)'.format(Superscript(-2))
 
         blank = self._make_footnote('BLANK',
-                                   'Blank Type', 'LR= Linear Regression, AVE= Average',
-                                   'Blank')
+                                    'Blank Type', 'LR= Linear Regression, AVE= Average',
+                                    'Blank')
 
         line = [
-                ('', ''),
-                ('N', ''),
-                ('Power', '(%)'),
-                (super_ar(40), ''),
-                (super_ar(40), _103fa), (sigma, ''),
-                (super_ar(39), _103fa), (sigma, ''),
-                (super_ar(38), ''), (sigma, ''),
-                (super_ar(37), ''), (sigma, ''),
-                (super_ar(36), ''), (sigma, minus_102fa),
-                ('%{}*'.format(super_ar(40)), ''),
-                ('{}*/{}{}'.format(super_ar(40),
-                                   super_ar(39),
-                                   Subscript('K')), ''),
-                ('Age', '(Ma)'), (sigma, ''),
-                ('K/Ca', ''),
-                (blank, 'type'),
-                (super_ar(40), ''), (sigma, ''),
-                (super_ar(39), ''), (sigma, ''),
-                (super_ar(38), ''), (sigma, ''),
-                (super_ar(37), ''), (sigma, ''),
-                (super_ar(36), ''), (sigma, ''),
-              ]
+            ('', ''),
+            ('N', ''),
+            ('Power', '(%)'),
+            (super_ar(40), ''),
+            (super_ar(40), _103fa), (sigma, ''),
+            (super_ar(39), _103fa), (sigma, ''),
+            (super_ar(38), ''), (sigma, ''),
+            (super_ar(37), ''), (sigma, ''),
+            (super_ar(36), ''), (sigma, minus_102fa),
+            ('%{}*'.format(super_ar(40)), ''),
+            ('{}*/{}{}'.format(super_ar(40),
+                               super_ar(39),
+                               Subscript('K')), ''),
+            ('Age', '(Ma)'), (sigma, ''),
+            ('K/Ca', ''),
+            (blank, 'type'),
+            (super_ar(40), ''), (sigma, ''),
+            (super_ar(39), ''), (sigma, ''),
+            (super_ar(38), ''), (sigma, ''),
+            (super_ar(37), ''), (sigma, ''),
+            (super_ar(36), ''), (sigma, ''),
+        ]
 
         name_row, unit_row = zip(*line)
 
@@ -175,9 +178,9 @@ class IdeogramTable(PDFTable):
         for ni in unit_row:
             urow.add_item(value=ni)
         return [
-                nrow.render(),
-                urow,
-                ]
+            nrow.render(),
+            urow,
+        ]
 
     def _make_analysis_row(self, analysis):
         def fmt_attr(v, key='nominal_value', n=5, scale=1, **kw):
@@ -201,58 +204,59 @@ class IdeogramTable(PDFTable):
 
         def error(**kw):
             return lambda x: fmt_attr(x, key='std_dev', **kw)
+
         def value(**kw):
             return lambda x: fmt_attr(x, key='nominal_value', **kw)
 
         default_fontsize = 6
         row = AnalysisRow(fontsize=default_fontsize)
         attrs = (
-                 ('status', lambda x: '' if x == 0 else 'x'),
-                 ('aliquot_step', '{}',),
-                 ('extract_value', '{}'),
-                 ('moles_Ar40', value()),
+            ('status', lambda x: '' if x == 0 else 'x'),
+            ('aliquot_step', '{}',),
+            ('extract_value', '{}'),
+            ('moles_Ar40', value()),
 
-                 #==============================================================
-                 # signals
-                 #==============================================================
-                 ('Ar40', value(scale=1e3)),
-                 ('Ar40', error()),
-                 ('Ar39', value(scale=1e3)),
-                 ('Ar39', error()),
-                 ('Ar38', value()),
-                 ('Ar38', error()),
-                 ('Ar37', value()),
-                 ('Ar37', error()),
-                 ('Ar36', value()),
-                 ('Ar36', error(scale=1e3)),
+            #==============================================================
+            # signals
+            #==============================================================
+            ('Ar40', value(scale=1e3)),
+            ('Ar40', error()),
+            ('Ar39', value(scale=1e3)),
+            ('Ar39', error()),
+            ('Ar38', value()),
+            ('Ar38', error()),
+            ('Ar37', value()),
+            ('Ar37', error()),
+            ('Ar36', value()),
+            ('Ar36', error(scale=1e3)),
 
-                 #==============================================================
-                 # computed
-                 #==============================================================
-                 ('rad40_percent', value(n=1)),
-                 ('R', value(n=5)),
-                 ('age', value(n=2)),
-                 ('age', error(n=4)),
-                 ('k_ca', value(n=2)),
-                 #==============================================================
-                 # blanks
-                 #==============================================================
-                 ('blank_fit', '{}'),
-                 ('Ar40_blank', value()),
-                 ('Ar40_blank_err', error()),
+            #==============================================================
+            # computed
+            #==============================================================
+            ('rad40_percent', value(n=1)),
+            ('R', value(n=5)),
+            ('age', value(n=2)),
+            ('age', error(n=4)),
+            ('k_ca', value(n=2)),
+            #==============================================================
+            # blanks
+            #==============================================================
+            ('blank_fit', '{}'),
+            ('Ar40_blank', value()),
+            ('Ar40_blank_err', error()),
 
-                 ('Ar39_blank', value()),
-                 ('Ar39_blank_err', error()),
+            ('Ar39_blank', value()),
+            ('Ar39_blank_err', error()),
 
-                 ('Ar38_blank', value()),
-                 ('Ar38_blank_err', error()),
+            ('Ar38_blank', value()),
+            ('Ar38_blank_err', error()),
 
-                 ('Ar37_blank', value()),
-                 ('Ar37_blank_err', error()),
+            ('Ar37_blank', value()),
+            ('Ar37_blank_err', error()),
 
-                 ('Ar36_blank', value()),
-                 ('Ar36_blank_err', error()),
-                 )
+            ('Ar36_blank', value()),
+            ('Ar36_blank_err', error()),
+        )
         for args in attrs:
             if len(args) == 3:
                 attr, fmt, fontsize = args
@@ -274,7 +278,7 @@ class IdeogramTable(PDFTable):
         wm, we = calculate_weighted_mean(ages, errors)
         wm = floatfmt(wm, n=3)
         we = floatfmt(we, n=4)
-#
+        #
         mswd = calculate_mswd(ages, errors)
         mswd = floatfmt(mswd, n=3)
 
@@ -296,17 +300,17 @@ class IdeogramTable(PDFTable):
             rows.append(row)
 
         for n, d, v, e, r in (
-                          (40, 36, 295.5, 0.5, 'Nier (1950)'),
-                          (40, 38, 0.1880, 0.5, 'Nier (1950)'),
-                          ):
+            (40, 36, 295.5, 0.5, 'Nier (1950)'),
+            (40, 38, 0.1880, 0.5, 'Nier (1950)'),
+        ):
             row = FooterRow(fontsize=df)
             row.add_item(value='({}Ar/{}Ar){}'.format(
-                                                Superscript(n),
-                                                Superscript(d),
-                                                Subscript('A'),
-                                                ),
+                Superscript(n),
+                Superscript(d),
+                Subscript('A'),
+            ),
                          span=3
-                         )
+            )
             row.add_item(value=u'{} {}{}'.format(v, PLUSMINUS, e),
                          span=2)
             row.add_item(value=r, span=-1)
@@ -316,21 +320,21 @@ class IdeogramTable(PDFTable):
         row.add_item(value='Interferring isotope production ratios', span=-1)
         rows.append(row)
         for n, d, s, v, e, r in (
-                          (40, 39, 'K'  , 295.5     , 0.5   , 'Nier (1950)'),
-                          (38, 39, 'K'  , 0.1880    , 0.5   , 'Nier (1950)'),
-                          (37, 39, 'K'  , 0.1880    , 0.5   , 'Nier (1950)'),
-                          (39, 37, 'Ca' , 295.5     , 0.5   , 'Nier (1950)'),
-                          (38, 37, 'Ca' , 0.1880    , 0.5   , 'Nier (1950)'),
-                          (36, 37, 'Ca' , 0.1880    , 0.5   , 'Nier (1950)'),
-                          ):
+            (40, 39, 'K', 295.5, 0.5, 'Nier (1950)'),
+            (38, 39, 'K', 0.1880, 0.5, 'Nier (1950)'),
+            (37, 39, 'K', 0.1880, 0.5, 'Nier (1950)'),
+            (39, 37, 'Ca', 295.5, 0.5, 'Nier (1950)'),
+            (38, 37, 'Ca', 0.1880, 0.5, 'Nier (1950)'),
+            (36, 37, 'Ca', 0.1880, 0.5, 'Nier (1950)'),
+        ):
             row = FooterRow(fontsize=df)
             row.add_item(value='({}Ar/{}Ar){}'.format(
-                                                Superscript(n),
-                                                Superscript(d),
-                                                Subscript(s),
-                                                ),
+                Superscript(n),
+                Superscript(d),
+                Subscript(s),
+            ),
                          span=3
-                         )
+            )
             row.add_item(value=u'{} {}{}'.format(v, PLUSMINUS, e),
                          span=2)
             row.add_item(value=r, span=-1)
@@ -341,11 +345,11 @@ class IdeogramTable(PDFTable):
         rows.append(row)
 
         for i, E, dl, v, e, r in (
-                                  (40, 'K', u'\u03BB\u03B5', 1, 0, 'Foo (1990)'),
-                                  (40, 'K', u'\u03BB\u03B2', 1, 0, 'Foo (1990)'),
-                                  (39, 'Ar', '', 1, 0, 'Foo (1990)'),
-                                  (37, 'Ar', '', 1, 0, 'Foo (1990)'),
-                                  ):
+            (40, 'K', u'\u03BB\u03B5', 1, 0, 'Foo (1990)'),
+            (40, 'K', u'\u03BB\u03B2', 1, 0, 'Foo (1990)'),
+            (39, 'Ar', '', 1, 0, 'Foo (1990)'),
+            (37, 'Ar', '', 1, 0, 'Foo (1990)'),
+        ):
             row = FooterRow(fontsize=df)
             row.add_item(value=u'{}{} {}'.format(Superscript(i), E, dl), span=3)
             row.add_item(value=u'{} {}{} a{}'.format(v, PLUSMINUS, e, Superscript(-1)), span=2)
@@ -360,9 +364,10 @@ class IdeogramTable(PDFTable):
         para = link(linkname, extra=link_extra)
         self._footnotes.append(tag(tagName, tagText))
         return para
-#===============================================================================
-# table formatting
-#===============================================================================
+
+    #===============================================================================
+    # table formatting
+    #===============================================================================
     def _get_style(self, rows):
 
         '''
@@ -408,8 +413,8 @@ class IdeogramTable(PDFTable):
         style.add('LINEBELOW', (0, unit_row), (-1, unit_row), 1.5, colors.black)
 
         # set style for summary rows
-#        summary_idxs = [(i, v) for i, v in enumerate(rows)
-#                      if isinstance(v, SummaryRow)]
+        #        summary_idxs = [(i, v) for i, v in enumerate(rows)
+        #                      if isinstance(v, SummaryRow)]
         summary_idxs = _get_idxs(SummaryRow)
         for idx, summary in summary_idxs:
             style.add('LINEABOVE', (0, idx), (-1, idx), 1.5, colors.black)
@@ -418,7 +423,7 @@ class IdeogramTable(PDFTable):
 
         analysis_idxs = _get_idxs(AnalysisRow)
         sidx, eidx = _get_se(analysis_idxs)
-#        sidx, eidx = analysis_idxs[0][0], analysis_idxs[-1][0]
+        #        sidx, eidx = analysis_idxs[0][0], analysis_idxs[-1][0]
         style.add('VALIGN', (0, sidx), (-1, eidx), 'MIDDLE')
         style.add('ALIGN', (0, sidx), (-1, eidx), 'CENTER')
 
@@ -427,7 +432,7 @@ class IdeogramTable(PDFTable):
                 if idx % 2 == 0:
                     style.add('BACKGROUND', (0, idx), (-1, idx),
                               colors.lightgrey,
-                              )
+                    )
 
         # set for footnot rows
         footnote_idxs = _get_idxs(FootNoteRow)
@@ -435,7 +440,7 @@ class IdeogramTable(PDFTable):
         style.add('VALIGN', (0, sidx), (-1, eidx), 'MIDDLE')
         for idx, _v in footnote_idxs:
             style.add('SPAN', (0, idx), (-1, idx))
-#            style.add('VALIGN', (1, idx), (-1, idx), 'MIDDLE')
+            #            style.add('VALIGN', (1, idx), (-1, idx), 'MIDDLE')
 
         footer_idxs = _get_idxs(FooterRow)
         sidx, eidx = _get_se(footer_idxs)
@@ -450,7 +455,7 @@ class IdeogramTable(PDFTable):
         a_idxs = self._get_idxs(rows, AnalysisRow)
 
         for a, v in a_idxs:
-#            print a, v
+        #            print a, v
             ta._argH[a] = 0.18 * inch
 
         a_idxs = self._get_idxs(rows, (FooterRow, FootNoteRow))
@@ -459,8 +464,8 @@ class IdeogramTable(PDFTable):
 
 
     def _set_column_widths(self, ta):
-        scale = lambda x: x / 100.*inch
-#        print ta._argW
+        scale = lambda x: x / 100. * inch
+        #        print ta._argW
         ta._argW[0] = scale(self.status_width)
         ta._argW[1] = scale(self.id_width)
         ta._argW[2] = scale(self.power_width)
@@ -494,14 +499,14 @@ class IdeogramTable(PDFTable):
         widths = dict()
         for a in map(str.lower, ARGON_KEYS):
             for k in ('{}_width'.format(a),
-                           '{}_error_width'.format(a)
-                           ):
+                      '{}_error_width'.format(a)
+            ):
                 widths[k] = getattr(self, k)
         return widths
 
-#===============================================================================
-# views
-#===============================================================================
+    #===============================================================================
+    # views
+    #===============================================================================
     def _value_error_width_factory(self, name):
         top = HGroup(Label(name.capitalize()), spring, Label('Error'), spring)
         bottom = HGroup(self._width_factory('{}_width'.format(name)),
@@ -529,8 +534,9 @@ class IdeogramTable(PDFTable):
         column_widths = HGroup(*contents)
         v = View(column_widths,
                  buttons=['OK', 'Cancel']
-                 )
+        )
         return v
+
 
 if __name__ == '__main__':
     t = IdeogramTable()

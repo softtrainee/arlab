@@ -25,7 +25,7 @@ from src.pyscripts.pyscript import verbose_skip, count_verbose_skip, \
     makeRegistry
 from src.paths import paths
 from src.pyscripts.valve_pyscript import ValvePyScript
-from src.constants import MEASUREMENT_COLOR
+from src.pychron_constants import MEASUREMENT_COLOR
 
 ESTIMATED_DURATION_FF = 1.045
 

@@ -16,10 +16,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Bool, String, Float, on_trait_change, Str, \
-    List
-from traitsui.api import View, Item, HGroup, VGroup, Group, spring, ListEditor, \
-    InstanceEditor, UItem, Label, Spring, EnumEditor
+from traits.api import HasTraits, Bool, on_trait_change, Str
+from traitsui.api import View, HGroup, UItem, EnumEditor
 #============= standard library imports ========================
 import os
 import re
@@ -28,7 +26,7 @@ from src.pyscripts.editor import PyScriptEditor
 from src.paths import paths
 from src.helpers.filetools import str_to_bool
 from src.pyscripts.hop import Hop
-from src.constants import FIT_TYPES, NULL_STR
+from src.pychron_constants import FIT_TYPES, NULL_STR
 
 STR_FMT = "{}= '{}'"
 FMT = '{}= {}'
@@ -108,176 +106,179 @@ class Detector(HasTraits):
     ref = Bool
     isotope = Str
     isotopes = [NULL_STR, 'Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36']
+
     def traits_view(self):
         v = View(HGroup(
-                        UItem('use'),
-                        UItem('label',
-                              width=-30,
-                              style='readonly'),
-                        UItem('isotope',
-                             editor=EnumEditor(name='isotopes'),
-                             enabled_when='use'),
-                        UItem('fit',
-                            enabled_when='use',
-                            editor=EnumEditor(values=[NULL_STR] + FIT_TYPES))
-                        )
-                 )
+            UItem('use'),
+            UItem('label',
+                  width=-30,
+                  style='readonly'),
+            UItem('isotope',
+                  editor=EnumEditor(name='isotopes'),
+                  enabled_when='use'),
+            UItem('fit',
+                  enabled_when='use',
+                  editor=EnumEditor(values=[NULL_STR] + FIT_TYPES))
+        )
+        )
         return v
 
     def _use_changed(self):
         if self.use and not self.fit:
             self.fit = 'linear'
 
+
 class MeasurementPyScriptEditor(PyScriptEditor):
     _kind = 'Measurement'
 
-#    #===========================================================================
-#    # counts
-#    #===========================================================================
-#    multicollect_counts = Int(100)
-#    active_detectors = List
-#
-#    #===========================================================================
-#    # baselines
-#    #===========================================================================
-#    baseline_counts = Int(100)
-#    baseline_detector = String
-#    baseline_mass = Float
-#    baseline_before = Bool
-#    baseline_after = Bool
-#    baseline_settling_time = Int(3)
-#
-#    #===========================================================================
-#    # peak center
-#    #===========================================================================
-#    peak_center_before = Bool
-#    peak_center_after = Bool
-#    peak_center_isotope = String
-#    peak_center_detector = String
-#
-#    #===========================================================================
-#    # equilibration
-#    #===========================================================================
-#    eq_time = Float
-#    eq_outlet = String
-#    eq_inlet = String
-#    eq_delay = Float
-#
-#    #===========================================================================
-#    # peak hop
-#    #===========================================================================
-#    ncycles = Int
-#    use_peak_hop = Bool
-#    baseline_ncycles = Int
-#    hops = List
-#
-#    def _get_parameters_group(self):
-#
-#        multicollect_grp = VGroup(
-#                                Group(
-#                                      Item('multicollect_counts', label='Counts',
-#                                           tooltip='Number of data points to collect'
-#                                           )
-#                                      ),
-#                                 HGroup(
-#                                        Label('Use'),
-#                                        Spring(springy=False, width= -32),
-#                                        Label('Ref. Iso'),
-#                                        Spring(springy=False, width= -35),
-#                                        Label('Fit')
-#                                        ),
-#                                 UItem('active_detectors',
-#                                       style='custom',
-#                                       editor=ListEditor(mutable=False,
-#                                                         style='custom',
-# #                                                         columns=2,
-#                                                         editor=InstanceEditor(),
-#                                                         ),
-# #                                        height= -50,
-#                                       ),
-#
-#                                 label='Multicollect',
-#                                 show_border=True
-#                                 )
-#        baseline_grp = Group(
-#                             Item('baseline_before', label='Baselines at Start'),
-#                             Item('baseline_after', label='Baselines at End'),
-#                             Item('baseline_counts',
-#                                  tooltip='Number of baseline data points to collect',
-#                                  label='Counts'),
-#                             Item('baseline_detector', label='Detector'),
-#                             Item('baseline_settling_time',
-#                                  label='Delay (s)',
-#                                  tooltip='Wait "Delay" seconds after setting magnet to baseline position'
-#                                  ),
-#                             Item('baseline_mass', label='Mass'),
-#                             label='Baseline',
-#                             show_border=True
-#                             )
-#
-#        peak_center_grp = Group(
-#                              Item('peak_center_before', label='Peak Center at Start'),
-#                              Item('peak_center_after', label='Peak Center at End'),
-#                              Item('peak_center_detector',
-#                                   label='Detector',
-#                                   enabled_when='peak_center_before or peak_center_after'
-#                                   ),
-#                              Item('peak_center_isotope',
-#                                   label='Isotope',
-#                                   enabled_when='peak_center_before or peak_center_after'
-#                                   ),
-#                              label='Peak Center',
-#                              show_border=True)
-#
-#        equilibration_grp = Group(
-#                                Item('eq_time', label='Time (s)'),
-#                                Item('eq_outlet', label='Ion Pump Valve'),
-#                                Item('eq_delay', label='Delay (s)',
-#                                     tooltip='Wait "Delay" seconds before opening the Inlet Valve'
-#                                     ),
-#                                Item('eq_inlet', label='Inlet Valve'),
-#                                label='Equilibration',
-#                                show_border=True
-#                                )
-#
-#        peak_hop_group = VGroup(
-#                                Group(
-#                                      Item('ncycles'),
-#                                      Item('baseline_ncycles')),
-#                                HGroup(Spring(springy=False, width=28),
-#                                        Label('position'), Spring(springy=False, width=10),
-#                                        Label('Detectors'), Spring(springy=False, width=188),
-#                                        Label('counts'),
-#                                        spring),
-#                                UItem('hops', editor=ListEditor(style='custom',
-#                                                              editor=InstanceEditor())),
-#                               label='Peak Hop',
-#                               visible_when='use_peak_hop',
-#                               show_border=True
-#                               )
-#
-#        return Group(
-# #                     HGroup(
-#
-#                            VGroup(
-#                                 Item('use_peak_hop'),
-#                                 peak_hop_group,
-#                                 Group(multicollect_grp,
-#                                       baseline_grp,
-#                                       layout='tabbed',
-#                                       visible_when='not use_peak_hop'
-#                                       ),
-#                                 peak_center_grp,
-#                                 equilibration_grp),
-#
-# #                            spring,
-# #                            ),
-#
-#                     label='Parameters')
+    #    #===========================================================================
+    #    # counts
+    #    #===========================================================================
+    #    multicollect_counts = Int(100)
+    #    active_detectors = List
+    #
+    #    #===========================================================================
+    #    # baselines
+    #    #===========================================================================
+    #    baseline_counts = Int(100)
+    #    baseline_detector = String
+    #    baseline_mass = Float
+    #    baseline_before = Bool
+    #    baseline_after = Bool
+    #    baseline_settling_time = Int(3)
+    #
+    #    #===========================================================================
+    #    # peak center
+    #    #===========================================================================
+    #    peak_center_before = Bool
+    #    peak_center_after = Bool
+    #    peak_center_isotope = String
+    #    peak_center_detector = String
+    #
+    #    #===========================================================================
+    #    # equilibration
+    #    #===========================================================================
+    #    eq_time = Float
+    #    eq_outlet = String
+    #    eq_inlet = String
+    #    eq_delay = Float
+    #
+    #    #===========================================================================
+    #    # peak hop
+    #    #===========================================================================
+    #    ncycles = Int
+    #    use_peak_hop = Bool
+    #    baseline_ncycles = Int
+    #    hops = List
+    #
+    #    def _get_parameters_group(self):
+    #
+    #        multicollect_grp = VGroup(
+    #                                Group(
+    #                                      Item('multicollect_counts', label='Counts',
+    #                                           tooltip='Number of data points to collect'
+    #                                           )
+    #                                      ),
+    #                                 HGroup(
+    #                                        Label('Use'),
+    #                                        Spring(springy=False, width= -32),
+    #                                        Label('Ref. Iso'),
+    #                                        Spring(springy=False, width= -35),
+    #                                        Label('Fit')
+    #                                        ),
+    #                                 UItem('active_detectors',
+    #                                       style='custom',
+    #                                       editor=ListEditor(mutable=False,
+    #                                                         style='custom',
+    # #                                                         columns=2,
+    #                                                         editor=InstanceEditor(),
+    #                                                         ),
+    # #                                        height= -50,
+    #                                       ),
+    #
+    #                                 label='Multicollect',
+    #                                 show_border=True
+    #                                 )
+    #        baseline_grp = Group(
+    #                             Item('baseline_before', label='Baselines at Start'),
+    #                             Item('baseline_after', label='Baselines at End'),
+    #                             Item('baseline_counts',
+    #                                  tooltip='Number of baseline data points to collect',
+    #                                  label='Counts'),
+    #                             Item('baseline_detector', label='Detector'),
+    #                             Item('baseline_settling_time',
+    #                                  label='Delay (s)',
+    #                                  tooltip='Wait "Delay" seconds after setting magnet to baseline position'
+    #                                  ),
+    #                             Item('baseline_mass', label='Mass'),
+    #                             label='Baseline',
+    #                             show_border=True
+    #                             )
+    #
+    #        peak_center_grp = Group(
+    #                              Item('peak_center_before', label='Peak Center at Start'),
+    #                              Item('peak_center_after', label='Peak Center at End'),
+    #                              Item('peak_center_detector',
+    #                                   label='Detector',
+    #                                   enabled_when='peak_center_before or peak_center_after'
+    #                                   ),
+    #                              Item('peak_center_isotope',
+    #                                   label='Isotope',
+    #                                   enabled_when='peak_center_before or peak_center_after'
+    #                                   ),
+    #                              label='Peak Center',
+    #                              show_border=True)
+    #
+    #        equilibration_grp = Group(
+    #                                Item('eq_time', label='Time (s)'),
+    #                                Item('eq_outlet', label='Ion Pump Valve'),
+    #                                Item('eq_delay', label='Delay (s)',
+    #                                     tooltip='Wait "Delay" seconds before opening the Inlet Valve'
+    #                                     ),
+    #                                Item('eq_inlet', label='Inlet Valve'),
+    #                                label='Equilibration',
+    #                                show_border=True
+    #                                )
+    #
+    #        peak_hop_group = VGroup(
+    #                                Group(
+    #                                      Item('ncycles'),
+    #                                      Item('baseline_ncycles')),
+    #                                HGroup(Spring(springy=False, width=28),
+    #                                        Label('position'), Spring(springy=False, width=10),
+    #                                        Label('Detectors'), Spring(springy=False, width=188),
+    #                                        Label('counts'),
+    #                                        spring),
+    #                                UItem('hops', editor=ListEditor(style='custom',
+    #                                                              editor=InstanceEditor())),
+    #                               label='Peak Hop',
+    #                               visible_when='use_peak_hop',
+    #                               show_border=True
+    #                               )
+    #
+    #        return Group(
+    # #                     HGroup(
+    #
+    #                            VGroup(
+    #                                 Item('use_peak_hop'),
+    #                                 peak_hop_group,
+    #                                 Group(multicollect_grp,
+    #                                       baseline_grp,
+    #                                       layout='tabbed',
+    #                                       visible_when='not use_peak_hop'
+    #                                       ),
+    #                                 peak_center_grp,
+    #                                 equilibration_grp),
+    #
+    # #                            spring,
+    # #                            ),
+    #
+    #                     label='Parameters')
 
     def _parse(self):
         str_to_str = lambda x: x.replace("'", '').replace('"', '')
         lines = self.body.split('\n')
+
         def extract_detectors(v):
             v = eval(v)
             for di in self.active_detectors:
@@ -292,29 +293,29 @@ class MeasurementPyScriptEditor(PyScriptEditor):
                 di.fit = vi
 
         attrs = (
-                ('multicollect_counts', int),
-                ('active_detectors'   , extract_detectors),
-                ('fits'               , extract_fits),
+            ('multicollect_counts', int),
+            ('active_detectors', extract_detectors),
+            ('fits', extract_fits),
 
-                ('baseline_before'    , str_to_bool),
-                ('baseline_after'     , str_to_bool),
-                ('baseline_counts'    , int),
-                ('baseline_detector'  , str_to_str),
-                ('baseline_mass'      , float),
+            ('baseline_before', str_to_bool),
+            ('baseline_after', str_to_bool),
+            ('baseline_counts', int),
+            ('baseline_detector', str_to_str),
+            ('baseline_mass', float),
 
-                ('peak_center_before', str_to_bool),
-                ('peak_center_after', str_to_bool),
-                ('peak_center_detector', str_to_str),
-                ('peak_center_isotope', str_to_str),
+            ('peak_center_before', str_to_bool),
+            ('peak_center_after', str_to_bool),
+            ('peak_center_detector', str_to_str),
+            ('peak_center_isotope', str_to_str),
 
-                ('eq_time', float),
-                ('eq_inlet', str_to_str),
-                ('eq_outlet', str_to_str),
-                ('eq_delay', float),
+            ('eq_time', float),
+            ('eq_inlet', str_to_str),
+            ('eq_outlet', str_to_str),
+            ('eq_delay', float),
 
-                ('use_peak_hop', str_to_bool),
-                ('ncycles', int),
-                )
+            ('use_peak_hop', str_to_bool),
+            ('ncycles', int),
+        )
         found = []
         for li in lines:
             for v, cast in attrs:
@@ -383,16 +384,16 @@ class MeasurementPyScriptEditor(PyScriptEditor):
     def _extract_parameter(self, line, attr, cast=None):
 
         regex = globals()['{}_REGEX'.format(attr.upper())]
-#        if attr == 'multicollect_counts':
-#            print regex.match(line), line
+        #        if attr == 'multicollect_counts':
+        #            print regex.match(line), line
         if regex.match(line):
             _, v = line.split('=')
             v = v.strip()
             if cast:
                 v = cast(v)
 
-#            if attr == 'multicollect_counts':
-#                print 'vvvvv', v
+            #            if attr == 'multicollect_counts':
+            #                print 'vvvvv', v
             if v is not None:
                 setattr(self, attr, v)
                 self._update_value(attr, v)
@@ -451,15 +452,13 @@ class MeasurementPyScriptEditor(PyScriptEditor):
         if len(new) == 1:
             s = "'{}',".format(new[0])
         else:
-#            nn = []
-#            for di, _label in self.detectors:
-#                if di in new:
-#                    nn.append(di)
+        #            nn = []
+        #            for di, _label in self.detectors:
+        #                if di in new:
+        #                    nn.append(di)
             s = ','.join(map("'{}'".format, new))
 
-
         self._modify_body(param, '({})'.format(s))
-
 
 
     @on_trait_change('''peak_center_+, eq_+, multicollect_counts, baseline_+,
@@ -495,7 +494,7 @@ use_peak_hop, ncycles, baseline_ncycles
                 idx = i
                 start = True
                 continue
-            elif start :
+            elif start:
                 if endline(li):
                     start = False
                 continue
@@ -521,30 +520,33 @@ use_peak_hop, ncycles, baseline_ncycles
 
         return modified
 
-#==============================================================================
-# defaults
-#==============================================================================
+    #==============================================================================
+    # defaults
+    #==============================================================================
     def _hops_default(self):
         return [Hop(position='Ar40', detectors='H1, CDD')] + \
-                [Hop(position='Ar39', detectors='CDD')] + \
-                [Hop() for i in range(5)]
+               [Hop(position='Ar39', detectors='CDD')] + \
+               [Hop() for i in range(5)]
 
     def _active_detectors_default(self):
         return [Detector(label=di) for di in ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']]
 
+
 if __name__ == '__main__':
     from launchers.helpers import build_version
+
     build_version('_experiment')
     from src.helpers.logger_setup import logging_setup
+
     logging_setup('scripts')
 
     s = MeasurementPyScriptEditor()
 
-#    h = Hop(position='Ar40',
-#            detectors='H1, CDD')
-#    print h.to_string()
+    #    h = Hop(position='Ar40',
+    #            detectors='H1, CDD')
+    #    print h.to_string()
     p = os.path.join(paths.scripts_dir, 'measurement', 'jan_unknown_peak_hop.py')
     s.open_script(path=p)
-# #    s.hops = [Hop(position='Ar40', detectors='H1, CDD', counts=403)]
+    # #    s.hops = [Hop(position='Ar40', detectors='H1, CDD', counts=403)]
     s.configure_traits()
 #============= EOF =====================================po========

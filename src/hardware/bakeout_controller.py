@@ -15,8 +15,8 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Event, Float, Str, Instance, Bool, Property, \
-     HasTraits, Any
+from traits.api import List, Event, Float, Str, Bool, Property, \
+    Any
 from traitsui.api import View, Item, spring, HGroup, Label, VGroup, Spring, \
     ButtonEditor, EnumEditor
 #============= standard library imports ========================
@@ -26,7 +26,7 @@ import os
 from src.helpers.timer import Timer
 from src.paths import paths
 from watlow_ezzone import WatlowEZZone
-from src.constants import NULL_STR
+from src.pychron_constants import NULL_STR
 from src.pyscripts.bakeout_pyscript import BakeoutPyScript
 from src.ui.led_editor import LEDEditor, ButtonLED
 # from src.ui.led_editor import ButtonLED, LEDEditor
@@ -42,6 +42,8 @@ from src.ui.led_editor import LEDEditor, ButtonLED
 
 
 BLANK_SCRIPT = NULL_STR
+
+
 class BakeoutController(WatlowEZZone):
     '''
         
@@ -68,11 +70,11 @@ class BakeoutController(WatlowEZZone):
 
     scripts = List()
     script = Str(BLANK_SCRIPT)
-#    led = Instance(LED, ())
-#     led = Instance(ButtonLED, ())
+    #    led = Instance(LED, ())
+    #     led = Instance(ButtonLED, ())
     led = Any
 
-#    alive = Bool(False)
+    #    alive = Bool(False)
     active = Bool(False)
     cnt = 0
     ramp_scale = None
@@ -108,8 +110,8 @@ class BakeoutController(WatlowEZZone):
     _check_temp_minutes = 2
     _check_temp_threshold = 40
     _check_start_minutes = 5
-#    (depends_on='_ok_to_run')
-#    _ok_to_run = Bool(False)
+    #    (depends_on='_ok_to_run')
+    #    _ok_to_run = Bool(False)
 
 
     def initialization_hook(self):
@@ -122,22 +124,22 @@ class BakeoutController(WatlowEZZone):
         if p:
             self._max_output = p
 
-#    def isAlive(self):
-#        return self.alive
+            #    def isAlive(self):
+            #        return self.alive
 
     def isActive(self):
         return self.active
 
-#    def kill(self):
-#        self.led.state = 'red'
-# #        if self.isAlive() and self.isActive():
-#        if self.isActive():
-#            self.info('killing')
-#            if self._active_script is not None:
-#                self._active_script._alive = False
-#
-#            if abs(self.setpoint) > 0.001:
-#                self.set_closed_loop_setpoint(0)
+    #    def kill(self):
+    #        self.led.state = 'red'
+    # #        if self.isAlive() and self.isActive():
+    #        if self.isActive():
+    #            self.info('killing')
+    #            if self._active_script is not None:
+    #                self._active_script._alive = False
+    #
+    #            if abs(self.setpoint) > 0.001:
+    #                self.set_closed_loop_setpoint(0)
 
     def load_additional_args(self, config):
         '''
@@ -156,13 +158,13 @@ class BakeoutController(WatlowEZZone):
         sd = os.path.join(paths.scripts_dir, 'bakeout')
         if os.path.isdir(sd):
             files = os.listdir(sd)
-#            s = [f for f in files
-#                        if not os.path.basename(f).startswith('.') and
-#                             os.path.splitext(f)[1] in ['.py', '.bo']]
-#            print s
+            #            s = [f for f in files
+            #                        if not os.path.basename(f).startswith('.') and
+            #                             os.path.splitext(f)[1] in ['.py', '.bo']]
+            #            print s
             s = [NULL_STR] + [f for f in files if not f.startswith('.') and
-                        os.path.isfile(os.path.join(sd, f)) and
-                        os.path.splitext(f)[1] in ['.py', '.bo']]
+                                                  os.path.isfile(os.path.join(sd, f)) and
+                                                  os.path.splitext(f)[1] in ['.py', '.bo']]
             self.scripts = s
 
         else:
@@ -182,7 +184,7 @@ Add {}'.format(sd)):
         return ok
 
     def on_led_action(self):
-#        if self.isAlive():
+    #        if self.isAlive():
         if self.isActive():
             self.end()
         else:
@@ -211,11 +213,11 @@ Add {}'.format(sd)):
             self.heating = False
             self._duration_timeout = False
 
-#            if self._active_script is not None:
-#                self._active_script.cancel()
+            #            if self._active_script is not None:
+            #                self._active_script.cancel()
 
             t = BakeoutPyScript(root=os.path.join(paths.scripts_dir,
-                                                      'bakeout'),
+                                                  'bakeout'),
                                 name=self.script,
                                 controller=self)
 
@@ -255,7 +257,7 @@ Add {}'.format(sd)):
         '''
         '''
         scalemap = {'h': 39,
-                  'm': 57}
+                    'm': 57}
 
         if 'value' in scalemap:
             self.info('setting ramp scale = {}'.format(value))
@@ -267,9 +269,9 @@ Add {}'.format(sd)):
         '''
         '''
         rampmap = {'off': 62,
-                 'startup': 88,
-                 'setpoint': 1647,
-                 'both': 13}
+                   'startup': 88,
+                   'setpoint': 1647,
+                   'both': 13}
 
         if value in rampmap:
             self.info('setting ramp action = {}'.format(value))
@@ -333,7 +335,7 @@ Add {}'.format(sd)):
         self.get_temp_and_power(verbose=False)
         if self._check_temp_enabled:
             self._check_temp()
-#        self.get_temp_and_power(verbose=True)
+            #        self.get_temp_and_power(verbose=True)
 
         if self._duration_timeout:
             if time.time() - self.start_time > self._oduration * 3600.:
@@ -359,18 +361,20 @@ Add {}'.format(sd)):
                     self.led.state = False
                     self.active = False
 
-#                    self.alive = False
-                    self.warning('controller failed to heat average temp= {}, duration={}'.format(avgtemp, self._check_temp_minutes))
-                    self.warning_dialog('Controller failed to heat. Average temp.={:0.1f} after {} minutes. Check thermocouple and heating tape'.\
-                                        format(avgtemp, self._check_temp_minutes), sound='alarm1')
+                    #                    self.alive = False
+                    self.warning('controller failed to heat average temp= {}, duration={}'.format(avgtemp,
+                                                                                                  self._check_temp_minutes))
+                    self.warning_dialog(
+                        'Controller failed to heat. Average temp.={:0.1f} after {} minutes. Check thermocouple and heating tape'. \
+                            format(avgtemp, self._check_temp_minutes), sound='alarm1')
 
             self._check_buffer = cb
-#===============================================================================
-# handlers
-#===============================================================================
+            #===============================================================================
+            # handlers
+            #===============================================================================
 
     def _state_button_fired(self):
-#        if self.isAlive():
+    #        if self.isAlive():
         if self.isActive():
             self.user_cancel = True
             self.end()
@@ -388,11 +392,12 @@ Add {}'.format(sd)):
         self._duration = 0
         self.setpoint = 0
         self.execute_dirty = True
-#===============================================================================
-# property get/set
-#===============================================================================
+
+    #===============================================================================
+    # property get/set
+    #===============================================================================
     def _get_state_label(self):
-#        return 'Stop' if self.isAlive() else 'Start'
+    #        return 'Stop' if self.isAlive() else 'Start'
         return 'Stop' if self.isActive() else 'Start'
 
     def _validate_max_output(self, v):
@@ -413,7 +418,7 @@ Add {}'.format(sd)):
         return self._duration
 
     def _set_duration(self, v):
-#        if self.isAlive():
+    #        if self.isAlive():
         if self.isActive():
             self._oduration = v
             self.start_time = time.time()
@@ -435,12 +440,14 @@ Add {}'.format(sd)):
 
     def _get_state_enabled(self):
         return self.ok_to_run and self._state_enabled
-#===============================================================================
-# defaults
-#===============================================================================
+
+    #===============================================================================
+    # defaults
+    #===============================================================================
     def _led_default(self):
         return ButtonLED(callable=self.on_led_action)
-#============= views ===================================
+
+    #============= views ===================================
     def traits_view(self):
         '''
         '''
@@ -448,68 +455,69 @@ Add {}'.format(sd)):
                           editor=ButtonEditor(label_value='state_label'),
                           show_label=False,
                           enabled_when='state_enabled'
-                        )
+        )
         show_label = False
         if self.name.endswith('1'):
             show_label = True
             header_grp = HGroup(
-                            Spring(width=95, springy=False),
-                            HGroup(
-                                   Label(self.name[-1]),
-                                   Item('led', editor=LEDEditor(),
-                                        show_label=False, style='custom'),
-                                   state_item,
-                                   ),
-                            )
+                Spring(width=95, springy=False),
+                HGroup(
+                    Label(self.name[-1]),
+                    Item('led', editor=LEDEditor(),
+                         show_label=False, style='custom'),
+                    state_item,
+                ),
+            )
             process_grp = HGroup(
-                                 Spring(width=35, springy=False),
-                                 Label('Temp. (C)'),
-                                 spring,
-                                   Item('process_value', show_label=False,
-                                   style='readonly', format_str='%0.1f'),
-                                   spring,
-                                   )
+                Spring(width=35, springy=False),
+                Label('Temp. (C)'),
+                spring,
+                Item('process_value', show_label=False,
+                     style='readonly', format_str='%0.1f'),
+                spring,
+            )
         else:
             header_grp = HGroup(
-                            HGroup(
-                                Label(self.name[-1]),
-                                Item('led', editor=LEDEditor(),
-                                        show_label=False, style='custom'),
-                                state_item,
-#                                Item('color', show_label=False, style='readonly')
-                                ),
-                                )
+                HGroup(
+                    Label(self.name[-1]),
+                    Item('led', editor=LEDEditor(),
+                         show_label=False, style='custom'),
+                    state_item,
+                    #                                Item('color', show_label=False, style='readonly')
+                ),
+            )
             process_grp = HGroup(
-                                   spring,
-                                   Item('process_value', label='Temp (C)',
-                                        show_label=False,
-                                  style='readonly', format_str='%0.1f'),
-                                   spring,
-                                   )
+                spring,
+                Item('process_value', label='Temp (C)',
+                     show_label=False,
+                     style='readonly', format_str='%0.1f'),
+                spring,
+            )
         v = View(
-                 VGroup(
-                    header_grp,
-                    VGroup(
-                            Item('script', show_label=False,
-                                 editor=EnumEditor(name='scripts'),
-                                                         width=-200,
-                                enabled_when='not active'
-                                 ),
-                            Item('duration', label='Duration (hrs)',
-                                 show_label=show_label,
-                                 enabled_when='script=="---"',
-                                 format_str='%0.3f'),
-                            Item('setpoint', label='Setpoint (C)',
-                                  show_label=show_label,
-                                  enabled_when='script=="---"',
-                                  format_str='%0.2f'),
-                            Item('max_output', label='Max.Out (%)',
-                                 format_str='%0.2f',
-                                 show_label=show_label,
-                                 enabled_when='not active'),
-                            process_grp
-                            ),
-                        )
-               )
+            VGroup(
+                header_grp,
+                VGroup(
+                    Item('script', show_label=False,
+                         editor=EnumEditor(name='scripts'),
+                         width=-200,
+                         enabled_when='not active'
+                    ),
+                    Item('duration', label='Duration (hrs)',
+                         show_label=show_label,
+                         enabled_when='script=="---"',
+                         format_str='%0.3f'),
+                    Item('setpoint', label='Setpoint (C)',
+                         show_label=show_label,
+                         enabled_when='script=="---"',
+                         format_str='%0.2f'),
+                    Item('max_output', label='Max.Out (%)',
+                         format_str='%0.2f',
+                         show_label=show_label,
+                         enabled_when='not active'),
+                    process_grp
+                ),
+            )
+        )
         return v
-#============= EOF ====================================
+
+        #============= EOF ====================================

@@ -32,7 +32,7 @@ from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
     OpenExperimentQueueAction, SignalCalculatorAction, \
     DeselectAction, SendTestNotificationAction, \
     NewPatternAction, OpenPatternAction, ResetQueuesAction
-from src.experiment.tasks.constants_preferences import ConstantsPreferencesPane
+#from src.experiment.tasks.constants_preferences import ConstantsPreferencesPane
 # from src.loading.load_task import LoadingTask
 # from src.loading.actions import SaveLoadingAction
 # from src.loading.loading_preferences import LoadingPreferencesPane
@@ -163,7 +163,7 @@ class ExperimentPlugin(BaseTaskPlugin):
     def _preferences_panes_default(self):
         return [
             ExperimentPreferencesPane,
-            ConstantsPreferencesPane,
+            #ConstantsPreferencesPane,
             #                 LoadingPreferencesPane
         ]
 

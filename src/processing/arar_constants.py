@@ -18,7 +18,7 @@
 from traits.api import HasTraits, Property, Float, Enum, Str, List, Either
 
 from uncertainties import ufloat
-from src.constants import AGE_SCALARS
+from src.pychron_constants import AGE_SCALARS
 #=============local library imports  ==========================
 
 

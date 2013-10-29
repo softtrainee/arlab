@@ -22,7 +22,7 @@ from src.graph.graph import Graph
 
 from src.graph.regression_graph import StackedRegressionGraph
 # from src.helpers.traitsui_shortcuts import instance_item
-from src.constants import PLUSMINUS
+from src.pychron_constants import PLUSMINUS
 from src.processing.analyses.analysis_view import AutomatedRunAnalysisView
 from src.processing.arar_age import ArArAge
 # from src.helpers.formatting import floatfmt

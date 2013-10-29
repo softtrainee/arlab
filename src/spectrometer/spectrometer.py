@@ -28,7 +28,7 @@ from src.spectrometer.source import Source
 from src.spectrometer.magnet import Magnet
 from src.spectrometer.detector import Detector
 from src.spectrometer.spectrometer_device import SpectrometerDevice
-from src.constants import NULL_STR, DETECTOR_ORDER
+from src.pychron_constants import NULL_STR, DETECTOR_ORDER
 #from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.paths import paths
 
