@@ -218,7 +218,7 @@ class ExperimentEditorTask(EditorTask):
 
     def open(self, path=None):
 
-        path = '/Users/ross/Pychrondata_dev/experiments/uv.xls'
+        #path = '/Users/ross/Pychrondata_dev/experiments/uv.xls'
 #        path = '/Users/ross/Pychrondata_dev/experiments/uv.txt'
         #path='/Users/ross/Pychrondata_dev/experiments/Current Experiment.txt'
         if path is None:

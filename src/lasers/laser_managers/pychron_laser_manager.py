@@ -26,7 +26,8 @@ from threading import Thread
 #============= local library imports  ==========================
 from src.globals import globalv
 from src.hardware.core.communicators.ethernet_communicator import EthernetCommunicator
-from src.lasers.laser_managers.client import UVLaserOpticsClient, UVLaserControlsClient
+from src.lasers.laser_managers.client import UVLaserOpticsClient, UVLaserControlsClient,\
+    LaserOpticsClient, LaserControlsClient
 from src.lasers.laser_managers.laser_manager import BaseLaserManager
 from src.helpers.filetools import str_to_bool
 import os
@@ -74,7 +75,15 @@ class PychronLaserManager(BaseLaserManager):
     use_autocenter = Bool(False)
 
     mode = 'client'
+    optics_client = Instance(LaserOpticsClient)
+    controls_client = Instance(LaserControlsClient)
 
+    def _controls_client_default(self):
+        return LaserControlsClient(parent=self)
+
+    def _optics_client_default(self):
+        return LaserOpticsClient(parent=self)
+    
     def _test_connection_button_fired(self):
         self.test_connection()
         if self.connected:
