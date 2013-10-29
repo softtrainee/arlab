@@ -1463,7 +1463,8 @@ anaylsis_type={}
         try:
             ss = self._preliminary_processing(cp)
         except Exception, e:
-            self.debug('preliminary_processing - {}'.format(e))
+            import traceback
+            self.debug('preliminary_processing - {}'.format(traceback.format_exc()))
             self.warning('could not process isotope signals. not saving to database')
             mem_log('post pychron save')
             return
@@ -1574,7 +1575,13 @@ anaylsis_type={}
                   if kind == 'sniff']
 
         rsignals = dict()
-
+        def extract_xy(tb):
+            try:
+                x, y = zip(*[(r['time'], r['value']) for r in tb.iterrows()])
+            except ValueError:
+                x,y=[], []
+            return x,y
+        
         #fits = self.plot_panel.fits
         #for fit, (iso, detname) in zip(fits, signals):
         for iso, detname in signals:
@@ -1584,12 +1591,14 @@ anaylsis_type={}
                 fit = 'linear'
 
             tab = dm.get_table(detname, '/signal/{}'.format(iso))
-            x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
-            #            if iso=='Ar40':
-            #                print 'prelim signal,',len(x), x[0], x[-1]
+            x,y=extract_xy(tab)
+                
+                #            if iso=='Ar40':
+                #                print 'prelim signal,',len(x), x[0], x[-1]
             s = IsotopicMeasurement(xs=x, ys=y, fit=fit)
 #            print 'signal',iso, s.value, y
             rsignals['{}signal'.format(iso)] = s
+            
 
         #baseline_fits = ['average_SEM', ] * len(baselines)
         #for fit, (iso, detname) in zip(baseline_fits, baselines):
@@ -1600,7 +1609,8 @@ anaylsis_type={}
                 fit = 'average_SEM'
 
             tab = dm.get_table(detname, '/baseline/{}'.format(iso))
-            x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
+            x,y=extract_xy(tab)
+                
             bs = IsotopicMeasurement(xs=x, ys=y, fit=fit)
 #            print 'baseline',iso, bs.value, y
 
@@ -1608,7 +1618,8 @@ anaylsis_type={}
 
         for (iso, detname) in sniffs:
             tab = dm.get_table(detname, '/sniff/{}'.format(iso))
-            x, y = zip(*[(r['time'], r['value']) for r in tab.iterrows()])
+            
+            x,y=extract_xy(tab)
             sn = IsotopicMeasurement(xs=x, ys=y)
 
             rsignals['{}sniff'.format(iso)] = sn
@@ -1890,21 +1901,28 @@ anaylsis_type={}
         baselines = []
         signals = []
         detectors = []
-
+        
+#        print self._save_isotopes
         for isotope, detname, kind in self._save_isotopes:
-            if kind == 'signal':
-                detectors.append((detname, isotope))
+#            print isotope, detname, kind
+            
+            dd=(detname, isotope)
+            if not dd in detectors:
+                detectors.append(dd)
+                
+            if kind == 'baseline':
+                #detectors.append((detname, isotope))
                 table = dm.get_table(detname, '/baseline/{}'.format(isotope))
                 if table:
                     bi = [(row['time'], row['value']) for row in table.iterrows()]
                     baselines.append(bi)
-                    
+            elif kind=='signal':    
+                
                 table = dm.get_table(detname, '/signal/{}'.format(isotope))
                 if table:
                     si = [(row['time'], row['value']) for row in table.iterrows()]
                     signals.append(si)
-                    
-                    
+            
         dm.close_file()
 
         blanks = []
@@ -1950,8 +1968,7 @@ anaylsis_type={}
                          baselines=baselines,
                          signals=signals,
                          blanks=blanks,
-                         detectors=detectors,
-        )
+                         detectors=detectors)
 
         exp.load_record(self)
 
@@ -2228,6 +2245,7 @@ anaylsis_type={}
             dm.new_group(gn)
 
             for iso, det in parse_hops(hops, ret='iso,det'):
+                self._save_isotopes.append((iso, det, gn))
             #for hopstr, _cnt, _s in hops:
             #    for hi in hopstr.split(','):
             #        args = map(str.strip, hi.split(':'))

@@ -102,6 +102,20 @@ class ExportSpec(Loggable):
             self.debug('{} has no ic_factor attribute'.format(record,))
 
     def iter(self):
+        for a in ('detectors','signals','baselines','blanks', 'signal_intercepts','baseline_intercepts',
+                  'signal_fits','baseline_fits'):
+            v=getattr(self, a)
+            print a, len(v), v
+            
+#        print 'det',len(self.detectorsself.detectors
+#        print 'signals',self.signals
+#        print 'baselins',self.baselines
+#        print 'blanks',self.blanks
+#        print 'sgint',self.signal_intercepts
+#        print 'bsint',self.baseline_intercepts
+#        print 'sf',self.signal_fits
+#        print 'bsf',self.baseline_fits
+        
         return zip(self.detectors,
                    self.signals,
                    self.baselines,
