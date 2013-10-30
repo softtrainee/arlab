@@ -15,15 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from reportlab.lib import colors
-from reportlab.lib.enums import TA_CENTER
-from reportlab.lib.units import inch
 from traits.api import Bool
 
 #============= standard library imports ========================
+from reportlab.lib import colors
+from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.units import inch
 #============= local library imports  ==========================
 from src.canvas.canvas2D.irradiation_canvas import IrradiationCanvas
-from src.experiment.entry.level import load_holder_canvas
+from src.entry.level import load_holder_canvas
 from src.loading.component_flowable import ComponentFlowable
 from src.pdf.base_pdf_writer import BasePDFWriter
 from src.pdf.items import Row

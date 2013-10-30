@@ -88,7 +88,7 @@ class Level(HasTraits):
         v = View(VGroup(
             HGroup(Item('name'),
                    Item('z'),
-                        Item('tray', show_label=False, editor=EnumEditor(name='trays'))),
+                   Item('tray', show_label=False, editor=EnumEditor(name='trays'))),
             UItem('canvas', editor=ComponentEditor())
         ),
                  buttons=['OK', 'Cancel'],

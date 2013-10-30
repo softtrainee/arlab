@@ -16,24 +16,21 @@
 
 #============= enthought library imports =======================
 from pyface.tasks.action.schema import SToolBar
-
 from traits.api import Instance, on_trait_change, Button
 from pyface.tasks.task_layout import TaskLayout, PaneItem, Splitter, Tabbed
-
-from src.envisage.tasks.base_task import BaseManagerTask
-
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.experiment.entry.project_entry import ProjectEntry
-from src.experiment.entry.sample_entry import SampleEntry
 from src.experiment.importer.import_manager import ImportManager
-from src.experiment.entry.labnumber_entry import LabnumberEntry
 from src.experiment.tasks.browser.browser_mixin import BrowserMixin
-from src.experiment.tasks.entry.actions import SavePDFAction, GenerateLabnumbersAction, ImportIrradiationLevelAction
-from src.experiment.tasks.entry.importer_panes import ImporterPane
-from src.experiment.tasks.entry.labnumber_entry_panes import LabnumbersPane, \
+from src.entry.project_entry import ProjectEntry
+from src.entry.sample_entry import SampleEntry
+from src.entry.labnumber_entry import LabnumberEntry
+from src.entry.tasks.actions import SavePDFAction, GenerateLabnumbersAction, ImportIrradiationLevelAction
+from src.entry.tasks.importer_panes import ImporterPane
+from src.entry.tasks.labnumber_entry_panes import LabnumbersPane, \
     IrradiationPane, IrradiationEditorPane, IrradiationCanvasPane
 from src.processing.tasks.analysis_edit.actions import DatabaseSaveAction
+from src.envisage.tasks.base_task import BaseManagerTask
 
 
 class LabnumberEntryTask(BaseManagerTask, BrowserMixin):

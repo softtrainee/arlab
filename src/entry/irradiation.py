@@ -21,8 +21,8 @@ from traitsui.api import View, Item, EnumEditor, HGroup, spring
 import os
 #============= local library imports  ==========================
 from src.database.adapters.isotope_adapter import IsotopeAdapter
-from src.experiment.entry.chronology_input import ChronologyInput
-from src.experiment.entry.production_ratio_input import ProductionRatioInput
+from src.entry.chronology_input import ChronologyInput
+from src.entry.production_ratio_input import ProductionRatioInput
 from src.paths import paths
 from src.saveable import Saveable
 from src.pychron_constants import NULL_STR
