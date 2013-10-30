@@ -27,7 +27,7 @@ from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
 # from pyface.tasks.task_window_layout import TaskWindowLayout
 from src.database.records.isotope_record import IsotopeRecordView
 from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
-from src.processing.analysis import Analysis
+from src.processing.analyses.analysis import Analysis
 from src.processing.selection.data_selector import DataSelector
 
 #============= standard library imports ========================
@@ -48,11 +48,15 @@ class AnalysisEditTask(BaseBrowserTask):
     ic_factor_editor_count = 0
 
     tool_bars = [SToolBar(DatabaseSaveAction(),
-                          image_size=(16, 16))]
+                          image_size=(16, 16)
+    )]
 
     external_recall_window = True
 
     def recall(self, records):
+        if not hasattr(records, '__iter__'):
+            records=(records, )
+            
         ans = self.manager.make_analyses(records, calculate_age=True)
 
         def func(rec):
@@ -116,6 +120,7 @@ class AnalysisEditTask(BaseBrowserTask):
                         x.tag = name
 
                         ai.set_tag(tag)
+
 
                     for it in items:
                         ma = db.get_analysis_uuid(it.uuid)
@@ -262,34 +267,36 @@ class AnalysisEditTask(BaseBrowserTask):
 
     @on_trait_change('unknowns_pane:[items, update_needed]')
     def _update_unknowns_runs(self, obj, name, old, new):
-        print obj, obj._no_update
         if not obj._no_update:
             #print 'upadte unkownasdf pane', new,
             if self.active_editor:
                 self.active_editor.unknowns = self.unknowns_pane.items
-                self._append_cache(self.active_editor)
+#                self._append_cache(self.active_editor)
 
     @on_trait_change('plot_editor_pane:current_editor')
     def _update_current_plot_editor(self, new):
         if new:
             self._show_pane(self.plot_editor_pane)
 
-    def _append_cache(self, editor):
-        if hasattr(editor, 'unknowns'):
-            ans = editor.unknowns
-            ids = [ai.uuid for ai in self._analysis_cache]
-            c = [ai for ai in ans if ai.uuid not in ids]
-
-            if c:
-                self._analysis_cache.extend(c)
-
-        editor.analysis_cache = self._analysis_cache
+#    def _append_cache(self, editor):
+#        if hasattr(editor, 'unknowns'):
+#            ans = editor.unknowns
+#            ids = [ai.uuid for ai in self._analysis_cache]
+#            c = [ai for ai in ans if ai.uuid not in ids]
+#
+#            if c:
+#                self._analysis_cache.extend(c)
+#
+#        editor.analysis_cache = self._analysis_cache
 
     @on_trait_change('''unknowns_pane:dclicked, data_selector:selector:dclicked''')
     def _selected_changed(self, new):
+        print new
         if new:
+            print new.item
             if isinstance(new.item, (IsotopeRecordView, Analysis)):
-                self._open_recall_editor(new.item)
+                self._recall_item(new.item)
+#                self._open_external_recall_editor(new.item)
 
     #@on_trait_change('controls_pane:save_button')
     #def _save_fired(self):
@@ -306,28 +313,33 @@ class AnalysisEditTask(BaseBrowserTask):
     @on_trait_change('[analysis_table, danalysis_table]:dclicked')
     def _dclicked_analysis_changed(self, obj, name, old, new):
         sel = obj.selected
-
+        self._recall_item(sel)
+        
+    def _recall_item(self, item):
         if not self.external_recall_window:
-            self.recall(sel)
+            self.recall(item)
         else:
-            tid = 'pychron.recall'
-            app = self.window.application
+            self._open_external_recall_editor(item)
+            
+    def _open_external_recall_editor(self, sel):
+        tid = 'pychron.recall'
+        app = self.window.application
 
-            win, task, is_open = app.get_open_task(tid)
+        win, task, is_open = app.get_open_task(tid)
 
-            if is_open:
-                win.activate()
-            else:
-                win.open()
+        if is_open:
+            win.activate()
+        else:
+            win.open()
 
-            task.recall(sel)
+        task.recall(sel)
 
-            task.load_projects()
+        task.load_projects()
 
-            #print self.selected_project, 'ffff'
-            task.set_projects(self.oprojects, self.selected_project)
-            task.set_samples(self.osamples, self.selected_sample)
-
+        #print self.selected_project, 'ffff'
+        task.set_projects(self.oprojects, self.selected_project)
+        task.set_samples(self.osamples, self.selected_sample)
+        
     @on_trait_change('unknowns_pane:previous_selection')
     def _update_up_previous_selection(self, obj, name, old, new):
         self._set_previous_selection(obj, new)

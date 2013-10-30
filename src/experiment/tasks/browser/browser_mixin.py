@@ -87,7 +87,12 @@ class BrowserMixin(ColumnSorterMixin):
         if new:
             db = self.manager.db
             with db.session_ctx():
-                if new[0].name == 'Recent':
+                if hasattr(new, '__iter__'):
+                    name=new[0].name
+                else:
+                    name=new.name
+                    
+                if name == 'Recent':
                     sams = self._set_recent_samples()
                 else:
                     sams = self._set_samples()

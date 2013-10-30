@@ -64,6 +64,7 @@ class ICFactorPreferenceBinding(PreferenceBinding):
 class ArArAge(Loggable):
     j = Any
     irradiation = Str
+    irradiation_str = Str
     irradiation_level = Str
     irradiation_pos = Str
     irradiation_label = Property(depends_on='irradiation, irradiation_level,irradiation_pos')
@@ -124,8 +125,10 @@ class ArArAge(Loggable):
     moles_Ar40 = AgeProperty()
     moles_K39 = AgeProperty()
 
-    arar_constants = Instance(ArArConstants, ())
+    ar39decayfactor = AgeProperty()
+    ar37decayfactor = AgeProperty()
 
+    arar_constants = Instance(ArArConstants, ())
 
     def __init__(self, *args, **kw):
         super(ArArAge, self).__init__(*args, **kw)
@@ -552,7 +555,13 @@ class ArArAge(Loggable):
         r = self._get_arar_result_attr('Ar36')
         if r:
             return r.std_dev
-
+    
+    def _get_ar39decayfactor(self):
+        return self._get_arar_result_attr('ar39decayfactor')
+        
+    def _get_ar37decayfactor(self):
+        return self._get_arar_result_attr('ar37decayfactor')
+        
     def _get_moles_Ar40(self):
         return 0.001
 

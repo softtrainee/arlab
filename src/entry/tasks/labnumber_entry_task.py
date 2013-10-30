@@ -83,14 +83,18 @@ class LabnumberEntryTask(BaseManagerTask, BrowserMixin):
         self.manager.generate_labnumbers()
 
     def import_irradiation_load_xls(self):
-        p = '/Users/ross/Sandbox/irrad_load_template.xls'
-        self.manager.import_irradiation_load_xls(p)
+        path=self.open_file_dialog()
+        if path:
+            #p = '/Users/ross/Sandbox/irrad_load_template.xls'
+            self.manager.import_irradiation_load_xls(path)
 
     def make_irradiation_load_template(self):
-        p = '/Users/ross/Sandbox/irrad_load_template.xls'
-        self.manager.make_irradiation_load_template(p)
-        #self.information_dialog('Template saved to {}'.format(p))
-        self.view_xls(p)
+        path=self.open_file_dialog()
+        if path:
+    #        p = '/Users/ross/Sandbox/irrad_load_template.xls'
+            self.manager.make_irradiation_load_template(path)
+            #self.information_dialog('Template saved to {}'.format(p))
+            self.view_xls(path)
 
     def _manager_default(self):
         return LabnumberEntry(application=self.application)

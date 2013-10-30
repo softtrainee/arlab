@@ -245,6 +245,12 @@ class AnalysisView(HasTraits):
                              value=an.sample),
             MeasurementValue(name='Material',
                              value=an.material),
+            
+            MeasurementValue(name='Ar39Decay',
+                             value=floatfmt(an.ar39decayfactor)),
+            MeasurementValue(name='Ar37Decay',
+                             value=floatfmt(an.ar37decayfactor)),
+            
         ]
         self.measurement_values = ms
 
