@@ -109,7 +109,7 @@ class FigureEditor(GraphEditor):
         ans = self.unknowns
         for e in self.associated_editors:
             if isinstance(e, FigureEditor):
-                e.analysis_cache = self.analysis_cache
+#                e.analysis_cache = self.analysis_cache
                 #e.trait_set(unknowns=ans, trait_change_notify=False)
                 e.unknowns = ans
             else:

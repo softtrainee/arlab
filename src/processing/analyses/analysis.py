@@ -377,8 +377,7 @@ class DBAnalysis(Analysis):
                     fit = Fit(fit='average_sem',
                               filter_outliers=False,
                               filter_outlier_iterations=0,
-                              filter_outlier_std_devs=0
-                    )
+                              filter_outlier_std_devs=0)
 
                 r.set_fit(fit)
                 iso.baseline = r
@@ -645,7 +644,7 @@ class DBAnalysis(Analysis):
             if attr in self.isotopes:
                 return self.isotopes[attr].uvalue
 
-        print attr
+        self.debug('no attribute {}'.format(attr))
         raise AttributeError
 
 

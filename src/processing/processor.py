@@ -17,7 +17,7 @@
 
 #============= enthought library imports =======================
 #============= standard library imports ========================
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy.orm.exc import NoResultFound
 from sqlalchemy.sql.expression import and_
@@ -434,7 +434,7 @@ class Processor(IsotopeDatabaseManager):
                                                                                  fit_obj))
             return
 
-        ic_v, ic_e = ic
+        ic_v, ic_e = map(float, ic)
         db = self.db
         item = db.add_detector_intercalibration(history,
                                                 detector=d,
@@ -519,9 +519,9 @@ class Processor(IsotopeDatabaseManager):
         q = q.join(gen_AnalysisTypeTable)
         q = q.join(gen_MassSpectrometerTable)
 
-        win = datetime.timedelta(hours=delta)
+        win = timedelta(hours=delta)
         if isinstance(post, float):
-            post = datetime.datetime.fromtimestamp(post)
+            post = datetime.fromtimestamp(post)
 
         dt = post + win
         if delta < 0:
