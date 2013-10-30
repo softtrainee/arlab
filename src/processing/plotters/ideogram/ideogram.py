@@ -25,9 +25,10 @@ from numpy import linspace, pi, exp, zeros, ones, array, arange, \
 from src.processing.plotters.arar_figure import BaseArArFigure
 
 from src.processing.plotters.ideogram.mean_indicator_overlay import MeanIndicatorOverlay
+from src.processing.plotters.points_label_overlay import PointsLabelOverlay
 from src.stats.peak_detection import find_peaks
 from src.stats.core import calculate_weighted_mean
-from src.processing.plotters.point_move_tool import PointMoveTool, OverlayMoveTool
+from src.processing.plotters.point_move_tool import OverlayMoveTool
 
 N = 500
 
@@ -59,7 +60,7 @@ class Ideogram(BaseArArFigure):
         self.xs, self.xes = array([(ai.nominal_value, ai.std_dev)
                                    for ai in self._get_xs(key=self.index_key)]).T
 
-        self._plot_relative_probability(graph.plots[0], 0)
+        #self._plot_relative_probability(graph.plots[0], 0)
 
         omit = self._get_omitted(self.sorted_analyses,
                                  omit='omit_ideo')
@@ -67,7 +68,7 @@ class Ideogram(BaseArArFigure):
         #omit = [i for i, ai in enumerate(self.sorted_analyses) if ai.temp_status]
 
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
-            scatter = getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1)
+            scatter = getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid)
             #if omit:
             #    scatter.index.metadata['selections'] = omit
 
@@ -97,7 +98,8 @@ class Ideogram(BaseArArFigure):
     # plotters
     #===============================================================================
 
-    def _plot_aux(self, title, vk, ys, po, plot, pid, es=None):
+    def _plot_aux(self, title, vk, ys, po, plot, pid,
+                  es=None):
 
         scatter = self._add_aux_plot(ys,
                                      title, pid)
@@ -107,6 +109,9 @@ class Ideogram(BaseArArFigure):
         if es:
             self._add_error_bars(scatter, es, 'y', 1,
                                  visible=po.y_error)
+
+        if po.show_labels:
+            self._add_point_labels(scatter)
 
         self._add_scatter_inspector(scatter)
         return scatter
@@ -141,8 +146,9 @@ class Ideogram(BaseArArFigure):
 
         self._add_scatter_inspector(scatter,
                                     value_format=lambda x: '{:d}'.format(int(x)),
-                                    additional_info=lambda x: u'Age= {}'.format(x.age_string),
-        )
+                                    additional_info=lambda x: u'Age= {}'.format(x.age_string))
+        if po.show_labels:
+            self._add_point_labels(scatter)
 
         #         self._analysis_number_cnt += n
         self.graph.set_y_limits(min_=0,
@@ -150,7 +156,7 @@ class Ideogram(BaseArArFigure):
                                 plotid=pid)
         return scatter
 
-    def _plot_relative_probability(self, plot, pid):
+    def _plot_relative_probability(self, po, plot, pid):
         graph = self.graph
         bins, probs = self._calculate_probability_curve(self.xs, self.xes)
 
@@ -222,54 +228,11 @@ class Ideogram(BaseArArFigure):
         line.tools.append(OverlayMoveTool(component=m,
                                           constrain='x'))
 
-    def _add_mean_indicator2(self, g, scatter, bins, probs, pid):
-        offset = 0
-        percentH = 1 - 0.954  # 2sigma
-
-        maxp = max(probs)
-        wm, we, mswd, valid_mswd = self._calculate_stats(self.xs, self.xes,
-                                                         bins, probs)
-        #ym = maxp * percentH + offset
-        #set ym in screen space
-        #convert to data space
-        ogid = self.group_id
-        gid = ogid + 1
-        sgid = ogid * 3
-
-        ym = maxp * 0.1 * gid
-
-        s, p = g.new_series(
-            [wm], [ym],
-            type='scatter',
-                            marker='circle',
-                            #selection_marker_size=3,
-                            marker_size=3,
-                            #selection_marker='circle',
-                            #selection_color=scatter.color,
-                            #selection_outline_color=scatter.color,
-                            color=scatter.color,
-                            plotid=0
-        )
-
-        g.set_series_label('Mean-{}'.format(gid), series=sgid + 2, plotid=pid)
-
-        self._add_error_bars(s, [we], 'x', self.options.nsigma)
-        #         display_mean_indicator = self._get_plot_option(self.options, 'display_mean_indicator', default=True)
-        if not self.options.display_mean_indicator:
-            s.visible = False
-
-        label = None
-        #         display_mean = self._get_plot_option(self.options, 'display_mean_text', default=True)
-        if self.options.display_mean:
-            text = self._build_label_text(wm, we, mswd, valid_mswd, len(self.xs))
-            #             font = self._get_plot_option(self.options, 'data_label_font', default='modern 12')
-            self._add_data_label(s, text, (wm, ym),
-                                 #                                 font=font
-            )
-            # add a tool to move the mean age point
-        s.tools.append(PointMoveTool(component=s,
-                                     label=label,
-                                     constrain='y'))
+    def _add_point_labels(self, scatter):
+        labels = ['{:02n}{}'.format(si.aliquot, si.step) for si in self.sorted_analyses]
+        ov = PointsLabelOverlay(component=scatter,
+                                labels=labels)
+        scatter.overlays.append(ov)
 
     def update_index_mapper(self, obj, name, old, new):
         if new:
@@ -474,3 +437,51 @@ class Ideogram(BaseArArFigure):
 
 
 #============= EOF =============================================
+        #def _add_mean_indicator2(self, g, scatter, bins, probs, pid):
+        #        offset = 0
+        #        percentH = 1 - 0.954  # 2sigma
+        #
+        #        maxp = max(probs)
+        #        wm, we, mswd, valid_mswd = self._calculate_stats(self.xs, self.xes,
+        #                                                         bins, probs)
+        #        #ym = maxp * percentH + offset
+        #        #set ym in screen space
+        #        #convert to data space
+        #        ogid = self.group_id
+        #        gid = ogid + 1
+        #        sgid = ogid * 3
+        #
+        #        ym = maxp * 0.1 * gid
+        #
+        #        s, p = g.new_series(
+        #            [wm], [ym],
+        #            type='scatter',
+        #                            marker='circle',
+        #                            #selection_marker_size=3,
+        #                            marker_size=3,
+        #                            #selection_marker='circle',
+        #                            #selection_color=scatter.color,
+        #                            #selection_outline_color=scatter.color,
+        #                            color=scatter.color,
+        #                            plotid=0
+        #        )
+        #
+        #        g.set_series_label('Mean-{}'.format(gid), series=sgid + 2, plotid=pid)
+        #
+        #        self._add_error_bars(s, [we], 'x', self.options.nsigma)
+        #        #         display_mean_indicator = self._get_plot_option(self.options, 'display_mean_indicator', default=True)
+        #        if not self.options.display_mean_indicator:
+        #            s.visible = False
+        #
+        #        label = None
+        #        #         display_mean = self._get_plot_option(self.options, 'display_mean_text', default=True)
+        #        if self.options.display_mean:
+        #            text = self._build_label_text(wm, we, mswd, valid_mswd, len(self.xs))
+        #            #             font = self._get_plot_option(self.options, 'data_label_font', default='modern 12')
+        #            self._add_data_label(s, text, (wm, ym),
+        #                                 #                                 font=font
+        #            )
+        #            # add a tool to move the mean age point
+        #        s.tools.append(PointMoveTool(component=s,
+        #                                     label=label,
+        #                                     constrain='y'))

@@ -17,8 +17,7 @@
 #============= enthought library imports =======================
 from chaco.array_data_source import ArrayDataSource
 from traits.api import HasTraits, Any, Int, Str, Tuple, Property, \
-    Event, Bool, cached_property, on_trait_change
-from traitsui.api import View, Item
+    Event, Bool, cached_property
 from chaco.tools.data_label_tool import DataLabelTool
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -75,15 +74,21 @@ class BaseArArFigure(HasTraits):
 
         graph = self.graph
 
-        p = graph.new_plot(ytitle=self.ytitle,
-                           padding=self.padding)
-        _setup_plot(p, None)
-        
-        for po in plots:
-            p = graph.new_plot(padding=self.padding,
-                               bounds=[50, po.height],
-#                               value_scale=po.scale,
-                               ytitle=po.name)
+        vertical_resize = not all([p.height for p in plots])
+
+        graph.vertical_resize = vertical_resize
+
+        for i, po in enumerate(plots):
+            kw = {'padding': self.padding,
+                  'ytitle': po.name}
+
+            if po.height:
+                kw['bounds'] = [50, po.height]
+
+            if i == 0:
+                kw['ytitle'] = self.ytitle
+
+            p = graph.new_plot(**kw)
             _setup_plot(p, po)
             
     def plot(self, *args, **kw):

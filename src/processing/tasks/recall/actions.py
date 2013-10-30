@@ -15,35 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Str, List
-from traitsui.api import View, Item, EnumEditor, UItem, InstanceEditor
-from pyface.tasks.traits_dock_pane import TraitsDockPane
+from pyface.image_resource import ImageResource
+from pyface.tasks.action.task_action import TaskAction
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class FigureSelectorPane(TraitsDockPane):
-    name = 'Saved Figures'
-    figure = Str
-    figures = List
-
-    def traits_view(self):
-        v = View(Item('figure',
-                      editor=EnumEditor(name='figures')))
-        return v
+from src.paths import paths
 
 
-class PlotterOptionsPane(TraitsDockPane):
-    """
-        Pane for displaying the active editor's plotter options manager
-    """
-    id = 'pychron.processing.figures.plotter_options'
+class AddIsoEvoAction(TaskAction):
+    name = 'Iso. Evo'
+    method = 'add_iso_evo'
+    image = ImageResource(name='chart_curve_add.png',
+                          search_path=paths.icon_search_path)
 
-    name = 'Plot Options'
-    pom = Any
 
-    def traits_view(self):
-        v = View(UItem('pom',
-                       editor=InstanceEditor(),
-                       style='custom'))
-        return v
+class AddDiffAction(TaskAction):
+    name = 'Diff'
+    method = 'add_diff'
+    image = ImageResource(name='edit_diff.png',
+                          search_path=paths.icon_search_path)
 
 #============= EOF =============================================

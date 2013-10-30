@@ -30,6 +30,19 @@ from kiva.fonttools.font import str_to_font
 from traits.trait_errors import TraitError
 
 
+def _table_column(klass, *args, **kw):
+    kw['text_font'] = 'arial 10'
+    return klass(*args, **kw)
+
+
+def object_column(*args, **kw):
+    return _table_column(ObjectColumn, *args, **kw)
+
+
+def checkbox_column(*args, **kw):
+    return _table_column(CheckboxColumn, *args, **kw)
+
+
 class PlotterOption(HasTraits):
     use = Bool
     name = Str(NULL_STR)
@@ -39,6 +52,7 @@ class PlotterOption(HasTraits):
     height = Int(100, enter_set=True, auto_set=False)
     x_error = Bool(False)
     y_error = Bool(False)
+    show_labels = Bool(False)
 
     def _name_changed(self):
         if self.name != NULL_STR:
@@ -51,8 +65,8 @@ class PlotterOption(HasTraits):
                 'radiogenic_yield': 'Radiogenic 40Ar',
                 'kca': 'K/Ca',
                 'kcl': 'K/Cl',
-                'moles_K39': 'K39 Moles'
-        }
+                'moles_K39': 'K39 Moles',
+                'relative_probability': 'Ideogram'}
 
 
 class FitPlotterOption(PlotterOption):
@@ -65,8 +79,18 @@ class SpectrumPlotOption(PlotterOption):
                 'radiogenic_yield': 'Radiogenic 40Ar',
                 'kca': 'K/Ca',
                 'kcl': 'K/Cl',
-                'moles_K39': 'K39 Moles'
-        }
+                'moles_K39': 'K39 Moles',
+                'age_spectrum': 'Age'}
+
+
+class InverseIsochronPlotOption(PlotterOption):
+    def _get_plot_names(self):
+        return {NULL_STR: NULL_STR,
+                #'radiogenic_yield': 'Radiogenic 40Ar',
+                #'kca': 'K/Ca',
+                #'kcl': 'K/Cl',
+                #'moles_K39': 'K39 Moles',
+                'inverse_isochron': 'Inv. Isochron'}
 
 
 FONTS = ['modern', 'arial']
@@ -76,6 +100,8 @@ SIZES = [6, 8, 9, 10, 11, 12, 14, 16, 18, 24, 36]
 class BasePlotterOptions(HasTraits):
     aux_plots = List
     name = Str
+    plot_option_klass = PlotterOption
+    plot_option_name = None
 
     def __init__(self, root, clean=False, *args, **kw):
         super(BasePlotterOptions, self).__init__(*args, **kw)
@@ -132,9 +158,16 @@ class BasePlotterOptions(HasTraits):
                 try:
                     obj = pickle.load(fp)
                     self.trait_set(**obj)
-
                 except (pickle.PickleError, TypeError, EOFError, TraitError):
                     pass
+
+        klass = self.plot_option_klass
+        name = self.plot_option_name
+        if name:
+            pp = next((p for p in self.aux_plots if p.name == name), None)
+            if not pp:
+                po = klass(name=name, height=0)
+                self.aux_plots.append(po)
 
     def __repr__(self):
         return self.name
@@ -163,7 +196,6 @@ class PlotterOptions(BasePlotterOptions):
     ytitle_font_name = Enum(*FONTS)
     #     data_type_editable = Bool(True)
 
-    plot_option_klass = PlotterOption
 
     #    def closed(self, isok):
     #        self._dump()
@@ -279,24 +311,24 @@ class PlotterOptions(BasePlotterOptions):
         return main_grp
 
     def _get_aux_plots_group(self):
-        cols = [
-            CheckboxColumn(name='use'),
-            ObjectColumn(name='name',
-                         width=180,
-                         editor=EnumEditor(name='plot_names')),
-            ObjectColumn(name='scale'),
-            ObjectColumn(name='height'),
-            CheckboxColumn(name='x_error', label='X Error'),
-            CheckboxColumn(name='y_error', label='Y Error'),
-        ]
+        cols = [checkbox_column(name='use', ),
+                object_column(name='name',
+                              width=130,
+                              editor=EnumEditor(name='plot_names')),
+                object_column(name='scale'),
+                object_column(name='height',
+                              format_func=lambda x: str(x) if x else ''),
+                checkbox_column(name='show_labels', label='Labels'),
+                checkbox_column(name='x_error', label='X Error'),
+                checkbox_column(name='y_error', label='Y Error')]
+
         aux_plots_grp = Item('aux_plots',
                              style='custom',
                              show_label=False,
-
                              editor=TableEditor(columns=cols,
                                                 sortable=False,
                                                 deletable=False,
-                                                reorderable=False
+                                                reorderable=False,
                              ))
         return aux_plots_grp
 
@@ -306,13 +338,14 @@ class PlotterOptions(BasePlotterOptions):
             VGroup(
                 self._create_axis_group('y', 'title'),
                 self._create_axis_group('y', 'tick'),
-                #                                           show_border=True,
                 label='Y'),
-            label='Axes'
-        )
+            label='Axes')
+
         main_grp = self._get_main_group()
 
-        g = Group(main_grp, axis_grp, layout='tabbed')
+        g = Group(main_grp,
+                  axis_grp,
+                  layout='tabbed')
         grps = self._get_groups()
         if grps:
             g.content.extend(grps)
@@ -349,6 +382,7 @@ class IdeogramOptions(AgeOptions):
     centered_range = Float(0.5)
     display_mean_indicator = Bool(True)
     display_mean = Bool(True)
+    plot_option_name = 'relative_probability'
 
     def _get_x_axis_group(self):
         vg = super(IdeogramOptions, self)._get_x_axis_group()
@@ -409,6 +443,7 @@ class SpectrumOptions(AgeOptions):
     force_plateau = Bool(False)
     plateau_steps = Property(Str)
     _plateau_steps = Str
+    plot_option_name = 'age_spectrum'
 
     def _get_plateau_steps(self):
         return self._plateau_steps
@@ -454,7 +489,8 @@ class SpectrumOptions(AgeOptions):
 
 
 class InverseIsochronOptions(AgeOptions):
-    pass
+    plot_option_name = 'inverse_isochron'
+    plot_option_klass = InverseIsochronPlotOption
 
 
 class SeriesOptions(BasePlotterOptions):

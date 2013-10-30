@@ -15,19 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, on_trait_change, Any
-from traitsui.api import View, Item
+from traits.api import on_trait_change, Any
 from pyface.action.action import Action
-from pyface.tasks.task_window_layout import TaskWindowLayout
 from pyface.tasks.action.task_action import TaskAction
 #============= standard library imports ========================
 #============= local library imports  ==========================
-import os
-from src.paths import paths
-import shelve
 
 import webbrowser
-from pyface.confirmation_dialog import ConfirmationDialog, confirm
+from pyface.confirmation_dialog import confirm
 from pyface.constant import YES
 
 #===============================================================================
@@ -44,7 +39,7 @@ class IssueAction(WebAction):
         '''
             goto issues page add an request or report bug
         '''
-        url = 'http://code.google.com/p/arlab'
+        url = 'http://code.google.com/p/arlab/issues/list'
         self._open_url(url)
 
 

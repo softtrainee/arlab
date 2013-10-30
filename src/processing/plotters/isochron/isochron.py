@@ -21,14 +21,11 @@ from chaco.array_data_source import ArrayDataSource
 #============= standard library imports ========================
 from numpy import array, linspace, delete
 #============= local library imports  ==========================
-from src.codetools.simple_timeit import timethis
 
 from src.helpers.formatting import calc_percent_error, floatfmt
-from src.processing.argon_calculations import age_equation
 from src.processing.plotters.arar_figure import BaseArArFigure
 
-from src.stats.peak_detection import find_peaks
-from src.stats.core import calculate_weighted_mean, calculate_mswd, validate_mswd
+from src.stats.core import calculate_mswd, validate_mswd
 from src.graph.error_ellipse_overlay import ErrorEllipseOverlay
 from src.regression.new_york_regressor import ReedYorkRegressor
 
@@ -63,7 +60,7 @@ class InverseIsochron(Isochron):
         """
         graph = self.graph
 
-        self._plot_inverse_isochron(graph.plots[0], 0)
+        #self._plot_inverse_isochron(graph.plots[0], 0)
 
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
             getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1)
@@ -90,7 +87,7 @@ class InverseIsochron(Isochron):
     def _add_plot(self, xs, ys, es, plotid, value_scale='linear'):
         pass
 
-    def _plot_inverse_isochron(self, plot, pid):
+    def _plot_inverse_isochron(self, po, plot, pid):
         analyses = self.sorted_analyses
         plot.padding_left = 75
 

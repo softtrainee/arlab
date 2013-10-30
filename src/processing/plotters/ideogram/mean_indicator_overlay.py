@@ -106,7 +106,7 @@ def render_end_cap(gc, x, y, length=3):
         gc.begin_path()
         gc.move_to(x, y - l)
         gc.line_to(x, y + l)
-        print x, y, y - l, y + l
+        #print x, y, y - l, y + l
         gc.draw_path()
 
 
@@ -120,6 +120,7 @@ class MeanIndicatorOverlay(AbstractOverlay, Movable):
     nsigma = Int
 
     marker = Str('vertical')
+    end_cap_length = Int(4)
 
     def clear(self):
         self.altered_screen_point = None
@@ -171,7 +172,9 @@ class MeanIndicatorOverlay(AbstractOverlay, Movable):
             e = self.error / 2.0 * max(1, self.nsigma)
             p1, p2 = self.component.map_screen([(self.x - e, 0), (self.x + e, 0)])
 
-            render_error_bar(gc, p1[0], p2[0], y, self._color)
+            render_error_bar(gc, p1[0], p2[0], y,
+                             self._color,
+                             end_caps=self.end_cap_length)
 
         for o in self.overlays:
             o.overlay(other_component, gc, view_bounds=view_bounds, mode=mode)

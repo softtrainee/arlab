@@ -43,13 +43,17 @@ class BaseMeasurement(HasTraits):
     detector = Str
 
     unpack_error = None
+    endianness = '>'
+    reverse_unpack = False
 
-    def __init__(self, dbrecord=None, unpack=True, *args, **kw):
+    def __init__(self, dbrecord=None, unpack=True, unpacker=None, *args, **kw):
         super(BaseMeasurement, self).__init__(*args, **kw)
 
         if dbrecord and unpack:
             try:
-                xs, ys = self._unpack_blob(dbrecord.signal.data)
+                if unpacker is None:
+                    unpacker = lambda x: x.signal.data
+                xs, ys = self._unpack_blob(unpacker(dbrecord))
             except (ValueError, TypeError, IndexError, AttributeError), e:
                 self.unpack_error = e
                 return
@@ -57,9 +61,17 @@ class BaseMeasurement(HasTraits):
             self.xs = array(xs)
             self.ys = array(ys)
 
-    def _unpack_blob(self, blob, endianness='>'):
+    def _unpack_blob(self, blob, endianness=None):
+        if endianness is None:
+            endianness = self.endianness
+
         try:
-            return zip(*[struct.unpack('{}ff'.format(endianness), blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
+            x, y = zip(*[struct.unpack('{}ff'.format(endianness), blob[i:i + 8]) for i in xrange(0, len(blob), 8)])
+            if self.reverse_unpack:
+                return y, x
+            else:
+                return x, y
+
         except struct.error, e:
             print 'unpack_blob', e
 
