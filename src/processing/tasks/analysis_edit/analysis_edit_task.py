@@ -104,13 +104,14 @@ class AnalysisEditTask(BaseBrowserTask):
             analyses selected in figure e.g temp_status!=0
 
         """
-        items = self.unknowns_pane.selected
-        if not items:
-            items = [i for i in self.unknowns_pane.items if i.temp_status != 0]
-
-        if items:
-            tag = self._get_tagname()
-            if tag:
+        
+        tag = self._get_tagname()
+        if tag:
+            items = self.unknowns_pane.selected
+            if not items:
+                items = [i for i in self.unknowns_pane.items if i.temp_status != 0]
+        
+            if items:
                 db = self.manager.db
                 name = tag.name
                 with db.session_ctx():
@@ -126,7 +127,9 @@ class AnalysisEditTask(BaseBrowserTask):
 
                 self.unknowns_pane.refresh_needed = True
                 self.active_editor.rebuild(refresh_data=False)
-
+            else:
+                self.warning_dialog('Not analyses selected to Tag')
+                
     def prepare_destroy(self):
         if self.unknowns_pane:
             self.unknowns_pane.dump()
