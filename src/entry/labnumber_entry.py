@@ -26,27 +26,17 @@ from pyface.image_resource import ImageResource
 import os
 #============= local library imports  ==========================
 from src.canvas.canvas2D.irradiation_canvas import IrradiationCanvas
-from src.experiment.entry.irradiation_loader import XLSIrradiationLoader
-from src.experiment.entry.irradiation_pdf_writer import IrradiationPDFWriter, LabbookPDFWriter
-from src.experiment.entry.irradiation_table_view import IrradiationTableView
-from src.experiment.entry.labnumber_generator import LabnumberGenerator
+from src.entry.irradiation_loader import XLSIrradiationLoader
+from src.entry.irradiation_pdf_writer import IrradiationPDFWriter, LabbookPDFWriter
+from src.entry.irradiation_table_view import IrradiationTableView
+from src.entry.labnumber_generator import LabnumberGenerator
 from src.paths import paths
-from src.experiment.entry.irradiation import Irradiation
-from src.experiment.entry.level import Level, load_holder_canvas, iter_geom
-# from src.processing.entry.flux_monitor import FluxMonitor
-# from src.processing.entry.db_entry import DBEntry
-# from src.irradiation.irradiated_position import IrradiatedPosition, \
-#    IrradiatedPositionAdapter
+from src.entry.irradiation import Irradiation
+from src.entry.level import Level, load_holder_canvas, iter_geom
 from src.pychron_constants import NULL_STR, ALPHAS
 from src.database.isotope_database_manager import IsotopeDatabaseManager
-from src.experiment.entry.irradiated_position import IrradiatedPosition
-# import math
-# from src.processing.publisher.writers.pdf_writer import SimplePDFWriter
-# from src.processing.publisher.templates.tables.irradiation_table import IrradiationTable
-# from src.database.orms.isotope_orm import gen_ProjectTable, gen_SampleTable
+from src.entry.irradiated_position import IrradiatedPosition
 from src.database.orms.isotope.gen import gen_ProjectTable, gen_SampleTable
-# from src.ui.thread import Thread
-# from pyface.timer.do_later import do_later
 
 
 class LabnumberEntry(IsotopeDatabaseManager):
