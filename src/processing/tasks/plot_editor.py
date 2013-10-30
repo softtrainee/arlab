@@ -15,17 +15,17 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+import copy
 from chaco.axis import DEFAULT_TICK_FORMATTER
 from chaco.base_xy_plot import BaseXYPlot
 from chaco.scatterplot import ScatterPlot
 from enable.colors import transparent_color
 from enable.enable_traits import LineStyle
 from enable.markers import MarkerTrait
-from kiva.trait_defs.kiva_font_trait import KivaFont
 from traits.api import HasTraits, Any, Float, Int, on_trait_change, Bool, \
-    Instance, List, Range, Color, Str, Font
+    Instance, List, Range, Color, Str, Font, Enum
 from traitsui.api import View, Item, Group, VGroup, UItem, ListEditor, \
-    InstanceEditor, Heading, RangeEditor, HGroup
+    InstanceEditor, Heading, HGroup
 # from pyface.timer.do_later import do_later
 # from traitsui.editors.range_editor import RangeEditor
 # from numpy.core.numeric import Inf
@@ -58,6 +58,9 @@ class PlotEditor(HasTraits):
 
     title_spacing = EFloat
     tick_visible = Bool
+    title_font_size = Enum(6, 8, 10, 11, 12, 14, 15, 18, 22, 24, 36)
+    tick_font_size = Enum(6, 8, 10, 11, 12, 14, 15, 18, 22, 24, 36)
+
     x_grid = Bool
     y_grid = Bool
 
@@ -67,6 +70,22 @@ class PlotEditor(HasTraits):
     def _update_padding(self, name, new):
         self.plot.trait_set(**{name: new})
         self.plot._layout_needed = True
+        self.plot.invalidate_and_redraw()
+
+    @on_trait_change('title_font_size')
+    def _update_title_font(self):
+        f = copy.copy(self.plot.y_axis.title_font)
+
+        f.size = self.title_font_size
+        self.plot.y_axis.title_font = f
+        self.plot.invalidate_and_redraw()
+
+    @on_trait_change('tick_font_size')
+    def _update_tick_font(self):
+        f = copy.copy(self.plot.y_axis.tick_label_font)
+
+        f.size = self.tick_font_size
+        self.plot.y_axis.tick_label_font = f
         self.plot.invalidate_and_redraw()
 
     @on_trait_change('title_spacing')
@@ -120,7 +139,7 @@ class PlotEditor(HasTraits):
         #self.y_grid = self.plot.y_grid.visible
         traits['title_spacing'] = self.plot.value_axis.title_spacing
         traits['tick_visible'] = self.plot.value_axis.tick_visible
-        #
+
         traits['x_grid'] = self.plot.x_grid.visible
         traits['y_grid'] = self.plot.y_grid.visible
 
@@ -196,50 +215,50 @@ class PlotEditor(HasTraits):
         y_grp = Group(
             Item('title_spacing'),
             Item('tick_visible'),
-            label='Y Axis',
-        )
+            Item('title_font_size'),
+            Item('tick_font_size'),
+            label='Y Axis', )
 
         grids_grp = Group(
             Item('x_grid'),
             Item('y_grid'),
-            label='Grids'
-        )
+            label='Grids')
+
         renderers_grp = Group(
             UItem('renderers', editor=ListEditor(mutable=False,
                                                  style='custom',
                                                  editor=InstanceEditor())
             ),
-            label='Plots'
-        )
+            label='Plots')
 
         general_grp = VGroup(
             Group(
                 #                           Item('xauto', label='Autoscale'),
-                Item('xmin'),
-                Item('xmax'),
+                Item('xmin', format_str='%0.4f'),
+                Item('xmax', format_str='%0.4f'),
             ),
             Group(
                 #                           Item('yauto', label='Autoscale'),
-                Item('ymin'),
-                Item('ymax'),
+                Item('ymin', format_str='%0.4f'),
+                Item('ymax', format_str='%0.4f'),
             ),
             y_grp,
             grids_grp,
-            label='General'
-        )
+            label='General')
+
         layout_grp = Group(
             Item('padding_left', label='Left'),
-                Item('padding_right', label='Right'),
-                Item('padding_top', label='Top'),
-                Item('padding_bottom', label='Bottom'),
-                label='Padding'
-        )
+            Item('padding_right', label='Right'),
+            Item('padding_top', label='Top'),
+            Item('padding_bottom', label='Bottom'),
+            label='Padding')
 
         v = View(
-            renderers_grp,
             general_grp,
+            renderers_grp,
             layout_grp,
         )
+
         return v
 
 

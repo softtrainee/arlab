@@ -16,23 +16,20 @@
 
 #============= enthought library imports =======================
 from envisage.ui.tasks.task_extension import TaskExtension
-from envisage.ui.tasks.task_factory import TaskFactory
 from pyface.tasks.action.schema_addition import SchemaAddition
-from traits.api import HasTraits
-from traitsui.api import View, Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.database.tasks.actions import UpdateDatabaseAction
 from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
-from src.database.tasks.connection_preferences import ConnectionPreferencesPane
+from src.database.tasks.connection_preferences import ConnectionPreferencesPane, MassSpecConnectionPane
 from src.database.isotope_database_manager import IsotopeDatabaseManager
 
 
 class DatabasePlugin(BaseTaskPlugin):
     def _preferences_panes_default(self):
         return [
-            ConnectionPreferencesPane
-        ]
+            ConnectionPreferencesPane,
+            MassSpecConnectionPane]
 
     def _service_offers_default(self):
         so = self.service_offer_factory(

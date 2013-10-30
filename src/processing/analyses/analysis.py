@@ -374,9 +374,12 @@ class DBAnalysis(Analysis):
                              **kw)
                 fit = self.get_db_fit(meas_analysis, name, 'baseline')
                 if fit is None:
-                    fit = Fit(fit='average_sem', filter_outliers=True,
-                              filter_outlier_iterations=1,
-                              filter_outlier_std_devs=2)
+                    fit = Fit(fit='average_sem',
+                              filter_outliers=False,
+                              filter_outlier_iterations=0,
+                              filter_outlier_std_devs=0
+                    )
+
                 r.set_fit(fit)
                 iso.baseline = r
 

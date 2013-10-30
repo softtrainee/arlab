@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Float, Array
+from traits.api import Array
 #============= standard library imports ========================
 from numpy import hstack, array
 # from chaco.array_data_source import ArrayDataSource
@@ -29,13 +29,8 @@ from src.processing.plotters.arar_figure import BaseArArFigure
 #     RectSelectionTool
 # from src.graph.tools.analysis_inspector import AnalysisPointInspector
 # from src.graph.tools.point_inspector import PointInspectorOverlay
-from chaco.data_label import DataLabel
-from src.stats.peak_detection import find_peaks
-from src.stats.core import calculate_weighted_mean
 # from numpy.core.numeric import Inf
 # from src.processing.plotters.point_move_tool import PointMoveTool
-from src.helpers.formatting import floatfmt
-from chaco.tools.data_label_tool import DataLabelTool
 from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
 from src.processing.plotters.spectrum.tools import SpectrumTool, \
     SpectrumErrorOverlay, PlateauTool, PlateauOverlay
@@ -61,8 +56,7 @@ class Spectrum(BaseArArFigure):
         '''
         graph = self.graph
 
-        self._plot_age_spectrum(graph.plots[0], 0)
-
+        #self._plot_age_spectrum(graph.plots[0], 0)
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
             getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid + 1)
 
@@ -85,7 +79,7 @@ class Spectrum(BaseArArFigure):
     #             self._add_error_bars(scatter, es, 'y', 1,
     #                              visible=po.y_error)
 
-    def _plot_age_spectrum(self, plot, pid):
+    def _plot_age_spectrum(self, po, plot, pid):
         graph = self.graph
 
         xs, ys, es, c39s = self._calculate_spectrum()

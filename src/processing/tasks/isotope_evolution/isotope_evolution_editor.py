@@ -15,16 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Dict, on_trait_change, Bool
-from traitsui.api import View, Item, UItem
+from traits.api import Instance, Dict, Bool
+from traitsui.api import View, UItem
 from enable.component_editor import ComponentEditor
 from chaco.plot_containers import GridPlotContainer
 #============= standard library imports ========================
-import os
 from numpy import Inf, polyfit
 
 #============= local library imports  ==========================
-from src.codetools.simple_timeit import timethis
 from src.processing.tasks.analysis_edit.fits import IsoEvoFitSelector
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 
@@ -128,16 +126,21 @@ class IsotopeEvolutionEditor(GraphEditor):
         if not fits:
             return
 
-        add_tools = bind_index = self.tool.auto_update
+        prog = None
         n = len(self.unknowns)
-        prog = self.processor.open_progress(n)
+        if n > 1:
+            prog = self.processor.open_progress(n)
+
+        add_tools = bind_index = self.tool.auto_update or n == 1
 
         for j, unk in enumerate(self.unknowns):
             set_ytitle = j % c == 0
             set_xtitle = j >= (n / r)
             g = self._graph_factory(bind_index=bind_index)
             plot_kw = dict(padding=[50, 1, 1, 1],
-                           title=unk.record_id)
+                           title=unk.record_id,
+                           border_width=2
+            )
 
             with g.no_regression(refresh=False):
                 ma = -Inf
@@ -187,16 +190,14 @@ class IsotopeEvolutionEditor(GraphEditor):
             if set_x_flag:
                 g.set_x_limits(0, ma * 1.1)
                 g.refresh()
-
                 #self.graphs[unk.record_id] = g
 
-            prog.change_message('Plotting {}'.format(unk.record_id))
-            prog.increment()
-
             self.component.add(g.plotcontainer)
-            self.component.invalidate_draw()
+            #self.component.invalidate_draw()
             self.component.request_redraw()
-
+            if prog:
+                prog.change_message('Plotting {}'.format(unk.record_id))
+                prog.increment()
 
     #def refresh_unknowns(self):
     #    if not self._suppress_update:

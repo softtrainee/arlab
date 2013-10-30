@@ -15,26 +15,19 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import on_trait_change
-from src.envisage.tasks.editor_task import EditorTask
+from pyface.tasks.task_layout import TaskLayout, PaneItem, Tabbed
+from pyface.tasks.action.schema import SToolBar
+
+from src.processing.tasks.recall.actions import AddIsoEvoAction, AddDiffAction
+from src.processing.tasks.recall.diff_editor import DiffEditor
 from src.processing.tasks.recall.recall_editor import RecallEditor
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
-from pyface.tasks.task_layout import Splitter, TaskLayout, PaneItem, Tabbed
 from src.processing.tasks.analysis_edit.panes import ControlsPane
 from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
-from src.loading.actions import SaveLoadingAction
-from pyface.tasks.action.schema import SToolBar
-from pyface.tasks.action.task_action import TaskAction
-from pyface.image_resource import ImageResource
-from src.paths import paths
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-class AddIsoEvoAction(TaskAction):
-    method = 'add_iso_evo'
-    image = ImageResource(name='chart_curve_add.png',
-                          search_path=paths.icon_search_path
-    )
 
 
 class RecallTask(AnalysisEditTask):
@@ -42,6 +35,7 @@ class RecallTask(AnalysisEditTask):
 
     tool_bars = [
         SToolBar(AddIsoEvoAction(),
+                 AddDiffAction(),
                  image_size=(16, 16))]
 
     def activated(self, load=False):
@@ -68,6 +62,7 @@ class RecallTask(AnalysisEditTask):
             #             an.load_isotopes(refit=False)
             #self.active_editor.analysis_summary = an.analysis_summary
             self.active_editor.analysis_view = an.analysis_view
+            self.active_editor.model = an
 
     def create_dock_panes(self):
         return [self._create_browser_pane(multi_select=False)]
@@ -129,10 +124,19 @@ class RecallTask(AnalysisEditTask):
 
         ieditor = IsotopeEvolutionEditor(
             name='IsoEvo {}'.format(name),
-            processor=self.manager,
-        )
+            processor=self.manager)
 
         ieditor.unknowns = [rec]
         self.editor_area.add_editor(ieditor)
+
+    def add_diff(self):
+        left = None
+        if self.active_editor:
+            left = self.active_editor.model
+
+        if left:
+            editor = DiffEditor()
+            editor.set_diff(left)
+            self.editor_area.add_editor(editor)
 
 #============= EOF =============================================

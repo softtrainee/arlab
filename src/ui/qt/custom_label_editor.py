@@ -14,26 +14,27 @@
 # limitations under the License.
 #===============================================================================
 from traits.etsconfig.etsconfig import ETSConfig
+
 ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Int, Color, Button, Any, Instance
-from traitsui.api import View, Item, TableEditor, UItem, Label
+from traitsui.api import View, Item
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 # from traitsui.wx.basic_editor_factory import BasicEditorFactory
 # import wx
 #============= standard library imports ========================
 import random
-from PySide.QtGui import QLabel, QVBoxLayout, QHBoxLayout, QFont
-from PySide.QtCore import Qt
+from PySide.QtGui import QLabel
 #============= local library imports  ==========================
 
 class _CustomLabelEditor(Editor):
 #    txtctrl = Any
     color = Any
+
     def init(self, parent):
         self.control = self._create_control(parent)
-#        self.item.on_trait_change(self._set_color, 'color')
+        #        self.item.on_trait_change(self._set_color, 'color')
         self.sync_value(self.factory.color, 'color', mode='from')
 
     def _color_changed(self):
@@ -49,47 +50,48 @@ class _CustomLabelEditor(Editor):
 
     def update_editor(self):
         if self.control:
-#             print self.object, self.value
+        #             print self.object, self.value
             if isinstance(self.value, (str, int, float, long, unicode)):
                 self.control.setText(str(self.value))
-#            self.control.SetLabel(self.value)
+            #            self.control.SetLabel(self.value)
 
     def _create_control(self, parent):
         control = QLabel()
         color = self.item.color.name()
         self._set_color(color, control)
-#        css = '''QLabel {{ color:{}; font-size:{}px; font-weight:{};}}
-# # '''.format(self.item.color.name(), self.item.size, self.item.weight)
-#        control.setStyleSheet(css)
+        #        css = '''QLabel {{ color:{}; font-size:{}px; font-weight:{};}}
+        # # '''.format(self.item.color.name(), self.item.size, self.item.weight)
+        #        control.setStyleSheet(css)
 
 
-#        control.setAlignment(Qt.AlignCenter)
-#        control.setGeometry(0, 0, self.item.width, self.item.height)
-#        vbox = QVBoxLayout()
-#        vbox.setSpacing(0)
+        #        control.setAlignment(Qt.AlignCenter)
+        #        control.setGeometry(0, 0, self.item.width, self.item.height)
+        #        vbox = QVBoxLayout()
+        #        vbox.setSpacing(0)
 
-#        hbox = QHBoxLayout()
+        #        hbox = QHBoxLayout()
 
-#        hbox.addLayout(vbox)
-#        parent.addLayout(vbox)
+        #        hbox.addLayout(vbox)
+        #        parent.addLayout(vbox)
 
         control.setMargin(5)
         parent.setSpacing(0)
-#        print vbox.getContentsMargins()
-#        vbox.setContentsMargins(5, 5, 5, 5)
-#        vbox.setSpacing(-1)
-#        vbox.addSpacing(5)
-#        vbox.addSpacing(10)
-#        vbox.addWidget(control)
-#        vbox.addSpacing(5)
-#        vbox.addStretch()
+        #        print vbox.getContentsMargins()
+        #        vbox.setContentsMargins(5, 5, 5, 5)
+        #        vbox.setSpacing(-1)
+        #        vbox.addSpacing(5)
+        #        vbox.addSpacing(10)
+        #        vbox.addWidget(control)
+        #        vbox.addSpacing(5)
+        #        vbox.addStretch()
 
-#        vbox.setSpacing(-1)
-#        vbox.setMargin(10)
-#        control.setLayout(vbox)
-#        parent.addWidget(control)
+        #        vbox.setSpacing(-1)
+        #        vbox.setMargin(10)
+        #        control.setLayout(vbox)
+        #        parent.addWidget(control)
         return control
-#        panel = wx.Panel(parent, -1)
+
+    #        panel = wx.Panel(parent, -1)
 #        size = None
 #        if self.item.width > 1 and self.item.height > 1:
 #            size = (self.item.width, self.item.height)
@@ -139,7 +141,8 @@ class CustomLabelEditor(BasicEditorFactory):
     klass = _CustomLabelEditor
     color = Str
 
-class CustomLabel(UItem):
+
+class CustomLabel(Item):
     editor = Instance(CustomLabelEditor, ())
     size = Int(12)
 
@@ -152,6 +155,7 @@ class CustomLabel(UItem):
     left_padding = Int(5)
     right_padding = Int(5)
 
+
     def _color_name_changed(self):
         self.editor.color = self.color_name
 
@@ -163,6 +167,7 @@ class Demo(HasTraits):
     foo = Button
     color = Color('blue')
     cnt = 0
+
     def _foo_fired(self):
         self.a = 'fffff {}'.format(random.random())
         if self.cnt % 2 == 0:
@@ -170,20 +175,22 @@ class Demo(HasTraits):
         else:
             self.color = 'blue'
         self.cnt += 1
+
     def traits_view(self):
 
         v = View(
-                 'foo',
-                 CustomLabel('a',
-#                             color='blue',
-                             size=24,
-                             top_padding=10,
-                             left_padding=10,
-                             color_name='color'
-                             ),
-                  width=100,
-                 height=100)
+            'foo',
+            CustomLabel('a',
+                        #                             color='blue',
+                        size=24,
+                        top_padding=10,
+                        left_padding=10,
+                        color_name='color'
+            ),
+            width=100,
+            height=100)
         return v
+
 
 if __name__ == '__main__':
     d = Demo()

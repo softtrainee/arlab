@@ -17,7 +17,7 @@
 
 
 #=============enthought library imports=======================
-from traits.api import Bool, on_trait_change, List, Event
+from traits.api import Bool, on_trait_change, Event
 from chaco.scatterplot import ScatterPlot
 #=============standard library imports ========================
 
@@ -40,6 +40,7 @@ class StackedGraph(Graph):
     padding_bottom = 50
 
     metadata_updated = Event
+    vertical_resize = Bool(True)
 
     @on_trait_change('plots:value_axis:title_spacing')
     def _update_value_axis(self, obj, name, old, new):
@@ -98,15 +99,17 @@ class StackedGraph(Graph):
                 kw.pop('title')
             self._has_title = True
 
-        if n > 0:
+        if not self.vertical_resize:
             kw['resizable'] = 'h'
+
+        if n > 0:
             if 'bounds' not in kw:
                 kw['bounds'] = (1, self.panel_height)
 
         p = super(StackedGraph, self).new_plot(**kw)
         p.value_axis.ensure_labels_bounded = True
-
         p.value_axis.title_spacing = 40
+
         #p.value_axis.on_trait_change(self._update_foo, 'updated')
         #if self.bind_padding:
         #    p.on_trait_change(self._update_padding, 'padding_left, padding_right')
@@ -200,7 +203,8 @@ class StackedGraph(Graph):
             vertically resizes the stacked graph.
             the plots are sized equally
         '''
-        self._update_bounds(bounds, self.plotcontainer.components)
+        if self.vertical_resize:
+            self._update_bounds(bounds, self.plotcontainer.components)
 
     def _update_bounds(self, bounds, comps):
 

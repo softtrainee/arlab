@@ -21,6 +21,7 @@ import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
+from src.envisage.tasks.pane_helpers import new_button_editor
 from src.viewable import Viewable
 from src.processing.plotters.plotter_options import PlotterOptions, \
     IdeogramOptions, SpectrumOptions, InverseIsochronOptions, SeriesOptions, \
@@ -65,11 +66,11 @@ class PlotterOptionsManager(Viewable):
 
     def set_plotter_options(self, name):
         self.plotter_options = next((pi for pi in self.plotter_options_list
-                                         if pi.name == name), None)
+                                     if pi.name == name), None)
 
-#===============================================================================
-# handlers
-#===============================================================================
+    #===============================================================================
+    # handlers
+    #===============================================================================
     def _add_options_fired(self):
         info = self.edit_traits(view='new_options_name_view')
         if info.result:
@@ -89,34 +90,33 @@ class PlotterOptionsManager(Viewable):
 
     def new_options_name_view(self):
         v = View(
-                 Item('new_options_name', label='New Plot Options Name'),
-                 width=500,
-                 title=' ',
-                 buttons=['OK', 'Cancel'],
-                 kind='livemodal')
+            Item('new_options_name', label='New Plot Options Name'),
+            width=500,
+            title=' ',
+            buttons=['OK', 'Cancel'],
+            kind='livemodal')
         return v
 
     def traits_view(self):
         v = View(
-                 HGroup(
-                    Item('plotter_options', show_label=False,
-                         editor=EnumEditor(name='plotter_options_list'),
-                         tooltip='List of available plot options'
-                         ),
-                    Item('add_options', tooltip='Add new plot options',
-                         show_label=False),
-                    Item('delete_options',
-                         tooltip='Delete current plot options',
-                         enabled_when='object.plotter_options.name!="Default"',
-                         show_label=False),
-                        ),
-                   Item('plotter_options', show_label=False,
-                        style='custom'),
-                 resizable=True,
-                 buttons=['OK', 'Cancel'],
-                 handler=self.handler_klass,
-                 title=self.title
-                )
+            HGroup(
+                Item('plotter_options', show_label=False,
+                     editor=EnumEditor(name='plotter_options_list'),
+                     tooltip='List of available plot options'),
+                new_button_editor('add_options',
+                                  'add',
+                                  tooltip='Add new plot options',
+                                  show_label=False),
+                new_button_editor('delete_options',
+                                  'delete',
+                                  tooltip='Delete current plot options',
+                                  enabled_when='object.plotter_options.name!="Default"',
+                                  show_label=False)),
+            Item('plotter_options',
+                 show_label=False,
+                 style='custom'),
+            resizable=True,
+            handler=self.handler_klass)
         return v
 
     @cached_property
@@ -156,15 +156,18 @@ class IdeogramOptionsManager(PlotterOptionsManager):
     persistence_name = 'ideogram'
     title = 'Ideogram Plot Options'
 
+
 class SpectrumOptionsManager(PlotterOptionsManager):
     plotter_options_klass = SpectrumOptions
     persistence_name = 'spectrum'
     title = 'Spectrum Plot Options'
 
+
 class InverseIsochronOptionsManager(PlotterOptionsManager):
     plotter_options_klass = InverseIsochronOptions
     persistence_name = 'inverse_isochron'
     title = 'Isochron Plot Options'
+
 
 class SeriesOptionsManager(PlotterOptionsManager):
     plotter_options_klass = SeriesOptions

@@ -15,35 +15,34 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Any, Str, List
-from traitsui.api import View, Item, EnumEditor, UItem, InstanceEditor
-from pyface.tasks.traits_dock_pane import TraitsDockPane
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class FigureSelectorPane(TraitsDockPane):
-    name = 'Saved Figures'
-    figure = Str
-    figures = List
-
-    def traits_view(self):
-        v = View(Item('figure',
-                      editor=EnumEditor(name='figures')))
-        return v
+from src.processing.analyses.analysis import Analysis
+from src.processing.isotope import Isotope, Blank, Baseline
 
 
-class PlotterOptionsPane(TraitsDockPane):
-    """
-        Pane for displaying the active editor's plotter options manager
-    """
-    id = 'pychron.processing.figures.plotter_options'
+class MassSpecAnalysis(Analysis):
+    def _sync(self, obj):
+        for dbiso in obj.isotopes:
+            r = dbiso.results[-1]
+            uv = r.Iso
+            ee = r.IsoEr
 
-    name = 'Plot Options'
-    pom = Any
+            bv = r.Bkgd
+            be = r.BkgdEr
 
-    def traits_view(self):
-        v = View(UItem('pom',
-                       editor=InstanceEditor(),
-                       style='custom'))
-        return v
+            key = dbiso.Label
+            iso = Isotope(name=key, value=uv, error=ee)
+
+            iso.baseline = Baseline(name=key,
+                                    reverse_unpack=True,
+                                    dbrecord=dbiso.baseline,
+                                    unpacker=lambda x: x.PeakTimeBlob,
+                                    fit='average_SEM')
+
+            iso.blank = Blank(name=key, value=bv, error=be)
+            self.isotopes[key] = iso
+
 
 #============= EOF =============================================

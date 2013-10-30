@@ -17,25 +17,29 @@
 #============= enthought library imports =======================
 from pyface.image_resource import ImageResource
 from traits.api import Str, Password, Enum, List, Button, Any, Int, \
-    on_trait_change
-from traitsui.api import View, Item, Group, VGroup, HGroup, ListStrEditor, ButtonEditor
+    on_trait_change, Color
+from traitsui.api import View, Item, Group, VGroup, HGroup, ListStrEditor, ButtonEditor, \
+    spring, Label
 from traitsui.list_str_adapter import ListStrAdapter
 from envisage.ui.tasks.preferences_pane import PreferencesPane
+from src.database.core.database_adapter import DatabaseAdapter
 
 from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.paths import paths
+from src.ui.custom_label_editor import CustomLabel
 
 
-def button_editor(name, editor_kw=None, **kw):
+def button_editor(trait, name, editor_kw=None, **kw):
     if editor_kw is None:
         editor_kw = {}
 
     image = ImageResource(name=name,
                           search_path=paths.icon_search_path)
-    return Item(name, style='custom',
+    return Item(trait,
+                style='custom',
                 editor=ButtonEditor(image=image, **editor_kw),
                 **kw)
 
@@ -50,10 +54,8 @@ class FavoritesAdapter(ListStrAdapter):
 
 
 class ConnectionPreferences(BasePreferencesHelper):
-    name = 'Connection'
     preferences_path = 'pychron.database'
-    id = 'pychron.database.preferences_page'
-    #    username = Str
+    #id = 'pychron.database.preferences_page'
 
     db_fav_name = Str
     db_name = Str
@@ -61,25 +63,32 @@ class ConnectionPreferences(BasePreferencesHelper):
     db_password = Password
     db_host = Str
     db_kind = Enum('---', 'mysql', 'sqlite')
-
-    #    repo_kind = Enum('---', 'local', 'FTP')
-    #
-    #    ftp_username = Str
-    #    ftp_password = Password
-    #    ftp_host = Str
-    #    repo_root = Str
-
-    massspec_dbname = Str
-    massspec_username = Str
-    massspec_password = Password
-    massspec_host = Str
+    test_connection = Button
 
     favorites = List
     add_favorite = Button('+')
     delete_favorite = Button('-')
     selected = Any
-    #    selected_live = Any
     selected_index = Int
+    connected_label = Str
+    connected_color = Color('green')
+
+    def _test_connection_fired(self):
+        db = DatabaseAdapter(username=self.db_username,
+                             host=self.db_host,
+                             password=self.db_password,
+                             name=self.db_name,
+                             kind=self.db_kind)
+
+        self.connected_label = ''
+        c = db.connect()
+        if c:
+            self.connected_label = 'Connected'
+            self.connected_color = 'green'
+        else:
+            self.connected_label = 'Not Connected'
+            self.connected_color = 'red'
+
 
     @on_trait_change('db+')
     def db_attribute_changed(self, obj, name, old, new):
@@ -120,7 +129,6 @@ class ConnectionPreferences(BasePreferencesHelper):
                                         'host', 'name', 'password']):
                     setattr(self, 'db_{}'.format(attr), str(v))
 
-
     def _add_favorite_fired(self):
         if self.db_fav_name:
             fv = ','.join([self.db_fav_name,
@@ -156,15 +164,6 @@ class ConnectionPreferencesPane(PreferencesPane):
             label='Authentication'
         )
 
-        #        ftp_auth_grp = Group(Item('ftp_host', label='Host'),
-        #                             Item('ftp_username', label='Name'),
-        #                             Item('ftp_password', label='Password'),
-        #                             Item('repo_root', label='Data directory'),
-        #                             enabled_when='repo_kind=="FTP"',
-        #                             show_border=True,
-        #                             label='Authentication'
-        #                             )
-
         fav_grp = VGroup(Item('db_fav_name',
                               #                              editor=EnumEditor(name='favorites'),
                               show_label=False),
@@ -177,15 +176,42 @@ class ConnectionPreferencesPane(PreferencesPane):
                                   selected='object.selected',
                               )),
                          HGroup(
-                             Item('add_favorite'),
-                             Item('delete_favorite'),
+                             button_editor('add_favorite', 'add',
+                                           tooltip='Add saved connection'),
+                             button_editor('delete_favorite', 'delete',
+                                           tooltip='Delete saved connection'),
+                             button_editor('test_connection', 'database_connect',
+                                           tooltip='Test connection'),
+                             spring,
+                             Label('Status:'),
+                             CustomLabel('connected_label',
+                                         label='Status',
+                                         weight='bold',
+                                         color_name='connected_color'),
+
                              show_labels=False))
 
         db_grp = Group(HGroup(Item('db_kind', show_label=False)),
                        Item('db_name', label='Name'),
                        HGroup(fav_grp, db_auth_grp),
-                       show_border=True, label='Main DB')
+                       label='Main DB')
 
+        return View(db_grp)
+
+
+class MassSpecConnectionPreferences(BasePreferencesHelper):
+    preferences_path = 'pychron.database'
+    massspec_dbname = Str
+    massspec_username = Str
+    massspec_password = Password
+    massspec_host = Str
+
+
+class MassSpecConnectionPane(PreferencesPane):
+    model_factory = MassSpecConnectionPreferences
+    category = 'Database'
+
+    def traits_view(self):
         massspec_grp = Group(
             Group(
                 Item('massspec_dbname', label='Database'),
@@ -193,14 +219,11 @@ class ConnectionPreferencesPane(PreferencesPane):
                 Item('massspec_username', label='Name'),
                 Item('massspec_password', label='Password'),
                 show_border=True,
-                label='MassSpec Authentication'
+                label='Authentication'
             ),
             label='MassSpec DB'
         )
 
-        return View(
-            db_grp,
-            massspec_grp,
-        )
+        return View(massspec_grp)
 
-#============= EOF =============================================
+    #============= EOF =============================================
