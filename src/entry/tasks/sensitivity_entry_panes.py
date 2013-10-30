@@ -18,16 +18,13 @@
 from traits.api import Property, Int
 from traitsui.api import View, Item
 from pyface.tasks.traits_task_pane import TraitsTaskPane
-# from src.irradiation.irradiated_position import IrradiatedPositionAdapter
-# from pyface.tasks.traits_dock_pane import TraitsDockPane
-# from src.ui.custom_label_editor import CustomLabel
 from traitsui.tabular_adapter import TabularAdapter
-#from src.experiment.tasks.entry.actions import SaveSensitivityAction
-from src.ui.tabular_editor import myTabularEditor
-# from src.processing.entry.irradiated_position import IrradiatedPositionAdapter
-# from traitsui.editors.progress_editor import ProgressEditor
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.ui.tabular_editor import myTabularEditor
+
+
 class SensitivityAdapter(TabularAdapter):
     columns = [
         #                ('', 'placeholder'),

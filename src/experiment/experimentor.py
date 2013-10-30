@@ -469,7 +469,8 @@ class Experimentor(IsotopeDatabaseManager):
         if self.application:
             p2 = 'src.spectrometer.spectrometer_manager.SpectrometerManager'
             spec = self.application.get_service(p2)
-            dms = spec.name.capitalize()
+            if spec:
+                dms = spec.name.capitalize()
 
         e = ExperimentFactory(db=self.db,
                               application=self.application,

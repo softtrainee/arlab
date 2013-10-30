@@ -19,10 +19,10 @@ from src.envisage.tasks.base_task import BaseManagerTask
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-from src.experiment.tasks.entry.sensitivity_entry_panes import SensitivityPane
-from src.experiment.entry.sensitivity_entry import SensitivityEntry
+from src.entry.tasks.sensitivity_entry_panes import SensitivityPane
+from src.entry.sensitivity_entry import SensitivityEntry
 from pyface.tasks.action.schema import SToolBar
-from src.experiment.tasks.entry.actions import SaveSensitivityAction, \
+from src.entry.tasks.actions import SaveSensitivityAction, \
     AddSensitivityAction
 
 

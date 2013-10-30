@@ -20,14 +20,11 @@ from traits.api import Instance
 from traitsui.api import View, Item, TabularEditor, VGroup, spring, HGroup, \
     EnumEditor, UItem, Label, VSplit
 from pyface.tasks.traits_task_pane import TraitsTaskPane
-# from src.irradiation.irradiated_position import IrradiatedPositionAdapter
 from pyface.tasks.traits_dock_pane import TraitsDockPane
-# from src.ui.custom_label_editor import CustomLabel
-from src.envisage.tasks.pane_helpers import new_button_editor, spacer
-from src.experiment.entry.irradiated_position import IrradiatedPositionAdapter
-# from traitsui.editors.progress_editor import ProgressEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.pane_helpers import new_button_editor, spacer
+from src.entry.irradiated_position import IrradiatedPositionAdapter
 from src.experiment.tasks.browser.adapters import ProjectAdapter, SampleAdapter
 
 

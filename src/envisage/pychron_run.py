@@ -61,8 +61,8 @@ PACKAGE_DICT = dict(
     PyScriptPlugin='src.pyscripts.tasks.pyscript_plugin',
     DatabasePlugin='src.database.tasks.database_plugin',
     CanvasDesignerPlugin='src.canvas.tasks.canvas_plugin',
-    ArArConstantsPlugin='src.constants.tasks.arar_constants_plugin'
-
+    ArArConstantsPlugin='src.constants.tasks.arar_constants_plugin',
+    EntryPlugin='src.entry.tasks.entry_plugin'
 )
 
 
