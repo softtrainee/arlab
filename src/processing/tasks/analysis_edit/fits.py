@@ -75,7 +75,7 @@ class FitSelector(HasTraits):
         v = View(self._get_fit_group())
         return v
 
-    def _get_fit_group(self):
+    def _get_columns(self):
         cols = [ObjectColumn(name='name', editable=False),
                 CheckboxColumn(name='show'),
                 ObjectColumn(name='fit',
@@ -83,6 +83,10 @@ class FitSelector(HasTraits):
                              width=75),
                 CheckboxColumn(name='use', label='Save DB')]
 
+        return cols
+
+    def _get_fit_group(self):
+        cols = self._get_columns()
         editor = myTableEditor(columns=cols,
                                sortable=False,
                                on_command_key=self._update_command_key)

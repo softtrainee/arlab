@@ -62,7 +62,8 @@ PACKAGE_DICT = dict(
     DatabasePlugin='src.database.tasks.database_plugin',
     CanvasDesignerPlugin='src.canvas.tasks.canvas_plugin',
     ArArConstantsPlugin='src.constants.tasks.arar_constants_plugin',
-    EntryPlugin='src.entry.tasks.entry_plugin'
+    EntryPlugin='src.entry.tasks.entry_plugin',
+    SystemMonitorPlugin='src.system_monitor.tasks.system_monitor_plugin'
 )
 
 
