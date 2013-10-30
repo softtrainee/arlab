@@ -18,7 +18,7 @@ from traits.etsconfig.etsconfig import ETSConfig
 ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Int, Color, Button, Any, Instance
-from traitsui.api import View, Item
+from traitsui.api import View, Item, UItem
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 # from traitsui.wx.basic_editor_factory import BasicEditorFactory
@@ -142,7 +142,7 @@ class CustomLabelEditor(BasicEditorFactory):
     color = Str
 
 
-class CustomLabel(Item):
+class CustomLabel(UItem):
     editor = Instance(CustomLabelEditor, ())
     size = Int(12)
 
