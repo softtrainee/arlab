@@ -16,25 +16,46 @@
 
 #============= enthought library imports =======================
 from pyface.tasks.traits_dock_pane import TraitsDockPane
-from traits.api import Instance, Str
-from traitsui.api import View, Item, UItem, VGroup
+from traits.api import Instance
+from traitsui.api import View, UItem, TabularEditor
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.database.database_connection_spec import DBConnectionSpec
+from traitsui.tabular_adapter import TabularAdapter
+from src.processing.tasks.analysis_edit.panes import TablePane
+from src.system_monitor.tasks.connection_spec import ConnectionSpec
+
+
+class AnalysisAdapter(TabularAdapter):
+    columns = [('Run ID', 'record_id'),
+               ('Sample', 'sample'),
+               #('Age', 'age'),
+               #(u'\u00b11\u03c3', 'error'),
+               #('Tag', 'tag')
+    ]
+    font = 'arial 10'
+
+
+class AnalysisPane(TablePane):
+    name = 'Analyses'
+    id = 'pychron.sys_mon.analyses'
+
+    def traits_view(self):
+        v = View(UItem('items',
+                       editor=TabularEditor(
+                           editable=False,
+                           adapter=AnalysisAdapter())))
+        return v
 
 
 class ConnectionPane(TraitsDockPane):
     name = 'Connection'
     id = 'pychron.sys_mon.connection'
 
-    dbconn_spec = Instance(DBConnectionSpec)
-    system_name = Str
+    conn_spec = Instance(ConnectionSpec)
 
     def traits_view(self):
-        v = View(VGroup(Item('system_name'),
-                        Item('_'),
-                        UItem('dbconn_spec', style='custom')))
+        v = View(UItem('conn_spec', style='custom'))
         return v
 
 

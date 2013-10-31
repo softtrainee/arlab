@@ -79,8 +79,8 @@ class FigureTask(AnalysisEditTask):
                 pom.close()
         super(FigureTask, self).prepare_destroy()
 
-    def activated(self):
-        super(FigureTask, self).activated()
+        #def activated(self):
+        #    super(FigureTask, self).activated()
 
         #uk=self.unknowns_pane
         #uk.previous_selection=uk.previous_selections[0]

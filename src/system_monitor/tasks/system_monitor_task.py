@@ -15,19 +15,21 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance, on_trait_change
+from traits.api import Instance
 from pyface.tasks.action.schema import SToolBar
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.envisage.tasks.editor_task import BaseEditorTask
 from src.processing.tasks.analysis_edit.panes import ControlsPane
+from src.processing.tasks.figures.figure_editor import FigureEditor
+from src.processing.tasks.figures.figure_task import FigureTask
+from src.processing.tasks.figures.panes import PlotterOptionsPane
 from src.system_monitor.tasks.actions import AddSystemMonitorAction
-from src.system_monitor.tasks.panes import ConnectionPane
+from src.system_monitor.tasks.panes import ConnectionPane, AnalysisPane
 from src.system_monitor.tasks.system_monitor_editor import SystemMonitorEditor
 
 
-class SystemMonitorTask(BaseEditorTask):
+class SystemMonitorTask(FigureTask):
     name = 'System Monitor'
 
     tool_bars = [SToolBar(AddSystemMonitorAction(),
@@ -37,16 +39,25 @@ class SystemMonitorTask(BaseEditorTask):
 
     connection_pane = Instance(ConnectionPane)
     controls_pane = Instance(ControlsPane)
+    unknowns_pane = Instance(AnalysisPane)
+
+    def prepare_destroy(self):
+        pass
 
     def add_system_monitor(self):
-        editor = SystemMonitorEditor()
+        editor = self._editor_factory()
         self._open_editor(editor)
+
+    def _editor_factory(self):
+        editor = SystemMonitorEditor(processor=self.manager)
+        editor.start()
+
+        return editor
 
     def _active_editor_changed(self):
         if self.active_editor:
 
-            self.connection_pane.system_name = self.active_editor.system_name
-            self.connection_pane.dbconn_spec = self.active_editor.dbconn_spec
+            self.connection_pane.conn_spec = self.active_editor.conn_spec
 
             if self.controls_pane:
                 tool = None
@@ -55,10 +66,9 @@ class SystemMonitorTask(BaseEditorTask):
 
                 self.controls_pane.tool = tool
 
-    @on_trait_change('connection_pane:system_name')
-    def _handle_system_name(self, new):
-        if self.active_editor:
-            self.active_editor.system_name = new
+        if isinstance(self.active_editor, FigureEditor):
+            self.plotter_options_pane.pom = self.active_editor.plotter_options_manager
+
 
     def _prompt_for_save(self):
         """
@@ -67,25 +77,37 @@ class SystemMonitorTask(BaseEditorTask):
         return True
 
     def activated(self):
-        editor = SystemMonitorEditor()
+        editor = self._editor_factory()
         self._open_editor(editor)
 
-    def _manager_default(self):
-        return
+        editor.sub_refresh_plots()
+        #db=self.manager.db
+        #with db.session_ctx():
+        #    ans=db.selector.get_last(5)
+        #
+        #    ans=self.manager.make_analyses(ans)
+        #    editor.unknowns=ans
 
     def _default_layout_default(self):
         return TaskLayout(
             left=Splitter(
-                PaneItem('pychron.sys_mon.connection'),
-                PaneItem('pychron.analysis_edit.controls'),
-                orientation='vertical'),
-        )
+                Splitter(
+                    PaneItem('pychron.sys_mon.connection'),
+                    PaneItem('pychron.analysis_edit.controls'),
+                    orientation='vertical'),
+                PaneItem('pychron.sys_mon.analyses'),
+                orientation='horizontal'))
 
     def create_dock_panes(self):
         self.connection_pane = ConnectionPane()
         self.controls_pane = ControlsPane()
+        self.unknowns_pane = AnalysisPane()
+        self.plotter_options_pane = PlotterOptionsPane()
+
         return [self.connection_pane,
-                self.controls_pane
+                self.controls_pane,
+                self.unknowns_pane,
+                self.plotter_options_pane
         ]
 
 

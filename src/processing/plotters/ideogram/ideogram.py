@@ -53,24 +53,16 @@ class Ideogram(BaseArArFigure):
 
         graph = self.graph
 
-        #dump previous metadata
-
         self._analysis_number_cnt = 0
 
         self.xs, self.xes = array([(ai.nominal_value, ai.std_dev)
                                    for ai in self._get_xs(key=self.index_key)]).T
 
-        #self._plot_relative_probability(graph.plots[0], 0)
-
         omit = self._get_omitted(self.sorted_analyses,
                                  omit='omit_ideo')
 
-        #omit = [i for i, ai in enumerate(self.sorted_analyses) if ai.temp_status]
-
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
-            scatter = getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid)
-            #if omit:
-            #    scatter.index.metadata['selections'] = omit
+            getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid)
 
         graph.set_x_limits(min_=self.xmi, max_=self.xma,
                            pad='0.05')
@@ -343,7 +335,7 @@ class Ideogram(BaseArArFigure):
     def _add_aux_plot(self, ys, title, pid, **kw):
         plot = self.graph.plots[pid]
         if plot.value_scale == 'log':
-            ys=array(ys)
+            ys = array(ys)
             ys[ys < 0] = 1e-20
 
         graph = self.graph
@@ -438,7 +430,7 @@ class Ideogram(BaseArArFigure):
         return we * a * n
 
 
-#============= EOF =============================================
+        #============= EOF =============================================
         #def _add_mean_indicator2(self, g, scatter, bins, probs, pid):
         #        offset = 0
         #        percentH = 1 - 0.954  # 2sigma

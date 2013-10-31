@@ -56,20 +56,22 @@ class Series(BaseArArFigure):
 
     def _plot_series(self, po, pid):
         graph = self.graph
+        try:
+            ys = [ai.nominal_value for ai in self._unpack_attr(po.name)]
+            yerr = [ai.std_dev for ai in self._unpack_attr(po.name)]
 
-        ys = [ai.nominal_value for ai in self._unpack_attr(po.name)]
-        yerr = [ai.std_dev for ai in self._unpack_attr(po.name)]
-
-        scatter, p = graph.new_series(x=self.xs,
-                                      y=ys,
-                                      yerror=yerr,
-                                      fit=po.fit,
-                                      plotid=pid,
-                                      type='scatter'
-        )
-        p.value_scale = po.scale
-        self._add_error_bars(scatter, yerr, 'y', 1,
-                             visible=po.y_error)
+            scatter, p = graph.new_series(x=self.xs,
+                                          y=ys,
+                                          yerror=yerr,
+                                          fit=po.fit,
+                                          plotid=pid,
+                                          type='scatter'
+            )
+            p.value_scale = po.scale
+            self._add_error_bars(scatter, yerr, 'y', 1,
+                                 visible=po.y_error)
+        except (KeyError, ZeroDivisionError), e:
+            print 'Series', e
 
     def _unpack_attr(self, attr):
         if attr.endswith('bs'):

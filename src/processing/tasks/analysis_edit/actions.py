@@ -16,10 +16,7 @@
 
 #============= enthought library imports =======================
 from pyface.image_resource import ImageResource
-from traits.api import HasTraits, Str
-from traitsui.api import View, Item
 from pyface.tasks.action.task_action import TaskAction
-from pyface.tasks.task_window_layout import TaskWindowLayout
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.paths import paths
@@ -47,6 +44,14 @@ class DatabaseSaveAction(TaskAction):
     description = 'Save current changes to the database'
     method = 'save_to_db'
     image = ImageResource(name='database_save.png',
+                          search_path=paths.icon_search_path)
+
+
+class FindAssociatedAction(TaskAction):
+    name = 'Find Associated'
+    description = 'Find associated analyses'
+    method = 'find_associated_analyses'
+    image = ImageResource(name='find.png',
                           search_path=paths.icon_search_path)
 
 

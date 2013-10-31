@@ -51,6 +51,7 @@ class SeriesEditor(FigureEditor):
         model = SeriesModel(plot_options=plotter_options)
         model.analyses = ans
         iv = FigureContainer(model=model)
+
         return model, iv.component
 
 #     def show_series(self, key, fit='Linear'):

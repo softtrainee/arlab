@@ -46,9 +46,7 @@ class ProcessingPlugin(BaseTaskPlugin):
     def _service_offers_default(self):
         process_so = self.service_offer_factory(
             protocol=Processor,
-            #                                              factory=Processor
-            factory=self._processor_factory
-        )
+            factory=self._processor_factory)
 
         return [process_so]
 
@@ -173,10 +171,12 @@ Install to enable MS Excel export''')
             # ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher'),
             ('pychron.processing.publisher',
              self._table_task_factory, 'Table', '', 'Ctrl+t'),
-            ('pychron.processing.auto_figure',
-             self._auto_figure_task_factory, 'AutoFigure'),
-            ('pychron.processing.smart_project',
-             self._smart_project_task_factory, 'SmartProject'),
+            #('pychron.processing.auto_figure',
+            # self._auto_figure_task_factory, 'AutoFigure'),
+
+            #('pychron.processing.smart_project',
+            # self._smart_project_task_factory, 'SmartProject'),
+
             #('pychron.processing.browser',
             # self._browser_task_factory, 'Analysis Browser'),
             #'', 'Ctrl+Shift+B'),
@@ -241,10 +241,10 @@ Install to enable MS Excel export''')
 
         return FigureTask(manager=self._processor_factory())
 
-    def _auto_figure_task_factory(self):
-        from src.processing.tasks.figures.auto_figure_task import AutoFigureTask
-
-        return AutoFigureTask(manager=self._processor_factory())
+    #def _auto_figure_task_factory(self):
+    #    from src.processing.tasks.figures.auto_figure_task import AutoFigureTask
+    #
+    #    return AutoFigureTask(manager=self._processor_factory())
 
     def _repository_task_factory(self):
         from src.processing.tasks.repository.respository_task import RepositoryTask
