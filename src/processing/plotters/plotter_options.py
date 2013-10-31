@@ -508,11 +508,11 @@ class SeriesOptions(BasePlotterOptions):
             if 'Ar36' in keys:
                 keys.append('Ar40/Ar36')
 
-            keys.append('PC')
-            ap = [f(k) for k in keys]
-            self.trait_set(
-                aux_plots=ap,
-            )
+        keys.append('PC')
+        ap = [f(k) for k in keys]
+        self.trait_set(
+            aux_plots=ap,
+        )
 
     def traits_view(self):
         cols = [
@@ -535,6 +535,28 @@ class SeriesOptions(BasePlotterOptions):
                              ))
         v = View(aux_plots_grp)
         return v
+
+
+class SystemMonitorOptions(SeriesOptions):
+    def load_aux_plots(self, ref):
+        def f(kii):
+            ff = FitPlotterOption(name=kii)
+            ff.trait_set(use=False, fit='')
+            return ff
+
+        keys = ref.isotope_keys
+        keys.extend(['{}bs'.format(ki) for ki in keys])
+        if 'Ar40' in keys:
+            if 'Ar39' in keys:
+                keys.append('Ar40/Ar39')
+            if 'Ar36' in keys:
+                keys.append('Ar40/Ar36')
+
+        keys.append('PC')
+        keys.append('Foo')
+        ap = [f(k) for k in keys]
+        self.trait_set(
+            aux_plots=ap)
 
 
 if __name__ == '__main__':

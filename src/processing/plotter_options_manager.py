@@ -25,7 +25,7 @@ from src.envisage.tasks.pane_helpers import new_button_editor
 from src.viewable import Viewable
 from src.processing.plotters.plotter_options import PlotterOptions, \
     IdeogramOptions, SpectrumOptions, InverseIsochronOptions, SeriesOptions, \
-    BasePlotterOptions
+    BasePlotterOptions, SystemMonitorOptions
 from src.paths import paths
 
 
@@ -173,5 +173,11 @@ class SeriesOptionsManager(PlotterOptionsManager):
     plotter_options_klass = SeriesOptions
     persistence_name = 'series'
     title = 'Series Plot Options'
+
+
+class SystemMonitorOptionsManager(PlotterOptionsManager):
+    plotter_options_klass = SystemMonitorOptions
+    persistence_name = 'system_monitor'
+    #title = 'Series Plot Options'
 
 #============= EOF =============================================
