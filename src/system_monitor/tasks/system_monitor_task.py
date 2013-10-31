@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance
+from traits.api import Instance, List
 from pyface.tasks.action.schema import SToolBar
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
 #============= standard library imports ========================
@@ -25,8 +25,11 @@ from src.processing.tasks.figures.figure_editor import FigureEditor
 from src.processing.tasks.figures.figure_task import FigureTask
 from src.processing.tasks.figures.panes import PlotterOptionsPane
 from src.system_monitor.tasks.actions import AddSystemMonitorAction
+from src.system_monitor.tasks.connection_spec import ConnectionSpec
 from src.system_monitor.tasks.panes import ConnectionPane, AnalysisPane
 from src.system_monitor.tasks.system_monitor_editor import SystemMonitorEditor
+
+from traitsui.api import View, Item, EnumEditor
 
 
 class SystemMonitorTask(FigureTask):
@@ -40,18 +43,36 @@ class SystemMonitorTask(FigureTask):
     connection_pane = Instance(ConnectionPane)
     controls_pane = Instance(ControlsPane)
     unknowns_pane = Instance(AnalysisPane)
+    connections = List
+    connection = Instance(ConnectionSpec)
 
     #def prepare_destroy(self):
     #    pass
 
     def add_system_monitor(self):
-        editor = self._editor_factory()
-        self._open_editor(editor)
+        self._editor_factory()
+
+    def get_connection_view(self):
+        v = View(Item('connection',
+                      editor=EnumEditor(name='connections')),
+                 kind='livemodal',
+                 buttons=['OK', 'Cancel'],
+                 title='Choose System')
+        return v
 
     def _editor_factory(self):
-        editor = SystemMonitorEditor(processor=self.manager)
-        editor.start()
-        return editor
+        #ask user for system
+        info = self.edit_traits(view='get_connection_view')
+
+        if info.result and self.connection:
+            editor = SystemMonitorEditor(processor=self.manager,
+                                         conn_spec=self.connection)
+            editor.start()
+            self._open_editor(editor)
+            if editor:
+                editor.sub_refresh_plots()
+
+            return editor
 
     def _active_editor_changed(self):
         if self.active_editor:
@@ -75,17 +96,21 @@ class SystemMonitorTask(FigureTask):
         """
         return True
 
-    def activated(self):
-        editor = self._editor_factory()
-        self._open_editor(editor)
+    def _make_connections(self):
+        app = self.window.application
+        connections = app.preferences.get('pychron.sys_mon.favorites')
+        cs = []
+        for ci in eval(connections):
+            n, sn, h, p = ci.split(',')
+            cc = ConnectionSpec(system_name=sn,
+                                host=h, port=int(p))
+            cs.append(cc)
+        self.connections = cs
 
-        editor.sub_refresh_plots()
-        #db=self.manager.db
-        #with db.session_ctx():
-        #    ans=db.selector.get_last(5)
-        #
-        #    ans=self.manager.make_analyses(ans)
-        #    editor.unknowns=ans
+    def activated(self):
+        self._make_connections()
+        self._editor_factory()
+
 
     def _default_layout_default(self):
         return TaskLayout(

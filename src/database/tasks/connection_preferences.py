@@ -15,70 +15,39 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from pyface.image_resource import ImageResource
-from traits.api import Str, Password, Enum, List, Button, Any, Int, \
-    on_trait_change, Color
-from traitsui.api import View, Item, Group, VGroup, HGroup, ListStrEditor, ButtonEditor, \
-    spring, Label
-from traitsui.list_str_adapter import ListStrAdapter
+from traits.api import Str, Password, Enum, Button, on_trait_change, Color
+from traitsui.api import View, Item, Group, VGroup, HGroup, ListStrEditor, spring, Label
 from envisage.ui.tasks.preferences_pane import PreferencesPane
 from src.database.core.database_adapter import DatabaseAdapter
 
-from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
+from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper, FavoritesPreferencesHelper, FavoritesAdapter, button_editor
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.paths import paths
 from src.ui.custom_label_editor import CustomLabel
 
 
-def button_editor(trait, name, editor_kw=None, **kw):
-    if editor_kw is None:
-        editor_kw = {}
-
-    image = ImageResource(name=name,
-                          search_path=paths.icon_search_path)
-    return Item(trait,
-                style='custom',
-                editor=ButtonEditor(image=image, **editor_kw),
-                **kw)
-
-
-class FavoritesAdapter(ListStrAdapter):
-    columns = [('', 'name')]
-    can_edit = False
-
-    def get_text(self, obj, tr, ind):
-        o = getattr(obj, tr)[ind]
-        return o.split(',')[0]
-
-
-class ConnectionPreferences(BasePreferencesHelper):
+class ConnectionPreferences(FavoritesPreferencesHelper):
     preferences_path = 'pychron.database'
     #id = 'pychron.database.preferences_page'
 
-    db_fav_name = Str
+    #fav_name = Str
     db_name = Str
-    db_username = Str
-    db_password = Password
-    db_host = Str
-    db_kind = Enum('---', 'mysql', 'sqlite')
+    username = Str
+    password = Password
+    host = Str
+    kind = Enum('---', 'mysql', 'sqlite')
     test_connection = Button
 
-    favorites = List
-    add_favorite = Button('+')
-    delete_favorite = Button('-')
-    selected = Any
-    selected_index = Int
     connected_label = Str
     connected_color = Color('green')
 
     def _test_connection_fired(self):
-        db = DatabaseAdapter(username=self.db_username,
-                             host=self.db_host,
-                             password=self.db_password,
+        db = DatabaseAdapter(username=self.username,
+                             host=self.host,
+                             password=self.password,
                              name=self.db_name,
-                             kind=self.db_kind)
+                             kind=self.kind)
 
         self.connected_label = ''
         c = db.connect()
@@ -89,17 +58,20 @@ class ConnectionPreferences(BasePreferencesHelper):
             self.connected_label = 'Not Connected'
             self.connected_color = 'red'
 
-
-    @on_trait_change('db+')
+    @on_trait_change('db_name, kind, username, host, password')
     def db_attribute_changed(self, obj, name, old, new):
-        if name == 'db_fav_name':
-            return
 
         if self.favorites:
+            idx = ['', 'kind',
+                   'username',
+                   'host',
+                   'db_name',
+                   'password']
+
             for i, fastr in enumerate(self.favorites):
                 vs = fastr.split(',')
-                if vs[0] == self.db_fav_name:
-                    aind = ['', 'db_kind', 'db_username', 'db_host', 'db_name', 'db_password'].index(name)
+                if vs[0] == self.fav_name:
+                    aind = idx.index(name)
                     fa = fastr.split(',')
                     fa[aind] = new
                     fastr = ','.join(fa)
@@ -107,47 +79,16 @@ class ConnectionPreferences(BasePreferencesHelper):
                     self.selected = fastr
                     break
 
-    def _selected_changed(self):
-        sel = self.selected
-        if isinstance(sel, (str, unicode)):
-            vs = sel.split(',')
-            for v, attr in zip(vs, ['fav_name', 'kind', 'username',
-                                    'host', 'name', 'password']):
-                setattr(self, 'db_{}'.format(attr), str(v))
+    def _get_attrs(self):
+        return ['fav_name', 'kind', 'username',
+                'host', 'name', 'password']
 
-    def _delete_favorite_fired(self):
-        if self.selected:
-            if self.favorites:
-                if self.selected in self.favorites:
-                    self.favorites.remove(self.selected)
-
-            if self.favorites:
-                self.selected = self.favorites[-1]
-            else:
-                vs = ['', '---', '', '', '', '']
-                for v, attr in zip(vs, ['fav_name', 'kind', 'username',
-                                        'host', 'name', 'password']):
-                    setattr(self, 'db_{}'.format(attr), str(v))
-
-    def _add_favorite_fired(self):
-        if self.db_fav_name:
-            fv = ','.join([self.db_fav_name,
-                           self.db_kind,
-                           self.db_username, self.db_host,
-                           self.db_name,
-                           self.db_password
-            ])
-
-            pf = next((f for f in self.favorites if f.split(',')[0] == self.db_fav_name), None)
-            if pf:
-                ind = self.favorites.index(pf)
-                self.favorites.remove(pf)
-                self.favorites.insert(ind, fv)
-
-            else:
-                self.favorites.append(fv)
-
-            self.selected = fv
+    def _get_values(self):
+        return [self.fav_name,
+                self.kind,
+                self.username, self.host,
+                self.db_name,
+                self.password]
 
 
 class ConnectionPreferencesPane(PreferencesPane):
@@ -156,16 +97,15 @@ class ConnectionPreferencesPane(PreferencesPane):
 
     def traits_view(self):
         db_auth_grp = Group(
-            Item('db_host', width=125, label='Host'),
-            Item('db_username', label='User'),
-            Item('db_password', label='Password'),
-            enabled_when='db_kind=="mysql"',
+            Item('host', width=125, label='Host'),
+            Item('username', label='User'),
+            Item('password', label='Password'),
+            enabled_when='kind=="mysql"',
             show_border=True,
             label='Authentication'
         )
 
-        fav_grp = VGroup(Item('db_fav_name',
-                              #                              editor=EnumEditor(name='favorites'),
+        fav_grp = VGroup(Item('fav_name',
                               show_label=False),
                          Item('favorites',
                               show_label=False,
@@ -191,7 +131,7 @@ class ConnectionPreferencesPane(PreferencesPane):
 
                              show_labels=False))
 
-        db_grp = Group(HGroup(Item('db_kind', show_label=False)),
+        db_grp = Group(HGroup(Item('kind', show_label=False)),
                        Item('db_name', label='Name'),
                        HGroup(fav_grp, db_auth_grp),
                        label='Main DB')

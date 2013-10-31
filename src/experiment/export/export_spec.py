@@ -15,11 +15,10 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, CStr, Str, CInt, Int, Dict, Tuple, List, Float, \
+from traits.api import CStr, Str, CInt, Tuple, List, Float, \
     TraitError, Property, Any, Either
-from traitsui.api import View, Item, TableEditor
 from src.loggable import Loggable
-from src.experiment.utilities.identifier import make_runid, make_rid
+from src.experiment.utilities.identifier import make_rid
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -106,16 +105,8 @@ class ExportSpec(Loggable):
                   'signal_fits','baseline_fits'):
             v=getattr(self, a)
             print a, len(v), v
-            
-#        print 'det',len(self.detectorsself.detectors
-#        print 'signals',self.signals
-#        print 'baselins',self.baselines
-#        print 'blanks',self.blanks
-#        print 'sgint',self.signal_intercepts
-#        print 'bsint',self.baseline_intercepts
-#        print 'sf',self.signal_fits
-#        print 'bsf',self.baseline_fits
-        
+
+        #dont use zip
         return zip(self.detectors,
                    self.signals,
                    self.baselines,
