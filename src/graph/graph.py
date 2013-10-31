@@ -194,6 +194,7 @@ class Graph(Viewable, ContextMenuMixin):
         for p in self.plots:
             d = dict()
             d['value_axis'] = self._assemble_value_axis_metadata(p.value_axis)
+            d['xlimits'] = p.index_range.low, p.index_range.high
             for k, pp in p.plots.iteritems():
                 pp = pp[0]
                 d[k] = self._assemble_plot_metadata(pp)
@@ -205,6 +206,7 @@ class Graph(Viewable, ContextMenuMixin):
     def load_metadata(self, metas):
 
         for i, meta in enumerate(metas):
+            #print meta.keys()
             if not meta:
                 continue
 
@@ -219,6 +221,9 @@ class Graph(Viewable, ContextMenuMixin):
 
                 if obj:
                     obj.trait_set(**d)
+
+            mi_, ma_ = meta['xlimits']
+            self.set_x_limits(min_=mi_, max_=ma_, plotid=i)
 
         self.redraw()
 

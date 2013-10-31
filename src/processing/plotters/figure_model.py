@@ -16,7 +16,6 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Property, Any, on_trait_change, Instance
-from traitsui.api import View, Item
 #============= standard library imports ========================
 from itertools import groupby
 #============= local library imports  ==========================
@@ -36,8 +35,10 @@ class FigureModel(HasTraits):
 
     def dump_metadata(self):
         ps = []
+
         for pp in self.panels:
             ps.append(pp.dump_metadata())
+
         return ps
 
     def load_metadata(self, metadata):
@@ -66,4 +67,4 @@ class FigureModel(HasTraits):
     def next_panel(self):
         return self.panel_gen.next()
 
-    #============= EOF =============================================
+        #============= EOF =============================================

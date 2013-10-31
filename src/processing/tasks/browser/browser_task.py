@@ -123,7 +123,7 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
 
         return self.browser_pane
 
-    def _get_sample_analyses(self, srv, limit=50, include_invalid=False):
+    def _get_sample_analyses(self, srv, limit=500, include_invalid=False):
         db = self.manager.db
         with db.session_ctx():
             for project in self.selected_project:

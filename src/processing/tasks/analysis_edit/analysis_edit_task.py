@@ -184,6 +184,7 @@ class AnalysisEditTask(BaseBrowserTask):
         return up
 
     def _get_tagname(self):
+        print 'asdf'
         from src.processing.tasks.analysis_edit.tags import TagTableView
 
         db = self.manager.db
@@ -272,7 +273,9 @@ class AnalysisEditTask(BaseBrowserTask):
             #print 'upadte unkownasdf pane', new,
             if self.active_editor:
                 self.active_editor.unknowns = self.unknowns_pane.items
-#                self._append_cache(self.active_editor)
+            if self.plot_editor_pane:
+                self.plot_editor_pane.analyses = self.unknowns_pane.items
+                #                self._append_cache(self.active_editor)
 
     @on_trait_change('plot_editor_pane:current_editor')
     def _update_current_plot_editor(self, new):

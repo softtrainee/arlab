@@ -95,6 +95,8 @@ def flatten(nested):
 
 class PlotEditorPane(TraitsDockPane):
     component = Any
+    analyses = Any
+
     name = 'Plot Editor'
     id = 'pychron.processing.editor'
     current_editor = Instance(PlotEditor)
@@ -115,16 +117,21 @@ class PlotEditorPane(TraitsDockPane):
                 self.selectors = []
                 self.current_editor = None
                 for plot in ncomps:
-                    editor = PlotEditor(plot=plot)
+                    editor = PlotEditor(plot=plot,
+                                        analyses=self.analyses)
+
+                    if self.current_editor is None:
+                        self.current_editor = editor
+
                     st = SelectorTool(self.component, editor=editor)
                     st.on_trait_change(self.set_editor, 'editor_event')
 
                     so = SelectorOverlay(tool=st, component=plot)
 
                     plot.tools.append(st)
-                    plot.overlays.insert(0, so)
-                    #plot.overlays.append(so)
+                    plot.underlays.append(so)
                     self.selectors.append(so)
+
 
     def set_editor(self, new):
         self.current_editor = new

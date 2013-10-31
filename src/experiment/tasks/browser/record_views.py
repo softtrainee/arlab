@@ -21,8 +21,9 @@ from traits.api import HasTraits, Str
 
 
 class RecordView(HasTraits):
-    def __init__(self, dbrecord):
+    def __init__(self, dbrecord, *args, **kw):
         self._create(dbrecord)
+        super(RecordView, self).__init__(*args, **kw)
 
     def _create(self, *args, **kw):
         pass
@@ -32,6 +33,7 @@ class SampleRecordView(RecordView):
     name = Str
     material = Str
     project = Str
+    labnumber = Str
 
     def _create(self, dbrecord):
         self.name = dbrecord.name

@@ -23,9 +23,7 @@ from traitsui.table_column import ObjectColumn
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, List, Instance, Any, Button, Date, Bool
-from traitsui.api import View, Item, UItem, ButtonEditor, TabularEditor, \
-    HGroup, TableEditor, Handler, Label, VGroup
-from traitsui.tabular_adapter import TabularAdapter
+from traitsui.api import View, Item, UItem, ButtonEditor, HGroup, TableEditor, Handler, VGroup
 from src.loggable import Loggable
 from src.paths import paths
 from pyface.image_resource import ImageResource
@@ -51,19 +49,25 @@ class TagTable(HasTraits):
         with db.session_ctx():
             dbtags = db.get_tags()
 
-            t1 = next((i for i, t in enumerate(dbtags) if t.name == ''))
-            t2 = next((i for i, t in enumerate(dbtags) if t.name == 'invalid'))
+            invalid_tag = next((t for t in dbtags
+                                if t.name == 'invalid'), None)
+            if invalid_tag:
+                dbtags.remove(invalid_tag)
+                tags = [invalid_tag, ] + dbtags
+            else:
+                tags = dbtags
 
-            t1 = dbtags[t1]
-            t2 = dbtags[t2]
-            dbtags.remove(t1)
-            dbtags.remove(t2)
+            for di in tags:
+                print di.name
 
             ts = [Tag(name=di.name,
                       user=di.user,
-                      date=di.create_date
+                      date=di.create_date,
+                      omit_ideo=di.omit_ideo,
+                      omit_iso=di.omit_iso,
+                      omit_spec=di.omit_spec,
             )
-                  for di in [t1, t2] + dbtags]
+                  for di in tags]
 
             self.tags = ts
 
@@ -71,7 +75,11 @@ class TagTable(HasTraits):
         name, user = tag.name, tag.user
         db = self.db
         with db.session_ctx():
-            return db.add_tag(name=name, user=user)
+            return db.add_tag(name=name, user=user,
+                              omit_ideo=tag.omit_ideo,
+                              omit_spec=tag.omit_spec,
+                              omit_iso=tag.omit_iso
+            )
 
     def add_tag(self, tag):
         self._add_tag(tag)
@@ -167,7 +175,8 @@ class TagTableView(Loggable):
                 CheckboxColumn(name='omit_iso')]
 
         editor = TableEditor(columns=cols,
-                             selected='selected')
+                             selected='selected',
+                             sortable=False)
 
         v = View(UItem('object.table.tags',
                        editor=editor),
