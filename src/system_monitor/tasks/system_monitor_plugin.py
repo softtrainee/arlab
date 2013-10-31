@@ -19,24 +19,17 @@ from envisage.ui.tasks.task_factory import TaskFactory
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
-from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
-
 #from src.processing.tasks.browser.browser_task import BrowserTask
+from src.processing.tasks.processing_plugin import ProcessingPlugin
 from src.system_monitor.tasks.system_monitor_task import SystemMonitorTask
 
 
-class SystemMonitorPlugin(BaseTaskPlugin):
-    def _service_offers_default(self):
-        #process_so = self.service_offer_factory(
-        #    protocol=Processor,
-        #    factory=self._processor_factory)
-        return []
-
+class SystemMonitorPlugin(ProcessingPlugin):
     def start(self):
         pass
 
     def _task_factory(self):
-        return SystemMonitorTask()
+        return SystemMonitorTask(manager=self._processor_factory())
 
     def _my_task_extensions_default(self):
         return []
@@ -44,6 +37,7 @@ class SystemMonitorPlugin(BaseTaskPlugin):
     def _tasks_default(self):
         return [TaskFactory(name='System Monitor',
                             id='pychron.system_monitor',
+                            accelerator='Ctrl+Shift+V',
                             factory=self._task_factory)]
 
     def _preferences_panes_default(self):

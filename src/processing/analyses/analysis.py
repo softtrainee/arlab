@@ -423,6 +423,9 @@ class DBAnalysis(Analysis):
 
             name = iso.molecular_weight.name
             if name not in isodict:
+                if not iso.detector:
+                    return
+
                 det = iso.detector.name
                 result = None
 

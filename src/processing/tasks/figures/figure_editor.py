@@ -16,19 +16,14 @@
 
 #============= enthought library imports =======================
 from chaco.base_plot_container import BasePlotContainer
-from traits.api import HasTraits, Any, Instance, on_trait_change, \
-    List, Bool, Int, Float, Event
-from traitsui.api import View, Item, UItem
+from traits.api import Any, on_trait_change, \
+    List
+from traitsui.api import View, UItem
 from enable.component_editor import ComponentEditor as EnableComponentEditor
 #============= standard library imports ========================
-from itertools import groupby
 #============= local library imports  ==========================
-from src.processing.plotter_options_manager import IdeogramOptionsManager, \
-    SpectrumOptionsManager, InverseIsochronOptionsManager, SeriesOptionsManager
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 from src.codetools.simple_timeit import timethis
-from src.processing.plotters.figure_container import FigureContainer
-from src.processing.tasks.analysis_edit.plot_editor_pane import flatten_container
 from src.processing.tasks.figures.annotation import AnnotationTool, AnnotationOverlay
 
 
@@ -109,7 +104,7 @@ class FigureEditor(GraphEditor):
         ans = self.unknowns
         for e in self.associated_editors:
             if isinstance(e, FigureEditor):
-#                e.analysis_cache = self.analysis_cache
+            #                e.analysis_cache = self.analysis_cache
                 #e.trait_set(unknowns=ans, trait_change_notify=False)
                 e.unknowns = ans
             else:
@@ -124,12 +119,12 @@ class FigureEditor(GraphEditor):
             model, comp = timethis(self.get_component, args=(ans, po),
                                    msg='get_component {}'.format(self.__class__.__name__))
             #comp = self._get_component(ans, po)
-            comp.invalidate_and_redraw()
-
-            #if set_model:
-            self.figure_model = model
-            self.component = comp
-            self.component_changed = True
+            if comp:
+                comp.invalidate_and_redraw()
+                #if set_model:
+                self.figure_model = model
+                self.component = comp
+                self.component_changed = True
 
     def get_component(self, ans, po):
         pass

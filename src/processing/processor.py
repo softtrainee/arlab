@@ -25,9 +25,9 @@ from traits.api import HasTraits, Int, Str
 
 #============= local library imports  ==========================
 from src.database.isotope_database_manager import IsotopeDatabaseManager
-from src.database.orms.isotope.gen import gen_AnalysisTypeTable, gen_MassSpectrometerTable
+from src.database.orms.isotope.gen import gen_AnalysisTypeTable, gen_MassSpectrometerTable, gen_ExtractionDeviceTable
 
-from src.database.orms.isotope.meas import meas_AnalysisTable, meas_MeasurementTable
+from src.database.orms.isotope.meas import meas_AnalysisTable, meas_MeasurementTable, meas_ExtractionTable
 from src.processing.analysis import Analysis
 # from src.processing.plotters.spectrum import Spectrum
 # from src.processing.plotters.ideogram import Ideogram
@@ -98,41 +98,38 @@ class Processor(IsotopeDatabaseManager):
 
         return refs, unks
 
-        #def load_series(self, analysis_type, ms, ed, weeks=0, days=0, hours=0):
-        #    self.debug('{} {} {}'.format(analysis_type, ms, ed))
-        #    db = self.db
-        #    sess = db.get_session()
-        #    q = sess.query(meas_AnalysisTable)
-        #    q = q.join(meas_MeasurementTable)
-        #    q = q.join(gen_AnalysisTypeTable)
-        #    q = q.join(gen_MassSpectrometerTable)
-        #    if ed:
-        #        q = q.join(meas_ExtractionTable)
-        #        q = q.join(gen_ExtractionDeviceTable)
-        #        #         q = q.join(gen_LabTable)
-        #
-        #    d = datetime.datetime.today()
-        #    today = datetime.datetime.today()  # .date()#.datetime()
-        #    d = d - datetime.timedelta(hours=hours, weeks=weeks, days=days)
-        #    attr = meas_AnalysisTable.analysis_timestamp
-        #    q = q.filter(and_(attr <= today, attr >= d))
-        #    q = q.filter(gen_AnalysisTypeTable.name == analysis_type)
-        #    q = q.filter(gen_MassSpectrometerTable.name == ms)
-        #
-        #    if ed:
-        #    #             ed = ed.capitalize()
-        #    #             print ed
-        #        q = q.filter(gen_ExtractionDeviceTable.name == ed)
-        #
-        #    self.debug(compile_query(q))
-        #    return self._make_analyses_from_query(q)
+    def analysis_series(self, analysis_type, ms, ed, weeks=0, days=0, hours=0):
+        self.debug('{} {} {}'.format(analysis_type, ms, ed))
+        db = self.db
+        with db.session_ctx() as sess:
+            q = sess.query(meas_AnalysisTable)
+            q = q.join(meas_MeasurementTable)
+            q = q.join(gen_AnalysisTypeTable)
+            q = q.join(gen_MassSpectrometerTable)
+            if ed:
+                q = q.join(meas_ExtractionTable)
+                q = q.join(gen_ExtractionDeviceTable)
 
+            d = datetime.today()
+            today = datetime.today()
+            d = d - timedelta(hours=hours, weeks=weeks, days=days)
 
-        #def load_sample_analyses(self, labnumber, sample, aliquot=None):
-        #    db = self.db
-        #    sess = db.get_session()
-        #    q = sess.query(meas_AnalysisTable)
-        #    q = q.join(gen_LabTable)
+            self.debug('Date Range >={}'.format(d))
+
+            attr = meas_AnalysisTable.analysis_timestamp
+            q = q.filter(and_(attr <= today, attr >= d))
+            q = q.filter(gen_AnalysisTypeTable.name == analysis_type)
+            q = q.filter(gen_MassSpectrometerTable.name == ms)
+            if ed:
+                q = q.filter(gen_ExtractionDeviceTable.name == ed)
+
+            return self._make_analyses_from_query(q)
+
+            #def load_sample_analyses(self, labnumber, sample, aliquot=None):
+            #    db = self.db
+            #    sess = db.get_session()
+            #    q = sess.query(meas_AnalysisTable)
+            #    q = q.join(gen_LabTable)
         #    q = q.join(gen_SampleTable)
         #
         #    q = q.filter(gen_SampleTable.name == sample)
@@ -546,6 +543,20 @@ class Processor(IsotopeDatabaseManager):
             return q.all()
         except NoResultFound:
             pass
+
+    def _make_analyses_from_query(self, q):
+        ans = None
+        try:
+            ans = q.all()
+            self.debug('{}'.format(ans))
+        except Exception, e:
+            import traceback
+
+            traceback.print_exc()
+
+        if ans:
+            ans = self.make_analyses(ans)
+            return ans
 
 #============= EOF =============================================
 

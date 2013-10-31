@@ -157,9 +157,9 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         if q in self.queries:
             self.queries.remove(q)
 
-    def load_recent(self):
+    def load_recent(self, criterion='this month'):
         with self.db.session_ctx():
-            dbs = self._get_recent()
+            dbs = self._get_recent(criterion)
             self.load_records(dbs, load=False)
 
     def load_last(self, n=200):
@@ -174,8 +174,12 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
             dbs = self._execute_query(queries, use_filters=use_filters)
             self.load_records(dbs, load=load)
 
-    def get_recent(self):
-        return self._get_recent()
+    def get_last(self, n):
+        dbs, _stmt = self._get_selector_records(limit=n)
+        return dbs
+
+    def get_recent(self, criterion='this month'):
+        return self._get_recent(criterion)
 
     def get_date_range(self, start, end, **kw):
         qs = self.query_factory(criterion=start, parameter=self.date_str, comparator='>=')
@@ -197,8 +201,7 @@ class DatabaseSelector(Viewable, ColumnSorterMixin):
         else:
             self.add_query(pq, pq.parameter, pq.criterion, add=add)
 
-    def _get_recent(self):
-        criterion = 'this month'
+    def _get_recent(self, criterion):
         q = self.queries[0]
         q.parameter = self.date_str
         q.comparator = '>'

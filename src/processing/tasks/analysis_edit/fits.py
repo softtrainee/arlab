@@ -110,7 +110,7 @@ class FitSelector(HasTraits):
 
         nfs = []
         for ki, fi in zip(keys, fits):
-            pf = next((fi for fi in self.fits if fi.name == ki), None)
+            pf = next((fa for fa in self.fits if fa.name == ki), None)
             if pf is None:
                 pf = self.fit_klass(name=ki, fit=fi)
             else:

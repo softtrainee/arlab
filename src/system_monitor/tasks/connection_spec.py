@@ -15,11 +15,24 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Str, Int
+from traitsui.api import View, Item, VGroup
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
+class ConnectionSpec(HasTraits):
+    host = Str('localhost')
+    port = Int(8100)
+    system_name = Str('jan')
 
-class SystemMonitorControls(HasTraits):
-    pass
-    #============= EOF =============================================
+    def traits_view(self):
+        return View(VGroup(
+            Item('host'),
+            Item('port'),
+            Item('system_name',
+                 label='Name')
+        )
+        )
+
+        #============= EOF =============================================

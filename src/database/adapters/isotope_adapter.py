@@ -862,19 +862,28 @@ class IsotopeAdapter(DatabaseAdapter):
                 self.debug('get last labnumber {}'.format(e))
                 return
 
-    def get_last_analysis(self, ln, aliquot=None):
+    def get_last_analysis(self, ln=None, aliquot=None, spectrometer=None):
         with self.session_ctx() as sess:
-            ln = self.get_labnumber(ln, )
-            if not ln:
-                return
-
-                #         sess = self.get_session()
             q = sess.query(meas_AnalysisTable)
-            q = q.join(gen_LabTable)
-            q = q.filter(getattr(meas_AnalysisTable, 'labnumber') == ln)
-            if aliquot:
-                q = q.filter(meas_AnalysisTable.aliquot == aliquot)
-                #             q = q.order_by(meas_AnalysisTable.step.asc())
+            if ln:
+                ln = self.get_labnumber(ln, )
+                if not ln:
+                    return
+
+            if spectrometer:
+                q = q.join(meas_MeasurementTable)
+                q = q.join(gen_MassSpectrometerTable)
+
+            if ln:
+                q = q.join(gen_LabTable)
+
+            if spectrometer:
+                q = q.filter(gen_MassSpectrometerTable.name == spectrometer)
+
+            if ln:
+                q = q.filter(getattr(meas_AnalysisTable, 'labnumber') == ln)
+                if aliquot:
+                    q = q.filter(meas_AnalysisTable.aliquot == aliquot)
 
             q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
             #         q = q.limit(1)
