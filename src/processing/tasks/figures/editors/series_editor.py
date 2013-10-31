@@ -20,13 +20,18 @@ from traits.api import Instance
 #============= local library imports  ==========================
 from src.processing.tasks.figures.figure_editor import FigureEditor
 from src.processing.plotters.figure_container import FigureContainer
-from src.processing.plotter_options_manager import SeriesOptionsManager
+from src.processing.plotter_options_manager import SeriesOptionsManager, PlotterOptionsManager
 from src.processing.tasks.figures.editors.auto_controls import AutoSeriesControl
 
 
 class SeriesEditor(FigureEditor):
-    plotter_options_manager = Instance(SeriesOptionsManager, ())
+    plotter_options_manager = Instance(PlotterOptionsManager)
+    plotter_options_manager_klass = SeriesOptionsManager
+
     basename = 'series'
+
+    def _plotter_options_manager_default(self):
+        return self.plotter_options_manager_klass()
 
     def _update_unknowns_hook(self):
         po = self.plotter_options_manager.plotter_options
@@ -39,7 +44,7 @@ class SeriesEditor(FigureEditor):
     def get_component(self, ans, plotter_options):
     #         print plotter_options
         if plotter_options is None:
-            pom = SeriesOptionsManager()
+            pom = self.plotter_options_manager_klass()
             plotter_options = pom.plotter_options
 
         #         ref = ans[0]

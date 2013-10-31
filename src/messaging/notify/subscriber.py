@@ -15,11 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Int, Callable, List
-from traitsui.api import View, Item
-from src.loggable import Loggable
-import zmq
 from threading import Thread, Event
+
+from traits.api import Str, Int, Callable, List
+import zmq
+
+from src.loggable import Loggable
+
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -46,6 +48,7 @@ class Subscriber(Loggable):
         self.info('starting subscription')
         self._stop_signal = Event()
         t = Thread(target=self._listen, args=(cb,))
+        t.setDaemon(True)
         t.start()
 
     def stop(self):

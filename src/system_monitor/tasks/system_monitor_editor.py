@@ -22,6 +22,7 @@ from traits.api import Instance, Property, Int, Bool
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.messaging.notify.subscriber import Subscriber
+from src.processing.plotter_options_manager import SystemMonitorOptionsManager
 from src.processing.tasks.figures.editors.series_editor import SeriesEditor
 from src.system_monitor.tasks.connection_spec import ConnectionSpec
 from src.system_monitor.tasks.controls import SystemMonitorControls
@@ -39,6 +40,7 @@ class SystemMonitorEditor(SeriesEditor):
     name = Property(depends_on='conn_spec:+')
     tool = Instance(SystemMonitorControls)
     subscriber = Instance(Subscriber)
+    plotter_options_manager_klass = SystemMonitorOptionsManager
 
     _sub_str = 'RunAdded'
 
@@ -47,7 +49,8 @@ class SystemMonitorEditor(SeriesEditor):
     _polling = False
 
     def prepare_destroy(self):
-        pass
+        self._polling = False
+        self.subscriber.stop()
 
     def _subscriber_default(self):
         h = self.conn_spec.host
