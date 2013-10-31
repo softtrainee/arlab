@@ -73,7 +73,7 @@ class Ideogram(BaseArArFigure):
             #    scatter.index.metadata['selections'] = omit
 
         graph.set_x_limits(min_=self.xmi, max_=self.xma,
-                           pad='0.1')
+                           pad='0.05')
 
         ref = self.analyses[0]
         age_units = ref.arar_constants.age_units
@@ -89,10 +89,12 @@ class Ideogram(BaseArArFigure):
             self._rebuild_ideo(omit)
 
     def max_x(self, attr):
-        return max([ai.nominal_value for ai in self._unpack_attr(attr)])
+        return max([ai.nominal_value + ai.std_dev
+                    for ai in self._unpack_attr(attr)])
 
     def min_x(self, attr):
-        return min([ai.nominal_value for ai in self._unpack_attr(attr)])
+        return min([ai.nominal_value - ai.std_dev
+                    for ai in self._unpack_attr(attr)])
 
     #===============================================================================
     # plotters
@@ -232,7 +234,7 @@ class Ideogram(BaseArArFigure):
         labels = ['{:02n}{}'.format(si.aliquot, si.step) for si in self.sorted_analyses]
         ov = PointsLabelOverlay(component=scatter,
                                 labels=labels)
-        scatter.overlays.append(ov)
+        scatter.underlays.append(ov)
 
     def update_index_mapper(self, obj, name, old, new):
         if new:

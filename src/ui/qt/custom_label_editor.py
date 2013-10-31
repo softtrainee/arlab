@@ -18,7 +18,7 @@ from traits.etsconfig.etsconfig import ETSConfig
 ETSConfig.toolkit = 'qt4'
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Int, Color, Button, Any, Instance
-from traitsui.api import View, Item, UItem
+from traitsui.api import View, UItem
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
 # from traitsui.wx.basic_editor_factory import BasicEditorFactory
@@ -53,7 +53,7 @@ class _CustomLabelEditor(Editor):
         #             print self.object, self.value
             if isinstance(self.value, (str, int, float, long, unicode)):
                 self.control.setText(str(self.value))
-            #            self.control.SetLabel(self.value)
+                #            self.control.SetLabel(self.value)
 
     def _create_control(self, parent):
         control = QLabel()
@@ -91,7 +91,8 @@ class _CustomLabelEditor(Editor):
         #        parent.addWidget(control)
         return control
 
-    #        panel = wx.Panel(parent, -1)
+        #        panel = wx.Panel(parent, -1)
+
 #        size = None
 #        if self.item.width > 1 and self.item.height > 1:
 #            size = (self.item.width, self.item.height)

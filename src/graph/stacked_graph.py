@@ -48,12 +48,13 @@ class StackedGraph(Graph):
             for p in self.plots:
                 p.value_axis.trait_set(**{name: new})
 
-    @on_trait_change('plots:[x_grid:visible, y_grid:visible]')
+    @on_trait_change('plots:[x_grid:[visible,line_+], y_grid:[visible,line_+]]')
     def _update_grids(self, obj, name, old, new):
         if self.bind_grids:
             grid = 'x_grid' if obj.orientation == 'vertical' else 'y_grid'
             for p in self.plots:
-                getattr(p, grid).visible = new
+                setattr(getattr(p, grid), name, new)
+                #getattr(p, grid).visible = new
 
     @on_trait_change('plots:[padding_left, padding_right]')
     def _update_padding(self, obj, name, old, new):
@@ -99,10 +100,11 @@ class StackedGraph(Graph):
                 kw.pop('title')
             self._has_title = True
 
-        if not self.vertical_resize:
-            kw['resizable'] = 'h'
+        #if not self.vertical_resize:
+        #    pass
 
         if n > 0:
+            kw['resizable'] = 'h'
             if 'bounds' not in kw:
                 kw['bounds'] = (1, self.panel_height)
 

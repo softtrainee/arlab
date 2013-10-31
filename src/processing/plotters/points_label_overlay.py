@@ -33,9 +33,11 @@ class PointsLabelOverlay(AbstractOverlay):
     def _get_gfont(self):
         return str_to_font(self.font)
 
-    def overlay(self, other_component, gc, view_bounds=None, mode="normal"):
+    def overlay(self, oc, gc, view_bounds=None, mode="normal"):
         xoffset, yoffset = 10, 0
         with gc:
+            gc.clip_to_rect(oc.x, oc.y, oc.x2, oc.y2)
+
             dd = self.component.index.get_data()
             xs = self.component.index_mapper.map_screen(dd)
             xs += xoffset
@@ -43,9 +45,9 @@ class PointsLabelOverlay(AbstractOverlay):
             dd = self.component.value.get_data()
             ys = self.component.value_mapper.map_screen(dd)
 
+            gc.set_font(self.gfont)
             w, h, _, _ = gc.get_full_text_extent('ff')
             ys += yoffset - h / 2.0
-            gc.set_font(self.gfont)
 
             for xi, yi, li in zip(xs, ys, self.labels):
                 gc.set_text_position(xi, yi)

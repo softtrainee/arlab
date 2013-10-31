@@ -28,7 +28,7 @@ from src.pychron_constants import PLUSMINUS
 
 class ArArConstantsPreferences(BasePreferencesHelper):
     name = 'Constants'
-    preferences_path = 'pychron.experiment.constants'
+    preferences_path = 'pychron.arar.constants'
     Ar40_Ar36_atm = Float(295.5)
     Ar40_Ar36_atm_error = Float(0)
     Ar40_Ar38_atm = Float(1575)
@@ -54,6 +54,8 @@ class ArArConstantsPreferences(BasePreferencesHelper):
     sensitivity = Float(0)
     ic_factor = Float(1.0)
     ic_factor_error = Float(0.0)
+
+    age_units = Enum('Ma', 'ka')
 
 
 class ArArConstantsPreferencesPane(PreferencesPane):
@@ -82,7 +84,53 @@ class ArArConstantsPreferencesPane(PreferencesPane):
             show_border=True,
             label='Decay'
         )
+        return decay
 
+    def traits_view(self):
+        ratios = VGroup(
+            HGroup(Spring(springy=False, width=125),
+                   Label('Value'), Spring(springy=False, width=55),
+                   Label(u'{}1s'.format(PLUSMINUS))),
+            HGroup(Item('Ar40_Ar36_atm', label='(40Ar/36Ar)atm'),
+                   Item('Ar40_Ar36_atm_error', show_label=False)),
+            HGroup(Item('Ar40_Ar38_atm', label='(40Ar/38Ar)atm'),
+                   Item('Ar40_Ar38_atm_error', show_label=False)),
+
+            HGroup(
+                Item('Ar37_Ar39_mode', label='(37Ar/39Ar)K'),
+                Item('Ar37_Ar39', show_label=False),
+                Item('Ar37_Ar39_error', show_label=False)),
+
+            #show_border=True,
+            label='Ratios'
+        )
+
+        decay = self._get_decay_group()
+        spectrometer = VGroup(
+            Item('abundant_sensitivity'),
+            Item('sensitivity',
+                 tooltip='Nominal spectrometer sensitivity saved with analysis'
+            ),
+            HGroup(Spring(springy=False, width=125),
+                   Label('Value'), Spring(springy=False, width=55),
+                   Label(u'{}1s'.format(PLUSMINUS))),
+            HGroup(
+                Item('ic_factor',
+                     tooltip='Default intercalibration factor (H1/CDD) saved with analysis'
+                ),
+                UItem('ic_factor_error')
+            ),
+            label='Spectrometer',
+            #show_border=True
+        )
+
+        general = VGroup(Item('age_units', label='Age Units'),
+                         label='General')
+
+        v = View(general, decay, ratios, spectrometer)
+        return v
+
+        #============= EOF =============================================
         #         decay = VGroup(
         #                         HGroup(Spring(springy=False, width=125),
         #                                Label('Value'), Spring(springy=False, width=55),
@@ -126,44 +174,3 @@ class ArArConstantsPreferencesPane(PreferencesPane):
         #                         show_border=True,
         #                         label='Decay'
         #                         )
-        return decay
-
-    def traits_view(self):
-        ratios = VGroup(
-            HGroup(Spring(springy=False, width=125),
-                   Label('Value'), Spring(springy=False, width=55),
-                   Label(u'{}1s'.format(PLUSMINUS))),
-            HGroup(Item('Ar40_Ar36_atm', label='(40Ar/36Ar)atm'),
-                   Item('Ar40_Ar36_atm_error', show_label=False)),
-            HGroup(Item('Ar40_Ar38_atm', label='(40Ar/38Ar)atm'),
-                   Item('Ar40_Ar38_atm_error', show_label=False)),
-
-            HGroup(
-                Item('Ar37_Ar39_mode', label='(37Ar/39Ar)K'),
-                Item('Ar37_Ar39', show_label=False),
-                Item('Ar37_Ar39_error', show_label=False)),
-
-            show_border=True,
-            label='Ratios'
-        )
-
-        decay = self._get_decay_group()
-        spectrometer = VGroup(
-            Item('abundant_sensitivity'),
-            Item('sensitivity',
-                 tooltip='Nominal spectrometer sensitivity saved with analysis'
-            ),
-            HGroup(Spring(springy=False, width=125),
-                   Label('Value'), Spring(springy=False, width=55),
-                   Label(u'{}1s'.format(PLUSMINUS))),
-            HGroup(
-                Item('ic_factor',
-                     tooltip='Default intercalibration factor (H1/CDD) saved with analysis'
-                ),
-                UItem('ic_factor_error')
-            ),
-            label='Spectrometer', show_border=True)
-        v = View(decay, ratios, spectrometer)
-        return v
-
-        #============= EOF =============================================

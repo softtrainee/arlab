@@ -135,28 +135,28 @@ class ArArAge(Loggable):
         try:
 
             arc = self.arar_constants
-            bind_preference(arc, 'lambda_b_v', 'pychron.experiment.constants.lambda_b')
-            bind_preference(arc, 'lambda_b_e', 'pychron.experiment.constants.lambda_b_error')
-            bind_preference(arc, 'lambda_e_v', 'pychron.experiment.constants.lambda_e')
-            bind_preference(arc, 'lambda_e_e', 'pychron.experiment.constants.lambda_e_error')
-            bind_preference(arc, 'lambda_Cl36_v', 'pychron.experiment.constants.lambda_Cl36')
-            bind_preference(arc, 'lambda_Cl36_e', 'pychron.experiment.constants.lambda_Cl36_error')
-            bind_preference(arc, 'lambda_Ar37_v', 'pychron.experiment.constants.lambda_Ar37')
-            bind_preference(arc, 'lambda_Ar37_e', 'pychron.experiment.constants.lambda_Ar37_error')
-            bind_preference(arc, 'lambda_Ar39_v', 'pychron.experiment.constants.lambda_Ar39')
-            bind_preference(arc, 'lambda_Ar39_e', 'pychron.experiment.constants.lambda_Ar39_error')
+            bind_preference(arc, 'lambda_b_v', 'pychron.arar.constants.lambda_b')
+            bind_preference(arc, 'lambda_b_e', 'pychron.arar.constants.lambda_b_error')
+            bind_preference(arc, 'lambda_e_v', 'pychron.arar.constants.lambda_e')
+            bind_preference(arc, 'lambda_e_e', 'pychron.arar.constants.lambda_e_error')
+            bind_preference(arc, 'lambda_Cl36_v', 'pychron.arar.constants.lambda_Cl36')
+            bind_preference(arc, 'lambda_Cl36_e', 'pychron.arar.constants.lambda_Cl36_error')
+            bind_preference(arc, 'lambda_Ar37_v', 'pychron.arar.constants.lambda_Ar37')
+            bind_preference(arc, 'lambda_Ar37_e', 'pychron.arar.constants.lambda_Ar37_error')
+            bind_preference(arc, 'lambda_Ar39_v', 'pychron.arar.constants.lambda_Ar39')
+            bind_preference(arc, 'lambda_Ar39_e', 'pychron.arar.constants.lambda_Ar39_error')
 
-            bind_preference(arc, 'atm4036_v', 'pychron.experiment.constants.Ar40_Ar36_atm')
-            bind_preference(arc, 'atm_4036_e', 'pychron.experiment.constants.Ar40_Ar36_atm_error')
-            bind_preference(arc, 'atm4038_v', 'pychron.experiment.constants.Ar40_Ar38_atm')
-            bind_preference(arc, 'atm_4038_e', 'pychron.experiment.constants.Ar40_Ar38_atm_error')
+            bind_preference(arc, 'atm4036_v', 'pychron.arar.constants.Ar40_Ar36_atm')
+            bind_preference(arc, 'atm_4036_e', 'pychron.arar.constants.Ar40_Ar36_atm_error')
+            bind_preference(arc, 'atm4038_v', 'pychron.arar.constants.Ar40_Ar38_atm')
+            bind_preference(arc, 'atm_4038_e', 'pychron.arar.constants.Ar40_Ar38_atm_error')
 
-            bind_preference(arc, 'k3739_mode', 'pychron.experiment.constants.Ar37_Ar39_mode')
-            bind_preference(arc, 'k3739_v', 'pychron.experiment.constants.Ar37_Ar39')
-            bind_preference(arc, 'k3739_e', 'pychron.experiment.constants.Ar37_Ar39_error')
+            bind_preference(arc, 'k3739_mode', 'pychron.arar.constants.Ar37_Ar39_mode')
+            bind_preference(arc, 'k3739_v', 'pychron.arar.constants.Ar37_Ar39')
+            bind_preference(arc, 'k3739_e', 'pychron.arar.constants.Ar37_Ar39_error')
 
-            bind_preference(arc, 'age_units', 'pychron.experiment.general_age.age_units')
-            bind_preference(arc, 'abundance_sensitivity', 'pychron.experiment.constants.abundance_sensitivity')
+            bind_preference(arc, 'age_units', 'pychron.arar.constants.age_units')
+            bind_preference(arc, 'abundance_sensitivity', 'pychron.arar.constants.abundance_sensitivity')
 
             mybind_preference(arc, 'ic_factors', 'pychron.spectrometer.ic_factors',
                               factory=ICFactorPreferenceBinding)
@@ -555,13 +555,13 @@ class ArArAge(Loggable):
         r = self._get_arar_result_attr('Ar36')
         if r:
             return r.std_dev
-    
+
     def _get_ar39decayfactor(self):
         return self._get_arar_result_attr('ar39decayfactor')
-        
+
     def _get_ar37decayfactor(self):
         return self._get_arar_result_attr('ar37decayfactor')
-        
+
     def _get_moles_Ar40(self):
         return 0.001
 

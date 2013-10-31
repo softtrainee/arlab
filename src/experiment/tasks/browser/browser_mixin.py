@@ -49,7 +49,7 @@ class BrowserMixin(ColumnSorterMixin):
     sample_filter_values = List
     sample_filter_parameter = Str('Sample')
     sample_filter_comparator = Enum('=', 'not =')
-    sample_filter_parameters = List(['Sample', 'Material'])
+    sample_filter_parameters = List(['Sample', 'Material', 'Labnumber'])
 
     configure_sample_table = Button
     clear_selection_button = Button
@@ -77,8 +77,10 @@ class BrowserMixin(ColumnSorterMixin):
         db = self.manager.db
         with db.session_ctx():
             ps = db.get_projects(order=gen_ProjectTable.name.asc())
+            ms = db.get_mass_spectrometers()
+            recents = [ProjectRecordView('Recent {}'.format(mi.name.capitalize())) for mi in ms]
 
-            ad = [ProjectRecordView('Recent')] + [ProjectRecordView(p) for p in ps]
+            ad = recents + [ProjectRecordView(p) for p in ps]
 
             self.projects = ad
             self.oprojects = ad
@@ -88,12 +90,12 @@ class BrowserMixin(ColumnSorterMixin):
             db = self.manager.db
             with db.session_ctx():
                 if hasattr(new, '__iter__'):
-                    name=new[0].name
+                    name = new[0].name
                 else:
-                    name=new.name
-                    
-                if name == 'Recent':
-                    sams = self._set_recent_samples()
+                    name = new.name
+
+                if name.startswith('Recent'):
+                    sams = self._set_recent_samples(name)
                 else:
                     sams = self._set_samples()
 
@@ -105,11 +107,14 @@ class BrowserMixin(ColumnSorterMixin):
             p = self._get_sample_filter_parameter()
             self.sample_filter_values = [getattr(si, p) for si in sams]
 
-    def _set_recent_samples(self):
+    def _set_recent_samples(self, recent_name):
+        args = recent_name.split(' ')
+        ms = ' '.join(args[1:])
+
         db = self.manager.db
         with db.session_ctx():
             lpost = datetime.now() - timedelta(hours=self.recent_hours)
-            ss = db.get_recent_samples(lpost)
+            ss = db.get_recent_samples(lpost, ms)
             sams = [SampleRecordView(s)
                     for s in ss]
 
@@ -142,7 +147,12 @@ class BrowserMixin(ColumnSorterMixin):
                     def test(sa):
                         return any([len(li.analyses) for li in sa.labnumbers])
 
-                ss = [SampleRecordView(s) for s in ss if test(s)]
+                def make_samples(sa):
+                    return [SampleRecordView(sa, labnumber=ln.identifier)
+                            for ln in sa.labnumbers]
+
+                ss = [si for s in ss if test(s)
+                      for si in make_samples(s)]
                 sams.extend(ss)
         return sams
         #self.samples = sams

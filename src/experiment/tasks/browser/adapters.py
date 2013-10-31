@@ -38,10 +38,15 @@ class ProjectAdapter(BrowserAdapter):
 
 
 class SampleAdapter(BrowserAdapter):
-    columns = [('Sample', 'name'), ('Material', 'material')]
-    all_columns = [('Sample', 'name'), ('Material', 'material')]
+    columns = [('Sample', 'name'),
+               ('Identifier', 'labnumber'),
+               ('Material', 'material')]
+    all_columns = [('Sample', 'name'),
+                   ('Identifier', 'labnumber'),
+                   ('Material', 'material')]
     #     material_text = Property
     odd_bg_color = 'lightgray'
 
     name_width = Int(150)
+    labnumber_width = Int(75)
     material_width = Int(100)

@@ -42,56 +42,94 @@ class EInt(Int):
     auto_set = False
 
 
-class PlotEditor(HasTraits):
-    xmin = EFloat
-    xmax = EFloat
-    ymin = EFloat
-    ymax = EFloat
-    xauto = Bool
-    yauto = Bool
+class Grid(HasTraits):
+    plot_grid = Any
+    show_grid = Bool
+    line_style = LineStyle
+    line_width = Int
 
-    plot = Any
-    padding_left = EInt
-    padding_right = EInt
-    padding_top = EInt
-    padding_bottom = EInt
+    def _plot_grid_changed(self):
+        g = self.plot_grid
+        if g:
+            traits = {'show_grid': g.visible,
+                      'line_style': g.line_style,
+                      'line_width': g.line_width}
+
+            self.trait_set(trait_change_notify=False, **traits)
+
+    @on_trait_change('show_grid, line_+')
+    def _update_grids(self, name, new):
+        if name == 'show_grid':
+            name = 'visible'
+
+        setattr(self.plot_grid, name, new)
+        self.plot_grid.invalidate_and_redraw()
+
+    def traits_view(self):
+        v = View(HGroup(Item('show_grid', label='Show Grid'),
+                        UItem('line_style'),
+                        UItem('line_width')))
+        return v
+
+
+class Axis(HasTraits):
+    plot_axis = Any
 
     title_spacing = EFloat
+    title_spacing_auto = Bool
     tick_visible = Bool
     title_font_size = Enum(6, 8, 10, 11, 12, 14, 15, 18, 22, 24, 36)
     tick_font_size = Enum(6, 8, 10, 11, 12, 14, 15, 18, 22, 24, 36)
+    tick_interval = Float
+    tick_interval_auto = Bool
 
-    x_grid = Bool
-    y_grid = Bool
+    grid = Instance(Grid, ())
 
-    renderers = List
+    def _plot_axis_changed(self):
+        vaxis = self.plot_axis
+        if vaxis:
+            traits = {}
+            ts = vaxis.title_spacing
+            if ts == 'auto':
+                traits['title_spacing_auto'] = True
+            else:
+                traits['title_spacing_auto'] = False
+                traits['title_spacing'] = ts
 
-    @on_trait_change('padding+')
-    def _update_padding(self, name, new):
-        self.plot.trait_set(**{name: new})
-        self.plot._layout_needed = True
-        self.plot.invalidate_and_redraw()
+            traits['title_font_size'] = vaxis.title_font.size
+            traits['tick_visible'] = vaxis.tick_visible
+
+            ti = vaxis.tick_interval
+            if ti == 'auto':
+                traits['tick_interval_auto'] = True
+            else:
+                traits['tick_interval_auto'] = False
+                traits['tick_interval'] = ti
+
+            traits['tick_font_size'] = vaxis.tick_label_font.size
+            self.trait_set(trait_change_notify=False, **traits)
 
     @on_trait_change('title_font_size')
     def _update_title_font(self):
-        f = copy.copy(self.plot.y_axis.title_font)
+        f = copy.copy(self.plot_axis.title_font)
 
         f.size = self.title_font_size
-        self.plot.y_axis.title_font = f
-        self.plot.invalidate_and_redraw()
+        self.plot_axis.title_font = f
+        self.plot_axis.invalidate_and_redraw()
 
     @on_trait_change('tick_font_size')
     def _update_tick_font(self):
-        f = copy.copy(self.plot.y_axis.tick_label_font)
+        f = copy.copy(self.plot_axis.tick_label_font)
 
         f.size = self.tick_font_size
-        self.plot.y_axis.tick_label_font = f
-        self.plot.invalidate_and_redraw()
+        self.plot_axis.tick_label_font = f
+        self.plot_axis.invalidate_and_redraw()
 
     @on_trait_change('title_spacing')
     def _update_value_axis(self, name, new):
-        self.plot.value_axis.title_spacing = new
-        self.plot.invalidate_and_redraw()
+        if self.plot_axis:
+            self.plot_axis.title_spacing = new
+            self.plot_axis.invalidate_and_redraw()
 
     @on_trait_change('tick_visible')
     def _update_tick_visible(self, name, new):
@@ -99,49 +137,82 @@ class PlotEditor(HasTraits):
             fmt = DEFAULT_TICK_FORMATTER
         else:
             fmt = lambda x: ''
-        self.plot.value_axis.tick_visible = new
-        self.plot.value_axis.trait_set(**{'tick_visible': new,
-                                          'tick_label_formatter': fmt
-        })
-        self.plot.invalidate_and_redraw()
+        self.plot_axis.tick_visible = new
+        self.plot_axis.trait_set(**{'tick_visible': new,
+                                    'tick_label_formatter': fmt})
+        self.plot_axis.invalidate_and_redraw()
 
-        #
+    @on_trait_change('tick_interval_auto, title_spacing_auto')
+    def _tick_interval_auto_changed(self, name, new):
+        name = name.replace('_auto', '')
+        if new:
+            ti = 'auto'
+        else:
+            ti = getattr(self, name)
 
-    @on_trait_change('x_grid, y_grid')
-    def _update_grids(self, name, new):
-        getattr(self.plot, name).visible = new
+        self.plot_axis.trait_set(**{name: ti})
+        self.plot_axis.invalidate_and_redraw()
+
+    @on_trait_change('tick_interval, title_spacing')
+    def _tick_interval_changed(self, name, new):
+        self.plot_axis.trait_set(name, new)
+        self.plot_axis.invalidate_and_redraw()
+
+    def traits_view(self):
+        y_grp = Group(
+            HGroup(Item('title_spacing_auto', label='Auto'),
+                   Item('title_spacing', enabled_when='not title_spacing_auto')),
+            Item('tick_visible'),
+            Item('title_font_size'),
+            Item('tick_font_size'),
+            HGroup(Item('tick_interval_auto', label='Auto'),
+                   Item('tick_interval', enabled_when='not tick_interval_auto')),
+            UItem('grid', style='custom')
+        )
+        v = View(y_grp)
+        return v
+
+
+class PlotEditor(HasTraits):
+    plot = Any
+    analyses = Any
+
+    xmin = EFloat
+    xmax = EFloat
+    ymin = EFloat
+    ymax = EFloat
+
+    xauto = Bool
+    yauto = Bool
+
+    padding_left = EInt
+    padding_right = EInt
+    padding_top = EInt
+    padding_bottom = EInt
+
+    x_axis = Instance(Axis, ())
+    y_axis = Instance(Axis, ())
+
+    renderers = List
 
     def _plot_changed(self):
-        #self.xmin = self.plot.index_range.low
-        #self.xmax = self.plot.index_range.high
-        #
-        #self.ymin = self.plot.value_range.low
-        #self.ymax = self.plot.value_range.high
-        self.trait_set(xmin=self.plot.index_range.low,
-                       xmax=self.plot.index_range.high,
-                       ymin=self.plot.value_range.low,
-                       ymax=self.plot.value_range.high,
-                       trait_change_notify=False)
+        traits = {'xmin': self.plot.index_range.low,
+                  'xmax': self.plot.index_range.high,
+                  'ymin': self.plot.value_range.low,
+                  'ymax': self.plot.value_range.high}
 
-        traits = {}
         for attr in ('left', 'right', 'top', 'bottom'):
             attr = 'padding_{}'.format(attr)
             v = getattr(self.plot, attr)
             traits[attr] = v
 
-            #setattr(self, attr, getattr(self.plot, attr))
+        vaxis = self.plot.value_axis
+        self.y_axis.plot_axis = vaxis
+        self.y_axis.grid.plot_grid = self.plot.y_grid
 
-
-        #self.title_spacing = self.plot.value_axis.title_spacing
-        #self.tick_visible = self.plot.value_axis.tick_visible
-        #
-        #self.x_grid = self.plot.x_grid.visible
-        #self.y_grid = self.plot.y_grid.visible
-        traits['title_spacing'] = self.plot.value_axis.title_spacing
-        traits['tick_visible'] = self.plot.value_axis.tick_visible
-
-        traits['x_grid'] = self.plot.x_grid.visible
-        traits['y_grid'] = self.plot.y_grid.visible
+        vaxis = self.plot.index_axis
+        self.x_axis.plot_axis = vaxis
+        self.x_axis.grid.plot_grid = self.plot.x_grid
 
         self.trait_set(trait_change_notify=False, **traits)
 
@@ -163,6 +234,12 @@ class PlotEditor(HasTraits):
 
         self.renderers = rs
 
+    @on_trait_change('padding+')
+    def _update_padding(self, name, new):
+        self.plot.trait_set(**{name: new})
+        self.plot._layout_needed = True
+        self.plot.invalidate_and_redraw()
+
     def _xmin_changed(self):
         p = self.plot
         v = p.index_range.high
@@ -171,7 +248,7 @@ class PlotEditor(HasTraits):
             self.xauto = False
 
         try:
-            self.plot.index.metadata_changed = True
+            p.default_index.metadata_changed = True
         except AttributeError:
             pass
 
@@ -201,49 +278,41 @@ class PlotEditor(HasTraits):
             p.value_range.high_setting = self.ymax
             self.yauto = False
 
-            #    def _xauto_changed(self):
-            #        if self.xauto:
-            #            p = self.plot
-            #            p.index_range.low_setting = 'auto'
-            #            p.index_range.high_setting = 'auto'
-            #            p.index_range.refresh()
-            #            p.invalidate_and_redraw()
-            #            print p.index_range.high, p.index_range.low
+    def _xauto_changed(self):
+        if self.xauto:
+            #p = self.plot
+            dd = [a.age for a in self.analyses]
+
+            mid = [di.nominal_value - di.std_dev for di in dd]
+            mad = [di.nominal_value + di.std_dev for di in dd]
+            #mid=[di.nominal_value for di in dd]
+            #mad=[di.nominal_value for di in dd]
+            mi, ma = min(mid), max(mad)
+
+            p = 0.05 * (ma - mi)
+            self.xmin = mi - p
+            self.xmax = ma + p
 
 
     def traits_view(self):
-        y_grp = Group(
-            Item('title_spacing'),
-            Item('tick_visible'),
-            Item('title_font_size'),
-            Item('tick_font_size'),
-            label='Y Axis', )
-
-        grids_grp = Group(
-            Item('x_grid'),
-            Item('y_grid'),
-            label='Grids')
-
         renderers_grp = Group(
             UItem('renderers', editor=ListEditor(mutable=False,
                                                  style='custom',
-                                                 editor=InstanceEditor())
-            ),
+                                                 editor=InstanceEditor())),
             label='Plots')
 
         general_grp = VGroup(
-            Group(
-                #                           Item('xauto', label='Autoscale'),
-                Item('xmin', format_str='%0.4f'),
-                Item('xmax', format_str='%0.4f'),
-            ),
-            Group(
-                #                           Item('yauto', label='Autoscale'),
-                Item('ymin', format_str='%0.4f'),
-                Item('ymax', format_str='%0.4f'),
-            ),
-            y_grp,
-            grids_grp,
+            HGroup(Item('xauto', label='Auto'),
+                   UItem('xmin', format_str='%0.4f',
+                         enabled_when='not xauto'),
+                   UItem('xmax', format_str='%0.4f',
+                         enabled_when='not xauto'),
+                   label='X Limits'),
+            HGroup(UItem('ymin', format_str='%0.4f'),
+                   UItem('ymax', format_str='%0.4f'),
+                   label='Y Limits'),
+            Group(UItem('x_axis', style='custom'), label='X Axis'),
+            Group(UItem('y_axis', style='custom'), label='Y Axis'),
             label='General')
 
         layout_grp = Group(

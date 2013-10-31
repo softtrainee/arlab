@@ -229,6 +229,8 @@ class AnalysisView(HasTraits):
 
     def load_measurement(self, an):
         j = self._get_j(an)
+        jj = floatfmt(j.nominal_value, n=5, s=3)
+        jf = u'{} \u00b1{:0.2e}'.format(jj, j.std_dev)
         ms = [
             MeasurementValue(name='AnalysisID',
                              value=self.analysis_id),
@@ -239,18 +241,17 @@ class AnalysisView(HasTraits):
             MeasurementValue(name='Irradiation',
                              value=self._get_irradiation(an)),
             MeasurementValue(name='J',
-                             value=u'{:0.4f} \u00b1{:0.2e}'.format(j.nominal_value, j.std_dev)
-            ),
+                             value=jf),
             MeasurementValue(name='Sample',
                              value=an.sample),
             MeasurementValue(name='Material',
                              value=an.material),
-            
+
             MeasurementValue(name='Ar39Decay',
                              value=floatfmt(an.ar39decayfactor)),
             MeasurementValue(name='Ar37Decay',
                              value=floatfmt(an.ar37decayfactor)),
-            
+
         ]
         self.measurement_values = ms
 

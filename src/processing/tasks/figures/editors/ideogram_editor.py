@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Instance, Any, on_trait_change
+from traits.api import Instance
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -31,8 +31,8 @@ class IdeogramEditor(FigureEditor):
 
     def get_component(self, ans, plotter_options):
         meta = None
-        if self.model:
-            meta = self.model.dump_metadata()
+        if self.figure_model:
+            meta = self.figure_model.dump_metadata()
 
         if plotter_options is None:
             pom = IdeogramOptionsManager()
