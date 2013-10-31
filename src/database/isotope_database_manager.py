@@ -57,6 +57,9 @@ class IsotopeDatabaseManager(Loggable):
             try:
                 self.bind_preferences()
             except AttributeError, e:
+                import traceback
+
+                traceback.print_exc()
                 self.debug('bind exception. {}'.format(e))
 
                 #         if connect and not self.db.connect(warn=warn):
@@ -98,17 +101,13 @@ class IsotopeDatabaseManager(Loggable):
             self.db = self._db_factory()
 
         prefid = 'pychron.database'
-        try:
-            bind_preference(self, 'username', '{}.username'.format(prefid))
-            bind_preference(self.db, 'kind', '{}.db_kind'.format(prefid))
-            if self.db.kind == 'mysql':
-                bind_preference(self.db, 'host', '{}.db_host'.format(prefid))
-                bind_preference(self.db, 'username', '{}.db_username'.format(prefid))
-                bind_preference(self.db, 'password', '{}.db_password'.format(prefid))
+        bind_preference(self.db, 'kind', '{}.kind'.format(prefid))
+        if self.db.kind == 'mysql':
+            bind_preference(self.db, 'host', '{}.host'.format(prefid))
+            bind_preference(self.db, 'username', '{}.username'.format(prefid))
+            bind_preference(self.db, 'password', '{}.password'.format(prefid))
 
-            bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
-        except AttributeError:
-            pass
+        bind_preference(self.db, 'name', '{}.db_name'.format(prefid))
 
     def filter_analysis_tag(self, ans, exclude):
         if not isinstance(exclude, (list, tuple)):

@@ -35,4 +35,6 @@ class ConnectionSpec(HasTraits):
         )
         )
 
+    def __repr__(self):
+        return self.system_name
         #============= EOF =============================================
