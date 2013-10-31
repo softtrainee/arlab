@@ -34,7 +34,8 @@ class Series(BaseArArFigure):
                 p = graph.new_plot(padding=self.padding,
                                    ytitle=po.name,
                 )
-                #p.value_scale=po.scale
+
+                p.value_scale = po.scale
                 p.padding_left = 75
                 p.value_range.tight_bounds = False
 
@@ -43,7 +44,8 @@ class Series(BaseArArFigure):
             plot data on plots
         """
         graph = self.graph
-        self.xs = array([ai.timestamp for ai in self.sorted_analyses]) / 3600.
+        self.xs = array([ai.timestamp for ai in self.sorted_analyses])
+        #print [get_datetime(xi) for xi in self.xs]
         self.xs -= self.xs[0]
         with graph.no_regression(refresh=True):
             plots = [po for po in plots if po.use]
@@ -65,9 +67,8 @@ class Series(BaseArArFigure):
                                           yerror=yerr,
                                           fit=po.fit,
                                           plotid=pid,
-                                          type='scatter'
-            )
-            p.value_scale = po.scale
+                                          type='scatter')
+            #p.value_scale = po.scale
             self._add_error_bars(scatter, yerr, 'y', 1,
                                  visible=po.y_error)
         except (KeyError, ZeroDivisionError), e:

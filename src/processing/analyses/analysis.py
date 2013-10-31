@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Instance, Int, Str, Float, Dict, Property, \
-    Date
+    Date, Any
 #============= standard library imports ========================
 import time
 from datetime import datetime
@@ -109,7 +109,7 @@ class DBAnalysis(Analysis):
     timestamp = Float
     rundate = Date
 
-    peak_center = Float
+    peak_center = Any
 
     ic_factors = Dict
 
@@ -294,6 +294,8 @@ class DBAnalysis(Analysis):
         #    self.temp_status = 1
 
         # copy related table attrs
+
+
         self._sync_irradiation(meas_analysis)
         self._sync_isotopes(meas_analysis, unpack)
         self._sync_detector_info(meas_analysis)
@@ -345,6 +347,8 @@ class DBAnalysis(Analysis):
         self.isotopes = self._get_isotopes(meas_analysis,
                                            unpack=unpack)
         self.isotope_fits = self._get_isotope_fits()
+
+        self.peak_center = self._get_peak_center(meas_analysis)
 
     def _get_baselines(self, isotopes, meas_analysis, unpack):
         for dbiso in meas_analysis.isotopes:
@@ -452,9 +456,8 @@ class DBAnalysis(Analysis):
                     r.set_fit(fit)
                     isodict[name] = r
 
-
-    def _load_peak_center(self, meas_analysis):
-        pass
+    def _get_peak_center(self, meas_analysis):
+        return ufloat(0, 0)
 
     def _get_extraction_device(self, extraction):
         r = ''

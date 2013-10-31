@@ -98,7 +98,8 @@ class Processor(IsotopeDatabaseManager):
 
         return refs, unks
 
-    def analysis_series(self, analysis_type, ms, ed, weeks=0, days=0, hours=0):
+    def analysis_series(self, analysis_type, ms, ed, weeks=0,
+                        days=0, hours=0, limit=None):
         self.debug('{} {} {}'.format(analysis_type, ms, ed))
         db = self.db
         with db.session_ctx() as sess:
@@ -123,6 +124,9 @@ class Processor(IsotopeDatabaseManager):
             if ed:
                 q = q.filter(gen_ExtractionDeviceTable.name == ed)
 
+            if limit:
+                q = q.limit(limit)
+
             return self._make_analyses_from_query(q)
 
             #def load_sample_analyses(self, labnumber, sample, aliquot=None):
@@ -130,60 +134,60 @@ class Processor(IsotopeDatabaseManager):
             #    sess = db.get_session()
             #    q = sess.query(meas_AnalysisTable)
             #    q = q.join(gen_LabTable)
-        #    q = q.join(gen_SampleTable)
-        #
-        #    q = q.filter(gen_SampleTable.name == sample)
-        #    if aliquot is not None:
-        #        q = q.filter(meas_AnalysisTable.aliquot == aliquot)
-        #
-        #    if sample == 'FC-2':
-        #        q = q.filter(gen_LabTable.identifier == labnumber)
-        #
-        #    #        q = q.limit(10)
-        #    return self._make_analyses_from_query(q)
+            #    q = q.join(gen_SampleTable)
+            #
+            #    q = q.filter(gen_SampleTable.name == sample)
+            #    if aliquot is not None:
+            #        q = q.filter(meas_AnalysisTable.aliquot == aliquot)
+            #
+            #    if sample == 'FC-2':
+            #        q = q.filter(gen_LabTable.identifier == labnumber)
+            #
+            #    #        q = q.limit(10)
+            #    return self._make_analyses_from_query(q)
 
-        #def _make_analyses_from_query(self, q):
-        #    ans = None
-        #    try:
-        #        ans = q.all()
-        #        self.debug('{}'.format(ans))
-        #    except Exception, e:
-        #        import traceback
-        #
-        #        traceback.print_exc()
-        #
-        #    if ans:
-        #        ans = self.make_analyses(ans)
-        #        return ans
+            #def _make_analyses_from_query(self, q):
+            #    ans = None
+            #    try:
+            #        ans = q.all()
+            #        self.debug('{}'.format(ans))
+            #    except Exception, e:
+            #        import traceback
+            #
+            #        traceback.print_exc()
+            #
+            #    if ans:
+            #        ans = self.make_analyses(ans)
+            #        return ans
 
-        #     def auto_blank_fit(self, irradiation, level, kind):
-        #         if kind == 'preceeding':
-        #             '''
-        #             1. supply a list of labnumbers/ supply level and extract labnumbers (with project minnabluff)
-        #             2. get all analyses for the labnumbers
-        #             3. sort analyses by run date
-        #             4. calculate blank
-        #                 1. preceeding/bracketing
-        #                     get max 2 predictors
-        #
-        #                 2. fit
-        #                     a. group analyses by run date
-        #                     b. get n predictors based on group date
-        #             5. save blank
-        #             '''
-        #             db = self.db
-        #             level = db.get_irradiation_level(irradiation, level)
-        #
-        #             labnumbers = [pi.labnumber for pi in level.positions
-        #                             if pi.labnumber.sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff')]
-        #             ans = [ai
-        #                     for ln in labnumbers
-        #                         for ai in ln.analyses
-        #                         ]
-        #             pd = self.open_progress(n=len(ans))
-        #             for ai in ans:
-        #                 self.preceeding_blank_correct(ai, pd=pd)
-        #             db.commit()
+            #     def auto_blank_fit(self, irradiation, level, kind):
+            #         if kind == 'preceeding':
+            #             '''
+            #             1. supply a list of labnumbers/ supply level and extract labnumbers (with project minnabluff)
+            #             2. get all analyses for the labnumbers
+            #             3. sort analyses by run date
+            #             4. calculate blank
+            #                 1. preceeding/bracketing
+            #                     get max 2 predictors
+            #
+            #                 2. fit
+            #                     a. group analyses by run date
+            #                     b. get n predictors based on group date
+            #             5. save blank
+            #             '''
+            #             db = self.db
+            #             level = db.get_irradiation_level(irradiation, level)
+            #
+            #             labnumbers = [pi.labnumber for pi in level.positions
+            #                             if pi.labnumber.sample.project.name in ('j', 'Minna Bluff', 'Mina Bluff')]
+            #             ans = [ai
+            #                     for ln in labnumbers
+            #                         for ai in ln.analyses
+            #                         ]
+            #             pd = self.open_progress(n=len(ans))
+            #             for ai in ans:
+            #                 self.preceeding_blank_correct(ai, pd=pd)
+            #             db.commit()
 
     #def refit_isotopes(self, meas_analysis, pd=None, fits=None, keys=None, verbose=False):
     #
@@ -547,8 +551,8 @@ class Processor(IsotopeDatabaseManager):
     def _make_analyses_from_query(self, q):
         ans = None
         try:
+            self.debug('{}'.format(q.count()))
             ans = q.all()
-            self.debug('{}'.format(ans))
         except Exception, e:
             import traceback
 

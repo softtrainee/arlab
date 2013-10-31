@@ -15,21 +15,25 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Property, List, Event, Instance, Button, cached_property, Str
+from traits.api import Property, List, Event, Instance, Button, cached_property, Str, \
+    HasTraits
 from traitsui.api import View, Item, EnumEditor, HGroup
 import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
 from src.envisage.tasks.pane_helpers import new_button_editor
-from src.viewable import Viewable
-from src.processing.plotters.plotter_options import PlotterOptions, \
-    IdeogramOptions, SpectrumOptions, InverseIsochronOptions, SeriesOptions, \
-    BasePlotterOptions, SystemMonitorOptions
+from src.processing.plotters.options.base import BasePlotterOptions
+from src.processing.plotters.options.ideogram import IdeogramOptions
+from src.processing.plotters.options.isochron import InverseIsochronOptions
+from src.processing.plotters.options.plotter import PlotterOptions
+from src.processing.plotters.options.series import SeriesOptions
+from src.processing.plotters.options.spectrum import SpectrumOptions
+from src.processing.plotters.options.system_monitor import SystemMonitorOptions
 from src.paths import paths
 
 
-class PlotterOptionsManager(Viewable):
+class PlotterOptionsManager(HasTraits):
     plotter_options_list = Property(List(BasePlotterOptions), depends_on='_plotter_options_list_dirty')
     _plotter_options_list_dirty = Event
     plotter_options = Instance(BasePlotterOptions)
@@ -116,7 +120,8 @@ class PlotterOptionsManager(Viewable):
                  show_label=False,
                  style='custom'),
             resizable=True,
-            handler=self.handler_klass)
+            #handler=self.handler_klass
+        )
         return v
 
     @cached_property
@@ -154,25 +159,25 @@ class PlotterOptionsManager(Viewable):
 class IdeogramOptionsManager(PlotterOptionsManager):
     plotter_options_klass = IdeogramOptions
     persistence_name = 'ideogram'
-    title = 'Ideogram Plot Options'
+    #title = 'Ideogram Plot Options'
 
 
 class SpectrumOptionsManager(PlotterOptionsManager):
     plotter_options_klass = SpectrumOptions
     persistence_name = 'spectrum'
-    title = 'Spectrum Plot Options'
+    #title = 'Spectrum Plot Options'
 
 
 class InverseIsochronOptionsManager(PlotterOptionsManager):
     plotter_options_klass = InverseIsochronOptions
     persistence_name = 'inverse_isochron'
-    title = 'Isochron Plot Options'
+    #title = 'Isochron Plot Options'
 
 
 class SeriesOptionsManager(PlotterOptionsManager):
     plotter_options_klass = SeriesOptions
     persistence_name = 'series'
-    title = 'Series Plot Options'
+    #title = 'Series Plot Options'
 
 
 class SystemMonitorOptionsManager(PlotterOptionsManager):

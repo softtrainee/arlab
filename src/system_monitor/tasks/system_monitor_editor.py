@@ -109,19 +109,21 @@ class SystemMonitorEditor(SeriesEditor):
                 ms = an.mass_spectrometer
                 ed = an.extract_device
 
-                weeks = 0
+                weeks = 1000
                 days = 0
                 hours = 12
+                limit = 10
 
-                proc.analysis_series(analysis_type, ms, ed, weeks, days, hours)
+                ans = proc.analysis_series(analysis_type, ms, ed,
+                                           weeks, days, hours, limit)
+                self.unknowns = ans
 
     def _tool_default(self):
         tool = SystemMonitorControls()
-
-        keys = ('Ar40',)
-        fits = ('',)
-        tool.load_fits(keys, fits)
         return tool
+
+    def _load_refiso(self, ref):
+        pass
 
     def _set_name(self):
         pass

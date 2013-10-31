@@ -41,8 +41,8 @@ class SystemMonitorTask(FigureTask):
     controls_pane = Instance(ControlsPane)
     unknowns_pane = Instance(AnalysisPane)
 
-    def prepare_destroy(self):
-        pass
+    #def prepare_destroy(self):
+    #    pass
 
     def add_system_monitor(self):
         editor = self._editor_factory()
@@ -51,7 +51,6 @@ class SystemMonitorTask(FigureTask):
     def _editor_factory(self):
         editor = SystemMonitorEditor(processor=self.manager)
         editor.start()
-
         return editor
 
     def _active_editor_changed(self):
