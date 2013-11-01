@@ -129,28 +129,54 @@ class IsotopeDatabaseManager(Loggable):
 
         with self.db.session_ctx():
             if ans:
-                progress = None
 
                 db_ans, no_db_ans = map(list, partition(ans, lambda x: isinstance(x, DBAnalysis)))
-                if no_db_ans:
+                for di in db_ans:
+                    self.debug('is DBAnalysis -{}'.format(di.record_id))
 
-                    cached_ans, no_db_ans = map(list, partition(no_db_ans,
-                                                                lambda x: x.uuid in ANALYSIS_CACHE))
+                if no_db_ans:
+                    cached_ans, no_db_ans = partition(no_db_ans,
+                                                      lambda x: x.uuid in ANALYSIS_CACHE)
+                    cached_ans = list(cached_ans)
+                    for ci in cached_ans:
+                        self.debug('getting {} from cache'.format(ci.labnumber.identifier))
 
                     db_ans.extend([ANALYSIS_CACHE[ci.uuid] for ci in cached_ans])
-                    n = len(no_db_ans)
-                    if n > 1:
-                        progress = self._open_progress(n)
 
-                    db_ans.extend([self._analysis_factory(ai,
-                                                          progress=progress,
-                                                          calculate_age=calculate_age,
-                                                          unpack=unpack,
-                                                          **kw)
-                                   for ai in no_db_ans])
-                    if progress:
-                        progress.on_trait_change(self._progress_closed,
-                                                 'closed', remove=True)
+                    no_db_ans = list(no_db_ans)
+                    n = len(no_db_ans)
+                    if n:
+                        progress = None
+                        if n > 1:
+                            progress = self._open_progress(n)
+
+                        for i, ai in enumerate(no_db_ans):
+                            if progress:
+                                if progress.canceled:
+                                    self.debug('canceling make analyses')
+                                    return []
+                                elif progress.accepted:
+                                    self.debug('accepting {}/{} analyses'.format(i, n))
+                                    break
+
+                            a = self._analysis_factory(ai,
+                                                       progress=progress,
+                                                       calculate_age=calculate_age,
+                                                       unpack=unpack,
+                                                       **kw)
+                            db_ans.append(a)
+                            #time.sleep(10)
+
+                        #db_ans.extend([self._analysis_factory(ai,
+                        #                                      progress=progress,
+                        #                                      calculate_age=calculate_age,
+                        #                                      unpack=unpack,
+                        #                                      **kw)
+                        #               for ai in no_db_ans])
+
+                        if progress:
+                            progress.on_trait_change(self._progress_closed,
+                                                     'closed', remove=True)
                 return db_ans
 
     def get_level(self, level, irradiation=None):
@@ -184,7 +210,7 @@ class IsotopeDatabaseManager(Loggable):
                 def f(ai, msg):
                     progress.change_message(msg)
                     func(ai)
-                    progress.increment()
+
             else:
                 def f(ai, msg):
                     func(ai)
@@ -197,7 +223,9 @@ class IsotopeDatabaseManager(Loggable):
     def _open_progress(self, n):
 
         pd = myProgressDialog(max=n - 1,
-                              size=(550, 15))
+                              #dialog_size=(0,0, 550, 15),
+                              can_cancel=True,
+                              can_ok=True)
         pd.open()
         pd.on_trait_change(self._progress_closed, 'closed')
         return pd
@@ -311,7 +339,6 @@ class IsotopeDatabaseManager(Loggable):
             m = 'calculating age' if show_age else ''
             msg = 'loading {}. {}'.format(rid, m)
             prog.change_message(msg)
-            prog.increment()
 
         meas_analysis = self.db.get_analysis_uuid(rec.uuid)
 

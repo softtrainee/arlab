@@ -294,12 +294,11 @@ class ArArAge(Loggable):
 
             k_ca_pr = 1
             if prs:
-            #                k_ca_pr = 1
-            #                 cak = prs['Ca_K']
-            #                 cak = cak if cak else 1
                 cak = prs.get('Ca_K', 1)
-                k_ca_pr = 1 / cak
+                if cak is None:
+                    cak = 1.0
 
+                k_ca_pr = 1 / cak
             try:
                 ret = k / ca * k_ca_pr
             except ZeroDivisionError:
@@ -316,12 +315,11 @@ class ArArAge(Loggable):
             prs = self.production_ratios
             k_cl_pr = 1
             if prs:
-
-            #                 if 'Cl_K' in prs:
                 clk = prs.get('Cl_K', 1)
-                #                 clk = clk if clk else 1
-                k_cl_pr = 1 / clk
+                if clk is None:
+                    clk = 1.0
 
+                k_cl_pr = 1 / clk
             try:
                 ret = k / cl * k_cl_pr
             except ZeroDivisionError:

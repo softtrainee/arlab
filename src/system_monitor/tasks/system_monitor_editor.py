@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from threading import Thread
 import time
-from traits.api import Instance, Property, Int, Bool
+from traits.api import Instance, Property, Int, Bool, on_trait_change
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -45,10 +45,16 @@ class SystemMonitorEditor(SeriesEditor):
     _sub_str = 'RunAdded'
 
     use_poll = Bool(False)
-    _poll_interval = Int
+    _poll_interval = Int(10)
     _polling = False
+    pickle_path = 'system_monitor'
+
+    @on_trait_change('tool:[+, refresh_button]')
+    def _handle_tool_change(self):
+        self.sub_refresh()
 
     def prepare_destroy(self):
+        self.dump_tool()
         self._polling = False
         self.subscriber.stop()
 
@@ -62,13 +68,27 @@ class SystemMonitorEditor(SeriesEditor):
                          port=self.conn_spec.port)
         return sub
 
-    def start(self):
-        sub = self.subscriber
-        sub.connect()
-        sub.subscribe(self._sub_str)
-        sub.listen(self.sub_refresh_plots)
+    def _dump_tool(self):
+        return self.tool
 
-        if self.use_poll:
+    def _load_tool(self, obj):
+        self.tool = obj
+
+    def start(self):
+        self.load_tool()
+
+        use_poll = True
+        if self.conn_spec.host:
+            sub = self.subscriber
+            if sub.connect(timeout=1):
+                sub.subscribe(self._sub_str)
+                sub.listen(self.sub_refresh)
+                use_poll = False
+
+        if use_poll:
+            url = self.conn_spec.url
+            self.debug('System publisher @ {} not available using database polling instead'.format(url))
+
             t = Thread(name='poll', target=self._poll)
             t.setDaemon(True)
             t.start()
@@ -80,9 +100,10 @@ class SystemMonitorEditor(SeriesEditor):
             time.sleep(self._poll_interval)
 
             lr = self._get_last_run_uuid()
+            self.debug('current uuid {}  <> {}'.format(last_run_uuid, lr))
             if lr != last_run_uuid:
                 last_run_uuid = lr
-                invoke_in_main_thread(self.sub_refresh_plots, lr)
+                invoke_in_main_thread(self.sub_refresh, lr)
 
     def _get_last_run_uuid(self):
         db = self.processor.db
@@ -91,10 +112,11 @@ class SystemMonitorEditor(SeriesEditor):
             if dbrun:
                 return dbrun.uuid
 
-    def sub_refresh_plots(self, last_run_uuid=None):
+    def sub_refresh(self, last_run_uuid=None):
         """
             get the last n runs for this system
         """
+        self.info('refresh analyses. last UUID={}'.format(last_run_uuid))
         proc = self.processor
         db = proc.db
 
@@ -109,10 +131,10 @@ class SystemMonitorEditor(SeriesEditor):
                 ms = an.mass_spectrometer
                 ed = an.extract_device
 
-                weeks = 1000
-                days = 0
-                hours = 12
-                limit = 10
+                weeks = self.tool.weeks
+                days = self.tool.days
+                hours = self.tool.hours
+                limit = self.tool.limit
 
                 ans = proc.analysis_series(analysis_type, ms, ed,
                                            weeks, days, hours, limit)

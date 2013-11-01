@@ -152,6 +152,8 @@ class MeanIndicatorOverlay(AbstractOverlay, Movable):
     def overlay(self, other_component, gc, view_bounds=None, mode="normal"):
 
         with gc:
+            oc = other_component
+            gc.clip_to_rect(oc.x, oc.y, oc.x2, oc.y2)
             points = self._gather_data()
             #print points, self.x, self.y
             marker = self.marker

@@ -15,11 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from chaco.plot_containers import HPlotContainer
 from traits.api import Any, List, on_trait_change, Instance, Property, Event, File
 from traitsui.api import View, UItem, InstanceEditor
 from src.codetools.simple_timeit import timethis
-from src.envisage.tasks.base_editor import BaseTraitsEditor
 #============= standard library imports ========================
 from numpy import asarray
 import os
@@ -57,23 +55,29 @@ class GraphEditor(BaseUnknownsEditor):
     def dump_tool(self):
         p = os.path.join(paths.hidden_dir, self.pickle_path)
         with open(p, 'w') as fp:
-            pickle.dump(self.tool.fits, fp)
+            tool = self._dump_tool()
+            pickle.dump(tool, fp)
+
+    def _dump_tool(self):
+        return self.tool.fits
 
     def load_tool(self):
         p = os.path.join(paths.hidden_dir, self.pickle_path)
         if os.path.isfile(p):
             with open(p, 'r') as fp:
                 try:
-                    fits = pickle.load(fp)
+                    obj = pickle.load(fp)
+                    self._load_tool(obj)
                 except (pickle.PickleError, OSError, EOFError):
                     return
 
-                for fi in fits:
-                    ff = next((fo for fo in self.tool.fits if fo.name == fi.name), None)
-                    if ff:
-                        ff.trait_set(fit=fi.fit,
-                                     use=fi.use,
-                                     show=fi.show)
+    def _load_tool(self, fits):
+        for fi in fits:
+            ff = next((fo for fo in self.tool.fits if fo.name == fi.name), None)
+            if ff:
+                ff.trait_set(fit=fi.fit,
+                             use=fi.use,
+                             show=fi.show)
 
     def normalize(self, xs, start=None):
         xs = asarray(xs)
@@ -228,8 +232,8 @@ class GraphEditor(BaseUnknownsEditor):
                 ans = timethis(self.processor.make_analyses,
                                args=(ans,),
                                kwargs={'exclude': exclude,
-                                        'unpack': self.unpack_peaktime},
-                                msg='MAKE ANALYSES TOTAL')
+                                       'unpack': self.unpack_peaktime},
+                               msg='MAKE ANALYSES TOTAL')
 
                 #unks = self.processor.make_analyses(list(aa),
                 #                                    exclude=exclude)
@@ -270,4 +274,4 @@ class GraphEditor(BaseUnknownsEditor):
     def _get_auto_plot(self):
         return len(self.unknowns) == 1 or self.update_on_unknowns
 
-    #============= EOF =============================================
+        #============= EOF =============================================

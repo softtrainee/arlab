@@ -49,13 +49,11 @@ class IsotopeEvolutionEditor(GraphEditor):
         db = proc.db
         for unk in self.unknowns:
             prog.change_message('Saving fits for {}'.format(unk.record_id))
-            prog.increment()
 
             meas_analysis = db.get_analysis_uuid(unk.uuid)
             self._save_fit(unk, meas_analysis)
 
             prog.change_message('Saving new ArAr age for {}'.format(unk.record_id))
-            prog.increment()
 
             proc.save_arar(unk, meas_analysis)
 

@@ -20,10 +20,12 @@ from traitsui.api import View, Item, Group, VGroup, HGroup, ListStrEditor, sprin
 from envisage.ui.tasks.preferences_pane import PreferencesPane
 from src.database.core.database_adapter import DatabaseAdapter
 
-from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper, FavoritesPreferencesHelper, FavoritesAdapter, button_editor
+from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper, \
+    FavoritesPreferencesHelper, FavoritesAdapter
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.pane_helpers import icon_button_editor
 from src.ui.custom_label_editor import CustomLabel
 
 
@@ -116,12 +118,12 @@ class ConnectionPreferencesPane(PreferencesPane):
                                   selected='object.selected',
                               )),
                          HGroup(
-                             button_editor('add_favorite', 'add',
-                                           tooltip='Add saved connection'),
-                             button_editor('delete_favorite', 'delete',
-                                           tooltip='Delete saved connection'),
-                             button_editor('test_connection', 'database_connect',
-                                           tooltip='Test connection'),
+                             icon_button_editor('add_favorite', 'add',
+                                                tooltip='Add saved connection'),
+                             icon_button_editor('delete_favorite', 'delete',
+                                                tooltip='Delete saved connection'),
+                             icon_button_editor('test_connection', 'database_connect',
+                                                tooltip='Test connection'),
                              spring,
                              Label('Status:'),
                              CustomLabel('connected_label',

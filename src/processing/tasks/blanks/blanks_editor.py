@@ -64,7 +64,6 @@ class BlanksEditor(InterpolationEditor):
             for unk in self.unknowns:
                 if prog:
                     prog.change_message('Saving blanks for {}'.format(unk.record_id))
-                    prog.increment()
 
                 meas_analysis = db.get_analysis_uuid(unk.uuid)
 

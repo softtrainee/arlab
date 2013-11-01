@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Int
+from traits.api import HasTraits, Str, Int, Property
 from traitsui.api import View, Item, VGroup
 
 #============= standard library imports ========================
@@ -25,6 +25,10 @@ class ConnectionSpec(HasTraits):
     host = Str('localhost')
     port = Int(8100)
     system_name = Str('jan')
+    url = Property
+
+    def _get_url(self):
+        return '{}:{}'.format(self.host, self.port)
 
     def traits_view(self):
         return View(VGroup(

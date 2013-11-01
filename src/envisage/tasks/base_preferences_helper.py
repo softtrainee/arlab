@@ -15,26 +15,23 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from pyface.image_resource import ImageResource
 from traits.api import List, Button, Any, Int, Str
-from traitsui.api import UItem, ButtonEditor
 from apptools.preferences.api import PreferencesHelper
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from traitsui.list_str_adapter import ListStrAdapter
-from src.paths import paths
 
 
-def button_editor(trait, name, editor_kw=None, **kw):
-    if editor_kw is None:
-        editor_kw = {}
-
-    image = ImageResource(name=name,
-                          search_path=paths.icon_search_path)
-    return UItem(trait,
-                 style='custom',
-                 editor=ButtonEditor(image=image, **editor_kw),
-                 **kw)
+#def button_editor(trait, name, editor_kw=None, **kw):
+#    if editor_kw is None:
+#        editor_kw = {}
+#
+#    image = ImageResource(name=name,
+#                          search_path=paths.icon_search_path)
+#    return UItem(trait,
+#                 style='custom',
+#                 editor=ButtonEditor(image=image, **editor_kw),
+#                 **kw)
 
 
 class FavoritesAdapter(ListStrAdapter):

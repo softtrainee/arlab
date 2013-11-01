@@ -223,7 +223,8 @@ class KerrMotor(KerrDevice, ConsumerMixin):
     def _update_position_changed(self):
     #        self.debug('*****************************update position {}'.format(self.update_position))
         try:
-            self.progress.change_message('{} position = {}'.format(self.name, self.update_position))
+            self.progress.change_message('{} position = {}'.format(self.name, self.update_position),
+                                         auto_increment=False)
         except AttributeError:
             # self.progress is None
             pass
@@ -341,7 +342,6 @@ class KerrMotor(KerrDevice, ConsumerMixin):
         if progress is not None:
             progress.increase_max()
             progress.change_message('Homing {}'.format(self.name))
-            progress.increment()
 
         addr = self.address
 
@@ -394,8 +394,9 @@ class KerrMotor(KerrDevice, ConsumerMixin):
         while not signal.is_set():
             pos = self._get_motor_position(verbose=False)
             if progress is not None:
-                progress.change_message('{} position= {}'.format(self.name, pos))
-            #                 do_after(25, progress.change_message, '{} position = {}'.format(self.name, pos))
+                progress.change_message('{} position= {}'.format(self.name, pos),
+                                        auto_increment=False)
+                #                 do_after(25, progress.change_message, '{} position = {}'.format(self.name, pos))
             time.sleep(0.5)
 
     def block(self, n=3, tolerance=1, progress=None, homing=False):
@@ -411,7 +412,8 @@ class KerrMotor(KerrDevice, ConsumerMixin):
                 invoke_in_main_thread(self.trait_set, home_position=steps)
 
             if progress is not None:
-                progress.change_message('{} position = {}'.format(self.name, steps))
+                progress.change_message('{} position = {}'.format(self.name, steps),
+                                        auto_increment=False)
 
             if steps is None:
                 fail_cnt += 1

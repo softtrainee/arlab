@@ -15,6 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+import time
+from chaco.scales.time_scale import CalendarScaleSystem
+from chaco.scales_tick_generator import ScalesTickGenerator
 from traits.api import Array
 #============= standard library imports ========================
 from numpy import array
@@ -33,7 +36,7 @@ class Series(BaseArArFigure):
             if po.use:
                 p = graph.new_plot(padding=self.padding,
                                    ytitle=po.name,
-                )
+                                   xtitle='Time')
 
                 p.value_scale = po.scale
                 p.padding_left = 75
@@ -44,9 +47,23 @@ class Series(BaseArArFigure):
             plot data on plots
         """
         graph = self.graph
-        self.xs = array([ai.timestamp for ai in self.sorted_analyses])
-        #print [get_datetime(xi) for xi in self.xs]
-        self.xs -= self.xs[0]
+
+        xs = array([ai.timestamp for ai in self.sorted_analyses])
+        px = plots[0]
+
+        if px.normalize == 'now':
+            norm = time.time()
+        else:
+            norm = xs[-1]
+
+        xs -= norm
+        if not px.use_time_axis:
+            xs /= 3600
+        else:
+            graph.convert_index_func = lambda x: '{:0.2f} hrs'.format(x / 3600.)
+
+        self.xs = xs
+
         with graph.no_regression(refresh=True):
             plots = [po for po in plots if po.use]
             for i, po in enumerate(plots):
@@ -68,6 +85,9 @@ class Series(BaseArArFigure):
                                           fit=po.fit,
                                           plotid=pid,
                                           type='scatter')
+            if po.use_time_axis:
+                p.x_axis.tick_generator = ScalesTickGenerator(scale=CalendarScaleSystem())
+
             #p.value_scale = po.scale
             self._add_error_bars(scatter, yerr, 'y', 1,
                                  visible=po.y_error)

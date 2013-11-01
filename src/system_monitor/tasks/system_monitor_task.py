@@ -57,6 +57,7 @@ class SystemMonitorTask(FigureTask):
                       editor=EnumEditor(name='connections')),
                  kind='livemodal',
                  buttons=['OK', 'Cancel'],
+                 width=300,
                  title='Choose System')
         return v
 
@@ -70,7 +71,7 @@ class SystemMonitorTask(FigureTask):
             editor.start()
             self._open_editor(editor)
             if editor:
-                editor.sub_refresh_plots()
+                editor.sub_refresh()
 
             return editor
 
@@ -110,7 +111,6 @@ class SystemMonitorTask(FigureTask):
     def activated(self):
         self._make_connections()
         self._editor_factory()
-
 
     def _default_layout_default(self):
         return TaskLayout(

@@ -23,19 +23,23 @@ from traitsui.api import View, Item, EnumEditor, HGroup, UItem
 import os
 from threading import Thread
 #============= local library imports  ==========================
-from src.envisage.tasks.pane_helpers import new_button_editor
+from src.envisage.tasks.pane_helpers import icon_button_editor
 from src.paths import paths
+
 
 class LaserClient(HasTraits):
     parent = Any
 
+
 class LaserControlsClient(LaserClient):
     pass
+
+
 class LaserOpticsClient(LaserClient):
     pass
 
+
 class UVLaserControlsClient(LaserControlsClient):
-    
     fire = Event
     stop = Event
     #fire_label = Property(depends_on='firing')
@@ -46,12 +50,12 @@ class UVLaserControlsClient(LaserControlsClient):
 
     def traits_view(self):
         v = View(HGroup(
-            new_button_editor('fire', 'lightning',
-                              enabled_when='not firing',
-                              editor_kw={'label_value': 'fire_label'}),
-            new_button_editor('stop', 'stop',
-                              enabled_when='firing',
-                              editor_kw={'label_value': 'fire_label'}),
+            icon_button_editor('fire', 'lightning',
+                               enabled_when='not firing',
+                               editor_kw={'label_value': 'fire_label'}),
+            icon_button_editor('stop', 'stop',
+                               enabled_when='firing',
+                               editor_kw={'label_value': 'fire_label'}),
             UItem('fire_mode')),
                  Item('nburst'),
         )
@@ -73,7 +77,6 @@ class UVLaserControlsClient(LaserControlsClient):
 
 
 class UVLaserOpticsClient(LaserOpticsClient):
-
     mask = Property(String(enter_set=True, auto_set=False),
                     depends_on='_mask')
     _mask = Either(Str, Float)

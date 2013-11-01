@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import CInt, Str, Bool, Dict, Float, HasTraits, Any
-from traitsui.api import View, Item, EnumEditor, RangeEditor, Label, Group
+from traitsui.api import View, Item, EnumEditor, RangeEditor
 # from src.ui.custom_label_editor import CustomLabel
 from src.hardware.core.data_helper import make_bitarray
 
@@ -197,7 +197,6 @@ class KerrStepMotor(KerrMotor):
             progress = kw['progress']
             progress.increase_max()
             progress.change_message('Homing {}'.format(self.name))
-            progress.increment()
 
         addr = self.address
 

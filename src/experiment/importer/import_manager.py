@@ -62,11 +62,7 @@ class ImportManager(IsotopeDatabaseManager):
     dry_run = Bool(True)
 
     def _progress_message(self, pd, m):
-        def d():
-            pd.change_message(m)
-            pd.increment()
-
-        invoke_in_main_thread(d)
+        invoke_in_main_thread(pd.change_message, m)
 
     def _do_import(self, selected, pd):
         func = getattr(self.importer, 'import_{}'.format(self.import_kind))
