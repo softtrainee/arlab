@@ -33,12 +33,12 @@ class PlotterOption(HasTraits):
     y_error = Bool(False)
     show_labels = Bool(False)
 
-    _auto_set_use = True
+    normalize = None
+    use_time_axis = False
 
     def _name_changed(self):
-        if self._auto_set_use:
-            if self.name != NULL_STR:
-                self.use = True
+        if self.name != NULL_STR:
+            self.use = True
 
     def _get_plot_names(self):
         return {NULL_STR: NULL_STR,
@@ -77,5 +77,10 @@ class InverseIsochronPlotOption(PlotterOption):
 
 class SystemMonitorPlotOption(PlotterOption):
     _auto_set_use = False
+    normalize = 'now'
+    use_time_axis = True
+
+    def _name_changed(self):
+        pass
 
 #============= EOF =============================================

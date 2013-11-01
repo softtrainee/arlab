@@ -23,7 +23,7 @@ from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.envisage.tasks.pane_helpers import new_button_editor, spacer
+from src.envisage.tasks.pane_helpers import icon_button_editor, spacer
 from src.entry.irradiated_position import IrradiatedPositionAdapter
 from src.experiment.tasks.browser.adapters import ProjectAdapter, SampleAdapter
 
@@ -39,13 +39,13 @@ class IrradiationEditorPane(TraitsDockPane):
                    Label('Filter'),
                    UItem('project_filter',
                          width=75),
-                   new_button_editor('clear_selection_button',
-                                     'cross',
-                                     tooltip='Clear selected'),
-                   new_button_editor('edit_project_button', 'database_edit',
-                                     tooltip='Edit selected project in database'),
-                   new_button_editor('add_project_button', 'database_add',
-                                     tooltip='Add project to database')
+                   icon_button_editor('clear_selection_button',
+                                      'cross',
+                                      tooltip='Clear selected'),
+                   icon_button_editor('edit_project_button', 'database_edit',
+                                      tooltip='Edit selected project in database'),
+                   icon_button_editor('add_project_button', 'database_add',
+                                      tooltip='Add project to database')
             ),
             UItem('projects',
                   editor=TabularEditor(editable=False,
@@ -66,13 +66,13 @@ class IrradiationEditorPane(TraitsDockPane):
                       width=-25),
                 #UItem('filter_non_run_samples',
                 #      tooltip='Omit non-analyzed samples'),
-                new_button_editor('configure_sample_table',
-                                  'cog',
-                                  tooltip='Configure Sample Table'),
-                new_button_editor('edit_sample_button', 'database_edit',
-                                  tooltip='Edit sample in database'),
-                new_button_editor('add_sample_button', 'database_add',
-                                  tooltip='Add sample to database')),
+                icon_button_editor('configure_sample_table',
+                                   'cog',
+                                   tooltip='Configure Sample Table'),
+                icon_button_editor('edit_sample_button', 'database_edit',
+                                   tooltip='Edit sample in database'),
+                icon_button_editor('add_sample_button', 'database_add',
+                                   tooltip='Add sample to database')),
 
             UItem('samples',
                   editor=TabularEditor(
@@ -123,9 +123,9 @@ class IrradiationPane(TraitsDockPane):
             Item('irradiation',
                  width=-150,
                  editor=EnumEditor(name='irradiations')),
-            new_button_editor('edit_irradiation_button', 'database_edit',
-                              enabled_when='edit_irradiation_enabled'),
-            new_button_editor('add_irradiation_button', 'database_add'))
+            icon_button_editor('edit_irradiation_button', 'database_edit',
+                               enabled_when='edit_irradiation_enabled'),
+            icon_button_editor('add_irradiation_button', 'database_add'))
 
         level = HGroup(
             spacer(),
@@ -134,9 +134,9 @@ class IrradiationPane(TraitsDockPane):
             UItem('level',
                   width=-150,
                   editor=EnumEditor(name='levels')),
-            new_button_editor('edit_level_button', 'database_edit',
-                              enabled_when='edit_level_enabled'),
-            new_button_editor('add_level_button', 'database_add'))
+            icon_button_editor('edit_level_button', 'database_edit',
+                               enabled_when='edit_level_enabled'),
+            icon_button_editor('add_level_button', 'database_add'))
 
         v = View(VGroup(irrad, level))
         return v

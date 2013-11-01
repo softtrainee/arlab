@@ -16,22 +16,66 @@
 
 #============= enthought library imports =======================
 # from pyface.api import ProgressDialog
+
+from traits.api import Property, Bool, Int
 #============= standard library imports ========================
-from PySide.QtCore import QRect, QPoint, QSize, Qt
-from PySide.QtGui import QLabel
+from PySide.QtCore import Qt
+from PySide.QtGui import QLabel, QDialogButtonBox
 from pyface.ui.qt4.progress_dialog import ProgressDialog
 #============= local library imports  ==========================
 
 class myProgressDialog(ProgressDialog):
     show_percent = True
     show_time = True
-#     def _message_default(self):
-#         return 'Progress'
-#
-    def change_message(self, message):
-#         print message
+
+    canceled = Property
+    accepted = Property
+    width = Int(400)
+    height = Int(10)
+    _user_accepted = Bool(False)
+
+    def cancel(self):
+        self._user_cancelled = True
+        self.close()
+
+    def accept(self):
+        self._user_accepted = True
+        self.close()
+
+    def _create_control(self, parent):
+        control = super(myProgressDialog, self)._create_control(parent)
+        control.resize(self.width, self.height)
+        return control
+
+    def _create_buttons(self, dialog, layout):
+        """ Creates the buttons. """
+
+        if not (self.can_cancel or self.can_ok):
+            return
+
+        # Create the button.
+        buttons = QDialogButtonBox()
+
+        if self.can_cancel:
+            cancel_button = buttons.addButton(self.cancel_button_label, QDialogButtonBox.RejectRole)
+            cancel_button.clicked.connect(self.cancel)
+        if self.can_ok:
+            ok_button = buttons.addButton(QDialogButtonBox.Ok)
+            ok_button.clicked.connect(self.accept)
+
+        layout.addWidget(buttons)
+
+    def _get_canceled(self):
+        return self._user_cancelled
+
+    def _get_accepted(self):
+        return self._user_accepted
+
+    def change_message(self, message, auto_increment=True):
+    #         print message
         self.message = message
         self.message_control.setText(message)
+        self.increment()
 
     def _create_message(self, dialog, layout):
         label = QLabel(self.message, dialog)

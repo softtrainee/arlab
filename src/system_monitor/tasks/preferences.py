@@ -21,7 +21,8 @@ from traitsui.api import View, Item, VGroup, ListStrEditor, HGroup
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.envisage.tasks.base_preferences_helper import FavoritesPreferencesHelper, FavoritesAdapter, button_editor
+from src.envisage.tasks.base_preferences_helper import FavoritesPreferencesHelper, FavoritesAdapter
+from src.envisage.tasks.pane_helpers import icon_button_editor
 
 
 class SystemMonitorPreferences(FavoritesPreferencesHelper):
@@ -75,10 +76,10 @@ class SystemMonitorPreferencesPane(PreferencesPane):
                                   selected='object.selected',
                               )),
                          HGroup(
-                             button_editor('add_favorite', 'add',
-                                           tooltip='Add saved connection'),
-                             button_editor('delete_favorite', 'delete',
-                                           tooltip='Delete saved connection')))
+                             icon_button_editor('add_favorite', 'add',
+                                                tooltip='Add saved connection'),
+                             icon_button_editor('delete_favorite', 'delete',
+                                                tooltip='Delete saved connection')))
         conn_grp = VGroup(Item('system_name'),
                           Item('host'),
                           Item('port'),

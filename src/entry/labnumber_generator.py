@@ -64,7 +64,6 @@ class LabnumberGenerator(Loggable):
                     self.info(msg)
                     if prog:
                         prog.change_message(msg)
-                        prog.increment()
 
     def _add_default_flux(self, pos):
         db = self.db

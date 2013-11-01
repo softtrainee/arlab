@@ -155,7 +155,7 @@ class Axis(HasTraits):
 
     @on_trait_change('tick_interval, title_spacing')
     def _tick_interval_changed(self, name, new):
-        self.plot_axis.trait_set(name, new)
+        self.plot_axis.trait_set(**{name: new})
         self.plot_axis.invalidate_and_redraw()
 
     def traits_view(self):

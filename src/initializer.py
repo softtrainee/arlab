@@ -17,7 +17,6 @@
 #============= enthought library imports =======================
 from traits.api import Any
 #============= standard library imports ========================
-import time
 #============= local library imports  ==========================
 from src.paths import paths
 from src.hardware.core.i_core_device import ICoreDevice
@@ -31,7 +30,6 @@ from src.globals import globalv
 
 
 class Initializer(Loggable):
-
     '''
     '''
 
@@ -60,15 +58,16 @@ class Initializer(Loggable):
         self.debug('add initialization {}'.format(a))
         ilist = self.init_list
         ilist.append(a)
-#        add = True
-#        for (i, il) in enumerate(ilist):
-#            if il['name'] == a['name']:
-#                ilist[i] = a
-#                add = False
-#                break
-#
-#        if add:
-#            ilist.append(a)
+
+    #        add = True
+    #        for (i, il) in enumerate(ilist):
+    #            if il['name'] == a['name']:
+    #                ilist[i] = a
+    #                add = False
+    #                break
+    #
+    #        if add:
+    #            ilist.append(a)
 
     def run(self, application=None):
         '''
@@ -103,22 +102,20 @@ class Initializer(Loggable):
         pd = self.pd
         if pd is not None:
 
-#            offset = pd.progress_bar.control.GetValue()
+        #            offset = pd.progress_bar.control.GetValue()
             offset = pd.get_value()
-
 
             if offset == pd.max - 1:
                 pd.max += 1
 
             pd.change_message(msg)
-            pd.increment()
 
-#            pd.update(offset + 1)
-#            (cont, skip) = pd.update(offset + 1)
-#            if not cont or skip:
-#                return
+        #            pd.update(offset + 1)
+        #            (cont, skip) = pd.update(offset + 1)
+        #            if not cont or skip:
+        #                return
 
-#             time.sleep(0.1)
+        #             time.sleep(0.1)
 
         super(Initializer, self).info(msg, **kw)
 
@@ -146,12 +143,12 @@ class Initializer(Loggable):
         return ns
 
     def _run_(
-        self,
-        name=None,
-        device_dir=None,
-        manager=None,
-        plugin_name=None,
-        ):
+            self,
+            name=None,
+            device_dir=None,
+            manager=None,
+            plugin_name=None,
+    ):
         '''
         '''
 
@@ -195,7 +192,6 @@ class Initializer(Loggable):
             devices = parser.get_devices(mp)
             flags = parser.get_flags(mp)
             timed_flags = parser.get_timed_flags(mp)
-
 
             valve_flags_attrs = []
             valve_flags = parser.get_valve_flags(mp, element=True)
@@ -254,11 +250,11 @@ class Initializer(Loggable):
             manager.add_valve_flag(f, v)
 
     def load_managers(
-        self,
-        manager,
-        managers,
-        device_dir,
-        ):
+            self,
+            manager,
+            managers,
+            device_dir,
+    ):
         '''
         '''
 
@@ -276,22 +272,21 @@ class Initializer(Loggable):
                                                  port=port, remote=remote)
             except AttributeError, e:
                 print 'initializaer', e
-#                self.warning(e)
+                #                self.warning(e)
                 try:
                     man = manager.create_manager(mi,
                                                  host=host,
                                                  port=port, remote=remote)
                 except Exception:
                     import traceback
+
                     traceback.print_exc()
 
             if man is None:
                 self.debug('trouble creating manager {}'.format(mi))
                 break
 
-
             if self.application is not None:
-
                 # register this manager as a service
                 man.application = self.application
                 self.application.register_service(type(man), man)
@@ -312,7 +307,7 @@ class Initializer(Loggable):
 
             enabled = di.get('enabled').lower() == 'true'
 
-#            print enabled, di.text.strip(), required
+            #            print enabled, di.text.strip(), required
             if required and not enabled:
                 name = di.text.strip().upper()
                 msg = '''Device {} is REQUIRED but is not ENABLED.
@@ -325,12 +320,12 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
         return True
 
     def load_devices(
-        self,
-        manager,
-        name,
-        devices,
-        plugin_name,
-        ):
+            self,
+            manager,
+            name,
+            devices,
+            plugin_name,
+    ):
         '''
         '''
 
@@ -346,7 +341,7 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
 
             dev = None
             pdev = self.parser.get_device(name, device, plugin_name,
-                    element=True)
+                                          element=True)
 
             dev_class = pdev.find('klass')
             if dev_class is not None:
@@ -357,13 +352,13 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
                 dev = getattr(manager, device)
                 if dev is None:
                     dev = manager.create_device(device,
-                            dev_class=dev_class)
+                                                dev_class=dev_class)
                 else:
                     if dev_class and dev.__class__.__name__ != dev_class:
                         dev = manager.create_device(device,
                                                     dev_class=dev_class,
                                                     obj=dev
-                                                    )
+                        )
 
             except AttributeError:
                 dev = manager.create_device(device, dev_class=dev_class)
@@ -379,11 +374,10 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
                 # register the device
 
                 if self.application is not None:
-
                     # display with the HardwareManager
 
                     self.application.register_service(ICoreDevice, dev,
-                            {'display': True})
+                                                      {'display': True})
 
                 devs.append(dev)
                 self.info('opening {}'.format(dev.name))
@@ -394,7 +388,7 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
             else:
                 self.info('failed loading {}'.format(dev.name))
 
-#        for od in opened:
+            #        for od in opened:
 
         for od in devs:
             self.info('Initializing {}'.format(od.name))
@@ -414,15 +408,15 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
 
 
 
-#            if od.simulation:
-#                time.sleep(0.25)
+        #            if od.simulation:
+        #                time.sleep(0.25)
 
     def load_progress(self, n):
         '''
         '''
         pd = myProgressDialog(max=n, message='Welcome',
                               size=(500, 50)
-                              )
+        )
         self.pd = pd
         self.pd.open()
 

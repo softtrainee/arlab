@@ -156,7 +156,6 @@ class Graph(Viewable, ContextMenuMixin):
         pc.tools.append(menu)
 
     def _assemble_plot_metadata(self, plot):
-
         meta = dict()
         pmeta = dict()
         if isinstance(plot, ScatterPlot):
@@ -209,8 +208,11 @@ class Graph(Viewable, ContextMenuMixin):
             #print meta.keys()
             if not meta:
                 continue
+            try:
+                plot = self.plots[i]
+            except IndexError:
+                continue
 
-            plot = self.plots[i]
             plots = plot.plots
             for k, d in meta.iteritems():
                 obj = None

@@ -212,7 +212,10 @@ class TaskGroup(Group):
 class BaseTask(Task, Loggable):
     application = DelegatesTo('window')
 
+    #suppress_pane_change=False
+
     def _show_pane(self, p):
+        #if not self.suppress_pane_change:
         def _show():
             ctrl = p.control
             if not p.visible:
@@ -424,7 +427,7 @@ class BaseManagerTask(BaseTask):
         dialog = FileDialog(
             #parent=self.window.control,
             action=action,
-                            **kw)
+            **kw)
         if dialog.open() == OK:
             r = dialog.path
             if action == 'open files':

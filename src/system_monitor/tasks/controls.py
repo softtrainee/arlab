@@ -15,11 +15,41 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
+from traits.api import HasTraits, Int, Button, Event
+from traitsui.api import View, Item, HGroup, spring, VGroup
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.pane_helpers import icon_button_editor
+
+
+def EInt(*args, **kw):
+    kw['auto_set'] = False
+    kw['enter_ser'] = True
+    return Int(*args, **kw)
 
 
 class SystemMonitorControls(HasTraits):
-    pass
-    #============= EOF =============================================
+    weeks = EInt(0)
+    days = EInt(2)
+    hours = EInt(0)
+    limit = EInt(50)
+    update = Event
+    refresh_button = Button
+
+    def _refresh_button_fired(self):
+        self.update = True
+
+    def traits_view(self):
+        v = View(
+            VGroup(VGroup(Item('weeks'),
+                          Item('days'),
+                          Item('hours'),
+                          Item('_'),
+                          Item('limit'),
+                          label='Search Criteria'),
+                   HGroup(spring, icon_button_editor('refresh_button',
+                                                     'arrow_refresh',
+                                                     tooltip='Refresh')))
+        )
+        return v
+        #============= EOF =============================================

@@ -22,7 +22,7 @@ from traitsui.api import View, Item, UItem, VGroup, HGroup, spring, \
 # from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from traitsui.tabular_adapter import TabularAdapter
-from src.envisage.tasks.pane_helpers import new_button_editor
+from src.envisage.tasks.pane_helpers import icon_button_editor
 from src.experiment.utilities.identifier import SPECIAL_NAMES
 # from src.ui.tabular_editor import myTabularEditor
 # from src.experiment.automated_run.tabular_adapter import AutomatedRunSpecAdapter
@@ -74,21 +74,21 @@ class ExperimentFactoryPane(TraitsDockPane):
     name = 'Experiment Editor'
 
     def traits_view(self):
-        add_button = new_button_editor('add_button', 'add',
-                                       enabled_when='ok_add',
-                                       tooltip='Add run'
+        add_button = icon_button_editor('add_button', 'add',
+                                        enabled_when='ok_add',
+                                        tooltip='Add run'
         )
 
-        save_button = new_button_editor('save_button', 'disk',
-                                        tooltip='Save queue to file'
+        save_button = icon_button_editor('save_button', 'disk',
+                                         tooltip='Save queue to file'
         )
-        edit_button = new_button_editor('edit_mode_button', 'table_edit',
-                                        enabled_when='edit_enabled',
-                                        tooltip='Toggle edit mode'
+        edit_button = icon_button_editor('edit_mode_button', 'table_edit',
+                                         enabled_when='edit_enabled',
+                                         tooltip='Toggle edit mode'
         )
-        clear_button = new_button_editor('clear_button',
-                                         'table_row_delete',
-                                         tooltip='Clear all runs added using "frequency"')
+        clear_button = icon_button_editor('clear_button',
+                                          'table_row_delete',
+                                          tooltip='Clear all runs added using "frequency"')
 
         queue_grp = VGroup(
             QFItem('username'),
@@ -193,9 +193,9 @@ class ExperimentFactoryPane(TraitsDockPane):
             HGroup(RFItem('flux'),
                    Label(u'\u00b1'),
                    RFItem('flux_error', show_label=False),
-                   new_button_editor(make_rf_name('save_flux_button'),
-                                     'database_save',
-                                     tooltip='Save flux to database'
+                   icon_button_editor(make_rf_name('save_flux_button'),
+                                      'database_save',
+                                      tooltip='Save flux to database'
                    ),
                    enabled_when=make_rf_name('labnumber')
                    #                           spring,
@@ -327,14 +327,14 @@ Quick=   measure_iteration stopped at current step
         v = View(
             HGroup(
                 spacer(-20),
-                new_button_editor('start_button',
-                                  'start',
-                                  enabled_when='can_start',
-                                  tooltip=start_tt,
+                icon_button_editor('start_button',
+                                   'start',
+                                   enabled_when='can_start',
+                                   tooltip=start_tt,
                 ),
-                new_button_editor('stop_button', 'stop',
-                                  enabled_when='not can_start',
-                                  tooltip=stop_tt
+                icon_button_editor('stop_button', 'stop',
+                                   enabled_when='not can_start',
+                                   tooltip=stop_tt
                 ),
 
                 spacer(-20),
@@ -343,15 +343,15 @@ Quick=   measure_iteration stopped at current step
                      tooltip=end_tt
                 ),
                 spacer(-20),
-                new_button_editor('cancel_run_button', 'cancel',
-                                  enabled_when='can_cancel',
-                                  tooltip=cancel_tt
+                icon_button_editor('cancel_run_button', 'cancel',
+                                   enabled_when='can_cancel',
+                                   tooltip=cancel_tt
                 ),
                 spacer(-20),
-                new_button_editor('truncate_button',
-                                  'lightning',
-                                  enabled_when='measuring',
-                                  tooltip=truncate_tt
+                icon_button_editor('truncate_button',
+                                   'lightning',
+                                   enabled_when='measuring',
+                                   tooltip=truncate_tt
                 ),
                 UItem('truncate_style',
                       enabled_when='measuring',

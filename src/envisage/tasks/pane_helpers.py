@@ -27,7 +27,7 @@ def spacer(width=-1, **kw):
     return Spring(springy=False, width=width, **kw)
 
 
-def new_button_editor(trait, name, label=None, editor_kw=None, **kw):
+def icon_button_editor(trait, name, label=None, editor_kw=None, **kw):
     if editor_kw is None:
         editor_kw = {}
     name = '{}.png'.format(name)

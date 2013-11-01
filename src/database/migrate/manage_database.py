@@ -1,7 +1,8 @@
-from migrate.versioning.api import test, version_control, upgrade, version
+import os
+
+from migrate.versioning.api import version_control, upgrade, version
 from migrate.exceptions import DatabaseAlreadyControlledError, KnownError, \
     InvalidRepositoryError
-import os
 
 
 def manage_version(url, base_repo):
@@ -55,7 +56,6 @@ def manage_database(url, repo, logger=None, progress=None):
         finally:
             if progress:
                 progress.change_message(msg)
-                progress.increment()
             if logger:
                 logger.info(msg)
 

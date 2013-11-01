@@ -266,7 +266,6 @@ class LabnumberEntry(IsotopeDatabaseManager):
                                                                         self.level,
                                                                         irs.hole,
                                                                         dbln.identifier))
-                prog.increment()
 
         self.dirty = False
         self.info('chang saved to database')

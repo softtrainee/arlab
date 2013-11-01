@@ -25,7 +25,7 @@ import shelve
 import hashlib
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.envisage.tasks.pane_helpers import new_button_editor
+from src.envisage.tasks.pane_helpers import icon_button_editor
 from src.ui.custom_label_editor import CustomLabel
 from src.ui.tabular_editor import myTabularEditor
 from src.processing.tasks.analysis_edit.ianalysis_edit_tool import IAnalysisEditTool
@@ -183,14 +183,14 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
 
     def traits_view(self):
         v = View(VGroup(
-            HGroup(new_button_editor('append_button', 'add',
-                                     tooltip=self._add_tooltip),
-                   new_button_editor('replace_button', 'arrow_refresh',
-                                     tooltip=self._replace_tooltip)),
+            HGroup(icon_button_editor('append_button', 'add',
+                                      tooltip=self._add_tooltip),
+                   icon_button_editor('replace_button', 'arrow_refresh',
+                                      tooltip=self._replace_tooltip)),
             HGroup(UItem('previous_selection',
                          editor=EnumEditor(name='previous_selections')),
-                   new_button_editor('configure_button', 'cog',
-                                     tooltip=self.configure_history_tooltip)),
+                   icon_button_editor('configure_button', 'cog',
+                                      tooltip=self.configure_history_tooltip)),
             HGroup(spring, CustomLabel('cs_label'), spring),
             UItem('items', editor=myTabularEditor(adapter=self.adapter_klass(),
                                                   operations=['move', 'delete'],
@@ -207,9 +207,9 @@ class HistoryTablePane(TablePane, ColumnSorterMixin):
     def configure_view(self):
         v = View(
             Item('history_limit', label='Max. N History'),
-            new_button_editor('clear_button', 'delete',
-                              label='Clear',
-                              tooltip=self.clear_prev_selection_tooltip),
+            icon_button_editor('clear_button', 'delete',
+                               label='Clear',
+                               tooltip=self.clear_prev_selection_tooltip),
             buttons=['OK', 'Cancel', 'Revert'],
             title='Configure History'
         )

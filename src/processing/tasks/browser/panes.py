@@ -25,7 +25,7 @@ from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.experiment.tasks.browser.adapters import BrowserAdapter, SampleAdapter, ProjectAdapter
-from src.processing.tasks.analysis_edit.panes import new_button_editor
+from src.processing.tasks.analysis_edit.panes import icon_button_editor
 from src.ui.tabular_editor import myTabularEditor
 
 
@@ -66,9 +66,9 @@ class BrowserPane(TraitsDockPane):
                    UItem('project_filter',
                          width=75
                    ),
-                   new_button_editor('clear_selection_button',
-                                     'cross',
-                                     tooltip='Clear selected'),
+                   icon_button_editor('clear_selection_button',
+                                      'cross',
+                                      tooltip='Clear selected'),
             ),
             UItem('projects',
                   editor=TabularEditor(editable=False,
@@ -91,9 +91,9 @@ class BrowserPane(TraitsDockPane):
                       width=-25),
                 UItem('filter_non_run_samples',
                       tooltip='Omit non-analyzed samples'),
-                new_button_editor('configure_sample_table',
-                                  'cog',
-                                  tooltip='Configure Sample Table'
+                icon_button_editor('configure_sample_table',
+                                   'cog',
+                                   tooltip='Configure Sample Table'
                 )
             ),
             UItem('samples',
@@ -165,8 +165,8 @@ class BrowserPane(TraitsDockPane):
                 UItem(make_name('analysis_filter'),
                       editor=EnumEditor(name=make_name('analysis_filter_values')),
                       width=-25),
-                new_button_editor(make_name('configure_analysis_filter'), 'cog',
-                                  tooltip='Configure/Advanced query'
+                icon_button_editor(make_name('configure_analysis_filter'), 'cog',
+                                   tooltip='Configure/Advanced query'
                 ),
             ),
             UItem(make_name('analyses'),
@@ -187,14 +187,14 @@ class BrowserPane(TraitsDockPane):
                   width=300
             ),
             HGroup(
-                new_button_editor(make_name('backward'),
-                                  'control_rewind'
+                icon_button_editor(make_name('backward'),
+                                   'control_rewind'
                 ),
                 spring,
                 UItem(make_name('limit')),
                 spring,
-                new_button_editor(make_name('forward'),
-                                  'control_fastforward'),
+                icon_button_editor(make_name('forward'),
+                                   'control_fastforward'),
                 UItem(make_name('page')),
                 Item(make_name('omit_invalid'))
             ),

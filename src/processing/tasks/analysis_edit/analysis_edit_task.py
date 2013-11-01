@@ -282,20 +282,21 @@ class AnalysisEditTask(BaseBrowserTask):
                 #                self._append_cache(self.active_editor)
 
     @on_trait_change('plot_editor_pane:current_editor')
-    def _update_current_plot_editor(self, new):
+    def _update_current_plot_editor(self, obj, name, new):
         if new:
-            self._show_pane(self.plot_editor_pane)
+            if not obj.suppress_pane_change:
+                self._show_pane(self.plot_editor_pane)
 
-            #    def _append_cache(self, editor):
-            #        if hasattr(editor, 'unknowns'):
-            #            ans = editor.unknowns
-            #            ids = [ai.uuid for ai in self._analysis_cache]
-            #            c = [ai for ai in ans if ai.uuid not in ids]
-            #
-            #            if c:
-            #                self._analysis_cache.extend(c)
-            #
-            #        editor.analysis_cache = self._analysis_cache
+                #    def _append_cache(self, editor):
+                #        if hasattr(editor, 'unknowns'):
+                #            ans = editor.unknowns
+                #            ids = [ai.uuid for ai in self._analysis_cache]
+                #            c = [ai for ai in ans if ai.uuid not in ids]
+                #
+                #            if c:
+                #                self._analysis_cache.extend(c)
+                #
+                #        editor.analysis_cache = self._analysis_cache
 
     @on_trait_change('''unknowns_pane:dclicked, data_selector:selector:dclicked''')
     def _selected_changed(self, new):

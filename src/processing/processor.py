@@ -549,18 +549,15 @@ class Processor(IsotopeDatabaseManager):
             pass
 
     def _make_analyses_from_query(self, q):
-        ans = None
+        ans = []
         try:
-            self.debug('{}'.format(q.count()))
+            self.debug('query count={}'.format(q.count()))
             ans = q.all()
         except Exception, e:
             import traceback
-
             traceback.print_exc()
 
-        if ans:
-            ans = self.make_analyses(ans)
-            return ans
+        return self.make_analyses(ans)
 
 #============= EOF =============================================
 

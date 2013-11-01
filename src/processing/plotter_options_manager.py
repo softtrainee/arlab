@@ -22,7 +22,7 @@ import apptools.sweet_pickle as pickle
 #============= standard library imports ========================
 import os
 #============= local library imports  ==========================
-from src.envisage.tasks.pane_helpers import new_button_editor
+from src.envisage.tasks.pane_helpers import icon_button_editor
 from src.processing.plotters.options.base import BasePlotterOptions
 from src.processing.plotters.options.ideogram import IdeogramOptions
 from src.processing.plotters.options.isochron import InverseIsochronOptions
@@ -107,15 +107,15 @@ class PlotterOptionsManager(HasTraits):
                 Item('plotter_options', show_label=False,
                      editor=EnumEditor(name='plotter_options_list'),
                      tooltip='List of available plot options'),
-                new_button_editor('add_options',
-                                  'add',
-                                  tooltip='Add new plot options',
-                                  show_label=False),
-                new_button_editor('delete_options',
-                                  'delete',
-                                  tooltip='Delete current plot options',
-                                  enabled_when='object.plotter_options.name!="Default"',
-                                  show_label=False)),
+                icon_button_editor('add_options',
+                                   'add',
+                                   tooltip='Add new plot options',
+                                   show_label=False),
+                icon_button_editor('delete_options',
+                                   'delete',
+                                   tooltip='Delete current plot options',
+                                   enabled_when='object.plotter_options.name!="Default"',
+                                   show_label=False)),
             Item('plotter_options',
                  show_label=False,
                  style='custom'),

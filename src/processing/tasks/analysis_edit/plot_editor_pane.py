@@ -103,6 +103,7 @@ class PlotEditorPane(TraitsDockPane):
     selectors = List
 
     annotation_editor = Instance(AnnotationEditor, ())
+    suppress_pane_change = False
 
     def set_annotation_tool(self, tool):
         self.set_annotation_component(tool.component)
@@ -121,7 +122,9 @@ class PlotEditorPane(TraitsDockPane):
                                         analyses=self.analyses)
 
                     if self.current_editor is None:
+                        self.suppress_pane_change = True
                         self.current_editor = editor
+                        self.suppress_pane_change = False
 
                     st = SelectorTool(self.component, editor=editor)
                     st.on_trait_change(self.set_editor, 'editor_event')

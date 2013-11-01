@@ -61,6 +61,7 @@ class InitializationParser(XMLParser):
         #ver = '_exp'
         #ver = '_exp_uv'
         #ver= '_spec'
+        #ver='_diode'
         #ver = ''
         p = os.path.join(paths.setup_dir, 'initialization{}.xml'.format(ver))
         if os.path.isfile(p):

@@ -22,7 +22,7 @@ from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.envisage.tasks.pane_helpers import new_button_editor
+from src.envisage.tasks.pane_helpers import icon_button_editor
 from src.experiment.utilities.identifier import pretty_extract_device
 from src.ui.led_editor import LEDEditor
 from enable.component_editor import ComponentEditor
@@ -320,8 +320,8 @@ class ClientDockPane(TraitsDockPane):
         egrp = HGroup(UItem('enabled_led', editor=LEDEditor()),
                       UItem('enable', editor=ButtonEditor(label_value='enable_label')),
                       spring,
-                      new_button_editor('test_connection_button',
-                                        'connect', tooltip='Test Connection'),
+                      icon_button_editor('test_connection_button',
+                                         'connect', tooltip='Test Connection'),
         )
         v = View(VGroup(egrp, tgrp))
         return v

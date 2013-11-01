@@ -43,7 +43,6 @@ class IrradiationPDFWriter(BasePDFWriter):
         for level in sorted(irrad.levels, key=lambda x: x.name):
             if progress is not None:
                 progress.change_message('Making {}{}'.format(irradname, level.name))
-                progress.increment()
 
             c = self._make_canvas(level)
             fs = self._make_level_table(irrad, level, c)
