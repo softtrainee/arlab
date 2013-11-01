@@ -64,11 +64,13 @@ class InitializationParser(XMLParser):
         #ver='_diode'
         #ver = ''
         p = os.path.join(paths.setup_dir, 'initialization{}.xml'.format(ver))
-        if os.path.isfile(p):
-            super(InitializationParser, self).__init__(p, *args, **kw)
-        else:
-            warning(None, 'No initialization file')
-            sys.exit()
+        if not os.path.isfile(p):
+            p = os.path.join(paths.setup_dir, 'initialization.xml')
+            if not os.path.isfile(p):
+                warning(None, 'No initialization file.\n{} is not a valid file'.format(p))
+                sys.exit()
+
+        super(InitializationParser, self).__init__(p, *args, **kw)
 
     def add_plugin(self, category, name):
         tree = self.get_root()
