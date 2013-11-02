@@ -22,7 +22,6 @@ from traits.api import Instance
 from src.processing.tasks.figures.figure_editor import FigureEditor
 from src.processing.plotter_options_manager import IdeogramOptionsManager
 from src.processing.plotters.figure_container import FigureContainer
-from src.processing.tasks.figures.editors.auto_controls import AutoIdeogramControl
 
 
 class IdeogramEditor(FigureEditor):
@@ -49,8 +48,5 @@ class IdeogramEditor(FigureEditor):
 
         return model, iv.component
 
-
-class AutoIdeogramEditor(IdeogramEditor):
-    auto_figure_control = Instance(AutoIdeogramControl, ())
 
 #============= EOF =============================================

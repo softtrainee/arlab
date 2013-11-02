@@ -75,16 +75,16 @@ class ExportSpec(Loggable):
 
     def load_record(self, record):
         attrs = [
-                 ('labnumber', 'labnumber'),
-                 ('aliquot', 'aliquot'),
-                 ('step', 'step'),
-                 ('irradpos', 'labnumber'),
-                 ('extract_device', 'extract_device'), ('tray', 'tray'),
-                 ('position', 'position'), ('power_requested', 'extract_value'),
-                 ('power_achieved', 'extract_value'), ('duration', 'duration'),
-                 ('duration_at_request', 'duration'), ('first_stage_delay', 'cleanup'),
-                 ('comment', 'comment'),
-                 ]
+            ('labnumber', 'labnumber'),
+            ('aliquot', 'aliquot'),
+            ('step', 'step'),
+            ('irradpos', 'labnumber'),
+            ('extract_device', 'extract_device'), ('tray', 'tray'),
+            ('position', 'position'), ('power_requested', 'extract_value'),
+            ('power_achieved', 'extract_value'), ('duration', 'duration'),
+            ('duration_at_request', 'duration'), ('first_stage_delay', 'cleanup'),
+            ('comment', 'comment'),
+        ]
 
         for exp_attr, run_attr in attrs:
             if hasattr(record.spec, run_attr):
@@ -98,34 +98,46 @@ class ExportSpec(Loggable):
             self.ic_factor_v = float(ic.nominal_value)
             self.ic_factor_e = float(ic.std_dev)
         else:
-            self.debug('{} has no ic_factor attribute'.format(record,))
+            self.debug('{} has no ic_factor attribute'.format(record, ))
 
     def iter(self):
-        for a in ('detectors','signals','baselines','blanks', 'signal_intercepts','baseline_intercepts',
-                  'signal_fits','baseline_fits'):
-            v=getattr(self, a)
+        for a in ('detectors', 'signals', 'baselines', 'blanks', 'signal_intercepts', 'baseline_intercepts',
+                  'signal_fits', 'baseline_fits'):
+            v = getattr(self, a)
             print a, len(v), v
 
-        #dont use zip
-        return zip(self.detectors,
-                   self.signals,
-                   self.baselines,
-                   self.blanks,
-                   self.signal_intercepts,
-                   self.baseline_intercepts,
-                   self.signal_fits,
-                   self.baseline_fits)
+        ##dont use zip
+        #return zip(self.detectors,
+        #           self.signals,
+        #           self.baselines,
+        #           self.blanks,
+        #           self.signal_intercepts,
+        #           self.baseline_intercepts,
+        #           self.signal_fits,
+        #           self.baseline_fits)
+
+        for i, detector in enumerate(self.detectors):
+            signal = self.signals[i]
+            baseline = self.baselines[i]
+            blank = self.blanks[i]
+            sintercept = self.signal_intercepts[i]
+            bsintercept = self.baseline_intercepts[i]
+            sfits = self.signal_fits[i]
+            bfits = self.baseline_fits[i]
+
+            yield detector, signal, baseline, blank, sintercept, bsintercept, sfits, bfits
 
     @property
     def record_id(self):
         return make_rid(self.labnumber, self.aliquot, self.step)
-
 
     def _set_position(self, pos):
         if ',' in pos:
             self._position = list(map(int, pos.split(',')))
         else:
             self._position = pos
+
     def _get_position(self):
         return self._position
-#============= EOF =============================================
+
+        #============= EOF =============================================

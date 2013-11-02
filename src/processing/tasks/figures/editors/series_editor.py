@@ -21,14 +21,13 @@ from traits.api import Instance
 from src.processing.tasks.figures.figure_editor import FigureEditor
 from src.processing.plotters.figure_container import FigureContainer
 from src.processing.plotter_options_manager import SeriesOptionsManager, PlotterOptionsManager
-from src.processing.tasks.figures.editors.auto_controls import AutoSeriesControl
 
 
 class SeriesEditor(FigureEditor):
     plotter_options_manager = Instance(PlotterOptionsManager)
     plotter_options_manager_klass = SeriesOptionsManager
-
-    basename = 'series'
+    pickle_path = 'series'
+    basename = 'Series'
 
     def _plotter_options_manager_default(self):
         return self.plotter_options_manager_klass()
@@ -71,8 +70,8 @@ class SeriesEditor(FigureEditor):
 #         self.rebuild(refresh_data=False)
 
 
-class AutoSeriesEditor(SeriesEditor):
-    auto_figure_control = Instance(AutoSeriesControl, ())
+#class AutoSeriesEditor(SeriesEditor):
+#    auto_figure_control = Instance(AutoSeriesControl, ())
 
 
 #============= EOF =============================================

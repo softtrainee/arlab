@@ -32,7 +32,7 @@ class SystemMonitorControls(HasTraits):
     weeks = EInt(0)
     days = EInt(2)
     hours = EInt(0)
-    limit = EInt(50)
+    limit = EInt(5)
     update = Event
     refresh_button = Button
 

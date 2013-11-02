@@ -368,13 +368,13 @@ Quick=   measure_iteration stopped at current step
         return v
 
 
-class ConsolePane(TraitsDockPane):
-    id = 'pychron.experiment.console'
-    name = 'Console'
-
-    def traits_view(self):
-        v = View(UItem('info_display', style='custom'))
-        return v
+#class ConsolePane(TraitsDockPane):
+#    id = 'pychron.experiment.console'
+#    name = 'Console'
+#
+#    def traits_view(self):
+#        v = View(UItem('console_display', style='custom'))
+#        return v
 
 
 class ExplanationPane(TraitsDockPane):

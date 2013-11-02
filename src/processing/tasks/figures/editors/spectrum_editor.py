@@ -21,7 +21,7 @@ from traits.api import Instance
 from src.processing.tasks.figures.figure_editor import FigureEditor
 from src.processing.plotters.figure_container import FigureContainer
 from src.processing.plotter_options_manager import SpectrumOptionsManager
-from src.processing.tasks.figures.editors.auto_controls import AutoSpectrumControl
+#from src.processing.tasks.figures.editors.auto_controls import AutoSpectrumControl
 
 
 class SpectrumEditor(FigureEditor):
@@ -42,7 +42,7 @@ class SpectrumEditor(FigureEditor):
         return model, iv.component
 
 
-class AutoSpectrumEditor(SpectrumEditor):
-    auto_figure_control = Instance(AutoSpectrumControl, ())
+#class AutoSpectrumEditor(SpectrumEditor):
+#    auto_figure_control = Instance(AutoSpectrumControl, ())
 
 #============= EOF =============================================

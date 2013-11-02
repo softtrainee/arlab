@@ -15,11 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traitsui.api import Item, ButtonEditor, Spring
+from pyface.tasks.traits_dock_pane import TraitsDockPane
+from traits.api import Instance
+from traitsui.api import Item, ButtonEditor, Spring, View, UItem
 from pyface.image_resource import ImageResource
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.displays.display import DisplayController
 from src.paths import paths
 
 
@@ -39,6 +42,16 @@ def icon_button_editor(trait, name, label=None, editor_kw=None, **kw):
                 editor=ButtonEditor(image=image, **editor_kw),
                 **kw)
 
+
+class ConsolePane(TraitsDockPane):
+    id = 'pychron.console'
+    name = 'Console'
+    console_display = Instance(DisplayController)
+
+    def traits_view(self):
+        v = View(UItem('console_display',
+                       style='custom'))
+        return v
 
 #============= EOF =============================================
 

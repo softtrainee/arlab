@@ -77,6 +77,32 @@ class IsotopeAdapter(DatabaseAdapter):
 
     selector_klass = IsotopeAnalysisSelector
 
+    def get_analyses_date_range(self, start, end,
+                                labnumber=None,
+                                atype=None,
+                                limit=None):
+
+        with self.session_ctx() as sess:
+            q = sess.query(meas_AnalysisTable)
+            q = q.join(meas_MeasurementTable)
+            if atype:
+                q = q.join(gen_AnalysisTypeTable)
+            if labnumber:
+                q = q.join(gen_LabTable)
+
+            q = q.filter(and_(meas_AnalysisTable.analysis_timestamp <= end,
+                              meas_AnalysisTable.analysis_timestamp >= start))
+            if atype:
+                q = q.filter(gen_AnalysisTypeTable.name == atype)
+            if labnumber:
+                q = q.filter(gen_LabTable.identifier == labnumber)
+
+            if limit:
+                q = q.limit(limit)
+
+            q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+            return self._query_all(q)
+
     def count_sample_analyses(self, *args, **kw):
         return self._get_sample_analyses('count', *args, **kw)
 
@@ -721,9 +747,11 @@ class IsotopeAdapter(DatabaseAdapter):
     def _add_sample(self, name, project, material):
         sample = gen_SampleTable(name=name)
 
+        project = self.get_project(project)
         if project is not None:
             project.samples.append(sample)
 
+        material = self.get_material(material)
         if material is not None:
             material.samples.append(sample)
 

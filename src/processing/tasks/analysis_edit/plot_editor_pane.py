@@ -98,7 +98,7 @@ class PlotEditorPane(TraitsDockPane):
     analyses = Any
 
     name = 'Plot Editor'
-    id = 'pychron.processing.editor'
+    id = 'pychron.plot_editor'
     current_editor = Instance(PlotEditor)
     selectors = List
 

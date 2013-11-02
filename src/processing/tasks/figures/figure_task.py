@@ -178,7 +178,8 @@ class FigureTask(AnalysisEditTask):
         self._append_figure(IdeogramEditor)
 
     def new_ideogram(self, ans=None, klass=None, tklass=None,
-                     name='Ideo', plotter_kw=None, set_ans=True):
+                     name='Ideo', set_ans=True,
+                     add_table=True, add_iso=True):
 
         if klass is None:
             klass = IdeogramEditor
@@ -187,16 +188,15 @@ class FigureTask(AnalysisEditTask):
             from src.processing.tasks.tables.editors.laser_table_editor \
                 import LaserTableEditor as tklass
 
-        self._new_figure(ans, name, klass, tklass, set_ans=set_ans)
-
-        #auto load the first prev selection for debugging
-
-    #        uk = self.unknowns_pane
-    #        uk.previous_selection = uk.previous_selections[0]
+        return self._new_figure(ans, name, klass, tklass,
+                                set_ans=set_ans,
+                                add_iso=add_iso,
+                                add_table=add_table)
 
     def new_spectrum(self, ans=None, klass=None,
                      tklass=None,
-                     name='Spec', plotter_kw=None):
+                     name='Spec',
+                     add_table=True, add_iso=True):
         if klass is None:
             klass = SpectrumEditor
 
@@ -204,7 +204,9 @@ class FigureTask(AnalysisEditTask):
             from src.processing.tasks.tables.editors.laser_table_editor \
                 import LaserTableEditor as tklass
 
-        self._new_figure(ans, name, klass, tklass)
+        return self._new_figure(ans, name, klass, tklass,
+                                add_iso=add_iso,
+                                add_table=add_table)
 
     def new_inverse_isochron(self, ans=None, name='Inv. Iso.',
                              klass=None, tklass=None, plotter_kw=None):
@@ -219,7 +221,9 @@ class FigureTask(AnalysisEditTask):
                                    add_iso=False)
 
     def new_series(self, ans=None, name='Series',
-                   klass=None, tklass=None, plotter_kw=None):
+                   klass=None, tklass=None,
+                   add_iso=False,
+                   add_table=True):
         if klass is None:
             klass = SeriesEditor
 
@@ -227,8 +231,9 @@ class FigureTask(AnalysisEditTask):
             from src.processing.tasks.tables.editors.laser_table_editor \
                 import LaserTableEditor as tklass
 
-        feditor = self._new_figure(ans, name, klass, tklass,
-                                   add_iso=False)
+        return self._new_figure(ans, name, klass, tklass,
+                                add_iso=add_iso,
+                                add_table=add_table)
 
 
     #         func = self.manager.new_inverse_isochron
@@ -366,6 +371,7 @@ class FigureTask(AnalysisEditTask):
             self.active_editor.rebuild(compress_groups=False)
 
     def _new_figure(self, ans, name, klass, tklass=None,
+                    add_table=True,
                     add_iso=True,
                     set_ans=True):
         # new figure editor
@@ -374,7 +380,7 @@ class FigureTask(AnalysisEditTask):
             processor=self.manager,
         )
 
-        if not ans:
+        if ans is None:
             ans = self.unknowns_pane.items
 
         if ans:
@@ -384,7 +390,7 @@ class FigureTask(AnalysisEditTask):
 
         self._open_editor(editor)
 
-        if tklass:
+        if tklass and add_table:
             # open table
             teditor = self._new_table(ans, name, tklass)
             if teditor:
@@ -496,8 +502,6 @@ class FigureTask(AnalysisEditTask):
 
         super(FigureTask, self)._active_editor_changed()
 
-
-    #@on_trait_change('active_editor:figure_model:panels:figures:refresh_unknowns_table')
     @on_trait_change('active_editor:refresh_unknowns_table')
     def _ac_refresh_table(self):
         if self.unknowns_pane:
@@ -509,7 +513,7 @@ class FigureTask(AnalysisEditTask):
     def _dclicked_sample_changed(self, new):
         if self.unknowns_pane.items:
 
-            editor = IdeogramEditor(processor=self.manager)
+            #editor = IdeogramEditor(processor=self.manager)
 
             for sa in self.selected_sample:
                 ans = self._get_sample_analyses(sa)
@@ -542,7 +546,7 @@ class FigureTask(AnalysisEditTask):
                 Tabbed(
                     PaneItem('pychron.analysis_edit.unknowns'),
                     PaneItem('pychron.processing.figures.plotter_options'),
-                    PaneItem('pychron.processing.editor')
+                    PaneItem('pychron.plot_editor')
                     #PaneItem('pychron.analysis_edit.controls'),
                 ),
             ),
