@@ -392,9 +392,6 @@ class AutomatedRun(Loggable):
 
         ion = self.ion_optics_manager
 
-        #        invoke_in_main_thread(self.plot_panel.show)
-        #        self.plot_panel.show()
-
         if mass:
             if ion is not None:
                 if detector is None:
@@ -477,7 +474,7 @@ class AutomatedRun(Loggable):
         self.is_peak_hop = False
         return ret
 
-    def py_peak_center(self, detector=None, **kw):
+    def py_peak_center(self, detector=None, save=True, **kw):
         mem_log('pre peak center')
         if not self._alive:
             return
@@ -498,7 +495,7 @@ class AutomatedRun(Loggable):
                                        **kw)
             self.peak_center = pc
 
-            ion.do_peak_center(new_thread=False)
+            ion.do_peak_center(new_thread=False, save=save)
 
             if pc.result:
                 dm = self.data_manager
