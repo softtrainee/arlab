@@ -31,6 +31,13 @@ class UnknownsAdapter(TabularAdapter):
                (u'\u00b11\u03c3', 'error'),
                ('Tag', 'tag')
     ]
+    
+    record_id_width=Int(80)
+    sample_width=Int(80)
+    age_width=Int(70)
+    error_width=Int(60)
+    tag_width=Int(50)
+    
     font = 'arial 12'
     #     record_id_text_color = Property
     #     tag_text_color = Property

@@ -37,6 +37,7 @@ from .editors.isochron_editor import InverseIsochronEditor
 from .editors.ideogram_editor import IdeogramEditor
 from src.processing.tasks.figures.figure_editor import FigureEditor
 from src.processing.tasks.figures.editors.series_editor import SeriesEditor
+from src.processing.utils.grouping import group_analyses_by_key
 
 #@todo: add layout editing.
 #@todo: add vertical stack. link x-axes
@@ -452,26 +453,29 @@ class FigureTask(AnalysisEditTask):
             for ai in self.active_editor.associated_editors:
                 if isinstance(ai, FigureEditor):
                     ai.rebuild_graph()
+    
+    @classmethod
+    def group_by(cls, editor, items, key):
+        ids = []
+        for it in items:
+            v = key(it)
+            if not v in ids:
+                ids.append(v)
 
+        sitems = sorted(items, key=key)
+        #for i, (_, analyses) in enumerate(groupby(sitems, key=key)):
+        for k, analyses in groupby(sitems, key=key):
+            gid = ids.index(k)
+            idxs = [items.index(ai) for ai in analyses]
+            editor.set_group(idxs, gid, refresh=False)
+        
     def _group_by(self, key):
 
         editor = self.active_editor
         if editor:
             #items = editor.unknowns
             items = self.unknowns_pane.items
-            ids = []
-            for it in items:
-                v = key(it)
-                if not v in ids:
-                    ids.append(v)
-
-            sitems = sorted(items, key=key)
-            #for i, (_, analyses) in enumerate(groupby(sitems, key=key)):
-            for k, analyses in groupby(sitems, key=key):
-                gid = ids.index(k)
-                idxs = [items.index(ai) for ai in analyses]
-                editor.set_group(idxs, gid, refresh=False)
-
+            group_analyses_by_key(editor, items, key)
             self.unknowns_pane.refresh_needed = True
             editor.rebuild(refresh_data=False)
 

@@ -29,6 +29,7 @@ from src.processing.tasks.figures.editors.series_editor import SeriesEditor
 from src.system_monitor.tasks.connection_spec import ConnectionSpec
 from src.system_monitor.tasks.controls import SystemMonitorControls
 from src.ui.gui import invoke_in_main_thread
+from src.processing.utils.grouping import group_analyses_by_key
 
 """
     subscribe to pyexperiment
@@ -54,7 +55,7 @@ class SystemMonitorEditor(SeriesEditor):
 
     use_poll = Bool(False)
     _poll_interval = Int(10)
-    _db_poll_interval = Int(30)
+    _db_poll_interval = Int(10)
     _polling = False
     pickle_path = 'system_monitor'
 
@@ -123,9 +124,10 @@ class SystemMonitorEditor(SeriesEditor):
         if self.conn_spec.host:
             sub = self.subscriber
             connected = sub.connect(timeout=1)
+            
             sub.subscribe('RunAdded', self.run_added_handler, True)
             sub.subscribe('ConsoleMessage', self.console_message_handler)
-
+            
             if connected:
                 sub.listen()
             else:
@@ -157,7 +159,7 @@ class SystemMonitorEditor(SeriesEditor):
                 if not sub.is_listening():
                     self.info('Subscription server now avaliable. starting to listen')
                     self.subscriber.listen()
-                    continue
+                
             else:
                 if sub.was_listening:
                     self.warning('Subscription server no longer avaliable. stop listen')
@@ -172,6 +174,8 @@ class SystemMonitorEditor(SeriesEditor):
                         if lr != last_run_uuid:
                             last_run_uuid = lr
                         invoke_in_main_thread(self.run_added_handler, lr)
+            else:
+                break
 
     def _wait(self, t):
         st = time.time()
@@ -273,19 +277,23 @@ class SystemMonitorEditor(SeriesEditor):
         ans = self._get_analyses(identifier,
                                  aliquot, use_date_range)
 
+
+        
         editor.unknowns = ans
-        self.task.group_by_labnumber()
+        group_analyses_by_key(editor, editor.unknowns, 'labnumber')
+#        self.task.group_by_labnumber()
 
         return editor
 
     def _get_analyses(self, identifier, aliquot=None, use_date_range=False):
         db = self.processor.db
         with db.session_ctx():
+            limit=self.tool.limit
             if aliquot is not None:
                 def func(a, l):
                     return l.identifier == identifier, a.aliquot == aliquot
 
-                ans = db.get_analyses(func=func)
+                ans = db.get_analyses(func=func, limit=limit)
             elif use_date_range:
                 end = datetime.now()
                 start = end - timedelta(hours=self.tool.hours,
@@ -294,9 +302,9 @@ class SystemMonitorEditor(SeriesEditor):
 
                 ans = db.get_analyses_date_range(start, end,
                                                  labnumber=identifier,
-                                                 limit=self.tool.limit)
+                                                 limit=limit)
             else:
-                ans = db.get_labnumber_analyses(identifier)
+                ans = db.get_labnumber_analyses(identifier, limit=limit)
 
             return self.processor.make_analyses(ans)
 

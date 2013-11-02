@@ -34,7 +34,10 @@ class BaseEditorTask(BaseManagerTask):
 
     def activate_editor(self, editor):
         if self.editor_area:
-            self.editor_area.activate_editor(editor)
+            try:
+                self.editor_area.activate_editor(editor)
+            except AttributeError:
+                pass
 
     def open(self, path=None, **kw):
         ''' Shows a dialog to open a file.

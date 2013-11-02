@@ -958,12 +958,18 @@ class IsotopeAdapter(DatabaseAdapter):
     # #        return meas_AnalysisTable, 'uuid'
         return self._retrieve_item(meas_AnalysisTable, value, key='uuid')
 
-    def get_labnumber_analyses(self, ln):
+    def get_labnumber_analyses(self, ln, limit=None):
         with self.session_ctx() as sess:
             q = sess.query(meas_AnalysisTable)
             q = q.join(gen_LabTable)
             q = q.filter(gen_LabTable.identifier == ln)
-            return q.all()
+            q=q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+            
+            if limit:
+                q=q.limit(limit)
+                
+            return self._query_all(q)
+            
 
     def get_analysis_record(self, value):
         return self._retrieve_item(meas_AnalysisTable, value, key='id')
