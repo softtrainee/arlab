@@ -22,7 +22,7 @@ from multiprocessing.process import Process
         - move to archive
     2. remove archive directories older than X
 '''
-from traits.api import HasTraits, Range, Bool, Str
+from traits.api import Range, Bool, Str
 import os
 import shutil
 from datetime import datetime, timedelta
@@ -92,6 +92,7 @@ class Archiver(Loggable):
 
         if self.clean_archives:
             self._clean_archive(root)
+        self.info('Archive cleaning complete')
 
     def _get_files(self, root):
         return [p for p in os.listdir(root)

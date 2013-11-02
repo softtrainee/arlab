@@ -1,0 +1,33 @@
+"""
+ test script that periodically
+ sends random messages using zmq.Publisher patterb
+"""
+import random
+import time
+import sys
+import os
+from traits.etsconfig.etsconfig import ETSConfig
+
+ETSConfig.toolkit = 'qt4'
+
+d = os.path.dirname(os.getcwd())
+print os.path.join(d)
+sys.path.append(d)
+#print sys.path
+from src.messaging.notify.notifier import Notifier
+
+
+def beacon(port):
+    n = Notifier()
+    n.setup(port)
+    for i in xrange(100000):
+        msg = 'beacon number {}, {}'.format(i, random.random())
+        print 'Sending message {}'.format(msg)
+        n.send_console_message(msg)
+        time.sleep(0.25)
+
+
+if __name__ == '__main__':
+    beacon(8100)
+
+
