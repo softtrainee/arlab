@@ -18,10 +18,12 @@ from src.messaging.notify.notifier import Notifier
 
 
 def beacon(port):
+    colors = ['red', 'green', 'blue', 'orange']
     n = Notifier()
     n.setup(port)
     for i in xrange(100000):
-        msg = 'beacon number {}, {}'.format(i, random.random())
+        color = random.choice(colors)
+        msg = '{}|beacon number {}, {}'.format(color, i, random.random())
         print 'Sending message {}'.format(msg)
         n.send_console_message(msg)
         time.sleep(0.25)
