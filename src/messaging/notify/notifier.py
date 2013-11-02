@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from threading import Thread
 from traits.api import Int
 #============= standard library imports ========================
 import zmq
@@ -25,6 +26,7 @@ from src.loggable import Loggable
 class Notifier(Loggable):
     port = Int
     _sock = None
+    _ping_sock = None
 
     def _port_changed(self):
         self.setup(self.port)
@@ -36,12 +38,32 @@ class Notifier(Loggable):
             sock.bind('tcp://*:{}'.format(port))
             self._sock = sock
 
-            # delay to allow publ sock to get setup
-            #time.sleep(0.1)
+            self._ping_sock = context.socket(zmq.REP)
+            self._ping_sock.bind('tcp://*:{}'.format(port + 1))
+
+            t = Thread(name='ping_replier', target=self._handle_ping)
+            t.setDaemon(1)
+            t.start()
+
+    def _handle_ping(self):
+
+        sock = self._ping_sock
+        poll = zmq.Poller()
+        poll.register(self._ping_sock, zmq.POLLIN)
+
+        while self._ping_sock:
+            socks = dict(poll.poll(1000))
+            if socks.get(sock) == zmq.POLLIN:
+                resp = sock.recv()
+                if resp == 'ping':
+                    sock.send('echo')
 
     def close(self):
         self._sock.close()
         self._sock = None
+
+        self._ping_sock.close()
+        self._ping_sock = None
 
     def send_notification(self, uuid, tag='RunAdded'):
         msg = '{} {}'.format(tag, uuid)
