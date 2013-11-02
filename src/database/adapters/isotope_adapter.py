@@ -103,31 +103,38 @@ class IsotopeAdapter(DatabaseAdapter):
             q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
             return self._query_all(q)
 
-    def count_sample_analyses(self, *args, **kw):
-        return self._get_sample_analyses('count', *args, **kw)
+    #def count_sample_analyses(self, *args, **kw):
+    #    return self._get_sample_analyses('count', *args, **kw)
 
     def get_sample_analyses(self, *args, **kw):
         return self._get_sample_analyses('all', *args, **kw)
 
-    def _get_sample_analyses(self, f, sample, limit=None, offset=None,
+    def _get_sample_analyses(self, f, samples, projects, limit=None, offset=None,
                              include_invalid=False):
+        if not isinstance(samples, (list, tuple)):
+            samples = (samples,)
+
         with self.session_ctx() as sess:
             q = sess.query(meas_AnalysisTable)
             q = q.join(gen_LabTable)
             q = q.join(gen_SampleTable)
+            q = q.join(gen_ProjectTable)
 
             if not include_invalid:
                 q = q.filter(meas_AnalysisTable.tag != 'invalid')
 
-            q = q.filter(gen_SampleTable.name == sample.name)
+            q = q.filter(gen_SampleTable.name.in_(samples))
+            q = q.filter(gen_ProjectTable.name.in_(projects))
             q = q.order_by(meas_AnalysisTable.analysis_timestamp.asc())
+
+            tc = int(q.count())
 
             if limit:
                 q = q.limit(limit)
             if offset:
                 q = q.offset(offset)
 
-            return getattr(q, f)()
+            return getattr(q, f)(), tc
 
     def get_analyses_data_range(self, mi, ma,
                                 analysis_type=None,
