@@ -88,7 +88,7 @@ class SystemMonitorEditor(SeriesEditor):
     def console_message_handler(self, msg):
         color = 'green'
         if '|' in msg:
-            color, msg = msg
+            color, msg = msg.split('|')
 
         self.console_display.add_text(msg, color=color)
 
@@ -104,6 +104,7 @@ class SystemMonitorEditor(SeriesEditor):
                     add to ideogram
         """
         self.info('refresh analyses. last UUID={}'.format(last_run_uuid))
+        return
         proc = self.processor
         db = proc.db
         with db.session_ctx():
@@ -329,6 +330,7 @@ class SystemMonitorEditor(SeriesEditor):
 
         self.info('Creating subscriber to {}:{}"'.format(h, p))
         sub = Subscriber(host=self.conn_spec.host,
-                         port=self.conn_spec.port)
+                         port=self.conn_spec.port,
+                         verbose=False)
         return sub
         #============= EOF =============================================

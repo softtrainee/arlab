@@ -34,6 +34,7 @@ class Subscriber(Loggable):
     _stop_signal = None
     _subscriptions = List
     was_listening = False
+    verbose = True
 
     def connect(self, timeout=None):
         context = zmq.Context()
@@ -104,7 +105,9 @@ class Subscriber(Loggable):
         sock = self._sock
         while not self._stop_signal.is_set():
             resp = sock.recv()
-            self.debug('raw notification {}'.format(resp))
+            if self.verbose:
+                self.debug('raw notification {}'.format(resp))
+
             for si, cb, verbose in self._subscriptions:
                 if resp.startswith(si):
                     resp = resp.split(si)[-1].strip()
