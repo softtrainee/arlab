@@ -263,8 +263,8 @@ class AnalysisEditTask(BaseBrowserTask):
             if self.unknowns_pane:
                 self.unknowns_pane.previous_selection = self.unknowns_pane.previous_selections[0]
                 if hasattr(self.active_editor, 'unknowns'):
-                    if self.active_editor.unknowns:
-                        self.unknowns_pane.items = self.active_editor.unknowns
+                    #if self.active_editor.unknowns:
+                    self.unknowns_pane.items = self.active_editor.unknowns
 
     @on_trait_change('active_editor:component_changed')
     def _update_component(self):

@@ -131,15 +131,15 @@ class IsotopeDatabaseManager(Loggable):
             if ans:
 
                 db_ans, no_db_ans = map(list, partition(ans, lambda x: isinstance(x, DBAnalysis)))
-                for di in db_ans:
-                    self.debug('is DBAnalysis -{}'.format(di.record_id))
+                #for di in db_ans:
+                #    self.debug('is DBAnalysis -{}'.format(di.record_id))
 
                 if no_db_ans:
                     cached_ans, no_db_ans = partition(no_db_ans,
                                                       lambda x: x.uuid in ANALYSIS_CACHE)
                     cached_ans = list(cached_ans)
-                    for ci in cached_ans:
-                        self.debug('getting {} from cache'.format(ci.labnumber.identifier))
+                    #for ci in cached_ans:
+                    #    self.debug('getting {} from cache'.format(ci.labnumber.identifier))
 
                     db_ans.extend([ANALYSIS_CACHE[ci.uuid] for ci in cached_ans])
 

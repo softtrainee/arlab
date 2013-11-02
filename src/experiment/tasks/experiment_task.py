@@ -26,10 +26,11 @@ import weakref
 import os
 #============= local library imports  ==========================
 import xlrd
+from src.envisage.tasks.pane_helpers import ConsolePane
 from src.experiment.health.analysis_health import AnalysisHealth
 from src.experiment.queue.base_queue import extract_meta
 from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPane, \
-    ControlsPane, ConsolePane, WaitPane, IsotopeEvolutionPane
+    ControlsPane, WaitPane, IsotopeEvolutionPane
 
 from src.envisage.tasks.editor_task import EditorTask
 from src.experiment.tasks.experiment_editor import ExperimentEditor, UVExperimentEditor
@@ -448,6 +449,11 @@ class ExperimentEditorTask(EditorTask):
             self.isotope_evolution_pane.plot_panel = new
             #         self.summary_pane.plot_panel = new
 
+    @on_trait_change('manager:executor:console_updated')
+    def _update_console(self, new):
+        if self.use_notifications:
+            self.notifier.send_console_message(new)
+
     @on_trait_change('manager:executor:run_completed')
     def _update_run_completed(self, new):
         if self.auto_figure_window:
@@ -613,7 +619,7 @@ class ExperimentEditorTask(EditorTask):
             right=Splitter(
                 Tabbed(
                     PaneItem('pychron.experiment.stats'),
-                    PaneItem('pychron.experiment.console', height=425),
+                    PaneItem('pychron.console', height=425),
                     PaneItem('pychron.experiment.explanation', height=425),
                 ),
                 #                                          PaneItem('pychron.extraction_line.canvas_dock'),

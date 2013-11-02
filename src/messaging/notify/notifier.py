@@ -44,9 +44,16 @@ class Notifier(Loggable):
         self._sock = None
 
     def send_notification(self, uuid, tag='RunAdded'):
+        msg = '{} {}'.format(tag, uuid)
+        self.info('pushing notification - {}'.format(msg))
+        self._send(msg)
+
+    def send_console_message(self, msg):
+        self.info('push console message - {}'.format(msg))
+        self._send(msg)
+
+    def _send(self, msg):
         if self._sock:
-            msg = '{} {}'.format(tag, uuid)
-            self.info('pushing notification {}'.format(msg))
             self._sock.send(msg)
         else:
             self.debug('notifier not setup')

@@ -40,7 +40,7 @@ class IsotopeEvolutionTask(AnalysisEditTask):
                 ),
                 VSplitter(
                     Tabbed(
-                        PaneItem('pychron.processing.editor'),
+                        PaneItem('pychron.plot_editor'),
                         PaneItem('pychron.analysis_edit.unknowns')),
                     PaneItem('pychron.analysis_edit.controls')
                 ),

@@ -59,7 +59,8 @@ class GraphEditor(BaseUnknownsEditor):
             pickle.dump(tool, fp)
 
     def _dump_tool(self):
-        return self.tool.fits
+        if self.tool:
+            return self.tool.fits
 
     def load_tool(self):
         p = os.path.join(paths.hidden_dir, self.pickle_path)
@@ -121,7 +122,6 @@ class GraphEditor(BaseUnknownsEditor):
 
     def _set_name(self):
         na = list(set([ni.sample for ni in self.unknowns]))
-
         na = self._grouped_name(na)
         self.name = '{} {}'.format(na, self.basename)
 

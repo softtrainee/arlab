@@ -40,6 +40,7 @@ class FigureEditor(GraphEditor):
     #     _unknowns = List
     #     _cached_unknowns = List
     #     _suppress_rebuild = False
+    tool = Any
 
     annotation_tool = Any
 

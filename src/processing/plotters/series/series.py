@@ -49,29 +49,31 @@ class Series(BaseArArFigure):
         graph = self.graph
 
         xs = array([ai.timestamp for ai in self.sorted_analyses])
-        px = plots[0]
+        #print plots, xs
+        if plots:
+            px = plots[0]
 
-        if px.normalize == 'now':
-            norm = time.time()
-        else:
-            norm = xs[-1]
+            if px.normalize == 'now':
+                norm = time.time()
+            else:
+                norm = xs[-1]
 
-        xs -= norm
-        if not px.use_time_axis:
-            xs /= 3600
-        else:
-            graph.convert_index_func = lambda x: '{:0.2f} hrs'.format(x / 3600.)
+            xs -= norm
+            if not px.use_time_axis:
+                xs /= 3600
+            else:
+                graph.convert_index_func = lambda x: '{:0.2f} hrs'.format(x / 3600.)
 
-        self.xs = xs
+            self.xs = xs
 
-        with graph.no_regression(refresh=True):
-            plots = [po for po in plots if po.use]
-            for i, po in enumerate(plots):
-                self._plot_series(po, i)
+            with graph.no_regression(refresh=True):
+                plots = [po for po in plots if po.use]
+                for i, po in enumerate(plots):
+                    self._plot_series(po, i)
 
-            if plots:
-                graph.set_x_limits(min_=0, max_=max(self.xs), pad='0.1',
-                                   plotid=0)
+                if plots:
+                    graph.set_x_limits(min_=min(self.xs), max_=max(self.xs), pad='0.1',
+                                       plotid=0)
 
     def _plot_series(self, po, pid):
         graph = self.graph

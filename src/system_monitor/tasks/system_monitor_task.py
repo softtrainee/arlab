@@ -15,12 +15,16 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from PySide.QtCore import Qt
+from pyface.timer.do_later import do_later
 from traits.api import Instance, List
 from pyface.tasks.action.schema import SToolBar
-from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem
+from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.pane_helpers import ConsolePane
 from src.processing.tasks.analysis_edit.panes import ControlsPane
+from src.processing.tasks.analysis_edit.plot_editor_pane import PlotEditorPane
 from src.processing.tasks.figures.figure_editor import FigureEditor
 from src.processing.tasks.figures.figure_task import FigureTask
 from src.processing.tasks.figures.panes import PlotterOptionsPane
@@ -43,11 +47,23 @@ class SystemMonitorTask(FigureTask):
     connection_pane = Instance(ConnectionPane)
     controls_pane = Instance(ControlsPane)
     unknowns_pane = Instance(AnalysisPane)
+    console_pane = Instance(ConsolePane)
+
     connections = List
     connection = Instance(ConnectionSpec)
 
     #def prepare_destroy(self):
     #    pass
+    #def add_ideogram(self):
+    #    editor=IdeogramEditor()
+    #    self._open_editor(editor)
+    #    return editor
+    #
+    #def add_spectrum(self):
+    #    editor=SpectrumEditor()
+    #    self._open_editor(editor)
+    #    return editor
+
 
     def add_system_monitor(self):
         self._editor_factory()
@@ -61,25 +77,47 @@ class SystemMonitorTask(FigureTask):
                  title='Choose System')
         return v
 
-    def _editor_factory(self):
-        #ask user for system
-        info = self.edit_traits(view='get_connection_view')
+    def tab_editors(self, *args):
+        def func(control, a, b):
+            control.tabifyDockWidget(a, b)
 
-        if info.result and self.connection:
+        self._layout_editors(func, *args)
+
+    def split_editors(self, *args):
+        def func(control, a, b):
+            control.splitDockWidget(a, b, Qt.Horizontal)
+
+        self._layout_editors(func, *args)
+
+    def _layout_editors(self, func, aidx, bidx):
+        ea = self.editor_area
+        control = ea.control
+        widgets = control.get_dock_widgets()
+        if widgets:
+            try:
+                a, b = widgets[aidx], widgets[bidx]
+                func(control, a, b)
+            except IndexError:
+                pass
+
+    def _editor_factory(self):
+        self.connection = self.connections[1]
+        #ask user for system
+        #info = self.edit_traits(view='get_connection_view')
+        if 1:
+        #if info.result and self.connection:
             editor = SystemMonitorEditor(processor=self.manager,
-                                         conn_spec=self.connection)
+                                         conn_spec=self.connection,
+                                         task=self)
             editor.start()
             self._open_editor(editor)
             if editor:
-                editor.sub_refresh()
+                do_later(editor.run_added_handler)
 
             return editor
 
     def _active_editor_changed(self):
         if self.active_editor:
-
-            self.connection_pane.conn_spec = self.active_editor.conn_spec
-
             if self.controls_pane:
                 tool = None
                 if hasattr(self.active_editor, 'tool'):
@@ -87,9 +125,18 @@ class SystemMonitorTask(FigureTask):
 
                 self.controls_pane.tool = tool
 
-        if isinstance(self.active_editor, FigureEditor):
-            self.plotter_options_pane.pom = self.active_editor.plotter_options_manager
+            if isinstance(self.active_editor, FigureEditor):
+                self.plotter_options_pane.pom = self.active_editor.plotter_options_manager
+            elif isinstance(self.active_editor, SystemMonitorEditor):
+                self.console_pane.console_display = self.active_editor.console_display
+                self.connection_pane.conn_spec = self.active_editor.conn_spec
 
+            if self.unknowns_pane:
+                if hasattr(self.active_editor, 'unknowns'):
+                    #print self.active_editor, len(self.active_editor.unknowns)
+                    #self.unknowns_pane._no_update=True
+                    self.unknowns_pane.items = self.active_editor.unknowns
+                    #self.unknowns_pane._no_update=False
 
     def _prompt_for_save(self):
         """
@@ -110,7 +157,12 @@ class SystemMonitorTask(FigureTask):
 
     def activated(self):
         self._make_connections()
-        self._editor_factory()
+        self.add_system_monitor()
+
+        self.new_ideogram(add_table=False, add_iso=False)
+        #self.active_editor.unknowns=[]
+
+        self.activate_editor(self.editor_area.editors[0])
 
     def _default_layout_default(self):
         return TaskLayout(
@@ -120,18 +172,25 @@ class SystemMonitorTask(FigureTask):
                     PaneItem('pychron.analysis_edit.controls'),
                     orientation='vertical'),
                 PaneItem('pychron.sys_mon.analyses'),
-                orientation='horizontal'))
+                orientation='horizontal'),
+            right=Tabbed(PaneItem('pychron.console'),
+                         PaneItem('pychron.plot_editor')))
 
     def create_dock_panes(self):
         self.connection_pane = ConnectionPane()
         self.controls_pane = ControlsPane()
         self.unknowns_pane = AnalysisPane()
         self.plotter_options_pane = PlotterOptionsPane()
+        self.plot_editor_pane = PlotEditorPane()
+
+        self.console_pane = ConsolePane()
 
         return [self.connection_pane,
                 self.controls_pane,
                 self.unknowns_pane,
-                self.plotter_options_pane
+                self.plotter_options_pane,
+                self.console_pane,
+                self.plot_editor_pane
         ]
 
 

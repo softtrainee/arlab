@@ -15,30 +15,28 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Float, Bool
-from traitsui.api import View, Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class AutoSpectrumControl(HasTraits):
-    pass
-class AutoIdeogramControl(HasTraits):
-    group_by_aliquot = Bool(False)
-    group_by_labnumber = Bool(False)
-    def traits_view(self):
-        v = View(
-                 Item('group_by_aliquot'),
-                 Item('group_by_labnumber'),
+#class AutoSpectrumControl(HasTraits):
+#    pass
+#class AutoIdeogramControl(HasTraits):
+#    group_by_aliquot = Bool(False)
+#    group_by_labnumber = Bool(False)
+#    def traits_view(self):
+#        v = View(
+#                 Item('group_by_aliquot'),
+#                 Item('group_by_labnumber'),
+#
+#                 )
+#        return v
 
-                 )
-        return v
-
-class AutoSeriesControl(HasTraits):
-    days = Int(1)
-    hours = Float(0)
-    def traits_view(self):
-        v = View(
-               Item('days'),
-               Item('hours')
-               )
-        return v
+#class AutoSeriesControl(HasTraits):
+#    days = Int(1)
+#    hours = Float(0)
+#    def traits_view(self):
+#        v = View(
+#               Item('days'),
+#               Item('hours')
+#               )
+#        return v
 #============= EOF =============================================

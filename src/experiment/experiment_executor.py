@@ -93,7 +93,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
     #===========================================================================
     #
     #===========================================================================
-    info_display = Instance(DisplayController)
+    console_display = Instance(DisplayController)
+    console_updated = Event
     wait_group = Instance(WaitGroup, ())
     stats = Instance(StatsGroup)
 
@@ -144,14 +145,16 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         return self._prev_blanks
 
     def info(self, msg, log=True, color=None, *args, **kw):
-        if self.info_display:
-            if color is None:
-                color = 'green'
+        if color is None:
+            color = 'green'
 
-            self.info_display.add_text(msg, color=color)
+        if self.console_display:
+            self.console_display.add_text(msg, color=color)
 
         if log:
             super(ExperimentExecutor, self).info(msg, *args, **kw)
+
+        self.console_updated = '{}|{}'.format(color, msg)
 
     def bind_preferences(self):
         super(ExperimentExecutor, self).bind_preferences()
@@ -1073,7 +1076,7 @@ If "No" select from database
     #===============================================================================
     # defaults
     #===============================================================================
-    def _info_display_default(self):
+    def _console_display_default(self):
 
         return DisplayController(
             bg_color='black',

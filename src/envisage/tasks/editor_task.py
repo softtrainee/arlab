@@ -29,8 +29,12 @@ from pyface.tasks.advanced_editor_area_pane import AdvancedEditorAreaPane
 class BaseEditorTask(BaseManagerTask):
     active_editor = Property(Instance(IEditor),
                              depends_on='editor_area.active_editor'
-                             )
+    )
     editor_area = Instance(IEditorAreaPane)
+
+    def activate_editor(self, editor):
+        if self.editor_area:
+            self.editor_area.activate_editor(editor)
 
     def open(self, path=None, **kw):
         ''' Shows a dialog to open a file.
@@ -49,7 +53,6 @@ class BaseEditorTask(BaseManagerTask):
         if self.active_editor:
             if self.active_editor.path:
                 path = self.active_editor.path
-
 
             if not path:
                 path = self.save_file_dialog()
@@ -84,20 +87,21 @@ class BaseEditorTask(BaseManagerTask):
             self.editor_area.add_editor(editor)
             self.editor_area.activate_editor(editor)
 
-#===============================================================================
-# property get/set
-#===============================================================================
+            #===============================================================================
+            # property get/set
+            #===============================================================================
+
     def _get_active_editor(self):
         if self.editor_area is not None:
             return self.editor_area.active_editor
 
         return None
 
-#     def _confirmation(self, message=''):
-#         dialog = ConfirmationDialog(parent=self.window.control,
-#                                     message=message, cancel=True,
-#                                     default=CANCEL, title='Save Changes?')
-#         return dialog.open()
+    #     def _confirmation(self, message=''):
+    #         dialog = ConfirmationDialog(parent=self.window.control,
+    #                                     message=message, cancel=True,
+    #                                     default=CANCEL, title='Save Changes?')
+    #         return dialog.open()
 
     def _prompt_for_save(self):
         if self.editor_area is None:
@@ -123,4 +127,5 @@ class BaseEditorTask(BaseManagerTask):
 
 class EditorTask(BaseExtractionLineTask, BaseEditorTask):
     pass
+
 #============= EOF =============================================

@@ -98,15 +98,18 @@ class Processor(IsotopeDatabaseManager):
 
         return refs, unks
 
-    def analysis_series(self, analysis_type, ms, ed, weeks=0,
+    def analysis_series(self, ms, ed=None, analysis_type=None, weeks=0,
                         days=0, hours=0, limit=None):
-        self.debug('{} {} {}'.format(analysis_type, ms, ed))
+
+        self.debug('atype={} ms={} ed={}'.format(analysis_type, ms, ed))
         db = self.db
         with db.session_ctx() as sess:
             q = sess.query(meas_AnalysisTable)
             q = q.join(meas_MeasurementTable)
-            q = q.join(gen_AnalysisTypeTable)
             q = q.join(gen_MassSpectrometerTable)
+            if analysis_type:
+                q = q.join(gen_AnalysisTypeTable)
+
             if ed:
                 q = q.join(meas_ExtractionTable)
                 q = q.join(gen_ExtractionDeviceTable)
@@ -119,8 +122,10 @@ class Processor(IsotopeDatabaseManager):
 
             attr = meas_AnalysisTable.analysis_timestamp
             q = q.filter(and_(attr <= today, attr >= d))
-            q = q.filter(gen_AnalysisTypeTable.name == analysis_type)
             q = q.filter(gen_MassSpectrometerTable.name == ms)
+
+            if analysis_type:
+                q = q.filter(gen_AnalysisTypeTable.name == analysis_type)
             if ed:
                 q = q.filter(gen_ExtractionDeviceTable.name == ed)
 
