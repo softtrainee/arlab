@@ -16,12 +16,11 @@
 
 #============= enthought library imports =======================
 from pyface.tasks.traits_dock_pane import TraitsDockPane
-from traits.api import Instance, Property, Int
-from traitsui.api import View, UItem, TabularEditor
+from traits.api import Instance, Property, Int, Color, Str
+from traitsui.api import View, UItem, TabularEditor, VGroup
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from traitsui.tabular_adapter import TabularAdapter
 from src.processing.tasks.analysis_edit.panes import TablePane
 from src.system_monitor.tasks.connection_spec import ConnectionSpec
 from src.ui.custom_label_editor import CustomLabel
@@ -29,14 +28,14 @@ from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
 
 
 class AnalysisAdapter(UnknownsAdapter):
-    record_id_width=Int(80)
-    sample_width=Int(80)
-    age_width=Int(70)
-    error_width=Int(60)
-    tag_width=Int(50)
-    
+    record_id_width = Int(80)
+    sample_width = Int(80)
+    age_width = Int(70)
+    error_width = Int(60)
+    tag_width = Int(50)
+
     font = 'arial 10'
-    
+
 
 class AnalysisPane(TablePane):
     name = 'Analyses'
@@ -51,9 +50,9 @@ class AnalysisPane(TablePane):
             CustomLabel('n', color='blue'),
             UItem('items',
                   editor=TabularEditor(
-                           editable=False,
-                           refresh='refresh_needed',
-                           adapter=AnalysisAdapter())))
+                      editable=False,
+                      refresh='refresh_needed',
+                      adapter=AnalysisAdapter())))
         return v
 
 
@@ -63,8 +62,14 @@ class ConnectionPane(TraitsDockPane):
 
     conn_spec = Instance(ConnectionSpec)
 
+    connection_status = Str
+    connection_color = Color('red')
+
     def traits_view(self):
-        v = View(UItem('conn_spec', style='custom'))
+        v = View(VGroup(UItem('conn_spec', style='custom'),
+                        UItem('_'),
+                        CustomLabel('connection_status',
+                                    color_name='connection_color')))
         return v
 
 
