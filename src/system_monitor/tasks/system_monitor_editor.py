@@ -106,6 +106,7 @@ class SystemMonitorEditor(SeriesEditor):
         """
         self.info('refresh analyses. last UUID={}'.format(last_run_uuid))
         return
+
         proc = self.processor
         db = proc.db
         with db.session_ctx():
@@ -124,13 +125,19 @@ class SystemMonitorEditor(SeriesEditor):
         if self.conn_spec.host:
             sub = self.subscriber
             connected = sub.connect(timeout=1)
-            
+
             sub.subscribe('RunAdded', self.run_added_handler, True)
             sub.subscribe('ConsoleMessage', self.console_message_handler)
-            
+
             if connected:
                 sub.listen()
+                self.task.connection_pane.connection_status = 'Connected'
+                self.task.connection_pane.connection_color = 'green'
+
             else:
+                self.task.connection_pane.connection_status = 'Not Connected'
+                self.task.connection_pane.connection_color = 'red'
+
                 url = self.conn_spec.url
                 self.warning('System publisher not available url={}'.format(url))
 
@@ -157,12 +164,11 @@ class SystemMonitorEditor(SeriesEditor):
             #check subscription availablity
             if sub.check_server_availability(timeout=0.5, verbose=True):
                 if not sub.is_listening():
-                    self.info('Subscription server now avaliable. starting to listen')
+                    self.info('Subscription server now available. starting to listen')
                     self.subscriber.listen()
-                
             else:
                 if sub.was_listening:
-                    self.warning('Subscription server no longer avaliable. stop listen')
+                    self.warning('Subscription server no longer available. stop listen')
                     self.subscriber.stop()
 
             if self._wait(poll_interval):
@@ -277,18 +283,16 @@ class SystemMonitorEditor(SeriesEditor):
         ans = self._get_analyses(identifier,
                                  aliquot, use_date_range)
 
-
-        
         editor.unknowns = ans
         group_analyses_by_key(editor, editor.unknowns, 'labnumber')
-#        self.task.group_by_labnumber()
+        #        self.task.group_by_labnumber()
 
         return editor
 
     def _get_analyses(self, identifier, aliquot=None, use_date_range=False):
         db = self.processor.db
         with db.session_ctx():
-            limit=self.tool.limit
+            limit = self.tool.limit
             if aliquot is not None:
                 def func(a, l):
                     return l.identifier == identifier, a.aliquot == aliquot
