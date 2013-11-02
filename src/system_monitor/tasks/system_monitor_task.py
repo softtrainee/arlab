@@ -69,7 +69,7 @@ class SystemMonitorTask(FigureTask):
 
 
     def add_system_monitor(self):
-        self._editor_factory()
+        return self._editor_factory()
 
     def get_connection_view(self):
         v = View(Item('connection',
@@ -159,12 +159,13 @@ class SystemMonitorTask(FigureTask):
 
     def activated(self):
         self._make_connections()
-        self.add_system_monitor()
-
-        self.new_ideogram(add_table=False, add_iso=False)
-        #self.active_editor.unknowns=[]
-
-        self.activate_editor(self.editor_area.editors[0])
+        editor=self.add_system_monitor()
+        if editor:
+            ideo=self.new_ideogram(add_table=False, add_iso=False)
+            editor._ideogram_editor=ideo
+            #self.active_editor.unknowns=[]
+    
+            self.activate_editor(self.editor_area.editors[0])
 
     def _default_layout_default(self):
         return TaskLayout(

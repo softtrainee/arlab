@@ -43,15 +43,16 @@ class Subscriber(Loggable):
         url = self._get_url()
         sock.connect(url)
         self._sock = sock
+        
+        url=self._get_url(1)
         return self._check_server_availability(url, timeout, context=context)
 
-
-    def _get_url(self):
-        h, p = self.host, self.port
+    def _get_url(self, offset=0):
+        h, p = self.host, self.port+offset
         return 'tcp://{}:{}'.format(h, p)
 
     def check_server_availability(self, timeout=1, verbose=True):
-        url = self._get_url()
+        url = self._get_url(1)
         return self._check_server_availability(url, timeout=timeout, verbose=verbose)
 
     def _check_server_availability(self, url, timeout=3, context=None, verbose=True):
@@ -68,13 +69,14 @@ class Subscriber(Loggable):
             request = 'ping'
             alive_sock.send(request)
             socks = dict(poll.poll(timeout * 1000))
-            if not socks.get(alive_sock) == zmq.POLLIN:
+            
+            if not socks.get(alive_sock) == zmq.POLLIN or not alive_sock.recv()=='echo':
                 if verbose:
                     self.warning('subscription server at {} not available'.format(url))
                 alive_sock.setsockopt(zmq.LINGER, 0)
                 alive_sock.close()
                 poll.unregister(alive_sock)
-                ret = False
+                ret=False
 
         return ret
 

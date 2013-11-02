@@ -116,9 +116,10 @@ class GraphEditor(BaseUnknownsEditor):
 
     def load_fits(self, refiso):
         if refiso.isotope_keys:
-            self.tool.load_fits(refiso.isotope_keys,
-                                refiso.isotope_fits)
-            self.load_tool()
+            if self.tool:
+                self.tool.load_fits(refiso.isotope_keys,
+                                    refiso.isotope_fits)
+                self.load_tool()
 
     def _set_name(self):
         na = list(set([ni.sample for ni in self.unknowns]))

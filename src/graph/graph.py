@@ -165,13 +165,12 @@ class Graph(Viewable, ContextMenuMixin):
 
         for ai in attrs:
             v = getattr(plot, ai)
-            if ai == 'color':
-                #print ai, v, type(v)
-                if isinstance(v, str):
-                    v = color_table[v]
-                else:
-                    v = v[0] * 255, v[1] * 255, v[2] * 255
-                    #print '_assemble_plot_metadata', ai, v
+#            if ai == 'color':
+#                print ai, v, type(v)
+#                if isinstance(v, str):
+#                    v = color_table[v]
+#                else:
+#                    v=map(lambda x:x*255, v)
 
             meta[ai] = v
 
@@ -203,7 +202,7 @@ class Graph(Viewable, ContextMenuMixin):
         return ps
 
     def load_metadata(self, metas):
-
+        self.debug('loading metadata')
         for i, meta in enumerate(metas):
             #print meta.keys()
             if not meta:
@@ -222,6 +221,8 @@ class Graph(Viewable, ContextMenuMixin):
                     obj = plots[k][0]
 
                 if obj:
+                    for ki,di in d.iteritems():
+                        print k,ki, di
                     obj.trait_set(**d)
 
             mi_, ma_ = meta['xlimits']

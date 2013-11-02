@@ -25,18 +25,18 @@ from traitsui.tabular_adapter import TabularAdapter
 from src.processing.tasks.analysis_edit.panes import TablePane
 from src.system_monitor.tasks.connection_spec import ConnectionSpec
 from src.ui.custom_label_editor import CustomLabel
+from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
 
 
-class AnalysisAdapter(TabularAdapter):
-    columns = [('Run ID', 'record_id'),
-               ('Sample', 'sample'),
-               #('Age', 'age'),
-               #(u'\u00b11\u03c3', 'error'),
-               #('Tag', 'tag')
-    ]
+class AnalysisAdapter(UnknownsAdapter):
+    record_id_width=Int(80)
+    sample_width=Int(80)
+    age_width=Int(70)
+    error_width=Int(60)
+    tag_width=Int(50)
+    
     font = 'arial 10'
-    record_id_width = Int(60)
-
+    
 
 class AnalysisPane(TablePane):
     name = 'Analyses'
@@ -51,7 +51,8 @@ class AnalysisPane(TablePane):
             CustomLabel('n', color='blue'),
             UItem('items',
                   editor=TabularEditor(
-                      editable=False,
+                           editable=False,
+                           refresh='refresh_needed',
                            adapter=AnalysisAdapter())))
         return v
 
