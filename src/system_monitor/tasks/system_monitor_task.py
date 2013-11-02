@@ -52,8 +52,11 @@ class SystemMonitorTask(FigureTask):
     connections = List
     connection = Instance(ConnectionSpec)
 
-    #def prepare_destroy(self):
-    #    pass
+    def prepare_destroy(self):
+        for e in self.editor_area.editors:
+            if isinstance(e, SystemMonitorEditor):
+                e.stop()
+
     #def add_ideogram(self):
     #    editor=IdeogramEditor()
     #    self._open_editor(editor)
@@ -124,10 +127,9 @@ class SystemMonitorTask(FigureTask):
                     tool = self.active_editor.tool
 
                 self.controls_pane.tool = tool
-
             if isinstance(self.active_editor, FigureEditor):
                 self.plotter_options_pane.pom = self.active_editor.plotter_options_manager
-            elif isinstance(self.active_editor, SystemMonitorEditor):
+            if isinstance(self.active_editor, SystemMonitorEditor):
                 self.console_pane.console_display = self.active_editor.console_display
                 self.connection_pane.conn_spec = self.active_editor.conn_spec
 

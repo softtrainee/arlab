@@ -48,7 +48,8 @@ class Notifier(Loggable):
         self.info('pushing notification - {}'.format(msg))
         self._send(msg)
 
-    def send_console_message(self, msg):
+    def send_console_message(self, msg, tag='ConsoleMessage'):
+        msg = '{} {}'.format(tag, msg)
         self.info('push console message - {}'.format(msg))
         self._send(msg)
 

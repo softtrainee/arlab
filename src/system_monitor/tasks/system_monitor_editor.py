@@ -34,6 +34,9 @@ from src.ui.gui import invoke_in_main_thread
     subscribe to pyexperiment
     or poll database for changes
 
+    use poll to check subscription availability
+    suspend db poll when subscription becomes available
+
 """
 
 
@@ -51,6 +54,7 @@ class SystemMonitorEditor(SeriesEditor):
 
     use_poll = Bool(False)
     _poll_interval = Int(10)
+    _db_poll_interval = Int(30)
     _polling = False
     pickle_path = 'system_monitor'
 
@@ -67,6 +71,7 @@ class SystemMonitorEditor(SeriesEditor):
     task = Any
 
     def prepare_destroy(self):
+        self.stop()
         self.dump_tool()
         for e in ('ideogram', 'spectrum',
                   'air', 'blank_air',
@@ -76,6 +81,7 @@ class SystemMonitorEditor(SeriesEditor):
             if e is not None:
                 e.dump_tool()
 
+    def stop(self):
         self._polling = False
         self.subscriber.stop()
 
@@ -113,22 +119,21 @@ class SystemMonitorEditor(SeriesEditor):
     def start(self):
         self.load_tool()
 
-        use_poll = True
         if self.conn_spec.host:
             sub = self.subscriber
-            if sub.connect(timeout=1):
-                sub.subscribe('RunAdded', self.run_added_handler)
-                sub.subscribe('ConsoleMessage', self.console_message_handler)
+            connected = sub.connect(timeout=1)
+            sub.subscribe('RunAdded', self.run_added_handler, True)
+            sub.subscribe('ConsoleMessage', self.console_message_handler)
+
+            if connected:
                 sub.listen()
-                use_poll = False
+            else:
+                url = self.conn_spec.url
+                self.warning('System publisher not available url={}'.format(url))
 
-        if use_poll:
-            url = self.conn_spec.url
-            self.debug('System publisher @ {} not available using database polling instead'.format(url))
-
-            t = Thread(name='poll', target=self._poll)
-            t.setDaemon(True)
-            t.start()
+        t = Thread(name='poll', target=self._poll)
+        t.setDaemon(True)
+        t.start()
 
     def _dump_tool(self):
         return self.tool
@@ -139,14 +144,42 @@ class SystemMonitorEditor(SeriesEditor):
     def _poll(self):
         self._polling = True
         last_run_uuid = self._get_last_run_uuid()
-        while self._polling:
-            time.sleep(self._poll_interval)
+        sub = self.subscriber
 
-            lr = self._get_last_run_uuid()
-            self.debug('current uuid {} <> {}'.format(last_run_uuid, lr))
-            if lr != last_run_uuid:
-                last_run_uuid = lr
-            invoke_in_main_thread(self.run_added_handler, lr)
+        db_poll_interval = self._db_poll_interval
+        poll_interval = self._poll_interval
+
+        st = time.time()
+        while 1:
+            #check subscription availablity
+            if sub.check_server_availability(timeout=0.5, verbose=True):
+                if not sub.is_listening():
+                    self.info('Subscription server now avaliable. starting to listen')
+                    self.subscriber.listen()
+                    continue
+            else:
+                if sub.was_listening:
+                    self.warning('Subscription server no longer avaliable. stop listen')
+                    self.subscriber.stop()
+
+            if self._wait(poll_interval):
+                if not sub.is_listening():
+                    if time.time() - st > db_poll_interval:
+                        st = time.time()
+                        lr = self._get_last_run_uuid()
+                        self.debug('current uuid {} <> {}'.format(last_run_uuid, lr))
+                        if lr != last_run_uuid:
+                            last_run_uuid = lr
+                        invoke_in_main_thread(self.run_added_handler, lr)
+
+    def _wait(self, t):
+        st = time.time()
+        while time.time() - st < t:
+            if not self._polling:
+                return
+            time.sleep(0.5)
+
+        return True
 
     def _get_last_run_uuid(self):
         db = self.processor.db
@@ -285,7 +318,6 @@ class SystemMonitorEditor(SeriesEditor):
         return tool
 
     def _console_display_default(self):
-
         return DisplayController(
             bg_color='black',
             default_color='limegreen',

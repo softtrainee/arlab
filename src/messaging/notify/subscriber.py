@@ -33,20 +33,33 @@ class Subscriber(Loggable):
 
     _stop_signal = None
     _subscriptions = List
+    was_listening = False
 
     def connect(self, timeout=None):
         context = zmq.Context()
         sock = context.socket(zmq.SUB)
-        h, p = self.host, self.port
-        url = 'tcp://{}:{}'.format(h, p)
+
+        url = self._get_url()
         sock.connect(url)
         self._sock = sock
-        return self.check_server_availability(context, url, timeout)
+        return self._check_server_availability(url, timeout, context=context)
 
-    def check_server_availability(self, ctx, url, timeout=3):
+
+    def _get_url(self):
+        h, p = self.host, self.port
+        return 'tcp://{}:{}'.format(h, p)
+
+    def check_server_availability(self, timeout=1, verbose=True):
+        url = self._get_url()
+        return self._check_server_availability(url, timeout=timeout, verbose=verbose)
+
+    def _check_server_availability(self, url, timeout=3, context=None, verbose=True):
         ret = True
         if timeout:
-            alive_sock = ctx.socket(zmq.REQ)
+            if context is None:
+                context = zmq.Context()
+
+            alive_sock = context.socket(zmq.REQ)
             alive_sock.connect(url)
 
             poll = zmq.Poller()
@@ -55,7 +68,8 @@ class Subscriber(Loggable):
             alive_sock.send(request)
             socks = dict(poll.poll(timeout * 1000))
             if not socks.get(alive_sock) == zmq.POLLIN:
-                self.warning('subscription server at {} not available'.format(url))
+                if verbose:
+                    self.warning('subscription server at {} not available'.format(url))
                 alive_sock.setsockopt(zmq.LINGER, 0)
                 alive_sock.close()
                 poll.unregister(alive_sock)
@@ -63,32 +77,42 @@ class Subscriber(Loggable):
 
         return ret
 
-    def subscribe(self, f, cb):
+    def subscribe(self, f, cb, verbose=False):
         sock = self._sock
         sock.setsockopt(zmq.SUBSCRIBE, f)
-        self._subscriptions.append((f, cb))
+        self._subscriptions.append((f, cb, verbose))
+
+    def is_listening(self):
+        return self._stop_signal and not self._stop_signal.is_set()
 
     def listen(self):
         self.info('starting subscription')
+        self.was_listening = True
+
         self._stop_signal = Event()
         t = Thread(target=self._listen)
         t.setDaemon(True)
         t.start()
 
     def stop(self):
+        self.debug('stopping')
         if self._stop_signal:
             self._stop_signal.set()
+            self.was_listening = False
 
     def _listen(self):
         sock = self._sock
         while not self._stop_signal.is_set():
             resp = sock.recv()
             self.debug('raw notification {}'.format(resp))
-            for si, cb in self._subscriptions:
+            for si, cb, verbose in self._subscriptions:
                 if resp.startswith(si):
                     resp = resp.split(si)[-1].strip()
-                    self.info('received notification {}'.format(resp))
+                    if verbose:
+                        self.info('received notification {}'.format(resp))
                     cb(resp)
                     break
+
+        self.debug('no longer listening {}'.format(self._stop_signal.is_set()))
 
 #============= EOF =============================================
