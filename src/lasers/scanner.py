@@ -39,9 +39,9 @@ class ScannerController(ApplicationController):
     def traits_view(self):
         v = View(UItem('controller.execute_button',
                        editor=ButtonEditor(label_value='controller.execute_label')
-                       ),
+        ),
                  Item('setpoint', enabled_when='_scanning'),
-                 )
+        )
         return v
 
     def controller_execute_button_changed(self, info):
@@ -53,9 +53,10 @@ class ScannerController(ApplicationController):
     def _get_execute_label(self):
         return 'Stop' if self.model._scanning else 'Start'
 
+
 class Scanner(Loggable):
     '''
-        Scanner is a base class for display a scan of device data
+        Scanner is a base class for displaying a scan of device data
         
         ScanableDevices has this ability built in but more complicated scans are
         best done here. ScanableDevice scan is best used from continuous long term recording 
@@ -109,12 +110,12 @@ class Scanner(Loggable):
         if name is None:
             name = function.func_name
 
-#        g = self.graph
-#        func = self.functions
-#        kw = dict(ytitle=name,)
-#        n = len(func)
-#        if n == 0:
-#            kw['xtitle'] = 'Time'
+        #        g = self.graph
+        #        func = self.functions
+        #        kw = dict(ytitle=name,)
+        #        n = len(func)
+        #        if n == 0:
+        #            kw['xtitle'] = 'Time'
 
         self.functions.append((function, name))
 
@@ -123,13 +124,13 @@ class Scanner(Loggable):
                                window_y=100)
 
         for i, (_, name) in enumerate(self.functions):
-            kw = dict(ytitle=name,)
+            kw = dict(ytitle=name, )
             if i == 0:
                 kw['xtitle'] = 'Time'
 
             g.new_plot(
-                       data_limit=1000,
-                       **kw)
+                data_limit=1000,
+                **kw)
             g.new_series(plotid=i)
         self._graph = g
         return g
@@ -149,14 +150,14 @@ class Scanner(Loggable):
             self.stop()
         else:
             self.data_manager.new_frame(directory=self._directory,
-                                    base_frame_name=self._base_frame_name)
+                                        base_frame_name=self._base_frame_name)
             # write metadata if available
             self._write_metadata()
 
             # make header row
             header = ['t'] + \
-                        self._make_func_names() + \
-                            [n for n, _ in self.static_values]
+                     self._make_func_names() + \
+                     [n for n, _ in self.static_values]
             self.data_manager.write_to_frame(header)
 
             self._scanning = True
@@ -185,47 +186,47 @@ class Scanner(Loggable):
 
         self.info('scan started')
 
-#            yd = self._read_control_path()
+        #            yd = self._read_control_path()
         if yd is not None:
             # start a control thread
             self._control_thread = Thread(target=self._control,
                                           args=(yd,)
-                                          )
+            )
             self._control_thread.start()
             self.info('control started')
-#        if self.manager:
-#            if self.manager.enable_device():
-#
-#                # starts automatically
-#                self.debug('scan starting')
-#                self._timer = Timer(sp, self._scan)
-#
-#                self.info('scan started')
-#                self._scanning = True
-#    #            yd = self._read_control_path()
-#                if yd is not None:
-#                    # start a control thread
-#                    self._control_thread = Thread(target=self._control,
-#                                                  args=(yd,)
-#                                                  )
-#                    self._control_thread.start()
-#                    self.info('control started')
-#            else:
-#                self.warning('Could not enable device')
-#        else:
-#            self.warning('no manager available')
+        #        if self.manager:
+        #            if self.manager.enable_device():
+        #
+        #                # starts automatically
+        #                self.debug('scan starting')
+        #                self._timer = Timer(sp, self._scan)
+        #
+        #                self.info('scan started')
+        #                self._scanning = True
+        #    #            yd = self._read_control_path()
+        #                if yd is not None:
+        #                    # start a control thread
+        #                    self._control_thread = Thread(target=self._control,
+        #                                                  args=(yd,)
+        #                                                  )
+        #                    self._control_thread.start()
+        #                    self.info('control started')
+        #            else:
+        #                self.warning('Could not enable device')
+        #        else:
+        #            self.warning('no manager available')
 
     def _control(self, ydict):
         self.start_control_hook()
 
-#        if self.manager:
-#            if self.manager.temperature_controller:
-#                self.manager.temperature_controller.enable_tru_tune = True
+        #        if self.manager:
+        #            if self.manager.temperature_controller:
+        #                self.manager.temperature_controller.enable_tru_tune = True
 
         start_delay = ydict['start_delay']
         end_delay = ydict['end_delay']
         setpoints = ydict['setpoints']
-
+        print setpoints
         self.set_static_value('Setpoint', 0)
         time.sleep(start_delay)
         for t, d in setpoints:
@@ -236,10 +237,7 @@ class Scanner(Loggable):
                     self.manager.set_laser_temperature(t)
 
                 self.set_static_value('Setpoint', t, plotid=0)
-                self.info('setting setpoint to {} for {}s'.format(t, d))
-                st = time.time()
-                while time.time() - st < d and self._scanning:
-                    time.sleep(1)
+                self._maintain_setpoint(t, d)
 
         if self._scanning:
             self.setpoint = 0
@@ -252,8 +250,15 @@ class Scanner(Loggable):
 
         self.end_control_hook(self._scanning)
 
+    def _maintain_setpoint(self, t, d):
+        self.info('setting setpoint to {} for {}s'.format(t, d))
+        st = time.time()
+        while time.time() - st < d and self._scanning:
+            time.sleep(1)
+
     def start_control_hook(self):
         pass
+
     def end_control_hook(self, ok):
         pass
 
@@ -267,7 +272,7 @@ class Scanner(Loggable):
         functions = self.functions
         data = []
         record = self._graph.record
-#        record = self.graph.record
+        #        record = self.graph.record
 
         x = time.time() - self._starttime
         for i, (func, _) in enumerate(functions):
@@ -298,8 +303,9 @@ class Scanner(Loggable):
             return yaml.load(open(self.control_path).read())
         elif not self._warned:
 
-            self.warning_dialog('Not Scanner Control file found at {}'.format(self.control_path))
+            self.warning_dialog('No Scanner Control file found at {}'.format(self.control_path))
             self._warned = True
+
 #===============================================================================
 # defaults
 #===============================================================================
@@ -349,6 +355,7 @@ class PIDScanner(Scanner):
 
 if __name__ == '__main__':
     import random
+
     def random_generator(scale=1):
         def random_gen():
             return random.random() * scale
@@ -362,13 +369,14 @@ if __name__ == '__main__':
             while 1:
                 for i in (1, 100):
                     yield random.random() * i
+
         return gen
 
     gen = generator()
 
     s = Scanner()
-#    s.new_function(random_generator(), ytitle='random', directory='random_scan')
-#    s.new_function(random_generator(scale=10), ytitle='random', directory='random_scan')
+    #    s.new_function(random_generator(), ytitle='random', directory='random_scan')
+    #    s.new_function(random_generator(scale=10), ytitle='random', directory='random_scan')
     gg = gen()
     s.new_function(gg, name='random1', directory='random_scan')
     s.new_function(gg, name='random2', directory='random_scan')

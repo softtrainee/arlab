@@ -15,14 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
-from src.envisage.tasks.base_editor import BaseTraitsEditor
+from traitsui.api import View
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.lasers.tasks.editors.laser_editor import LaserEditor
 
-class PowerCalibrationEditor(BaseTraitsEditor):
+
+class PowerCalibrationEditor(LaserEditor):
     def traits_view(self):
         v = View()
         return v
-#============= EOF =============================================
+
+    #============= EOF =============================================

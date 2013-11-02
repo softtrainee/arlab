@@ -15,14 +15,18 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any
-from traitsui.api import View, Item
+from traits.api import Any
 from src.envisage.tasks.base_editor import BaseTraitsEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class LaserEditor(BaseTraitsEditor):
     component = Any
     _execute_thread = None
+    was_executed = False
+    _laser_manager = Any
+
+    def stop(self):
+        pass
 
     def do_execute(self, lm):
         self._laser_manager = lm
@@ -34,4 +38,5 @@ class LaserEditor(BaseTraitsEditor):
     def block(self):
         if self._execute_thread:
             self._execute_thread.join()
+
 #============= EOF =============================================
