@@ -50,7 +50,7 @@ class ArArConstantsPreferences(BasePreferencesHelper):
     #===========================================================================
     # spectrometer
     #===========================================================================
-    abundant_sensitivity = Float(0)
+    abundance_sensitivity = Float(0)
     sensitivity = Float(0)
     ic_factor = Float(1.0)
     ic_factor_error = Float(0.0)
@@ -107,18 +107,9 @@ class ArArConstantsPreferencesPane(PreferencesPane):
 
         decay = self._get_decay_group()
         spectrometer = VGroup(
-            Item('abundant_sensitivity'),
+            Item('abundance_sensitivity'),
             Item('sensitivity',
                  tooltip='Nominal spectrometer sensitivity saved with analysis'
-            ),
-            HGroup(Spring(springy=False, width=125),
-                   Label('Value'), Spring(springy=False, width=55),
-                   Label(u'{}1s'.format(PLUSMINUS))),
-            HGroup(
-                Item('ic_factor',
-                     tooltip='Default intercalibration factor (H1/CDD) saved with analysis'
-                ),
-                UItem('ic_factor_error')
             ),
             label='Spectrometer',
             #show_border=True

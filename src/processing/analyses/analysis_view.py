@@ -219,7 +219,7 @@ class AnalysisView(HasTraits):
 
         self.load_computed(an)
         self.load_extraction(an)
-        self.load_measurement(an)
+        self.load_measurement(an, an)
 
     def _get_irradiation(self, an):
         return an.irradiation_str
@@ -227,10 +227,15 @@ class AnalysisView(HasTraits):
     def _get_j(self, an):
         return an.j
 
-    def load_measurement(self, an):
+    def load_measurement(self, an, ar):
+        
         j = self._get_j(an)
         jj = floatfmt(j.nominal_value, n=5, s=3)
         jf = u'{} \u00b1{:0.2e}'.format(jj, j.std_dev)
+        
+        a39=ar.ar39decayfactor
+        a37=ar.ar37decayfactor
+    
         ms = [
             MeasurementValue(name='AnalysisID',
                              value=self.analysis_id),
@@ -248,9 +253,9 @@ class AnalysisView(HasTraits):
                              value=an.material),
 
             MeasurementValue(name='Ar39Decay',
-                             value=floatfmt(an.ar39decayfactor)),
+                             value=floatfmt(a39)),
             MeasurementValue(name='Ar37Decay',
-                             value=floatfmt(an.ar37decayfactor)),
+                             value=floatfmt(a37)),
 
         ]
         self.measurement_values = ms
@@ -454,7 +459,7 @@ class AutomatedRunAnalysisView(AnalysisView):
 
         self.load_computed(an)
         self.load_extraction(ar.spec)
-        self.load_measurement(ar.spec)
+        self.load_measurement(ar.spec, an)
 
     def _get_irradiation(self, an):
         return self._irradiation_str
