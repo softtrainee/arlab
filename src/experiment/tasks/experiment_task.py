@@ -102,12 +102,13 @@ class ExperimentEditorTask(EditorTask):
 
         bind_preference(self.notifier, 'port',
                         'pychron.experiment.notifications_port')
-
         bind_preference(self.manager.executor, 'use_auto_save',
                         'pychron.experiment.use_auto_save')
         bind_preference(self.manager.executor, 'auto_save_delay',
                         'pychron.experiment.auto_save_delay')
-
+#        #force notifier setup
+        self.notifier.setup(self.notifier.port)
+        
         super(ExperimentEditorTask, self).activated()
 
     def create_dock_panes(self):
