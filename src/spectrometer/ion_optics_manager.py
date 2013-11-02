@@ -138,17 +138,11 @@ class IonOpticsManager(Manager):
                        save=True,
                        confirm_save=False,
                        warn=False,
-                       new_thread=True,
-                       #                       plot_panel=None,
-    ):
-    #        spec = self.spectrometer
+                       new_thread=True):
         self.debug('doing pc')
 
         self.canceled = False
         self.alive = True
-
-        #        self._setup_peak_center(detectors, isotope, period,
-        #                                      center_dac, directions, plot_panel)
 
         args = (save, confirm_save, warn)
         if new_thread:
