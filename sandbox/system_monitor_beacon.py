@@ -26,7 +26,7 @@ def beacon(port):
         msg = '{}|beacon number {}, {}'.format(color, i, random.random())
         print 'Sending message {}'.format(msg)
         n.send_console_message(msg)
-        time.sleep(0.25)
+        time.sleep(1.5)
 
 
 if __name__ == '__main__':

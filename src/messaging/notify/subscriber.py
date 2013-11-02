@@ -68,6 +68,7 @@ class Subscriber(Loggable):
             poll.register(alive_sock, zmq.POLLIN)
             request = 'ping'
             alive_sock.send(request)
+
             socks = dict(poll.poll(timeout * 1000))
             
             if not socks.get(alive_sock) == zmq.POLLIN or not alive_sock.recv()=='echo':
