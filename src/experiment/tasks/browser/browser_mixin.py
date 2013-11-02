@@ -21,6 +21,7 @@ from datetime import timedelta, datetime
 #============= local library imports  ==========================
 from src.column_sorter_mixin import ColumnSorterMixin
 from src.database.orms.isotope.gen import gen_ProjectTable
+from src.database.records.isotope_record import IsotopeRecordView
 from src.experiment.tasks.browser.record_views import ProjectRecordView, SampleRecordView
 from src.experiment.tasks.browser.table_configurer import SampleTableConfigurer
 
@@ -101,8 +102,9 @@ class BrowserMixin(ColumnSorterMixin):
 
             self.samples = sams
             self.osamples = sams
-            if sams:
-                self.selected_sample = sams[:1]
+
+            #if sams:
+            #    self.selected_sample = sams[:1]
 
             p = self._get_sample_filter_parameter()
             self.sample_filter_values = [getattr(si, p) for si in sams]
@@ -213,8 +215,42 @@ class BrowserMixin(ColumnSorterMixin):
         self.selected_project = []
         self.selected_sample = []
 
+    def _get_sample_analyses(self, samples, limit=500, page=None, page_width=None, include_invalid=False):
+        db = self.manager.db
+        with db.session_ctx():
+            #ps=[project.name for project in self.selected_project
+            #    if not project.name.startwith('Recent')]
 
-#===============================================================================
+            #for project in self.selected_project:
+            #    pname = project.name
+            #    if pname == 'Recent':
+            #        pname = None
+            #
+            #    sample = db.get_sample(srv.name,
+            #                           project=pname)
+            #    if sample:
+            #        break
+            #else:
+            #    return []
+
+            s, p = zip(*[(si.name, si.project) for si in samples])
+
+            if page_width:
+                o = (page - 1) * page_width
+                limit = page_width
+
+            ans, tc = db.get_sample_analyses(s, p,
+                                             limit=limit,
+                                             offset=o,
+                                             include_invalid=include_invalid)
+            return [self._record_view_factory(a) for a in ans], tc
+
+    def _record_view_factory(self, ai, **kw):
+        iso = IsotopeRecordView(**kw)
+        iso.create(ai)
+        return iso
+
+    #===============================================================================
 # handlers
 #===============================================================================
 

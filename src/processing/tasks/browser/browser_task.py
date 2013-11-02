@@ -29,7 +29,6 @@ from src.experiment.tasks.browser.browser_mixin import BrowserMixin
 from src.processing.tasks.browser.actions import NewBrowserEditorAction
 from src.processing.tasks.browser.analysis_table import AnalysisTable
 from src.processing.tasks.browser.panes import BrowserPane
-from src.database.records.isotope_record import IsotopeRecordView
 
 '''
 add toolbar action to open another editor tab
@@ -99,7 +98,7 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
         bind_preference(self, 'recent_hours', 'pychron.processing')
 
     def _set_db(self):
-        self.analysis_table.db = self.manager.db
+        #self.analysis_table.db = self.manager.db
         self.danalysis_table.db = self.manager.db
 
     def _load_mass_spectrometers(self):
@@ -122,29 +121,6 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
         self.analysis_table.tabular_adapter = self.browser_pane.analysis_tabular_adapter
 
         return self.browser_pane
-
-    def _get_sample_analyses(self, srv, limit=500, include_invalid=False):
-        db = self.manager.db
-        with db.session_ctx():
-            for project in self.selected_project:
-                pname = project.name
-                if pname == 'Recent':
-                    pname = None
-                sample = db.get_sample(srv.name,
-                                       project=pname)
-                if sample:
-                    break
-            else:
-                return []
-
-            ans = db.get_sample_analyses(sample, limit=limit,
-                                         include_invalid=include_invalid)
-            return [self._record_view_factory(a) for a in ans]
-
-    def _record_view_factory(self, ai, **kw):
-        iso = IsotopeRecordView(**kw)
-        iso.create(ai)
-        return iso
 
     def _ok_query(self):
         ms = self.mass_spectrometer not in (DEFAULT_SPEC, 'None')
@@ -217,16 +193,36 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
     def _selected_sample_changed(self, new):
         if new:
             ans = []
-            for ni in new:
-                aa = self._get_sample_analyses(ni,
-                                               include_invalid=not self.analysis_table.omit_invalid)
-                #print 'aa', new, ans
-                ans.extend(aa)
+            include_invalid = not self.analysis_table.omit_invalid
 
-            ans = self.analysis_table.set_analyses(ans)
+            aa, tc = self._get_sample_analyses(new,
+                                               include_invalid=include_invalid,
+                                               page_width=self.analysis_table.page_width,
+                                               page=1,
+            )
+            ans.extend(aa)
+
+            ans = self.analysis_table.set_analyses(ans,
+                                                   tc,
+                                                   reset_page=True)
 
             if ans and self.auto_select_analysis:
                 self.analysis_table.selected = ans[0]
+
+    @on_trait_change('analysis_table:page')
+    def _page_changed(self):
+        if not self.analysis_table.no_update:
+            include_invalid = not self.analysis_table.omit_invalid
+            page = self.analysis_table.page
+            page_width = self.analysis_table.page_width
+
+            ans, tc = self._get_sample_analyses(self.selected_sample,
+                                                include_invalid=include_invalid,
+                                                page_width=page_width,
+                                                page=page,
+            )
+
+            self.analysis_table.set_analyses(ans, tc)
 
     def _analysis_table_default(self):
         at = AnalysisTable(db=self.manager.db)

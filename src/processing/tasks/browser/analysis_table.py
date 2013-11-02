@@ -15,8 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+import math
 from traits.api import HasTraits, List, Any, Str, Enum, Bool, Button, \
-    Int
+    Int, Property
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -41,21 +42,39 @@ class AnalysisTable(HasTraits):
 
     forward = Button
     backward = Button
-    limit = Int
-    page = Int
+    page_width = Int(10)
+    page = Int(1, enter_set=True, auto_set=False)
 
-    db = Any
+    forward_enabled = Bool
+    backward_enabled = Bool
+    n_all_analyses = Int
+    npages = Property(depends_on='n_all_analyses,page_width')
 
     def _forward_fired(self):
-        db = self.db
-        print db
+        if self.page < self.npages:
+            self.page += 1
+            #if self.oanalyses:
+            #    self.page+=1
 
     def _backward_fired(self):
-        pass
+        p = self.page
+        p -= 1
+        self.page = max(1, p)
 
-    def set_analyses(self, ans):
+    def set_analyses(self, ans, tc, reset_page=False):
         self.analyses = ans
         self.oanalyses = ans
+        if reset_page:
+            self.no_update = True
+            self.page = 1
+            self.no_update = False
+
+        self.n_all_analyses = tc
+        #self.forward_enabled=bool(ans)
+        #self.backward_enabled=bool(ans or self.page)
+
+    #def _page_changed(self):
+    #    self.backward_enabled=bool(self.oanalyses or self.page)
 
     def _analysis_filter_changed(self, new):
         if new:
@@ -77,6 +96,11 @@ class AnalysisTable(HasTraits):
                             title='Configure Analysis Table')
         c.edit_traits()
 
+    def _get_npages(self):
+        try:
+            return int(math.ceil(self.n_all_analyses / float(self.page_width)))
+        except ZeroDivisionError:
+            return 0
 
     def _get_analysis_filter_parameter(self):
         p = self.analysis_filter_parameter
