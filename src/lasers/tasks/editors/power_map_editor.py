@@ -48,17 +48,18 @@ class PowerMapControls(HasTraits):
     def traits_view(self):
         v = View(VGroup(
 
-                        Item('discrete_scan'),
-                        Item('beam_diameter'),
-                        Item('request_power'),
-                        Item('padding'),
-                        Item('step_length'),
-                        Item('center_x'),
-                        Item('center_y'),
+            Item('discrete_scan'),
+            Item('beam_diameter'),
+            Item('request_power'),
+            Item('padding'),
+            Item('step_length'),
+            Item('center_x'),
+            Item('center_y'),
 
-                    )
-                 )
+        )
+        )
         return v
+
 
 class PowerMapEditor(LaserEditor):
     percent_threshold = Range(0.0, 100.0)
@@ -66,11 +67,11 @@ class PowerMapEditor(LaserEditor):
     beam_diameter = Float
     power = Float
 
-#     canvas = Instance(RasterCanvas, ())
+    #     canvas = Instance(RasterCanvas, ())
     editor = Instance(PowerMapControls, ())
     mapper = Instance(PowerMapper, ())
     completed = DelegatesTo('mapper')
-    was_executed = False
+    #was_executed = False
 
     processor = Instance(PowerMapProcessor)
 
@@ -79,7 +80,6 @@ class PowerMapEditor(LaserEditor):
             self.processor.set_percent_threshold(new)
 
     def load(self, path):
-
         pmp = PowerMapProcessor()
 
         reader = H5DataManager()
@@ -98,10 +98,10 @@ class PowerMapEditor(LaserEditor):
         editor = self.editor
         padding = editor.padding
 
-#         if editor.discrete_scan:
-#             mapper.canvas = self.canvas
-#             self.component = self.canvas
-#         else:
+        #         if editor.discrete_scan:
+        #             mapper.canvas = self.canvas
+        #             self.component = self.canvas
+        #         else:
 
         c = mapper.make_component(padding)
         self.component = c
@@ -124,14 +124,14 @@ class PowerMapEditor(LaserEditor):
 
     def traits_view(self):
         v = View(
-                 HGroup(spring,
-                        Item('beam_diameter', style='readonly'),
-                        Item('power', style='readonly'),
-                        Item('percent_threshold', label='% Threshold'),
-                        visible_when='was_executed'
-                        ),
-                 UItem('component', editor=ComponentEditor())
-                 )
+            HGroup(spring,
+                   Item('beam_diameter', style='readonly'),
+                   Item('power', style='readonly'),
+                   Item('percent_threshold', label='% Threshold'),
+                   visible_when='was_executed'
+            ),
+            UItem('component', editor=ComponentEditor())
+        )
         return v
 
 #============= EOF =============================================
