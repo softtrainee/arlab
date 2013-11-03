@@ -120,6 +120,7 @@ class AutomatedRunFactory(Loggable):
 
     weight = Float
     comment = Str
+    auto_fill_comment = Bool
 
     position = Property(depends_on='_position')
     _position = Str
@@ -182,6 +183,8 @@ class AutomatedRunFactory(Loggable):
     #===========================================================================
     sample = Str
     irradiation = Str
+    irrad_level = Str
+    irrad_hole = Str
 
     info_label = Property(depends_on='labnumber')
     #===========================================================================
@@ -382,7 +385,12 @@ class AutomatedRunFactory(Loggable):
         if ipos is not None:
             level = ipos.level
             irrad = level.irradiation
-            il = '{}{} {}'.format(irrad.name, level.name, ipos.position)
+            hole = ipos.position
+
+            self.irrad_hole = str(hole)
+            self.irrad_level = str(level.name)
+
+            il = '{} {}:{}'.format(irrad.name, level.name, hole)
         return il
 
     def _new_run(self, excludes=None, **kw):
@@ -1057,6 +1065,9 @@ post_equilibration_script:name
                     self._aliquot = a
 
                     self.irradiation = self._make_irrad_level(ln)
+                    if self.auto_fill_comment:
+                        self.set_auto_comment()
+
                     self._load_scripts(old, labnumber)
 
                 elif special:
@@ -1080,6 +1091,16 @@ post_equilibration_script:name
                 else:
                     self.warning_dialog(
                         '{} does not exist. Add using "Labnumber Entry" or "Utilities>>Import"'.format(labnumber))
+
+    def set_auto_comment(self):
+        self.comment = '{}:{}'.format(self.irrad_level,
+                                      self.irrad_hole)
+
+    def _auto_fill_comment_changed(self):
+        if self.auto_fill_comment:
+            self.set_auto_comment()
+        else:
+            self.comment = ''
 
     def _edit_template_fired(self):
         temp = self._new_template()

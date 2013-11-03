@@ -224,6 +224,10 @@ class ExperimentFactoryPane(TraitsDockPane):
                 ),
                 RFItem('comment',
                        tooltip='(Optional) Enter a comment for this sample. Will be saved in Database with analysis'
+                ),
+                RFItem('auto_fill_comment',
+                       show_label=False,
+                       tooltip='Auto fill "Comment" with IrradiationLevel:Hole, e.g A:9'
                 )
             ),
             show_border=True,
