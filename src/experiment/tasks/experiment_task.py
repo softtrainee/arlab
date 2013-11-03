@@ -87,7 +87,6 @@ class ExperimentEditorTask(EditorTask):
     def prepare_destroy(self):
         if self.use_notifications:
             self.notifier.close()
-            self.notifier = None
 
         self.manager.experiment_factory.destroy()
         super(ExperimentEditorTask, self).prepare_destroy()
@@ -251,6 +250,8 @@ class ExperimentEditorTask(EditorTask):
             self._show_pane(self.experiment_factory_pane)
 
             return True
+        else:
+            self.notifier.close()
 
     #def _split_text(self, txt):
     #    ts = []

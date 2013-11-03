@@ -29,15 +29,21 @@ class myMessageMixin(object):
         makes  message dialogs thread save. 
     
     '''
-    def open(self):
+    timeout_return_code=OK
+    
+    def open(self, timeout=None):
         '''        
             open the confirmation dialog on the GUI thread but wait for return 
         '''
         evt = Event()
         invoke_in_main_thread(self._open, evt)
+        st=time.time()
         while not evt.is_set():
             time.sleep(0.05)
-
+            if time.time()-st>timeout:
+                self.close()
+                return self.timeout_return_code
+            
         return self.return_code
 
     def _open(self, evt):
@@ -60,8 +66,6 @@ class myMessageDialog(myMessageMixin, MessageDialog):
     pass
 class myConfirmationDialog(myMessageMixin, ConfirmationDialog):
     pass
-
-
 
 
 

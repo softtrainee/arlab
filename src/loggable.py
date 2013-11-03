@@ -113,15 +113,16 @@ class Loggable(HasTraits):
         #         from threading import current_thread
         #         print current_thread()
         dialog.open()
-
-    def confirmation_dialog(self, msg, return_retval=False, cancel=False, title=''):
-
+    
+    def confirmation_dialog(self, msg, return_retval=False, 
+                            cancel=False, title='', timeout=None):
+    
         dlg = myConfirmationDialog(
             cancel=cancel,
             message=msg,
             title=title,
             style='modal')
-        retval = dlg.open()
+        retval = dlg.open(timeout)
         if return_retval:
             return retval
         else:
