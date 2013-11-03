@@ -70,7 +70,7 @@ class Timer(QThread):
 
             if not self.isActive():
                 break
-            time.sleep(0.1)
+            time.sleep(0.01)
 
     def Stop(self):
         self._flag.set()

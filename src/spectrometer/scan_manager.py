@@ -94,6 +94,8 @@ class ScanManager(Manager):
     _consuming = False
     queue = None
 
+    timer = None
+
     def _update_graph_limits(self, name, new):
         if 'high' in name:
             self._graph_ymax = max(new, self._graph_ymin)
@@ -137,7 +139,7 @@ class ScanManager(Manager):
     def setup_scan(self):
         self.graph = self._graph_factory()
 
-        self._start_timer()
+        self.integration_time = 1.048576
 
         # listen to detector for enabling
         self.on_trait_change(self._toggle_detector, 'detectors:active')
@@ -231,11 +233,15 @@ class ScanManager(Manager):
             #                dm.write_to_frame((x,) + tuple(signals))
             # #        print time.clock() - st
 
-    def _start_timer(self):
-    #        self._first_iteration = True
-        self.info('starting scan timer')
-        self.integration_time = 1.048576
+    def reset_scan_timer(self):
+        self.info('reset scan timer')
         self.timer = self._timer_factory()
+
+    #def _start_timer(self):
+    ##        self._first_iteration = True
+    #    self.info('starting scan timer')
+    #    self.integration_time = 1.048576
+    #    self.timer = self._timer_factory()
 
     def _stop_timer(self):
         self.info('stopping scan timer')
@@ -361,6 +367,13 @@ class ScanManager(Manager):
         self.graph.add_vertical_rule(xs[-1])
 
 
+    def _integration_time_changed(self):
+        self.spectrometer.set_integration_time(self.integration_time)
+
+        self.graph.set_scan_delay(self.integration_time)
+        self.reset_scan_timer()
+
+
     def _consume(self, dm):
         self._consuming = True
         _first_recording = True
@@ -387,14 +400,16 @@ class ScanManager(Manager):
         if func is None:
             func = self._update_scan_graph
 
+        if self.timer:
+            self.timer.Stop()
+            self.timer.wait_for_completion()
+
         mult = 1000
-        return Timer((self.integration_time + 0.025) * mult, self._update_scan_graph)
+        return Timer(self.integration_time * mult, func)
 
     def _graph_factory(self):
         g = TimeSeriesStreamGraph(container_dict=dict(bgcolor='lightgray',
-                                                      padding=5
-        )
-        )
+                                                      padding=5))
 
         n = self.graph_scan_width * 60
         plot = g.new_plot(padding=[55, 5, 5, 50],
@@ -403,8 +418,7 @@ class ScanManager(Manager):
                           ytitle='Signal',
                           scale=self.graph_scale,
                           bgcolor='whitesmoke',
-                          zoom=True
-        )
+                          zoom=True)
 
         plot.x_grid.visible = False
 
@@ -417,28 +431,28 @@ class ScanManager(Manager):
             g.set_series_label(det.name)
             det.series_id = i
 
-        #        print p, p.plots
-        cp = plot.plots[det.name][0]
-        dt = DataTool(plot=cp, component=plot,
-                      normalize_time=True,
-                      use_date_str=False)
-        dto = DataToolOverlay(
-            component=plot,
-            tool=dt)
-        plot.tools.append(dt)
-        plot.overlays.append(dto)
+        if plot.plots:
+            cp = plot.plots[det.name][0]
+            dt = DataTool(plot=cp, component=plot,
+                          normalize_time=True,
+                          use_date_str=False)
+            dto = DataToolOverlay(
+                component=plot,
+                tool=dt)
+            plot.tools.append(dt)
+            plot.overlays.append(dto)
 
-        #        self.graph_ymax_auto = True
+            #        self.graph_ymax_auto = True
         #        self.graph_ymin_auto = True
         #        p.value_range.low_setting = 'auto'
         #        p.value_range.high_setting = 'auto'
         #        p.value_range.tight_bounds = False
 
-        n = self.graph_scan_width
-        n = max(n, 1 / 60.)
-        mins = n * 60
-        g.data_limits[0] = 1.8 * mins
-        #        g.set_x_tracking(mins)
+            n = self.graph_scan_width
+            n = max(n, 1 / 60.)
+            mins = n * 60
+            g.data_limits[0] = 1.8 * mins
+            #        g.set_x_tracking(mins)
 
         return g
 
@@ -511,94 +525,6 @@ class ScanManager(Manager):
         rd.load(config)
 
         return rd
-
-#===============================================================================
-# views
-#===============================================================================
-#     def traits_view(self):
-#         custom = lambda n:Item(n, style='custom', show_label=False)
-#         magnet_grp = VGroup(
-#                             HGroup(
-#                                 Item('detector',
-#                                      show_label=False,
-#                                      editor=EnumEditor(name='detectors')),
-#                                 Item('isotope',
-#                                      show_label=False,
-#                                      editor=EnumEditor(name='isotopes')
-#                                      )),
-#                             custom('magnet'),
-#                             custom('scanner'),
-#                             label='Magnet'
-#                             )
-#         detector_grp = VGroup(
-#                               HGroup(
-#                                      spring,
-#                                      Label('Deflection'),
-#                                      Spring(springy=False, width=70),
-#                                      ),
-#                               Item('detectors',
-#                                    show_label=False,
-#                                    editor=ListEditor(style='custom', mutable=False, editor=InstanceEditor())),
-#                               label='Detectors'
-#                               )
-#
-#         rise_grp = custom('rise_rate')
-#         source_grp = custom('source')
-#
-#         right_spring = Spring(springy=False, width=275)
-#         def hitem(n, l, **kw):
-#             return HGroup(Label(l), spring, Item(n, show_label=False, **kw), right_spring)
-#
-#         graph_cntrl_grp = VGroup(
-#                                  hitem('graph_scan_width', 'Scan Width (mins)'),
-#                                  hitem('graph_scale', 'Scale'),
-#                                  hitem('graph_y_auto', 'Autoscale Y'),
-#                                  hitem('graph_ymax', 'Max', format_str='%0.3f'),
-#                                  hitem('graph_ymin', 'Min', format_str='%0.3f'),
-#                                  HGroup(self._button_factory('record_button', label='record_label'),
-#                                         Item('add_marker_button',
-#                                              show_label=False,
-#                                              enabled_when='_recording')),
-#                                  label='Graph'
-#                                  )
-#         control_grp = Group(
-#                           graph_cntrl_grp,
-#                           detector_grp,
-#                           rise_grp,
-#                           magnet_grp,
-#                           source_grp,
-#                           layout='tabbed')
-#         intensity_grp = VGroup(
-#                                HGroup(spring, Label('Intensity'),
-#                                       Spring(springy=False, width=90),
-#                                       Label(u'1\u03c3'),
-#                                       Spring(springy=False, width=87)),
-#                                Item('detectors',
-#                                    show_label=False,
-#                                    editor=ListEditor(style='custom', mutable=False,
-#                                                      editor=InstanceEditor(view='intensity_view'))),
-#                                label='Intensities',
-#                                show_border=True
-#                                )
-#         display_grp = VGroup(
-#                           Group(custom('readout_view'), show_border=True, label='Readout'),
-#                           intensity_grp,
-#                           )
-#         graph_grp = custom('graph')
-#         v = View(
-#                     HSplit(
-# #                           VGroup(control_grp, intensity_grp),
-#                            VGroup(control_grp, display_grp),
-#                            graph_grp,
-#                            ),
-#                     title='Scan',
-#                     resizable=True,
-#                     handler=self.handler_klass,
-#                     width=0.8,
-#                     height=0.6
-#                     )
-#         return v
-
 
 if __name__ == '__main__':
     from src.spectrometer.molecular_weights import MOLECULAR_WEIGHTS

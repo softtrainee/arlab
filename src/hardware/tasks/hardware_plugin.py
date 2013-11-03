@@ -27,7 +27,6 @@ from src.hardware.core.i_core_device import ICoreDevice
 from envisage.ui.tasks.task_factory import TaskFactory
 from src.hardware.tasks.hardware_task import HardwareTask
 from envisage.ui.tasks.task_extension import TaskExtension
-from pyface.tasks.action.task_action import TaskAction
 from pyface.action.action import Action
 from pyface.tasks.action.schema_addition import SchemaAddition
 from src.hardware.tasks.hardware_preferences import HardwarePreferencesPane
@@ -38,17 +37,22 @@ from apptools.preferences.preference_binding import bind_preference
 class Preference(HasTraits):
     pass
 
+
 class SerialPreference(Preference):
     auto_find_handle = Bool
     auto_write_handle = Bool
 
+
 class DevicePreferences(HasTraits):
     serial_preference = Instance(SerialPreference)
+
     def _serial_preference_default(self):
         return SerialPreference()
 
+
 class OpenFlagManagerAction(Action):
     name = 'Flag Manager'
+
     def perform(self, event):
         app = event.task.window.application
         man = app.get_service('src.hardware.flag_manager.FlagManager')
@@ -66,7 +70,6 @@ class HardwarePlugin(BaseTaskPlugin):
 
     my_managers = List(contributes_to='pychron.hardware.managers')
 
-
     sources = List(contributes_to='pychron.video.sources')
 
     def _sources_default(self):
@@ -82,8 +85,8 @@ class HardwarePlugin(BaseTaskPlugin):
                             name='Hardware',
                             factory=self._factory,
                             task_group='hardware'
-                            )
-                ]
+        )
+        ]
 
     def _factory(self):
         man = self.application.get_service(HardwareManager)
@@ -95,18 +98,18 @@ class HardwarePlugin(BaseTaskPlugin):
         '''
 
         so_hm = self.service_offer_factory(
-                          protocol=HardwareManager,
-                          factory=self._hardware_manager_factory)
+            protocol=HardwareManager,
+            factory=self._hardware_manager_factory)
 
         so_rhm = self.service_offer_factory(
-                          protocol=RemoteHardwareManager,
-                          factory=self._remote_hardware_manager_factory)
+            protocol=RemoteHardwareManager,
+            factory=self._remote_hardware_manager_factory)
 
         so_fm = self.service_offer_factory(
-                          protocol=FlagManager,
-                          factory=self._flag_manager_factory
-                          )
-#        return [so, so1, so2]
+            protocol=FlagManager,
+            factory=self._flag_manager_factory
+        )
+        #        return [so, so1, so2]
         return [so_hm, so_rhm, so_fm]
 
     def _flag_manager_factory(self):
@@ -123,8 +126,9 @@ class HardwarePlugin(BaseTaskPlugin):
 
     def _my_managers_default(self):
         return [dict(name='hardware', manager=self._hardware_manager_factory())]
-#    def _system_lock_manager_factory(self):
-#        return SystemLockManager(application=self.application)
+
+    #    def _system_lock_manager_factory(self):
+    #        return SystemLockManager(application=self.application)
 
     def start(self):
         '''
@@ -141,7 +145,6 @@ class HardwarePlugin(BaseTaskPlugin):
             dp.serial_preference.auto_write_handle = toBool(awh)
 
         ini = Initializer(device_prefs=dp)
-
         for m in self.managers:
             ini.add_initialization(m)
 
@@ -159,8 +162,8 @@ class HardwarePlugin(BaseTaskPlugin):
 
     def stop(self):
 
-#        rhm = self.application.get_service(RemoteHardwareManager)
-#        rhm.stop()
+    #        rhm = self.application.get_service(RemoteHardwareManager)
+    #        rhm.stop()
 
         if self.managers:
             for m in self.managers:
@@ -173,5 +176,6 @@ class HardwarePlugin(BaseTaskPlugin):
             if s.is_scanable:
                 if s._scanning and not s._auto_started:
                     s.stop_scan()
+
 #                s.save_to_db()
 #============= EOF =============================================

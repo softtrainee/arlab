@@ -215,7 +215,9 @@ class BrowserMixin(ColumnSorterMixin):
         self.selected_project = []
         self.selected_sample = []
 
-    def _get_sample_analyses(self, samples, limit=500, page=None, page_width=None, include_invalid=False):
+    def _get_sample_analyses(self, samples, limit=500,
+                             page=None, page_width=None,
+                             include_invalid=False):
         db = self.manager.db
         with db.session_ctx():
             #ps=[project.name for project in self.selected_project
@@ -235,6 +237,7 @@ class BrowserMixin(ColumnSorterMixin):
 
             s, p = zip(*[(si.name, si.project) for si in samples])
 
+            o = None
             if page_width:
                 o = (page - 1) * page_width
                 limit = page_width
@@ -243,7 +246,12 @@ class BrowserMixin(ColumnSorterMixin):
                                              limit=limit,
                                              offset=o,
                                              include_invalid=include_invalid)
-            return [self._record_view_factory(a) for a in ans], tc
+
+            ans = [self._record_view_factory(a) for a in ans]
+            if page_width:
+                return ans, tc
+            else:
+                return ans
 
     def _record_view_factory(self, ai, **kw):
         iso = IsotopeRecordView(**kw)

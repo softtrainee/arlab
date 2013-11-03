@@ -52,26 +52,15 @@ class Initializer(Loggable):
         self.application = None
 
     def add_initialization(self, a):
-        '''
+        """
 
-        '''
+        """
         self.debug('add initialization {}'.format(a))
         ilist = self.init_list
         ilist.append(a)
 
-    #        add = True
-    #        for (i, il) in enumerate(ilist):
-    #            if il['name'] == a['name']:
-    #                ilist[i] = a
-    #                add = False
-    #                break
-    #
-    #        if add:
-    #            ilist.append(a)
 
     def run(self, application=None):
-        '''
-        '''
 
         self.application = application
 
@@ -253,10 +242,7 @@ class Initializer(Loggable):
             self,
             manager,
             managers,
-            device_dir,
-    ):
-        '''
-        '''
+            device_dir, ):
 
         for mi in managers:
             man = None
@@ -388,7 +374,7 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
             else:
                 self.info('failed loading {}'.format(dev.name))
 
-            #        for od in opened:
+                #        for od in opened:
 
         for od in devs:
             self.info('Initializing {}'.format(od.name))
@@ -408,8 +394,8 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
 
 
 
-        #            if od.simulation:
-        #                time.sleep(0.25)
+            #            if od.simulation:
+            #                time.sleep(0.25)
 
     def load_progress(self, n):
         '''

@@ -23,6 +23,7 @@ from traits.api import Instance, Int, Property, List, \
 #============= standard library imports ========================
 from ConfigParser import ConfigParser
 import os
+from numpy import array, argmin, abs
 #============= local library imports  ==========================
 from src.spectrometer.source import Source
 from src.spectrometer.magnet import Magnet
@@ -33,6 +34,17 @@ from src.pychron_constants import NULL_STR, DETECTOR_ORDER
 from src.paths import paths
 
 debug = False
+QTEGRA_INTEGRATION_TIMES = array([0.065536, 0.131072, 0.262144, 0.524288,
+                                  1.048576, 2.097152, 4.194304, 8.388608,
+                                  16.777216, 33.554432, 67.108864])
+
+
+def normalize_integration_time(it):
+    """
+        find the integration time closest to "it"
+    """
+    x = QTEGRA_INTEGRATION_TIMES
+    return x[argmin(abs(x - it))]
 
 
 class Spectrometer(SpectrometerDevice):
@@ -77,10 +89,16 @@ class Spectrometer(SpectrometerDevice):
     testcnt = 0
     send_config_on_startup = Bool
 
+    def set_integration_time(self, it):
+        it = normalize_integration_time(it)
+        name = 'SetIntegrationTime'
+        self.set_parameter(name, it)
+        return it
+
     def send_configuration(self):
-        '''
+        """
             send the configuration values to the device
-        '''
+        """
         self._send_configuration()
 
     def set_parameter(self, name, v):

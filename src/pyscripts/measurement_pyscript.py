@@ -404,6 +404,11 @@ class MeasurementPyScript(ValvePyScript):
 
     @verbose_skip
     @command_register
+    def set_integration_time(self, v):
+        self._automated_run_call('py_set_integration_time', v)
+
+    @verbose_skip
+    @command_register
     def set_ysymmetry(self, v):
         self._set_spectrometer_parameter('SetYSymmetry', v)
 
