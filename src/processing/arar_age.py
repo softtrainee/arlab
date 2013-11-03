@@ -360,34 +360,38 @@ class ArArAge(Loggable):
         ic_factors = self._make_ic_factors_dict()
 
         irrad = self.irradiation_info
-        if not include_irradiation_error:
-            #set errors to zero
-            nirrad = []
-            for ir in irrad[:-2]:
-                nirrad.append((ir[0], 0))
-            nirrad.extend(irrad[-2:])
-            irrad = nirrad
+        result = None
+        if irrad:
+            if not include_irradiation_error:
+                #set errors to zero
+                nirrad = []
+                for ir in irrad[:-2]:
+                    nirrad.append((ir[0], 0))
+                nirrad.extend(irrad[-2:])
+                irrad = nirrad
 
-        ab = self.arar_constants.abundance_sensitivity
-
-        result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
-                                    self.j, irrad, abundance_sensitivity=ab,
-                                    ic_factors=ic_factors,
-                                    #ic=ic,
-                                    #ic=self.ic_factor,
-                                    include_decay_error=include_decay_error,
-                                    arar_constants=self.arar_constants)
+            ab = self.arar_constants.abundance_sensitivity
+            result = calculate_arar_age(fsignals, bssignals, blsignals, bksignals,
+                                        self.j, irrad, abundance_sensitivity=ab,
+                                        ic_factors=ic_factors,
+                                        #ic=ic,
+                                        #ic=self.ic_factor,
+                                        include_decay_error=include_decay_error,
+                                        arar_constants=self.arar_constants)
 
         if result:
             self.arar_result = result
-
             ai = result['age']
-            ai = ai / self.arar_constants.age_scalar
+        else:
+            ai = ufloat(0, 1.e-20)
 
-            return ai
-            #            age = ai.nominal_value
-            #            err = ai.std_dev()
-            #            return age, err
+        ai = ai / self.arar_constants.age_scalar
+
+        return ai
+
+        #            age = ai.nominal_value
+        #            err = ai.std_dev()
+        #            return age, err
 
     def _make_signals(self, kind=None):
         isos = self.isotopes

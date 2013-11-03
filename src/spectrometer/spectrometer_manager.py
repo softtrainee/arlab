@@ -26,7 +26,6 @@ from src.paths import paths
 from src.spectrometer.jobs.relative_detector_positions import RelativeDetectorPositions
 from src.spectrometer.jobs.coincidence_scan import CoincidenceScan
 from src.spectrometer.jobs.cdd_operating_voltage_scan import CDDOperatingVoltageScan
-from src.hardware.argus_controller import ArgusController
 from apptools.preferences.preference_binding import bind_preference
 from src.spectrometer.spectrometer_parameters import SpectrometerParameters, \
     SpectrometerParametersView
@@ -66,21 +65,21 @@ class SpectrometerManager(Manager):
             d[di.name] = di.read_deflection()
         return d
 
-    def load(self):
+    def load(self, db_mol_weights=True):
         self.debug('******************************* LOAD Spec')
+        if db_mol_weights:
+            # get the molecular weights from the database
+            dbm = IsotopeDatabaseManager(application=self.application,
+                                         warn=False)
+            self.db = dbm
+            if dbm.isConnected():
+                self.info('loading molecular_weights from database')
+                mws = dbm.db.get_molecular_weights()
+                # convert to a dictionary
+                m = dict([(mi.name, mi.mass) for mi in mws])
+                self.spectrometer.molecular_weights = m
 
-        # get the molecular weights from the database
-        dbm = IsotopeDatabaseManager(application=self.application,
-                                     warn=False)
-        self.db = dbm
-        if dbm.isConnected():
-            self.info('loading molecular_weights from database')
-            mws = dbm.db.get_molecular_weights()
-            # convert to a dictionary
-            m = dict([(mi.name, mi.mass) for mi in mws])
-            self.spectrometer.molecular_weights = m
-
-        else:
+        if not self.spectrometer.molecular_weights:
             import csv
             # load the molecular weights dictionary
             p = os.path.join(paths.spectrometer_dir, 'molecular_weights.csv')
@@ -103,21 +102,20 @@ class SpectrometerManager(Manager):
                         writer.writerow(row)
                 self.spectrometer.molecular_weights = mw
 
+        #config = self.get_configuration(path=os.path.join(paths.spectrometer_dir, 'detectors.cfg'))
+        #for name in config.sections():
+        #    relative_position = self.config_get(config, name, 'relative_position', cast='float')
+        #    color = self.config_get(config, name, 'color', default='black')
+        #    default_state = self.config_get(config, name, 'default_state', default=True, cast='boolean')
+        #    isotope = self.config_get(config, name, 'isotope')
+        #    kind = self.config_get(config, name, 'kind', default='Faraday', optional=True)
+        #    self.spectrometer.add_detector(name=name,
+        #                                   relative_position=relative_position,
+        #                                   color=color,
+        #                                   active=default_state,
+        #                                   isotope=isotope,
+        #                                   kind=kind)
         self.spectrometer.load()
-
-        config = self.get_configuration(path=os.path.join(paths.spectrometer_dir, 'detectors.cfg'))
-        for name in config.sections():
-            relative_position = self.config_get(config, name, 'relative_position', cast='float')
-            color = self.config_get(config, name, 'color', default='black')
-            default_state = self.config_get(config, name, 'default_state', default=True, cast='boolean')
-            isotope = self.config_get(config, name, 'isotope')
-            kind = self.config_get(config, name, 'kind', default='Faraday', optional=True)
-            self.spectrometer.add_detector(name=name,
-                                           relative_position=relative_position,
-                                           color=color,
-                                           active=default_state,
-                                           isotope=isotope,
-                                           kind=kind)
 
         return True
 

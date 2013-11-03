@@ -228,14 +228,16 @@ class AnalysisView(HasTraits):
         return an.j
 
     def load_measurement(self, an, ar):
-        
+
         j = self._get_j(an)
-        jj = floatfmt(j.nominal_value, n=5, s=3)
-        jf = u'{} \u00b1{:0.2e}'.format(jj, j.std_dev)
-        
-        a39=ar.ar39decayfactor
-        a37=ar.ar37decayfactor
-    
+        jf = 'NaN'
+        if j is not None:
+            jj = floatfmt(j.nominal_value, n=5, s=3)
+            jf = u'{} \u00b1{:0.2e}'.format(jj, j.std_dev)
+
+        a39 = ar.ar39decayfactor
+        a37 = ar.ar37decayfactor
+
         ms = [
             MeasurementValue(name='AnalysisID',
                              value=self.analysis_id),

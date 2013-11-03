@@ -650,7 +650,7 @@
 #        return paths.experiment_dir
 #
 #    def _set_selector_default(self):
-#        s = SetSelector(experiment_manager=self,
+#        s = SetSelector(experiment_executor=self,
 #                        addable=True
 #                        )
 #        return s
@@ -675,7 +675,7 @@
 # #    paths.build('_experiment')
 # #    from src.helpers.logger_setup import logging_setup
 # #
-# #    logging_setup('experiment_manager')
+# #    logging_setup('experiment_executor')
 # #
 # #    globalv.show_infos = False
 # #

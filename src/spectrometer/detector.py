@@ -41,6 +41,7 @@ class Detector(SpectrometerDevice):
     deflection = Property(Float(enter_set=True, auto_set=False), depends_on='_deflection')
     _deflection = Float
 
+    _deflection_correction_factors = None
     #    intensity = Property(depends_on='spectrometer:intensity_dirty')
     #    intensity = Float
     #    std = Float
@@ -83,25 +84,14 @@ class Detector(SpectrometerDevice):
     def load(self):
         self.read_deflection()
 
+    def load_deflection_coefficients(self):
         # load deflection correction table
         p = os.path.join(paths.spectrometer_dir,
                          'deflections', self.name)
 
         x, y = loadtxt(p, delimiter=',', unpack=True)
-
-        #        x, y = data.transpose()
-
-        #        y = [yi - y[0] for yi in y]
         y -= y[0]
         coeffs = polyfit(x, y, 1)
-
-        #        plot(x, y, '+')
-        #
-        #        coeffs = polyfit(x, y, 1)
-        #        xf = linspace(min(x), max(x), 100)
-        #        plot(xf, polyval(coeffs, xf))
-        #
-        #        show()
         self._deflection_correction_factors = coeffs
 
     def _set_deflection(self, v):

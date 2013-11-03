@@ -74,6 +74,9 @@ class PeakHopCollector(DataCollector):
             dets, isos = args
             # get the data
             data = self._get_data(dets)
+
+            #self._iter_step((time.time() - self.starttime,
+            #                    data, dets, isos, i))
             con.add_consumable((time.time() - self.starttime,
                                 data, dets, isos, i))
             return True
@@ -82,7 +85,7 @@ class PeakHopCollector(DataCollector):
         x, k_s, dets, isos, i = data
 #        keys, signals = data
         self._save_data(x, *k_s)
-        self._plot_data(i, x, *k_s)
+        self.plot_data(i, x, *k_s)
 
     def _do_hop(self, cnt):
         """
@@ -130,8 +133,7 @@ class PeakHopCollector(DataCollector):
 
         invoke_in_main_thread(self.plot_panel.trait_set,
                               current_cycle='{} cycle={} count={}'.format(isotope, cycle + 1, count + 1),
-                              current_color=d.color
-        )
+                              current_color=d.color)
 
         return dets, isos
 

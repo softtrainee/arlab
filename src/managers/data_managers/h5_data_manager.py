@@ -25,7 +25,6 @@ from data_manager import DataManager
 from table_descriptions import table_description_factory
 import os
 import weakref
-from tables.table import Table
 
 
 def get_table(name, group, frame):
@@ -38,6 +37,7 @@ def get_table(name, group, frame):
             return getattr(frame.root, name)
         except AttributeError:
             pass
+
 
 class TableCTX(object):
     def __init__(self, p, t, g, complevel, mode):
@@ -53,19 +53,19 @@ class TableCTX(object):
         self._file.close()
         del self._file
 
+
 class FileCTX(object):
     def __init__(self, parent, p, m, complevel):
         self._file = openFile(p, m,
                               filters=Filters(complevel=complevel))
         self._parent = parent
-
         self._parent._frame = self._file
 
     def __enter__(self):
         return self._file
 
     def __exit__(self, *args, **kw):
-#         self._file.flush()
+    #         self._file.flush()
         self._parent.close_file()
         self._file.close()
 
@@ -76,11 +76,12 @@ class FileCTX(object):
 class H5DataManager(DataManager):
     '''
     '''
-#    _extension = 'h5'
+    #    _extension = 'h5'
     _extension = 'hdf5'
     repository = Any
     workspace_root = None
     compression_level = 5
+
     def set_group_attribute(self, group, key, value):
         f = self._frame
 
@@ -88,15 +89,16 @@ class H5DataManager(DataManager):
             group = getattr(f, group)
 
         setattr(group._v_attrs, key, value)
-#        print group._v_attrs[]
-#        group.flush()
-#    def set_table_attribute(self, key, value, table):
-#        '''
-#
-#        '''
-#        _df, table = self._get_parent(table)
-#        setattr(table.attrs, key, value)
-#        table.flush()
+
+    #        print group._v_attrs[]
+    #        group.flush()
+    #    def set_table_attribute(self, key, value, table):
+    #        '''
+    #
+    #        '''
+    #        _df, table = self._get_parent(table)
+    #        setattr(table.attrs, key, value)
+    #        table.flush()
 
     def record(self, values, table):
         '''
@@ -112,12 +114,13 @@ class H5DataManager(DataManager):
 
     def get_current_path(self):
         if self._frame is not None:
-#            for d in dir(self._frame):
-#                print d
+        #            for d in dir(self._frame):
+        #                print d
             return self._frame.filename
 
     def lock_path(self, p):
         import stat
+
         os.chmod(p, stat.S_IROTH | stat.S_IRGRP | stat.S_IREAD)
 
     def delete_frame(self):
@@ -139,15 +142,15 @@ class H5DataManager(DataManager):
         p = self._new_frame_path(*args, **kw)
         try:
             self._frame = openFile(p, mode='w',
-#                                    filters=Filters(complevel=self.compression_level)
-                                   )
-#             self._frame = openFile(p, mode='w',
-#                                    filters=Filters(complevel=self.compression_level))
+                                   #                                    filters=Filters(complevel=self.compression_level)
+            )
+            #             self._frame = openFile(p, mode='w',
+            #                                    filters=Filters(complevel=self.compression_level))
             return self._frame
         except ValueError:
             pass
 
-#        self.lock_path(p)
+            #        self.lock_path(p)
 
 
     def new_group(self, group_name, parent=None, description=''):
@@ -171,7 +174,7 @@ class H5DataManager(DataManager):
         tab = self.get_table(table_name, group)
         if tab is None:
             tab = self._frame.createTable(group, table_name,
-                                        table_description_factory(table_style))
+                                          table_description_factory(table_style))
 
         tab.flush()
         return tab
@@ -192,7 +195,7 @@ class H5DataManager(DataManager):
         if grp is not None:
             if isinstance(grp, str):
                 grp = getattr(self._frame.root, grp)
-#            print 'wget', grp
+                #            print 'wget', grp
             return [g for g in grp._f_walkGroups() if g != grp]
         else:
             return [g for g in self._frame.walkGroups() if g != self._frame.root]
@@ -208,7 +211,7 @@ class H5DataManager(DataManager):
         return os.path.isfile(path)
 
     def open_data(self, path, mode='r', caller=None):
-#        print 'open data', caller
+    #        print 'open data', caller
         if self.repository:
             out = os.path.join(self.workspace_root, path)
             path = os.path.join(self.repository.root, path)
@@ -224,6 +227,7 @@ class H5DataManager(DataManager):
         except Exception:
             self._frame = None
             import traceback
+
             traceback.print_exc()
             return True
 
@@ -237,23 +241,24 @@ class H5DataManager(DataManager):
             self._frame.flush()
             self._frame.close()
             self._frame = None
-#             del self._frame
+        #             del self._frame
 
         except Exception, e:
             print 'exception closing file', e
 
     def open_file(self, path, mode='r+'):
         return FileCTX(
-#                         self,
-                       weakref.ref(self)(),
-                       path, mode, self.compression_level)
+            #                         self,
+            weakref.ref(self)(),
+            path, mode, self.compression_level)
 
     def open_table(self, path, table, group='/', mode='r'):
         return TableCTX(path, table, group, self.compression_level, mode)
 
     def kill(self):
         self.close_file()
-#        for table in f.walkNodes('/', 'Table'):
+
+        #        for table in f.walkNodes('/', 'Table'):
 
 #    def add_table(self, table, table_style='Timestamp', parent='root'):
 #        '''

@@ -28,6 +28,8 @@ from src.loggable import Loggable
 from src.globals import globalv
 from src.consumer_mixin import consumable
 # from src.codetools.memory_usage import mem_log
+from src.ui.gui import invoke_in_main_thread
+
 
 class DataCollector(Loggable):
     measurement_script = Any
@@ -107,7 +109,7 @@ class DataCollector(Loggable):
 
     def _measure(self, evt, et):
         self.debug('starting measurment')
-        with consumable(func=self._iter_step, main=True) as con:
+        with consumable(func=self._iter_step) as con:
             self._iter(con, evt, 1)
             evt.wait(et * 1.1)
         self.debug('measurement finished')
@@ -157,6 +159,9 @@ class DataCollector(Loggable):
             d = next((di for di in self.detectors
                       if di.name == d), None)
         return d
+
+    def plot_data(self, *args, **kw):
+        invoke_in_main_thread(self._plot_data, *args, **kw)
 
     def _plot_data(self, i, x, keys, signals):
         if globalv.experiment_debug:

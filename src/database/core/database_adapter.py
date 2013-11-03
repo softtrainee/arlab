@@ -78,8 +78,12 @@ class SessionCTX(object):
         self._sess.flush()
         if self._close_at_exit:
             try:
+                self._parent.debug('$%$%$%$%$%$%$%$ commit {}'.format(self._commit))
                 if self._commit:
                     self._sess.commit()
+                else:
+                    self._sess.rollback()
+
             except Exception, e:
                 print 'exception commiting session: {}'.format(e)
                 if self._parent:

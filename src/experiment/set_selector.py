@@ -22,23 +22,23 @@
 #
 #
 # class SetSelector(HasTraits):
-#    experiment_manager = Any
+#    experiment_executor = Any
 #    experiment_sets = List  # Instance('src.experiment_set.ExperimentSet')
 #    add_button = Button('+')
 #    delete_button = Button('-')
-#    names = Property(depends_on='experiment_manager.experiment_sets')
+#    names = Property(depends_on='experiment_executor.experiment_sets')
 #
 #    selected_index = Int
 #    selected = Str
 #    editable = Bool(True)
 #    def _get_names(self):
 #        return ['Queue {}'.format(i + 1)
-#                for i in range(len(self.experiment_manager.experiment_queues))]
+#                for i in range(len(self.experiment_executor.experiment_queues))]
 #
 # #        print 'asdffds', ['Set {}'.format(i + 1) for i in range(len(self.experiment_sets))]
 #
 #    def _add_button_fired(self):
-#        exp = self.experiment_manager
+#        exp = self.experiment_executor
 #        exp.new_experiment_queue(clear=False)
 #        i = 0
 #        while 1:
@@ -57,11 +57,11 @@
 #        else:
 #            si = len(self.names) - 1
 # #        self.names.pop(si)
-#        self.experiment_manager.experiment_queues.pop(si)
+#        self.experiment_executor.experiment_queues.pop(si)
 #
 #    def _selected_index_changed(self):
 #        if self.selected_index >= 0:
-#            em = self.experiment_manager
+#            em = self.experiment_executor
 #            em.experiment_set = em.experiment_queues[self.selected_index]
 #
 #    def traits_view(self):

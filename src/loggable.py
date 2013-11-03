@@ -16,7 +16,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, String, on_trait_change
+from traits.api import HasTraits, Any, String
 
 # from pyface.message_dialog import information, warning as nonmodal_warning, \
 #     MessageDialog
@@ -147,7 +147,7 @@ class Loggable(HasTraits):
 
         gMessageDisplay.add_text(msg)
 
-    #        self.info(msg)
+        self.info(msg)
 
     def warning(self, msg, decorate=True):
         '''

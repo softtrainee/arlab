@@ -41,6 +41,6 @@ class MultiCollector(DataCollector):
         # save the data
         self._save_data(x, *data)
         # plot the data
-        self._plot_data(i, x, *data)
+        self.plot_data(i, x, *data)
 
         #============= EOF =============================================

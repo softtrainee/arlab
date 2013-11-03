@@ -17,20 +17,22 @@
 
 
 #============= enthought library imports =======================
-from traits.api import  Any, Property
+from traits.api import Any, Property
 # from traitsui.api import View, Item, Group, HGroup, VGroup
 
 #============= standard library imports ========================
 
 #============= local library imports  ==========================
-from src.loggable import Loggable
+from src.config_loadable import ConfigMixin
 
-class SpectrometerDevice(Loggable):
+
+class SpectrometerDevice(ConfigMixin):
     microcontroller = Any
     spectrometer = Any
-#    simulation = DelegatesTo('microcontroller')
+    #    simulation = DelegatesTo('microcontroller')
 
     simulation = Property
+
     def _get_simulation(self):
         s = True
         if self.microcontroller:
