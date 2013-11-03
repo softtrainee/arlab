@@ -22,23 +22,26 @@
 #============= local library imports  ==========================
 from src.envisage.core.core_ui_plugin import CoreUIPlugin
 
+
 class ExperimentUIPlugin(CoreUIPlugin):
     '''
     '''
     id = 'pychron.experiment.ui'
     name = 'Experiment UI'
-#    def _perspectives_default(self):
-#        from experiment_perspective import ExperimentPerspective
-#        p = [ExperimentPerspective]
-#        return p
+    #    def _perspectives_default(self):
+    #        from experiment_perspective import ExperimentPerspective
+    #        p = [ExperimentPerspective]
+    #        return p
     def _preferences_pages_default(self):
         from experiment_preferences_page import ExperimentPreferencesPage
+
         return [ExperimentPreferencesPage]
 
     def _action_sets_default(self):
         '''
         '''
         from experiment_action_set import ExperimentActionSet
+
         return [ExperimentActionSet]
 
 #    def _views_default(self):
@@ -48,7 +51,7 @@ class ExperimentUIPlugin(CoreUIPlugin):
 
 #    def _create_experiment_set_view(self, **kw):
 #        app = self.application
-#        man = app.get_service('src.experiment.experiment_manager.ExperimentManager')
+#        man = app.get_service('src.experiment.experiment_executor.ExperimentManager')
 #        args = dict(id='pychron.experiment_set',
 #                         name='Experiment Set',
 #                         obj=man
@@ -91,7 +94,7 @@ class ExperimentUIPlugin(CoreUIPlugin):
 #        if new  is True:
 #            app = self.application
 #            window = app.workbench.active_window
-#            manager = app.get_service('src.experiment.experiment_manager.ExperimentManager')
+#            manager = app.get_service('src.experiment.experiment_executor.ExperimentManager')
 #            manager.window = window
 #            manager.open_default()
 #============= views ===================================

@@ -252,7 +252,12 @@ class Spectrometer(SpectrometerDevice):
         self.molecular_weight = 'Ar40'
 
     def load(self):
+        self.load_detectors()
+
         self.magnet.load()
+        self.debug('Detectors {}'.format(self.detectors))
+        for d in self.detectors:
+            d.load_deflection_coefficients()
 
     def finish_loading(self):
         self.magnet.finish_loading()
@@ -261,6 +266,21 @@ class Spectrometer(SpectrometerDevice):
             # write configuration to spectrometer
             self._send_configuration()
 
+    def load_detectors(self):
+        p = os.path.join(paths.spectrometer_dir, 'detectors.cfg')
+        config = self.get_configuration(path=os.path.join(paths.spectrometer_dir, 'detectors.cfg'))
+        for name in config.sections():
+            relative_position = self.config_get(config, name, 'relative_position', cast='float')
+            color = self.config_get(config, name, 'color', default='black')
+            default_state = self.config_get(config, name, 'default_state', default=True, cast='boolean')
+            isotope = self.config_get(config, name, 'isotope')
+            kind = self.config_get(config, name, 'kind', default='Faraday', optional=True)
+            self.add_detector(name=name,
+                              relative_position=relative_position,
+                              color=color,
+                              active=default_state,
+                              isotope=isotope,
+                              kind=kind)
 
     def add_detector(self, **kw):
         d = Detector(spectrometer=self,

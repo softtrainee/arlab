@@ -50,7 +50,6 @@ from src.codetools.memory_usage import mem_available, mem_log
 from src.ui.gui import invoke_in_main_thread
 from src.consumer_mixin import consumable
 from src.paths import paths
-from src.managers.data_managers.h5_data_manager import H5DataManager
 from src.experiment.automated_run.automated_run import AutomatedRun
 from src.helpers.filetools import add_extension
 from src.globals import globalv
@@ -102,7 +101,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
     extraction_line_manager = Any
     ion_optics_manager = Any
     massspec_importer = Instance(MassSpecDatabaseImporter, ())
-    data_manager = Instance(H5DataManager, ())
+    #data_manager = Instance(H5DataManager, ())
     pyscript_runner = Instance(PyScriptRunner)
     monitor = Instance(AutomatedRunMonitor)
     current_run = Instance(AutomatedRun)
@@ -620,12 +619,12 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         arun.integration_time = 1.04
 
         #        if self.current_run is None:
-        arun.experiment_manager = weakref.ref(self)()
+        arun.experiment_executor = weakref.ref(self)()
 
         arun.spectrometer_manager = self.spectrometer_manager
         arun.extraction_line_manager = self.extraction_line_manager
         arun.ion_optics_manager = self.ion_optics_manager
-        arun.data_manager = self.data_manager
+        #arun.data_manager = self.data_manager
         arun.db = self.db
         arun.massspec_importer = self.massspec_importer
         arun.runner = self.pyscript_runner

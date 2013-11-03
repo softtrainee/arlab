@@ -23,33 +23,11 @@ import os
 import ConfigParser
 #============= local library imports  ==========================
 
-class ConfigLoadable(Loggable):
-
-    '''
-    '''
-
+class ConfigMixin(Loggable):
     configuration_dir_name = None
     configuration_dir_path = None
     configuration_name = None
-    name = None
     config_path = None
-
-    def bootstrap(self, *args, **kw):
-        '''
-        '''
-
-        self.info('load')
-        if self.load(*args, **kw):
-            self.info('open')
-            if self.open(*args, **kw):
-                self.info('initialize')
-                self.initialize(*args, **kw)
-                return True
-            else:
-                self.initialize(*args, **kw)
-                self.warning('failed opening')
-        else:
-            self.warning('failed loading')
 
     def configparser_factory(self):
         return ConfigParser.ConfigParser()
@@ -60,17 +38,10 @@ class ConfigLoadable(Loggable):
             r = config.options(section)
         return r
 
-    def config_get(
-        self,
-        config,
-        section,
-        option,
-        cast=None,
-        optional=False,
-        default=None,
-        ):
-        '''
-        '''
+    def config_get(self, config, section, option,
+                   cast=None,
+                   optional=False,
+                   default=None):
 
         if cast is not None:
             func = getattr(config, 'get%s' % cast)
@@ -81,49 +52,18 @@ class ConfigLoadable(Loggable):
             if not optional:
                 if self.logger is not None:
                     self.warning('Need to specifiy {}:{}'.format(section,
-                                 option))
+                                                                 option))
 
             return default
         else:
             return func(section, option)
 
     def set_attribute(self, config, attribute, section, option, **kw):
-        '''
-        '''
-
         r = self.config_get(config, section, option, **kw)
         if r is not None:
             setattr(self, attribute, r)
 
-    def open(self, *args, **kw):
-        '''
-        '''
-
-        return True
-
-    def load(self, *args, **kw):
-        '''
-
-        '''
-
-        return True
-
-    def load_additional_args(self, *args, **kw):
-        return True
-
-    def _load_hook(self, config):
-        pass
-
-    def initialize(self, *args, **kw):
-        '''
-        '''
-
-        return True
-
     def write_configuration(self, config, path=None):
-        '''
-
-        '''
 
         if path is None:
             path = self.config_path
@@ -132,15 +72,11 @@ class ConfigLoadable(Loggable):
             config.write(f)
 
     def get_configuration(
-        self,
-        path=None,
-        name=None,
-        warn=True,
-        set_path=True
-        ):
-        '''
-
-        '''
+            self,
+            path=None,
+            name=None,
+            warn=True,
+            set_path=True):
 
         if path is None:
             path = self.config_path
@@ -149,7 +85,7 @@ class ConfigLoadable(Loggable):
 
                 if self.configuration_dir_name:
                     base = os.path.join(device_dir,
-                            self.configuration_dir_name)
+                                        self.configuration_dir_name)
                 else:
                     base = device_dir
 
@@ -176,10 +112,55 @@ class ConfigLoadable(Loggable):
         config = ConfigParser.RawConfigParser()
         return config
 
-    def convert_config_name(self, name):
-        '''
-        '''
 
+class ConfigLoadable(ConfigMixin):
+    """
+    """
+
+    def bootstrap(self, *args, **kw):
+        """
+        """
+
+        self.info('load')
+        if self.load(*args, **kw):
+            self.info('open')
+            if self.open(*args, **kw):
+                self.info('initialize')
+                self.initialize(*args, **kw)
+                return True
+            else:
+                self.initialize(*args, **kw)
+                self.warning('failed opening')
+        else:
+            self.warning('failed loading')
+
+
+    def open(self, *args, **kw):
+        """
+        """
+
+        return True
+
+    def load(self, *args, **kw):
+        """
+        """
+        return True
+
+    def load_additional_args(self, *args, **kw):
+        return True
+
+    def _load_hook(self, config):
+        pass
+
+    def initialize(self, *args, **kw):
+        """
+        """
+
+        return True
+
+    def convert_config_name(self, name):
+        """
+        """
         nname = ''
         if '_' in name:
             for s in name.split('_'):

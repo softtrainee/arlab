@@ -17,6 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import CStr, Str, CInt, Tuple, List, Float, \
     TraitError, Property, Any, Either
+from uncertainties import ufloat
 from src.loggable import Loggable
 from src.experiment.utilities.identifier import make_rid
 #============= standard library imports ========================
@@ -95,6 +96,10 @@ class ExportSpec(Loggable):
 
         if hasattr(record, 'cdd_ic_factor'):
             ic = record.cdd_ic_factor
+            if ic is None:
+                self.debug('Using default CDD IC factor 1.0')
+                ic = ufloat(1, 1.0e-20)
+
             self.ic_factor_v = float(ic.nominal_value)
             self.ic_factor_e = float(ic.std_dev)
         else:
@@ -104,7 +109,7 @@ class ExportSpec(Loggable):
         for a in ('detectors', 'signals', 'baselines', 'blanks', 'signal_intercepts', 'baseline_intercepts',
                   'signal_fits', 'baseline_fits'):
             v = getattr(self, a)
-            print a, len(v), v
+            self.debug('attr={} n={} {}'.format(a, len(v), v))
 
         ##dont use zip
         #return zip(self.detectors,
@@ -115,17 +120,37 @@ class ExportSpec(Loggable):
         #           self.baseline_intercepts,
         #           self.signal_fits,
         #           self.baseline_fits)
+        def _iter():
+            self.debug('detectors----- {}'.format(self.detectors))
+            for i, detector in enumerate(self.detectors):
+                signal = self.signals[i]
+                baseline = self._get_list_attr('baselines', i)
+                #baseline = self.baselines[i]
+                blank = self.blanks[i]
+                sintercept = self.signal_intercepts[i]
+                bsintercept = self.baseline_intercepts[i]
+                sfits = self.signal_fits[i]
+                #bfits = self.baseline_fits[i]
+                bfits = self._get_list_attr('baseline_fits', i, default='average_SEM')
+                #self.debug('{} detector {}'.format(i, detector))
+                #self.debug('{} signal {}'.format(i, signal))
+                #self.debug('{} baseline {}'.format(i, baseline))
+                #self.debug('{} blank {}'.format(i, blank))
+                #self.debug('{} sint {}'.format(i, sintercept))
+                #self.debug('{} bint {}'.format(i, bsintercept))
+                #self.debug('{} sfit {}'.format(i, sfits))
+                #self.debug('{} bfit {}'.format(i, bfits))
+                yield detector, signal, baseline, blank, sintercept, bsintercept, sfits, bfits
 
-        for i, detector in enumerate(self.detectors):
-            signal = self.signals[i]
-            baseline = self.baselines[i]
-            blank = self.blanks[i]
-            sintercept = self.signal_intercepts[i]
-            bsintercept = self.baseline_intercepts[i]
-            sfits = self.signal_fits[i]
-            bfits = self.baseline_fits[i]
+        return _iter()
 
-            yield detector, signal, baseline, blank, sintercept, bsintercept, sfits, bfits
+    def _get_list_attr(self, attr, idx, default=None):
+        try:
+            return getattr(self, attr)[idx]
+        except IndexError:
+            if default is None:
+                default = [(0, 0)]
+            return default
 
     @property
     def record_id(self):

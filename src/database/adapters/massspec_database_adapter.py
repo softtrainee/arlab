@@ -19,6 +19,10 @@
 #=============standard library imports ========================
 
 #=============local library imports  ==========================
+import binascii
+
+from sqlalchemy.sql.expression import func, distinct
+
 from src.database.orms.massspec_orm import IsotopeResultsTable, \
     AnalysesChangeableItemsTable, BaselinesTable, DetectorTable, \
      IsotopeTable, AnalysesTable, \
@@ -29,13 +33,8 @@ from src.database.orms.massspec_orm import IsotopeResultsTable, \
     AnalysisPositionTable, LoginSessionTable, RunScriptTable, \
     IrradiationChronologyTable, IrradiationLevelTable
 from src.database.core.database_adapter import DatabaseAdapter
-
-from src.database.core.functions import delete_one, get_first
-from sqlalchemy.sql.expression import func, distinct
-
+from src.database.core.functions import delete_one
 from src.database.selectors.massspec_selector import MassSpecSelector
-import binascii
-from src.experiment.utilities.identifier import make_runid
 
 
 class MassSpecDatabaseAdapter(DatabaseAdapter):
@@ -371,7 +370,7 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             analysis.isotopes.append(iso)
 
         if detector is not None:
-            detector.isotopes.append(iso)
+            iso.DetectorID = detector.DetectorID
             iso.BkgdDetectorID = detector.DetectorID
 
         self._add_item(iso,)

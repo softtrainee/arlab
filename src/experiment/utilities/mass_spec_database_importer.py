@@ -29,7 +29,6 @@ from src.regression.mean_regressor import MeanRegressor
 from uncertainties import ufloat
 from src.experiment.utilities.info_blob import encode_infoblob
 import time
-from src.experiment.utilities.identifier import make_rid
 
 mkeys = ['l2 value', 'l1 value', 'ax value', 'h1 value', 'h2 value']
 
@@ -101,7 +100,7 @@ class MassSpecDatabaseImporter(Loggable):
         self._current_spec = None
 
     def add_analysis(self, spec, commit=True):
-        with self.db.session_ctx(commit=commit) as sess:
+        with self.db.session_ctx(commit=False) as sess:
             irradpos = spec.irradpos
             rid = spec.rid
             trid = rid.lower()
@@ -134,11 +133,12 @@ class MassSpecDatabaseImporter(Loggable):
 
             self._analysis = None
             try:
-                self._add_analysis(sess, spec, irradpos, rid, runtype)
+                return self._add_analysis(sess, spec, irradpos, rid, runtype)
             except Exception, e:
-    #            import traceback
-    #            tb = traceback.format_exc()
-                self.message('Could not save to Mass Spec database.\n {}'.format(e))
+                import traceback
+
+                tb = traceback.format_exc()
+                self.message('Could not save to Mass Spec database.\n {}'.format(tb))
                 if commit:
                     sess.rollback()
     #                 self.db.rollback()
@@ -155,7 +155,6 @@ class MassSpecDatabaseImporter(Loggable):
 #            self._add_analysis_db(sess,*args)
 
     def _add_analysis(self, sess, spec, irradpos, rid, runtype):
-#    def _add_analysis_db(self, sess, spec, irradpos, rid, runtype):
         gst = time.time()
 
         db = self.db
@@ -184,20 +183,14 @@ class MassSpecDatabaseImporter(Loggable):
         # add runscript
         rs = db.add_runscript(spec.runscript_name,
                               spec.runscript_text)
-#        sess.flush()
-#         db.flush()
-#        print irradpos, runtype
+
         self.create_import_session(spectrometer, tray,
                                    )
 
         # added the reference detector
-        refdbdet = db.add_detector('H1', Label='H1',
+        refdbdet = db.add_detector('H1', Label='H1')
 
-                                   )
-#         db.flush()
-#        sess.flush()
-
-        # remember new rid in case duplicate entry error and new to augment rid
+        # remember new rid in case duplicate entry error and need to augment rid
         spec.rid = rid
         analysis = db.add_analysis(rid, spec.aliquot, spec.step,
                                    irradpos,
@@ -221,32 +214,21 @@ class MassSpecDatabaseImporter(Loggable):
                                    RunScriptID=rs.RunScriptID,
                                    )
 
-#        analysis.RefDetID = refdbdet.DetectorID
-#        analysis.ReferenceDetectorLabel = refdbdet.Label
-#        analysis.SampleLoadingID = self.sample_loading_id
-#        analysis.LoginSessionID = self.login_session_id
-#        analysis.RunScriptID = rs.RunScriptID
-
         db.add_analysis_positions(analysis, spec.position)
-#        sess.flush()
-
-#         db.flush()
         #=======================================================================
         # add changeable items
         #=======================================================================
-        item = db.add_changeable_items(analysis, self.data_reduction_session_id,
-                                       )
+        item = db.add_changeable_items(analysis, self.data_reduction_session_id)
 
         self.debug('%%%%%%%%%%%%%%%%%%%% Comment: {} %%%%%%%%%%%%%%%%%%%'.format(spec.comment))
         item.Comment = spec.comment
-        sess.flush()
-#         db.flush()
-
+        #sess.flush()
         analysis.ChangeableItemsID = item.ChangeableItemsID
 
 #        from src.codetools.simple_timeit import timethis
         for ((det, isok), si, bi, ublank, signal, baseline, sfit, bfit) in spec.iter():
-            print 'ffff',det, isok, signal.nominal_value, baseline.nominal_value, sfit, bfit
+            self.debug('msi {} {} {} {} {} {}'.format(det, isok, signal.nominal_value,
+                                                      baseline.nominal_value, sfit, bfit))
             #===================================================================
             # isotopes
             #===================================================================
@@ -263,13 +245,12 @@ class MassSpecDatabaseImporter(Loggable):
                     dbdet.ICFactor = spec.ic_factor_v
                     dbdet.ICFactorEr = spec.ic_factor_e
                     sess.flush()
-#                 db.flush()
 
             db_iso = db.add_isotope(analysis, dbdet, isok)
-
             #===================================================================
             # baselines
             #===================================================================
+            self.debug(bi)
             tb, vb = zip(*bi)
             blob = self._build_timeblob(tb, vb)
             label = '{} Baseline'.format(det.upper())
@@ -280,13 +261,10 @@ class MassSpecDatabaseImporter(Loggable):
             infoblob = self._make_infoblob(baseline.nominal_value, sem)
             db_changeable = db.add_baseline_changeable_item(self.data_reduction_session_id,
                                                             bfit,
-#                                                            baseline_fits[isok],
                                                             infoblob,
                                                             )
 
             # baseline and baseline changeable items need matching BslnID
-            sess.flush()
-#             db.flush()
             db_changeable.BslnID = db_baseline.BslnID
             #===================================================================
             # peak time
@@ -318,10 +296,6 @@ class MassSpecDatabaseImporter(Loggable):
                                   ublank,
                                   sfit,
                                   dbdet,)
-
-#         if commit:
-#             self.debug('commit')
-#             db.commit()
 
         t = time.time() - gst
         self.debug('{} added analysis time {}s'.format(spec.record_id, t))
