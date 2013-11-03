@@ -1470,8 +1470,8 @@ anaylsis_type={}
         # make a new frame for saving data
 
         name = self.uuid
-        #path = os.path.join(paths.isotope_dir, '{}.h5'.format(name))
-        path = '/Users/ross/Sandbox/aaaa_isotope.h5'
+        path = os.path.join(paths.isotope_dir, '{}.h5'.format(name))
+#        path = '/Users/ross/Sandbox/aaaa_isotope.h5'
         self._current_data_frame = path
         frame = dm.new_frame(path)
 
@@ -2253,7 +2253,7 @@ anaylsis_type={}
                         #self.debug('get table {} /{}/{}'.format(k,grpname, det.isotope))
                         t = dm.get_table(k, '/{}/{}'.format(grpname, det.isotope))
                         nrow = t.row
-                        self.debug('x={}'.format(x))
+#                        self.debug('x={}'.format(x))
                         nrow['time'] = x
                         nrow['value'] = signals[keys.index(k)]
                         nrow.append()

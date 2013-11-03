@@ -157,14 +157,15 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
     def bind_preferences(self):
         super(ExperimentExecutor, self).bind_preferences()
-
-        prefid = 'pychron.experiment'
+        
+       
+        prefid = 'pychron.database'
 
         bind_preference(self.massspec_importer.db, 'name', '{}.massspec_dbname'.format(prefid))
         bind_preference(self.massspec_importer.db, 'host', '{}.massspec_host'.format(prefid))
         bind_preference(self.massspec_importer.db, 'username', '{}.massspec_username'.format(prefid))
         bind_preference(self.massspec_importer.db, 'password', '{}.massspec_password'.format(prefid))
-
+        
     def isAlive(self):
         return self._alive
 
@@ -490,8 +491,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
                 ret = self.confirmation_dialog(m,
                                                title='Confirm Cancel',
-                                               return_retval=True
-                )
+                                               return_retval=True,
+                                               timeout=None)
 
             if ret == YES:
                 # stop queue
@@ -989,7 +990,7 @@ If "No" select from database
 
     def _check_managers(self, inform=True, n=1):
         self.debug('checking for managers')
-        if globalv.experiment_debug:
+        if globalv.experiment_debug or True:
             self.debug('********************** NOT DOING  managers check')
             return True
 

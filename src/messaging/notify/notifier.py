@@ -52,11 +52,14 @@ class Notifier(Loggable):
         poll.register(self._ping_sock, zmq.POLLIN)
 
         while self._ping_sock:
-            socks = dict(poll.poll(1000))
-            if socks.get(sock) == zmq.POLLIN:
-                resp = sock.recv()
-                if resp == 'ping':
-                    sock.send('echo')
+            try:
+                socks = dict(poll.poll(1000))
+                if socks.get(sock) == zmq.POLLIN:
+                    resp = sock.recv()
+                    if resp == 'ping':
+                        sock.send('echo')
+            except zmq.ZMQError:
+                pass
 
     def close(self):
         self._sock.close()
