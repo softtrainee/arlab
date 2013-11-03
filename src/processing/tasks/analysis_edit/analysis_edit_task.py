@@ -366,9 +366,14 @@ class AnalysisEditTask(BaseBrowserTask):
                 def test(aa):
                     return not aa.uuid in uuids
 
-                s = [ai for si in self.selected_sample
-                     for ai in self._get_sample_analyses(si, include_invalid=iv)
+
+                s = [ai for ai in self._get_sample_analyses(self.selected_sample,
+                                                            include_invalid=iv)
                      if test(ai)]
+
+                #s = [ai for si in self.selected_sample
+                #     for ai in self._get_sample_analyses(si, include_invalid=iv)
+                #     if test(ai)]
 
             else:
                 s = self.data_selector.selector.selected

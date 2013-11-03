@@ -15,13 +15,14 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
 from traitsui.api import View, Item, VGroup, HGroup, EnumEditor, spring, \
-    Label, Spring, ListEditor, Group, InstanceEditor, HSplit, UItem, ButtonEditor
+    Label, Spring, ListEditor, Group, InstanceEditor, UItem, ButtonEditor
 from pyface.tasks.traits_task_pane import TraitsTaskPane
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.envisage.tasks.pane_helpers import spacer
+
 
 class ScanPane(TraitsTaskPane):
     def traits_view(self):
@@ -108,8 +109,14 @@ class ControlsPane(TraitsDockPane):
                           layout='tabbed')
 
         v = View(
-                 control_grp
-#                  Group(
+            VGroup(
+                HGroup(spacer(10),
+                       Item('integration_time',
+                            label='Integration Time(s)')),
+                control_grp
+            ),
+
+            #                  Group(
 #                        magnet_grp,
 #                        detector_grp,
 #                        layout='tabbed'

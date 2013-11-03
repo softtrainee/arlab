@@ -104,8 +104,14 @@ class ICFactorAction(AnalysisEditAction):
 
 class BatchEditAction(AnalysisEditAction):
     name = 'Batch Edit...'
-    accelerator = 'Ctrl+Shift+e'
+    #accelerator = 'Ctrl+Shift+e'
     task_id = 'pychron.analysis_edit.batch'
+
+
+class SmartBatchEditAction(AnalysisEditAction):
+    name = 'Smart Batch Edit...'
+    accelerator = 'Ctrl+Shift+e'
+    task_id = 'pychron.analysis_edit.smart_batch'
 
 
 class SCLFTableAction(AnalysisEditAction):

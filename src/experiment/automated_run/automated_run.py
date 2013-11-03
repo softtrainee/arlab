@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Any, Str, Int, List, Property, \
-    Event, Instance, Bool, Dict, HasTraits
+    Event, Instance, Bool, Dict, HasTraits, Float
 #============= standard library imports ========================
 import os
 import traceback
@@ -64,6 +64,15 @@ from src.processing.analyses.analysis import DBAnalysis
 
 DEBUG = False
 
+"""
+    @todo
+    need to handle different integration times
+
+    change total_counts to total_seconds
+    convert counts to seconds
+        total_seconds += ncounts * self._integration_seconds
+"""
+
 
 class ScriptInfo(HasTraits):
     measurement_script_name = Str
@@ -77,11 +86,11 @@ warned_scripts = []
 
 
 def assemble_script_blob(scripts, kinds=None):
-    '''
+    """
         make one blob of all the script text
-        
+
         return csv-list of names, blob
-    '''
+    """
     if kinds is None:
         kinds = ['extraction', 'measurement', 'post_equilibration', 'post_measurement']
 
@@ -183,9 +192,17 @@ class AutomatedRun(Loggable):
 
     is_last = False
     is_peak_hop = Bool(False)
+
+    _integration_seconds = Float(1.0)
     #===============================================================================
     # pyscript interface
     #===============================================================================
+    def py_set_integration_time(self, v):
+        spectrometer = self.spectrometer_manager
+
+        nv = spectrometer.set_integration_time(v)
+        self._integration_seconds = nv
+
     def py_is_last_run(self):
         return self.is_last
     

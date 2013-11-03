@@ -29,11 +29,11 @@ from src.processing.tasks.processing_actions import IdeogramAction, \
     RecallAction, SpectrumAction, \
     EquilibrationInspectorAction, InverseIsochronAction, GroupSelectedAction, \
     GroupbyAliquotAction, GroupbyLabnumberAction, ClearGroupAction, \
-    SmartProjectAction, SeriesAction
+    SeriesAction
 
 from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     FluxAction, IsotopeEvolutionAction, ICFactorAction, \
-    BatchEditAction, TagAction, DatabaseSaveAction
+    BatchEditAction, TagAction, DatabaseSaveAction, SmartBatchEditAction
 from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
 from src.processing.tasks.processing_preferences import ProcessingPreferencesPane
 from src.processing.tasks.smart_project.smart_project_task import SmartProjectTask
@@ -105,6 +105,7 @@ Install to enable MS Excel export''')
                 #('labnumber_entry', LabnumberEntryAction, 'MenuBar/Edit'),
                 #('sensitivity_entry', SensitivityEntryAction, 'MenuBar/Edit'),
                 ('batch_edit', BatchEditAction, 'MenuBar/Edit'),
+                ('smart_batch_edit', SmartBatchEditAction, 'MenuBar/Edit'),
                 ('reduction_group', reduction_group, 'MenuBar/Edit'),
 
                 #('blank_edit', BlankEditAction, 'MenuBar/Edit'),
@@ -126,7 +127,7 @@ Install to enable MS Excel export''')
                 ('tag', TagAction, 'MenuBar/Data'),
                 ('database_save', DatabaseSaveAction, 'MenuBar/Data'),
                 ('grouping_group', grouping_group, 'MenuBar/Data'),
-                ('smart_project', SmartProjectAction, 'MenuBar/File')
+                #('smart_project', SmartProjectAction, 'MenuBar/File')
             ]),
             self._make_task_extension([
                                           ('optimal_equilibration', CalcOptimalEquilibrationAction, 'MenuBar/Tools')
@@ -163,8 +164,13 @@ Install to enable MS Excel export''')
              self._iso_evo_task_factory, 'Isotope Evolution'),
             ('pychron.analysis_edit.ic_factor',
              self._ic_factor_task_factory, 'IC Factor'),
+
             ('pychron.analysis_edit.batch',
              self._batch_edit_task_factory, 'Batch Edit'),
+            ('pychron.analysis_edit.smart_batch',
+             self._smart_batch_edit_task_factory, 'Smart Batch Edit'),
+
+
             ('pychron.processing.figures',
              self._figure_task_factory, 'Figures'),
             # ('pychron.processing.publisher', self._publisher_task_factory, 'Publisher'),
@@ -234,6 +240,11 @@ Install to enable MS Excel export''')
         from src.processing.tasks.batch_edit.batch_edit_task import BatchEditTask
 
         return BatchEditTask(manager=self._processor_factory())
+
+    def _smart_batch_edit_task_factory(self):
+        from src.processing.tasks.batch_edit.smart_batch_edit_task import SmartBatchEditTask
+
+        return SmartBatchEditTask(manager=self._processor_factory())
 
     def _figure_task_factory(self):
         from src.processing.tasks.figures.figure_task import FigureTask
