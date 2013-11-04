@@ -13,18 +13,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-import psutil
 import os
 import gc
 import sys
 import cPickle
-from src.helpers.filetools import unique_path
 from itertools import groupby
+
+import psutil
+
+from src.helpers.filetools import unique_path
+
 # import objgraph
-import random
-import inspect
-import subprocess
-USE_MEM_LOG = True
+USE_MEM_LOG = False
 root = os.path.join(os.path.expanduser('~'), 'Desktop', 'memtest')
 if not os.path.isdir(root):
     os.mkdir(root)

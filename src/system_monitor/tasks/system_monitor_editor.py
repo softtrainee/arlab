@@ -18,6 +18,7 @@
 from datetime import datetime, timedelta
 from threading import Thread
 import time
+#from apptools.preferences.preference_binding import bind_preference
 from traits.api import Instance, Property, Int, Bool, on_trait_change, Any
 
 #============= standard library imports ========================
@@ -30,6 +31,7 @@ from src.system_monitor.tasks.connection_spec import ConnectionSpec
 from src.system_monitor.tasks.controls import SystemMonitorControls
 from src.ui.gui import invoke_in_main_thread
 from src.processing.utils.grouping import group_analyses_by_key
+from src.ui.preference_binding import color_bind_preference
 
 """
     subscribe to pyexperiment
@@ -70,6 +72,11 @@ class SystemMonitorEditor(SeriesEditor):
     _background_editor = None
 
     task = Any
+
+    def __init__(self, *args, **kw):
+        super(SystemMonitorEditor, self).__init__(*args, **kw)
+        color_bind_preference(self.console_display.model, 'bgcolor', 'pychron.sys_mon.bgcolor')
+        color_bind_preference(self.console_display, 'default_color', 'pychron.sys_mon.textcolor')
 
     def prepare_destroy(self):
         self.stop()
@@ -332,7 +339,7 @@ class SystemMonitorEditor(SeriesEditor):
 
     def _console_display_default(self):
         return DisplayController(
-            bg_color='black',
+            bgcolor='black',
             default_color='limegreen',
             max_blocks=100)
 

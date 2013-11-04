@@ -32,6 +32,9 @@ class ColorPreferenceBinding(PreferenceBinding):
         return value
 
 
+def color_bind_preference(*args, **kw):
+    return bind_preference(factory=ColorPreferenceBinding, *args, **kw)
+
 # Factory function for creating bindings.
 def bind_preference(obj, trait_name, preference_path,
                     factory=None,
@@ -54,9 +57,9 @@ def bind_preference(obj, trait_name, preference_path,
     # constructor (we could of course split that out, which may be the 'right'
     # way to do it ;^).
     traits = {
-        'obj'             : obj,
-        'trait_name'      : trait_name,
-        'preference_path' : preference_path
+        'obj': obj,
+        'trait_name': trait_name,
+        'preference_path': preference_path
     }
 
     if preferences is not None:
@@ -66,4 +69,5 @@ def bind_preference(obj, trait_name, preference_path,
         return factory(**traits)
     else:
         return PreferenceBinding(**traits)
+
 #============= EOF =============================================

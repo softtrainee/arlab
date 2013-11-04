@@ -20,7 +20,7 @@ from traits.api import Str, Int, \
 from traitsui.api import View, Item, Group, VGroup
 from envisage.ui.tasks.preferences_pane import PreferencesPane
 
-from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper
+from src.envisage.tasks.base_preferences_helper import BasePreferencesHelper, BaseConsolePreferences, BaseConsolePreferencesPane
 
 
 #============= standard library imports ========================
@@ -80,5 +80,14 @@ class ExperimentPreferencesPane(PreferencesPane):
             editor_grp,
             irradiation_grp,
         )
+
+
+class ConsolePreferences(BaseConsolePreferences):
+    preferences_path = 'pychron.experiment'
+
+
+class ConsolePreferencesPane(BaseConsolePreferencesPane):
+    model_factory = ConsolePreferences
+    label = 'Experiment'
 
 #============= EOF =============================================

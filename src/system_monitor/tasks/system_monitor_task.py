@@ -52,21 +52,11 @@ class SystemMonitorTask(FigureTask):
     connections = List
     connection = Instance(ConnectionSpec)
 
+
     def prepare_destroy(self):
         for e in self.editor_area.editors:
             if isinstance(e, SystemMonitorEditor):
                 e.stop()
-
-    #def add_ideogram(self):
-    #    editor=IdeogramEditor()
-    #    self._open_editor(editor)
-    #    return editor
-    #
-    #def add_spectrum(self):
-    #    editor=SpectrumEditor()
-    #    self._open_editor(editor)
-    #    return editor
-
 
     def add_system_monitor(self):
         return self._editor_factory()
@@ -159,12 +149,12 @@ class SystemMonitorTask(FigureTask):
 
     def activated(self):
         self._make_connections()
-        editor=self.add_system_monitor()
+        editor = self.add_system_monitor()
         if editor:
-            ideo=self.new_ideogram(add_table=False, add_iso=False)
-            editor._ideogram_editor=ideo
+            ideo = self.new_ideogram(add_table=False, add_iso=False)
+            editor._ideogram_editor = ideo
             #self.active_editor.unknowns=[]
-    
+
             self.activate_editor(self.editor_area.editors[0])
 
     def _default_layout_default(self):

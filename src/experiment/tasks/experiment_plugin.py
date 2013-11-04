@@ -26,7 +26,7 @@ from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from src.experiment.signal_calculator import SignalCalculator
 from src.experiment.image_browser import ImageBrowser
 from src.experiment.tasks.experiment_task import ExperimentEditorTask
-from src.experiment.tasks.experiment_preferences import ExperimentPreferencesPane
+from src.experiment.tasks.experiment_preferences import ExperimentPreferencesPane, ConsolePreferencesPane
 from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
     OpenExperimentQueueAction, SignalCalculatorAction, \
     DeselectAction, SendTestNotificationAction, \
@@ -100,6 +100,6 @@ class ExperimentPlugin(BaseTaskPlugin):
         return ExperimentEditorTask()
 
     def _preferences_panes_default(self):
-        return [ExperimentPreferencesPane]
+        return [ExperimentPreferencesPane, ConsolePreferencesPane]
 
         #============= EOF =============================================

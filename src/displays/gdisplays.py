@@ -33,7 +33,7 @@ gWarningDisplay = DisplayController(
     title='Warnings',
     width=450,
     default_color='red',
-    bg_color='light grey',
+    bgcolor='light grey',
     max_blocks=300
 )
 
@@ -44,10 +44,9 @@ gLoggerDisplay = DisplayController(
     y=20,
     font_size=10,
     default_color='black',
-    bg_color='light grey',
+    bgcolor='light grey',
     max_blocks=300
 )
-
 gMessageDisplay = DisplayController(
 
     title='Messages',
@@ -57,7 +56,7 @@ gMessageDisplay = DisplayController(
 
     #                                 default_size=14,
     default_color='darkgreen',
-    bg_color='light grey',
+    bgcolor='light grey',
     max_blocks=300
 )
 

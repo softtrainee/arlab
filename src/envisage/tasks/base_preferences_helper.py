@@ -15,7 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Button, Any, Int, Str
+from envisage.ui.tasks.preferences_pane import PreferencesPane
+from traits.api import List, Button, Any, Int, Str, Enum, Color
+from traitsui.api import View, VGroup, UItem, HGroup
 from apptools.preferences.api import PreferencesHelper
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -32,6 +34,7 @@ from traitsui.list_str_adapter import ListStrAdapter
 #                 style='custom',
 #                 editor=ButtonEditor(image=image, **editor_kw),
 #                 **kw)
+from src.ui.custom_label_editor import CustomLabel
 
 
 class FavoritesAdapter(ListStrAdapter):
@@ -44,7 +47,15 @@ class FavoritesAdapter(ListStrAdapter):
 
 
 class BasePreferencesHelper(PreferencesHelper):
-    pass
+    def _get_value(self, name, value):
+        if 'color' in name:
+            value = value.split('(')[1]
+            value = value[:-1]
+            value = map(float, value.split(','))
+            value = ','.join(map(lambda x: str(int(x * 255)), value))
+        else:
+            value = super(BasePreferencesHelper, self)._get_value(name, value)
+        return value
 
 
 class FavoritesPreferencesHelper(BasePreferencesHelper):
@@ -97,4 +108,31 @@ class FavoritesPreferencesHelper(BasePreferencesHelper):
 
             self.selected = fv
 
-#============= EOF =============================================
+
+class BaseConsolePreferences(BasePreferencesHelper):
+    fontsize = Enum(6, 8, 10, 11, 12, 14, 16, 18, 22, 24, 36)
+
+    textcolor = Color('green')
+    bgcolor = Color('black')
+
+    preview = Str('Pychron is python + geochronology')
+
+
+class BaseConsolePreferencesPane(PreferencesPane):
+    category = 'Console'
+    label = ''
+
+    def traits_view(self):
+        preview = CustomLabel('preview',
+                              size_name='fontsize',
+                              color_name='textcolor',
+                              bgcolor_name='bgcolor')
+
+        v = View(VGroup(HGroup(UItem('fontsize'),
+                               UItem('textcolor'),
+                               UItem('bgcolor')),
+                        preview,
+                        label=self.label))
+        return v
+
+    #============= EOF =============================================
