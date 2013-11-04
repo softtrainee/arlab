@@ -143,6 +143,19 @@ class ExperimentExecutor(IsotopeDatabaseManager):
     def get_prev_blanks(self):
         return self._prev_blanks
 
+    def warning(self, msg, log=True, color=None, *args, **kw):
+
+        super(ExperimentExecutor, self).warning(msg, *args, **kw)
+
+        if color is None:
+            color = 'red'
+
+        msg = msg.upper()
+        if self.console_display:
+            self.console_display.add_text(msg, color=color)
+
+        self.console_updated = '{}|{}'.format(color, msg)
+
     def info(self, msg, log=True, color=None, *args, **kw):
         if color is None:
             color = 'green'
@@ -157,8 +170,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
 
     def bind_preferences(self):
         super(ExperimentExecutor, self).bind_preferences()
-        
-       
+
         prefid = 'pychron.database'
 
         bind_preference(self.massspec_importer.db, 'name', '{}.massspec_dbname'.format(prefid))
@@ -178,12 +190,22 @@ class ExperimentExecutor(IsotopeDatabaseManager):
     def set_extract_state(self, state, flash=0.75, color='green'):
         self._set_extract_state(state, flash, color)
 
+    def info_heading(self, msg):
+        self.info('')
+        self.info('=' * 80)
+        self.info(msg)
+        self.info('=' * 80)
+        self.info('')
+
     def execute(self):
         self._alive = True
 
         if self._pre_execute_check():
             name = self.experiment_queue.name
-            self.info('Starting Execution "{}"'.format(name))
+
+            msg = 'Starting Execution "{}"'.format(name)
+            self.info_heading(msg)
+
             if self.stats:
                 self.stats.reset()
                 self.stats.start_timer()
@@ -222,6 +244,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
             self.cancel()
 
     def _set_message(self, msg, color='black'):
+
+        self.info_heading(msg)
         invoke_in_main_thread(self.trait_set, extraction_state_label=msg,
                               extraction_state_color=color)
 
@@ -368,7 +392,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         if last_runid:
             self.info('Automated runs ended at {}, runs executed={}'.format(last_runid, total_cnt))
 
-        self.info('experiment queue {} finished'.format(exp.name))
+        self.info_heading('experiment queue {} finished'.format(exp.name))
 
     #    def _execute_run(self, spec):
     #
@@ -492,7 +516,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
                 ret = self.confirmation_dialog(m,
                                                title='Confirm Cancel',
                                                return_retval=True,
-                                               timeout=None)
+                                               timeout=30)
 
             if ret == YES:
                 # stop queue
@@ -1079,7 +1103,7 @@ If "No" select from database
     def _console_display_default(self):
 
         return DisplayController(
-            bg_color='black',
+            bgcolor='black',
             default_color='limegreen',
             max_blocks=100
         )

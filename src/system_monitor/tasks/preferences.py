@@ -21,7 +21,7 @@ from traitsui.api import View, Item, VGroup, ListStrEditor, HGroup
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.envisage.tasks.base_preferences_helper import FavoritesPreferencesHelper, FavoritesAdapter
+from src.envisage.tasks.base_preferences_helper import FavoritesPreferencesHelper, FavoritesAdapter, BaseConsolePreferences, BaseConsolePreferencesPane
 from src.envisage.tasks.pane_helpers import icon_button_editor
 
 
@@ -88,5 +88,14 @@ class SystemMonitorPreferencesPane(PreferencesPane):
                         label='Connections',
                         show_border=True))
         return v
+
+
+class ConsolePreferences(BaseConsolePreferences):
+    preferences_path = 'pychron.sys_mon'
+
+
+class ConsolePreferencesPane(BaseConsolePreferencesPane):
+    model_factory = ConsolePreferences
+    label = 'System Monitor'
 
 #============= EOF =============================================

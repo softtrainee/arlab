@@ -15,11 +15,13 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from Queue import Empty
+
 from traits.api import Color, Str, Event, Int
 from traitsui.qt4.editor import Editor
 from traitsui.basic_editor_factory import BasicEditorFactory
-from PySide.QtGui import QTextEdit, QPlainTextEdit, QTextCursor, QPalette, QColor, QFont
-from Queue import Empty
+from PySide.QtGui import QPlainTextEdit, QTextCursor, QPalette, QColor, QFont
+
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -30,16 +32,16 @@ class _DisplayEditor(Editor):
     clear = Event
     refresh = Event
     control_klass = QPlainTextEdit
-    def init(self, parent):
-        '''
+    font_size = Int
+    bgcolor = Color
 
-        '''
+    def init(self, parent):
         if self.control is None:
             self.control = self.control_klass()
-            if self.factory.bg_color:
-                p = QPalette()
-                p.setColor(QPalette.Base, self.factory.bg_color)
-                self.control.setPalette(p)
+            #if self.factory.bg_color:
+            #    p = QPalette()
+            #    p.setColor(QPalette.Base, self.factory.bg_color)
+            #    self.control.setPalette(p)
             self.control.setReadOnly(True)
 
         if self.factory.max_blocks:
@@ -47,12 +49,25 @@ class _DisplayEditor(Editor):
 
         self.sync_value(self.factory.clear, 'clear', mode='from')
         self.sync_value(self.factory.refresh, 'refresh', mode='from')
+        self.sync_value(self.factory.font_size, 'font_size', mode='from')
+        self.sync_value(self.factory.bgcolor, 'bgcolor', mode='from')
 
         fmt = self.control.currentCharFormat()
         if self.factory.font_name:
             fmt.setFont(QFont(self.factory.font_name))
-        if self.factory.font_size:
-            fmt.setFontPointSize(self.factory.font_size)
+
+        #if self.factory.font_size:
+        #    fmt.setFontPointSize(self.factory.font_size)
+        self.control.setCurrentCharFormat(fmt)
+
+    def _bgcolor_changed(self):
+        p = QPalette()
+        p.setColor(QPalette.Base, self.bgcolor)
+        self.control.setPalette(p)
+
+    def _font_size_changed(self):
+        fmt = self.control.currentCharFormat()
+        fmt.setFontPointSize(self.font_size)
         self.control.setCurrentCharFormat(fmt)
 
     def _refresh_fired(self):
@@ -63,8 +78,6 @@ class _DisplayEditor(Editor):
             self.control.clear()
 
     def update_editor(self, *args, **kw):
-        '''
-        '''
         ctrl = self.control
 
         if self.value:
@@ -74,16 +87,16 @@ class _DisplayEditor(Editor):
                 except Empty:
                     return
 
-    #            if force or v != self._pv or c != self._pc:
-    #            ctrl.setTextColor(c)
-    #            if c != self._pc:
+                    #            if force or v != self._pv or c != self._pc:
+                    #            ctrl.setTextColor(c)
+                    #            if c != self._pc:
                 fmt = ctrl.currentCharFormat()
                 fmt.setForeground(QColor(c))
                 ctrl.setCurrentCharFormat(fmt)
                 ctrl.appendPlainText(v)
 
-    #            self._pc = c
-    #            self._pv = v
+                #            self._pc = c
+                #            self._pv = v
 
                 ctrl.moveCursor(QTextCursor.End)
                 ctrl.ensureCursorVisible()
@@ -91,13 +104,17 @@ class _DisplayEditor(Editor):
 
 class DisplayEditor(BasicEditorFactory):
     klass = _DisplayEditor
-    bg_color = Color
     font_name = Str
-    font_size = Int
+    max_blocks = Int(0)
+
+    #extended trait names
+    bgcolor = Str
+    font_size = Str
     clear = Str
     refresh = Str
-    max_blocks = Int(0)
+
 
 class LoggerEditor(DisplayEditor):
     pass
+
 #============= EOF =============================================

@@ -11,7 +11,6 @@ from traits.etsconfig.etsconfig import ETSConfig
 ETSConfig.toolkit = 'qt4'
 
 d = os.path.dirname(os.getcwd())
-print os.path.join(d)
 sys.path.append(d)
 #print sys.path
 from src.messaging.notify.notifier import Notifier

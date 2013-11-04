@@ -15,11 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from PySide.QtGui import QColor
 from traits.api import HasTraits, Int, Color, Str, Event, Bool
 from traitsui.api import View, UItem
-from src.lasers.scanner import ApplicationController
+#from src.lasers.scanner import ApplicationController
+from src.application_controller import ApplicationController
 from src.ui.display_editor import DisplayEditor
-from src.deprecate import deprecated
 from src.ui.gui import invoke_in_main_thread
 #============= standard library imports ========================
 from threading import Lock
@@ -34,6 +35,8 @@ class DisplayModel(HasTraits):
     clear_event = Event
     refresh = Event
 
+    font_size = Int(12)
+    bgcolor = Color('white')
 
     #    message = Queue
     def __init__(self, *args, **kw):
@@ -63,9 +66,9 @@ class DisplayController(ApplicationController):
 
     default_color = Color('black')
     #    default_size = Int
-    bg_color = Color
+    #bg_color = Color
     font_name = Str
-    font_size = Int(12)
+    #font_size = Int(12)
     max_blocks = Int(0)
 
     editor_klass = DisplayEditor
@@ -76,8 +79,9 @@ class DisplayController(ApplicationController):
     was_closed = Bool(False)
     text_added = Event
 
-    def __init__(self, *args, **kw):
-        super(DisplayController, self).__init__(model=DisplayModel(),
+    def __init__(self, font_size=12, bgcolor='white', *args, **kw):
+        super(DisplayController, self).__init__(model=DisplayModel(font_size=font_size,
+                                                                   bgcolor=bgcolor),
                                                 *args, **kw)
         self._lock = Lock()
 
@@ -108,21 +112,37 @@ class DisplayController(ApplicationController):
         if 'color' not in kw or kw['color'] is None:
             kw['color'] = self.default_color
 
+        tol = 5
+        if isinstance(kw['color'], str):
+            q = QColor(kw['color'])
+            kw['color'] = q
+
+        rgba = kw['color'].toTuple()
+        b_rgba = self.model.bgcolor.toTuple()
+        for a, b in zip(rgba, b_rgba):
+            if abs(a - b) > tol:
+                break
+        else:
+            r, b, g, a = b_rgba
+            kw['color'].setRgb(255 - r, 255 - b, 255 - g, a)
+
         with self._lock:
             self.model.add_text(txt, **kw)
 
         self.text_added = True
 
-
     def traits_view(self):
         self.visible = True
-        v = View(UItem('qmessage', editor=self.editor_klass(bg_color=self.bg_color,
-                                                            clear='clear_event',
-                                                            refresh='refresh',
-                                                            font_name=self.font_name,
-                                                            font_size=self.font_size,
-                                                            max_blocks=self.max_blocks
-        )),
+        editor = self.editor_klass(
+            clear='clear_event',
+            refresh='refresh',
+            font_size='font_size',
+            bgcolor='bgcolor',
+            font_name=self.font_name,
+            #font_size=self.font_size,
+            max_blocks=self.max_blocks)
+
+        v = View(UItem('qmessage', editor=editor),
                  x=self.x, y=self.y, width=self.width,
                  height=self.height,
                  title=self.title)
