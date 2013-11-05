@@ -70,7 +70,7 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
     end_time = Time
     days_pad = Int(0)
     hours_pad = Int(18)
-
+    
     #clear_selection_button = Button
 
     browser_pane = Any
@@ -95,7 +95,8 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
             self._load_extraction_devices()
         self._set_db()
 
-        bind_preference(self, 'recent_hours', 'pychron.processing')
+        self.debug('BROWSER TASK BIND PREFERENCES')
+        bind_preference(self.search_criteria, 'recent_hours', 'pychron.processing.recent_hours')
 
     def _set_db(self):
         #self.analysis_table.db = self.manager.db

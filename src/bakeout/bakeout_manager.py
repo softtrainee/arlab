@@ -142,7 +142,7 @@ class BakeoutManager(Manager):
                                                            style='h5')
 
         self._current_data_path = cp = self.data_manager.get_current_path()
-        self._add_bakeout_to_db(controllers, cp)
+#        self._add_bakeout_to_db(controllers, cp)
 
     def activate(self):
         self.data_queue = Queue()
@@ -440,34 +440,44 @@ class BakeoutManager(Manager):
 # database
 #===============================================================================
     def _db_save(self):
-        if not self.db_save_dialog():
-            self._db_rollback()
-        else:
-            self.database.commit()
+#        if not self.db_save_dialog():
+##            self._db_rollback()
+#        else:
+#            self.database.commit()
 
+        if self.db_save_dialog():
+#            controllers=self._get_controllers()
+#            path=self._current_data_path
+            self._add_bakeout_to_db()
+        else:
+            if self.data_manager:
+                self.data_manager.delete_frame()
+                
         if self.data_manager is not None:
             self.data_manager.close_file()
+    
+#    def _db_rollback(self):
+#        self.info('rolling back')
+##        self.database.rollback()
+#        self.database.close()
+#        if self.data_manager:
+#            self.data_manager.delete_frame()
 
-    def _db_rollback(self):
-        self.info('rolling back')
-        self.database.rollback()
-        self.database.close()
-        if self.data_manager:
-            self.data_manager.delete_frame()
-
-    def _add_bakeout_to_db(self, controllers, path):
-
+    def _add_bakeout_to_db(self):
+        controllers=self._get_controllers()
+        path=self._current_data_path
         db = self.database
-        # add to BakeoutTable
-        b = db.add_bakeout()
-        b.timestamp = datetime.datetime.now()
-        # add to PathTable
-        db.add_path(b, path)
-
-        # add to ControllerTable
-        for c in controllers:
-            db.add_controller(b, name=c.name, script=c.script,
-                              setpoint=c.setpoint, duration=c.duration)
+        with db.session_ctx():
+            # add to BakeoutTable
+            b = db.add_bakeout()
+            b.timestamp = datetime.datetime.now()
+            # add to PathTable
+            db.add_path(b, path)
+    
+            # add to ControllerTable
+            for c in controllers:
+                db.add_controller(b, name=c.name, script=c.script,
+                                  setpoint=c.setpoint, duration=c.duration)
 #===============================================================================
 # handlers
 #===============================================================================
@@ -529,14 +539,16 @@ class BakeoutManager(Manager):
                     if self.training_run:
                         self._classifier_save()
 
-                    self.info('commit session to db')
-                    invoke_in_main_thread(self.database.commit)
+                    self._add_bakeout_to_db()
+#                    self._db_save()
+#                    self.info('commit session to db')
+#                    invoke_in_main_thread(self.database.commit)
 
                     time.sleep(0.5)
                     invoke_in_main_thread(self.open_latest_bake)
 
-                else:
-                    self._db.rollback()
+#                else:
+#                    self._db.rollback()
 
             if self.data_manager is not None:
                 self.data_manager.close_file()

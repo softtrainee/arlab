@@ -46,24 +46,25 @@ def make():
     apps = args.applications
     for name in apps:
         template = None
-        flavors = ('diode', 'co2', 'valve', 'uv', 'experiment', 'view')
+        flavors = ('diode', 'co2', 'valve', 'uv', 'experiment', 'view', 'bakedpy')
         if name in flavors:
             template = Template()
             template.root = args.root[0]
             template.version = args.version[0]
             template.name = name
-
-            template.icon_name = 'py{}_icon.icns'.format(name)
-            template.bundle_name = 'py{}'.format(name)
-        elif name in ('bakedpy'):
-            template = Template()
-            template.root = args.root[0]
-            template.version = args.version[0]
-            template.name = name
-            template.icon_name = '{}_icon.icns'.format(name)
-            template.bundle_name = name
-
-
+            if name in ('bakedpy',):
+                template.root = args.root[0]
+#                template.version = args.version[0]
+#                template.name = name
+                template.icon_name = '{}_icon.icns'.format(name)
+                template.bundle_name = name
+            else:
+#                template = Template()
+                
+    
+                template.icon_name = 'py{}_icon.icns'.format(name)
+                template.bundle_name = 'py{}'.format(name)
+            
         if template is not None:
             template.build()
         else:
