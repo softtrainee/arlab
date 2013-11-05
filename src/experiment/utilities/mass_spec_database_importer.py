@@ -22,6 +22,7 @@ from traitsui.api import View, Item
 import struct
 from numpy import array
 #============= local library imports  ==========================
+from src.helpers.isotope_utils import sort_isotopes
 from src.loggable import Loggable
 from src.database.adapters.massspec_database_adapter import MassSpecDatabaseAdapter
 from src.regression.ols_regressor import PolynomialRegressor
@@ -233,10 +234,17 @@ class MassSpecDatabaseImporter(Loggable):
 
     def _add_isotopes(self, sess, analysis, spec, refdet, runtype):
         with spec.open_file():
-            for iso, det in spec.iter_isotopes():
-                dbiso, dbdet = self._add_isotope(analysis, spec, iso, det, refdet)
 
-                self._add_baseline(analysis, spec, dbiso, dbdet)
+            isotopes = list(spec.iter_isotopes())
+            isotopes = sort_isotopes(isotopes, key=lambda x: x[0])
+
+            bs = []
+            for iso, det in isotopes:
+                dbiso, dbdet = self._add_isotope(analysis, spec, iso, det, refdet)
+                if not dbdet.Label in bs:
+                    self._add_baseline(analysis, spec, dbiso, dbdet)
+                    bs.append(dbdet.Label)
+
                 self._add_signal(analysis, spec, dbiso, dbdet, runtype)
 
     def _add_isotope(self, analysis, spec, iso, det, refdet):

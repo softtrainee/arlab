@@ -27,8 +27,13 @@ def rank_func(x):
     return re.sub('\D', '', x)
 
 
-def sort_isotopes(keys, reverse=True):
-    return sorted(list(keys), key=rank_func, reverse=reverse)
+def sort_isotopes(keys, reverse=True, key=None):
+    if key:
+        rf = lambda x: rank_func(key(x))
+    else:
+        rf = rank_func
+    return sorted(list(keys), key=rf,
+                  reverse=reverse)
 
 
 def sort_detectors(idets):

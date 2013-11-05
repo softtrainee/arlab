@@ -333,8 +333,9 @@ class AutomatedRun(Loggable):
 
         gn = 'signal'
         fits = self.fits
-        if fits is None:
+        if not fits:
             fits = [(None, ['linear', ] * len(self._active_detectors))]
+
         self.fits = fits
         self._build_tables(gn, fits)
         check_conditions = True
@@ -1471,7 +1472,7 @@ anaylsis_type={}
 
         name = self.uuid
         path = os.path.join(paths.isotope_dir, '{}.h5'.format(name))
-        path = '/Users/ross/Sandbox/aaaa_isotope.h5'
+        path = '/Users/ross/Sandbox/aaaa_multicollect_isotope.h5'
 
         self._current_data_frame = path
         frame = dm.new_frame(path)

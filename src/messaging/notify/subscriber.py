@@ -16,8 +16,9 @@
 
 #============= enthought library imports =======================
 from threading import Thread, Event
+import time
 
-from traits.api import Str, Int, Callable, List
+from traits.api import Str, Int, Callable, List, Float
 import zmq
 
 from src.loggable import Loggable
@@ -35,6 +36,8 @@ class Subscriber(Loggable):
     _subscriptions = List
     was_listening = False
     verbose = True
+
+    last_message_time = Float
 
     def connect(self, timeout=None):
         context = zmq.Context()
@@ -117,6 +120,7 @@ class Subscriber(Loggable):
                     if verbose:
                         self.info('received notification {}'.format(resp))
                     cb(resp)
+                    self.last_message_time = time.time()
                     break
 
         self.debug('no longer listening {}'.format(self._stop_signal.is_set()))
