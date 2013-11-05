@@ -15,24 +15,20 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import Instance
+from traits.api import Bool
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.processing.tasks.batch_edit.batch_edit_task import BatchEditTask
-from src.processing.tasks.batch_edit.smart_batch_editor import SmartBatchEditor
-from src.processing.tasks.batch_edit.smart_panes import SmartBatchEditPane
-from src.processing.tasks.browser.browser_task import BaseBrowserTask
+from src.loggable import Loggable
 
 
-class SmartBatchEditTask(BatchEditTask):
-    central_pane_klass = SmartBatchEditPane
-    name = 'Smart Batch Edit'
-    batch_editor = Instance(SmartBatchEditor, ())
+class SmartBatchEditor(Loggable):
+    find_blanks = Bool
+    find_airs = Bool
+    find_cocktails = Bool
 
-    def prepare_destroy(self):
+
+    def populate(self, unks):
         pass
 
-    def activated(self):
-        BaseBrowserTask.activated(self)
-
-        #============= EOF =============================================
+#============= EOF =============================================

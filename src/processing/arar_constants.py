@@ -15,11 +15,35 @@
 #===============================================================================
 
 #=============enthought library imports=======================
+from apptools.preferences.preference_binding import PreferenceBinding
 from traits.api import HasTraits, Property, Float, Enum, Str, List, Either
-
 from uncertainties import ufloat
+
+from src.ui.preference_binding import bind_preference
 from src.pychron_constants import AGE_SCALARS
+
 #=============local library imports  ==========================
+
+class ICFactor(HasTraits):
+    detector = Str
+    value = Float
+
+
+class ICFactorPreferenceBinding(PreferenceBinding):
+    def _get_value(self, name, value):
+        path = self.preference_path.split('.')[:-1]
+        path.append('stored_ic_factors')
+        path = '.'.join(path)
+        ics = self.preferences.get(path)
+        ics = eval(ics)
+        ss = []
+        for ic in ics:
+            detector, v, e = ic.split(',')
+            ss.append(ICFactor(detector=detector,
+                               value=float(v),
+                               error=float(e)
+            ))
+        return ss
 
 
 class ArArConstants(HasTraits):
@@ -65,6 +89,39 @@ class ArArConstants(HasTraits):
     abundance_sensitivity = Float
 
     ic_factors = Either(List, Str)
+
+    def __init__(self, *args, **kw):
+        #print 'init arar constants'
+        try:
+            bind_preference(self, 'lambda_b_v', 'pychron.arar.constants.lambda_b')
+            bind_preference(self, 'lambda_b_e', 'pychron.arar.constants.lambda_b_error')
+            bind_preference(self, 'lambda_e_v', 'pychron.arar.constants.lambda_e')
+            bind_preference(self, 'lambda_e_e', 'pychron.arar.constants.lambda_e_error')
+            bind_preference(self, 'lambda_Cl36_v', 'pychron.arar.constants.lambda_Cl36')
+            bind_preference(self, 'lambda_Cl36_e', 'pychron.arar.constants.lambda_Cl36_error')
+            bind_preference(self, 'lambda_Ar37_v', 'pychron.arar.constants.lambda_Ar37')
+            bind_preference(self, 'lambda_Ar37_e', 'pychron.arar.constants.lambda_Ar37_error')
+            bind_preference(self, 'lambda_Ar39_v', 'pychron.arar.constants.lambda_Ar39')
+            bind_preference(self, 'lambda_Ar39_e', 'pychron.arar.constants.lambda_Ar39_error')
+
+            bind_preference(self, 'atm4036_v', 'pychron.arar.constants.Ar40_Ar36_atm')
+            bind_preference(self, 'atm_4036_e', 'pychron.arar.constants.Ar40_Ar36_atm_error')
+            bind_preference(self, 'atm4038_v', 'pychron.arar.constants.Ar40_Ar38_atm')
+            bind_preference(self, 'atm_4038_e', 'pychron.arar.constants.Ar40_Ar38_atm_error')
+
+            bind_preference(self, 'k3739_mode', 'pychron.arar.constants.Ar37_Ar39_mode')
+            bind_preference(self, 'k3739_v', 'pychron.arar.constants.Ar37_Ar39')
+            bind_preference(self, 'k3739_e', 'pychron.arar.constants.Ar37_Ar39_error')
+
+            bind_preference(self, 'age_units', 'pychron.arar.constants.age_units')
+            bind_preference(self, 'abundance_sensitivity', 'pychron.arar.constants.abundance_sensitivity')
+
+            bind_preference(self, 'ic_factors', 'pychron.spectrometer.ic_factors',
+                            factory=ICFactorPreferenceBinding)
+        except Exception:
+            pass
+
+        super(ArArConstants, self).__init__(*args, **kw)
 
     def _get_fixed_k3739(self):
         return self._get_ufloat('k3739')

@@ -16,11 +16,9 @@
 
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Dict, Property, cached_property, \
+from traits.api import Dict, Property, cached_property, \
     Event, Bool, Instance, Float, Any, Str, Tuple, on_trait_change
-from apptools.preferences.preference_binding import bind_preference, PreferenceBinding
 from src.pychron_constants import ARGON_KEYS
-from src.ui.preference_binding import bind_preference as mybind_preference
 #============= standard library imports ========================
 from datetime import datetime
 from uncertainties import ufloat
@@ -39,26 +37,7 @@ def AgeProperty():
     return Property(depends_on='age_dirty')
 
 
-class ICFactor(HasTraits):
-    detector = Str
-    value = Float
-
-
-class ICFactorPreferenceBinding(PreferenceBinding):
-    def _get_value(self, name, value):
-        path = self.preference_path.split('.')[:-1]
-        path.append('stored_ic_factors')
-        path = '.'.join(path)
-        ics = self.preferences.get(path)
-        ics = eval(ics)
-        ss = []
-        for ic in ics:
-            detector, v, e = ic.split(',')
-            ss.append(ICFactor(detector=detector,
-                               value=float(v),
-                               error=float(e)
-            ))
-        return ss
+arar_constants = None
 
 
 class ArArAge(Loggable):
@@ -128,42 +107,10 @@ class ArArAge(Loggable):
     ar39decayfactor = AgeProperty()
     ar37decayfactor = AgeProperty()
 
-    arar_constants = Instance(ArArConstants, ())
+    arar_constants = Instance(ArArConstants)
 
     def __init__(self, *args, **kw):
         super(ArArAge, self).__init__(*args, **kw)
-        try:
-
-            arc = self.arar_constants
-            bind_preference(arc, 'lambda_b_v', 'pychron.arar.constants.lambda_b')
-            bind_preference(arc, 'lambda_b_e', 'pychron.arar.constants.lambda_b_error')
-            bind_preference(arc, 'lambda_e_v', 'pychron.arar.constants.lambda_e')
-            bind_preference(arc, 'lambda_e_e', 'pychron.arar.constants.lambda_e_error')
-            bind_preference(arc, 'lambda_Cl36_v', 'pychron.arar.constants.lambda_Cl36')
-            bind_preference(arc, 'lambda_Cl36_e', 'pychron.arar.constants.lambda_Cl36_error')
-            bind_preference(arc, 'lambda_Ar37_v', 'pychron.arar.constants.lambda_Ar37')
-            bind_preference(arc, 'lambda_Ar37_e', 'pychron.arar.constants.lambda_Ar37_error')
-            bind_preference(arc, 'lambda_Ar39_v', 'pychron.arar.constants.lambda_Ar39')
-            bind_preference(arc, 'lambda_Ar39_e', 'pychron.arar.constants.lambda_Ar39_error')
-
-            bind_preference(arc, 'atm4036_v', 'pychron.arar.constants.Ar40_Ar36_atm')
-            bind_preference(arc, 'atm_4036_e', 'pychron.arar.constants.Ar40_Ar36_atm_error')
-            bind_preference(arc, 'atm4038_v', 'pychron.arar.constants.Ar40_Ar38_atm')
-            bind_preference(arc, 'atm_4038_e', 'pychron.arar.constants.Ar40_Ar38_atm_error')
-
-            bind_preference(arc, 'k3739_mode', 'pychron.arar.constants.Ar37_Ar39_mode')
-            bind_preference(arc, 'k3739_v', 'pychron.arar.constants.Ar37_Ar39')
-            bind_preference(arc, 'k3739_e', 'pychron.arar.constants.Ar37_Ar39_error')
-
-            bind_preference(arc, 'age_units', 'pychron.arar.constants.age_units')
-            bind_preference(arc, 'abundance_sensitivity', 'pychron.arar.constants.abundance_sensitivity')
-
-            mybind_preference(arc, 'ic_factors', 'pychron.spectrometer.ic_factors',
-                              factory=ICFactorPreferenceBinding)
-
-        except AttributeError, e:
-            print 'arar init', e
-
         self.age = ufloat(0, 0)
 
     def get_ic_factor(self, det):
@@ -659,5 +606,18 @@ class ArArAge(Loggable):
                 return getattr(self, n) / getattr(self, d)
             except ZeroDivisionError:
                 return ufloat(0, 1e-20)
+
+    def _arar_constants_default(self):
+        """
+            use a global shared arar_constants
+        """
+
+        global arar_constants
+        #self.debug('$$$$$$$$$$$$$$$$ {}'.format(arar_constants))
+        #print 'asdf', arar_constants
+        if arar_constants is None:
+            arar_constants = ArArConstants()
+            #return ArArConstants()
+        return arar_constants
 
 #============= EOF =============================================

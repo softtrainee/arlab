@@ -1471,7 +1471,8 @@ anaylsis_type={}
 
         name = self.uuid
         path = os.path.join(paths.isotope_dir, '{}.h5'.format(name))
-#        path = '/Users/ross/Sandbox/aaaa_isotope.h5'
+        path = '/Users/ross/Sandbox/aaaa_isotope.h5'
+
         self._current_data_frame = path
         frame = dm.new_frame(path)
 
@@ -1958,93 +1959,109 @@ anaylsis_type={}
 
     def _save_to_massspec(self, p):
         dm = self.data_manager
-        dm.open_data(p)
+        #dm.open_data(p)
 
         h = self.massspec_importer.db.host
         dn = self.massspec_importer.db.name
         self.info('saving to massspec database {}/{}'.format(h, dn))
         #        #save to mass spec database
 
-        baselines = []
-        signals = []
-        detectors = []
+        #baselines = []
+        #signals = []
+        #detectors = []
+        #
+        ##        print self._save_isotopes
+        #for isotope, detname, kind in self._save_isotopes:
+        ##            print isotope, detname, kind
+        #
+        #    dd = (detname, isotope)
+        #    if not dd in detectors:
+        #        detectors.append(dd)
+        #
+        #    if kind == 'baseline':
+        #        #detectors.append((detname, isotope))
+        #        table = dm.get_table(detname, '/baseline/{}'.format(isotope))
+        #        if table:
+        #            bi = [(row['time'], row['value']) for row in table.iterrows()]
+        #            baselines.append(bi)
+        #    elif kind == 'signal':
+        #
+        #        table = dm.get_table(detname, '/signal/{}'.format(isotope))
+        #        if table:
+        #            si = [(row['time'], row['value']) for row in table.iterrows()]
+        #            signals.append(si)
+        #
+        #dm.close_file()
+        #
+        #blanks = []
+        #pb = self.get_previous_blanks()
+        ##pb = self.experiment_executor._prev_blanks
+        #for _di, iso in detectors:
+        #    if iso in pb:
+        #        blanks.append(pb[iso])
+        #    else:
+        #        blanks.append(ufloat(0, 0))
+        #
+        #sig_ints = []
+        #base_ints = []
+        #psignals = self._processed_signals_dict
+        #baseline_fits = []
+        #for iso, _, kind in self._save_isotopes:
+        #    if kind == 'signal':
+        #        si = psignals['{}signal'.format(iso)]
+        #        sig_ints.append(si.uvalue)
+        #        try:
+        #            bi = psignals['{}baseline'.format(iso)]
+        #            bv = bi.uvalue
+        #        except KeyError:
+        #            self.debug('No {} baseline available to save to mass spec database'.format(iso))
+        #            bv = ufloat(0, 0)
+        #
+        #        base_ints.append(bv)
+        #
+        #    elif kind == 'baseline':
+        #        baseline_fits.append('Average Y')
+        #
+        #        #        baseline_fits = ['Average Y', ] * len(self._active_detectors)
+        #
+        #rs_name, rs_text = self._assemble_script_blob()
+        #rid = self.runid
+        #
+        ##dc = self.multi_collector
+        dc = self.collector
+        fb = dc.get_fit_block(-1, self.fits)
+        #self.debug(fb)
+        #self.debug(self._active_detectors)
 
-        #        print self._save_isotopes
-        for isotope, detname, kind in self._save_isotopes:
-        #            print isotope, detname, kind
-
-            dd = (detname, isotope)
-            if not dd in detectors:
-                detectors.append(dd)
-
-            if kind == 'baseline':
-                #detectors.append((detname, isotope))
-                table = dm.get_table(detname, '/baseline/{}'.format(isotope))
-                if table:
-                    bi = [(row['time'], row['value']) for row in table.iterrows()]
-                    baselines.append(bi)
-            elif kind == 'signal':
-
-                table = dm.get_table(detname, '/signal/{}'.format(isotope))
-                if table:
-                    si = [(row['time'], row['value']) for row in table.iterrows()]
-                    signals.append(si)
-
-        dm.close_file()
-
-        blanks = []
-        pb = self.get_previous_blanks()
-        #pb = self.experiment_executor._prev_blanks
-        for _di, iso in detectors:
-            if iso in pb:
-                blanks.append(pb[iso])
-            else:
-                blanks.append(ufloat(0, 0))
-
-        sig_ints = []
-        base_ints = []
-        psignals = self._processed_signals_dict
-        baseline_fits = []
-        for iso, _, kind in self._save_isotopes:
-            if kind == 'signal':
-                si = psignals['{}signal'.format(iso)]
-                sig_ints.append(si.uvalue)
-                try:
-                    bi = psignals['{}baseline'.format(iso)]
-                    bv = bi.uvalue
-                except KeyError:
-                    self.debug('No {} baseline available to save to mass spec database'.format(iso))
-                    bv = ufloat(0, 0)
-
-                base_ints.append(bv)
-
-            elif kind == 'baseline':
-                baseline_fits.append('Average Y')
-
-                #        baseline_fits = ['Average Y', ] * len(self._active_detectors)
-
+        #exp = ExportSpec(rid=rid,
+        #                 runscript_name=rs_name,
+        #                 runscript_text=rs_text,
+        #                 signal_fits=fb,
+        #                 baseline_fits=baseline_fits,
+        #                 signal_intercepts=sig_ints,
+        #                 baseline_intercepts=base_ints,
+        #                 spectrometer=self.spec.mass_spectrometer.capitalize(),
+        #                 #                             spectrometer='Pychron {}'.format(self.mass_spectrometer.capitalize()),
+        #                 baselines=baselines,
+        #                 signals=signals,
+        #                 blanks=blanks,
+        #                 detectors=detectors)
         rs_name, rs_text = self._assemble_script_blob()
         rid = self.runid
 
-        #dc = self.multi_collector
-        dc = self.collector
-
-        fb = dc.get_fit_block(-1, self.fits)
+        blanks = self.get_previous_blanks()
+        dkeys = [d.name for d in self._active_detectors]
+        sf = dict(zip(dkeys, fb))
 
         exp = ExportSpec(rid=rid,
                          runscript_name=rs_name,
                          runscript_text=rs_text,
-                         signal_fits=fb,
-                         baseline_fits=baseline_fits,
-                         signal_intercepts=sig_ints,
-                         baseline_intercepts=base_ints,
+                         signal_fits=sf,
                          spectrometer=self.spec.mass_spectrometer.capitalize(),
-                         #                             spectrometer='Pychron {}'.format(self.mass_spectrometer.capitalize()),
-                         baselines=baselines,
-                         signals=signals,
                          blanks=blanks,
-                         detectors=detectors)
-
+                         data_path=p,
+                         signal_intercepts=self._processed_signals_dict
+        )
         exp.load_record(self)
 
         if self.massspec_importer.add_analysis(exp):

@@ -23,6 +23,7 @@ from traits.api import Instance, on_trait_change, List
 from pyface.tasks.task_layout import TaskLayout, Splitter, PaneItem, Tabbed
 
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
+from src.processing.tasks.batch_edit.batch_editor import BatchEditor
 from src.processing.tasks.batch_edit.panes import BatchEditPane
 from src.paths import paths
 
@@ -32,7 +33,7 @@ from src.processing.tasks.browser.browser_task import BaseBrowserTask
 #from src.processing.tasks.figures.panes import MultiSelectAnalysisBrowser
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.processing.tasks.smart_selection.panes import SmartSelectionConfigurePane, SmartSelection
+from src.processing.tasks.smart_selection.panes import SmartSelection
 
 
 class BatchEditTask(AnalysisEditTask):
@@ -40,17 +41,18 @@ class BatchEditTask(AnalysisEditTask):
     id = 'pychron.analysis_edit.batch'
     central_pane = Instance(TraitsDockPane)
     central_pane_klass = BatchEditPane
+    batch_editor = Instance(BatchEditor, ())
 
     unknowns = List
 
     smart_selection = Instance(SmartSelection, ())
 
-    def create_dock_panes(self):
-        panes = AnalysisEditTask.create_dock_panes(self)
-        slp = SmartSelectionConfigurePane(model=self.smart_selection)
-        panes.append(slp)
+    #def create_dock_panes(self):
+    #panes = AnalysisEditTask.create_dock_panes(self)
+    #slp = SmartSelectio nConfigurePane(model=self.smart_selection)
+    #panes.append(slp)
 
-        return panes
+    #return panes
 
     #@on_trait_change('smart_selection:[project_filter,]')
     #def _handle_smart_selection(self, new):
@@ -60,7 +62,7 @@ class BatchEditTask(AnalysisEditTask):
         pass
 
     def create_central_pane(self):
-        self.central_pane = self.central_pane_klass()
+        self.central_pane = self.central_pane_klass(model=self.batch_editor)
         return self.central_pane
 
     def prepare_destroy(self):
@@ -169,7 +171,7 @@ class BatchEditTask(AnalysisEditTask):
     @on_trait_change('unknowns_pane:[items, update_needed]')
     def _update_unknowns_runs(self, obj, name, old, new):
         AnalysisEditTask._update_unknowns_runs(self, obj, name, old, new)
-        self.central_pane.populate(self.unknowns)
+        self.batch_editor.populate(self.unknowns)
 
     @on_trait_change('unknowns_pane:[append_button, replace_button]')
     def _append_unknowns(self, obj, name, old, new):
@@ -189,8 +191,9 @@ class BatchEditTask(AnalysisEditTask):
 
             self.unknowns_pane.items = self.unknowns
 
-        #===============================================================================
-    # handlers
+            #===============================================================================
+
+        # handlers
     #===============================================================================
     #     @on_trait_change('unknowns_pane:items')
     #     def _update_unknowns_runs(self, obj, name, old, new):

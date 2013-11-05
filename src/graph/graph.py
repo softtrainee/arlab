@@ -16,7 +16,6 @@
 
 #=============enthought library imports=======================
 from chaco.scatterplot import ScatterPlot
-from enable.colors import color_table
 from traits.api import Instance, Any, Bool, \
     List, Str, Property, Dict, Callable
 from traitsui.api import View, Item
@@ -165,12 +164,12 @@ class Graph(Viewable, ContextMenuMixin):
 
         for ai in attrs:
             v = getattr(plot, ai)
-#            if ai == 'color':
-#                print ai, v, type(v)
-#                if isinstance(v, str):
-#                    v = color_table[v]
-#                else:
-#                    v=map(lambda x:x*255, v)
+            #            if ai == 'color':
+            #                print ai, v, type(v)
+            #                if isinstance(v, str):
+            #                    v = color_table[v]
+            #                else:
+            #                    v=map(lambda x:x*255, v)
 
             meta[ai] = v
 
@@ -221,8 +220,9 @@ class Graph(Viewable, ContextMenuMixin):
                     obj = plots[k][0]
 
                 if obj:
-                    for ki,di in d.iteritems():
-                        print k,ki, di
+                    for ki, di in d.iteritems():
+                        if 'color' in ki:
+                            d[ki] = map(lambda x: x * 255, d[ki])
                     obj.trait_set(**d)
 
             mi_, ma_ = meta['xlimits']

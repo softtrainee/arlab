@@ -187,7 +187,7 @@ class MassSpecDatabaseImporter(Loggable):
         self.create_import_session(spectrometer, tray,
                                    )
 
-        # added the reference detector
+        # add the reference detector
         refdbdet = db.add_detector('H1', Label='H1')
 
         # remember new rid in case duplicate entry error and need to augment rid
@@ -225,81 +225,98 @@ class MassSpecDatabaseImporter(Loggable):
         #sess.flush()
         analysis.ChangeableItemsID = item.ChangeableItemsID
 
-#        from src.codetools.simple_timeit import timethis
-        for ((det, isok), si, bi, ublank, signal, baseline, sfit, bfit) in spec.iter():
-            self.debug('msi {} {} {} {} {} {}'.format(det, isok, signal.nominal_value,
-                                                      baseline.nominal_value, sfit, bfit))
-            #===================================================================
-            # isotopes
-            #===================================================================
-
-#            db_iso = timethis(db.add_isotope, args=(analysis, det, isok),
-#                              msg='add_isotope', log=self.debug, decorate='^')
-
-            # add detector
-            if det == analysis.ReferenceDetectorLabel:
-                dbdet = refdbdet
-            else:
-                dbdet = db.add_detector(det, Label=det)
-                if det == 'CDD':
-                    dbdet.ICFactor = spec.ic_factor_v
-                    dbdet.ICFactorEr = spec.ic_factor_e
-                    sess.flush()
-
-            db_iso = db.add_isotope(analysis, dbdet, isok)
-            #===================================================================
-            # baselines
-            #===================================================================
-            self.debug(bi)
-            tb, vb = zip(*bi)
-            blob = self._build_timeblob(tb, vb)
-            label = '{} Baseline'.format(det.upper())
-            ncnts = len(tb)
-            db_baseline = db.add_baseline(blob, label, ncnts, db_iso)
-
-            sem = baseline.std_dev / (ncnts) ** 0.5
-            infoblob = self._make_infoblob(baseline.nominal_value, sem)
-            db_changeable = db.add_baseline_changeable_item(self.data_reduction_session_id,
-                                                            bfit,
-                                                            infoblob,
-                                                            )
-
-            # baseline and baseline changeable items need matching BslnID
-            db_changeable.BslnID = db_baseline.BslnID
-            #===================================================================
-            # peak time
-            #===================================================================
-            '''
-                build two blobs
-                blob 1 PeakTimeBlob
-                x, y - mean(baselines)
-                
-                blob 2
-                y list
-            '''
-            tb, vb = zip(*si)
-            vb = array(vb) - baseline.nominal_value
-            blob1 = self._build_timeblob(tb, vb)
-
-            blob2 = [struct.pack('>f', float(v)) for v in vb]
-            db.add_peaktimeblob(blob1, blob2, db_iso)
-
-            # in mass spec the intercept is alreay baseline corrected
-            # mass spec also doesnt propograte baseline errors
-
-            if runtype == 'Blank':
-                ublank = signal - baseline
-
-            db.add_isotope_result(db_iso, self.data_reduction_session_id,
-                                  signal,
-                                  baseline,
-                                  ublank,
-                                  sfit,
-                                  dbdet,)
+        self._add_isotopes(sess, analysis, spec, refdbdet, runtype)
 
         t = time.time() - gst
         self.debug('{} added analysis time {}s'.format(spec.record_id, t))
         return analysis
+
+    def _add_isotopes(self, sess, analysis, spec, refdet, runtype):
+        with spec.open_file():
+            for iso, det in spec.iter_isotopes():
+                dbiso, dbdet = self._add_isotope(analysis, spec, iso, det, refdet)
+
+                self._add_baseline(analysis, spec, dbiso, dbdet)
+                self._add_signal(analysis, spec, dbiso, dbdet, runtype)
+
+    def _add_isotope(self, analysis, spec, iso, det, refdet):
+        db = self.db
+        if det == analysis.ReferenceDetectorLabel:
+            dbdet = refdet
+        else:
+            dbdet = db.add_detector(det, Label=det)
+            if det == 'CDD':
+                dbdet.ICFactor = spec.ic_factor_v
+                dbdet.ICFactorEr = spec.ic_factor_e
+
+        return db.add_isotope(analysis, dbdet, iso), dbdet
+
+    def _add_signal(self, analysis, spec, dbiso, dbdet, runtype):
+        #===================================================================
+        # peak time
+        #===================================================================
+        """
+            build two blobs
+            blob 1 PeakTimeBlob
+            x, y - mean(baselines)
+
+            blob 2
+            y list
+        """
+        db = self.db
+
+        iso = dbiso.Label
+        tb, vb = spec.get_signal_data(iso, dbdet.Label)
+
+        baseline = spec.get_baseline_uvalue(dbdet.Label)
+        vb = array(vb) - baseline.nominal_value
+        blob1 = self._build_timeblob(tb, vb)
+
+        blob2 = [struct.pack('>f', float(v)) for v in vb]
+        db.add_peaktimeblob(blob1, blob2, dbiso)
+
+        # in mass spec the intercept is alreay baseline corrected
+        # mass spec also doesnt propograte baseline errors
+
+        signal = spec.get_signal_uvalue(iso, dbdet.Label)
+        sfit = spec.get_signal_fit(iso, dbdet.Label)
+
+        if runtype == 'Blank':
+            ublank = signal - baseline
+        else:
+            ublank = spec.get_blank_uvalue(iso)
+
+        db.add_isotope_result(dbiso, self.data_reduction_session_id,
+                              signal,
+                              baseline,
+                              ublank,
+                              sfit,
+                              dbdet)
+
+    def _add_baseline(self, analysis, spec, dbiso, dbdet):
+        self.debug('add baseline dbdet {}'.format(dbdet.Label))
+        det = dbdet.Label
+        tb, vb = spec.get_baseline_data(dbiso.Label, det)
+        blob = self._build_timeblob(tb, vb)
+
+        db = self.db
+        label = '{} Baseline'.format(det.upper())
+        ncnts = len(tb)
+        db_baseline = db.add_baseline(blob, label, ncnts, dbiso)
+
+        bs = spec.get_baseline_uvalue(det)
+
+        sem = bs.std_dev / (ncnts) ** 0.5
+
+        bfit = spec.get_baseline_fit(det)
+
+        infoblob = self._make_infoblob(bs.nominal_value, sem)
+        db_changeable = db.add_baseline_changeable_item(self.data_reduction_session_id,
+                                                        bfit,
+                                                        infoblob)
+
+        # baseline and baseline changeable items need matching BslnID
+        db_changeable.BslnID = db_baseline.BslnID
 
     def _make_pipetted_isotopes(self, runtype):
         blob = ''
@@ -311,8 +328,8 @@ class MassSpecDatabaseImporter(Loggable):
         return blob
 
     def _build_timeblob(self, t, v):
-        '''
-        '''
+        """
+        """
         blob = ''
         for ti, vi in zip(t, v):
             blob += struct.pack('>ff', float(vi), float(ti))
@@ -473,3 +490,74 @@ if __name__ == '__main__':
     d.configure_traits()
 
 #============= EOF ====================================
+    #        from src.codetools.simple_timeit import timethis
+    #        for ((det, isok), si, bi, ublank, signal, baseline, sfit, bfit) in spec.iter():
+    #            self.debug('msi {} {} {} {} {} {}'.format(det, isok, signal.nominal_value,
+    #                                                      baseline.nominal_value, sfit, bfit))
+    #            #===================================================================
+    #            # isotopes
+    #            #===================================================================
+    #
+    ##            db_iso = timethis(db.add_isotope, args=(analysis, det, isok),
+    ##                              msg='add_isotope', log=self.debug, decorate='^')
+    #
+    #            # add detector
+    #            if det == analysis.ReferenceDetectorLabel:
+    #                dbdet = refdbdet
+    #            else:
+    #                dbdet = db.add_detector(det, Label=det)
+    #                if det == 'CDD':
+    #                    dbdet.ICFactor = spec.ic_factor_v
+    #                    dbdet.ICFactorEr = spec.ic_factor_e
+    #                    sess.flush()
+    #
+    #            db_iso = db.add_isotope(analysis, dbdet, isok)
+    #            #===================================================================
+    #            # baselines
+    #            #===================================================================
+    #            self.debug(bi)
+    #            tb, vb = zip(*bi)
+    #            blob = self._build_timeblob(tb, vb)
+    #            label = '{} Baseline'.format(det.upper())
+    #            ncnts = len(tb)
+    #            db_baseline = db.add_baseline(blob, label, ncnts, db_iso)
+    #
+    #            sem = baseline.std_dev / (ncnts) ** 0.5
+    #            infoblob = self._make_infoblob(baseline.nominal_value, sem)
+    #            db_changeable = db.add_baseline_changeable_item(self.data_reduction_session_id,
+    #                                                            bfit,
+    #                                                            infoblob,
+    #                                                            )
+    #
+    #            # baseline and baseline changeable items need matching BslnID
+    #            db_changeable.BslnID = db_baseline.BslnID
+    #            #===================================================================
+    #            # peak time
+    #            #===================================================================
+    #            '''
+    #                build two blobs
+    #                blob 1 PeakTimeBlob
+    #                x, y - mean(baselines)
+    #
+    #                blob 2
+    #                y list
+    #            '''
+    #            tb, vb = zip(*si)
+    #            vb = array(vb) - baseline.nominal_value
+    #            blob1 = self._build_timeblob(tb, vb)
+    #
+    #            blob2 = [struct.pack('>f', float(v)) for v in vb]
+    #            db.add_peaktimeblob(blob1, blob2, db_iso)
+    #
+    #            # in mass spec the intercept is alreay baseline corrected
+    #            # mass spec also doesnt propograte baseline errors
+    #
+    #            if runtype == 'Blank':
+    #                ublank = signal - baseline
+    #
+    #            db.add_isotope_result(db_iso, self.data_reduction_session_id,
+    #                                  signal,
+    #                                  baseline,
+    #                                  ublank,
+    #                                  sfit,
+    #                                  dbdet,)
