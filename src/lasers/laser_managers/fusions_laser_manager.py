@@ -59,21 +59,21 @@ class FusionsLaserManager(LaserManager):
 
     laser_controller = Instance(FusionsLogicBoard)
     fiber_light = Instance(FiberLight)
-#    optics_view = Instance(OpticsView)
+    #    optics_view = Instance(OpticsView)
 
-#    beam = DelegatesTo('laser_controller')
-#    beammin = DelegatesTo('laser_controller')
-#    beammax = DelegatesTo('laser_controller')
-#    update_beam = DelegatesTo('laser_controller')
-#    beam_enabled = DelegatesTo('laser_controller')
-# #    beam_enabled = Bool(True)
-#
-#    zoom = DelegatesTo('laser_controller')
-#    zoommin = DelegatesTo('laser_controller')
-#    zoommax = DelegatesTo('laser_controller')
-#    update_zoom = DelegatesTo('laser_controller')
-#    execute_button = DelegatesTo('laser_script_executor')
-#    execute_label = DelegatesTo('laser_script_executor')
+    #    beam = DelegatesTo('laser_controller')
+    #    beammin = DelegatesTo('laser_controller')
+    #    beammax = DelegatesTo('laser_controller')
+    #    update_beam = DelegatesTo('laser_controller')
+    #    beam_enabled = DelegatesTo('laser_controller')
+    # #    beam_enabled = Bool(True)
+    #
+    #    zoom = DelegatesTo('laser_controller')
+    #    zoommin = DelegatesTo('laser_controller')
+    #    zoommax = DelegatesTo('laser_controller')
+    #    update_zoom = DelegatesTo('laser_controller')
+    #    execute_button = DelegatesTo('laser_script_executor')
+    #    execute_label = DelegatesTo('laser_script_executor')
 
     pointer = Event
     pointer_state = Bool(False)
@@ -91,11 +91,11 @@ class FusionsLaserManager(LaserManager):
     power_graph = None
     _prev_power = 0
     record_brightness = Bool
-#     recording_zoom = Float
+    #     recording_zoom = Float
 
-#     record = Event
-#     record_label = Property(depends_on='_recording_power_state')
-#     _recording_power_state = Bool(False)
+    #     record = Event
+    #     record_label = Property(depends_on='_recording_power_state')
+    _recording_power_state = Bool(False)
 
     simulation = DelegatesTo('laser_controller')
 
@@ -104,7 +104,7 @@ class FusionsLaserManager(LaserManager):
 
     _current_rid = None
 
-#    brightness_meter = Instance(BrightnessPIDManager)
+    #    brightness_meter = Instance(BrightnessPIDManager)
 
     chiller = Any
 
@@ -117,9 +117,10 @@ class FusionsLaserManager(LaserManager):
         if self.stage_manager:
             self.stage_manager.canvas.request_redraw()
 
-#===============================================================================
-#   IExtractionDevice interface
-#===============================================================================
+        #===============================================================================
+        #   IExtractionDevice interface
+        #===============================================================================
+
     def extract(self, power, **kw):
         self.enable_laser()
         self.set_laser_power(power, **kw)
@@ -130,26 +131,25 @@ class FusionsLaserManager(LaserManager):
     def open_motor_configure(self):
         self.laser_controller.open_motor_configure()
 
-#     def _record_fired(self):
-#         if self._recording_power_state:
-#             save = self.db_save_dialog()
-#             self.stop_power_recording(delay=0, save=save)
-#         else:
-#             t = Thread(name='fusions.power_record',
-#                        target=self.start_power_recording, args=('Manual',))
-#             t.start()
+    #     def _record_fired(self):
+    #         if self._recording_power_state:
+    #             save = self.db_save_dialog()
+    #             self.stop_power_recording(delay=0, save=save)
+    #         else:
+    #             t = Thread(name='fusions.power_record',
+    #                        target=self.start_power_recording, args=('Manual',))
+    #             t.start()
 
-#        self._recording_power_state = not self._recording_power_state
+    #        self._recording_power_state = not self._recording_power_state
 
     def bind_preferences(self, pref_id):
         super(FusionsLaserManager, self).bind_preferences(pref_id)
         bind_preference(self, 'recording_zoom',
                         '{}.recording_zoom'.format(pref_id)
-                        )
+        )
         bind_preference(self, 'record_brightness',
                         '{}.record_brightness'.format(pref_id)
-                        )
-
+        )
 
 
     def set_light(self, state):
@@ -161,11 +161,11 @@ class FusionsLaserManager(LaserManager):
     def set_light_intensity(self, v):
         self.fiber_light.intensity = v
 
-#    def kill(self, **kw):
-#        if self.step_heat_manager is not None:
-#            self.step_heat_manager.kill(**kw)
+    #    def kill(self, **kw):
+    #        if self.step_heat_manager is not None:
+    #            self.step_heat_manager.kill(**kw)
 
-#        super(FusionsLaserManager, self).kill(**kw)
+    #        super(FusionsLaserManager, self).kill(**kw)
 
     @on_trait_change('pointer')
     def pointer_ononff(self):
@@ -196,6 +196,7 @@ class FusionsLaserManager(LaserManager):
             if motor is not None:
                 n = 4
                 from src.ui.progress_dialog import myProgressDialog
+
                 pd = myProgressDialog(max=n, size=(550, 15))
                 pd.open()
                 motor.initialize(progress=pd)
@@ -240,8 +241,8 @@ class FusionsLaserManager(LaserManager):
     def take_snapshot(self, *args, **kw):
         if self.use_video:
             return self.stage_manager.snapshot(
-                                        auto=True,
-                                        *args, **kw)
+                auto=True,
+                *args, **kw)
 
     def start_video_recording(self, name='video', *args, **kw):
         if self.use_video:
@@ -253,15 +254,17 @@ class FusionsLaserManager(LaserManager):
 
     def degasser_factory(self):
         from src.mv.degas.degasser import Degasser
+
         dm = Degasser(
-                      laser_manager=self,
-                      video=self.stage_manager.video,
-                      )
+            laser_manager=self,
+            video=self.stage_manager.video,
+        )
         return dm
 
     def do_machine_vision_degas(self, lumens, duration, new_thread=False):
         if self.use_video:
             dm = self.degasser_factory()
+
             def func():
                 dm.degas(lumens, duration)
 
@@ -274,9 +277,9 @@ class FusionsLaserManager(LaserManager):
     def is_degassing(self):
         if self._degas_thread:
             return self._degas_thread.isRunning()
-#===============================================================================
-# pyscript interface
-#===============================================================================
+        #===============================================================================
+        # pyscript interface
+        #===============================================================================
 
     def _move_to_position(self, position, autocenter):
 
@@ -327,113 +330,113 @@ class FusionsLaserManager(LaserManager):
         m = factory(motion_controller=stage_controller)
         m.edit_traits()
 
-#========================= views =========================
+    #========================= views =========================
 
     def get_control_buttons(self):
         '''
         '''
         return [('enable', 'enable_label', None),
-#                ('record', 'record_label', None),
+                #                ('record', 'record_label', None),
                 # ('pointer', 'pointer_label', None),
                 # ('light', 'light_label', None)
-                ]
+        ]
 
-#    def get_control_items(self):
-#        '''
-#        '''
-# #        return Item('laser_controller', show_label=False,
-# #                    editor=InstanceEditor(view='control_view'),
-# #                    style='custom',
-# #                    springy=False, height= -100)
-#
-# #        return self.laser_controller.get_control_group()
-#        s = [('zoom', 'zoom', {}),
-#            ('beam', 'beam', {'enabled_when':'object.beam_enabled'})
-#            ]
-#        return self._update_slider_group_factory(s)
+    #    def get_control_items(self):
+    #        '''
+    #        '''
+    # #        return Item('laser_controller', show_label=False,
+    # #                    editor=InstanceEditor(view='control_view'),
+    # #                    style='custom',
+    # #                    springy=False, height= -100)
+    #
+    # #        return self.laser_controller.get_control_group()
+    #        s = [('zoom', 'zoom', {}),
+    #            ('beam', 'beam', {'enabled_when':'object.beam_enabled'})
+    #            ]
+    #        return self._update_slider_group_factory(s)
 
-#    def get_lens_configuration_group(self):
-#        return Item('lens_configuration',
-#                    editor=EnumEditor(values=self.lens_configuration_names)
-#                    )
+    #    def get_lens_configuration_group(self):
+    #        return Item('lens_configuration',
+    #                    editor=EnumEditor(values=self.lens_configuration_names)
+    #                    )
 
-#    def get_optics_group(self):
-#        csliders = self.get_control_items()
-#        vg = HGroup(csliders,
-#                      show_border=True,
-#                      label='Optics', springy=False
-#                      )
-#
-#        lens_config = self.get_lens_configuration_group()
-#        if lens_config:
-#            vg.content.insert(0, lens_config)
-#
-#        return vg
-#    def get_control_button_group(self):
-#        grp = HGroup(spring, Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
-#                        self._button_group_factory(self.get_control_buttons(), orientation='h'),
-# #                                  springy=True
-#                    )
-#        return grp
+    #    def get_optics_group(self):
+    #        csliders = self.get_control_items()
+    #        vg = HGroup(csliders,
+    #                      show_border=True,
+    #                      label='Optics', springy=False
+    #                      )
+    #
+    #        lens_config = self.get_lens_configuration_group()
+    #        if lens_config:
+    #            vg.content.insert(0, lens_config)
+    #
+    #        return vg
+    #    def get_control_button_group(self):
+    #        grp = HGroup(spring, Item('enabled_led', show_label=False, style='custom', editor=LEDEditor()),
+    #                        self._button_group_factory(self.get_control_buttons(), orientation='h'),
+    # #                                  springy=True
+    #                    )
+    #        return grp
     def get_power_group(self):
         power_grp = VGroup(
-                           self.get_control_button_group(),
-                           HGroup(
-                               Item('requested_power', style='readonly',
-                                    format_str='%0.2f',
-                                    width=100
-                                    ),
-                                spring,
-                               Item('units', show_label=False, style='readonly'),
-                               spring
-                               ),
-#                           Item('laser_script_executor', show_label=False, style='custom'),
-#                           self._button_factory('execute_button', 'execute_label'),
-                           show_border=True,
-#                           springy=True,
-                           label='Power'
-                           )
+            self.get_control_button_group(),
+            HGroup(
+                Item('requested_power', style='readonly',
+                     format_str='%0.2f',
+                     width=100
+                ),
+                spring,
+                Item('units', show_label=False, style='readonly'),
+                spring
+            ),
+            #                           Item('laser_script_executor', show_label=False, style='custom'),
+            #                           self._button_factory('execute_button', 'execute_label'),
+            show_border=True,
+            #                           springy=True,
+            label='Power'
+        )
 
         ps = self.get_power_slider()
         if ps:
-#            ps.springy = True
+        #            ps.springy = True
             power_grp.content.append(ps)
         return power_grp
 
-#     def get_additional_group(self):
-#         og = Group(Item('laser_controller', show_label=False,
-#                     editor=InstanceEditor(view='control_view'),
-#                     style='custom'),
-#                    label='Optics',
-#                    )
-#         ac = Group(
-#                    og,
-#                    show_border=True,
-#                    label='Additional Controls',
-#                    layout='tabbed')
-#
-#         aclist = self.get_additional_controls()
-#         if aclist is None:
-#             og.label = 'Optics'
-#             og.show_border = True
-#             ac = og
-#         else:
-#             for ai in aclist:
-#                 ac.content.append(ai)
-#         return ac
+    #     def get_additional_group(self):
+    #         og = Group(Item('laser_controller', show_label=False,
+    #                     editor=InstanceEditor(view='control_view'),
+    #                     style='custom'),
+    #                    label='Optics',
+    #                    )
+    #         ac = Group(
+    #                    og,
+    #                    show_border=True,
+    #                    label='Additional Controls',
+    #                    layout='tabbed')
+    #
+    #         aclist = self.get_additional_controls()
+    #         if aclist is None:
+    #             og.label = 'Optics'
+    #             og.show_border = True
+    #             ac = og
+    #         else:
+    #             for ai in aclist:
+    #                 ac.content.append(ai)
+    #         return ac
 
-#     def get_control_group(self):
-#         '''
-#         '''
-#         power_grp = self.get_power_group()
-#         pulse_grp = Group(Item('pulse', style='custom', show_label=False),
-#                         label='Pulse', show_border=True
-#                         )
-#         power_grp = HGroup(power_grp, pulse_grp)
-#         ac = self.get_additional_group()
-#         g = HGroup(power_grp, ac)
-#
-#         return g
+    #     def get_control_group(self):
+    #         '''
+    #         '''
+    #         power_grp = self.get_power_group()
+    #         pulse_grp = Group(Item('pulse', style='custom', show_label=False),
+    #                         label='Pulse', show_border=True
+    #                         )
+    #         power_grp = HGroup(power_grp, pulse_grp)
+    #         ac = self.get_additional_group()
+    #         g = HGroup(power_grp, ac)
+    #
+    #         return g
 
     def _get_pointer_label(self):
         '''
@@ -446,30 +449,33 @@ class FusionsLaserManager(LaserManager):
     def _get_record_brightness(self):
         return self.record_brightness and self._get_machine_vision() is not None
 
-#========================= defaults =======================
+    #========================= defaults =======================
     def get_power_database(self):
         from src.database.adapters.power_adapter import PowerAdapter
+
         db = PowerAdapter(name=self.dbname,
                           kind='sqlite')
         return db
 
     def get_power_calibration_database(self):
         from src.database.adapters.power_calibration_adapter import PowerCalibrationAdapter
+
         db = PowerCalibrationAdapter(name=self.dbname,
                                      kind='sqlite')
         return db
-#    def _subsystem_default(self):
-#        '''
-#        '''
-#        return ArduinoSubsystem(name='arduino_subsystem_2')
+
+    #    def _subsystem_default(self):
+    #        '''
+    #        '''
+    #        return ArduinoSubsystem(name='arduino_subsystem_2')
 
 
-#    def _brightness_meter_default(self):
-#        if self.use_video:
-#            b = BrightnessPIDManager(parent=self)
-# #            b.brightness_manager.video = self.stage_manager.video
-#
-#            return b
+    #    def _brightness_meter_default(self):
+    #        if self.use_video:
+    #            b = BrightnessPIDManager(parent=self)
+    # #            b.brightness_manager.video = self.stage_manager.video
+    #
+    #            return b
 
     def _fiber_light_default(self):
         '''
@@ -480,7 +486,6 @@ class FusionsLaserManager(LaserManager):
 #        return OpticsView(laser_controller=self.laser_controller)
 
 if __name__ == '__main__':
-
     d = FusionsLaserManager()
 #    d.open_power_graph('1')
 #    d.configure_traits()
@@ -706,8 +711,8 @@ if __name__ == '__main__':
 #        pp = os.path.join(paths.scripts_dir, 'laserscripts', 'power_scans')
 #        pscan = PowerScanScript(manager = self, source_dir = pp)
 
-        # pscan.start()
-        # pscan.open()
+# pscan.start()
+# pscan.open()
 #    def traits_view(self):
 #        '''
 #        '''

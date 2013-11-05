@@ -67,7 +67,7 @@ class PyrometerCalibrationScanner(Scanner):
         while self._scanning:
             sti = time.time()
             #py_t = py.get()
-            ref_t = tc.process_value
+            ref_t = py.temperature
             temps.append(ref_t)
             #            ttemps.append(tc_t)
             ns = array(temps[-n:])

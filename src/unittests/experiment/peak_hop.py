@@ -22,11 +22,16 @@ from src.experiment.automated_run.spec import AutomatedRunSpec
 
 import unittest
 
-HOPS = [('Ar40:H1:10,     Ar39:AX,     Ar36:CDD', 5, 1),
-        #('Ar40:L2,     Ar39:CDD',                   5, 1)
-        #('Ar38:CDD',                                5, 1)
-        ('Ar37:CDD', 5, 1)
-]
+#HOPS = [('Ar40:H1:10,     Ar39:AX,     Ar36:CDD', 5, 1),
+#        #('Ar40:L2,     Ar39:CDD',                   5, 1)
+#        #('Ar38:CDD',                                5, 1)
+#        ('Ar37:CDD', 5, 1)
+#]
+HOPS = [('Ar40:CDD', 5, 1),
+        ('Ar39:CDD', 5, 1),
+        ('Ar38:CDD', 5, 1),
+        ('Ar37:CDD', 5, 1),
+        ('Ar36:CDD', 5, 1)]
 
 #from traits.api import HasTraits, Str, Button
 #from traitsui.api import View
@@ -71,10 +76,11 @@ class PeakHopTestCase(unittest.TestCase):
 
         a._integration_seconds = 0.1
 
-        self.save_isotopes = [('Ar40', 'H1', 'signal'),
-                              ('Ar39', 'AX', 'signal'),
-                              ('Ar36', 'CDD', 'signal'),
-                              ('Ar37', 'CDD', 'signal')
+        self.save_isotopes = [('Ar40', 'CDD', 'signal'),
+                              ('Ar39', 'CDD', 'signal'),
+                              ('Ar38', 'CDD', 'signal'),
+                              ('Ar37', 'CDD', 'signal'),
+                              ('Ar36', 'CDD', 'signal')
         ]
 
     def measure(self):
@@ -84,16 +90,20 @@ class PeakHopTestCase(unittest.TestCase):
 
     def _measure(self):
         cycles = 1
-        counts = 10
+        counts = 100
         dets = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
         a = self.arun
         a.measurement_script.ncounts = 100
         a.py_position_magnet('Ar40', 'H1')
         a.py_activate_detectors(dets)
+        st = time.time()
         a.py_peak_hop(cycles, counts, HOPS,
-                      time.time(),
+                      st,
+                      #time.time(),
                       0,
                       series=0, group='signal')
+
+        a.py_baselines(10, st, 0, 39.5, 'H1', series=1)
 
     def test_peak_hop_save(self):
         self.measure()

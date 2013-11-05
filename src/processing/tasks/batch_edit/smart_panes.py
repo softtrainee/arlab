@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traitsui.api import View, VGroup
+from traitsui.api import View, VGroup, Item
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -27,11 +27,21 @@ class SmartBatchEditPane(TraitsDockPane):
 
     def traits_view(self):
         v = View(
-                 VGroup(
-                     #self._discrimination_group(),
-                     #self._blanks_group(),
-                     #self._sensitivity_group()
-                 )
-                 )
+            #VGroup(
+            #    VGroup(),
+            #Spring(springy=False, width=-20),
+            VGroup(
+                Item('find_blanks',
+                     tooltip=''),
+                Item('find_airs',
+                     tooltip=''),
+                Item('find_cocktails',
+                     tooltip=''),
+                label='Auto Find',
+                #show_border=True
+            )
+        )
+        #)
         return v
+
 #============= EOF =============================================

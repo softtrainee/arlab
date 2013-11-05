@@ -453,7 +453,7 @@ class FigureTask(AnalysisEditTask):
             for ai in self.active_editor.associated_editors:
                 if isinstance(ai, FigureEditor):
                     ai.rebuild_graph()
-    
+
     @classmethod
     def group_by(cls, editor, items, key):
         ids = []
@@ -468,7 +468,7 @@ class FigureTask(AnalysisEditTask):
             gid = ids.index(k)
             idxs = [items.index(ai) for ai in analyses]
             editor.set_group(idxs, gid, refresh=False)
-        
+
     def _group_by(self, key):
 
         editor = self.active_editor
@@ -527,7 +527,7 @@ class FigureTask(AnalysisEditTask):
                 #self.unknowns_pane.items=ans
                 #print sa, ans
         else:
-            ans = self._get_sample_analyses(self.selected_sample[-1])
+            ans = self._get_sample_analyses(self.selected_sample)
             self.unknowns_pane.items = ans
 
             #             sam = next((si

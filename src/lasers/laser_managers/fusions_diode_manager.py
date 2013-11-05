@@ -16,7 +16,7 @@
 
 #=============enthought library imports=======================
 from traits.api import Instance, Button, Bool, Float
-from traitsui.api import VGroup, Group, Item, InstanceEditor
+from traitsui.api import VGroup, Item, InstanceEditor
 from apptools.preferences.preference_binding import bind_preference
 #=============standard library imports ========================
 from functools import partial
@@ -30,7 +30,6 @@ from src.hardware.mikron_pyrometer import MikronGA140Pyrometer
 from src.hardware.watlow_ezzone import WatlowEZZone
 from src.hardware.temperature_monitor import DPi32TemperatureMonitor
 from src.hardware.pyrometer_temperature_monitor import PyrometerTemperatureMonitor
-
 
 from src.lasers.laser_managers.vue_metrix_manager import VueMetrixManager
 from src.paths import paths
@@ -59,9 +58,9 @@ class FusionsDiodeManager(FusionsLaserManager):
     tuning = Bool
 
     # laser_measured_power = Float
-#    thermocouple_temp = Float
+    #    thermocouple_temp = Float
 
-#    update_timers = List
+    #    update_timers = List
     monitor_name = 'diode_laser_monitor'
     monitor_klass = FusionsDiodeLaserMonitor
 
@@ -71,34 +70,37 @@ class FusionsDiodeManager(FusionsLaserManager):
     request_powermin = Float(0)
     request_powermax = Float(1500)
 
-
     dbname = paths.diodelaser_db
     db_root = paths.diodelaser_db_root
 
     use_calibrated_temperature = Bool(False)
     #    def finish_loading(self):
-#        super(FusionsDiodeManager, self).finish_loading()
-#
-#        self.pyrometer.start_scan()
-# #        self.control_module_manager.start_scan()
+    #        super(FusionsDiodeManager, self).finish_loading()
+    #
+    #        self.pyrometer.start_scan()
+    # #        self.control_module_manager.start_scan()
     def open_scanner(self):
         from src.lasers.scanner import PIDScanner
+
         self._open_scanner(PIDScanner, 'scanner.yaml')
 
     def open_autotuner(self):
         from src.lasers.autotuner import AutoTuner
+
         self._open_scanner(AutoTuner, 'autotuner.yaml')
 
     def _open_scanner(self, klass, name):
         from src.lasers.scanner import ScannerController
+
         p = os.path.join(paths.scripts_dir, name)
 
         s = klass(control_path=p,
-                       manager=self
-                       )
+                  manager=self
+        )
 
         tc = self.temperature_controller
         tm = self.get_device('temperature_monitor')
+
         def tc_gen():
             while 1:
                 pr = tc.get_temp_and_power(verbose=False)
@@ -117,13 +119,13 @@ class FusionsDiodeManager(FusionsLaserManager):
 
         # bind to request_power change. set Setpoint static value
         s.new_static_value('Setpoint')
-        self.on_trait_change(lambda v:s.set_static_value('Setpoint', v), self._requested_power)
+        self.on_trait_change(lambda v: s.set_static_value('Setpoint', v), self._requested_power)
 
         # bind to Scanner's stop_event. Set laser power to 0.
         s.on_trait_change(lambda: self.set_laser_temperature(0), 'stop_event')
 
         # bind to Scanners setpoint
-#        s.on_trait_change(lambda v: self.set_laser_temperature(v), 'setpoint')
+        #        s.on_trait_change(lambda v: self.set_laser_temperature(v), 'setpoint')
 
         sc = ScannerController(model=s,
                                application=self.application)
@@ -133,17 +135,21 @@ class FusionsDiodeManager(FusionsLaserManager):
     def bind_preferences(self, pref_id):
         super(FusionsDiodeManager, self).bind_preferences(pref_id)
         bind_preference(self, 'use_calibrated_temperature', '{}.use_calibrated_temperature'.format(pref_id))
+        #bind_preference(self.temperature_controller, '_use_calibrated_temperature',
+        #                '{}.use_calibrated_temperature'.format(pref_id))
 
-#    def get_process_temperature(self):
-#        '''
-#        '''
-#        return self.temperature_controller.get_temperature()
-
+    def _use_calibrated_temperature_changed(self, new):
+        if self.temperature_controller:
+            self.temperature_controller.use_calibrated_temperature = new
+            #    def get_process_temperature(self):
+            #        '''
+            #        '''
+            #        return self.temperature_controller.get_temperature()
 
 
     def map_temperature(self, v):
-        if self.use_calibrated_temperature:
-            v = self.temperature_controller.map_temperature(v)
+        #if self.use_calibrated_temperature:
+        v = self.temperature_controller.map_temperature(v)
         return v
 
     def get_pyrometer_temperature(self, **kw):
@@ -187,24 +193,22 @@ class FusionsDiodeManager(FusionsLaserManager):
             self.set_laser_power(value)
 
     def set_laser_temperature(self, temp):
-        return self._set_laser_power_hook(temp, mode='closed',
-                                          use_calibration=self.use_calibrated_temperature)
+        return self._set_laser_power_hook(temp, mode='closed')
+        #use_calibration=self.use_calibrated_temperature)
 
 
-#===============================================================================
-# private
-#===============================================================================
-    def _set_laser_power_hook(self, power, mode='open', use_calibration=False, **kw):
+    #===============================================================================
+    # private
+    #===============================================================================
+    def _set_laser_power_hook(self, power, mode='open', **kw):
         ''' 
         '''
         tc = self.temperature_controller
         if tc._control_mode != mode:
-
             tc.set_control_mode(mode)
 
         func = getattr(tc, 'set_{}_loop_setpoint'.format(mode))
         func(float(power),
-             use_calibration=use_calibration,
              **kw)
 
     def _enable_hook(self):
@@ -217,13 +221,12 @@ class FusionsDiodeManager(FusionsLaserManager):
     def _disable_hook(self):
         if self.fiber_light.auto_onoff and not self.fiber_light.state:
 
-            fl_on = lambda:self.fiber_light.power_on()
+            fl_on = lambda: self.fiber_light.power_on()
             if self._recording_power_state:
                 t = Timer(7, fl_on)
                 t.start()
             else:
                 fl_on()
-
 
         self.temperature_controller.disable()
         self.control_module_manager.disable()
@@ -238,53 +241,54 @@ class FusionsDiodeManager(FusionsLaserManager):
 
         except AttributeError:
             pass
-#===============================================================================
-# views
-#===============================================================================
+            #===============================================================================
+            # views
+            #===============================================================================
+
     def get_additional_controls(self):
-#        v = Group(
+    #        v = Group(
         gs = [
-                  VGroup(Item('temperature_controller', style='custom',
-                               editor=InstanceEditor(view='control_view'),
-                               show_label=False,
-                               ),
-                      label='Watlow',
-#                      show_border = True,
-                      ),
-                 VGroup(Item('pyrometer', show_label=False, style='custom',
-                              ),
-#                      show_border = True,
-                      label='Pyrometer',
+            VGroup(Item('temperature_controller', style='custom',
+                        editor=InstanceEditor(view='control_view'),
+                        show_label=False,
+            ),
+                   label='Watlow',
+                   #                      show_border = True,
+            ),
+            VGroup(Item('pyrometer', show_label=False, style='custom',
+            ),
+                   #                      show_border = True,
+                   label='Pyrometer',
 
-                      ),
-                 VGroup(Item('control_module_manager', show_label=False, style='custom',
-                             ),
-#                      show_border = True,
-                      label='ControlModule',
+            ),
+            VGroup(Item('control_module_manager', show_label=False, style='custom',
+            ),
+                   #                      show_border = True,
+                   label='ControlModule',
 
-                      ),
-                  VGroup(Item('fiber_light', style='custom', show_label=False),
-                         label='FiberLight'
-                         ),
-#                  layout = 'tabbed',
-                ]
+            ),
+            VGroup(Item('fiber_light', style='custom', show_label=False),
+                   label='FiberLight'
+            ),
+            #                  layout = 'tabbed',
+        ]
         return gs
 
-#===============================================================================
-# defaults
-#===============================================================================
-#    def _monitor_factory(self):
-#        '''
-#        '''
-#        return DiodeLaserMonitor
+    #===============================================================================
+    # defaults
+    #===============================================================================
+    #    def _monitor_factory(self):
+    #        '''
+    #        '''
+    #        return DiodeLaserMonitor
 
-#    def monitor_factory(self):
-#        lm = self.monitor
-#        if lm is None:
-#            lm = self._monitor_factory()(manager = self,
-#                            configuration_dir_name = paths.monitors_dir,
-#                            name = 'diode_laser_monitor')
-#        return lm
+    #    def monitor_factory(self):
+    #        lm = self.monitor
+    #        if lm is None:
+    #            lm = self._monitor_factory()(manager = self,
+    #                            configuration_dir_name = paths.monitors_dir,
+    #                            name = 'diode_laser_monitor')
+    #        return lm
 
     def _temperature_monitor_default(self):
         '''
@@ -308,36 +312,39 @@ class FusionsDiodeManager(FusionsLaserManager):
                                    configuration_dir_name=self.configuration_dir_name)
         return b
 
-#    def _control_module_default(self):
-#        '''
-#        '''
-#        b = VueDiodeControlModule(name = 'diodecontrolmodule',
-#                                      configuration_dir_name = 'diode'
-#                                      )
-#        return b
+    #    def _control_module_default(self):
+    #        '''
+    #        '''
+    #        b = VueDiodeControlModule(name = 'diodecontrolmodule',
+    #                                      configuration_dir_name = 'diode'
+    #                                      )
+    #        return b
 
     def _stage_manager_default(self):
         '''
         '''
         args = dict(name='stage',
                     configuration_name='stage',
-                            configuration_dir_name=self.configuration_dir_name,
-                             parent=self,
-                             )
+                    configuration_dir_name=self.configuration_dir_name,
+                    parent=self,
+        )
         return self._stage_manager_factory(args)
 
     def _temperature_controller_default(self):
         '''
         '''
         w = WatlowEZZone(name='temperature_controller',
-                        configuration_dir_name=self.configuration_dir_name)
+                         use_calibrated_temperature=self.use_calibrated_temperature,
+                         configuration_dir_name=self.configuration_dir_name)
         return w
+
     def _pyrometer_temperature_monitor_default(self):
         '''
         '''
         py = PyrometerTemperatureMonitor(name='pyrometer_tm',
-                                       configuration_dir_name=self.configuration_dir_name)
+                                         configuration_dir_name=self.configuration_dir_name)
         return py
+
     def _title_default(self):
         '''
         '''
@@ -346,6 +353,7 @@ class FusionsDiodeManager(FusionsLaserManager):
     def _control_module_manager_default(self):
         v = VueMetrixManager()  # control = self.control_module)
         return v
+
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
@@ -361,7 +369,7 @@ if __name__ == '__main__':
     a = dict(manager=f, name='FusionsDiode')
     ini.add_initialization(a)
     ini.run()
-#    f.bootstrap()
+    #    f.bootstrap()
     f.configure_traits()
 
 #======================= EOF ============================

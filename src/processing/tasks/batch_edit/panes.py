@@ -15,7 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Float, Str, List, Bool, Button, Property
 from traitsui.api import View, VGroup, UItem, \
     HGroup, TableEditor, ButtonEditor
 from pyface.tasks.traits_dock_pane import TraitsDockPane
@@ -23,88 +22,20 @@ from traitsui.table_column import ObjectColumn
 from traitsui.extras.checkbox_column import CheckboxColumn
 from pyface.image_resource import ImageResource
 
-from src.helpers.isotope_utils import sort_isotopes
 from src.paths import paths
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-class UValue(HasTraits):
-    nominal_value = Float
-    std_dev = Float
-    name = Str
-    use = Bool
 
-    def _nominal_value_changed(self, old, new):
-        if old:
-            self.use = True
-
-    def _std_dev_changed(self, old, new):
-        if old:
-            self.use = True
 
 
 class BatchEditPane(TraitsDockPane):
-    values = List
-    blanks = List
-    #     unknowns = List
-
-    db_sens_button = Button
-    sens_value = Property(Float, depends_on='_sens_value')
-    _sens_value = Float
-
-    def populate(self, unks):
 
 
-        keys = set([ki for ui in unks
-                    for ki in ui.isotope_keys])
-        keys = sort_isotopes(list(keys))
 
-        blanks = []
-        for ki in keys:
-            blank = next((bi for bi in self.blanks if bi.name == ki), None)
-            if blank is None:
-                blank = UValue(name=ki)
-            blanks.append(blank)
-
-        self.blanks = blanks
-
-        keys = set([iso.detector for ui in unks
-                    for iso in ui.isotopes.itervalues()
-        ])
-        keys = sort_isotopes(list(keys))
-        values = []
-        for ki in keys:
-            # vi.name includes "IC "
-            value = next((vi for vi in self.values if vi.name[3:] == ki), None)
-            if value is None:
-                value = UValue(name='IC {}'.format(ki))
-            values.append(value)
-
-        self.values = [UValue(name='disc')] + values
-
-    #===============================================================================
-    # property get/set
-    #===============================================================================
-    def _get_sens_value(self):
-        return self._sens_value
-
-    def _set_sens_value(self, v):
-        self._sens_value = v
-
-    def _validate_sens_value(self, v):
-        return self._validate_float(v)
-
-
-    def _validate_float(self, v):
-        try:
-            return float(v)
-        except ValueError:
-            pass
-
-
-        #===============================================================================
-        # views
-        #===============================================================================
+#===============================================================================
+# views
+#===============================================================================
 
     def _discrimination_group(self):
         cols = [
@@ -162,17 +93,6 @@ class BatchEditPane(TraitsDockPane):
 
         return grp
 
-    def _values_default(self):
-        v = [
-            UValue(name='disc.'),
-        ]
-        return v
-
-    def _blanks_default(self):
-        v = [
-            UValue(name='Ar40'),
-        ]
-        return v
 
     def traits_view(self):
         v = View(
@@ -184,4 +104,4 @@ class BatchEditPane(TraitsDockPane):
         )
         return v
 
-    #============= EOF =============================================
+        #============= EOF =============================================
