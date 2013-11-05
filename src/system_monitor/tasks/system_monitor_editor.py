@@ -168,15 +168,19 @@ class SystemMonitorEditor(SeriesEditor):
 
         st = time.time()
         while 1:
-            #check subscription availablity
-            if sub.check_server_availability(timeout=0.5, verbose=True):
-                if not sub.is_listening():
-                    self.info('Subscription server now available. starting to listen')
-                    self.subscriber.listen()
-            else:
-                if sub.was_listening:
-                    self.warning('Subscription server no longer available. stop listen')
-                    self.subscriber.stop()
+            #only check subscription availability if one poll_interval has elapsed
+            #sinde the last subscription message was received
+
+            #check subscription availability
+            if time.time() - sub.last_message_time > poll_interval:
+                if sub.check_server_availability(timeout=0.5, verbose=True):
+                    if not sub.is_listening():
+                        self.info('Subscription server now available. starting to listen')
+                        self.subscriber.listen()
+                else:
+                    if sub.was_listening:
+                        self.warning('Subscription server no longer available. stop listen')
+                        self.subscriber.stop()
 
             if self._wait(poll_interval):
                 if not sub.is_listening():
