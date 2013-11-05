@@ -45,9 +45,11 @@ class IsotopeRecordView(HasTraits):
     record_id = ''
 
     def create(self, dbrecord):
+#        print 'asdfsadfsdaf', dbrecord, dbrecord.labnumber, dbrecord.uuid
         try:
             if dbrecord is None or not dbrecord.labnumber:
                 return
+            
             ln = dbrecord.labnumber
             self.labnumber = str(ln.identifier)
             self.aliquot = dbrecord.aliquot
@@ -84,7 +86,6 @@ class IsotopeRecordView(HasTraits):
                 if ext.extraction_device:
                     self.extract_device = ext.extraction_device.name
 
-            self.uuid = dbrecord.uuid
             self.flux_fit_status = self._get_flux_fit_status(dbrecord)
             self.blank_fit_status = self._get_selected_history_item(dbrecord, 'selected_blanks_id')
             self.ic_fit_status = self._get_selected_history_item(dbrecord, 'selected_det_intercal_id')

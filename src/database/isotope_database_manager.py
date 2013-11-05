@@ -164,7 +164,9 @@ class IsotopeDatabaseManager(Loggable):
                                                        calculate_age=calculate_age,
                                                        unpack=unpack,
                                                        **kw)
-                            db_ans.append(a)
+                            if a:
+                                db_ans.append(a)
+                                
                             #time.sleep(10)
 
                         #db_ans.extend([self._analysis_factory(ai,
@@ -285,8 +287,8 @@ class IsotopeDatabaseManager(Loggable):
                           calculate_age=False,
                           unpack=False,
                           exclude=None, **kw):
-
-
+        
+        
         if isinstance(rec, (Analysis, DBAnalysis)):
             if progress:
                 progress.increment()
