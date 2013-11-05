@@ -236,7 +236,7 @@ class Spectrum(BaseArArFigure):
                     #            ans=[ai for (j,ai) in analyses if]
                     #            ans = analyses[platbounds[0]:platbounds[1]]
 
-            ages, errors = self._get_ages_errors(ans)
+            ages, errors = self._get_age_errors(ans)
             mswd, valid, n = self._get_mswd(ages, errors)
             plateau_age = self._calculate_total_gas_age(ans)
             return plateau_age, platbounds, mswd, valid, len(ages)
