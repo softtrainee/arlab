@@ -45,6 +45,7 @@ ISO_LABELS = dict(H1='Ar40', AX='Ar39', L1='Ar38', L2='Ar37', CDD='Ar36')
 
 DEBUG = True
 
+
 class MassSpecDatabaseImporter(Loggable):
     db = Instance(MassSpecDatabaseAdapter)
     test = Button
@@ -53,6 +54,7 @@ class MassSpecDatabaseImporter(Loggable):
     login_session_id = None
     _current_spec = None
     _analysis = None
+
     def connect(self):
         return self.db.connect()
 
@@ -62,7 +64,7 @@ class MassSpecDatabaseImporter(Loggable):
             with db.session_ctx() as sess:
                 sl = db.add_sample_loading(ms, tray)
                 sess.flush()
-#             db.flush()
+                #             db.flush()
                 self.sample_loading_id = sl.SampleLoadingID
 
     def add_login_session(self, ms):
@@ -71,7 +73,7 @@ class MassSpecDatabaseImporter(Loggable):
         with db.session_ctx() as sess:
             ls = db.add_login_session(ms)
             sess.flush()
-#         db.flush()
+            #         db.flush()
             self.login_session_id = ls.LoginSessionID
 
     def add_data_reduction_session(self):
@@ -80,7 +82,7 @@ class MassSpecDatabaseImporter(Loggable):
             with db.session_ctx() as sess:
                 dr = db.add_data_reduction_session()
                 sess.flush()
-    #             db.flush()
+                #             db.flush()
                 self.data_reduction_session_id = dr.DataReductionSessionID
 
     def create_import_session(self, spectrometer, tray):
@@ -142,20 +144,22 @@ class MassSpecDatabaseImporter(Loggable):
                 self.message('Could not save to Mass Spec database.\n {}'.format(tb))
                 if commit:
                     sess.rollback()
-    #                 self.db.rollback()
-    #                 pid = spec.rid
-    #                 spec.aliquot = '*{:02n}'.format(spec.aliquot)
-    #                 spec.rid = '{}-{}'.format(spec.labnumber, spec.aliquot)
-    #                 self.message('Saving {} as {}'.format(pid, spec.rid))
-    #                 self._add_analysis(spec, irradpos, spec.rid, runtype, commit)
+                    #                 self.db.rollback()
+                    #                 pid = spec.rid
+                    #                 spec.aliquot = '*{:02n}'.format(spec.aliquot)
+                    #                 spec.rid = '{}-{}'.format(spec.labnumber, spec.aliquot)
+                    #                 self.message('Saving {} as {}'.format(pid, spec.rid))
+                    #                 self._add_analysis(spec, irradpos, spec.rid, runtype, commit)
 
 
-#    def _add_analysis(self, *args):
-#        db=self.db
-#        with db.session_ctx() as sess:
-#            self._add_analysis_db(sess,*args)
+                    #    def _add_analysis(self, *args):
+                    #        db=self.db
+                    #        with db.session_ctx() as sess:
+                    #            self._add_analysis_db(sess,*args)
 
     def _add_analysis(self, sess, spec, irradpos, rid, runtype):
+
+
         gst = time.time()
 
         db = self.db
@@ -179,14 +183,14 @@ class MassSpecDatabaseImporter(Loggable):
             if db_irradpos:
                 sample_id = db_irradpos.SampleID
             else:
-                self.warning('no irradiation position found for {}. not importing analysis {}'.format(irradpos, spec.record_id))
+                self.warning(
+                    'no irradiation position found for {}. not importing analysis {}'.format(irradpos, spec.record_id))
                 return
-        # add runscript
+                # add runscript
         rs = db.add_runscript(spec.runscript_name,
                               spec.runscript_text)
 
-        self.create_import_session(spectrometer, tray,
-                                   )
+        self.create_import_session(spectrometer, tray)
 
         # add the reference detector
         refdbdet = db.add_detector('H1', Label='H1')
@@ -196,7 +200,7 @@ class MassSpecDatabaseImporter(Loggable):
         analysis = db.add_analysis(rid, spec.aliquot, spec.step,
                                    irradpos,
                                    RUN_TYPE_DICT[runtype],
-#                                   'H1',
+                                   #                                   'H1',
                                    RedundantSampleID=sample_id,
                                    HeatingItemName=spec.extract_device,
                                    PwrAchieved=spec.power_achieved,
@@ -213,7 +217,7 @@ class MassSpecDatabaseImporter(Loggable):
                                    SampleLoadingID=self.sample_loading_id,
                                    LoginSessionID=self.login_session_id,
                                    RunScriptID=rs.RunScriptID,
-                                   )
+        )
 
         db.add_analysis_positions(analysis, spec.position)
         #=======================================================================
@@ -234,7 +238,6 @@ class MassSpecDatabaseImporter(Loggable):
 
     def _add_isotopes(self, sess, analysis, spec, refdet, runtype):
         with spec.open_file():
-
             isotopes = list(spec.iter_isotopes())
             isotopes = sort_isotopes(isotopes, key=lambda x: x[0])
 
@@ -358,10 +361,11 @@ class MassSpecDatabaseImporter(Loggable):
     #===========================================================================
     def _test_fired(self):
         import numpy as np
+
         self.db.connect()
         xbase = np.linspace(430, 580, 150)
-#        ybase = np.zeros(150)
-#        cddybase = np.zeros(150)
+        #        ybase = np.zeros(150)
+        #        cddybase = np.zeros(150)
         ybase = np.random.random(150)
         cddybase = np.random.random(150) * 0.001
 
@@ -370,14 +374,14 @@ class MassSpecDatabaseImporter(Loggable):
                 zip(xbase, ybase),
                 zip(xbase, ybase),
                 zip(xbase, cddybase),
-                ]
+        ]
 
         xsig = np.linspace(20, 420, 410)
-#        y40 = np.ones(410) * 680
-#        y39 = np.ones(410) * 107
-#        y38 = np.zeros(410) * 1.36
-#        y37 = np.zeros(410) * 0.5
-#        y36 = np.ones(410) * 0.001
+        #        y40 = np.ones(410) * 680
+        #        y39 = np.ones(410) * 107
+        #        y38 = np.zeros(410) * 1.36
+        #        y37 = np.zeros(410) * 0.5
+        #        y36 = np.ones(410) * 0.001
 
         y40 = 680 - 0.1 * xsig
         y39 = 107 - 0.1 * xsig
@@ -391,7 +395,7 @@ class MassSpecDatabaseImporter(Loggable):
                zip(xsig, y37),
                zip(xsig, y36),
 
-               ]
+        ]
 
         regbs = MeanRegressor(xs=xbase, ys=ybase)
         cddregbs = MeanRegressor(xs=xbase, ys=cddybase)
@@ -403,39 +407,39 @@ class MassSpecDatabaseImporter(Loggable):
         reg4 = PolynomialRegressor(xs=xsig, ys=y36, fit='linear')
 
         keys = [
-                ('H1', 'Ar40'),
-                ('AX', 'Ar39'),
-                ('L1', 'Ar38'),
-                ('L2', 'Ar37'),
-                ('CDD', 'Ar36'),
-                ]
+            ('H1', 'Ar40'),
+            ('AX', 'Ar39'),
+            ('L1', 'Ar38'),
+            ('L2', 'Ar37'),
+            ('CDD', 'Ar36'),
+        ]
 
         regresults = (dict(
-                          Ar40=ufloat(reg.predict(0), reg.predict_error(0)),
-                          Ar39=ufloat(reg1.predict(0), reg1.predict_error(0)),
-                          Ar38=ufloat(reg2.predict(0), reg2.predict_error(0)),
-                          Ar37=ufloat(reg3.predict(0), reg3.predict_error(0)),
-                          Ar36=ufloat(reg4.predict(0), reg4.predict_error(0)),
+            Ar40=ufloat(reg.predict(0), reg.predict_error(0)),
+            Ar39=ufloat(reg1.predict(0), reg1.predict_error(0)),
+            Ar38=ufloat(reg2.predict(0), reg2.predict_error(0)),
+            Ar37=ufloat(reg3.predict(0), reg3.predict_error(0)),
+            Ar36=ufloat(reg4.predict(0), reg4.predict_error(0)),
 
-                          ),
+        ),
                       dict(
                           Ar40=ufloat(regbs.predict(0), regbs.predict_error(0)),
                           Ar39=ufloat(regbs.predict(0), regbs.predict_error(0)),
                           Ar38=ufloat(regbs.predict(0), regbs.predict_error(0)),
                           Ar37=ufloat(regbs.predict(0), regbs.predict_error(0)),
                           Ar36=ufloat(cddregbs.predict(0), cddregbs.predict_error(0))
-                          ))
+                      ))
         blanks = [ufloat(0, 0.1),
                   ufloat(0.1, 0.001),
                   ufloat(0.01, 0.001),
                   ufloat(0.01, 0.001),
                   ufloat(0.00001, 0.0001),
-                  ]
+        ]
         fits = (
-              dict(zip(['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'],
-                       ['Linear', 'Linear', 'Linear', 'Linear', 'Linear'])),
-              dict(zip(['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'],
-                       ['Average Y', 'Average Y', 'Average Y', 'Average Y', 'Average Y'])))
+            dict(zip(['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'],
+                     ['Linear', 'Linear', 'Linear', 'Linear', 'Linear'])),
+            dict(zip(['Ar40', 'Ar39', 'Ar38', 'Ar37', 'Ar36'],
+                     ['Average Y', 'Average Y', 'Average Y', 'Average Y', 'Average Y'])))
         mass_spectrometer = 'obama'
         extract_device = 'Laser Furnace'
         extract_value = 10
@@ -457,18 +461,18 @@ class MassSpecDatabaseImporter(Loggable):
                           extract_device,
                           tray,
                           position,
-                          extract_value,  # power requested
-                          extract_value,  # power achieved
+                          extract_value, # power requested
+                          extract_value, # power achieved
 
-                          duration,  # total extraction
-                          duration,  # time at extract_value
+                          duration, # total extraction
+                          duration, # time at extract_value
 
                           first_stage_delay,
                           second_stage_delay,
 
                           runscript_name,
                           runscript_text,
-                          )
+        )
 
     def traits_view(self):
         v = View(Item('test', show_label=False))
@@ -480,14 +484,15 @@ class MassSpecDatabaseImporter(Loggable):
                                      username='root',
                                      password='Argon',
                                      name='massspecdata_import'
-#                                     host='129.138.12.131',
-#                                     username='massspec',
-#                                     password='DBArgon',
-#                                     name='massspecdata_isotopedb'
-                                     )
-#        db.connect()
+                                     #                                     host='129.138.12.131',
+                                     #                                     username='massspec',
+                                     #                                     password='DBArgon',
+                                     #                                     name='massspecdata_isotopedb'
+        )
+        #        db.connect()
 
         return db
+
 
 if __name__ == '__main__':
     from src.helpers.logger_setup import logging_setup
@@ -497,7 +502,7 @@ if __name__ == '__main__':
 
     d.configure_traits()
 
-#============= EOF ====================================
+    #============= EOF ====================================
     #        from src.codetools.simple_timeit import timethis
     #        for ((det, isok), si, bi, ublank, signal, baseline, sfit, bfit) in spec.iter():
     #            self.debug('msi {} {} {} {} {} {}'.format(det, isok, signal.nominal_value,

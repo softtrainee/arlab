@@ -31,6 +31,12 @@ class ExportSpecTestCase(unittest.TestCase):
                                                    'Ar38', 'Ar37', 'Ar36')):
                 self.assertEqual(iso, siso)
 
+    def test_baseline(self):
+        e = self.spec
+        with e.open_file():
+            det = 'CDD'
+            tb, vb = e.get_baseline_data(det)
+            self.assertEqual(len(tb), 10)
 
     def test_iter_isotopes(self):
         with self.spec.open_file():

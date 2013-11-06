@@ -105,6 +105,7 @@ class PeakHopTestCase(unittest.TestCase):
 
         a.py_baselines(10, st, 0, 39.5, 'H1', series=1)
 
+    @unittest.skip("skip peak_hop_save")
     def test_peak_hop_save(self):
         self.measure()
 
@@ -115,6 +116,16 @@ class PeakHopTestCase(unittest.TestCase):
         ret = arun.post_measurement_save()
         self.assertTrue(ret)
 
+        #def test_peak_hop_baseline_save(self):
+        #    self.measure()
+        #    arun=self.arun
+        #
+        #    spec=arun._export_spec_factory()
+        #
+        #    iso='Ar40'
+        #    det='CDD'
+        #    tb, vb = spec.get_baseline_data(iso, det)
+        #    self.assertEqual(len(tb), 10)
         #def test_peak_hop_setup(self):
         #    a=self.arun
         #    self.measure()

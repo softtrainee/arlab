@@ -132,8 +132,8 @@ class ExportSpec(Loggable):
     def get_baseline_fit(self, det):
         return 'average_SEM'
 
-    def get_baseline_data(self, iso, det):
-        return self._get_data('baseline', iso, det)
+    def get_baseline_data(self, det):
+        return self._get_data('baseline', None, det)
 
     def get_signal_data(self, iso, det):
         return self._get_data('signal', iso, det)
@@ -161,16 +161,26 @@ class ExportSpec(Loggable):
 
     def _get_data(self, group, iso, det):
         dm = self.data_manager
-        root = dm._frame.root
+        hfile = dm._frame
+        root = hfile.root
 
         try:
             group = getattr(root, group)
-            isog = getattr(group, iso)
-            tab = getattr(isog, det)
+            if iso is None:
+                tab = next((di for ii in hfile.listNodes(group)
+                            for di in hfile.listNodes(ii)
+                            if di.name == det))
+            else:
+                isog = getattr(group, iso)
+                tab = getattr(isog, det)
+
             data = [(row['time'], row['value'])
                     for row in tab.iterrows()]
             t, v = zip(*data)
-        except (NoSuchNodeError, AttributeError):
+        except (NoSuchNodeError, AttributeError, StopIteration):
+            import traceback
+
+            self.debug(traceback.format_exc())
             t, v = [0, ], [0, ]
 
         return t, v
