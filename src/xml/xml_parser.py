@@ -21,13 +21,16 @@
 
 #============= standard library imports ========================
 # from xml.etree.ElementTree import ElementTree, Element, ParseError
+import os
+
 from lxml.etree import ElementTree, Element, ParseError, XML
 from pyface.message_dialog import warning
-import os
+
 #============= local library imports  ==========================
 
 class XMLParser(object):
     _root = None
+
     def __init__(self, path=None, *args, **kw):
         if path:
             self._path = path
@@ -87,11 +90,26 @@ class XMLParser(object):
         if tree:
             return tree.tostring()
 
+    def get_elements(self, name=None):
+        root = self.get_root()
+        path = '//{}'.format(name)
+        return root.xpath(path)
+
+    #         return self._get_elements(None, True, name)
+
+    def _get_elements(self, group, element, name):
+        if group is None:
+            group = self.get_root()
+        return [v if element else v.text.strip()
+                for v in group.findall(name)]
+
+
 class XMLParser2(object):
     '''
         wrapper for ElementTree
     '''
     _tree = None
+
     def __init__(self, path=None, *args, **kw):
         self._tree = ElementTree()
         if path:
@@ -118,23 +136,24 @@ class XMLParser2(object):
             p = self._path
 
         if p and os.path.isdir(os.path.dirname(p)):
-#        self.indent(self._tree.getroot())
+        #        self.indent(self._tree.getroot())
             self._tree.write(p, pretty_print=True)
 
-#    def indent(self, elem, level=0):
-#        i = '\n' + level * '  '
-#        if len(elem):
-#            if not elem.text or not elem.text.strip():
-#                elem.text = i + '  '
-#            if not elem.tail or not elem.tail.strip():
-#                elem.tail = i
-#            for elem in elem:
-#                self.indent(elem, level + 1)
-#            if not elem.tail or not elem.tail.strip():
-#                elem.tail = i
-#        else:
-#            if level and (not elem.tail or not elem.tail.strip()):
-#                elem.tail = i
+        #    def indent(self, elem, level=0):
+        #        i = '\n' + level * '  '
+        #        if len(elem):
+        #            if not elem.text or not elem.text.strip():
+        #                elem.text = i + '  '
+        #            if not elem.tail or not elem.tail.strip():
+        #                elem.tail = i
+        #            for elem in elem:
+        #                self.indent(elem, level + 1)
+        #            if not elem.tail or not elem.tail.strip():
+        #                elem.tail = i
+        #        else:
+        #            if level and (not elem.tail or not elem.tail.strip()):
+        #                elem.tail = i
+
     def add_element(self, tag, value, root, **kw):
         if root is None:
             root = self._tree.getroot()
@@ -144,7 +163,8 @@ class XMLParser2(object):
 
     def new_element(self, tag, value, **kw):
         e = Element(tag, attrib=kw)
-#        if value:
-#            e.text = value
+        #        if value:
+        #            e.text = value
         return e
-#============= EOF ====================================
+
+    #============= EOF ====================================

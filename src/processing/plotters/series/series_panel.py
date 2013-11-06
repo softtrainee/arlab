@@ -15,7 +15,9 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from traits.api import Dict, on_trait_change
 #============= standard library imports ========================
+from src.processing.plotters.series.dashboard_series import DashboardSeries
 from src.processing.plotters.series.series import Series
 from src.processing.plotters.figure_panel import FigurePanel
 from src.graph.regression_graph import StackedRegressionGraph
@@ -25,4 +27,18 @@ class SeriesPanel(FigurePanel):
     _figure_klass = Series
     equi_stack = True
     graph_klass = StackedRegressionGraph
-#============= EOF =============================================
+
+
+class DashboardSeriesPanel(SeriesPanel):
+    _figure_klass = DashboardSeries
+    measurements = Dict
+
+    @on_trait_change('measurements')
+    def _analyses_items_changed(self):
+        self.figures = self._make_figures()
+
+    def _make_figures(self):
+        gs = [self._figure_klass(measurements=self.measurements), ]
+        return gs
+
+    #============= EOF =============================================

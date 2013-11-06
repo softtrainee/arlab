@@ -165,8 +165,11 @@ class PowerCalibrationAction(LaserCalibrationAction):
         task.new_power_calibration()
 
 
-class PyrometerCalibrationAction(TaskAction):
-    method = 'new_pyrometer_calibration'
+class PyrometerCalibrationAction(LaserCalibrationAction):
     name = 'Pyrometer Calibration'
+
+    def perform(self, event):
+        task = self._get_task(event)
+        task.new_pyrometer_calibration()
 
 #============= EOF =============================================

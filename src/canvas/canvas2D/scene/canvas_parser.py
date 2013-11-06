@@ -24,6 +24,7 @@ from src.xml.xml_parser import XMLParser
 class CanvasParser(XMLParser):
     '''
     '''
+
 #    def get_valves(self, group=None, element=True):
 #        return self._get_elements(group, element, 'valve')
 # #        if group is None:
@@ -56,17 +57,6 @@ class CanvasParser(XMLParser):
 #    def get_getters(self, group=None, element=True):
 #        return self._get_elements(group, element, 'getter')
 
-    def get_elements(self, name=None):
-        root = self.get_root()
-        path = '//{}'.format(name)
-        return root.xpath(path)
 
-    #         return self._get_elements(None, True, name)
-
-    def _get_elements(self, group, element, name):
-        if group is None:
-            group = self.get_root()
-        return [v if element else v.text.strip()
-                for v in group.findall(name)]
 
 #============= EOF ====================================

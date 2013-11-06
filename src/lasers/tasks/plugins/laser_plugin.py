@@ -15,66 +15,59 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Str
-from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
-from envisage.ui.tasks.task_factory import TaskFactory
-from src.lasers.tasks.laser_task import FusionsDiodeTask, FusionsCO2Task
-from src.lasers.laser_managers.ilaser_manager import ILaserManager
-from src.initialization_parser import InitializationParser
 import os
-from src.paths import paths
-from src.lasers.tasks.laser_preferences import FusionsDiodePreferencesPane, \
-    FusionsCO2PreferencesPane
+
+from traits.api import List, Str
+from envisage.ui.tasks.task_factory import TaskFactory
 from pyface.tasks.action.schema_addition import SchemaAddition
 from envisage.ui.tasks.task_extension import TaskExtension
-from src.lasers.tasks.laser_actions import OpenScannerAction, \
-    OpenAutoTunerAction, PowerMapAction, PowerCalibrationAction, \
-    OpenPowerMapAction, TestDegasAction, OpenPatternAction, NewPatternAction
-from pyface.tasks.action.schema import SMenu, GroupSchema, MenuSchema
-from pyface.action.group import Group
+from pyface.tasks.action.schema import SMenu
+
+from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
+from src.lasers.laser_managers.ilaser_manager import ILaserManager
+from src.initialization_parser import InitializationParser
+from src.paths import paths
+from src.lasers.tasks.laser_actions import OpenPowerMapAction, OpenPatternAction, NewPatternAction
 from src.lasers.tasks.laser_calibration_task import LaserCalibrationTask
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class CoreLaserPlugin(BaseTaskPlugin):
     def _my_task_extensions_default(self):
-
-
         actions = [
-                   SchemaAddition(factory=OpenPowerMapAction,
-                                  path='MenuBar/File/Open'
-                                ),
-#                    SchemaAddition(id='calibration',
-#                                   factory=lambda: Group(
-#                                                          PowerMapAction(),
-#                                                          PowerCalibrationAction(),
-#                                                          ),
-#                                    path='MenuBar/Extraction'
-#                                    ),
-#                     SchemaAddition(
-#                                    factory=TestDegasAction,
-#                                    path='MenuBar/Extraction'
-#                                    )
-                   ]
+            SchemaAddition(factory=OpenPowerMapAction,
+                           path='MenuBar/File/Open'),
+            #                    SchemaAddition(id='calibration',
+            #                                   factory=lambda: Group(
+            #                                                          PowerMapAction(),
+            #                                                          PowerCalibrationAction(),
+            #                                                          ),
+            #                                    path='MenuBar/Extraction'
+            #                                    ),
+            #                     SchemaAddition(
+            #                                    factory=TestDegasAction,
+            #                                    path='MenuBar/Extraction'
+            #                                    )
+        ]
 
         # if experiment plugin available dont add pattern actions
         ids = [p.id for p in self.application.plugin_manager._plugins]
         if not 'pychron.experiment' in ids:
             actions.extend([
-                            SchemaAddition(id='Open Pattern',
-                                           factory=OpenPatternAction,
-                                           path='MenuBar/File/Open'
-                                           ),
-                            SchemaAddition(id='New Pattern',
-                                           factory=NewPatternAction,
-                                           path='MenuBar/File/New'
-                                           ),
-                            ])
-
+                SchemaAddition(id='Open Pattern',
+                               factory=OpenPatternAction,
+                               path='MenuBar/File/Open'
+                ),
+                SchemaAddition(id='New Pattern',
+                               factory=NewPatternAction,
+                               path='MenuBar/File/New'
+                ),
+            ])
 
         return [TaskExtension(actions=actions),
 
-                ]
+        ]
 
 
 class BaseLaserPlugin(BaseTaskPlugin):
@@ -90,8 +83,8 @@ class BaseLaserPlugin(BaseTaskPlugin):
             raise NotImplementedError
 
         so = self.service_offer_factory(
-                          protocol=ILaserManager,
-                          factory=self._manager_factory)
+            protocol=ILaserManager,
+            factory=self._manager_factory)
         return [so]
 
     def _manager_factory(self):
@@ -110,7 +103,7 @@ class BaseLaserPlugin(BaseTaskPlugin):
             pkg = 'src.lasers.laser_managers.pychron_laser_manager'
             try:
                 tag = ip.get_parameter(plugin, 'communications', element=True)
-#                tag = plugin.find('communications')
+                #                tag = plugin.find('communications')
                 params = dict()
                 for attr in ['host', 'port', 'kind']:
                     try:
@@ -134,6 +127,7 @@ class BaseLaserPlugin(BaseTaskPlugin):
         return m
 
     managers = List(contributes_to=MANAGERS)
+
     def _managers_default(self):
         '''
         '''
@@ -141,7 +135,7 @@ class BaseLaserPlugin(BaseTaskPlugin):
 
         if self.klass is not None:
             d = [dict(name=self.name,
-                     manager=self._get_manager())]
+                      manager=self._get_manager())]
 
         return d
 
@@ -157,6 +151,7 @@ class BaseLaserPlugin(BaseTaskPlugin):
                 pass
         return ['file://{}'.format(path)]
 
+
 class FusionsPlugin(BaseLaserPlugin):
     task_name = Str
 
@@ -165,22 +160,23 @@ class FusionsPlugin(BaseLaserPlugin):
                             task_group='hardware',
                             factory=self._task_factory,
                             name=self.task_name,
-#                             accelerator='Ctrl+l'
+                            #                             accelerator='Ctrl+l'
                             accelerator=self.accelerator
-                            ),
+        ),
                 TaskFactory(id='pychron.laser.calibration',
                             task_group='hardware',
                             factory=self._calibration_task_factory,
                             name='Laser Calibration',
                             accelerator='Ctrl+2'
-                            ),
-                ]
+                ),
+        ]
 
     def _calibration_task_factory(self):
         t = LaserCalibrationTask(manager=self._get_manager())
         return t
 
     sources = List(contributes_to='pychron.video.sources')
+
     def _sources_default(self):
         ip = InitializationParser()
         plugin = ip.get_plugin(self.task_name.replace(' ', ''),
@@ -192,7 +188,7 @@ class FusionsPlugin(BaseLaserPlugin):
         return rs
 
     def _my_task_extensions_default(self):
-#     def _get_task_extensions(self):
+    #     def _get_task_extensions(self):
         def efactory():
             return SMenu(id='Laser', name='Laser')
 
@@ -201,44 +197,43 @@ class FusionsPlugin(BaseLaserPlugin):
                                   path='MenuBar',
                                   before='Tools',
                                   after='View'
-                                  )
-                 ]
+        )
+        ]
 
         exts = [TaskExtension(actions=actions)]
 
-#                    SchemaAddition(id='fusions_laser_group',
-#                                  factory=lambda: GroupSchema(id='FusionsLaserGroup'
-#                                                        ),
-#                                  path='MenuBar/Extraction'
-#                                  ),
-#                    SchemaAddition(id='pattern',
-#                                   factory=lambda:Group(
-#                                                        OpenPatternAction(),
-#                                                        NewPatternAction(),
-#                                                        ),
-#                                   path='MenuBar/Extraction'
-#                                   ),
-#                     SchemaAddition(id='calibration',
-#                                    factory=lambda: Group(
-#                                                          PowerMapAction(),
-#                                                          PowerCalibrationAction(),
-#                                                          ),
-#                                    path='MenuBar/Extraction'
-#                                    ),
-#                     SchemaAddition(
-#                                    factory=OpenPowerMapAction,
-#                                    path='MenuBar/File/Open'
-#                                    ),
-#                     SchemaAddition(
-#                                    factory=TestDegasAction,
-#                                    path='MenuBar/Extraction'
-#                                    ),
-#                               ]
-#                             )
-#                        ]
+        #                    SchemaAddition(id='fusions_laser_group',
+        #                                  factory=lambda: GroupSchema(id='FusionsLaserGroup'
+        #                                                        ),
+        #                                  path='MenuBar/Extraction'
+        #                                  ),
+        #                    SchemaAddition(id='pattern',
+        #                                   factory=lambda:Group(
+        #                                                        OpenPatternAction(),
+        #                                                        NewPatternAction(),
+        #                                                        ),
+        #                                   path='MenuBar/Extraction'
+        #                                   ),
+        #                     SchemaAddition(id='calibration',
+        #                                    factory=lambda: Group(
+        #                                                          PowerMapAction(),
+        #                                                          PowerCalibrationAction(),
+        #                                                          ),
+        #                                    path='MenuBar/Extraction'
+        #                                    ),
+        #                     SchemaAddition(
+        #                                    factory=OpenPowerMapAction,
+        #                                    path='MenuBar/File/Open'
+        #                                    ),
+        #                     SchemaAddition(
+        #                                    factory=TestDegasAction,
+        #                                    path='MenuBar/Extraction'
+        #                                    ),
+        #                               ]
+        #                             )
+        #                        ]
 
         return exts
-
 
 
 #============= EOF =============================================

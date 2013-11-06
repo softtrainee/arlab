@@ -15,38 +15,35 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from pyface.tasks.traits_dock_pane import TraitsDockPane
+from pyface.tasks.traits_task_pane import TraitsTaskPane
+from traitsui.api import View, UItem
 
 #============= standard library imports ========================
-
 #============= local library imports  ==========================
-from traits.api import on_trait_change, Dict
-
-from src.processing.plotters.figure_model import FigureModel
-from src.processing.plotters.series.series_panel import SeriesPanel, DashboardSeriesPanel
-
-
-class SeriesModel(FigureModel):
-    _panel_klass = SeriesPanel
+from traitsui.editors import TableEditor
+from traitsui.extras.checkbox_column import CheckboxColumn
+from traitsui.table_column import ObjectColumn
 
 
-class DashboardSeriesModel(SeriesModel):
-    _panel_klass = DashboardSeriesPanel
-    measurements = Dict
+class DashboardCentralPane(TraitsTaskPane):
+    def traits_view(self):
+        v = View(UItem('selected_device',
+                       style='custom'))
 
-    @on_trait_change('measurements')
-    def _measurements_changed(self):
-        ps = self._make_panels()
-        self.panels = ps
-        self.panel_gen = (gi for gi in self.panels)
+        return v
 
-    def _make_panels(self):
-        #key = lambda x: x.graph_id
-        #ans = sorted(self.analyses, key=key)
-        gs = self._panel_klass(measurements=self.measurements,
-                               plot_options=self.plot_options,
-                               group_id=0)
-        #for gid, ais in groupby(ans, key=key)]
 
-        return [gs, ]
+class DashboardDevicePane(TraitsDockPane):
+    id = 'pychron.dashboard.devices'
+
+    def traits_view(self):
+        cols = [CheckboxColumn(name='use'),
+                ObjectColumn(name='name', editable=False)]
+
+        editor = TableEditor(columns=cols,
+                             selected='selected_device')
+        v = View(UItem('devices', editor=editor))
+        return v
 
     #============= EOF =============================================

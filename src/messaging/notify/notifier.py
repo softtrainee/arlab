@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from threading import Thread
-from traits.api import Int
+from traits.api import Int, Dict
 #============= standard library imports ========================
 import zmq
 #============= local library imports  ==========================
@@ -26,7 +26,9 @@ from src.loggable import Loggable
 class Notifier(Loggable):
     port = Int
     _sock = None
-    _ping_sock = None
+    _req_sock = None
+
+    _handlers = Dict
 
     def _port_changed(self):
         self.setup(self.port)
@@ -38,26 +40,33 @@ class Notifier(Loggable):
             sock.bind('tcp://*:{}'.format(port))
             self._sock = sock
 
-            self._ping_sock = context.socket(zmq.REP)
-            self._ping_sock.bind('tcp://*:{}'.format(port + 1))
+            self._req_sock = context.socket(zmq.REP)
+            self._req_sock.bind('tcp://*:{}'.format(port + 1))
 
-            t = Thread(name='ping_replier', target=self._handle_ping)
+            t = Thread(name='ping_replier', target=self._handle_request)
             t.setDaemon(1)
             t.start()
 
-    def _handle_ping(self):
+    def add_request_handler(self, name, func):
+        self._handlers[name] = func
 
-        sock = self._ping_sock
+    def _handle_request(self):
+
+        sock = self._req_sock
         poll = zmq.Poller()
-        poll.register(self._ping_sock, zmq.POLLIN)
+        poll.register(self._req_sock, zmq.POLLIN)
 
-        while self._ping_sock:
+        while self._req_sock:
             try:
                 socks = dict(poll.poll(1000))
                 if socks.get(sock) == zmq.POLLIN:
                     resp = sock.recv()
                     if resp == 'ping':
                         sock.send('echo')
+                    elif resp in self._handlers:
+                        func = self._handlers[resp]
+                        sock.send(func())
+
             except zmq.ZMQError:
                 pass
 
@@ -65,8 +74,13 @@ class Notifier(Loggable):
         self._sock.close()
         self._sock = None
 
-        self._ping_sock.close()
-        self._ping_sock = None
+        self._req_sock.close()
+        self._req_sock = None
+
+    def send_message(self, msg, verbose=True):
+        if verbose:
+            self.info('pushing message - {}'.format(msg))
+        self._send(msg)
 
     def send_notification(self, uuid, tag='RunAdded'):
         msg = '{} {}'.format(tag, uuid)

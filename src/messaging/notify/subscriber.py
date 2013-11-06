@@ -18,7 +18,7 @@
 from threading import Thread, Event
 import time
 
-from traits.api import Str, Int, Callable, List, Float
+from traits.api import Str, Int, List, Float
 import zmq
 
 from src.loggable import Loggable
@@ -30,7 +30,6 @@ from src.loggable import Loggable
 class Subscriber(Loggable):
     host = Str
     port = Int
-    callback = Callable
 
     _stop_signal = None
     _subscriptions = List
@@ -39,6 +38,10 @@ class Subscriber(Loggable):
 
     last_message_time = Float
 
+    _request_sock = None
+    _sock = None
+    _poll = None
+
     def connect(self, timeout=None):
         context = zmq.Context()
         sock = context.socket(zmq.SUB)
@@ -46,12 +49,12 @@ class Subscriber(Loggable):
         url = self._get_url()
         sock.connect(url)
         self._sock = sock
-        
-        url=self._get_url(1)
+
+        url = self._get_url(1)
         return self._check_server_availability(url, timeout, context=context)
 
     def _get_url(self, offset=0):
-        h, p = self.host, self.port+offset
+        h, p = self.host, self.port + offset
         return 'tcp://{}:{}'.format(h, p)
 
     def check_server_availability(self, timeout=1, verbose=True):
@@ -61,39 +64,63 @@ class Subscriber(Loggable):
     def _check_server_availability(self, url, timeout=3, context=None, verbose=True):
         ret = True
         if timeout:
-            if context is None:
-                context = zmq.Context()
 
-            alive_sock = context.socket(zmq.REQ)
-            alive_sock.connect(url)
+            resp = self.request('ping', timeout, context)
 
-            poll = zmq.Poller()
-            poll.register(alive_sock, zmq.POLLIN)
-            request = 'ping'
-            alive_sock.send(request)
-
-            socks = dict(poll.poll(timeout * 1000))
-            
-            if not socks.get(alive_sock) == zmq.POLLIN or not alive_sock.recv()=='echo':
+            if resp is None or resp != 'echo':
+            #if not socks.get(alive_sock) == zmq.POLLIN or not alive_sock.recv()=='echo':
                 if verbose:
                     self.warning('subscription server at {} not available'.format(url))
-                alive_sock.setsockopt(zmq.LINGER, 0)
-                alive_sock.close()
-                poll.unregister(alive_sock)
-                ret=False
+                    #sock.setsockopt(zmq.LINGER, 0)
+                #alive_sock.close()
+                #poll.unregister(alive_sock)
+                ret = False
 
         return ret
 
-    def subscribe(self, f, cb, verbose=False):
-        sock = self._sock
-        sock.setsockopt(zmq.SUBSCRIBE, f)
-        self._subscriptions.append((f, cb, verbose))
+    def request(self, msg, timeout=1, context=None):
+        if context is None:
+            context = zmq.Context()
+
+        req_sock = self._request_sock
+        if req_sock is None:
+            url = self._get_url(1)
+            req_sock = context.socket(zmq.REQ)
+            req_sock.connect(url)
+            self._request_sock = req_sock
+
+        poll = self._poll
+        if poll is None:
+            poll = zmq.Poller()
+            poll.register(req_sock, zmq.POLLIN)
+
+        req_sock.send(msg)
+
+        socks = dict(poll.poll(timeout * 1000))
+
+        resp = None
+        if socks.get(req_sock) == zmq.POLLIN:
+            resp = req_sock.recv()
+        else:
+            req_sock.setsockopt(zmq.LINGER, 0)
+            req_sock.close()
+            poll.unregister(req_sock)
+            self._request_sock = None
+
+        return resp
+
+    def subscribe(self, tag, cb, verbose=False):
+        if self._sock:
+            self.info('subscribing to {}'.format(tag))
+            sock = self._sock
+            sock.setsockopt(zmq.SUBSCRIBE, tag)
+            self._subscriptions.append((tag, cb, verbose))
 
     def is_listening(self):
         return self._stop_signal and not self._stop_signal.is_set()
 
     def listen(self):
-        self.info('starting subscription')
+        self.info('starting subscriptions')
         self.was_listening = True
 
         self._stop_signal = Event()
