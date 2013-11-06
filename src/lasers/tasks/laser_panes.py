@@ -211,6 +211,10 @@ class StageControlPane(TraitsDockPane):
 class ControlPane(TraitsDockPane):
     name = 'Control'
 
+    movable = False
+    closable = False
+    floatable = False
+
     def traits_view(self):
         v = View(
             VGroup(

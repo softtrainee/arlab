@@ -18,6 +18,7 @@
 from traits.api import Instance
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.processing.plotters.series.series_model import SeriesModel
 from src.processing.tasks.figures.figure_editor import FigureEditor
 from src.processing.plotters.figure_container import FigureContainer
 from src.processing.plotter_options_manager import SeriesOptionsManager, PlotterOptionsManager
@@ -28,6 +29,7 @@ class SeriesEditor(FigureEditor):
     plotter_options_manager_klass = SeriesOptionsManager
     pickle_path = 'series'
     basename = 'Series'
+    model_klass = SeriesModel
 
     def _plotter_options_manager_default(self):
         return self.plotter_options_manager_klass()
@@ -50,9 +52,8 @@ class SeriesEditor(FigureEditor):
         #         plotter_options.load_aux_plots(ref)
         #             plotter_options.load_fits(ref)
 
-        from src.processing.plotters.series.series_model import SeriesModel
 
-        model = SeriesModel(plot_options=plotter_options)
+        model = self.model_klass(plot_options=plotter_options)
         model.analyses = ans
         iv = FigureContainer(model=model)
 

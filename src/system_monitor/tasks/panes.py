@@ -21,7 +21,9 @@ from traitsui.api import View, UItem, TabularEditor, VGroup
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from traitsui.tabular_adapter import TabularAdapter
 from src.processing.tasks.analysis_edit.panes import TablePane
+from src.pychron_constants import LIGHT_RED_COLOR
 from src.system_monitor.tasks.connection_spec import ConnectionSpec
 from src.ui.custom_label_editor import CustomLabel
 from src.processing.tasks.analysis_edit.adapters import UnknownsAdapter
@@ -73,4 +75,34 @@ class ConnectionPane(TraitsDockPane):
         return v
 
 
-#============= EOF =============================================
+class DashboardTabularAdapter(TabularAdapter):
+    columns = [('Name', 'name'),
+               ('Value', 'value'),
+               ('Time', 'last_time_str')]
+
+    def get_bg_color(self, object, trait, row, column=0):
+        color = 'white'
+        if self.item.timed_out or not self.item.last_time:
+            color = LIGHT_RED_COLOR
+        return color
+
+
+class DashboardPane(TraitsDockPane):
+    id = 'pychron.dashboard.client'
+    name = 'Dashboard'
+
+    def traits_view(self):
+        #cols=[ObjectColumn(name='name'),
+        #      ObjectColumn(name='value'),
+        #      ObjectColumn(name='last_time_str', label='Time')]
+        #editor=TableEditor(columns=cols, editable=False)
+        #v=View(UItem('values',
+        #             editor=TableEditor(columns=cols, editable=False)))
+        editor = TabularEditor(adapter=DashboardTabularAdapter(),
+                               editable=False)
+
+        v = View(UItem('values',
+                       editor=editor))
+        return v
+
+    #============= EOF =============================================

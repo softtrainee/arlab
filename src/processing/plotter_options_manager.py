@@ -24,6 +24,7 @@ import os
 #============= local library imports  ==========================
 from src.envisage.tasks.pane_helpers import icon_button_editor
 from src.processing.plotters.options.base import BasePlotterOptions
+from src.processing.plotters.options.dashboard import DashboardOptions
 from src.processing.plotters.options.ideogram import IdeogramOptions
 from src.processing.plotters.options.isochron import InverseIsochronOptions
 from src.processing.plotters.options.plotter import PlotterOptions
@@ -184,5 +185,10 @@ class SystemMonitorOptionsManager(PlotterOptionsManager):
     plotter_options_klass = SystemMonitorOptions
     persistence_name = 'system_monitor'
     #title = 'Series Plot Options'
+
+
+class DashboardOptionsManager(PlotterOptionsManager):
+    plotter_options_klass = DashboardOptions
+    persistence_name = 'dashboard'
 
 #============= EOF =============================================

@@ -43,15 +43,16 @@ class Gauge(HasTraits):
     high = 1e-8
     color_scalar = 1
     width = Int(100)
+
     def traits_view(self):
         v = View(HGroup(Item('display_name', show_label=False, style='readonly',
                              width=-30,
-                             ),
-                         Item('pressure',
-                              format_str='%0.2e',
-                              show_label=False,
-                              style='readonly'
-                              ),
+        ),
+                        Item('pressure',
+                             format_str='%0.2e',
+                             show_label=False,
+                             style='readonly'
+                        ),
                         Item('pressure',
                              show_label=False,
                              width=self.width,
@@ -59,12 +60,13 @@ class Gauge(HasTraits):
                                                    high=self.high,
                                                    color_scalar=self.color_scalar,
                                                    width=self.width
-                                                   )
                              )
-
                         )
-                 )
+
+        )
+        )
         return v
+
 
 class MicroIonController(CoreDevice):
     scan_func = 'get_pressures'
@@ -74,22 +76,22 @@ class MicroIonController(CoreDevice):
 
     def gauge_view(self):
         v = View(
-                 Group(
-                     Item('gauges', style='custom',
-                          show_label=False,
-                          editor=ListEditor(mutable=False,
-                                            style='custom',
-                                        editor=InstanceEditor())),
-                       show_border=True,
-                       label=self.display_name
-                       ),
-#                 height= -100
-                 )
+            Group(
+                Item('gauges', style='custom',
+                     show_label=False,
+                     editor=ListEditor(mutable=False,
+                                       style='custom',
+                                       editor=InstanceEditor())),
+                show_border=True,
+                label=self.display_name
+            ),
+            #                 height= -100
+        )
         return v
 
     def load_additional_args(self, config, *args, **kw):
         self.address = self.config_get(config, 'General', 'address', optional=False)
-        self.display_name = self.config_get(config, 'General', 'name', default=self.name)
+        self.display_name = self.config_get(config, 'General', 'display_name', default=self.name)
 
         ns = self.config_get(config, 'Gauges', 'names')
         if ns:
@@ -122,9 +124,20 @@ class MicroIonController(CoreDevice):
                     self.warning_dialog('Invalid color_scalar string. {}'.format(e), title=self.config_path)
                     continue
 
+                p = '{}_pressure'.format(ni)
+                self.add_trait(p, Float)
+                g.on_trait_change(self._pressure_change, 'pressure')
+
                 self.gauges.append(g)
 
         return True
+
+    #@on_trait_change('gauges:pressure')
+    #def _pres(self, new):
+    #    print 'ffff',new
+
+    def _pressure_change(self, obj, name, old, new):
+        self.trait_set(**{'{}_pressure'.format(obj.name): new})
 
     def graph_builder(self, g):
         super(MicroIonController, self).graph_builder(g, show_legend=True)
@@ -139,7 +152,7 @@ class MicroIonController(CoreDevice):
 
     def get_gauge(self, name):
         return next((gi for gi in self.gauges
-                            if gi.name == name or gi.display_name == name), None)
+                     if gi.name == name or gi.display_name == name), None)
 
     def _set_gauge_pressure(self, name, v):
         g = self.get_gauge(name)
@@ -150,7 +163,7 @@ class MicroIonController(CoreDevice):
                 pass
 
     def get_pressures(self, verbose=False):
-#        self.debug('getting pressure')
+    #        self.debug('getting pressure')
         b = self.get_convectron_b_pressure(verbose=verbose)
         self._set_gauge_pressure('CG2', b)
         time.sleep(0.05)
@@ -236,19 +249,20 @@ class MicroIonController(CoreDevice):
             args = (key,)
         c = ' '.join(args)
 
-        return  c
+        return c
 
     def _parse_response(self, r, name):
         if self.simulation or r is None:
             from numpy.random import normal
+
             if name == 'IG':
                 loc, scale = 1e-9, 5e-10
-#                return pgen.next()
+            #                return pgen.next()
             else:
                 loc, scale = 1e-2, 5e-3
             return abs(normal(loc, scale))
 
-#            r = self.get_random_value(0, 10000) / 10000.0
+        #            r = self.get_random_value(0, 10000) / 10000.0
 
         return r
 

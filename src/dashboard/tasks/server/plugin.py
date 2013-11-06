@@ -15,30 +15,32 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from pyface.action.action import Action
+from envisage.ui.tasks.task_factory import TaskFactory
+from traits.api import Instance
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.dashboard.tasks.server.server import DashboardServer
+from src.dashboard.tasks.server.task import DashboardServerTask
+from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 
 
-class UpdateDatabaseAction(Action):
-    name = 'Update Database'
+class DashboardServerPlugin(BaseTaskPlugin):
+    dashboard_server = Instance(DashboardServer)
 
-    def perform(self, event):
-        app = event.task.window.application
-        man = app.get_service('src.database.isotope_database_manager.IsotopeDatabaseManager')
-        msg = 'Are you sure use would like to update the database? This is for advanced users only!'
-        if man.confirmation_dialog(msg):
-            url = man.db.url
+    def _tasks_default(self):
+        return [TaskFactory(id='pychron.dashboard.server',
+                            name='Dashboard Server',
+                            accelerator='Ctrl+4',
+                            factory=self._factory)]
 
-            repo = 'isotopedb'
-            from src.database.migrate.manage_database import manage_database
+    def _factory(self):
+        f = DashboardServerTask(server=self.dashboard_server)
+        return f
 
-            progress = man.open_progress()
-            manage_database(url, repo,
-                            logger=man.logger,
-                            progress=progress)
+    def start(self):
+        self.dashboard_server = DashboardServer(application=self.application)
+        s = self.dashboard_server
+        s.activate()
 
-            man.populate_default_tables()
-
-            #============= EOF =============================================
+#============= EOF =============================================

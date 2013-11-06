@@ -34,10 +34,8 @@ class FigureContainer(HasTraits):
         n = self.model.npanels
 
         comp, r, c = self._component_factory(n, gpi)
-
         for i in range(r):
             for j in range(c):
-            #                 k = i * c + j
                 p = self.model.next_panel()
                 comp.add(p.make_graph())
 

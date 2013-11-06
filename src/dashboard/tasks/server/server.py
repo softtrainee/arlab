@@ -1,0 +1,179 @@
+#===============================================================================
+# Copyright 2013 Jake Ross
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#   http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#===============================================================================
+
+#============= enthought library imports =======================
+import os
+import pickle
+from threading import Thread
+import time
+from traits.api import Instance, on_trait_change, List
+
+#============= standard library imports ========================
+#============= local library imports  ==========================
+from src.dashboard.tasks.server.device import DashboardDevice
+from src.hardware.core.i_core_device import ICoreDevice
+from src.helpers.filetools import str_to_bool
+from src.loggable import Loggable
+from src.messaging.notify.notifier import Notifier
+from src.paths import paths
+from src.xml.xml_parser import XMLParser
+
+
+class DashboardServer(Loggable):
+    devices = List
+    selected_device = Instance(DashboardDevice)
+
+    notifier = Instance(Notifier, ())
+    _alive = False
+
+    def activate(self):
+        self._load_devices()
+        if self.devices:
+            self.setup_notifier()
+            self.start_poll()
+
+            print self._handle_config()
+
+    def notifier_default(self):
+        return Notifier()
+
+    def start_poll(self):
+        self.info('starting dashboard poll')
+        self._alive = True
+        t = Thread(name='poll',
+                   target=self._poll)
+
+        t.setDaemon(1)
+        t.start()
+
+    def _load_devices(self):
+        #read devices from config
+
+        #get device from app
+        app = self.application
+
+        parser = self._get_parser()
+        ds = []
+        for dev in parser.get_elements('device'):
+            name = dev.text.strip()
+
+            dname = dev.find('name')
+            if dname is None:
+                self.warning('no device name for {}. use a <name> tag'.format(name))
+                continue
+
+            dev_name = dname.text.strip()
+
+            device = app.get_service(ICoreDevice,
+                                     query='name=="{}"'.format(dev_name))
+            if device is None:
+                self.warning('no device names {}'.format(dev_name))
+            enabled = dev.find('use')
+            if enabled is not None:
+                enabled = str_to_bool(enabled.text.strip())
+
+            d = DashboardDevice(name=name, use=bool(enabled),
+                                _device=device)
+
+            for v in dev.findall('value'):
+                func_name = v.find('func')
+
+                n = v.text.strip()
+                tag = '<{},{}>'.format(name, n)
+
+                if func_name is not None:
+                    func_name = func_name.text.strip()
+
+                    period = v.find('period')
+                    if period is None:
+                        period = 60
+                    else:
+                        period = period.text.strip()
+                        if not period == 'on_change':
+                            try:
+                                period = int(period)
+                            except ValueError:
+
+                                period = 60
+
+                    enabled = v.find('enabled')
+                    if enabled is None:
+                        enabled = False
+                    else:
+                        enabled = str_to_bool(enabled.text.strip())
+
+                    d.add_value(n, tag, func_name, period, enabled)
+
+            ds.append(d)
+
+        self.devices = ds
+
+    def _handle_config(self):
+        """
+            return a pickled dictionary string
+        """
+        config = [pv for dev in self.devices
+                  for pv in dev.values]
+
+        return pickle.dumps(config)
+
+    def _poll(self):
+
+        mperiod = min([v.period for dev in self.devices
+                       for v in dev.values])
+
+        self.debug('min period {}'.format(mperiod))
+        while self._alive:
+            for dev in self.devices:
+                if not dev.use:
+                    continue
+
+                dev.trigger()
+            time.sleep(mperiod)
+
+    def _get_parser(self):
+        p = os.path.join(paths.setup_dir, 'dashboard.xml')
+        parser = XMLParser(p)
+        return parser
+
+    def setup_notifier(self):
+        parser = self._get_parser()
+
+        port = 8100
+        elem = parser.get_elements('port')
+        if elem is not None:
+            try:
+                port = int(elem[0].text.strip())
+            except ValueError:
+                pass
+
+        self.notifier.port = port
+
+        #add a config request handler
+        self.notifier.add_request_handler('config', self._handle_config)
+
+    @on_trait_change('devices:publish_event')
+    def _handle_publish(self, new):
+        self.notifier.send_message(new)
+
+    @on_trait_change('devices:values:+')
+    def _value_changed(self, obj, name, old, new):
+        if name.startswith('last_'):
+            return
+
+        print obj, name, old, new
+
+#============= EOF =============================================

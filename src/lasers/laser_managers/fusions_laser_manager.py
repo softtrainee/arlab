@@ -117,9 +117,9 @@ class FusionsLaserManager(LaserManager):
         if self.stage_manager:
             self.stage_manager.canvas.request_redraw()
 
-        #===============================================================================
-        #   IExtractionDevice interface
-        #===============================================================================
+            #===============================================================================
+            #   IExtractionDevice interface
+            #===============================================================================
 
     def extract(self, power, **kw):
         self.enable_laser()
@@ -242,6 +242,7 @@ class FusionsLaserManager(LaserManager):
         if self.use_video:
             return self.stage_manager.snapshot(
                 auto=True,
+                inform=False,
                 *args, **kw)
 
     def start_video_recording(self, name='video', *args, **kw):
@@ -277,9 +278,9 @@ class FusionsLaserManager(LaserManager):
     def is_degassing(self):
         if self._degas_thread:
             return self._degas_thread.isRunning()
-        #===============================================================================
-        # pyscript interface
-        #===============================================================================
+            #===============================================================================
+            # pyscript interface
+            #===============================================================================
 
     def _move_to_position(self, position, autocenter):
 

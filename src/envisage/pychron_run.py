@@ -63,7 +63,10 @@ PACKAGE_DICT = dict(
     CanvasDesignerPlugin='src.canvas.tasks.canvas_plugin',
     ArArConstantsPlugin='src.constants.tasks.arar_constants_plugin',
     EntryPlugin='src.entry.tasks.entry_plugin',
-    SystemMonitorPlugin='src.system_monitor.tasks.system_monitor_plugin'
+    SystemMonitorPlugin='src.system_monitor.tasks.system_monitor_plugin',
+    DashboardServerPlugin='src.dashboard.tasks.server.plugin',
+
+
 )
 
 
