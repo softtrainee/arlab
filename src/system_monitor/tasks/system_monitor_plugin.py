@@ -21,7 +21,8 @@ from envisage.ui.tasks.task_factory import TaskFactory
 
 #from src.processing.tasks.browser.browser_task import BrowserTask
 from src.processing.tasks.processing_plugin import ProcessingPlugin
-from src.system_monitor.tasks.preferences import SystemMonitorPreferencesPane, ConsolePreferencesPane
+from src.system_monitor.tasks.preferences import SystemMonitorPreferencesPane, ConsolePreferencesPane,\
+    DashboardPreferencesPane
 from src.system_monitor.tasks.system_monitor_task import SystemMonitorTask
 
 
@@ -43,6 +44,7 @@ class SystemMonitorPlugin(ProcessingPlugin):
 
     def _preferences_panes_default(self):
         return [SystemMonitorPreferencesPane,
-                ConsolePreferencesPane]
+                ConsolePreferencesPane,
+                DashboardPreferencesPane,]
 
         #============= EOF =============================================

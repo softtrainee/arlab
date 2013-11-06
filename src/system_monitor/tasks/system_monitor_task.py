@@ -228,8 +228,9 @@ class SystemMonitorTask(FigureTask):
         bind_preference(client, 'host', 'pychron.dashboard.host')
         bind_preference(client, 'port', 'pychron.dashboard.port')
 
-        #if client.connect():
+        client.connect()
         client.load_configuration()
+        client.listen()
 
     @on_trait_change('dashboard_client:values:value')
     def _value_changed(self, obj, name, old, new):

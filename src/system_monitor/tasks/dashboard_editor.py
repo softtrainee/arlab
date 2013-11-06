@@ -51,7 +51,7 @@ class DashboardEditor(SeriesEditor):
     model_klass = DashboardSeriesModel
     name = 'Dashboard'
     measurements = Dict
-    limit = Int(500)
+    limit = Int(100)
 
     def _dump_tool(self):
         return self.tool
@@ -62,7 +62,8 @@ class DashboardEditor(SeriesEditor):
     def set_measurements(self, keys):
         m = {}
         for ki in keys:
-            m[ki] = array([(1, 0), (2, 1), (3, 10), (4, 4)])
+#            m[ki] = array([(1, 0), (2, 1), (3, 10), (4, 4)])
+            m[ki] = None
 
         self.measurements = m
         po = self.plotter_options_manager.plotter_options

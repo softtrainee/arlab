@@ -19,6 +19,7 @@ import time
 from chaco.scales.time_scale import CalendarScaleSystem
 from chaco.scales_tick_generator import ScalesTickGenerator
 from traits.api import Array, Dict
+from numpy import Inf
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.processing.plotters.arar_figure import BaseArArFigure
@@ -50,29 +51,29 @@ class DashboardSeries(BaseArArFigure):
 
         if plots:
             px = plots[0]
-            data = self.measurements[px.name]
-            if data is None:
-                return
-
-            xs, ys = data.T
-            if px.normalize == 'now':
-                norm = time.time()
-            else:
-                norm = xs[-1]
-            xs -= norm
-            if not px.use_time_axis:
-                xs /= 3600
-            else:
-                graph.convert_index_func = lambda x: '{:0.2f} hrs'.format(x / 3600.)
-
-            #self.xs = xs
+#            data = self.measurements[px.name]
+#            if data is None:
+#                return
+            _mi,_ma=Inf, -Inf
             with graph.no_regression(refresh=True):
                 plots = [po for po in plots if po.use]
+
                 for i, po in enumerate(plots):
+                    xs,ys=[],[]
+                    data = self.measurements[po.name]
+                    if data is not None:
+                        xs, ys = data.T
+                        _mi=min(min(xs), _mi)
+                        _ma=max(max(xs), _ma)
+                        if not po.use_time_axis:
+                            xs /= 3600
+                        else:
+                            graph.convert_index_func = lambda x: '{:0.2f} hrs'.format(x / 3600.)
+
                     self._plot_series(po, i, xs, ys)
 
                 if plots:
-                    graph.set_x_limits(min_=min(xs), max_=max(xs), pad='0.1',
+                    graph.set_x_limits(min_=_mi, max_=_ma, pad='0.1',
                                        plotid=0)
 
     def _plot_series(self, po, pid, xs, ys):
