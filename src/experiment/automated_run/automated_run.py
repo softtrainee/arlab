@@ -1490,26 +1490,23 @@ anaylsis_type={}
     #             attrs['ANALYSIS_TYPE'] = self.spec.analysis_type
     #             attrs['TIMESTAMP'] = time.time()
 
-
     def post_measurement_save(self):
         if self._measured:
             return self._post_measurement_save()
 
-
     def _local_db_save(self):
         ldb = self._local_lab_db_factory()
-        ln = self.spec.labnumber
-        aliquot = self.spec.aliquot
-        cp = self._current_data_frame
+        with ldb.session_ctx():
+            ln = self.spec.labnumber
+            aliquot = self.spec.aliquot
+            cp = self._current_data_frame
 
-        ldb.add_analysis(labnumber=ln,
-                         aliquot=aliquot,
-                         collection_path=cp,
-        )
-        ldb.commit()
-        ldb.close()
-        del ldb
-
+            ldb.add_analysis(labnumber=ln,
+                             aliquot=aliquot,
+                             collection_path=cp)
+            #ldb.commit()
+            #ldb.close()
+            #del ldb
 
     def _post_measurement_save(self):
 
@@ -1542,8 +1539,7 @@ anaylsis_type={}
         aliquot = self.spec.aliquot
 
         # save to local sqlite database for backup and reference
-
-        #         self._local_db_save()
+        self._local_db_save()
 
         # save to a database
         db = self.db
@@ -1959,100 +1955,32 @@ anaylsis_type={}
             return self._time_save(func, 'monitor info')
 
     def _save_to_massspec(self, p):
-        dm = self.data_manager
-        #dm.open_data(p)
+        #dm = self.data_manager
 
         h = self.massspec_importer.db.host
         dn = self.massspec_importer.db.name
         self.info('saving to massspec database {}/{}'.format(h, dn))
-        #        #save to mass spec database
 
-        #baselines = []
-        #signals = []
-        #detectors = []
-        #
-        ##        print self._save_isotopes
-        #for isotope, detname, kind in self._save_isotopes:
-        ##            print isotope, detname, kind
-        #
-        #    dd = (detname, isotope)
-        #    if not dd in detectors:
-        #        detectors.append(dd)
-        #
-        #    if kind == 'baseline':
-        #        #detectors.append((detname, isotope))
-        #        table = dm.get_table(detname, '/baseline/{}'.format(isotope))
-        #        if table:
-        #            bi = [(row['time'], row['value']) for row in table.iterrows()]
-        #            baselines.append(bi)
-        #    elif kind == 'signal':
-        #
-        #        table = dm.get_table(detname, '/signal/{}'.format(isotope))
-        #        if table:
-        #            si = [(row['time'], row['value']) for row in table.iterrows()]
-        #            signals.append(si)
-        #
-        #dm.close_file()
-        #
-        #blanks = []
-        #pb = self.get_previous_blanks()
-        ##pb = self.experiment_executor._prev_blanks
-        #for _di, iso in detectors:
-        #    if iso in pb:
-        #        blanks.append(pb[iso])
-        #    else:
-        #        blanks.append(ufloat(0, 0))
-        #
-        #sig_ints = []
-        #base_ints = []
-        #psignals = self._processed_signals_dict
-        #baseline_fits = []
-        #for iso, _, kind in self._save_isotopes:
-        #    if kind == 'signal':
-        #        si = psignals['{}signal'.format(iso)]
-        #        sig_ints.append(si.uvalue)
-        #        try:
-        #            bi = psignals['{}baseline'.format(iso)]
-        #            bv = bi.uvalue
-        #        except KeyError:
-        #            self.debug('No {} baseline available to save to mass spec database'.format(iso))
-        #            bv = ufloat(0, 0)
-        #
-        #        base_ints.append(bv)
-        #
-        #    elif kind == 'baseline':
-        #        baseline_fits.append('Average Y')
-        #
-        #        #        baseline_fits = ['Average Y', ] * len(self._active_detectors)
-        #
-        #rs_name, rs_text = self._assemble_script_blob()
-        #rid = self.runid
-        #
-        ##dc = self.multi_collector
+        exp = self._export_spec_factory()
+
+        if self.massspec_importer.add_analysis(exp):
+            self.info('analysis added to mass spec database')
+        else:
+            if self.experiment_executor:
+                self.experiment_executor.cancel(cancel_run=True,
+                                                msg='Could not save {} to Mass Spec database'.format(self.runid))
+
+    def _export_spec_factory(self):
         dc = self.collector
         fb = dc.get_fit_block(-1, self.fits)
-        #self.debug(fb)
-        #self.debug(self._active_detectors)
 
-        #exp = ExportSpec(rid=rid,
-        #                 runscript_name=rs_name,
-        #                 runscript_text=rs_text,
-        #                 signal_fits=fb,
-        #                 baseline_fits=baseline_fits,
-        #                 signal_intercepts=sig_ints,
-        #                 baseline_intercepts=base_ints,
-        #                 spectrometer=self.spec.mass_spectrometer.capitalize(),
-        #                 #                             spectrometer='Pychron {}'.format(self.mass_spectrometer.capitalize()),
-        #                 baselines=baselines,
-        #                 signals=signals,
-        #                 blanks=blanks,
-        #                 detectors=detectors)
         rs_name, rs_text = self._assemble_script_blob()
         rid = self.runid
 
         blanks = self.get_previous_blanks()
         dkeys = [d.name for d in self._active_detectors]
         sf = dict(zip(dkeys, fb))
+        p = self._current_data_frame
 
         exp = ExportSpec(rid=rid,
                          runscript_name=rs_name,
@@ -2064,14 +1992,7 @@ anaylsis_type={}
                          signal_intercepts=self._processed_signals_dict
         )
         exp.load_record(self)
-
-        if self.massspec_importer.add_analysis(exp):
-            self.info('analysis added to mass spec database')
-        else:
-            if self.experiment_executor:
-                self.experiment_executor.cancel(cancel_run=True,
-                                                msg='Could not save {} to Mass Spec database'.format(rid))
-
+        return exp
 
     def _assemble_extraction_blob(self):
         _names, txt = self._assemble_script_blob(kinds=('extraction', 'post_equilibration', 'post_measurement'))
