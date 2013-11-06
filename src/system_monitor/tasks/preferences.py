@@ -105,7 +105,7 @@ class DashboardPreferences(BasePreferencesHelper):
     port = Int
 
 
-class ConsolePreferencesPane(BaseConsolePreferencesPane):
+class DashboardPreferencesPane(PreferencesPane):
     model_factory = DashboardPreferences
     category = 'SystemMonitor'
 

@@ -159,7 +159,7 @@ class DashboardValue(HasTraits):
                 self.last_time = time.time()
 
         else:
-            self.value = new
+            self.value = float(new)
             self.last_time = time.time()
 
 
@@ -183,6 +183,6 @@ class DashboardClient(Subscriber):
             pv = DashboardValue(name=di.name)
             vs.append(pv)
             self.values = vs
-            self.subscribe(di.tag, pv.handle_update)
+            self.subscribe(di.tag, pv.handle_update, verbose=True)
 
 #============= EOF =============================================

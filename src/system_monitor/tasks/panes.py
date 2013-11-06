@@ -99,6 +99,7 @@ class DashboardPane(TraitsDockPane):
         #v=View(UItem('values',
         #             editor=TableEditor(columns=cols, editable=False)))
         editor = TabularEditor(adapter=DashboardTabularAdapter(),
+                               auto_update=True,
                                editable=False)
 
         v = View(UItem('values',
