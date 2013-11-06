@@ -225,8 +225,8 @@ class SystemMonitorTask(FigureTask):
 
     def _setup_dashboard_client(self):
         client = self.dashboard_client
-        bind_preference(client, 'host', 'pychron.sys_mon.dashboard_host')
-        bind_preference(client, 'port', 'pychron.sys_mon.dashboard_port')
+        bind_preference(client, 'host', 'pychron.dashboard.host')
+        bind_preference(client, 'port', 'pychron.dashboard.port')
 
         #if client.connect():
         client.load_configuration()

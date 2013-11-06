@@ -90,4 +90,5 @@ class ConsolePreferencesPane(BaseConsolePreferencesPane):
     model_factory = ConsolePreferences
     label = 'Experiment'
 
+
 #============= EOF =============================================

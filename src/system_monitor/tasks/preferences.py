@@ -16,12 +16,12 @@
 
 #============= enthought library imports =======================
 from canopy.plugin.preferences import PreferencesPane
-from traits.api import CInt, Str, on_trait_change
+from traits.api import CInt, Str, on_trait_change, Int
 from traitsui.api import View, Item, VGroup, ListStrEditor, HGroup
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.envisage.tasks.base_preferences_helper import FavoritesPreferencesHelper, FavoritesAdapter, BaseConsolePreferences, BaseConsolePreferencesPane
+from src.envisage.tasks.base_preferences_helper import FavoritesPreferencesHelper, FavoritesAdapter, BaseConsolePreferences, BaseConsolePreferencesPane, BasePreferencesHelper
 from src.envisage.tasks.pane_helpers import icon_button_editor
 
 
@@ -84,9 +84,9 @@ class SystemMonitorPreferencesPane(PreferencesPane):
                           Item('host'),
                           Item('port'),
         )
-        v = View(HGroup(fav_grp, conn_grp,
+        v = View(VGroup(HGroup(fav_grp, conn_grp),
                         label='Connections',
-                        show_border=True))
+        ))
         return v
 
 
@@ -97,5 +97,22 @@ class ConsolePreferences(BaseConsolePreferences):
 class ConsolePreferencesPane(BaseConsolePreferencesPane):
     model_factory = ConsolePreferences
     label = 'System Monitor'
+
+
+class DashboardPreferences(BasePreferencesHelper):
+    preferences_path = 'pychron.dashboard'
+    host = Str
+    port = Int
+
+
+class ConsolePreferencesPane(BaseConsolePreferencesPane):
+    model_factory = DashboardPreferences
+    category = 'SystemMonitor'
+
+    def traits_view(self):
+        v = View(VGroup(Item('host'),
+                        Item('port'),
+                        label='Dashboard'))
+        return v
 
 #============= EOF =============================================
