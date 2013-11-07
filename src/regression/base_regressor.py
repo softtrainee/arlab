@@ -41,6 +41,10 @@ class BaseRegressor(HasTraits):
     fit = Property
     _fit = None
 
+    n = Property(depends_on='dirty, xs, ys')
+
+    def _get_n(self):
+        return len(self.xs)
 
     def _xs_changed(self):
     #        if len(self.xs) and len(self.ys):

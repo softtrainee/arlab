@@ -31,11 +31,24 @@ class ExportSpecTestCase(unittest.TestCase):
                                                    'Ar38', 'Ar37', 'Ar36')):
                 self.assertEqual(iso, siso)
 
+    def test_non_fool_massspec(self):
+        e = self.spec
+        with e.open_file():
+            det = e._get_baseline_detector('Ar40', 'H1')
+            self.assertEqual(det, 'H1')
+
+    def test_fool_massspec(self):
+        e = self.spec
+        with e.open_file():
+            e.is_peak_hop = True
+            det = e._get_baseline_detector('Ar40', 'H1')
+            self.assertEqual(det, e.peak_hop_detector)
+
     def test_baseline(self):
         e = self.spec
         with e.open_file():
-            det = 'CDD'
-            tb, vb = e.get_baseline_data(det)
+            det = 'H1'
+            tb, vb = e.get_baseline_data('Ar40', det)
             self.assertEqual(len(tb), 10)
 
     def test_iter_isotopes(self):

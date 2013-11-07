@@ -15,11 +15,12 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from _socket import gethostname, gethostbyname
 import os
 import pickle
 from threading import Thread
 import time
-from traits.api import Instance, on_trait_change, List
+from traits.api import Instance, on_trait_change, List, Str
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -37,6 +38,9 @@ class DashboardServer(Loggable):
     selected_device = Instance(DashboardDevice)
 
     notifier = Instance(Notifier, ())
+
+    url = Str
+
     _alive = False
 
     def activate(self):
@@ -97,29 +101,30 @@ class DashboardServer(Loggable):
                 if func_name is not None:
                     func_name = func_name.text.strip()
 
-                    period = v.find('period')
-                    if period is None:
-                        period = 60
-                    else:
-                        period = period.text.strip()
-                        if not period == 'on_change':
-                            try:
-                                period = int(period)
-                            except ValueError:
+                    period = self._get_xml_value(v, 'period', 60)
+                    if not period == 'on_change':
+                        try:
+                            period = int(period)
+                        except ValueError:
+                            period = 60
 
-                                period = 60
-
-                    enabled = v.find('enabled')
-                    if enabled is None:
-                        enabled = False
-                    else:
-                        enabled = str_to_bool(enabled.text.strip())
-
-                    d.add_value(n, tag, func_name, period, enabled)
+                    enabled = str_to_bool(self._get_xml_value(v, 'enabled', False))
+                    timeout = self._get_xml_value(v, 'timeout', 0)
+                    d.add_value(n, tag, func_name, period, enabled, timeout)
 
             ds.append(d)
 
         self.devices = ds
+
+    def _get_xml_value(self, elem, tag, default):
+        ret = default
+
+        tt = elem.find(tag)
+        if not tt is None:
+            ret = tt.text.strip()
+
+        return ret
+
 
     def _handle_config(self):
         """
@@ -161,7 +166,8 @@ class DashboardServer(Loggable):
                 pass
 
         self.notifier.port = port
-
+        host = gethostbyname(gethostname())
+        self.url = '{}:{}'.format(host, port)
         #add a config request handler
         self.notifier.add_request_handler('config', self._handle_config)
 

@@ -82,7 +82,6 @@ class MulticollectTestCase(unittest.TestCase):
         t.join()
 
     def _measure(self):
-        cycles = 1
         counts = 50
         dets = ['H2', 'H1', 'AX', 'L1', 'L2', 'CDD']
         a = self.arun
@@ -91,7 +90,7 @@ class MulticollectTestCase(unittest.TestCase):
         a.py_activate_detectors(dets)
         st = time.time()
         a.py_data_collection(counts, st, 0)
-        #a.py_baselines(10, st, 0, 39.5, 'H1', series=1)
+        a.py_baselines(10, st, 0, 39.5, 'H1', series=1)
 
     def test_multicollect_save(self):
         self.measure()

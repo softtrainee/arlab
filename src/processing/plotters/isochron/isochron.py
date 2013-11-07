@@ -28,6 +28,7 @@ from src.processing.plotters.arar_figure import BaseArArFigure
 
 from src.graph.error_ellipse_overlay import ErrorEllipseOverlay
 from src.regression.new_york_regressor import ReedYorkRegressor
+from src.stats import validate_mswd
 
 N = 500
 
@@ -177,7 +178,7 @@ class InverseIsochron(Isochron):
         except ZeroDivisionError:
             xt=0
 
-#        reg.predict_error()
+        #        reg.predict_error()
         j = self._ref_j
         s = self._ref_age_scalar
         u = self._ref_age_units
@@ -186,20 +187,16 @@ class InverseIsochron(Isochron):
         v = age.nominal_value
         e = age.std_dev
 
-        ##p = calc_percent_error(v, e)
-        ##print 'age', v, e, j
-        #ages, errors = zip(*[(ai.age.nominal_value, ai.age_error_wo_j)
-        #                        for ai in self.analyses
-        #                            if ai.temp_status == 0])
-        #
-        #n = len(ages)
-        #mswd = calculate_mswd(ages, errors)
-        #mswd = '{:0.2f}'.format(mswd)
-        #valid = validate_mswd(mswd, n)
-        #if not valid:
-        #    mswd = '*{}'.format(mswd)
-        n = len([ai for ai in self.analyses if ai.temp_status == 0])
-        mswd = 'NaN'
+        mswd = reg.mswd
+        n = reg.n
+
+        valid = validate_mswd(mswd, n)
+        if not valid:
+            mswd = '*{}'.format(mswd)
+
+        mswd = '{:0.2f}'.format(mswd)
+        #n = len([ai for ai in self.analyses if ai.temp_status == 0])
+        #mswd = 'NaN'
 
         age_line = 'Age= {} +/-{} ({}%) {}'.format(floatfmt(v, n=3), floatfmt(e, n=4, s=3), p, u)
         mswd_line = 'N= {} mswd= {}'.format(n, mswd)
@@ -209,8 +206,7 @@ class InverseIsochron(Isochron):
                 component=plot,
                 overlay_position='inside bottom',
                 hjustify='left',
-                color=text_color
-            )
+                color=text_color)
             plot.overlays.append(label)
             self._plot_label = label
 

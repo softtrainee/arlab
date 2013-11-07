@@ -15,7 +15,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-import time
 from chaco.scales.time_scale import CalendarScaleSystem
 from chaco.scales_tick_generator import ScalesTickGenerator
 from traits.api import Array, Dict
@@ -51,20 +50,20 @@ class DashboardSeries(BaseArArFigure):
 
         if plots:
             px = plots[0]
-#            data = self.measurements[px.name]
-#            if data is None:
-#                return
-            _mi,_ma=Inf, -Inf
+            #            data = self.measurements[px.name]
+            #            if data is None:
+            #                return
+            _mi, _ma = Inf, -Inf
             with graph.no_regression(refresh=True):
                 plots = [po for po in plots if po.use]
 
                 for i, po in enumerate(plots):
-                    xs,ys=[],[]
+                    xs, ys = [], []
                     data = self.measurements[po.name]
                     if data is not None:
                         xs, ys = data.T
-                        _mi=min(min(xs), _mi)
-                        _ma=max(max(xs), _ma)
+                        _mi = min(min(xs), _mi)
+                        _ma = max(max(xs), _ma)
                         if not po.use_time_axis:
                             xs /= 3600
                         else:
@@ -73,6 +72,8 @@ class DashboardSeries(BaseArArFigure):
                     self._plot_series(po, i, xs, ys)
 
                 if plots:
+                    window_hours = 6
+                    _ma = max(_ma, _mi + 3600 * window_hours)
                     graph.set_x_limits(min_=_mi, max_=_ma, pad='0.1',
                                        plotid=0)
 

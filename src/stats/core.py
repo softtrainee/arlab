@@ -23,10 +23,11 @@ from scipy.stats import chi2
 def _kronecker(ii, jj):
     return int(ii == jj)
 
+
 kronecker = vectorize(_kronecker)
 
-def calculate_mswd(x, errs, k=1):
 
+def calculate_mswd(x, errs, k=1):
     mswd_w = 0
     n = len(x)
     if n >= 2:
@@ -37,21 +38,22 @@ def calculate_mswd(x, errs, k=1):
         ssw = (x - xmean_w) ** 2 / errs ** 2
         mswd_w = ssw.sum() / float(n - k)
 
-#         xmean_u = x.mean()
-#         ssu = (x - xmean_u) ** 2 / errs ** 2
-#         mswd_u = ssu.sum() / float(n - k)
-#         print mswd_w, mswd_u
+    #         xmean_u = x.mean()
+    #         ssu = (x - xmean_u) ** 2 / errs ** 2
+    #         mswd_u = ssu.sum() / float(n - k)
+    #         print mswd_w, mswd_u
 
     return mswd_w
+
 
 def calculate_weighted_mean(x, errs, error=0):
     x = asarray(x)
     errs = asarray(errs)
     weights = 1 / errs ** 2
-#     weights = asarray(map(lambda e: 1 / e ** 2, errs))
+    #     weights = asarray(map(lambda e: 1 / e ** 2, errs))
 
-#     wtot = weights.sum()
-#     wmean = (weights * x).sum() / wtot
+    #     wtot = weights.sum()
+    #     wmean = (weights * x).sum() / wtot
 
     wmean, sum_weights = average(x, weights=weights, returned=True)
     if error == 0:
@@ -59,6 +61,7 @@ def calculate_weighted_mean(x, errs, error=0):
     elif error == 1:
         werr = 1
     return wmean, werr
+
 
 def validate_mswd(mswd, n, k=1):
     '''
@@ -80,6 +83,36 @@ def validate_mswd(mswd, n, k=1):
     rv = chi2(dof, scale=1 / float(dof))
     low, high = rv.interval(0.95)
     return low <= mswd <= high
+
+
+def chi_squared(x, y, sx, sy, a, b):
+    """
+        Press et. al 2007 Numerical Recipes
+        chi2=Sum((y_i-(a+b*x_i)^2*W_i)
+        where W_i=1/(sy_i^2+(b*sx_i)^2)
+
+    """
+    x = asarray(x)
+    y = asarray(y)
+    sx = asarray(sx)
+    sy = asarray(sy)
+
+    w = (sy ** 2 + (b * sx) ** 2) ** -1
+
+    c = ((y - (a + b * x)) ** 2 * w).sum()
+
+    return c
+
+
+def calculate_mswd2(x, y, ex, ey, a, b):
+    """
+        see Murray 1994, Press 2007
+
+        calculate chi2
+        mswd=chi2/(n-2)
+    """
+    n = len(x)
+    return chi_squared(x, y, ex, ey, a, b) / (n - 2)
 
 #============= EOF =============================================
 #    if 1 <= dof <= 25:

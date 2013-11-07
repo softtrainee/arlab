@@ -19,12 +19,16 @@
 import time
 import math
 from datetime import datetime
+
 ISO_FORMAT_STR = "%Y-%m-%d %H:%M:%S"
+
+
 def time_generator(start=None):
     if start is None:
         start = time.time()
     while 1:
         yield time.time() - start
+
 
 def current_time_generator(start):
     '''
@@ -32,14 +36,14 @@ def current_time_generator(start):
     yt = start
     prev_time = 0
     i = 0
-    while(1):
+    while (1):
 
         current_time = time.time()
         if prev_time != 0:
             interval = current_time - prev_time
             yt += interval
 
-        yield(yt)
+        yield (yt)
         prev_time = current_time
         i += 1
 
@@ -55,8 +59,10 @@ def generate_datetimestamp(resolution='seconds'):
         r = '{}{:0.5f}'.format(time.strftime(ISO_FORMAT_STR), millisecs)
     return r
 
+
 def generate_datestamp():
     return get_date()
+
 
 def get_datetime(timestamp=None):
     if timestamp is None:
@@ -68,20 +74,28 @@ def get_datetime(timestamp=None):
         d = datetime.strptime(timestamp, ISO_FORMAT_STR)
     return d
 
+
 def get_date():
     return time.strftime('%Y-%m-%d')
+
 
 def get_time(timestamp=None):
     if timestamp is None:
         timestamp = time.time()
+
+    if isinstance(timestamp, float):
+        timestamp = datetime.fromtimestamp(timestamp)
+
     t = time.mktime(timestamp.timetuple())
     return t
+
 
 def convert_timestamp(timestamp, fmt=None):
     if fmt is None:
         fmt = ISO_FORMAT_STR
     t = get_datetime(timestamp)
     return datetime.strftime(t, fmt)
+
 #    return time.mktime(t.timetuple()) + 1e-6 * t.microsecond
 # def convert_float(timestamp):
 
