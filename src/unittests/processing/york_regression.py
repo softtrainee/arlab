@@ -22,6 +22,8 @@ import unittest
 import numpy as np
 #============= local library imports  ==========================
 from src.regression.new_york_regressor import NewYorkRegressor, ReedYorkRegressor
+
+
 class NewYorkRegressionTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -29,8 +31,8 @@ class NewYorkRegressionTest(unittest.TestCase):
         xs = [0, 0.9, 1.8, 2.6, 3.3, 4.4, 5.2, 6.1, 6.5, 7.4]
         ys = [5.9, 5.4, 4.4, 4.6, 3.5, 3.7, 2.8, 2.8, 2.4, 1.5]
 
-#         xs = [5, 10, 6, 8, 4, 4, 3, 10, 2, 6, 7, 9]
-#         ys = [5, 20, 4, 15, 11, 9, 12, 18, 7, 2, 14, 17]
+        #         xs = [5, 10, 6, 8, 4, 4, 3, 10, 2, 6, 7, 9]
+        #         ys = [5, 20, 4, 15, 11, 9, 12, 18, 7, 2, 14, 17]
 
         wxs = np.array([1000, 1000, 500, 800, 200, 80, 60, 20, 1.8, 1])
         wys = np.array([1, 1.8, 4, 8, 20, 20, 70, 70, 100, 500])
@@ -49,6 +51,7 @@ class NewYorkRegressionTest(unittest.TestCase):
     def testIntercept(self):
         intercept = self.reg.get_intercept()
         self.assertAlmostEqual(intercept, 5.4799, 4)
+
     def testSlopeError(self):
         err = self.reg.get_slope_error()
         self.assertAlmostEqual(err, 0.0702, 4)
@@ -66,7 +69,6 @@ class NewYorkRegressionTest(unittest.TestCase):
 #         self.assertAlmostEqual(se, 0.0702, 4)
 
 class YorkRegressionTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls):
         xs = [0.03692, 1.07118]
@@ -75,20 +77,20 @@ class YorkRegressionTest(unittest.TestCase):
         eys = [0.0003, 0.000013]
 
         xs = [0.89, 1.0, 0.92, 0.87, 0.9, 0.86, 1.08, 0.86, 1.25,
-            1.01, 0.86, 0.85, 0.88, 0.84, 0.79, 0.88, 0.70, 0.81,
-            0.88, 0.92, 0.92, 1.01, 0.88, 0.92, 0.96, 0.85, 1.04
-            ]
+              1.01, 0.86, 0.85, 0.88, 0.84, 0.79, 0.88, 0.70, 0.81,
+              0.88, 0.92, 0.92, 1.01, 0.88, 0.92, 0.96, 0.85, 1.04
+        ]
         ys = [0.67, 0.64, 0.76, 0.61, 0.74, 0.61, 0.77, 0.61, 0.99,
               0.77, 0.73, 0.64, 0.62, 0.63, 0.57, 0.66, 0.53, 0.46,
               0.79, 0.77, 0.7, 0.88, 0.62, 0.80, 0.74, 0.64, 0.93
-              ]
+        ]
         exs = np.ones(27) * 0.01
         eys = np.ones(27) * 0.01
 
-#         xs = [  1.333, -1.009, 9.720, -2.079, 8.920, -0.938, 10.94, 5.138, 11.37, 9.421]
-#         exs = [ 2.469 , 6.363, 6.045 , 4.061, 5.325, 5.865 , 3.993, 3.787, 3.693, 4.687]
-#         ys = [ -1.367 , 7.232, -0.593, 7.124, 0.468, 8.664 , 5.854, 13.35, 4.279, 11.63]
-#         eys = [0.297  , 4.672 , 2.014, 0.022, 6.868, 2.834 , 4.647, 4.728, 2.274, 4.659]
+        #         xs = [  1.333, -1.009, 9.720, -2.079, 8.920, -0.938, 10.94, 5.138, 11.37, 9.421]
+        #         exs = [ 2.469 , 6.363, 6.045 , 4.061, 5.325, 5.865 , 3.993, 3.787, 3.693, 4.687]
+        #         ys = [ -1.367 , 7.232, -0.593, 7.124, 0.468, 8.664 , 5.854, 13.35, 4.279, 11.63]
+        #         eys = [0.297  , 4.672 , 2.014, 0.022, 6.868, 2.834 , 4.647, 4.728, 2.274, 4.659]
 
 
         # Pearson Data with Weights
@@ -106,14 +108,11 @@ class YorkRegressionTest(unittest.TestCase):
         cls.pred_slope_error = 0.0702
 
         cls.reg = ReedYorkRegressor(
-                                 ys=ys,
-                                 xs=xs,
-                                 xserr=exs,
-                                 yserr=eys
-                                 )
-
-
-
+            ys=ys,
+            xs=xs,
+            xserr=exs,
+            yserr=eys
+        )
 
 
     def testSlope(self):

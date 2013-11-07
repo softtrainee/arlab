@@ -18,7 +18,7 @@
 from numpy import array
 from tables import NoSuchNodeError
 from traits.api import CStr, Str, CInt, Float, \
-    TraitError, Property, Any, Either, Instance, Dict
+    TraitError, Property, Any, Either, Instance, Dict, Bool
 from uncertainties import ufloat
 from src.loggable import Loggable
 from src.experiment.utilities.identifier import make_rid
@@ -56,6 +56,9 @@ class ExportSpec(Loggable):
     data_path = Str
     data_manager = Instance(H5DataManager, ())
 
+    is_peak_hop = Bool
+    peak_hop_detector = 'CDD'
+
     def load_record(self, record):
         attrs = [('labnumber', 'labnumber'),
                  ('aliquot', 'aliquot'),
@@ -65,7 +68,7 @@ class ExportSpec(Loggable):
                  ('position', 'position'), ('power_requested', 'extract_value'),
                  ('power_achieved', 'extract_value'), ('duration', 'duration'),
                  ('duration_at_request', 'duration'), ('first_stage_delay', 'cleanup'),
-                 ('comment', 'comment')]
+                 ('comment', 'comment'), ]
 
         for exp_attr, run_attr in attrs:
             if hasattr(record.spec, run_attr):
@@ -132,7 +135,12 @@ class ExportSpec(Loggable):
     def get_baseline_fit(self, det):
         return 'average_SEM'
 
-    def get_baseline_data(self, det):
+    def get_baseline_data(self, iso, det):
+        """
+            if is_peak_hop return CDD baseline always
+        """
+        det = self._get_baseline_detector(iso, det)
+
         return self._get_data('baseline', None, det)
 
     def get_signal_data(self, iso, det):
@@ -158,6 +166,13 @@ class ExportSpec(Loggable):
             e = vb.std()
 
         return ufloat(v, e)
+
+    def _get_baseline_detector(self, iso, det):
+        if self.is_peak_hop:
+            det = self.peak_hop_detector
+            msg = 'is_peak_hop using peak_hop_det baseline {} for {}'.format(det, iso)
+            self.debug(msg)
+        return det
 
     def _get_data(self, group, iso, det):
         dm = self.data_manager

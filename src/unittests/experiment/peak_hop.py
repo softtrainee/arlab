@@ -105,7 +105,7 @@ class PeakHopTestCase(unittest.TestCase):
 
         a.py_baselines(10, st, 0, 39.5, 'H1', series=1)
 
-    @unittest.skip("skip peak_hop_save")
+    #@unittest.skip("skip peak_hop_save")
     def test_peak_hop_save(self):
         self.measure()
 

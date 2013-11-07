@@ -17,19 +17,23 @@
 #============= enthought library imports =======================
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from pyface.tasks.traits_task_pane import TraitsTaskPane
-from traitsui.api import View, UItem
+from traitsui.api import View, UItem, VGroup
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from traitsui.editors import TableEditor
 from traitsui.extras.checkbox_column import CheckboxColumn
 from traitsui.table_column import ObjectColumn
+from src.ui.custom_label_editor import CustomLabel
 
 
 class DashboardCentralPane(TraitsTaskPane):
     def traits_view(self):
-        v = View(UItem('selected_device',
-                       style='custom'))
+        url = CustomLabel('url', label='URL')
+        v = View(
+            VGroup(url,
+                   UItem('selected_device',
+                         style='custom')))
 
         return v
 
@@ -46,4 +50,4 @@ class DashboardDevicePane(TraitsDockPane):
         v = View(UItem('devices', editor=editor))
         return v
 
-    #============= EOF =============================================
+        #============= EOF =============================================

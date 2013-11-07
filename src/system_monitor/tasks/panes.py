@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from datetime import datetime
 from pyface.tasks.traits_dock_pane import TraitsDockPane
 from traits.api import Instance, Property, Int, Color, Str
 from traitsui.api import View, UItem, TabularEditor, VGroup
@@ -78,13 +79,22 @@ class ConnectionPane(TraitsDockPane):
 class DashboardTabularAdapter(TabularAdapter):
     columns = [('Name', 'name'),
                ('Value', 'value'),
-               ('Time', 'last_time_str')]
+               ('Time', 'last_time')]
+
+    last_time_text = Property
 
     def get_bg_color(self, object, trait, row, column=0):
         color = 'white'
         if self.item.timed_out or not self.item.last_time:
             color = LIGHT_RED_COLOR
         return color
+
+    def _get_last_time_text(self):
+        ret = ''
+        if self.item.last_time:
+            dt = datetime.fromtimestamp(self.item.last_time)
+            ret = dt.strftime('%I:%M:%S %p')
+        return ret
 
 
 class DashboardPane(TraitsDockPane):
@@ -106,4 +116,4 @@ class DashboardPane(TraitsDockPane):
                        editor=editor))
         return v
 
-    #============= EOF =============================================
+        #============= EOF =============================================

@@ -47,9 +47,10 @@ class Subscriber(Loggable):
         sock = context.socket(zmq.SUB)
 
         url = self._get_url()
+        self.info('Connecting to {}'.format(url))
+
         sock.connect(url)
         self._sock = sock
-        self.info('Connecting to {}'.format(url))
 
         url = self._get_url(1)
         return self._check_server_availability(url, timeout, context=context)

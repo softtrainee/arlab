@@ -19,8 +19,8 @@ from numpy import linspace, Inf, identity
 from scipy.optimize import fsolve
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from uncertainties import ufloat
 from src.regression.ols_regressor import OLSRegressor
+from src.stats import calculate_mswd2
 
 
 class YorkRegressor(OLSRegressor):
@@ -44,6 +44,8 @@ class YorkRegressor(OLSRegressor):
 
     x_intercept = Property
     x_intercept_error = Property
+
+    mswd = Property
 
     def calculate(self, *args, **kw):
         super(YorkRegressor, self).calculate(*args, **kw)
@@ -122,6 +124,18 @@ class YorkRegressor(OLSRegressor):
         v = self.x_intercept
         e = self.get_intercept_error() / (v ** 0.5)
         return e
+
+    def _get_mswd(self):
+        if not self._slope:
+            self.calculate()
+
+        a = self.intercept
+        b = self.slope
+        x = self.xs
+        y = self.xs
+        sx = self.xserr
+        sy = self.yserr
+        return calculate_mswd2(x, y, sx, sy, a, b)
 
 
 class NewYorkRegressor(YorkRegressor):
@@ -242,6 +256,11 @@ class ReedYorkRegressor(YorkRegressor):
     #             York regressor only for linear fit
     #         '''
     #         self._degree = 2
+    def _get_weights(self):
+        wx = self.xserr
+        wy = self.yserr
+        return wx, wy
+
     def _calculate(self):
         if self.coefficients is None:
             return

@@ -30,11 +30,11 @@ class WeightedMeanRegressionTest(TestCase):
     def setUp(self):
         n = 1000
         ys = np.ones(n) * 5
-#        es = np.random.rand(n)
+        #        es = np.random.rand(n)
         es = np.ones(n)
         ys = np.hstack((ys, [5.1]))
         es = np.hstack((es, [1000]))
-#        print es
+        #        print es
         self.reg = WeightedMeanRegressor(ys=ys, errors=es)
 
 #    def testMean(self):
@@ -51,6 +51,7 @@ class RegressionTest(TestCase):
         ym = self.y.mean()
         self.assertEqual(xm, 4.3)
         self.assertEqual(ym, 10.2)
+
 
 class CITest(TestCase):
     def setUp(self):
@@ -77,6 +78,7 @@ class CITest(TestCase):
         reg = PolynomialRegressor(xs=self.x, ys=self.y, degree=1)
         self.assertAlmostEqual(reg.ssx, 8301.389, delta=0.01)
 
+
 class WLSRegressionTest(TestCase):
     def setUp(self):
         self.xs = np.linspace(0, 10, 10)
@@ -86,13 +88,13 @@ class WLSRegressionTest(TestCase):
             draper and smith p.8
         '''
         self.xs = [35.3, 29.7, 30.8, 58.8, 61.4, 71.3, 74.4, 76.7, 70.7, 57.5,
-                 46.4, 28.9, 28.1, 39.1, 46.8, 48.5, 59.3, 70, 70, 74.5, 72.1,
-                 58.1, 44.6, 33.4, 28.6
-                 ]
+                   46.4, 28.9, 28.1, 39.1, 46.8, 48.5, 59.3, 70, 70, 74.5, 72.1,
+                   58.1, 44.6, 33.4, 28.6
+        ]
         self.ys = [10.98, 11.13, 12.51, 8.4, 9.27, 8.73, 6.36, 8.50,
-                 7.82, 9.14, 8.24, 12.19, 11.88, 9.57, 10.94, 9.58,
-                 10.09, 8.11, 6.83, 8.88, 7.68, 8.47, 8.86, 10.36, 11.08
-                 ]
+                   7.82, 9.14, 8.24, 12.19, 11.88, 9.57, 10.94, 9.58,
+                   10.09, 8.11, 6.83, 8.88, 7.68, 8.47, 8.86, 10.36, 11.08
+        ]
         self.es = np.random.normal(1, 0.5, len(self.xs))
 
         self.slope = -0.0798
@@ -110,28 +112,29 @@ class WLSRegressionTest(TestCase):
         cv = wls.calculate_var_covar()
         print cv
         print wls._result.normalized_cov_params
-#        print wls._result.cov_params()
+
+    #        print wls._result.cov_params()
 
 
 class OLSRegressionTest(TestCase):
     def setUp(self):
         self.xs = np.linspace(0, 10, 10)
-#        self.ys = np.random.normal(self.xs, 1)
-#        print self.ys
-        self.ys = [ -1.8593967, 3.15506254, 1.82144207, 4.58729807, 4.95813564,
-                    5.71229382, 7.04611731, 8.14459843, 10.27429285, 10.10989719]
+        #        self.ys = np.random.normal(self.xs, 1)
+        #        print self.ys
+        self.ys = [-1.8593967, 3.15506254, 1.82144207, 4.58729807, 4.95813564,
+                   5.71229382, 7.04611731, 8.14459843, 10.27429285, 10.10989719]
 
         '''
             draper and smith p.8
         '''
         self.xs = [35.3, 29.7, 30.8, 58.8, 61.4, 71.3, 74.4, 76.7, 70.7, 57.5,
-                 46.4, 28.9, 28.1, 39.1, 46.8, 48.5, 59.3, 70, 70, 74.5, 72.1,
-                 58.1, 44.6, 33.4, 28.6
-                 ]
+                   46.4, 28.9, 28.1, 39.1, 46.8, 48.5, 59.3, 70, 70, 74.5, 72.1,
+                   58.1, 44.6, 33.4, 28.6
+        ]
         self.ys = [10.98, 11.13, 12.51, 8.4, 9.27, 8.73, 6.36, 8.50,
-                 7.82, 9.14, 8.24, 12.19, 11.88, 9.57, 10.94, 9.58,
-                 10.09, 8.11, 6.83, 8.88, 7.68, 8.47, 8.86, 10.36, 11.08
-                 ]
+                   7.82, 9.14, 8.24, 12.19, 11.88, 9.57, 10.94, 9.58,
+                   10.09, 8.11, 6.83, 8.88, 7.68, 8.47, 8.86, 10.36, 11.08
+        ]
 
         self.slope = -0.0798
         self.intercept = 13.623
@@ -142,6 +145,7 @@ class OLSRegressionTest(TestCase):
         ols = PolynomialRegressor(xs=xs, ys=ys, fit='linear')
 
         self.ols = ols
+
     def testSlope(self):
         ols = self.ols
         b, s = ols.coefficients
@@ -162,6 +166,7 @@ class OLSRegressionTest(TestCase):
         ols = self.ols
         ypred = ols.predict_error_matrix(self.Xk)[0]
         self.assertAlmostEqual(ypred, self.ypred_k, 3)
+
     def testPredictYerr_al(self):
         ols = self.ols
         ypred = ols.predict_error_al(self.Xk)[0]

@@ -1989,8 +1989,8 @@ anaylsis_type={}
                          spectrometer=self.spec.mass_spectrometer.capitalize(),
                          blanks=blanks,
                          data_path=p,
-                         signal_intercepts=self._processed_signals_dict
-        )
+                         signal_intercepts=self._processed_signals_dict,
+                         is_peak_hop=self.is_peak_hop)
         exp.load_record(self)
         return exp
 

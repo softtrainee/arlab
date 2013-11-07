@@ -216,8 +216,7 @@ class MassSpecDatabaseImporter(Loggable):
                                    ReferenceDetectorLabel=refdbdet.Label,
                                    SampleLoadingID=self.sample_loading_id,
                                    LoginSessionID=self.login_session_id,
-                                   RunScriptID=rs.RunScriptID,
-        )
+                                   RunScriptID=rs.RunScriptID)
 
         db.add_analysis_positions(analysis, spec.position)
         #=======================================================================
@@ -244,6 +243,7 @@ class MassSpecDatabaseImporter(Loggable):
             bs = []
             for iso, det in isotopes:
                 dbiso, dbdet = self._add_isotope(analysis, spec, iso, det, refdet)
+
                 if not dbdet.Label in bs:
                     self._add_baseline(analysis, spec, dbiso, dbdet)
                     bs.append(dbdet.Label)
@@ -255,6 +255,19 @@ class MassSpecDatabaseImporter(Loggable):
         if det == analysis.ReferenceDetectorLabel:
             dbdet = refdet
         else:
+
+            """
+                if is_peak_hop
+                fool mass spec. e.g Ar40 det = H1 not CDD
+                det=PEAK_HOP_MAP['Ar40']=='CDD'
+            """
+            PEAK_HOP_MAP = {'Ar41': 'H2', 'Ar40': 'H1',
+                            'Ar39': 'AX', 'Ar38': 'L1',
+                            'Ar37': 'L2', 'Ar36': 'CDD'}
+
+            if spec.is_peak_hop:
+                det = PEAK_HOP_MAP[iso]
+
             dbdet = db.add_detector(det, Label=det)
             if det == 'CDD':
                 dbdet.ICFactor = spec.ic_factor_v

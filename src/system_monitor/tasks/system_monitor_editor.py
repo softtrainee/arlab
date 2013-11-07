@@ -127,6 +127,8 @@ class SystemMonitorEditor(SeriesEditor):
                 self._refresh_figures(an)
 
     def start(self):
+        return
+
         self.load_tool()
 
         if self.conn_spec.host:

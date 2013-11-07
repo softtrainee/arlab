@@ -37,6 +37,7 @@ class ProcessValue(HasTraits):
     last_time_str = Property(depends_on='last_time')
     enabled = Bool
     last_value = Float
+    timeout = Float
 
     def traits_view(self):
         v = View(VGroup(HGroup(UItem('enabled'), Item('name')),
@@ -92,12 +93,13 @@ class DashboardDevice(Loggable):
                     self.debug(traceback.format_exc(limit=2))
                     value.use_pv = False
 
-    def add_value(self, n, tag, func_name, period, use):
+    def add_value(self, n, tag, func_name, period, use, timeout):
         pv = ProcessValue(name=n,
                           tag=tag,
                           func_name=func_name,
                           period=period,
-                          enabled=use)
+                          enabled=use,
+                          timeout=timeout)
 
         if period == 'on_change':
             self.debug('bind to {}'.format(n))
