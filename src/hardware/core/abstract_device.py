@@ -73,8 +73,9 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
     def get_factory(self, package, klass):
         try:
             module = __import__(package, fromlist=[klass])
-            factory = getattr(module, klass)
-            return factory
+            if hasattr(module, klass):
+                factory = getattr(module, klass)
+                return factory
         except ImportError, e:
             self.warning(e)
 
@@ -92,6 +93,8 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
 
     def post_initialize(self, *args, **kw):
         self.setup_scan()
+        if self.auto_start:
+            self.start_scan()
 
     def open(self, **kw):
         '''
@@ -99,9 +102,9 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
         if self._cdevice is not None:
             return self._cdevice.open(**kw)
 
-    def setup_scan(self, *args, **kw):
-        if self._cdevice is not None:
-            return self._cdevice.setup_scan(*args, **kw)
+    #def setup_scan(self, *args, **kw):
+    #    if self._cdevice is not None:
+    #        return self._cdevice.setup_scan(*args, **kw)
 
     def load(self, *args, **kw):
         '''

@@ -24,8 +24,6 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 from src.hardware.core.core_device import CoreDevice
 #============= standard library imports ========================
 #============= local library imports  ==========================
@@ -34,7 +32,7 @@ class NCDDevice(CoreDevice):
     def initialize(self, *args, **kw):
         super(NCDDevice, self).initialize(*args, **kw)
         self._communicator.write_terminator = None
-
+        return True
 
     def _make_cmdstr(self, *args):
 #        formatter = lambda x:'{:02X}'.format

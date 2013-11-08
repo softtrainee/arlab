@@ -32,6 +32,7 @@ from src.hardware.core.alarm import Alarm
 from src.graph.graph import Graph
 from src.graph.time_series_graph import TimeSeriesStreamGraph
 
+
 class ScanableDevice(ViewableDevice):
     scan_button = Event
     scan_label = Property(depends_on='_scanning')
@@ -59,9 +60,10 @@ class ScanableDevice(ViewableDevice):
     def _scan_path_changed(self):
         self.scan_root = os.path.split(self.scan_path)[0]
         self.scan_name = os.path.basename(self.scan_path)
-#===============================================================================
-# streamin interface
-#===============================================================================
+
+    #===============================================================================
+    # streamin interface
+    #===============================================================================
     def setup_scan(self):
         # should get scan settings from the config file not the initialization.xml
 
@@ -75,6 +77,7 @@ class ScanableDevice(ViewableDevice):
                 self.set_attribute(config, 'scan_units', 'Scan', 'units')
                 self.set_attribute(config, 'record_scan_data', 'Scan', 'record', cast='boolean')
                 self.set_attribute(config, 'graph_scan_data', 'Scan', 'graph', cast='boolean')
+                self.set_attribute(config, 'scan_func', 'Scan', 'func')
                 self.set_attribute(config, 'use_db', 'DataManager', 'use_db', cast='boolean', default=False)
                 self.set_attribute(config, 'dm_kind', 'DataManager', 'kind', default='csv')
 
@@ -83,9 +86,9 @@ class ScanableDevice(ViewableDevice):
         if config.has_section('Alarms'):
             for opt in config.options('Alarms'):
                 self.alarms.append(Alarm(
-                                         name=opt,
-                                         alarm_str=config.get('Alarms', opt)
-                                         ))
+                    name=opt,
+                    alarm_str=config.get('Alarms', opt)
+                ))
 
     def _scan_hook(self, *args, **kw):
         pass
@@ -199,6 +202,7 @@ class ScanableDevice(ViewableDevice):
 
     def save_scan_to_db(self):
         from src.database.adapters.device_scan_adapter import DeviceScanAdapter
+
         db = DeviceScanAdapter(name=paths.device_scan_db,
                                kind='sqlite')
         db.connect()
@@ -247,8 +251,8 @@ class ScanableDevice(ViewableDevice):
     def _graph_default(self):
 
         g = self.graph_klass(
-                  container_dict=dict(padding=[10, 10, 10, 10])
-                  )
+            container_dict=dict(padding=[10, 10, 10, 10])
+        )
 
         self.graph_builder(g)
 
@@ -258,38 +262,39 @@ class ScanableDevice(ViewableDevice):
 
         g.new_plot(padding=[40, 5, 5, 20],
                    zoom=True,
-                  pan=True,
-                  **kw
-                   )
+                   pan=True,
+                   **kw
+        )
         g.new_series()
 
     def current_state_view(self):
         g = VGroup(Item('graph', show_label=False, style='custom'),
-                        VGroup(Item('scan_func', label='Function', style='readonly'),
+                   VGroup(Item('scan_func', label='Function', style='readonly'),
 
-                               HGroup(Item('scan_period', label='Period ({})'.format(self.scan_units),
-                                            # style='readonly'
-                                            ), spring),
-                                 Item('current_scan_value', style='readonly'),
-                               ),
+                          HGroup(Item('scan_period', label='Period ({})'.format(self.scan_units),
+                                      # style='readonly'
+                          ), spring),
+                          Item('current_scan_value', style='readonly'),
+                   ),
 
-                        VGroup(
-                               HGroup(Item('scan_button', editor=ButtonEditor(label_value='scan_label'),
-                                     show_label=False),
-                                      spring
-                                      ),
-                               Item('scan_root',
-                                    style='readonly',
-                                    label='Scan directory',
-                                    visible_when='object.record_scan_data'),
-                               Item('scan_name', label='Scan name',
-                                    style='readonly',
-                                    visible_when='object.record_scan_data'),
-                               visible_when='object.is_scanable'),
+                   VGroup(
+                       HGroup(Item('scan_button', editor=ButtonEditor(label_value='scan_label'),
+                                   show_label=False),
+                              spring
+                       ),
+                       Item('scan_root',
+                            style='readonly',
+                            label='Scan directory',
+                            visible_when='object.record_scan_data'),
+                       Item('scan_name', label='Scan name',
+                            style='readonly',
+                            visible_when='object.record_scan_data'),
+                       visible_when='object.is_scanable'),
 
-                        label='Scan'
-                        )
+                   label='Scan'
+        )
         v = super(ScanableDevice, self).current_state_view()
         v.content.content.append(g)
         return v
-#============= EOF =============================================
+
+    #============= EOF =============================================

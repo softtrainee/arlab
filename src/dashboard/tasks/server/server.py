@@ -49,8 +49,6 @@ class DashboardServer(Loggable):
             self.setup_notifier()
             self.start_poll()
 
-            print self._handle_config()
-
     def notifier_default(self):
         return Notifier()
 
@@ -84,7 +82,9 @@ class DashboardServer(Loggable):
             device = app.get_service(ICoreDevice,
                                      query='name=="{}"'.format(dev_name))
             if device is None:
-                self.warning('no device names {}'.format(dev_name))
+                self.warning('no device named "{}" available'.format(dev_name))
+                continue
+
             enabled = dev.find('use')
             if enabled is not None:
                 enabled = str_to_bool(enabled.text.strip())
@@ -93,24 +93,22 @@ class DashboardServer(Loggable):
                                 _device=device)
 
             for v in dev.findall('value'):
-                func_name = v.find('func')
 
                 n = v.text.strip()
                 tag = '<{},{}>'.format(name, n)
 
-                if func_name is not None:
-                    func_name = func_name.text.strip()
+                func_name = self._get_xml_value(v, 'func', 'get')
+                period = self._get_xml_value(v, 'period', 60)
 
-                    period = self._get_xml_value(v, 'period', 60)
-                    if not period == 'on_change':
-                        try:
-                            period = int(period)
-                        except ValueError:
-                            period = 60
+                if not period == 'on_change':
+                    try:
+                        period = int(period)
+                    except ValueError:
+                        period = 60
 
-                    enabled = str_to_bool(self._get_xml_value(v, 'enabled', False))
-                    timeout = self._get_xml_value(v, 'timeout', 0)
-                    d.add_value(n, tag, func_name, period, enabled, timeout)
+                enabled = str_to_bool(self._get_xml_value(v, 'enabled', False))
+                timeout = self._get_xml_value(v, 'timeout', 0)
+                d.add_value(n, tag, func_name, period, enabled, timeout)
 
             ds.append(d)
 

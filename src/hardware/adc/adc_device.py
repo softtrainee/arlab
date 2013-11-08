@@ -26,16 +26,13 @@ class ADCDevice(AbstractDevice):
     channel = None
 
     def load_additional_args(self, config):
-        '''
-
-        '''
-
         if config.has_section('ADC'):
             klass = self.config_get(config, 'ADC', 'klass')
             pkgs = ('src.hardware.adc.analog_digital_converter',
                       'src.hardware.agilent.agilent_multiplexer',
                       'src.hardware.remote.agilent_multiplexer',
-                      )
+                      'src.hardware.ncd.adc'
+            )
 
             for pi in pkgs:
                 factory = self.get_factory(pi, klass)

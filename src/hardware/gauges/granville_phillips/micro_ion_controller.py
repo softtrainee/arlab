@@ -164,14 +164,14 @@ class MicroIonController(CoreDevice):
 
     def get_pressures(self, verbose=False):
     #        self.debug('getting pressure')
-        b = self.get_convectron_b_pressure(verbose=verbose)
+        b = self.get_convectron_b_pressure(verbose=verbose, force=True)
         self._set_gauge_pressure('CG2', b)
         time.sleep(0.05)
-        a = self.get_convectron_a_pressure(verbose=verbose)
+        a = self.get_convectron_a_pressure(verbose=verbose, force=True)
         self._set_gauge_pressure('CG1', a)
         time.sleep(0.05)
 
-        ig = self.get_ion_pressure(verbose=verbose)
+        ig = self.get_ion_pressure(verbose=verbose, force=True)
         self._set_gauge_pressure('IG', ig)
 
         return ig, a, b
@@ -229,8 +229,8 @@ class MicroIonController(CoreDevice):
             r = r.split(',')
         return r
 
-    def _get_pressure(self, name, verbose=False):
-        if self._scanning:
+    def _get_pressure(self, name, verbose=False, force=False):
+        if self._scanning and not force:
             attr = '{}_pressure'.format(name)
             if hasattr(self, attr):
                 return getattr(self, attr)
