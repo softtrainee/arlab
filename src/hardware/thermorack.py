@@ -56,13 +56,14 @@ class ThermoRack(CoreDevice):
         v = super(ThermoRack, self).get()
 #        v = CoreDevice.get(self)
         if v is None:
-            v = self.get_coolant_out_temperature()
+            if self._scanning:
+                v = self.current_scan_value
+            else:
+                v = self.get_coolant_out_temperature()
 
         return v
 
     def write(self, *args, **kw):
-        '''
-        '''
         kw['is_hex'] = True
         super(ThermoRack, self).write(*args, **kw)
 

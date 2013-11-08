@@ -177,7 +177,7 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         bind_preference(self.massspec_importer.db, 'host', '{}.massspec_host'.format(prefid))
         bind_preference(self.massspec_importer.db, 'username', '{}.massspec_username'.format(prefid))
         bind_preference(self.massspec_importer.db, 'password', '{}.massspec_password'.format(prefid))
-        
+
     def isAlive(self):
         return self._alive
 
@@ -201,6 +201,8 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         self._alive = True
 
         if self._pre_execute_check():
+            self.end_at_run_completion = False
+
             name = self.experiment_queue.name
 
             msg = 'Starting Execution "{}"'.format(name)
@@ -1037,7 +1039,7 @@ If "No" select from database
         nonfound = []
         if self.extraction_line_manager is None:
             nonfound.append('extraction_line')
-        
+
         if exp.extract_device and exp.extract_device not in (NULL_STR, 'Extract Device'):
             extract_device = convert_extract_device(exp.extract_device)
             #extract_device = exp.extract_device.replace(' ', '_').lower()
