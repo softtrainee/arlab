@@ -1016,7 +1016,7 @@ If "No" select from database
 
     def _check_managers(self, inform=True, n=1):
         self.debug('checking for managers')
-        if globalv.experiment_debug or True:
+        if globalv.experiment_debug:
             self.debug('********************** NOT DOING  managers check')
             return True
 

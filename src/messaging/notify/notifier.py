@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from threading import Thread
+from threading import Thread, Lock
 from traits.api import Int, Dict
 #============= standard library imports ========================
 import zmq
@@ -35,6 +35,8 @@ class Notifier(Loggable):
 
     def setup(self, port):
         if port:
+            self._lock=Lock()
+        
             context = zmq.Context()
             sock = context.socket(zmq.PUB)
             sock.bind('tcp://*:{}'.format(port))
@@ -42,40 +44,44 @@ class Notifier(Loggable):
 
             self._req_sock = context.socket(zmq.REP)
             self._req_sock.bind('tcp://*:{}'.format(port + 1))
-
+#
             t = Thread(name='ping_replier', target=self._handle_request)
-            t.setDaemon(1)
+#            t.setDaemon(1)
             t.start()
 
     def add_request_handler(self, name, func):
         self._handlers[name] = func
 
     def _handle_request(self):
-
         sock = self._req_sock
+        
         poll = zmq.Poller()
         poll.register(self._req_sock, zmq.POLLIN)
 
-        while self._req_sock:
-            try:
-                socks = dict(poll.poll(1000))
-                if socks.get(sock) == zmq.POLLIN:
-                    resp = sock.recv()
-                    if resp == 'ping':
-                        sock.send('echo')
-                    elif resp in self._handlers:
-                        func = self._handlers[resp]
-                        sock.send(func())
-
-            except zmq.ZMQError:
-                pass
+        while sock:
+            socks = dict(poll.poll(1000))
+            with self._lock:
+                try:
+                    if socks.get(sock) == zmq.POLLIN:
+                        resp = sock.recv()
+                        if resp == 'ping':
+                            sock.send('echo')
+                        elif resp in self._handlers:
+                            func = self._handlers[resp]
+                            sock.send(func())
+    
+                except zmq.ZMQBaseError:
+                    pass
 
     def close(self):
-        self._sock.close()
-        self._sock = None
-
-        self._req_sock.close()
-        self._req_sock = None
+        with self._lock:
+            if self._sock:
+                self._sock.close()
+                self._sock = None
+            
+            if self._req_sock:
+                self._req_sock.close()
+                self._req_sock = None
 
     def send_message(self, msg, verbose=True):
         if verbose:
@@ -93,9 +99,13 @@ class Notifier(Loggable):
         self._send(msg)
 
     def _send(self, msg):
-        if self._sock:
-            self._sock.send(msg)
-        else:
-            self.debug('notifier not setup')
+        with self._lock:
+            if self._sock:
+                try:
+                    self._sock.send(msg)
+                except (zmq.ZMQBaseError, AssertionError),e:
+                    self.warning('failed sending message: error {}: {}'.format(e, msg))
+            else:
+                self.debug('notifier not setup')
 
 #============= EOF =============================================

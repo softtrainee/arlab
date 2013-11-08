@@ -290,9 +290,13 @@ class MassSpecDatabaseImporter(Loggable):
         db = self.db
 
         iso = dbiso.Label
-        tb, vb = spec.get_signal_data(iso, dbdet.Label)
+        det=dbdet.Label
+        if spec.is_peak_hop:
+            det=spec.peak_hop_detector
+        
+        tb, vb = spec.get_signal_data(iso, det)
 
-        baseline = spec.get_baseline_uvalue(dbdet.Label)
+        baseline = spec.get_baseline_uvalue(det)
         vb = array(vb) - baseline.nominal_value
         blob1 = self._build_timeblob(tb, vb)
 
@@ -302,8 +306,8 @@ class MassSpecDatabaseImporter(Loggable):
         # in mass spec the intercept is alreay baseline corrected
         # mass spec also doesnt propograte baseline errors
 
-        signal = spec.get_signal_uvalue(iso, dbdet.Label)
-        sfit = spec.get_signal_fit(iso, dbdet.Label)
+        signal = spec.get_signal_uvalue(iso, det)
+        sfit = spec.get_signal_fit(iso, det)
 
         if runtype == 'Blank':
             ublank = signal - baseline
