@@ -85,11 +85,12 @@ class ExperimentEditorTask(EditorTask):
             self.active_editor.queue.executed_selected = []
 
     def prepare_destroy(self):
-        if self.use_notifications:
-            self.notifier.close()
+        super(ExperimentEditorTask, self).prepare_destroy()
 
         self.manager.experiment_factory.destroy()
-        super(ExperimentEditorTask, self).prepare_destroy()
+        
+        if self.use_notifications:
+            self.notifier.close()
 
     def activated(self):
 

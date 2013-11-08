@@ -99,8 +99,8 @@ class PeakHopCollector(DataCollector):
 
         detector = dets[0]
         isotope = isos[0]
-        if cycle > self.plot_panel.ncycles:
-            self.info('user termination. measurement iteration executed {} cycles'.format(cycle - 1, self.ncycles))
+        if cycle >= self.plot_panel.ncycles:
+            self.info('user termination. measurement iteration executed {}/{} cycles'.format(cycle, self.ncycles))
             self.stop()
             return
         else:
@@ -127,7 +127,7 @@ class PeakHopCollector(DataCollector):
 
         d = self.parent.get_detector(detector)
 
-        self.debug('cycle {} count {} {}'.format(cycle, count, id(self)))
+#        self.debug('cycle {} count {} {}'.format(cycle, count, id(self)))
         if self.plot_panel.is_baseline:
             isotope = '{}bs'.format(isotope)
 

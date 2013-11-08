@@ -193,6 +193,7 @@ class AutomatedRun(Loggable):
 
     is_last = False
     is_peak_hop = Bool(False)
+    save_as_peak_hop=Bool(False)
 
     _integration_seconds = Float(1.0)
     #===============================================================================
@@ -467,7 +468,8 @@ class AutomatedRun(Loggable):
         if self.plot_panel:
             self.plot_panel.trait_set(is_baseline=is_baseline,
                                       _ncycles=cycles)
-
+        
+        self.save_as_peak_hop = True
         self.is_peak_hop = True
 
         fits = self.fits
@@ -831,6 +833,7 @@ class AutomatedRun(Loggable):
 
         self.info('Start automated run {}'.format(self.runid))
 
+        self.save_as_peak_hop=False
         self.measuring = False
         #             self.update = True
         self.truncated = False
@@ -1472,7 +1475,7 @@ anaylsis_type={}
 
         name = self.uuid
         path = os.path.join(paths.isotope_dir, '{}.h5'.format(name))
-        path = '/Users/ross/Sandbox/aaaa_multicollect_isotope.h5'
+#        path = '/Users/ross/Sandbox/aaaa_multicollect_isotope.h5'
 
         self._current_data_frame = path
         frame = dm.new_frame(path)
@@ -1990,7 +1993,7 @@ anaylsis_type={}
                          blanks=blanks,
                          data_path=p,
                          signal_intercepts=self._processed_signals_dict,
-                         is_peak_hop=self.is_peak_hop)
+                         is_peak_hop=self.save_as_peak_hop)
         exp.load_record(self)
         return exp
 
