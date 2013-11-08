@@ -230,10 +230,15 @@ class MicroIonController(CoreDevice):
         return r
 
     def _get_pressure(self, name, verbose=False):
+        if self._scanning:
+            attr = '{}_pressure'.format(name)
+            if hasattr(self, attr):
+                return getattr(self, attr)
+
         key = 'DS'
         cmd = self._build_command(key, name)
 
-        r = self.ask(cmd, verbose=False)
+        r = self.ask(cmd, verbose=verbose)
         r = self._parse_response(r, name)
         return r
 
