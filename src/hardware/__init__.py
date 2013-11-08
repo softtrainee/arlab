@@ -35,8 +35,10 @@ HW_PACKAGE_MAP = {
 'PidController':                    'src.hardware.pid_controller',
 'PychronLaser':                     'src.hardware.pychron_laser',
 'AgilentMultiplexer':               'src.hardware.agilent.agilent_multiplexer',
+'Transducer': 'src.hardware.transducer',
 
 'RemoteThermoRack':                 'src.hardware.remote.thermorack',
-'RemoteNewportMotionController':    'src.hardware.remote.newport_motion_controller'
+'RemoteNewportMotionController': 'src.hardware.remote.newport_motion_controller',
+
 # 'ControlModule': 'src.hardware.fusions.vue_diode_control_module'
 }

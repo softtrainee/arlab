@@ -63,7 +63,7 @@ class InitializationParser(XMLParser):
         #ver= '_spec'
         #ver='_diode'
         ver = '_dash'
-        ver = '_dash_client'
+        #ver = '_dash_client'
         #ver = ''
         p = os.path.join(paths.setup_dir, 'initialization{}.xml'.format(ver))
         if not os.path.isfile(p):

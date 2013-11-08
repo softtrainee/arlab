@@ -343,8 +343,7 @@ Do you want to quit to enable {} in the Initialization File?'''.format(name, nam
                     if dev_class and dev.__class__.__name__ != dev_class:
                         dev = manager.create_device(device,
                                                     dev_class=dev_class,
-                                                    obj=dev
-                        )
+                                                    obj=dev)
 
             except AttributeError:
                 dev = manager.create_device(device, dev_class=dev_class)

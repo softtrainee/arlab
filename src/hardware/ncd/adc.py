@@ -22,21 +22,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-from src.paths import paths
-from src.helpers.logger_setup import logging_setup
+import math
 import struct
-logging_setup('prox')
-paths.build('_prox')
+
+#from src.ui import set_toolkit
+#set_toolkit('qt4')
+#paths.build('_dev')
+#logging_setup('prox')
 
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.hardware.ncd.ncd_device import NCDDevice
 
-class ProXADCExpansion(NCDDevice):
+
+class ProXRADCExpansion(NCDDevice):
     def read_channel(self, channel, nbits=8):
         if nbits == 10:
             start = 157
@@ -50,53 +51,90 @@ class ProXADCExpansion(NCDDevice):
         return int(resp, 16)
 
 
-EIGHT_BIT_BANKS = [195, 203, 208]
-TWELVE_BIT_BANKS = [199, 207, 209]
+EIGHT_BIT_SINGLE = [195, 203, 208]
+TWELVE_BIT_SINGLE = [199, 207, 209]
 
-class MultiBankADCExpansion(NCDDevice):
+EIGHT_BIT_BANKS = [192, 193, 194]
+TWELVE_BIT_BANKS = [196, 197, 198]
+
+
+class ProXRADC(NCDDevice):
+    max_voltage = 5
+
+    def read_device_info(self):
+        cmdstr = self._make_cmdstr(254, 246)
+        resp = self.ask(cmdstr, nchars=5)
+        return resp
+
+    def read_bank(self, bank=0, nbits=8):
+        """
+            return voltages (V) measured on channels in "bank"
+            nbits= 8 or 12 resolution of measurement
+        """
+        self._check_nbits(nbits)
+
+        if nbits == 8:
+            nbytes = 16
+            bank_idxs = EIGHT_BIT_BANKS
+        else:
+            nbytes = 32
+            bank_idxs = TWELVE_BIT_BANKS
+
+        idx = bank_idxs[bank]
+        cmdstr = self._make_cmdstr(254, idx)
+        resp = self.ask(cmdstr, nchars=nbytes)
+        return self._map_to_voltage(resp, nbits, nbytes)
+
     def read_channel(self, channel, nbits=8):
+        """
+            return voltage (V) measured on "channel"
+            nbits= 8 or 12. resolution of measurement
+        """
+        self._check_nbits(nbits)
+
         channel = int(channel)
         if nbits == 12:
-#            self._read_ten_bit(channel)
-            bank = TWELVE_BIT_BANKS
-            nchars = 2
+            bank = TWELVE_BIT_SINGLE
+            nbytes = 2
         else:
-#            self._read_eight_bit(channel)
-            bank = EIGHT_BIT_BANKS
-            nchars = 1
+            bank = EIGHT_BIT_SINGLE
+            nbytes = 1
 
         bank_idx = bank[channel / 16]
         channel_idx = channel % 16
 
         cmdstr = self._make_cmdstr(254, bank_idx, channel_idx)
+        resp = self.ask(cmdstr, nchars=nbytes, remove_eol=False)
 
-#        band_idx = 192
-#        cmdstr = self._make_cmdstr(254, bank_idx)
-        resp = self.ask(cmdstr, nchars=nchars, remove_eol=False)
+        return self._map_to_voltage(resp, nbits, nbytes)[0]
 
+    def _check_nbits(self, nbits):
+        if not nbits in (8, 12):
+            raise Exception('Invalid nbits {}. use 8 or 12')
+
+    def _map_to_voltage(self, resp, nbits, nbytes):
+        f, s = '>B', 1
         if nbits == 12:
-            '''
-                resp is lsb msb
-                switch to msb lsb
-            '''
-#            resp = resp[1:] + resp[:1]
-            fmt = '<h'
-#            return struct.unpack('@H', resp)[0]
-        else:
+            f, s = '<h', 2
 
-            fmt = '>B'
-        return struct.unpack(fmt, resp)[0]
+        m = 2 ** nbits - 1
 
+        def vfunc(v):
+            nd = int(math.log10(m))
+            return round(v / float(m) * self.max_voltage, nd)
 
-#        print resp
-#        return int(resp, 2)
+        return [vfunc(struct.unpack(f, resp[i:i + s])[0])
+                for i in range(0, nbytes, s)]
 
-    def read_all(self):
-        pass
 
 if __name__ == '__main__':
-    a = MultiBankADCExpansion(name='proxr_adc')
+    a = ProXRADC(name='ProXRADC')
+    #a = MultiBankADCExpansion(name='proxr_adc')
     a.bootstrap()
+    print a.read_bank()
+    print a.read_bank(nbits=12)
+    #print a._communicator.handle
+    #a.read_device_info()
     print a.read_channel(0, nbits=8)
     print a.read_channel(0, nbits=12)
 #============= EOF =============================================

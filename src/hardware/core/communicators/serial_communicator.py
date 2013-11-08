@@ -19,11 +19,13 @@
 #=============enthought library imports=======================
 
 #=============standard library imports ========================
-import serial
 import time
 import glob
 import os
 import sys
+
+import serial
+
 
 
 #=============local library imports  ==========================
@@ -465,6 +467,7 @@ class SerialCommunicator(Communicator):
 #            d = 1 / 1000.
 #            time.sleep(d)
 #            tt += d
+        print len(r), nchars
         return r[:nchars], len(r) >= nchars
 
     def _get_nchars(self, nchars, r):

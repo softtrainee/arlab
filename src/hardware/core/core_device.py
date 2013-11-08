@@ -198,6 +198,9 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator, ConsumerMixin):
         self.setup_alarms()
         self.setup_scheduler()
 
+        if self.auto_start:
+            self.start_scan()
+
     def get_random_value(self, mi=0, ma=10):
         '''
             convienent method for getting a random integer between min and max
