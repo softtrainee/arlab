@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import Float
 #============= standard library imports ========================
-from numpy import array, max, polyfit, argmax
+from numpy import max
 #============= local library imports  ==========================
 from magnet_scan import MagnetScan
 from src.graph.graph import Graph
@@ -253,7 +253,7 @@ class PeakCenter(MagnetScan):
                          color='green'
         )
 
-        graph.plots[0].value_range.tight_bounds = False
+        #graph.plots[0].value_range.tight_bounds = False
         return graph
 
 #    def _peak_center_graph_factory(self, graph, start, end, title=''):

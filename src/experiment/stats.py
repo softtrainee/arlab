@@ -15,13 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from src.helpers.timer import Timer
-from src.loggable import Loggable
-from traits.api import Property, String, Float, Any, Int, List
-from traitsui.api import View, Item, VGroup
 import datetime
 import time
-from numpy import polyval
+
+from traits.api import Property, String, Float, Any, Int, List
+from traitsui.api import View, Item, VGroup
+
+from src.helpers.timer import Timer
+from src.loggable import Loggable
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 FUDGE_COEFFS = (0, 0, 0)  # x**n+x**n-1....+c
@@ -142,11 +144,12 @@ class StatsGroup(ExperimentStats):
             calculate the total duration
             calculate the estimated time of finish
         '''
-        runs = [ai
-                for ei in self.experiment_queues
-                    for ai in ei.cleaned_automated_runs]
-        ni = len(runs)
-        self.nruns = ni
+        #runs = [ai
+        #        for ei in self.experiment_queues
+        #            for ai in ei.cleaned_automated_runs]
+        #
+        #ni = len(runs)
+        #self.nruns = ni
         tt = sum([ei.stats.calculate_duration(ei.cleaned_automated_runs)
                  for ei in self.experiment_queues])
         self._total_time = tt

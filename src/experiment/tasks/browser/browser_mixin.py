@@ -31,9 +31,12 @@ DEFAULT_AT = 'Analysis Type'
 DEFAULT_ED = 'Extraction Device'
 
 from traits.api import HasTraits, Instance
+
+
 class SearchCriteria(HasTraits):
-    recent_hours=Int
-    
+    recent_hours = Int
+
+
 class BrowserMixin(ColumnSorterMixin):
     projects = List
     oprojects = List
@@ -62,8 +65,8 @@ class BrowserMixin(ColumnSorterMixin):
 
     sample_tabular_adapter = Any
 
-#    recent_hours = Int#(48)
-    search_criteria=Instance(SearchCriteria, ())
+    #    recent_hours = Int#(48)
+    search_criteria = Instance(SearchCriteria, ())
 
     def set_projects(self, ps, sel):
         self.oprojects = ps
@@ -121,10 +124,14 @@ class BrowserMixin(ColumnSorterMixin):
         with db.session_ctx():
             lpost = datetime.now() - timedelta(hours=self.search_criteria.recent_hours)
             self.debug('RECENT HOURS {} {}'.format(self.search_criteria.recent_hours, lpost))
-            ss = db.get_recent_samples(lpost, ms)
-            print ss
-            sams = [SampleRecordView(s)
-                    for s in ss]
+            lns = db.get_recent_labnumbers(lpost, ms)
+
+            sams = [SampleRecordView(li.sample, labnumber=li.identifier)
+                    for li in lns if li.sample]
+            #ss = db.get_recent_samples(lpost, ms)
+            #print ss
+            #sams = [SampleRecordView(s)
+            #        for s in ss]
 
         return sams
 
@@ -263,7 +270,8 @@ class BrowserMixin(ColumnSorterMixin):
         iso.create(ai)
         return iso
 
-    #===============================================================================
+        #===============================================================================
+
 # handlers
 #===============================================================================
 

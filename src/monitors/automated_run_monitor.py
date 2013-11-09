@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Str, Property, Any, Array, Bool
+from traits.api import HasTraits, List, Str, Any, Array, Bool
 #============= standard library imports ========================
 from numpy import vstack, array
 #============= local library imports  ==========================
@@ -23,48 +23,27 @@ from src.monitors.monitor import Monitor
 from src.hardware.core.communicators.ethernet_communicator import EthernetCommunicator
 import time
 
+
 class Check(HasTraits):
     name = Str
     parameter = Str
     action = Str
-    criterion = Str
-    comparator = Property
-    _comparator = Str
+
     data = Array
     tripped = Bool
     message = Str
 
-    def _set_comparator(self, c):
-        self._comparator = c
-
-    def _get_comparator(self):
-        comp = '__eq__'
-        c = self._comparator
-        if c == '<':
-            comp = '__gt__'
-        elif c == '>':
-            comp = '__lt__'
-        elif c == '>=':
-            comp = '__ge__'
-        elif c == '<=':
-            comp = '__le__'
-
-        return comp
-
     def check_condition(self, v):
-        '''
-        '''
 
         vs = (time.time(), v)
         if not len(self.data):
             self.data = array([vs])
         else:
             self.data = vstack((self.data, vs))
-        compf = getattr(v, self.comparator)
-        cr = float(self.criterion)
-        r = compf(cr)
+
+        r = eval(self.rule, {'x': v})
         if r:
-            self.message = 'Automated Run Check tripped. {} {} {} {}'.format(self.parameter, v, self.comparator, self.criterion)
+            self.message = 'Automated Run Check tripped. {} {} {}'.format(self.parameter, v, r)
             self.tripped = True
 
         return r
@@ -73,36 +52,43 @@ class Check(HasTraits):
 class AutomatedRunMonitor(Monitor):
     checks = List
     automated_run = Any
+
     def _load_hook(self, config):
         self.checks = []
+        ok = True
         for section in config.sections():
             if section.startswith('Check'):
                 pa = self.config_get(config, section, 'parameter')
 
                 if 'Pressure' in pa and not ',' in pa:
-                    self.warning_dialog('Invalid Pressure Parameter in AutomatedRunMonitor, need to specify name, e.g. Pressure, <gauge_name>')
-                    return
+                    self.warning_dialog(
+                        'Invalid Pressure Parameter in AutomatedRunMonitor, need to specify controller and name, e.g. Pressure, <controller>,<gauge_name>')
+                    ok = False
+                    continue
+
                 else:
-                    cr = self.config_get(config, section, 'criterion')
-                    co = self.config_get(config, section, 'comparator')
+                    r = self.config_get(config, section, 'rule')
+                    if 'x' not in r:
+                        self.warning_dialog('Invalid rule. Include "x" variable. e.g "x>10"')
+                        ok = False
+                        continue
+
                     ch = Check(name=section,
                                parameter=pa,
-                               criterion=cr,
-                               comparator=co,
-
-                               )
+                               rule=r)
                     self.checks.append(ch)
 
-        return True
+        return ok
 
     def _fcheck_conditions(self):
         ok = True
         for ci in self.checks:
-            v = 0
             pa = ci.parameter
             if pa.startswith('Pressure'):
                 pa, controller, name = pa.split(',')
                 v = self.get_pressure(controller, name)
+            else:
+                v = self._get_value(pa)
 
             if ci.check_condition(v):
                 if self.automated_run:
@@ -115,13 +101,21 @@ class AutomatedRunMonitor(Monitor):
 
         return ok
 
+    def _get_value(self, q):
+        elm = self.automated_run.extraction_line_manager
+        dev = elm.get_device(q)
+        if dev:
+            return dev.get()
+
     def get_pressure(self, controller, name):
         elm = self.automated_run.extraction_line_manager
         p = elm.get_pressure(controller, name)
         return p
 
+
 class RemoteAutomatedRunMonitor(AutomatedRunMonitor):
     handle = None
+
     def __init__(self, host, port, kind, *args, **kw):
         super(RemoteAutomatedRunMonitor, self).__init__(*args, **kw)
         self.handle = EthernetCommunicator()
@@ -129,13 +123,20 @@ class RemoteAutomatedRunMonitor(AutomatedRunMonitor):
         self.handle.port = port
         self.handle.kind = kind
 
+    def _get_value(self, name):
+        p = self.handle.ask('Read {}'.format(name))
+        return self._float(p)
+
     def get_pressure(self, controller, name):
         cmd = 'GetPressure {}, {}'.format(controller, name)
         p = self.handle.ask(cmd)
+        return self._float(p, default=1.0)
+
+    def _float(self, p, default=0.0):
         try:
             p = float(p)
         except (ValueError, TypeError):
-            p = 1.0
+            p = default
         return p
 
 #============= EOF =============================================

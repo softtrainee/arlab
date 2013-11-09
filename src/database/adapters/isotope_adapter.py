@@ -963,13 +963,13 @@ class IsotopeAdapter(DatabaseAdapter):
             q = sess.query(meas_AnalysisTable)
             q = q.join(gen_LabTable)
             q = q.filter(gen_LabTable.identifier == ln)
-            q=q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
-            
+            q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+
             if limit:
-                q=q.limit(limit)
-                
+                q = q.limit(limit)
+
             return self._query_all(q)
-            
+
 
     def get_analysis_record(self, value):
         return self._retrieve_item(meas_AnalysisTable, value, key='id')
@@ -1192,6 +1192,21 @@ class IsotopeAdapter(DatabaseAdapter):
 
     def get_materials(self, **kw):
         return self._retrieve_items(gen_MaterialTable, **kw)
+
+    def get_recent_labnumbers(self, lpost, spectrometer=None):
+        with self.session_ctx() as sess:
+            q = sess.query(gen_LabTable)
+            q = q.join(meas_AnalysisTable)
+
+            if spectrometer:
+                q = q.join(meas_MeasurementTable)
+                q = q.join(gen_MassSpectrometerTable)
+                q = q.filter(gen_MassSpectrometerTable.name == spectrometer.lower())
+
+            q = q.filter(meas_AnalysisTable.analysis_timestamp >= lpost)
+            q = q.order_by(meas_AnalysisTable.analysis_timestamp.asc())
+
+            return self._query_all(q)
 
     def get_recent_samples(self, lpost, spectrometer=None):
         with self.session_ctx() as sess:

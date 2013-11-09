@@ -30,14 +30,14 @@ from src.ui.tabular_editor import myTabularEditor
 
 
 class AnalysisAdapter(BrowserAdapter):
-    all_columns = [('RunID', 'record_id'),
+    all_columns = [('Identifier', 'record_id'),
                    ('Tag', 'tag'),
                    ('Iso Fits', 'iso_fit_status'),
                    ('Blank', 'blank_fit_status'),
                    ('IC', 'ic_fit_status'),
                    ('Flux', 'flux_fit_status')]
 
-    columns = [('RunID', 'record_id'),
+    columns = [('Identifier', 'record_id'),
                ('Tag', 'tag'),
                #('Iso Fits', 'iso_fit_status'),
                #('Blank', 'blank_fit_status'),

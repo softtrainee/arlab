@@ -411,13 +411,11 @@ class PlotPanel(Loggable):
 
     def _graph_factory(self):
         return StackedRegressionGraph(container_dict=dict(padding=5, bgcolor='gray',
-                                                          stack_order=self.stack_order
-        ),
+                                                          stack_order=self.stack_order,
+                                                          spacing=5),
                                       bind_index=False,
                                       use_data_tool=False,
-                                      #use_inspector_tool=False,
-                                      padding_bottom=35
-        )
+                                      padding_bottom=35)
 
 
     def _get_isotopes(self):

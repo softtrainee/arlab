@@ -193,7 +193,7 @@ class AutomatedRun(Loggable):
 
     is_last = False
     is_peak_hop = Bool(False)
-    save_as_peak_hop=Bool(False)
+    save_as_peak_hop = Bool(False)
 
     _integration_seconds = Float(1.0)
     #===============================================================================
@@ -468,7 +468,7 @@ class AutomatedRun(Loggable):
         if self.plot_panel:
             self.plot_panel.trait_set(is_baseline=is_baseline,
                                       _ncycles=cycles)
-        
+
         self.save_as_peak_hop = True
         self.is_peak_hop = True
 
@@ -742,13 +742,14 @@ class AutomatedRun(Loggable):
     def start(self):
         if self.monitor is None:
             return self._start()
-        elif self.monitor.check():
-            # immediately check the monitor conditions
-            if self.monitor.monitor():
-                try:
-                    return self._start()
-                except AttributeError, e:
-                    self.warning('failed starting run: {}'.format(e))
+
+        if self.monitor.monitor():
+            try:
+                return self._start()
+            except AttributeError, e:
+                self.warning('failed starting run: {}'.format(e))
+        else:
+            self.warning('failed to start monitor')
 
     def wait_for_overlap(self):
         '''
@@ -833,7 +834,7 @@ class AutomatedRun(Loggable):
 
         self.info('Start automated run {}'.format(self.runid))
 
-        self.save_as_peak_hop=False
+        self.save_as_peak_hop = False
         self.measuring = False
         #             self.update = True
         self.truncated = False
@@ -1475,7 +1476,7 @@ anaylsis_type={}
 
         name = self.uuid
         path = os.path.join(paths.isotope_dir, '{}.h5'.format(name))
-#        path = '/Users/ross/Sandbox/aaaa_multicollect_isotope.h5'
+        #        path = '/Users/ross/Sandbox/aaaa_multicollect_isotope.h5'
 
         self._current_data_frame = path
         frame = dm.new_frame(path)
@@ -2195,7 +2196,7 @@ anaylsis_type={}
                         #self.debug('get table {} /{}/{}'.format(k,grpname, det.isotope))
                         t = dm.get_table(k, '/{}/{}'.format(grpname, det.isotope))
                         nrow = t.row
-#                        self.debug('x={}'.format(x))
+                        #                        self.debug('x={}'.format(x))
                         nrow['time'] = x
                         nrow['value'] = signals[keys.index(k)]
                         nrow.append()

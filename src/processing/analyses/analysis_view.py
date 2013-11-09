@@ -328,7 +328,7 @@ class AnalysisView(HasTraits):
         niso, diso = self._get_isotope(n), self._get_isotope(d)
         if niso and diso:
             try:
-                return niso.baseline_corrected_value() / diso.baseline_corrected_value()
+                return niso / diso
             except ZeroDivisionError:
                 return ufloat(0, 1e-20)
 

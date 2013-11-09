@@ -16,7 +16,6 @@
 
 #=============enthought library imports=======================
 from traits.api import Property, implements, DelegatesTo, Instance
-
 #=============standard library imports ========================
 #=============local library imports  ==========================
 # from src.config_loadable import ConfigLoadable
@@ -29,7 +28,8 @@ from src.hardware.core.core_device import CoreDevice
 from src.hardware.core.scanable_device import ScanableDevice
 
 
-class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
+class AbstractDevice(ScanableDevice, RPCable, HasCommunicator):
+#class AbstractDevice(RPCable, HasCommunicator):
     '''
     '''
     implements(ICoreDevice)
@@ -38,34 +38,36 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
     _communicator = DelegatesTo('_cdevice')
 
     dev_klass = Property(depends_on='_cdevice')
-#     simulation = Property(depends_on='_cdevice')
-#    reinitialize = DelegatesTo('_cdevice')
-#    com_class = Property(depends_on='_cdevice')
+    #     simulation = Property(depends_on='_cdevice')
+    #    reinitialize_button = DelegatesTo('_cdevice')
+    #    com_class = Property(depends_on='_cdevice')
 
-#    last_command = Property(depends_on='_cdevice.last_command')
-#    last_response = Property(depends_on='_cdevice.last_response')
-#
-#    scan_units = DelegatesTo('_cdevice')
-#    scan_func = DelegatesTo('_cdevice')
-#    scan_period = DelegatesTo('_cdevice')
-    scan_button = DelegatesTo('_cdevice')
-    scan_label = DelegatesTo('_cdevice')
-#    scan_path = DelegatesTo('_cdevice')
-#    last_command = DelegatesTo('_cdevice')
-#    last_response = DelegatesTo('_cdevice')
-# #    simulation = DelegatesTo('_cdevice')
-#    com_class = DelegatesTo('_cdevice')
-#    is_scanable = DelegatesTo('_cdevice')
-#    dm_kind = DelegatesTo('_cdevice')
+    #    last_command = Property(depends_on='_cdevice.last_command')
+    #    last_response = Property(depends_on='_cdevice.last_response')
+    #
+    #    scan_units = DelegatesTo('_cdevice')
+    #    scan_func = DelegatesTo('_cdevice')
+    #    scan_period = DelegatesTo('_cdevice')
+    #    scan_button = DelegatesTo('_cdevice')
+    #    scan_label = DelegatesTo('_cdevice')
+    #    _scanning = DelegatesTo('_cdevice')
+    #    scan_path = DelegatesTo('_cdevice')
+    #    last_command = DelegatesTo('_cdevice')
+    #    last_response = DelegatesTo('_cdevice')
+    # #    simulation = DelegatesTo('_cdevice')
+    #    com_class = DelegatesTo('_cdevice')
+    #    is_scanable = DelegatesTo('_cdevice')
+    #    dm_kind = DelegatesTo('_cdevice')
     graph = DelegatesTo('_cdevice')
+    #    graph_ytitle=DelegatesTo('_cdevice')
 
     def __getattr__(self, attr):
+        #print 'abstrcat {}'.format(attr)
         if hasattr(self._cdevice, attr):
             return getattr(self._cdevice, attr)
-#         try:
-#         except AttributeError, e:
-#             self.debug(e)
-
+            #try:
+            #except AttributeError, e:
+            #    self.debug(e)
 
     def _get_dev_klass(self):
         return self._cdevice.__class__.__name__
@@ -79,36 +81,20 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
         except ImportError, e:
             self.warning(e)
 
-#     def ask(self, cmd, **kw):
-#         '''
-#         '''
-#         if self._cdevice is not None:
-#             return self._cdevice.ask(cmd)
-#
-    def initialize(self, *args, **kw):
-        '''
-        '''
-        if self._cdevice is not None:
-            return self._cdevice.initialize(*args, **kw)
-
     def post_initialize(self, *args, **kw):
+        self.graph.set_y_title(self.graph_ytitle)
+
+
+        #use our scan configuration not the cdevice's
         self.setup_scan()
+        self.setup_alarms()
+        self.setup_scheduler()
+
         if self.auto_start:
             self.start_scan()
 
-    def open(self, **kw):
-        '''
-        '''
-        if self._cdevice is not None:
-            return self._cdevice.open(**kw)
-
-    #def setup_scan(self, *args, **kw):
-    #    if self._cdevice is not None:
-    #        return self._cdevice.setup_scan(*args, **kw)
 
     def load(self, *args, **kw):
-        '''
-        '''
         config = self.get_configuration()
         if config:
 
@@ -116,6 +102,38 @@ class AbstractDevice(RPCable, HasCommunicator, ScanableDevice):
                 self._loaded = True
                 self._cdevice.load()
                 return True
+
+                #def current_state_view(self):
+                #    g = VGroup(Item('graph', show_label=False, style='custom'),
+                #               VGroup(Item('scan_func', label='Function', style='readonly'),
+                #
+                #                      HGroup(Item('scan_period', label='Period ({})'.format(self.scan_units),
+                #                                  # style='readonly'
+                #                      ), spring),
+                #                      Item('current_scan_value', style='readonly'),
+                #               ),
+                #
+                #               VGroup(
+                #                   HGroup(Item('scan_button',
+                #                               editor=ButtonEditor(label_value='scan_label'),
+                #                               show_label=False),
+                #                          spring
+                #                   ),
+                #                   Item('scan_root',
+                #                        style='readonly',
+                #                        label='Scan directory',
+                #                        visible_when='record_scan_data'),
+                #                   Item('scan_name', label='Scan name',
+                #                        style='readonly',
+                #                        visible_when='record_scan_data'),
+                #                   visible_when='is_scanable'),
+                #
+                #               label='Scan'
+                #    )
+                #    #return View(g)
+                #    v = super(AbstractDevice, self).current_state_view()
+                #    v.content.content.append(g)
+                #    return v
 
 #===============================================================================
 # viewable device protocol

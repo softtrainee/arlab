@@ -19,7 +19,7 @@ from traits.api import Any, Float, DelegatesTo, Int, List, Bool
 from traitsui.api import View, Item, EnumEditor, Group, HGroup, spring, ButtonEditor
 from pyface.timer.do_later import do_after
 #============= standard library imports ========================
-from numpy import linspace, exp, hstack, array
+from numpy import linspace, exp, hstack, array, Inf
 import random
 import time
 from threading import Event
@@ -125,7 +125,7 @@ class MagnetScan(SpectrometerTask):
 
         R = None
         r = None
-
+        mi, ma = Inf, -Inf
         for i, v in enumerate(intensity):
             oys = None
             k = 'odata{}'.format(i)
@@ -152,6 +152,10 @@ class MagnetScan(SpectrometerTask):
             xs = hstack((xs, di))
             set_data('x{}'.format(i), xs)
             set_data('y{}'.format(i), oys)
+            mi, ma = min(mi, min(oys)), max(ma, max(oys))
+
+        self.graph.set_y_limits(min_=mi, max_=ma, pad='0.05',
+                                pad_style='upper')
 
     def _graph_hook(self, di, intensity, **kw):
         graph = self.graph
@@ -287,7 +291,7 @@ class MagnetScan(SpectrometerTask):
         )
         return v
 
-#============= EOF =============================================
+        #============= EOF =============================================
         #    title = 'Magnet Scan'
         #    def _scan_dac(self, values, det, delay=850):
         #

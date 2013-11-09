@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from numpy import poly1d
-
+from traits.api import Float, Str
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.hardware.adc.adc_device import ADCDevice
@@ -26,6 +26,8 @@ class Transducer(ADCDevice):
     """
         abstract device the reads an input voltage and maps to an output value
     """
+    scan_func = 'read_voltage'
+    mapped_name = Str
 
     def load_additional_args(self, config):
         """
@@ -41,15 +43,24 @@ class Transducer(ADCDevice):
         except Exception:
             self.warning('Invalid mapping coefficients: {}'.format(coeffs))
 
+        self.set_attribute(config, 'mapped_name', 'Mapping', 'name')
+        if self.mapped_name:
+            self.add_trait(self.mapped_name, Float)
+            u = self.config_get(config, 'Mapping', 'units', default='')
+            self.graph_ytitle = '{} ({})'.format(self.mapped_name.capitalize(), u)
+
         return super(Transducer, self).load_additional_args(config)
 
-    def get(self):
-        ret = super(Transducer, self).get()
-        if ret is None:
-            if self._scanning:
-                v = self.current_scan_value
-            else:
-                v = self.read_voltage()
+
+    def read_voltage(self, **kw):
+        ret = super(Transducer, self).read_voltage(**kw)
+        return self.map_data(ret)
+
+    def get(self, **kw):
+        if self._scanning:
+            v = self.current_scan_value
+        else:
+            v = self.read_voltage(**kw)
 
         ret = self.map_data(v)
         return ret
@@ -58,6 +69,8 @@ class Transducer(ADCDevice):
         """
             map a voltage to data space
         """
-        return self._mapping_poly(v)
+        v = self._mapping_poly(v)
+        setattr(self, self.mapped_name, v)
+        return v
 
 #============= EOF =============================================
