@@ -15,37 +15,34 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Any, on_trait_change, Instance, Str
-from traitsui.api import View, Item, TableEditor, VSplit, InstanceEditor
-from traitsui.table_column import ObjectColumn
+from traits.api import List, Any
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.managers.manager import Manager
 # from src.hardware.core.i_core_device import ICoreDevice
 class HardwareManager(Manager):
     devices = List
-#    application = Any
+    #    application = Any
     selected = Any
     current_device = Any
-#    current_device = Instance(ICoreDevice)
+    #    current_device = Instance(ICoreDevice)
 
-#    @on_trait_change('application')
-#    def app_changed(self, obj, name, old, new):
-#        if name == 'application' and new:
-#            self.load_devices()
-#            self.application = new
+    #    @on_trait_change('application')
+    #    def app_changed(self, obj, name, old, new):
+    #        if name == 'application' and new:
+    #            self.load_devices()
+    #            self.application = new
 
     def _application_changed(self):
         self.load_devices()
 
     def load_devices(self):
         self.devices = self.application.service_registry.get_services('src.hardware.core.i_core_device.ICoreDevice',
-                                                         "display==True"
-                                                         )
+                                                                      "display==True"
+        )
         self.devices.sort()
 
     def _selected_changed(self):
-        print self.selected
         if self.selected is not None:
             self.current_device = self.selected
 

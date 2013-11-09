@@ -38,7 +38,7 @@ class ScanableDevice(ViewableDevice):
     scan_label = Property(depends_on='_scanning')
     _scanning = Bool(False)
 
-    is_scanable = False
+    is_scanable = Bool(False)
     scan_func = Any
     scan_lock = None
     timer = None
@@ -53,6 +53,7 @@ class ScanableDevice(ViewableDevice):
 
     graph_klass = TimeSeriesStreamGraph
     graph = Instance(Graph)
+    graph_ytitle = Str
 
     data_manager = None
     time_dict = dict(ms=1, s=1000, m=60.0 * 1000, h=60.0 * 60.0 * 1000)
@@ -66,18 +67,16 @@ class ScanableDevice(ViewableDevice):
     #===============================================================================
     def setup_scan(self):
         # should get scan settings from the config file not the initialization.xml
-
         config = self.get_configuration()
         if config.has_section('Scan'):
-            enabled = self.config_get(config, 'Scan', 'enabled', optional=True, default=True)
+            enabled = self.config_get(config, 'Scan', 'enabled', cast='boolean', optional=True, default=True)
             self.is_scanable = enabled
             if enabled:
-                self.set_attribute(config, 'auto_start', 'Scan', 'auto_start', cast='boolean', default=True)
+                self.set_attribute(config, 'auto_start', 'Scan', 'auto_start', cast='boolean', default=False)
                 self.set_attribute(config, 'scan_period', 'Scan', 'period', cast='float')
                 self.set_attribute(config, 'scan_units', 'Scan', 'units')
                 self.set_attribute(config, 'record_scan_data', 'Scan', 'record', cast='boolean')
                 self.set_attribute(config, 'graph_scan_data', 'Scan', 'graph', cast='boolean')
-                self.set_attribute(config, 'scan_func', 'Scan', 'func')
                 self.set_attribute(config, 'use_db', 'DataManager', 'use_db', cast='boolean', default=False)
                 self.set_attribute(config, 'dm_kind', 'DataManager', 'kind', default='csv')
 
@@ -94,9 +93,6 @@ class ScanableDevice(ViewableDevice):
         pass
 
     def _scan_(self, *args):
-        '''
-
-        '''
         if self.scan_func:
             try:
                 v = getattr(self, self.scan_func)(verbose=False)
@@ -154,21 +150,16 @@ class ScanableDevice(ViewableDevice):
                     self._no_response_counter += 1
 
     def scan(self, *args, **kw):
-        '''
-
-        '''
         if self.scan_lock is None:
             self.scan_lock = Lock()
 
         with self.scan_lock:
             self._scan_(*args, **kw)
 
-    def start_scan(self, auto=False):
-
-        self._auto_started = auto
-
+    def start_scan(self):
         if self.timer is not None:
             self.timer.Stop()
+            self.timer.wait_for_completion()
 
         self._scanning = True
         self.info('Starting scan')
@@ -191,9 +182,9 @@ class ScanableDevice(ViewableDevice):
 
             if self.dm_kind == 'h5':
                 g = dm.new_group('scans')
-                _t = dm.new_table(g, 'scan1')
+                dm.new_table(g, 'scan1')
 
-            if self.auto_start and auto:
+            if self.auto_start:
                 self.save_scan_to_db()
 
         sp = self.scan_period * self.time_dict[self.scan_units]
@@ -217,6 +208,7 @@ class ScanableDevice(ViewableDevice):
 
     def stop_scan(self):
         self.info('Stoppiing scan')
+
         self._scanning = False
         if self.timer is not None:
             self.timer.Stop()
@@ -238,6 +230,7 @@ class ScanableDevice(ViewableDevice):
         return 'Start' if not self._scanning else 'Stop'
 
     def _scan_button_fired(self):
+        self.debug('scan button fired. scanning {}'.format(self._scanning))
         if self._scanning:
             self.stop_scan()
         else:
@@ -251,7 +244,7 @@ class ScanableDevice(ViewableDevice):
     def _graph_default(self):
 
         g = self.graph_klass(
-            container_dict=dict(padding=[10, 10, 10, 10])
+            #container_dict=dict(padding=[40, 10, 10, 10])
         )
 
         self.graph_builder(g)
@@ -259,12 +252,13 @@ class ScanableDevice(ViewableDevice):
         return g
 
     def graph_builder(self, g, **kw):
+        p = g.new_plot(padding=[50, 5, 5, 35],
+                       zoom=True,
+                       pan=True,
+                       **kw)
 
-        g.new_plot(padding=[40, 5, 5, 20],
-                   zoom=True,
-                   pan=True,
-                   **kw
-        )
+        g.set_y_title(self.graph_ytitle)
+        g.set_x_title('Time')
         g.new_series()
 
     def current_state_view(self):
@@ -297,4 +291,4 @@ class ScanableDevice(ViewableDevice):
         v.content.content.append(g)
         return v
 
-    #============= EOF =============================================
+        #============= EOF =============================================

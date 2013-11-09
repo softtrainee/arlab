@@ -85,7 +85,6 @@ class DashboardDevice(Loggable):
             if dt > value.period:
                 try:
                     nv = getattr(self._device, value.func_name)()
-                    value.last_value = nv
                     self._push_value(value, nv)
                 except Exception:
                     import traceback
@@ -117,6 +116,7 @@ class DashboardDevice(Loggable):
         if pv.enabled:
             tag = pv.tag
             self.publish_event = '{} {}'.format(tag, new)
+            pv.last_value = new
             pv.last_time = time.time()
 
     def traits_view(self):

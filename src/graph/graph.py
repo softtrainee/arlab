@@ -1536,7 +1536,7 @@ class Graph(Viewable, ContextMenuMixin):
 
             #    def _set_limits(self, mi, ma, axis, plotid, auto, track, pad):
 
-    def _set_limits(self, mi, ma, axis, plotid, pad, force=False):
+    def _set_limits(self, mi, ma, axis, plotid, pad, pad_style='symmetric', force=False):
         '''
         '''
         plot = self.plots[plotid]
@@ -1584,7 +1584,10 @@ class Graph(Viewable, ContextMenuMixin):
                     ma = 100
 
                 if ma is not None and mi is not None:
-                    pad = float(pad) * (ma - mi)
+
+                    dev = ma - mi
+
+                    pad = float(pad) * dev
                     if abs(pad) < 1e-10:
                         pad = 1
 
@@ -1593,11 +1596,13 @@ class Graph(Viewable, ContextMenuMixin):
 
             if isinstance(ma, (int, float)):
                 if ma is not None:
-                    ma += pad
+                    if pad_style in ('symmetric', 'upper'):
+                        ma += pad
 
             if isinstance(mi, (int, float)):
                 if mi is not None:
-                    mi -= pad
+                    if pad_style in ('symmetric', 'lower'):
+                        mi -= pad
 
         if mi is not None:
             if isinstance(mi, (int, float)):

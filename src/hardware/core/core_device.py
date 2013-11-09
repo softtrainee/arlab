@@ -194,12 +194,14 @@ class CoreDevice(ScanableDevice, RPCable, HasCommunicator, ConsumerMixin):
     #                                   id_response=self.id_response
     #                                )
     def post_initialize(self, *args, **kw):
+        self.graph.set_y_title(self.graph_ytitle)
         self.setup_scan()
         self.setup_alarms()
         self.setup_scheduler()
 
         if self.auto_start:
             self.start_scan()
+
 
     def get_random_value(self, mi=0, ma=10):
         '''

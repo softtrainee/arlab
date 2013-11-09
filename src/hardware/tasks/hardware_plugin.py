@@ -174,8 +174,8 @@ class HardwarePlugin(BaseTaskPlugin):
 
         for s in self.application.get_services(ICoreDevice):
             if s.is_scanable:
-                if s._scanning and not s._auto_started:
-                    s.stop_scan()
+                s.stop_scan()
+                #if s._scanning and not s._auto_started:
 
 #                s.save_to_db()
 #============= EOF =============================================

@@ -290,10 +290,10 @@ class MassSpecDatabaseImporter(Loggable):
         db = self.db
 
         iso = dbiso.Label
-        det=dbdet.Label
+        det = dbdet.Label
         if spec.is_peak_hop:
-            det=spec.peak_hop_detector
-        
+            det = spec.peak_hop_detector
+
         tb, vb = spec.get_signal_data(iso, det)
 
         baseline = spec.get_baseline_uvalue(det)
@@ -303,8 +303,8 @@ class MassSpecDatabaseImporter(Loggable):
         blob2 = [struct.pack('>f', float(v)) for v in vb]
         db.add_peaktimeblob(blob1, blob2, dbiso)
 
-        # in mass spec the intercept is alreay baseline corrected
-        # mass spec also doesnt propograte baseline errors
+        # in mass spec the intercept is already baseline corrected
+        # mass spec also doesnt propagate baseline errors
 
         signal = spec.get_signal_uvalue(iso, det)
         sfit = spec.get_signal_fit(iso, det)
@@ -331,6 +331,9 @@ class MassSpecDatabaseImporter(Loggable):
         label = '{} Baseline'.format(det.upper())
         ncnts = len(tb)
         db_baseline = db.add_baseline(blob, label, ncnts, dbiso)
+
+        if spec.is_peak_hop:
+            det = spec.peak_hop_detector
 
         bs = spec.get_baseline_uvalue(det)
 

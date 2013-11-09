@@ -137,8 +137,7 @@ class IsotopeEvolutionEditor(GraphEditor):
             g = self._graph_factory(bind_index=bind_index)
             plot_kw = dict(padding=[50, 1, 1, 1],
                            title=unk.record_id,
-                           border_width=2
-            )
+                           border_width=1)
 
             with g.no_regression(refresh=False):
                 ma = -Inf

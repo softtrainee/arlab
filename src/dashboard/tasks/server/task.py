@@ -26,6 +26,7 @@ from src.envisage.tasks.base_task import BaseTask
 
 
 class DashboardServerTask(BaseTask):
+    name = 'Dashboard Server'
     server = Instance(DashboardServer)
     #devices = DelegatesTo('server')
     #selected_device = Instance(DashboardDevice)

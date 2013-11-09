@@ -19,9 +19,8 @@
 #============= standard library imports ========================
 from threading import Thread
 #============= local library imports  ==========================
-from src.remote_hardware.errors import  InvalidArgumentsErrorCode, InvalidValveErrorCode, \
-    InvalidIPAddressErrorCode, InvalidValveGroupErrorCode, \
-    ValveSoftwareLockErrorCode, ValveActuationErrorCode
+from src.remote_hardware.errors import InvalidArgumentsErrorCode, InvalidValveErrorCode, \
+    InvalidIPAddressErrorCode, ValveSoftwareLockErrorCode, ValveActuationErrorCode
 from base_remote_hardware_handler import BaseRemoteHardwareHandler
 from dummies import DummyELM
 # from src.envisage.core.action_helper import open_manager
@@ -49,19 +48,19 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
 
         return elm
 
-#    def get_device(self, name, protocol=None):
-#        if self.application is not None:
-#            if protocol is None:
-#                protocol = 'src.hardware.core.i_core_device.ICoreDevice'
-#            dev = self.application.get_service(protocol, 'name=="{}"'.format(name))
-#            if dev is None:
-#                #possible we are trying to get a flag
-#                m = self.get_manager()
-#                dev = m.get_flag(name)
-#
-#        else:
-#            dev = DummyDevice()
-#        return dev
+    #    def get_device(self, name, protocol=None):
+    #        if self.application is not None:
+    #            if protocol is None:
+    #                protocol = 'src.hardware.core.i_core_device.ICoreDevice'
+    #            dev = self.application.get_service(protocol, 'name=="{}"'.format(name))
+    #            if dev is None:
+    #                #possible we are trying to get a flag
+    #                m = self.get_manager()
+    #                dev = m.get_flag(name)
+    #
+    #        else:
+    #            dev = DummyDevice()
+    #        return dev
 
     def Open(self, manager, vname, sender_address, *args):
         # intercept flags
@@ -70,7 +69,7 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
             return 'OK' if r else 'Error setting flag'
 
         result, change = manager.open_valve(vname,
-                            sender_address=sender_address)
+                                            sender_address=sender_address)
 
         if result == True:
             result = 'OK' if change else 'ok'
@@ -90,7 +89,7 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
             return 'OK' if r else 'Error clearing flag'
 
         result, change = manager.close_valve(vname,
-                            sender_address=sender_address)
+                                             sender_address=sender_address)
         if result == True:
             result = 'OK' if change else 'ok'
         elif result is None:
@@ -110,14 +109,14 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
 
     def GetValveStates(self, manager, *args):
         result = manager.get_valve_states()
-#        if result is None:
-#            result = 'ERROR'
+        #        if result is None:
+        #            result = 'ERROR'
         return result
 
     def GetValveLockStates(self, manager, *args):
         result = manager.get_valve_lock_states()
-#        if result is None:
-#            result = 'ERROR'
+        #        if result is None:
+        #            result = 'ERROR'
         return result
 
     def GetValveLockState(self, manager, vname, *args):
@@ -133,8 +132,8 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
         result = manager.get_software_lock(vname)
         if result is None:
             result = InvalidValveErrorCode(vname)
-#            result = 'ERROR: {} name available'.format(vname)
-#            result = False
+            #            result = 'ERROR: {} name available'.format(vname)
+        #            result = False
 
         return result
 
@@ -254,6 +253,17 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
     def ScriptState(self, manager, uuid, *args):
         result = manager.get_script_state(uuid)
         return result
+
+    def GetPressure(self, manager, controller, gauge):
+        p = None
+        if manager:
+            p = manager.get_pressure(controller, gauge)
+
+        if p is None:
+            p = InvalidGaugeErrorCode(controller, gauge)
+
+        return str(p)
+
 #===============================================================================
 # not current used
 #===============================================================================
@@ -280,15 +290,5 @@ class ExtractionlineHandler(BaseRemoteHardwareHandler):
 #         return 'OK'
 #
 #
-#     def GetPressure(self, manager, controller, gauge):
-#         '''
-#         '''
-#         p = None
-#         if manager:
-#             p = manager.get_pressure(controller, gauge)
-#
-#         if p is None:
-#             p = InvalidGaugeErrorCode(controller, gauge)
-#
-#         return str(p)
+
 #============= EOF ====================================

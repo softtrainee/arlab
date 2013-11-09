@@ -127,6 +127,8 @@ class Experimentor(IsotopeDatabaseManager):
         self.stats.calculate()
 
         ans = self._get_all_runs(queues)
+
+        self.stats.nruns = len(ans)
         #         print len([i for i in ans])
         exclude = ('dg', 'pa')
         #        timethis(self._modify_aliquots_steps, args=(ans,), kwargs=dict(exclude=exclude))

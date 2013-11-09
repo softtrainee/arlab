@@ -795,6 +795,9 @@ class ExperimentExecutor(IsotopeDatabaseManager):
         if not self._check_managers(n=3):
             return True
 
+        if not self.monitor.check():
+            return True
+
         # if the experiment queue has been modified wait until saved or
         # timed out. if timed out autosave.
         self._wait_for_save()

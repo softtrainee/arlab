@@ -137,6 +137,8 @@ class DashboardServer(Loggable):
 
         mperiod = min([v.period for dev in self.devices
                        for v in dev.values])
+        if mperiod == 'on_change':
+            mperiod = 1
 
         self.debug('min period {}'.format(mperiod))
         while self._alive:

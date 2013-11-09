@@ -35,8 +35,8 @@ class Notifier(Loggable):
 
     def setup(self, port):
         if port:
-            self._lock=Lock()
-        
+            self._lock = Lock()
+
             context = zmq.Context()
             sock = context.socket(zmq.PUB)
             sock.bind('tcp://*:{}'.format(port))
@@ -44,9 +44,9 @@ class Notifier(Loggable):
 
             self._req_sock = context.socket(zmq.REP)
             self._req_sock.bind('tcp://*:{}'.format(port + 1))
-#
+            #
             t = Thread(name='ping_replier', target=self._handle_request)
-#            t.setDaemon(1)
+            t.setDaemon(1)
             t.start()
 
     def add_request_handler(self, name, func):
@@ -54,7 +54,7 @@ class Notifier(Loggable):
 
     def _handle_request(self):
         sock = self._req_sock
-        
+
         poll = zmq.Poller()
         poll.register(self._req_sock, zmq.POLLIN)
 
@@ -69,7 +69,7 @@ class Notifier(Loggable):
                         elif resp in self._handlers:
                             func = self._handlers[resp]
                             sock.send(func())
-    
+
                 except zmq.ZMQBaseError:
                     pass
 
@@ -78,7 +78,7 @@ class Notifier(Loggable):
             if self._sock:
                 self._sock.close()
                 self._sock = None
-            
+
             if self._req_sock:
                 self._req_sock.close()
                 self._req_sock = None
@@ -103,7 +103,7 @@ class Notifier(Loggable):
             if self._sock:
                 try:
                     self._sock.send(msg)
-                except (zmq.ZMQBaseError, AssertionError),e:
+                except (zmq.ZMQBaseError, AssertionError), e:
                     self.warning('failed sending message: error {}: {}'.format(e, msg))
             else:
                 self.debug('notifier not setup')

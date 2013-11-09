@@ -164,7 +164,8 @@ class GraphEditor(BaseUnknownsEditor):
         return self._graph_factory()
 
     def _graph_factory(self, **kw):
-        g = StackedRegressionGraph(container_dict=dict(stack_order='top_to_bottom'),
+        g = StackedRegressionGraph(container_dict=dict(stack_order='top_to_bottom',
+                                                       spacing=5),
                                    **kw)
         return g
 
