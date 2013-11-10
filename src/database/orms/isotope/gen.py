@@ -16,9 +16,9 @@
 
 #============= enthought library imports =======================
 #============= standard library imports ========================
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import Column, Integer, String, \
-     ForeignKey, BLOB, Float, Time, Boolean, DateTime
+    ForeignKey, BLOB, Float, Boolean, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.schema import Table
 #============= local library imports  ==========================
@@ -51,7 +51,8 @@ class gen_DetectorTable(Base, NameMixin):
     intercalibrations = relationship('proc_DetectorIntercalibrationTable', backref='detector')
 
 class gen_ExtractionDeviceTable(Base, NameMixin):
-    extractions = relationship('meas_ExtractionTable', backref='extraction_device')
+    extractions = relationship('meas_ExtractionTable',
+                               backref='extraction_device')
     kind = stringcolumn()
     make = stringcolumn()
     model = stringcolumn()

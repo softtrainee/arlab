@@ -29,6 +29,7 @@ import xlrd
 from src.envisage.tasks.pane_helpers import ConsolePane
 from src.experiment.health.analysis_health import AnalysisHealth
 from src.experiment.queue.base_queue import extract_meta
+from src.experiment.sys_log import SysLogger
 from src.experiment.tasks.experiment_panes import ExperimentFactoryPane, StatsPane, \
     ControlsPane, WaitPane, IsotopeEvolutionPane
 
@@ -52,10 +53,13 @@ class ExperimentEditorTask(EditorTask):
     auto_figure_window = None
     use_auto_figure = Bool
     use_notifications = Bool
+    use_syslogger = Bool
     #notifications_port = Int
 
     loading_manager = Instance('src.loading.loading_manager.LoadingManager')
     notifier = Instance(Notifier, ())
+    syslogger = Instance(SysLogger, ())
+
     analysis_health = Instance(AnalysisHealth)
 
     def new_pattern(self):
@@ -94,21 +98,31 @@ class ExperimentEditorTask(EditorTask):
 
     def activated(self):
 
-        bind_preference(self, 'use_auto_figure',
-                        'pychron.experiment.use_auto_figure')
-
+        #notifications
         bind_preference(self, 'use_notifications',
                         'pychron.experiment.use_notifications')
-
         bind_preference(self.notifier, 'port',
                         'pychron.experiment.notifications_port')
+        #force notifier setup
+        self.notifier.setup(self.notifier.port)
+
+        #auto save
         bind_preference(self.manager.executor, 'use_auto_save',
                         'pychron.experiment.use_auto_save')
         bind_preference(self.manager.executor, 'auto_save_delay',
                         'pychron.experiment.auto_save_delay')
-#        #force notifier setup
-        self.notifier.setup(self.notifier.port)
-        
+
+        #sys logger
+        bind_preference(self, 'use_syslogger',
+                        'pychron.use_syslogger')
+
+        bind_preference(self.syslogger, 'username',
+                        'pychron.syslogger.username')
+        bind_preference(self.syslogger, 'password',
+                        'pychron.syslogger.password')
+        bind_preference(self.syslogger, 'host',
+                        'pychron.syslogger.host')
+
         super(ExperimentEditorTask, self).activated()
 
     def create_dock_panes(self):
@@ -459,6 +473,10 @@ class ExperimentEditorTask(EditorTask):
     def _update_console(self, new):
         if self.use_notifications:
             self.notifier.send_console_message(new)
+
+        if self.use_syslogger:
+            self.syslogger.executor = self.manager.executor
+            self.syslogger.trigger(new)
 
     @on_trait_change('manager:executor:run_completed')
     def _update_run_completed(self, new):

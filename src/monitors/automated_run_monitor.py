@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Str, Any, Array, Bool
+from traits.api import HasTraits, List, Str, Any, Array, Bool, Float
 #============= standard library imports ========================
 from numpy import vstack, array
 #============= local library imports  ==========================
@@ -28,6 +28,7 @@ class Check(HasTraits):
     name = Str
     parameter = Str
     action = Str
+    rule = Str
 
     data = Array
     tripped = Bool
@@ -52,6 +53,10 @@ class Check(HasTraits):
 class AutomatedRunMonitor(Monitor):
     checks = List
     automated_run = Any
+
+    pneumatics = Float
+    ctemp = Float
+    humidity = Float
 
     def _load_hook(self, config):
         self.checks = []
@@ -89,6 +94,8 @@ class AutomatedRunMonitor(Monitor):
                 v = self.get_pressure(controller, name)
             else:
                 v = self._get_value(pa)
+                if v:
+                    self.trait_set(**{ci.name.lower(): v})
 
             if ci.check_condition(v):
                 if self.automated_run:

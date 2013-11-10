@@ -15,16 +15,38 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+import os
+from traits.api import List, Int
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+import yaml
+from src.paths import paths
+from src.helpers.filetools import add_extension
+from src.loggable import Loggable
 
 
+class EasyParser(Loggable):
+    _docs = List
+    _ndocs = Int
 
+    def __init__(self, name, *args, **kw):
+        super(EasyParser, self).__init__(*args, **kw)
+        name = add_extension(name, '.yaml')
+        p = os.path.join(paths.processed_dir, name)
+        if os.path.isfile(p):
+            with open(p, 'r') as fp:
+                md = yaml.load_all(fp)
+                self._docs = list(md)
+                self._ndocs = len(self._docs)
+        else:
+            self.warning_dialog('Invalid EasyParser file. {}'.format(self._path))
 
-
-
-
-
+    def doc(self, idx):
+        try:
+            return self._docs[idx]
+        except IndexError:
+            self.warning_dialog('Invalid Document index {}. ndocs={}'.format(idx, self._ndocs))
 
 #============= EOF =============================================
+

@@ -25,7 +25,7 @@ from itertools import groupby
 import pickle
 #============= local library imports  ==========================
 from src.paths import paths
-from src.processing.tasks.analysis_edit.fits import FitSelector
+from src.processing.fits.fit_selector import FitSelector
 from src.graph.regression_graph import StackedRegressionGraph
 from src.processing.tasks.editor import BaseUnknownsEditor
 
@@ -69,7 +69,7 @@ class GraphEditor(BaseUnknownsEditor):
                 try:
                     obj = pickle.load(fp)
                     self._load_tool(obj)
-                except (pickle.PickleError, OSError, EOFError):
+                except (pickle.PickleError, OSError, EOFError, AttributeError):
                     return
 
     def _load_tool(self, fits):

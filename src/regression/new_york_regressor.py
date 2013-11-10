@@ -122,7 +122,7 @@ class YorkRegressor(OLSRegressor):
 
     def _get_x_intercept_error(self):
         v = self.x_intercept
-        e = self.get_intercept_error() / (v ** 0.5)
+        e = self.get_intercept_error() * v ** 0.5
         return e
 
     def _get_mswd(self):

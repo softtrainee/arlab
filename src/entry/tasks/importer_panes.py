@@ -44,7 +44,7 @@ class ImportedNameAdapter(TabularAdapter):
 
 class ImporterPane(TraitsDockPane):
     name = 'Importer'
-    id = 'pychron.labnumber.importer'
+    id = 'pychron.labnumber.extractor'
 
     def traits_view(self):
         v = View(
@@ -71,8 +71,8 @@ class ImporterPane(TraitsDockPane):
                     #                         VFold(
                     VGroup(
                         VGroup(
-                            Item('object.importer.dbconn_spec', style='custom', show_label=False),
-                            HGroup(spring, Item('object.importer.connect_button', show_label=False)),
+                            Item('object.extractor.dbconn_spec', style='custom', show_label=False),
+                            HGroup(spring, Item('object.extractor.connect_button', show_label=False)),
                             label='Source'
                         ),
                         VGroup(

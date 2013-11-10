@@ -341,10 +341,11 @@ class FigureTask(AnalysisEditTask):
 
     def _append_figure(self, klass):
         """
-            if selected_sample append all analyses
+            if selected_samples append all analyses
             else append selected analyses
 
         """
+        return
 
         if isinstance(self.active_editor, klass):
             sa = self.analysis_table.selected
@@ -519,7 +520,7 @@ class FigureTask(AnalysisEditTask):
 
             #editor = IdeogramEditor(processor=self.manager)
 
-            for sa in self.selected_sample:
+            for sa in self.selected_samples:
                 ans = self._get_sample_analyses(sa)
                 ans = self.manager.make_analyses(ans)
                 self.new_ideogram(ans, set_ans=False)
@@ -527,7 +528,7 @@ class FigureTask(AnalysisEditTask):
                 #self.unknowns_pane.items=ans
                 #print sa, ans
         else:
-            ans = self._get_sample_analyses(self.selected_sample)
+            ans = self._get_sample_analyses(self.selected_samples)
             self.unknowns_pane.items = ans
 
             #             sam = next((si

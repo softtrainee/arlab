@@ -83,15 +83,15 @@ class LabnumberEntryTask(BaseManagerTask, BrowserMixin):
         self.manager.generate_labnumbers()
 
     def import_irradiation_load_xls(self):
-        path=self.open_file_dialog()
+        path = self.open_file_dialog()
         if path:
             #p = '/Users/ross/Sandbox/irrad_load_template.xls'
             self.manager.import_irradiation_load_xls(path)
 
     def make_irradiation_load_template(self):
-        path=self.open_file_dialog()
+        path = self.open_file_dialog()
         if path:
-    #        p = '/Users/ross/Sandbox/irrad_load_template.xls'
+        #        p = '/Users/ross/Sandbox/irrad_load_template.xls'
             self.manager.make_irradiation_load_template(path)
             #self.information_dialog('Template saved to {}'.format(p))
             self.view_xls(path)
@@ -108,7 +108,7 @@ class LabnumberEntryTask(BaseManagerTask, BrowserMixin):
             left=Splitter(
                 PaneItem('pychron.labnumber.irradiation'),
                 Tabbed(
-                    PaneItem('pychron.labnumber.importer'),
+                    PaneItem('pychron.labnumber.extractor'),
                     PaneItem('pychron.labnumber.editor')
                 ),
                 orientation='vertical'
@@ -130,7 +130,7 @@ class LabnumberEntryTask(BaseManagerTask, BrowserMixin):
             IrradiationCanvasPane(model=self.manager)
         ]
 
-    @on_trait_change('importer:update_irradiations_needed')
+    @on_trait_change('extractor:update_irradiations_needed')
     def _update_irradiations(self):
         self.manager.updated = True
 
@@ -151,7 +151,7 @@ class LabnumberEntryTask(BaseManagerTask, BrowserMixin):
 
     def _edit_sample_button_fired(self):
         se = SampleEntry(db=self.manager.db)
-        sam = self.selected_sample
+        sam = self.selected_samples
 
         se.edit_sample(sam.name,
                        self.selected_project,

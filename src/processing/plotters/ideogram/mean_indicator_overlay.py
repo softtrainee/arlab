@@ -40,6 +40,7 @@ class XYPlotLabel(PlotLabel, Movable):
     sx = Float
     sy = Float
 
+
     def do_layout(self):
         """ Tells this component to do layout.
 
@@ -55,8 +56,13 @@ class XYPlotLabel(PlotLabel, Movable):
         return abs(x - self.x) < w and abs(y - self.y) < h
 
     def _sx_changed(self):
-        self.x = self.sx + self.get_preferred_size()[0] / 2.0 + 5
+        lw = self.get_preferred_size()[0] / 2.0
+        x = self.sx + lw + 5
+        x2 = self.component.x2
+        if x + lw > x2:
+            x = x2 - lw - 3
 
+        self.x = x
         #self.altered_screen_point=(self.x, self.y)
         #print self.altered_screen_point
         self.current_screen_point = (self.x, self.y)
@@ -136,7 +142,7 @@ class MeanIndicatorOverlay(AbstractOverlay, Movable):
     def _text_changed(self):
         label = self.label
         if label is None:
-            label = XYPlotLabel(component=self, text=self.text)
+            label = XYPlotLabel(component=self.component, text=self.text)
             self.label = label
             self.overlays.append(label)
             self.tools.append(LabelMoveTool(component=label))

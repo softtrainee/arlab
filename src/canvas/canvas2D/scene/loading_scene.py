@@ -49,7 +49,6 @@ class LoadingScene(Scene):
             xma = max(xma, x)
             yma = max(yma, y)
             mr = max(mr, r)
-
             v = LoadIndicator(
                 x=x,
                 y=y,

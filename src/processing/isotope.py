@@ -38,6 +38,7 @@ class BaseMeasurement(HasTraits):
     xs = Array
     ys = Array
 
+    n = Property(depends_on='xs')
     name = Str
     mass = Float
     detector = Str
@@ -74,6 +75,9 @@ class BaseMeasurement(HasTraits):
 
         except struct.error, e:
             print 'unpack_blob', e
+
+    def _get_n(self):
+        return len(self.xs)
 
 
 class IsotopicMeasurement(BaseMeasurement):

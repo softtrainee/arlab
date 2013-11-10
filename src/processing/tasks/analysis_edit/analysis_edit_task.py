@@ -15,8 +15,11 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from itertools import groupby
+from datetime import timedelta
 from pyface.tasks.action.schema import SToolBar
 from traits.api import Instance, on_trait_change, List
+from src.helpers.datetime_tools import get_datetime
 from src.processing.tasks.analysis_edit.actions import DatabaseSaveAction, FindAssociatedAction
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane, \
     TablePane
@@ -54,7 +57,42 @@ class AnalysisEditTask(BaseBrowserTask):
     external_recall_window = True
 
     def find_associated_analyses(self):
-        self.information_dialog('Find associated not yey implemented')
+        #self.information_dialog('Find associated not yet implemented')
+
+        if self.active_editor:
+            unks = self.active_editor.unknowns
+
+            key = lambda x: x.labnumber
+            unks = sorted(unks, key=key)
+
+            db = self.manager.db
+            with db.session_ctx():
+                tans = []
+                uuids = []
+                for ln, ais in groupby(unks, key=key):
+                    self.debug('find associated analyses for labnumber {}'.format(ln))
+
+                    ts = [get_datetime(ai.timestamp) for ai in ais]
+                    for atype in ('blank_unknown', 'blank_air', 'blank_cocktail',
+                                  'air', 'cocktail'):
+                        self.debug('find {}'.format(atype))
+                        for i in range(10):
+                            td = timedelta(hours=6 * (i + 1))
+                            lpost, hpost = min(ts) - td, max(ts) + td
+
+                            ans = db.get_date_range_analyses(lpost, hpost,
+                                                             atype=atype)
+
+                            self.debug('{} to {}. nanalyses={}'.format(lpost, hpost, len(ans) if ans else 0))
+                            if ans:
+                                ans = [ai for ai in ans if ai.uuid not in uuids]
+                                tans.extend(ans)
+                                uuids.extend([ai.uuid for ai in ans])
+                                break
+
+                #ans=self.manager.make_analyses(ans)
+                self.active_editor.unknowns.extend(tans)
+
 
     def recall(self, records):
         if not hasattr(records, '__iter__'):
@@ -347,7 +385,7 @@ class AnalysisEditTask(BaseBrowserTask):
 
         #print self.selected_project, 'ffff'
         task.set_projects(self.oprojects, self.selected_project)
-        task.set_samples(self.osamples, self.selected_sample)
+        task.set_samples(self.osamples, self.selected_samples)
 
     @on_trait_change('unknowns_pane:previous_selection')
     def _update_up_previous_selection(self, obj, name, old, new):
@@ -356,7 +394,7 @@ class AnalysisEditTask(BaseBrowserTask):
     def _get_selected_analyses(self, unks=None):
         s = self.analysis_table.selected
         if not s:
-            if self.selected_sample:
+            if self.selected_samples:
                 iv = not self.analysis_table.omit_invalid
 
                 uuids = []
@@ -366,12 +404,11 @@ class AnalysisEditTask(BaseBrowserTask):
                 def test(aa):
                     return not aa.uuid in uuids
 
-
-                s = [ai for ai in self._get_sample_analyses(self.selected_sample,
+                s = [ai for ai in self._get_sample_analyses(self.selected_samples,
                                                             include_invalid=iv)
                      if test(ai)]
 
-                #s = [ai for si in self.selected_sample
+                #s = [ai for si in self.selected_samples
                 #     for ai in self._get_sample_analyses(si, include_invalid=iv)
                 #     if test(ai)]
 

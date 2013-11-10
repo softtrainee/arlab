@@ -100,7 +100,7 @@ class BrowserPane(TraitsDockPane):
                   editor=TabularEditor(
                       adapter=self.sample_tabular_adapter,
                       editable=False,
-                      selected='selected_sample',
+                      selected='selected_samples',
                       multi_select=True,
                       dclicked='dclicked_sample',
                       column_clicked='column_clicked',

@@ -48,7 +48,7 @@ class BrowserMixin(ColumnSorterMixin):
     sample_filter = Str
 
     selected_project = Any
-    selected_sample = Any
+    selected_samples = Any
     dclicked_sample = Any
 
     auto_select_analysis = Bool(True)
@@ -76,7 +76,7 @@ class BrowserMixin(ColumnSorterMixin):
     def set_samples(self, s, sel):
         self.samples = s
         self.osamples = s
-        self.trait_set(selected_sample=sel)
+        self.trait_set(selected_samples=sel)
 
     def activate(self):
         self.load_projects()
@@ -111,7 +111,7 @@ class BrowserMixin(ColumnSorterMixin):
             self.osamples = sams
 
             #if sams:
-            #    self.selected_sample = sams[:1]
+            #    self.selected_samples = sams[:1]
 
             p = self._get_sample_filter_parameter()
             self.sample_filter_values = [getattr(si, p) for si in sams]
@@ -225,39 +225,24 @@ class BrowserMixin(ColumnSorterMixin):
 
     def _clear_selection_button_fired(self):
         self.selected_project = []
-        self.selected_sample = []
+        self.selected_samples = []
 
     def _get_sample_analyses(self, samples, limit=500,
                              page=None, page_width=None,
                              include_invalid=False):
         db = self.manager.db
         with db.session_ctx():
-            #ps=[project.name for project in self.selected_project
-            #    if not project.name.startwith('Recent')]
-
-            #for project in self.selected_project:
-            #    pname = project.name
-            #    if pname == 'Recent':
-            #        pname = None
-            #
-            #    sample = db.get_sample(srv.name,
-            #                           project=pname)
-            #    if sample:
-            #        break
-            #else:
-            #    return []
-
-            s, p = zip(*[(si.name, si.project) for si in samples])
-
+            #s, p = zip(*[(si.name, si.project) for si in samples])
+            lns = [si.labnumber for si in samples]
             o = None
             if page_width:
                 o = (page - 1) * page_width
                 limit = page_width
 
-            ans, tc = db.get_sample_analyses(s, p,
-                                             limit=limit,
-                                             offset=o,
-                                             include_invalid=include_invalid)
+            ans, tc = db.get_labnumber_analyses(lns,
+                                                limit=limit,
+                                                offset=o,
+                                                include_invalid=include_invalid)
 
             ans = [self._record_view_factory(a) for a in ans]
             if page_width:

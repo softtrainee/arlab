@@ -26,11 +26,12 @@ from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from src.experiment.signal_calculator import SignalCalculator
 from src.experiment.image_browser import ImageBrowser
 from src.experiment.tasks.experiment_task import ExperimentEditorTask
-from src.experiment.tasks.experiment_preferences import ExperimentPreferencesPane, ConsolePreferencesPane
+from src.experiment.tasks.experiment_preferences import ExperimentPreferencesPane, ConsolePreferencesPane, SysLoggerPreferencesPane
 from src.experiment.tasks.experiment_actions import NewExperimentQueueAction, \
     OpenExperimentQueueAction, SignalCalculatorAction, \
     DeselectAction, SendTestNotificationAction, \
     NewPatternAction, OpenPatternAction, ResetQueuesAction
+
 
 class ExperimentPlugin(BaseTaskPlugin):
     id = 'pychron.experiment'
@@ -92,14 +93,16 @@ class ExperimentPlugin(BaseTaskPlugin):
     def _tasks_default(self):
         return [TaskFactory(id=self.id,
                             factory=self._task_factory,
-                        name='Experiment',
-                        task_group='experiment')]
+                            name='Experiment',
+                            task_group='experiment')]
 
 
     def _task_factory(self):
         return ExperimentEditorTask()
 
     def _preferences_panes_default(self):
-        return [ExperimentPreferencesPane, ConsolePreferencesPane]
+        return [ExperimentPreferencesPane,
+                ConsolePreferencesPane,
+                SysLoggerPreferencesPane]
 
         #============= EOF =============================================

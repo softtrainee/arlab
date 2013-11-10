@@ -70,7 +70,7 @@ class RepositoryTask(AnalysisEditTask):
         '''
         db = self.manager.db
         with db.session_ctx():
-            s = self.selected_sample
+            s = self.selected_samples
             p = self.selected_project
             dbsample = db.get_sample(s.name, project=p.name)
             if dbsample is not None:
@@ -97,7 +97,7 @@ class RepositoryTask(AnalysisEditTask):
         project = self.igsn.project
         self.debug('Retrieved new IGSN:{} for project: {} sample: {}'.format(new, sample, project))
 
-        self.selected_sample.igsn = new
+        self.selected_samples.igsn = new
         self._save_to_db()
 
     #     @on_trait_change('igsn:[sample, username, password]')

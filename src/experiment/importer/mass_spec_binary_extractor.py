@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-#from src.processing.importer.extractor import Extractor
+#from src.processing.extractor.extractor import Extractor
 import os
 import struct
 #============= standard library imports ========================

@@ -560,6 +560,7 @@ class Processor(IsotopeDatabaseManager):
             ans = q.all()
         except Exception, e:
             import traceback
+
             traceback.print_exc()
 
         return self.make_analyses(ans)
