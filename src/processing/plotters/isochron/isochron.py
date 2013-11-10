@@ -21,6 +21,7 @@ from chaco.array_data_source import ArrayDataSource
 #============= standard library imports ========================
 from numpy import array, linspace, delete
 #============= local library imports  ==========================
+from uncertainties import ufloat
 
 from src.helpers.formatting import calc_percent_error, floatfmt
 from src.processing.argon_calculations import age_equation
@@ -73,6 +74,7 @@ class InverseIsochron(Isochron):
         #print 'iso omit', omit
         if omit:
             self._rebuild_iso(omit)
+
     #===============================================================================
     # plotters
     #===============================================================================
@@ -160,6 +162,9 @@ class InverseIsochron(Isochron):
     def _add_info(self, plot, reg, label=None, text_color='black'):
         intercept = reg.predict(0)
         err = reg.get_intercept_error()
+        mswd = reg.mswd
+        n = reg.n
+
         try:
             inv_intercept = intercept ** -1
             p = calc_percent_error(inv_intercept, err)
@@ -167,38 +172,39 @@ class InverseIsochron(Isochron):
             v = floatfmt(inv_intercept, s=3)
             e = floatfmt(err, s=3)
 
+            mse = err * mswd ** 0.5
+            mse = floatfmt(mse, s=3)
             #v = '{:0.2f}'.format(inv_intercept)
             #e = '{:0.3f}'.format(err)
 
         except ZeroDivisionError:
-            v, e, p = 'NaN', 'NaN', 'NaN'
-        ratio_line = 'Ar40/Ar36= {} +/-{} ({}%)'.format(v, e, p)
-        try:
-            xt = 1 / reg.x_intercept
-        except ZeroDivisionError:
-            xt=0
+            v, e, p, mse = 'NaN', 'NaN', 'NaN', 'NaN'
 
-        #        reg.predict_error()
+        ratio_line = 'Ar40/Ar36= {} +/-{} ({}%) mse= {}'.format(v, e, p, mse)
+
         j = self._ref_j
         s = self._ref_age_scalar
         u = self._ref_age_units
 
-        age = age_equation(j, xt ** -1, scalar=s)
+        xint = ufloat(reg.x_intercept, reg.x_intercept_error)
+        try:
+            R = xint ** -1
+        except ZeroDivisionError:
+            R = 0
+        age = age_equation(j, R, scalar=s)
         v = age.nominal_value
         e = age.std_dev
-
-        mswd = reg.mswd
-        n = reg.n
+        mse_age = e * mswd ** 0.5
 
         valid = validate_mswd(mswd, n)
+        mswd = '{:0.2f}'.format(mswd)
         if not valid:
             mswd = '*{}'.format(mswd)
-
-        mswd = '{:0.2f}'.format(mswd)
-        #n = len([ai for ai in self.analyses if ai.temp_status == 0])
+            #n = len([ai for ai in self.analyses if ai.temp_status == 0])
         #mswd = 'NaN'
-
-        age_line = 'Age= {} +/-{} ({}%) {}'.format(floatfmt(v, n=3), floatfmt(e, n=4, s=3), p, u)
+        age_line = 'Age= {} +/-{} ({}%) {}. mse= {}'.format(floatfmt(v, n=3),
+                                                            floatfmt(e, n=4, s=3), p, u,
+                                                            floatfmt(mse_age, s=3))
         mswd_line = 'N= {} mswd= {}'.format(n, mswd)
         if label is None:
             label = OffsetPlotLabel(
@@ -266,7 +272,8 @@ class InverseIsochron(Isochron):
 
             #
 
-        #===============================================================================
+            #===============================================================================
+
     # utils
     #===============================================================================
     def _get_age_errors(self, ans):
@@ -284,20 +291,20 @@ class InverseIsochron(Isochron):
         s = self._add_plot(xs, ys, es, pid, **kw)
         return s
 
-    #def _calculate_stats(self, ages, errors, xs, ys):
-    #    mswd, valid_mswd, n = self._get_mswd(ages, errors)
-    #    #         mswd = calculate_mswd(ages, errors)
-    #    #         valid_mswd = validate_mswd(mswd, len(ages))
-    #    if self.options.mean_calculation_kind == 'kernel':
-    #        wm, we = 0, 0
-    #        delta = 1
-    #        maxs, _mins = find_peaks(ys, delta, xs)
-    #        wm = max(maxs, axis=1)[0]
-    #    else:
-    #        wm, we = calculate_weighted_mean(ages, errors)
-    #        we = self._calc_error(we, mswd)
-    #
-    #    return wm, we, mswd, valid_mswd
+        #def _calculate_stats(self, ages, errors, xs, ys):
+        #    mswd, valid_mswd, n = self._get_mswd(ages, errors)
+        #    #         mswd = calculate_mswd(ages, errors)
+        #    #         valid_mswd = validate_mswd(mswd, len(ages))
+        #    if self.options.mean_calculation_kind == 'kernel':
+        #        wm, we = 0, 0
+        #        delta = 1
+        #        maxs, _mins = find_peaks(ys, delta, xs)
+        #        wm = max(maxs, axis=1)[0]
+        #    else:
+        #        wm, we = calculate_weighted_mean(ages, errors)
+        #        we = self._calc_error(we, mswd)
+        #
+        #    return wm, we, mswd, valid_mswd
 
         #def _calc_error(self, we, mswd):
         #    ec = self.options.error_calc_method

@@ -15,7 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Str, Bool, Instance, Button
+from traits.api import HasTraits, Str, Bool, Instance, Button, Any
 #============= standard library imports ========================
 import struct
 import datetime
@@ -50,6 +50,7 @@ class MassSpecExtractor(Extractor):
     dbconn_spec = Instance(DBConnectionSpec, ())
     connect_button = Button('Connect')
     db = Instance(MassSpecDatabaseAdapter, ())
+    mapper = Any
 
     def _dbconn_spec_default(self):
     #        return DBConnectionSpec(database='massspecdata_minnabluff',
@@ -79,12 +80,14 @@ class MassSpecExtractor(Extractor):
         self.db.connect()
 
     def import_irradiation(self, dest, name,
+                           progress,
                            include_analyses=False,
                            include_blanks=False,
                            include_airs=False,
                            include_cocktails=False,
                            include_list=None,
                            dry_run=True):
+
         self.connect()
         p, c = unique_path(paths.data_dir, 'import')
         self.import_err_file = open(p, 'w')
@@ -92,9 +95,7 @@ class MassSpecExtractor(Extractor):
         #         with dest.session_ctx(commit=not dry_run) as sess:
         self.dbimport = dest.add_import(
             source=self.db.name,
-            source_host=self.db.host,
-
-        )
+            source_host=self.db.host)
 
         # is irrad already in dest
         dbirrad = dest.get_irradiation(name)
@@ -106,22 +107,20 @@ class MassSpecExtractor(Extractor):
             dbpr = self._add_production_ratios(dest, name)
             # add irradiation
             dbirrad = dest.add_irradiation(name, production=dbpr,
-                                           chronology=dbchron,
-            )
+                                           chronology=dbchron)
             added_to_db = True
 
         dest.sess.flush()
 
         if dbirrad:
             # add all the levels and positions for this irradiation
-            added_to_db = self._add_levels(dest, dbirrad, name,
+            added_to_db = self._add_levels(dest, progress, dbirrad, name,
                                            include_analyses,
                                            include_blanks,
                                            include_airs,
                                            include_cocktails,
                                            include_list,
-                                           dry_run=dry_run
-            )
+                                           dry_run=dry_run)
         else:
             self.warning('no irradiation found or created for {}. not adding levels'.format(name))
         self.debug('irradiation import dry_run={}'.format(dry_run))
@@ -132,7 +131,7 @@ class MassSpecExtractor(Extractor):
         self.import_err_file.close()
         return ImportName(name=name, skipped=not added_to_db)
 
-    def _add_levels(self, dest, dbirrad, name,
+    def _add_levels(self, dest, progress, dbirrad, name,
                     include_analyses=False,
                     include_blanks=False,
                     include_airs=False,
@@ -146,13 +145,18 @@ class MassSpecExtractor(Extractor):
         added_to_db = False
         db = self.db
         with db.session_ctx() as sess:
-            levels = db.get_levels_by_irradname(name)
-            if not include_list:
-                include_list = [li.Level for li in levels]
+            levels = db.get_levels_by_irradname(name,
+                                                levels=include_list)
+            #if not include_list:
+            #    include_list = [li.Level for li in levels]
+
+            progress.increase_max(len(levels))
 
             for mli in levels:
-                if mli.Level not in include_list:
-                    continue
+                progress.change_message('importing level {} {}'.format(name, mli.Level))
+                #print mli.Level, include_list
+                #if mli.Level not in include_list:
+                #    continue
 
                 # is level already in dest
                 dbl = dest.get_irradiation_level(name, mli.Level)
@@ -308,7 +312,13 @@ class MassSpecExtractor(Extractor):
             ln = bi.RID
 
             if not ln.startswith('bu'):
-                ed = 'F' if ln.startswith('B2') else 'C02'
+
+                hid = bi.HeatingItemName
+                if hid in ('Eurotherm', 'Furnace'):
+                    ed = 'F'
+                else:
+                    ed = 'CO2'
+
                 ms = self._get_ms_identifier(bi)
                 ln = 'bu-{}-{}'.format(ed, ms)
             else:
@@ -357,7 +367,7 @@ class MassSpecExtractor(Extractor):
         return added_to_db
 
     def _get_ms_identifier(self, ai):
-        msname = ai.login_session.machine
+        msname = ai.login_session.machine.Label
         if msname == 'Pychron Obama':
             msname = 'PO'
         elif msname == 'Pychron Jan':
@@ -480,8 +490,7 @@ class MassSpecExtractor(Extractor):
             elif ms == 'pychron jan':
                 ms = 'jan'
             dest.add_measurement(dest_an,
-                                 analysis_type, ms,
-            )
+                                 analysis_type, ms)
 
         #=======================================================================
         # add extraction
@@ -491,16 +500,15 @@ class MassSpecExtractor(Extractor):
         if ed not in _ed_cache:
             dest.add_extraction_device(ed)
             _ed_cache.append(ed)
-            dest.sess.flush()
+            #dest.sess.flush()
 
         ext = dest.add_extraction(dest_an,
                                   cleanup_duration=dbanalysis.FirstStageDly + dbanalysis.SecondStageDly,
                                   extract_duration=dbanalysis.TotDurHeating,
                                   extract_value=dbanalysis.FinalSetPwr,
-                                  extract_device=ed
-        )
+                                  extract_device=ed)
 
-        dest.sess.flush()
+        #dest.sess.flush()
         pos = sorted(dbanalysis.positions, key=lambda x: x.PositionOrder)
 
         for pi in pos:
@@ -587,22 +595,26 @@ class MassSpecExtractor(Extractor):
         return True
 
     def _add_sample_project(self, dest, dbpos):
-
         sample = dbpos.sample
         project = sample.project
         material = dbpos.Material
 
+        if self.mapper:
+            material = self.mapper.map_material(material)
         dest.add_material(material)
 
-        project = dest.add_project(project.Project)
+        project = project.Project
+        if self.mapper:
+            project = self.mapper.map_project(project)
+
+        project = dest.add_project(project)
         #print sample, sample.Sample
         #sam=convert_sample(dbpos, sample.Sample)
 
         return dest.add_sample(
             sample.Sample,
             material=material,
-            project=project,
-        )
+            project=project)
 
     def _add_chronology(self, dest, name):
         db = self.db

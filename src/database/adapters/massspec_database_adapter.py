@@ -57,13 +57,19 @@ class MassSpecDatabaseAdapter(DatabaseAdapter):
             if irrad:
                 return irrad[-1].production
 
-    def get_levels_by_irradname(self, name):
-#         sess = self.get_session()
+    def get_levels_by_irradname(self, name, levels=None):
+    #         sess = self.get_session()
     #         sess = self.get_session()
         with self.session_ctx() as sess:
             q = sess.query(IrradiationLevelTable)
             q = q.filter(IrradiationLevelTable.IrradBaseID == name)
-            return q.all()
+            if levels:
+                if not hasattr(levels, '__iter__'):
+                    levels = (levels,)
+
+                q = q.filter(IrradiationLevelTable.Level.in_(levels))
+
+            return self._query_all(q)
 
     def get_chronology_by_irradname(self, name):
         with self.session_ctx() as sess:

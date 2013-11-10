@@ -21,7 +21,8 @@ from traitsui.api import View, Item, UItem, EnumEditor, VGroup
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.processing.tasks.analysis_edit.fits import InterpolationFitSelector, Fit
+from src.processing.fits.fit import Fit
+from src.processing.fits.interpolation_fit_selector import InterpolationFitSelector
 
 
 class DetectorCalibrationTool(HasTraits):

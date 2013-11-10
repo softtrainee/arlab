@@ -120,4 +120,5 @@ class SCLFTableAction(AnalysisEditAction):
     method = 'new_sclf_table'
     task_id = 'pychron.processing.publisher'
 
+
 #============= EOF =============================================

@@ -15,20 +15,24 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item, TableEditor
-from src.loggable import Loggable
-from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
 import os
 import struct
 import base64
+
+from src.loggable import Loggable
+from src.experiment.utilities.mass_spec_database_importer import MassSpecDatabaseImporter
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
+
+
 class Exporter(Loggable):
     def export(self, *args, **kw):
         raise NotImplementedError
+
     def rollback(self):
         pass
+
 
 class MassSpecExporter(Exporter):
     def __init__(self, destination, *args, **kw):
@@ -50,15 +54,17 @@ class MassSpecExporter(Exporter):
         self.info('committing current session to database')
         self.importer.db.commit()
         self.info('commit successful')
-#        self.importer.db.close()
+
+    #        self.extractor.db.close()
 
     def rollback(self):
         '''
             Mass Spec schema doesn't allow rollback
         '''
-#        self.info('rollback')
-#        self.importer.db.rollback()
-#        self.importer.db.reset()
+
+    #        self.info('rollback')
+    #        self.extractor.db.rollback()
+    #        self.extractor.db.reset()
 
     def add(self, spec):
         db = self.importer.db
@@ -82,7 +88,8 @@ class MassSpecExporter(Exporter):
 class XMLExporter(Exporter):
     def __init__(self, destination, *args, **kw):
         super(XMLExporter, self).__init__(*args, **kw)
-        from src.helpers.parsers.xml_parser import XMLParser
+        from src.xml.xml_parser import XMLParser
+
         xmlp = XMLParser()
         self._parser = xmlp
         self.destination = destination
@@ -125,7 +132,7 @@ class XMLExporter(Exporter):
             xmlp.add('blob',
                      base64.b64encode(self._make_timeblob(t, v)), iso,
                      dt="binary.base64"
-                     )
+            )
 
             iso = xmlp.add(isok, '', base)
             xmlp.add('detector', det, iso)
@@ -137,7 +144,7 @@ class XMLExporter(Exporter):
             xmlp.add('blob',
                      base64.b64encode(self._make_timeblob(t, v)), iso,
                      dt="binary.base64"
-                     )
+            )
 
             iso = xmlp.add(isok, '', blank)
             xmlp.add('detector', det, iso)

@@ -70,20 +70,20 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
     end_time = Time
     days_pad = Int(0)
     hours_pad = Int(18)
-    
+
     #clear_selection_button = Button
 
     browser_pane = Any
 
-    def set_projects(self, ps, sel):
-        self.oprojects = ps
-        self.projects = ps
-        self.trait_set(selected_project=sel)
-
-    def set_samples(self, s, sel):
-        self.samples = s
-        self.osamples = s
-        self.trait_set(selected_sample=sel)
+    #def set_projects(self, ps, sel):
+    #    self.oprojects = ps
+    #    self.projects = ps
+    #    self.trait_set(selected_project=sel)
+    #
+    #def set_samples(self, s, sel):
+    #    self.samples = s
+    #    self.osamples = s
+    #    self.trait_set(selected_sample=sel)
 
     def activated(self):
         self.load_projects()
@@ -180,18 +180,17 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
 
     @on_trait_change('analysis_table:omit_invalid')
     def _omit_invalid_changed(self):
-        self._selected_sample_changed(self.selected_sample)
+        self._selected_sample_changed(self.selected_samples)
 
     def _dclicked_sample_changed(self):
-        ans = self._get_sample_analyses(self.selected_sample[-1],
-                                        include_invalid=not self.analysis_table.omit_invalid
-        )
+        ans = self._get_sample_analyses(self.selected_samples,
+                                        include_invalid=not self.analysis_table.omit_invalid)
         print self.active_editor
         if self.active_editor:
             self.active_editor.unknowns = ans
             #self.unknowns_pane.items = self.active_editor.unknowns
 
-    def _selected_sample_changed(self, new):
+    def _selected_samples_changed(self, new):
         if new:
             ans = []
             include_invalid = not self.analysis_table.omit_invalid
@@ -199,8 +198,7 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
             aa, tc = self._get_sample_analyses(new,
                                                include_invalid=include_invalid,
                                                page_width=self.analysis_table.page_width,
-                                               page=1,
-            )
+                                               page=1)
             ans.extend(aa)
 
             ans = self.analysis_table.set_analyses(ans,
@@ -217,11 +215,10 @@ class BaseBrowserTask(BaseEditorTask, BrowserMixin):
             page = self.analysis_table.page
             page_width = self.analysis_table.page_width
 
-            ans, tc = self._get_sample_analyses(self.selected_sample,
+            ans, tc = self._get_sample_analyses(self.selected_samples,
                                                 include_invalid=include_invalid,
                                                 page_width=page_width,
-                                                page=page,
-            )
+                                                page=page)
 
             self.analysis_table.set_analyses(ans, tc)
 

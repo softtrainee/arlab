@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import Str, Int, \
-    Bool
+    Bool, Password
 from traitsui.api import View, Item, Group, VGroup
 from envisage.ui.tasks.preferences_pane import PreferencesPane
 
@@ -90,5 +90,26 @@ class ConsolePreferencesPane(BaseConsolePreferencesPane):
     model_factory = ConsolePreferences
     label = 'Experiment'
 
+
+class SysLoggerPreferences(BasePreferencesHelper):
+    preferences_path = 'pychron.syslogger'
+    username = Str
+    password = Password
+    host = Str
+
+
+class SysLoggerPreferencesPane(PreferencesPane):
+    model_factory = SysLoggerPreferences
+    category = 'Experiment'
+
+    def traits_view(self):
+        auth_grp = VGroup(Item('host'),
+                          Item('username'),
+                          Item('password'),
+                          enabled_when='use_syslogger')
+
+        v = View(VGroup(Item('use_syslogger', label='Use SysLogger'),
+                        auth_grp))
+        return v
 
 #============= EOF =============================================

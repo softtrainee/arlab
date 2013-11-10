@@ -91,7 +91,7 @@ class LabnumberEntry(IsotopeDatabaseManager):
     #    self.populate_default_tables()
     def set_selected_sample(self, new):
         self.selected_sample = new
-        #self.canvas.selected_sample=new
+        #self.canvas.selected_samples=new
 
     def make_labbook(self, out):
         """

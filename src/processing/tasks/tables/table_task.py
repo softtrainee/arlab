@@ -132,7 +132,7 @@ class TableTask(BaseBrowserTask):
         #         self.active_editor.items = aa
         #         self.active_editor.refresh_blanks()
 
-        self.active_editor.name = self.selected_sample[0].name
+        self.active_editor.name = self.selected_samples[0].name
 
     #===============================================================================
     # task actions
@@ -194,7 +194,7 @@ class TableTask(BaseBrowserTask):
 
     def _append_laser_table(self):
 
-        for sa in self.selected_sample:
+        for sa in self.selected_samples:
             sam = next((si
                         for si in self.active_editor.items
                         if si.sample == sa.name), None)
@@ -262,7 +262,7 @@ class TableTask(BaseBrowserTask):
             return next((ss for ss in pitems if ss.sample == si.name), None)
 
         items = [factory(si)
-                 for si in self.selected_sample
+                 for si in self.selected_samples
                  if not test(si)]
 
         #         ans = [ai for si in items

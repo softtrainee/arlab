@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2013 Jake Ross
+# Copyright 2011 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,17 +14,29 @@
 # limitations under the License.
 #===============================================================================
 
+
 #============= enthought library imports =======================
+from pyface.action.api import Action
+from pyface.tasks.action.task_action import TaskAction
 
 #============= standard library imports ========================
+
 #============= local library imports  ==========================
 
 
+class EasyImportAction(Action):
+    name = 'Easy Import'
+
+    def perform(self, event):
+        from src.experiment.importer.easy_import import EasyImporter
+
+        em = EasyImporter()
+        em.do_import()
 
 
+class EasyFitAction(TaskAction):
+    method = 'do_easy_fit'
+    name = 'Easy Fit'
 
 
-
-
-
-#============= EOF =============================================
+#============= EOF ====================================

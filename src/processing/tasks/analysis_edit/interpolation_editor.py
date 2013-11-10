@@ -15,16 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, on_trait_change, Instance, Bool, \
+from traits.api import List, on_trait_change, Instance, Bool, \
     Property, cached_property
-from traitsui.api import View, Item
 from src.graph.tools.analysis_inspector import AnalysisPointInspector
 from src.graph.tools.point_inspector import PointInspectorOverlay
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 
 #============= standard library imports ========================
 from numpy import Inf, asarray, array
-from src.processing.tasks.analysis_edit.fits import InterpolationFitSelector
+from src.processing.fits.interpolation_fit_selector import InterpolationFitSelector
 from src.regression.interpolation_regressor import InterpolationRegressor
 from chaco.array_data_source import ArrayDataSource
 from src.helpers.datetime_tools import convert_timestamp

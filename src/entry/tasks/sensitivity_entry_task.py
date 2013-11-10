@@ -46,12 +46,12 @@ class SensitivityEntryTask(BaseManagerTask):
     #     def create_dock_panes(self):
     #         return [
     #                 IrradiationPane(model=self.manager),
-    #                 ImporterPane(model=self.importer),
+    #                 ImporterPane(model=self.extractor),
     #                 IrradiationEditorPane(model=self.manager)
     #                 ]
 
 
-    #     @on_trait_change('importer:update_irradiations_needed')
+    #     @on_trait_change('extractor:update_irradiations_needed')
     #     def _update_irradiations(self):
     #         self.manager.updated = True
     #===========================================================================
@@ -82,7 +82,7 @@ class SensitivityEntryTask(BaseManagerTask):
 #                           left=Splitter(
 #                                         PaneItem('pychron.labnumber.irradiation'),
 #                                         Tabbed(
-#                                                PaneItem('pychron.labnumber.importer'),
+#                                                PaneItem('pychron.labnumber.extractor'),
 #                                                PaneItem('pychron.labnumber.editor')
 #                                                ),
 #                                         orientation='vertical'

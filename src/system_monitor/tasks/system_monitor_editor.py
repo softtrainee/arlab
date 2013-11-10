@@ -317,7 +317,7 @@ class SystemMonitorEditor(SeriesEditor):
                                         weeks=self.tool.weeks,
                                         days=self.tool.days)
 
-                ans = db.get_analyses_date_range(start, end,
+                ans = db.get_date_range_analyses(start, end,
                                                  labnumber=identifier,
                                                  limit=limit)
             else:

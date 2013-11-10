@@ -34,7 +34,7 @@ records = namedtuple('Record', 'name')
 
 class ImportManager(IsotopeDatabaseManager):
     data_source = Enum('MassSpec', 'File')
-    importer = Instance(Extractor)
+    extractor = Instance(Extractor)
     import_kind = Enum('---', 'irradiation', 'rid_list')
 
     import_button = Button('Import')
@@ -53,6 +53,7 @@ class ImportManager(IsotopeDatabaseManager):
     include_blanks = Bool(False)
     include_airs = Bool(False)
     include_cocktails = Bool(False)
+
     #    include_analyses = Bool(True)
     #    include_blanks = Bool(True)
     #    include_airs = Bool(True)
@@ -65,37 +66,34 @@ class ImportManager(IsotopeDatabaseManager):
         invoke_in_main_thread(pd.change_message, m)
 
     def _do_import(self, selected, pd):
-        func = getattr(self.importer, 'import_{}'.format(self.import_kind))
+        #func = getattr(self.extractor, 'import_{}'.format(self.import_kind))
+
         st = time.time()
         db = self.db
         with db.session_ctx(commit=not self.dry_run):
-            for si, inc in selected:
+            for irrad, levels in selected:
+                #pd.max = len(levels) + 2
+                self._progress_message(pd, 'Importing {} {}'.format(irrad, levels))
+                r = self.extractor.import_irradiation(db,
+                                                      irrad,
+                                                      pd,
+                                                      include_analyses=self.include_analyses,
+                                                      include_blanks=self.include_blanks,
+                                                      include_airs=self.include_airs,
+                                                      include_cocktails=self.include_cocktails,
+                                                      dry_run=self.dry_run,
+                                                      include_list=levels)
 
-            #                 pd.change_message('Importing {} {}'.format(si, inc))
-            #                 pd.increment()
-                self._progress_message(pd, 'Importing {} {}'.format(si, inc))
-                #            for i in range(10):
-                #                time.sleep(0.1)
-                #            r = False
-                r = func(db,
-                         si,
-                         include_analyses=self.include_analyses,
-                         include_blanks=self.include_blanks,
-                         include_airs=self.include_airs,
-                         include_cocktails=self.include_cocktails,
-                         dry_run=self.dry_run,
-                         include_list=inc
-                )
                 if r:
                     self.imported_names.append(r)
                     self._progress_message(pd,
-                                           'Imported {} {} successfully'.format(si, inc)
-                    )
+                                           'Imported {} {} successfully'.format(irrad, levels))
                 else:
                     self._progress_message(pd,
-                                           'Import {} {} failed'.format(si, inc))
+                                           'Import {} {} failed'.format(irrad, levels))
 
         self.info('====== Import Finished elapsed_time= {}s======'.format(int(time.time() - st)))
+        return True
         #if self.imported_names:
         #    self.update_irradiations_needed = True
 
@@ -136,7 +134,7 @@ class ImportManager(IsotopeDatabaseManager):
 
 
     def _filter_str_changed(self):
-        func = getattr(self.importer, 'get_{}s'.format(self.import_kind))
+        func = getattr(self.extractor, 'get_{}s'.format(self.import_kind))
         self.names = func(filter_str=self.filter_str)
 
     def _open_button_fired(self):
@@ -170,7 +168,7 @@ class ImportManager(IsotopeDatabaseManager):
                     self.db.save_username = 'jake({})'.format(self.db.username)
                     self.info('====== Import Started  ======')
                     self.info('user name= {}'.format(self.db.save_username))
-                    # get import func from importer
+                    # get import func from extractor
 
                     n = len(selected) * 2
                     pd = self.open_progress(n=n)
@@ -186,18 +184,18 @@ class ImportManager(IsotopeDatabaseManager):
 
     def _data_source_changed(self):
         if self.data_source == 'MassSpec':
-            self.importer = MassSpecExtractor()
+            self.extractor = MassSpecExtractor()
         else:
-            self.importer = None
+            self.extractor = None
 
     def _import_kind_changed(self):
         try:
-            func = getattr(self.importer, 'get_{}s'.format(self.import_kind))
+            func = getattr(self.extractor, 'get_{}s'.format(self.import_kind))
             self.names = func()
         except AttributeError:
             pass
 
-    def _importer_default(self):
+    def _extractor_default(self):
         return MassSpecExtractor()
 
     def _data_source_default(self):
@@ -206,7 +204,7 @@ class ImportManager(IsotopeDatabaseManager):
 #    def traits_view(self):
 #        v = View(
 #                 Item('data_source'),
-#                 Item('importer', style='custom', show_label=False),
+#                 Item('extractor', style='custom', show_label=False),
 #                 Item('import_kind', show_label=False),
 #                 Item('names', show_label=False, editor=TabularEditor(adapter=ImportNameAdapter(),
 #                                                    editable=False,

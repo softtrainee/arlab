@@ -25,6 +25,7 @@ from pyface.tasks.action.schema import SMenu
 
 from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from src.processing.processor import Processor
+from src.processing.tasks.import_actions import EasyImportAction, EasyFitAction
 from src.processing.tasks.processing_actions import IdeogramAction, \
     RecallAction, SpectrumAction, \
     EquilibrationInspectorAction, InverseIsochronAction, GroupSelectedAction, \
@@ -33,10 +34,9 @@ from src.processing.tasks.processing_actions import IdeogramAction, \
 
 from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
     FluxAction, IsotopeEvolutionAction, ICFactorAction, \
-    BatchEditAction, TagAction, DatabaseSaveAction, SmartBatchEditAction
+    BatchEditAction, TagAction, DatabaseSaveAction
 from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
 from src.processing.tasks.processing_preferences import ProcessingPreferencesPane
-from src.processing.tasks.smart_project.smart_project_task import SmartProjectTask
 #from src.processing.tasks.browser.browser_task import BrowserTask
 from pyface.message_dialog import warning
 
@@ -69,18 +69,13 @@ Install to enable MS Excel export''')
         return TaskExtension(actions=[make_schema(args)
                                       for args in actions], **kw)
 
-    #         return TaskExtension(actions=[SchemaAddition(id=i, factory=f, path=p)
-    #                                       for i, f, p in actions])
-
-
     def _my_task_extensions_default(self):
         def figure_group():
             return Group(
                 SpectrumAction(),
                 IdeogramAction(),
                 InverseIsochronAction(),
-                SeriesAction()
-            )
+                SeriesAction())
 
         def data_menu():
             return SMenu(id='Data', name='Data')
@@ -89,8 +84,7 @@ Install to enable MS Excel export''')
             return Group(GroupSelectedAction(),
                          GroupbyAliquotAction(),
                          GroupbyLabnumberAction(),
-                         ClearGroupAction()
-            )
+                         ClearGroupAction())
 
         def reduction_group():
             return Group(IsotopeEvolutionAction(),
@@ -100,51 +94,31 @@ Install to enable MS Excel export''')
 
         return [
             self._make_task_extension([
-
                 ('recall_action', RecallAction, 'MenuBar/File'),
-                #('labnumber_entry', LabnumberEntryAction, 'MenuBar/Edit'),
-                #('sensitivity_entry', SensitivityEntryAction, 'MenuBar/Edit'),
                 ('batch_edit', BatchEditAction, 'MenuBar/Edit'),
-                ('smart_batch_edit', SmartBatchEditAction, 'MenuBar/Edit'),
+                #('smart_batch_edit', SmartBatchEditAction, 'MenuBar/Edit'),
                 ('reduction_group', reduction_group, 'MenuBar/Edit'),
-
-                #('blank_edit', BlankEditAction, 'MenuBar/Edit'),
-                #('flux_edit', FluxAction, 'MenuBar/Edit'),
-
-
-                #('ic_factor', ICFactorAction, 'MenuBar/Edit'),
-                #('batch_edit', BatchEditAction, 'MenuBar/Edit'),
-                # ('refit', RefitIsotopeEvolutionAction, 'MenuBar/Edit'),
-                # ('sclf_table', SCLFTableAction, 'MenuBar/Edit'),
-
                 ('figure_group', figure_group, 'MenuBar/Edit'),
-
                 ('equil_inspector', EquilibrationInspectorAction, 'MenuBar/Tools'),
-
                 ('data', data_menu, 'MenuBar',
                  {'before': 'Tools', 'after': 'View'}),
-
                 ('tag', TagAction, 'MenuBar/Data'),
                 ('database_save', DatabaseSaveAction, 'MenuBar/Data'),
                 ('grouping_group', grouping_group, 'MenuBar/Data'),
-                #('smart_project', SmartProjectAction, 'MenuBar/File')
-            ]),
-            self._make_task_extension([
-                                          ('optimal_equilibration', CalcOptimalEquilibrationAction, 'MenuBar/Tools')
-                                      ],
-                                      task_id='pychron.analysis_edit.isotope_evolution'),
+                ('easy_import', EasyImportAction, 'MenuBar/Tools'),
 
-        ]
+            ]),
+            self._make_task_extension([('optimal_equilibration', CalcOptimalEquilibrationAction, 'MenuBar/Tools'),
+                                       ('easy_fit', EasyFitAction, 'MenuBar/Tools'), ],
+                                      task_id='pychron.analysis_edit.isotope_evolution'), ]
 
     def _meta_task_factory(self, i, f, n, task_group=None,
                            accelerator='', include_view_menu=False):
-
         return TaskFactory(id=i, factory=f, name=n,
                            task_group=task_group,
                            accelerator=accelerator,
                            include_view_menu=include_view_menu or accelerator
         )
-
 
     def _tasks_default(self):
         tasks = [
@@ -197,16 +171,6 @@ Install to enable MS Excel export''')
     def _processor_factory(self):
         return Processor(application=self.application)
 
-    #def _labnumber_task_factory(self):
-    #    from src.processing.tasks.entry.labnumber_entry_task import LabnumberEntryTask
-    #
-    #    return LabnumberEntryTask()
-    #
-    #def _sensitivity_entry_task_factory(self):
-    #    from src.processing.tasks.entry.sensitivity_entry_task import SensitivityEntryTask
-    #
-    #    return SensitivityEntryTask()
-
     def _blanks_edit_task_factory(self):
         from src.processing.tasks.blanks.blanks_task import BlanksTask
 
@@ -221,10 +185,6 @@ Install to enable MS Excel export''')
         from src.processing.tasks.recall.recall_task import RecallTask
 
         return RecallTask(manager=self._processor_factory())
-
-    #     def _series_task_factory(self):
-    #         from src.processing.tasks.series.series_task import SeriesTask
-    #         return SeriesTask(manager=self._processor_factory())
 
     def _iso_evo_task_factory(self):
         from src.processing.tasks.isotope_evolution.isotope_evolution_task import IsotopeEvolutionTask
@@ -251,33 +211,15 @@ Install to enable MS Excel export''')
 
         return FigureTask(manager=self._processor_factory())
 
-    #def _auto_figure_task_factory(self):
-    #    from src.processing.tasks.figures.auto_figure_task import AutoFigureTask
-    #
-    #    return AutoFigureTask(manager=self._processor_factory())
-
     def _repository_task_factory(self):
         from src.processing.tasks.repository.respository_task import RepositoryTask
 
         return RepositoryTask(manager=self._processor_factory())
 
-    #     def _publisher_task_factory(self):
-    #         from src.processing.tasks.publisher.publisher_task import PublisherTask
-    #         return PublisherTask(manager=self._processor_factory())
     def _table_task_factory(self):
         from src.processing.tasks.tables.table_task import TableTask
 
         return TableTask(manager=self._processor_factory())
-
-    def _smart_project_task_factory(self):
-        return SmartProjectTask(manager=self._processor_factory())
-
-    #def _browser_task_factory(self):
-    #    return BrowserTask(manager=self._processor_factory())
-
-    #    def _task_factory(self):
-    # #        processor = self.application.get_service(Processor)
-    #        return ProcessingTask(manager=self._processor_factory())
 
     def _preferences_panes_default(self):
         return [

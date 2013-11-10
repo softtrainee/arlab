@@ -69,17 +69,20 @@ class Notifier(Loggable):
                         elif resp in self._handlers:
                             func = self._handlers[resp]
                             sock.send(func())
-
                 except zmq.ZMQBaseError:
                     pass
+
+        poll.unregister(self._req_sock)
 
     def close(self):
         with self._lock:
             if self._sock:
+                self._sock.setsockopt(zmq.LINGER, 0)
                 self._sock.close()
                 self._sock = None
 
             if self._req_sock:
+                self._req_sock.setsockopt(zmq.LINGER, 0)
                 self._req_sock.close()
                 self._req_sock = None
 
@@ -103,7 +106,7 @@ class Notifier(Loggable):
             if self._sock:
                 try:
                     self._sock.send(msg)
-                except (zmq.ZMQBaseError, AssertionError), e:
+                except zmq.ZMQBaseError, e:
                     self.warning('failed sending message: error {}: {}'.format(e, msg))
             else:
                 self.debug('notifier not setup')

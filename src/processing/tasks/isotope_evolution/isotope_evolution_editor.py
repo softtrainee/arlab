@@ -23,7 +23,7 @@ from chaco.plot_containers import GridPlotContainer
 from numpy import Inf, polyfit
 
 #============= local library imports  ==========================
-from src.processing.tasks.analysis_edit.fits import IsoEvoFitSelector
+from src.processing.fits.iso_evo_fit_selector import IsoEvoFitSelector
 from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 
 
@@ -48,54 +48,124 @@ class IsotopeEvolutionEditor(GraphEditor):
 
         db = proc.db
         for unk in self.unknowns:
-            prog.change_message('Saving fits for {}'.format(unk.record_id))
+            prog.change_message('{} Saving fits'.format(unk.record_id))
 
             meas_analysis = db.get_analysis_uuid(unk.uuid)
             self._save_fit(unk, meas_analysis)
 
-            prog.change_message('Saving new ArAr age for {}'.format(unk.record_id))
-
+            prog.change_message('{} Saving ArAr age'.format(unk.record_id))
             proc.save_arar(unk, meas_analysis)
+
+    def save_fits(self, fits, filters):
+        proc = self.processor
+        prog = proc.open_progress(n=len(self.unknowns) * 2)
+
+        db = proc.db
+        for unk in self.unknowns:
+            prog.change_message('{} Saving fits'.format(unk.record_id))
+
+            meas_analysis = db.get_analysis_uuid(unk.uuid)
+            self._save_fit_dict(unk, meas_analysis, fits, filters)
+
+            if unk.analysis_type in ('cocktail', 'unknown'):
+                msg = '{} Saving ArAr age'.format(unk.record_id)
+                prog.change_message(msg)
+
+                #update arar table
+                proc.save_arar(unk, meas_analysis)
+
+            else:
+                prog.increment()
+
+
+    def _save_fit_dict(self, unk, meas_analysis, fits, filters):
+        fit_hist = None
+        for fit_d, filter_d in zip(fits, filters):
+            fname = name = fit_d['name']
+            fit = fit_d['fit']
+
+            get_iso = lambda: unk.isotopes[name]
+            if name.endswith('bs'):
+                name = name[:-2]
+                get_iso = lambda: unk.isotopes[name].baseline
+
+            if name in unk.isotopes:
+                iso = get_iso()
+                if 'if n' in fit:
+                    fit = eval(fit, {'n': iso.n})
+                elif 'if x' in fit:
+                    fit = eval(fit, {'x': iso.xs[-1]})
+                elif 'if d' in fit:
+                    fit = eval(fit, {'d': iso.xs[-1] - iso.xs[0]})
+
+                fit_hist = self._save_db_fit(unk, meas_analysis, fit_hist,
+                                             name, fit, filter_d)
+            else:
+                self.warning('no isotope {} for analysis {}'.format(fname, unk.record_id))
 
 
     def _save_fit(self, unk, meas_analysis):
         fit_hist = None
-        db = self.processor.db
 
-        #ai=self.processor.make_analyses([unk])[0]
         for fi in self.tool.fits:
             if not fi.use:
                 continue
 
-            # get database fit
-            name = fi.name
-            if name.endswith('bs'):
-                name = name[:-2]
-                dbfit = unk.get_db_fit(name, meas_analysis, 'baseline')
-                kind = 'baseline'
-                v = unk.isotopes[name].baseline.uvalue
-            else:
-                dbfit = unk.get_db_fit(name, meas_analysis, 'signal')
-                kind = 'signal'
-                v = unk.isotopes[name].uvalue
+            fd = dict(use=fi.use_filter,
+                      n=fi.filter_iterations,
+                      std_devs=fi.filter_std_devs)
 
-            if dbfit != fi.fit:
-                if fit_hist is None:
-                    fit_hist = db.add_fit_history(meas_analysis, user=db.save_username)
+            fit_hist = self._save_db_fit(unk, meas_analysis, fit_hist,
+                                         fi.name, fi.fit, fd)
 
-                dbiso = next((iso for iso in meas_analysis.isotopes
-                              if iso.molecular_weight.name == fi.name and
-                                 iso.kind == kind), None)
+    def _save_db_fit(self, unk, meas_analysis, fit_hist, name, fit, filter_dict):
+        db = self.processor.db
+        if name.endswith('bs'):
+            name = name[:-2]
+            dbfit = unk.get_db_fit(name, meas_analysis, 'baseline')
+            kind = 'baseline'
+            iso = unk.isotopes[name].baseline
+        else:
+            dbfit = unk.get_db_fit(name, meas_analysis, 'signal')
+            kind = 'signal'
+            iso = unk.isotopes[name]
 
-                db.add_fit(fit_hist, dbiso, fit=fi.fit)
+        if filter_dict:
+            iso.filter_outliers = filter_dict['use']
+            iso.filter_outlier_iterations = filter_dict['n']
+            iso.filter_outlier_std_devs = filter_dict['std_devs']
 
-                #update isotoperesults
-                v, e = float(v.nominal_value), float(v.std_dev)
-                db.add_isotope_result(dbiso, fit_hist,
-                                      signal_=v, signal_err=e)
-                #update arar table
+        iso.fit = fit
+        v = iso.uvalue
 
-                self.debug('adding fit {} - {}'.format(fi.name, fi.fit))
+        if dbfit != fit:
+            if fit_hist is None:
+                fit_hist = db.add_fit_history(meas_analysis, user=db.save_username)
+
+            dbiso = next((iso for iso in meas_analysis.isotopes
+                          if iso.molecular_weight.name == name and
+                             iso.kind == kind), None)
+
+            #if kind=='baseline':
+            #    for ix in meas_analysis.isotopes:
+            #        print ix.kind, ix.molecular_weight.name, kind, name, dbiso
+            if fit_hist is None:
+                self.warning('Failed added fit history for {}'.format(unk.record_id))
+                return
+
+            db.add_fit(fit_hist, dbiso, fit=fit,
+                       filter_outliers=iso.filter_outliers,
+                       filter_outlier_iterations=iso.filter_outlier_iterations,
+                       filter_outlier_std_devs=iso.filter_outlier_std_devs
+            )
+            #update isotoperesults
+            v, e = float(v.nominal_value), float(v.std_dev)
+            db.add_isotope_result(dbiso, fit_hist,
+                                  signal_=v, signal_err=e)
+
+            self.debug('adding {} fit {} - {}'.format(kind, name, fit))
+
+        return fit_hist
 
     def _rebuild_graph(self):
 
@@ -117,8 +187,6 @@ class IsotopeEvolutionEditor(GraphEditor):
 
         self.component = self._container_factory((r, c))
 
-        #fits=[fit for fit in self.tool.fits
-        #      if (fit.fit and fit.show)]
         fits = list(self._graph_generator())
 
         if not fits:
@@ -154,14 +222,18 @@ class IsotopeEvolutionEditor(GraphEditor):
                         plot_kw['xtitle'] = 'Time (s)'
 
                     g.new_plot(**plot_kw)
+                    fd = dict(filter_outlier_iterations=fit.filter_iterations,
+                              filter_outlier_std_devs=fit.filter_std_devs,
+                              filter_outliers=fit.use_filter)
 
                     if isok.endswith('bs'):
                         isok = isok[:-2]
                         iso = unk.isotopes[isok]
-                        iso.baseline.fit = fit.fit
+                        #iso.baseline.fit = fit.fit
                         xs, ys = iso.baseline.xs, iso.baseline.ys
                         g.new_series(xs, ys,
                                      fit=fit.fit,
+                                     filter_outliers_dict=fd,
                                      add_tools=add_tools,
                                      plotid=i)
                     else:
@@ -174,10 +246,12 @@ class IsotopeEvolutionEditor(GraphEditor):
                                              plotid=i,
                                              type='scatter',
                                              fit=False)
-                        iso.fit = fit.fit
+
+                        #iso.fit = fit.fit
                         xs, ys = iso.xs, iso.ys
                         g.new_series(xs, ys,
                                      fit=fit.fit,
+                                     filter_outliers_dict=fd,
                                      add_tools=add_tools,
                                      plotid=i)
 

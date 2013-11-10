@@ -18,13 +18,17 @@
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+from src.processing.fits.fit import Fit
+from src.processing.fits.fit_selector import FitSelector
+from src.pychron_constants import FIT_TYPES_INTERPOLATE
 
 
+class InterpolationFit(Fit):
+    def _get_fit_types(self):
+        return FIT_TYPES_INTERPOLATE
 
 
-
-
-
-
+class InterpolationFitSelector(FitSelector):
+    fit_klass = InterpolationFit
 
 #============= EOF =============================================

@@ -119,7 +119,7 @@ def _load_irradiation_map(db, p, name):
     with open(p, 'r') as f:
         try:
             h = f.readline()
-            _, diam = h.split(',')
+            _, diam = map(str.strip, h.split(','))
 
             holes = []
             for i, l in enumerate(f):
@@ -129,6 +129,7 @@ def _load_irradiation_map(db, p, name):
                         r = diam
                     else:
                         r = args[2]
+
                     holes.append((args[0], args[1], float(r)))
 
                 except ValueError:
