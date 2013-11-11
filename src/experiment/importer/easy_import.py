@@ -26,8 +26,8 @@ from src.experiment.importer.import_mapper import MinnaBluffMapper
 
 class EasyImporter(IsotopeDatabaseManager):
     def do_import(self):
-        ep = EasyParser('minna_bluff_prj3')
-        meta = ep.doc(1)
+        ep = EasyParser()
+        meta = ep.doc('import')
         self._import_irradiations(meta)
 
 

@@ -77,19 +77,44 @@ class IsotopeAdapter(DatabaseAdapter):
 
     selector_klass = IsotopeAnalysisSelector
 
+    def get_preceeding(self, post, ms, atype='blank_unknown'):
+        with self.session_ctx() as sess:
+            q = sess.query(meas_AnalysisTable)
+            q = q.join(meas_MeasurementTable)
+            q = q.join(gen_AnalysisTypeTable)
+            q = q.join(gen_MassSpectrometerTable)
+
+            q = q.filter(and_(
+                gen_AnalysisTypeTable.name == atype,
+                gen_MassSpectrometerTable.name == ms,
+                meas_AnalysisTable.analysis_timestamp < post))
+
+            q = q.order_by(meas_AnalysisTable.analysis_timestamp.desc())
+            try:
+                return q.first()
+            except NoResultFound:
+                pass
+
     def get_date_range_analyses(self, start, end,
                                 labnumber=None,
                                 atype=None,
+                                spectrometer=None,
+                                extract_device=None,
                                 limit=None,
                                 exclude_uuids=None):
 
         with self.session_ctx() as sess:
             q = sess.query(meas_AnalysisTable)
             q = q.join(meas_MeasurementTable)
+
             if atype:
                 q = q.join(gen_AnalysisTypeTable)
             if labnumber:
                 q = q.join(gen_LabTable)
+            if spectrometer:
+                q = q.join(meas_MeasurementTable, gen_MassSpectrometerTable)
+            if extract_device:
+                q = q.join(meas_ExtractionTable, gen_ExtractionDeviceTable)
 
             q = q.filter(and_(meas_AnalysisTable.analysis_timestamp <= end,
                               meas_AnalysisTable.analysis_timestamp >= start))
@@ -97,6 +122,10 @@ class IsotopeAdapter(DatabaseAdapter):
                 q = q.filter(gen_AnalysisTypeTable.name == atype)
             if labnumber:
                 q = q.filter(gen_LabTable.identifier == labnumber)
+            if spectrometer:
+                q = q.filter(gen_MassSpectrometerTable.name == spectrometer)
+            if extract_device:
+                q = q.filter(gen_ExtractionDeviceTable.name == extract_device)
 
             if exclude_uuids:
                 q = q.filter(not_(meas_AnalysisTable.uuid.in_(exclude_uuids)))
@@ -212,6 +241,18 @@ class IsotopeAdapter(DatabaseAdapter):
                               meas_AnalysisTable.analysis_timestamp <= ma))
             return q.all()
 
+    def add_history(self, dbrecord, kind):
+        func = getattr(self, 'add_{}_history'.format(kind))
+        history = func(dbrecord, user=self.save_username)
+        #        history = db.add_blanks_history(dbrecord, user=db.save_username)
+
+        # set analysis' selected history
+        sh = self.add_selected_histories(dbrecord)
+        setattr(sh, 'selected_{}'.format(kind), history)
+        #db.sess.flush()
+        #        sh.selected_blanks = history
+        return history
+
     def add_mass_calibration_history(self, spectrometer):
         spec = self.get_mass_spectrometer(spectrometer)
         if spec:
@@ -313,20 +354,29 @@ class IsotopeAdapter(DatabaseAdapter):
 
         name = 'proc_{}SetTable'.format(name)
         table = self.__import_proctable(name)
-
-        #table = globals()['proc_{}SetTable'.format(name)]
         nset = table(**kw)
-        pa = getattr(self, 'get_{}'.format(key))(value)
 
+        #pa = getattr(self, 'get_{}'.format(key))(value)
         analysis = self.get_analysis(analysis)
         if analysis:
             if idname is None:
                 idname = key
             setattr(nset, '{}_analysis_id'.format(idname), analysis.id)
 
-        if pa:
-            setattr(nset, '{}_id'.format(name.lower()), pa.id)
+            #analysis.blanks_sets.append(nset)
+            #nset.analysis
+            #nset.analyses.append(analysis)
 
+        if value:
+            value.sets.append(nset)
+            #    if idname is None:
+        #        idname = key
+        #    setattr(nset, '{}_analysis_id'.format(idname), analysis.id)
+        #
+        #if pa:
+        #    setattr(nset, '{}_id'.format(name.lower()), pa.id)
+
+        self._add_item(nset)
         return nset
 
     def __import_proctable(self, name):
@@ -434,12 +484,16 @@ class IsotopeAdapter(DatabaseAdapter):
     def add_detector_parameter_history(self, analysis, **kw):
         return self._add_history('DetectorParam', analysis, **kw)
 
-    def add_detector_parameter(self, history, **kw):
+    def add_detector_parameter(self, history, detector, **kw):
         obj = proc_DetectorParamTable(**kw)
-        self._add_item(obj)
         if history:
             obj.history = history
-            #    obj.history_id = history.id
+
+        detector = self.get_detector(detector)
+        obj.detector = detector
+        #    obj.history_id = history.id
+
+        self._add_item(obj)
 
         return obj
 
@@ -451,10 +505,10 @@ class IsotopeAdapter(DatabaseAdapter):
                                   'detector_intercalibrations', history, **kw)
         if a:
             detector = self.get_detector(detector)
-            if detector:
-                a.detector = detector
-                #a.detector_id = detector.id
-                #             detector.intercalibrations.append(a)
+            #if detector:
+            a.detector = detector
+            #a.detector_id = detector.id
+            #             detector.intercalibrations.append(a)
 
         return a
 

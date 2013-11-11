@@ -29,7 +29,7 @@ from src.entry.tasks.actions import SavePDFAction, GenerateLabnumbersAction, Imp
 from src.entry.tasks.importer_panes import ImporterPane
 from src.entry.tasks.labnumber_entry_panes import LabnumbersPane, \
     IrradiationPane, IrradiationEditorPane, IrradiationCanvasPane
-from src.processing.tasks.analysis_edit.actions import DatabaseSaveAction
+from src.processing.tasks.actions.edit_actions import DatabaseSaveAction
 from src.envisage.tasks.base_task import BaseManagerTask
 
 

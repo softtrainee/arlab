@@ -149,7 +149,7 @@ class GraphEditor(BaseUnknownsEditor):
         graph.clear()
         self._rebuild_graph()
 
-        self.component_changed = True
+        #self.component_changed = True
 
     def _rebuild_graph(self):
         pass

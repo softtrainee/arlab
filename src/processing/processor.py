@@ -387,22 +387,12 @@ class Processor(IsotopeDatabaseManager):
     #===============================================================================
     # corrections
     #===============================================================================
-    def add_history(self, dbrecord, kind):
-    #         dbrecord = analysis.dbrecord
-        db = self.db
+    #def add_history(self, dbrecord, kind):
+    ##         dbrecord = analysis.dbrecord
+    #    db = self.db
+    #    return db.add_history(dbrecord, kind)
+    #    # new history
 
-        # new history
-        func = getattr(db, 'add_{}_history'.format(kind))
-        history = func(dbrecord, user=db.save_username)
-        #        history = db.add_blanks_history(dbrecord, user=db.save_username)
-
-        # set analysis' selected history
-        sh = db.add_selected_histories(dbrecord)
-        setattr(sh, 'selected_{}'.format(kind), history)
-        db.sess.flush()
-
-        #        sh.selected_blanks = history
-        return history
 
     def apply_fixed_correction(self, history, isotope, value, error, correction_name):
         func = getattr(self.db, 'add_{}'.format(correction_name))

@@ -17,7 +17,6 @@
 #============= enthought library imports =======================
 from pyface.tasks.task_layout import PaneItem, TaskLayout, Tabbed, HSplitter, \
     VSplitter
-from src.experiment.easy_parser import EasyParser
 from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.processing.tasks.analysis_edit.panes import ControlsPane
 
@@ -191,24 +190,24 @@ class IsotopeEvolutionTask(AnalysisEditTask):
             #===============================================================================
 
     def do_easy_fit(self):
-        ep = EasyParser('minna_bluff_prj3')
-        doc = ep.doc(2)
+        self._do_easy(self._do_easy_fit)
 
+    def _do_easy_fit(self, db, ep):
+
+        doc = ep.doc('iso_fits')
         projects = doc['projects']
-        db = self.manager.db
-        with db.session_ctx():
-            self.active_editor.unknowns = [ai for proj in projects
-                                           for si in db.get_samples(project=proj)
-                                           for ln in si.labnumbers
-                                           for ai in ln.analyses]
+        self.active_editor.unknowns = [ai for proj in projects
+                                       for si in db.get_samples(project=proj)
+                                       for ln in si.labnumbers
+                                       for ai in ln.analyses]
 
-            self.find_associated_analyses()
-            fits = doc['fit_isotopes']
-            filters = doc['filter_isotopes']
+        self.find_associated_analyses()
+        fits = doc['fit_isotopes']
+        filters = doc['filter_isotopes']
 
-            self.active_editor.save_fits(fits, filters)
+        self.active_editor.save_fits(fits, filters)
 
-        self.information_dialog('Changes saved to the database')
+
         #def _dclicked_sample_changed(self, new):
         #    if self.active_editor:
         #        sa = self.selected_samples[0]

@@ -16,9 +16,9 @@
 
 #============= enthought library imports =======================
 #============= standard library imports ========================
-from sqlalchemy.ext.declarative import declarative_base, declared_attr
+from sqlalchemy.ext.declarative import declared_attr
 from sqlalchemy import Column, Integer, String, \
-    ForeignKey, BLOB, Float, Time, Boolean, DateTime
+    BLOB, Float, Boolean, DateTime
 from sqlalchemy.orm import relationship
 #============= local library imports  ==========================
 
@@ -101,8 +101,7 @@ class proc_BlanksHistoryTable(Base, HistoryMixin):
     blanks = relationship('proc_BlanksTable', backref='history')
     selected = relationship('proc_SelectedHistoriesTable',
                             backref='selected_blanks',
-                            uselist=False
-    )
+                            uselist=False)
 
 
 class proc_BlanksTable(Base, BaseMixin):
@@ -173,18 +172,18 @@ class proc_DetectorIntercalibrationSetTable(Base, BaseMixin):
 class proc_DetectorParamHistoryTable(Base, HistoryMixin):
     detector_param = relationship('proc_DetectorParamTable',
                                   backref='history',
-                                  uselist=False
-    )
+                                  uselist=False)
+
     selected = relationship('proc_SelectedHistoriesTable',
                             backref='selected_detector_param',
-                            uselist=False
-    )
+                            uselist=False)
 
 
 class proc_DetectorParamTable(Base, BaseMixin):
     history_id = foreignkey('proc_DetectorParamHistoryTable')
     disc = Column(Float)
     disc_error = Column(Float)
+    detector_id = foreignkey('gen_DetectorTable')
 
 #     selected = relationship('proc_SelectedHistoriesTable',
 #                             backref='selected_detector_param',
