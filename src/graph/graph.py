@@ -201,7 +201,10 @@ class Graph(Viewable, ContextMenuMixin):
         return ps
 
     def load_metadata(self, metas):
+        return
+
         self.debug('loading metadata')
+
         for i, meta in enumerate(metas):
             #print meta.keys()
             if not meta:

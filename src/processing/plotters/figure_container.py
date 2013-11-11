@@ -58,8 +58,8 @@ class FigureContainer(HasTraits):
         op = GridPlotContainer(shape=(r, c),
                                bgcolor='white',
                                fill_padding=True,
-                               padding_top=10
-        )
+                               use_backbuffer=True,
+                               padding_top=10)
         return op, r, c
 
 

@@ -24,8 +24,7 @@ from enable.enable_traits import LineStyle
 from enable.markers import MarkerTrait
 from traits.api import HasTraits, Any, Float, Int, on_trait_change, Bool, \
     Instance, List, Range, Color, Str, Font, Enum
-from traitsui.api import View, Item, Group, VGroup, UItem, ListEditor, \
-    InstanceEditor, Heading, HGroup
+from traitsui.api import View, Item, Group, VGroup, UItem, Heading, HGroup, EnumEditor
 # from pyface.timer.do_later import do_later
 # from traitsui.editors.range_editor import RangeEditor
 # from numpy.core.numeric import Inf
@@ -193,9 +192,29 @@ class PlotEditor(HasTraits):
     x_axis = Instance(Axis, ())
     y_axis = Instance(Axis, ())
 
-    renderers = List
+    #renderers = List
+    selected_renderer_name = Str
+    selected_renderer = Instance('RendererEditor')
+    renderer_names = List
+
+    def _selected_renderer_name_changed(self):
+        self.selected_renderer = self._get_selected_renderer()
+
+    def _get_selected_renderer(self):
+        for k, ps in self.plot.plots.iteritems():
+            r = ps[0]
+            if k == self.selected_renderer_name:
+                if isinstance(r, ScatterPlot):
+                    klass = ScatterRendererEditor
+                else:
+                    klass = LineRendererEditor
+
+                rend = klass(name=k,
+                             renderer=r)
+                return rend
 
     def _plot_changed(self):
+        print 'plot change'
         traits = {'xmin': self.plot.index_range.low,
                   'xmax': self.plot.index_range.high,
                   'ymin': self.plot.value_range.low,
@@ -224,15 +243,20 @@ class PlotEditor(HasTraits):
                 editable = r.editable
 
             if editable:
-                if isinstance(r, ScatterPlot):
-                    klass = ScatterRendererEditor
-                else:
-                    klass = LineRendererEditor
+                rs.append(k)
+                #if isinstance(r, ScatterPlot):
+                #    klass = ScatterRendererEditor
+                #else:
+                #    klass = LineRendererEditor
+                #
+                #rs.append(klass(name=k,
+                #                renderer=r))
 
-                rs.append(klass(name=k,
-                                renderer=r))
-
-        self.renderers = rs
+        #self.renderers = rs
+        rs = sorted(rs, key=lambda x: int(x.split('-')[1]))
+        self.renderer_names = rs
+        if rs:
+            self.selected_renderer_name = rs[0]
 
     @on_trait_change('padding+')
     def _update_padding(self, name, new):
@@ -241,6 +265,7 @@ class PlotEditor(HasTraits):
         self.plot.invalidate_and_redraw()
 
     def _xmin_changed(self):
+        print 'xmin change'
         p = self.plot
         v = p.index_range.high
         if self.xmin < v:
@@ -253,6 +278,7 @@ class PlotEditor(HasTraits):
             pass
 
     def _xmax_changed(self):
+        print 'xmax change'
         p = self.plot
         v = p.index_range.low
         if self.xmax > v:
@@ -293,39 +319,53 @@ class PlotEditor(HasTraits):
             self.xmin = mi - p
             self.xmax = ma + p
 
-
     def traits_view(self):
+        #renderers_grp = Group(
+        #    UItem('renderers', editor=ListEditor(mutable=False,
+        #                                         style='custom',
+        #                                         editor=InstanceEditor())),
+        #    label='Plots')
         renderers_grp = Group(
-            UItem('renderers', editor=ListEditor(mutable=False,
-                                                 style='custom',
-                                                 editor=InstanceEditor())),
-            label='Plots')
+            VGroup(UItem('selected_renderer_name',
+                         editor=EnumEditor(name='renderer_names')),
+                   UItem('selected_renderer', style='custom')
+            ),
+            label='Selected Plot')
 
-        general_grp = VGroup(
-            HGroup(Item('xauto', label='Auto'),
-                   UItem('xmin', format_str='%0.4f',
-                         enabled_when='not xauto'),
-                   UItem('xmax', format_str='%0.4f',
-                         enabled_when='not xauto'),
-                   label='X Limits'),
-            HGroup(UItem('ymin', format_str='%0.4f'),
-                   UItem('ymax', format_str='%0.4f'),
-                   label='Y Limits'),
-            Group(UItem('x_axis', style='custom'), label='X Axis'),
-            Group(UItem('y_axis', style='custom'), label='Y Axis'),
-            label='General')
+        xlim_grp = HGroup(Item('xauto', label='Auto'),
+                          UItem('xmin', format_str='%0.4f',
+                                enabled_when='not xauto'),
+                          UItem('xmax', format_str='%0.4f',
+                                enabled_when='not xauto'),
+                          label='X Limits')
+        ylim_grp = HGroup(UItem('ymin', format_str='%0.4f'),
+                          UItem('ymax', format_str='%0.4f'),
+                          label='Y Limits')
 
-        layout_grp = Group(
+        axes_grp = Group(
+            VGroup(xlim_grp,
+                   UItem('x_axis', style='custom'), label='X Axis'),
+            VGroup(ylim_grp,
+                   UItem('y_axis', style='custom'), label='Y Axis'),
+            layout='tabbed')
+
+        layout_grp = VGroup(
             Item('padding_left', label='Left'),
             Item('padding_right', label='Right'),
             Item('padding_top', label='Top'),
             Item('padding_bottom', label='Bottom'),
             label='Padding')
 
+        general_grp = VGroup(
+            axes_grp,
+            layout_grp,
+            renderers_grp,
+        )
+
         v = View(
             general_grp,
-            renderers_grp,
-            layout_grp,
+            #renderers_grp,
+            #layout_grp,
         )
 
         return v
@@ -348,7 +388,7 @@ class RendererEditor(HasTraits):
     def _renderer_changed(self):
         self.line_width = self.renderer.line_width
         self.visible = self.renderer.visible
-        self.color = self.renderer.color
+        #self.color = self.renderer.color
         self._sync()
 
     def _sync(self):

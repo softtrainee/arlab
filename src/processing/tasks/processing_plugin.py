@@ -19,22 +19,23 @@ from envisage.ui.tasks.task_factory import TaskFactory
 from envisage.ui.tasks.task_extension import TaskExtension
 from pyface.tasks.action.schema_addition import SchemaAddition
 from pyface.action.group import Group
-from pyface.tasks.action.schema import SMenu
+from pyface.tasks.action.schema import SMenu, SGroup
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 from src.processing.processor import Processor
-from src.processing.tasks.import_actions import EasyImportAction, EasyFitAction
+from src.processing.tasks.actions.import_actions import EasyImportAction
+from src.processing.tasks.actions.easy_actions import EasyFitAction, EasyBlanksAction, EasyDiscriminationAction, EasyFiguresAction, EasyTablesAction
 from src.processing.tasks.processing_actions import IdeogramAction, \
     RecallAction, SpectrumAction, \
     EquilibrationInspectorAction, InverseIsochronAction, GroupSelectedAction, \
     GroupbyAliquotAction, GroupbyLabnumberAction, ClearGroupAction, \
     SeriesAction
 
-from src.processing.tasks.analysis_edit.actions import BlankEditAction, \
+from src.processing.tasks.actions.edit_actions import BlankEditAction, \
     FluxAction, IsotopeEvolutionAction, ICFactorAction, \
-    BatchEditAction, TagAction, DatabaseSaveAction
+    BatchEditAction, TagAction, DatabaseSaveAction, DiscriminationAction
 from src.processing.tasks.isotope_evolution.actions import CalcOptimalEquilibrationAction
 from src.processing.tasks.processing_preferences import ProcessingPreferencesPane
 #from src.processing.tasks.browser.browser_task import BrowserTask
@@ -90,6 +91,7 @@ Install to enable MS Excel export''')
             return Group(IsotopeEvolutionAction(),
                          BlankEditAction(),
                          ICFactorAction(),
+                         DiscriminationAction(),
                          FluxAction())
 
         return [
@@ -105,12 +107,21 @@ Install to enable MS Excel export''')
                 ('tag', TagAction, 'MenuBar/Data'),
                 ('database_save', DatabaseSaveAction, 'MenuBar/Data'),
                 ('grouping_group', grouping_group, 'MenuBar/Data'),
-                ('easy_import', EasyImportAction, 'MenuBar/Tools'),
+                ('easy_group', lambda: SGroup(id='Easy', name='Easy'), 'MenuBar/Tools'),
+                ('easy_import', EasyImportAction, 'MenuBar/Tools/Easy'),
+                ('easy_figures', EasyFiguresAction, 'MenuBar/Tools/Easy'),
+                ('easy_tables', EasyTablesAction, 'MenuBar/Tools/Easy'),
 
             ]),
             self._make_task_extension([('optimal_equilibration', CalcOptimalEquilibrationAction, 'MenuBar/Tools'),
-                                       ('easy_fit', EasyFitAction, 'MenuBar/Tools'), ],
-                                      task_id='pychron.analysis_edit.isotope_evolution'), ]
+                                       ('easy_fit', EasyFitAction, 'MenuBar/Tools/Easy'),
+                                      ],
+                                      task_id='pychron.analysis_edit.isotope_evolution'),
+            self._make_task_extension([('easy_blanks', EasyBlanksAction, 'MenuBar/Tools/Easy'), ],
+                                      task_id='pychron.analysis_edit.blanks'),
+            self._make_task_extension([('easy_disc', EasyDiscriminationAction, 'MenuBar/Tools/Easy'), ],
+                                      task_id='pychron.analysis_edit.discrimination'),
+        ]
 
     def _meta_task_factory(self, i, f, n, task_group=None,
                            accelerator='', include_view_menu=False):
@@ -138,6 +149,8 @@ Install to enable MS Excel export''')
              self._iso_evo_task_factory, 'Isotope Evolution'),
             ('pychron.analysis_edit.ic_factor',
              self._ic_factor_task_factory, 'IC Factor'),
+            ('pychron.analysis_edit.discrimination',
+             self._discrimination_task_factory, 'Discrimination'),
 
             ('pychron.analysis_edit.batch',
              self._batch_edit_task_factory, 'Batch Edit'),
@@ -195,6 +208,11 @@ Install to enable MS Excel export''')
         from src.processing.tasks.detector_calibration.intercalibration_factor_task import IntercalibrationFactorTask
 
         return IntercalibrationFactorTask(manager=self._processor_factory())
+
+    def _discrimination_task_factory(self):
+        from src.processing.tasks.detector_calibration.discrimination_task import DiscrimintationTask
+
+        return DiscrimintationTask(manager=self._processor_factory())
 
     def _batch_edit_task_factory(self):
         from src.processing.tasks.batch_edit.batch_edit_task import BatchEditTask

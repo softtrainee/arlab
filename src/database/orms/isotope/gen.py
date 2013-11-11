@@ -30,6 +30,7 @@ from src.database.orms.isotope.util import foreignkey, stringcolumn
 
 from util import Base
 
+
 class gen_LoadHolderTable(Base):
     @declared_attr
     def __tablename__(self):
@@ -40,6 +41,7 @@ class gen_LoadHolderTable(Base):
 
     loads = relationship('loading_LoadTable', backref='holder_')
 
+
 class gen_AnalysisTypeTable(Base, NameMixin):
     measurements = relationship('meas_MeasurementTable', backref='analysis_type')
 
@@ -49,6 +51,8 @@ class gen_DetectorTable(Base, NameMixin):
     isotopes = relationship('meas_IsotopeTable', backref='detector')
     deflections = relationship('meas_SpectrometerDeflectionsTable', backref='detector')
     intercalibrations = relationship('proc_DetectorIntercalibrationTable', backref='detector')
+    detector_parameters = relationship('proc_DetectorParamTable', backref='detector')
+
 
 class gen_ExtractionDeviceTable(Base, NameMixin):
     extractions = relationship('meas_ExtractionTable',
@@ -57,6 +61,7 @@ class gen_ExtractionDeviceTable(Base, NameMixin):
     make = stringcolumn()
     model = stringcolumn()
 
+
 class gen_ImportTable(Base, BaseMixin):
     date = Column(DateTime, default=func.now())
     user = stringcolumn()
@@ -64,12 +69,13 @@ class gen_ImportTable(Base, BaseMixin):
     source_host = stringcolumn()
     analyses = relationship('meas_AnalysisTable')
 
+
 class gen_LabTable(Base, BaseMixin):
     identifier = stringcolumn()
-#    aliquot = Column(Integer)
+    #    aliquot = Column(Integer)
     sample_id = foreignkey('gen_SampleTable')
     analyses = relationship('meas_AnalysisTable',
-#                             lazy='subquery',
+                            #                             lazy='subquery',
                             backref='labnumber')
     irradiation_id = foreignkey('irrad_PositionTable')
     selected_flux_id = foreignkey('flux_HistoryTable')
@@ -81,6 +87,7 @@ class gen_MassSpectrometerTable(Base, NameMixin):
     measurements = relationship('meas_MeasurementTable', backref='mass_spectrometer')
     sensitivities = relationship('gen_SensitivityTable', backref='mass_spectrometer')
 
+
 class gen_MaterialTable(Base, NameMixin):
     samples = relationship('gen_SampleTable', backref='material')
 
@@ -91,14 +98,16 @@ class gen_MolecularWeightTable(Base, NameMixin):
 
 
 association_table = Table('association', Base.metadata,
-                        Column('project_id', Integer, ForeignKey('gen_ProjectTable.id')),
-                        Column('user_id', Integer, ForeignKey('gen_UserTable.id')),
-                        )
+                          Column('project_id', Integer, ForeignKey('gen_ProjectTable.id')),
+                          Column('user_id', Integer, ForeignKey('gen_UserTable.id')),
+)
+
 
 class gen_ProjectTable(Base, NameMixin):
     samples = relationship('gen_SampleTable', backref='project')
     figures = relationship('proc_FigureTable', backref='project')
     users = relationship('gen_UserTable', secondary=association_table)
+
 
 class gen_SampleTable(Base, NameMixin):
     material_id = foreignkey('gen_MaterialTable')
@@ -116,13 +125,10 @@ class gen_SensitivityTable(Base, BaseMixin):
     extractions = relationship('meas_ExtractionTable', backref='sensitivity')
 
 
-
 class gen_UserTable(Base, NameMixin):
-
     analyses = relationship('meas_AnalysisTable', backref='user')
-#    project_id = foreignkey('gen_ProjectTable')
+    #    project_id = foreignkey('gen_ProjectTable')
     projects = relationship('gen_ProjectTable', secondary=association_table)
-
 
     password = stringcolumn(80)
     salt = stringcolumn(80)
@@ -132,4 +138,5 @@ class gen_UserTable(Base, NameMixin):
     #===========================================================================
     max_allowable_runs = Column(Integer, default=25)
     can_edit_scripts = Column(Boolean, default=False)
+
 #============= EOF =============================================

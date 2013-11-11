@@ -26,12 +26,18 @@ from src.helpers.filetools import add_extension
 from src.loggable import Loggable
 
 
+doc_mapping = ['', 'import', 'iso_fits', 'blanks', 'disc', 'figures', 'tables']
+
+
 class EasyParser(Loggable):
     _docs = List
     _ndocs = Int
 
-    def __init__(self, name, *args, **kw):
+    def __init__(self, name=None, *args, **kw):
         super(EasyParser, self).__init__(*args, **kw)
+        if name is None:
+            name = 'minna_bluff_prj3'
+
         name = add_extension(name, '.yaml')
         p = os.path.join(paths.processed_dir, name)
         if os.path.isfile(p):
@@ -43,6 +49,13 @@ class EasyParser(Loggable):
             self.warning_dialog('Invalid EasyParser file. {}'.format(self._path))
 
     def doc(self, idx):
+        if isinstance(idx, str):
+            try:
+                idx = doc_mapping.index(idx)
+            except ValueError:
+                self.warning_dialog('Invalid Document index {}. ndocs={}'.format(idx, ','.join(doc_mapping)))
+                return
+
         try:
             return self._docs[idx]
         except IndexError:

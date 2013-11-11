@@ -102,6 +102,13 @@ class ICFactorAction(AnalysisEditAction):
     task_id = 'pychron.analysis_edit.ic_factor'
 
 
+class DiscriminationAction(AnalysisEditAction):
+    name = 'Discrimination...'
+    accelerator = 'Ctrl+shift+d'
+    #method = 'new_ic_factor'
+    task_id = 'pychron.analysis_edit.discrimination'
+
+
 class BatchEditAction(AnalysisEditAction):
     name = 'Batch Edit...'
     #accelerator = 'Ctrl+Shift+e'

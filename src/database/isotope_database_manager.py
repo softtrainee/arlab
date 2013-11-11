@@ -166,8 +166,8 @@ class IsotopeDatabaseManager(Loggable):
                                                        **kw)
                             if a:
                                 db_ans.append(a)
-                                
-                            #time.sleep(10)
+
+                                #time.sleep(10)
 
                         #db_ans.extend([self._analysis_factory(ai,
                         #                                      progress=progress,
@@ -269,7 +269,7 @@ class IsotopeDatabaseManager(Loggable):
 
     def _add_to_cache(self, rec):
         if not rec.uuid in ANALYSIS_CACHE:
-            self.debug('Adding {} to cache'.format(rec.record_id))
+            #self.debug('Adding {} to cache'.format(rec.record_id))
             ANALYSIS_CACHE[rec.uuid] = weakref.ref(rec)()
             ANALYSIS_CACHE_COUNT[rec.uuid] = 1
         else:
@@ -287,8 +287,8 @@ class IsotopeDatabaseManager(Loggable):
                           calculate_age=False,
                           unpack=False,
                           exclude=None, **kw):
-        
-        
+
+
         if isinstance(rec, (Analysis, DBAnalysis)):
             if progress:
                 progress.increment()

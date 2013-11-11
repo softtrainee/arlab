@@ -19,8 +19,9 @@ from itertools import groupby
 from datetime import timedelta
 from pyface.tasks.action.schema import SToolBar
 from traits.api import Instance, on_trait_change, List
+from src.experiment.easy_parser import EasyParser
 from src.helpers.datetime_tools import get_datetime
-from src.processing.tasks.analysis_edit.actions import DatabaseSaveAction, FindAssociatedAction
+from src.processing.tasks.actions.edit_actions import DatabaseSaveAction, FindAssociatedAction
 from src.processing.tasks.analysis_edit.panes import UnknownsPane, ControlsPane, \
     TablePane
 from src.processing.tasks.browser.browser_task import BaseBrowserTask
@@ -69,10 +70,20 @@ class AnalysisEditTask(BaseBrowserTask):
             with db.session_ctx():
                 tans = []
                 uuids = []
+
+                ngroups = len(list(groupby(unks, key=key)))
+                prog = self.manager.open_progress(ngroups + 1)
+
                 for ln, ais in groupby(unks, key=key):
-                    self.debug('find associated analyses for labnumber {}'.format(ln))
+                    msg = 'find associated analyses for labnumber {}'.format(ln)
+                    self.debug(msg)
+                    if prog:
+                        prog.change_message(msg)
 
                     ts = [get_datetime(ai.timestamp) for ai in ais]
+                    ms = ais[0].mass_spectrometer
+                    ed = ais[0].extract_device
+
                     for atype in ('blank_unknown', 'blank_air', 'blank_cocktail',
                                   'air', 'cocktail'):
                         self.debug('find {}'.format(atype))
@@ -81,7 +92,9 @@ class AnalysisEditTask(BaseBrowserTask):
                             lpost, hpost = min(ts) - td, max(ts) + td
 
                             ans = db.get_date_range_analyses(lpost, hpost,
-                                                             atype=atype)
+                                                             atype=atype,
+                                                             spectrometer=ms,
+                                                             extract_device=ed if atype == 'blank_unknown' else None)
 
                             self.debug('{} to {}. nanalyses={}'.format(lpost, hpost, len(ans) if ans else 0))
                             if ans:
@@ -90,6 +103,7 @@ class AnalysisEditTask(BaseBrowserTask):
                                 uuids.extend([ai.uuid for ai in ans])
                                 break
 
+                prog.increment()
                 #ans=self.manager.make_analyses(ans)
                 self.active_editor.unknowns.extend(tans)
 
@@ -245,7 +259,6 @@ class AnalysisEditTask(BaseBrowserTask):
         task = self._open_external_task(_id)
         task.new_ideogram(ans=ans, name=name)
         return task
-
 
     def _save_to_db(self):
         if self.active_editor:
@@ -470,6 +483,12 @@ class AnalysisEditTask(BaseBrowserTask):
     def _handle_key_pressed(self, c):
         pass
 
+    def _do_easy(self, func):
+        ep = EasyParser()
+        db = self.manager.db
+        with db.session_ctx():
+            func(db, ep)
+        self.information_dialog('Changes saved to the database')
 
 
 
