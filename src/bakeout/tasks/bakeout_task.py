@@ -36,7 +36,9 @@ class BakeoutTask(BaseTask):
         return TaskLayout(top=PaneItem('bakeout.controller'),
                           left=PaneItem('bakeout.controls'),
                           )
-
+    def prepare_destroy(self):
+        self.bakeout.destroy()
+        
     def activated(self):
         self.bakeout.activate()
 
