@@ -35,14 +35,14 @@ class myMessageMixin(object):
     '''
     timeout_return_code = YES
 
-    def open(self, timeout=None):
+    def open(self, timeout=0):
         """
             open the confirmation dialog on the GUI thread but wait for return
         """
 
         evt = Event()
         invoke_in_main_thread(self._open, evt, timeout)
-
+            
         st=time.time()
         while not evt.is_set():
             time.sleep(0.25)

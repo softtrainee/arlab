@@ -566,7 +566,7 @@ class BakeoutManager(Manager):
                 time.sleep(0.1)
 
             data = [dq.get() for _ in range(n)]
-            self._do_graph(data)
+            invoke_in_main_thread(self._do_graph,data)
 
     @on_trait_change('bakeout+:process_value_flag')
     def _update_graph_temperature(self, obj, name, old, new,):

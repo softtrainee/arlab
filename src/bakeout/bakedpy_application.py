@@ -30,13 +30,13 @@ from pyface.splash_screen import SplashScreen
 from pyface.image_resource import ImageResource
 from src.applications.pychron_application import PychronApplication
 
-class Bakedpy(PychronApplication, Loggable):
+class Bakedpy(PychronApplication):
     '''
     '''
     id = 'tasks.bakedpy'
     name = 'Bakedpy'
 
-    default_layout = [TaskWindowLayout('bakeout',
+    default_layout = [TaskWindowLayout('bakeout.main',
                                        size=(800, 800)) ]
 
 #============= views ===================================

@@ -29,7 +29,7 @@ from src.envisage.tasks.base_task_plugin import BaseTaskPlugin
 class BakeoutPlugin(BaseTaskPlugin):
 
     def _tasks_default(self):
-        ts = [TaskFactory(id='bakeout',
+        ts = [TaskFactory(id='bakeout.main',
                         name='Main',
                         factory=self._bakeout_factory),
               ]
