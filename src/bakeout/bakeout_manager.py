@@ -143,11 +143,16 @@ class BakeoutManager(Manager):
 
         self._current_data_path = cp = self.data_manager.get_current_path()
 #        self._add_bakeout_to_db(controllers, cp)
-
+    def destroy(self):
+        cs = self._get_controllers()
+        for c in cs:
+            c.stop_timer()
+        
     def activate(self):
         self.data_queue = Queue()
         from threading import Thread
         t = Thread(target=self._graph_thread)
+        t.setDaemon(True)
         t.start()
 
         self.reset_general_scan()
