@@ -29,6 +29,7 @@ from src.bakeout.tasks.bakeout_plugin import BakeoutPlugin
 from src.helpers.logger_setup import new_logger
 from src.bakeout.bakedpy_application import Bakedpy
 from src.pyscripts.tasks.pyscript_plugin import PyScriptPlugin
+from src.logger.tasks.logger_plugin import LoggerPlugin
 
 def launch():
     logger = new_logger('launcher')
@@ -38,6 +39,7 @@ def launch():
                TasksPlugin(),
                BakeoutPlugin(),
                PyScriptPlugin(),
+               LoggerPlugin(),
 #               BakedpyUIPlugin()
                ]
     app = Bakedpy(plugins=plugins)
@@ -47,7 +49,7 @@ def launch():
     app.exit()
 
     # force a clean exit
-    os._exit(0)
+#    os._exit(0)
 
 
 #============= EOF =============================================

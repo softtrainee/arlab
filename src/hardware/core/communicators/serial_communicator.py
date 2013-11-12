@@ -183,10 +183,14 @@ class SerialCommunicator(Communicator):
 
         '''
 
+
         if self.handle is None:
             if verbose:
                 self.info('no handle    {}'.format(cmd.strip()))
             return
+
+        if not self.handle.isOpen():
+            return 
 
         with self._lock:
             if self.clear_output:
@@ -532,17 +536,22 @@ class SerialCommunicator(Communicator):
         r = ''
         st = time.time()
 
+        handle=self.handle
+
         ct = time.time()
         while ct - st < timeout:
+            if not handle.isOpen():
+                break
+            
             try:
                 r, isterminated = func(r)
                 #                print r, isterminated
                 if isterminated:
                     break
             except (ValueError, TypeError):
-                import traceback
-
-                traceback.print_exc()
+                pass
+#                import traceback
+#                traceback.print_exc()
             time.sleep(0.01)
             ct = time.time()
 
