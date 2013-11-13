@@ -21,7 +21,7 @@ from traitsui.api import View, UItem, HGroup, Group
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from traitsui.tabular_adapter import TabularAdapter
-from uncertainties import ufloat
+from uncertainties import ufloat, std_dev, nominal_value
 from src.helpers.formatting import floatfmt, calc_percent_error
 from src.ui.tabular_editor import myTabularEditor
 
@@ -222,7 +222,7 @@ class AnalysisView(HasTraits):
         self.load_measurement(an, an)
 
     def _get_irradiation(self, an):
-        return an.irradiation_str
+        return an.irradiation_label
 
     def _get_j(self, an):
         return an.j
@@ -232,12 +232,12 @@ class AnalysisView(HasTraits):
         j = self._get_j(an)
         jf = 'NaN'
         if j is not None:
-            jj = floatfmt(j.nominal_value, n=5, s=3)
+            jj = floatfmt(j.nominal_value, n=4, s=3)
             jf = u'{} \u00b1{:0.2e}'.format(jj, j.std_dev)
 
         a39 = ar.ar39decayfactor
         a37 = ar.ar37decayfactor
-
+        #print ar, a39
         ms = [
             MeasurementValue(name='AnalysisID',
                              value=self.analysis_id),
@@ -371,23 +371,36 @@ class AnalysisView(HasTraits):
 
     def _load_unknown_computed(self, an, new_list):
 
-        attrs = (('Age', 'age'),
+        attrs = (('Age', 'age', None, 'age_err'),
+                 ('w/o J', 'wo_j', '', 'age_err_wo_j'),
                  ('K/Ca', 'kca'),
                  ('K/Cl', 'kcl'),
                  ('40Ar*', 'rad40_percent'),
-                 ('R', 'R'))
+                 ('R', 'R', None, 'R_err'))
         if new_list:
-            cv = [ComputedValue(name=name,
-                                tag=attr,
-                                value=floatfmt(getattr(an, attr).nominal_value),
-                                error=floatfmt(getattr(an, attr).std_dev))
-                  for name, attr in attrs]
+            def comp_factory(n, a, value=None, error_tag=None):
+                if value is None:
+                    aa = getattr(an, a)
+                    value = floatfmt(nominal_value(aa))
+
+                if error_tag:
+                    e = getattr(an, error_tag)
+                else:
+                    e = std_dev(aa)
+
+                return ComputedValue(name=n,
+                                     tag=a,
+                                     value=value,
+                                     error=floatfmt(e))
+
+            cv = [comp_factory(*args)
+                  for args in attrs]
 
             #insert error w/o j
-            cv.insert(1, ComputedValue(name='w/o J',
-                                       tag='wo_j',
-                                       value='',
-                                       error=floatfmt(an.age_error_wo_j)))
+            #cv.insert(1, ComputedValue(name='w/o J',
+            #                           tag='wo_j',
+            #                           value='',
+            #                           error=floatfmt(an.age_error_wo_j)))
             self.computed_values = cv
         else:
             for ci in self.computed_values:

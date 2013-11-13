@@ -26,7 +26,7 @@ from src.helpers.filetools import add_extension
 from src.loggable import Loggable
 
 
-doc_mapping = ['', 'import', 'iso_fits', 'blanks', 'disc', 'figures', 'tables']
+doc_mapping = ['setup', 'import', 'iso_fits', 'blanks', 'disc', 'figures', 'tables']
 
 
 class EasyParser(Loggable):

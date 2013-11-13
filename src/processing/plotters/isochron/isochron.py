@@ -96,11 +96,32 @@ class InverseIsochron(Isochron):
 
         refiso = analyses[0]
 
+        self._ref_constants = refiso.arar_constants
         self._ref_j = refiso.j
         self._ref_age_scalar = refiso.arar_constants.age_scalar
         self._ref_age_units = refiso.arar_constants.age_units
 
-        ans = [(a.Ar39, a.Ar36, a.Ar40) for a in analyses]
+        #ans = [(a.Ar39, a.Ar36, a.Ar40) for a in analyses]
+
+        #for ai in analyses:
+        #    a,b,c=ai.isotopes['Ar36'],ai.isotopes['Ar39'],ai.isotopes['Ar40']
+        #    a,b,c=a.get_interference_corrected_value(), \
+        #          b.get_interference_corrected_value(), \
+        #          c.get_interference_corrected_value()
+        #
+        #    #print b, c
+        #    #print ai.record_id, '36/40', a/c
+        #    print ai.record_id, '39/40', b/c
+
+        #ans=[(ai.isotopes['Ar39'].get_interference_corrected_value(),
+        #      ai.isotopes['Ar36'].get_interference_corrected_value(),
+        #      ai.isotopes['Ar40'].get_interference_corrected_value())
+        #      for ai in analyses]
+
+        ans = [(ai.isotopes['Ar39'].get_corrected_value(),
+                ai.isotopes['Ar36'].get_corrected_value(),
+                ai.isotopes['Ar40'].get_corrected_value())
+               for ai in analyses]
 
         a39, a36, a40 = array(ans).T
         try:
@@ -151,6 +172,8 @@ class InverseIsochron(Isochron):
         graph.new_series(rxs, rys, color=scatter.color)
         graph.set_series_label('fit{}'.format(self.group_id))
 
+        if po.show_labels:
+            self._add_point_labels(scatter)
         self._add_scatter_inspector(scatter)
 
         self._add_info(plot, reg, text_color=scatter.color)
@@ -183,7 +206,6 @@ class InverseIsochron(Isochron):
         ratio_line = 'Ar40/Ar36= {} +/-{} ({}%) mse= {}'.format(v, e, p, mse)
 
         j = self._ref_j
-        s = self._ref_age_scalar
         u = self._ref_age_units
 
         xint = ufloat(reg.x_intercept, reg.x_intercept_error)
@@ -191,10 +213,13 @@ class InverseIsochron(Isochron):
             R = xint ** -1
         except ZeroDivisionError:
             R = 0
-        age = age_equation(j, R, scalar=s)
-        v = age.nominal_value
-        e = age.std_dev
-        mse_age = e * mswd ** 0.5
+
+        v, e, mse_age = 0, 0, 0
+        if R > 0:
+            age = age_equation(j, R, arar_constants=self._ref_constants)
+            v = age.nominal_value
+            e = age.std_dev
+            mse_age = e * mswd ** 0.5
 
         valid = validate_mswd(mswd, n)
         mswd = '{:0.2f}'.format(mswd)

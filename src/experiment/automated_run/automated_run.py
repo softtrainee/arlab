@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from datetime import datetime
 from traits.api import Any, Str, Int, List, Property, \
     Event, Instance, Bool, Dict, HasTraits, Float
 #============= standard library imports ========================
@@ -824,11 +825,22 @@ class AutomatedRun(Loggable):
                 ln = self.db.get_labnumber(ln)
                 if ln:
                     an = DBAnalysis()
-                    an.load_irradiation(ln)
+                    an.sync_irradiation(ln)
 
-                    self.arar_age.j = an.j
-                    self.arar_age.production_ratios = an.production_ratios
-                    self.arar_age.irradiation_info = an.irradiation_info
+                    #an.load_irradiation(ln)
+
+                    x = datetime.now()
+                    now = time.mktime(x.timetuple())
+                    self.arar_age.trait_set(j=an.j,
+                                            production_ratios=an.production_ratios,
+                                            interference_corrections=an.interference_corrections,
+                                            chron_segments=an.chron_segments,
+                                            irradiation_time=an.irradiation_time,
+                                            timestamp=now
+                    )
+                    #self.arar_age.j = an.j
+                    #self.arar_age.production_ratios = an.production_ratios
+                    #self.arar_age.irradiation_info = an.irradiation_info
                     #                 self.arar_age.load_irradiation(ln)
                     #             self.arar_age.labnumber_record = ln
 

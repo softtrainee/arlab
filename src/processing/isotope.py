@@ -16,10 +16,10 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Float, Property, Instance, \
-    Bool, Int, Array, String
+    Bool, Int, Array, String, Either
 
 #============= standard library imports ========================
-from uncertainties import ufloat
+from uncertainties import ufloat, Variable, AffineScalarFunc
 from numpy import array, delete
 from src.regression.mean_regressor import MeanRegressor
 from src.regression.ols_regressor import PolynomialRegressor
@@ -108,7 +108,7 @@ class IsotopicMeasurement(BaseMeasurement):
 
     def set_fit(self, fit):
         if fit is not None:
-            self.fit = fit.fit
+
             self.filter_outliers = bool(fit.filter_outliers)
             try:
                 self.filter_outlier_iterations = int(
@@ -123,6 +123,7 @@ class IsotopicMeasurement(BaseMeasurement):
             except TypeError, e:
                 pass
                 #                print '{}. fit.filter_outlier_std_devs'.format(e)
+            self.fit = fit.fit
 
     def set_uvalue(self, v):
         if isinstance(v, tuple):
@@ -171,7 +172,9 @@ class IsotopicMeasurement(BaseMeasurement):
             #                else:
             #                    reg = MeanRegressor(xs=self.xs, ys=self.ys)
             else:
-                reg = PolynomialRegressor(xs=self.xs, ys=self.ys, degree=self.fit)
+                reg = PolynomialRegressor(xs=self.xs,
+                                          ys=self.ys,
+                                          degree=self.fit)
 
         except Exception, e:
             reg = PolynomialRegressor(xs=self.xs, ys=self.ys, degree=self.fit)
@@ -181,7 +184,7 @@ class IsotopicMeasurement(BaseMeasurement):
                 excludes = list(reg.calculate_outliers(nsigma=self.filter_outlier_std_devs))
                 xs = delete(self.xs, excludes, 0)
                 ys = delete(self.ys, excludes, 0)
-                reg.trait_set(xs=xs, ys=ys)
+                reg.trait_set(xs=xs, ys=ys, excludes=excludes)
 
         return reg
 
@@ -262,11 +265,29 @@ class Isotope(IsotopicMeasurement):
     sniff = Instance(Sniff)
 
     correct_for_blank = True
-    ic_factor = Float(1.0)
+    ic_factor = Either(Variable, AffineScalarFunc)
+
     age_error_component = Float(0.0)
     temporary_ic_factor = None
 
     baseline_fit_abbreviation = Property(depends_on='baseline:fit')
+
+    discrimination = Either(Variable, AffineScalarFunc)
+
+    interference_corrected_value = Either(Variable, AffineScalarFunc)
+
+    def get_interference_corrected_value(self):
+        return self.interference_corrected_value
+
+    def get_intensity(self):
+        """
+            return the discrimination and ic_factor corrected value
+        """
+        #print self.ic_factor, self.name, self.discrimination
+        return self.get_corrected_value() * self.discrimination * self.ic_factor
+
+    def disc_corrected_value(self):
+        return self.get_corrected_value() * self.disc_corrected_value()
 
     def ic_corrected_value(self):
         return self.get_corrected_value() * self.ic_factor

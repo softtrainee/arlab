@@ -116,7 +116,6 @@ class FigureEditor(GraphEditor):
 
         if ans:
             po = self.plotter_options_manager.plotter_options
-
             model, comp = timethis(self.get_component, args=(ans, po),
                                    msg='get_component {}'.format(self.__class__.__name__))
             #comp = self._get_component(ans, po)

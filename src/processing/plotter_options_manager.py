@@ -43,6 +43,7 @@ class PlotterOptionsManager(HasTraits):
 
     delete_options = Button('-')
     add_options = Button('+')
+    save_options = Button('+')
     new_options_name = Str
     persistence_name = ''
     persistence_root = Property
@@ -51,6 +52,9 @@ class PlotterOptionsManager(HasTraits):
         return os.path.join(paths.plotter_options_dir, self.persistence_name)
 
     def close(self):
+        self.save()
+
+    def save(self):
         # dump the default plotter options
         if not os.path.isdir(self.persistence_root):
             try:
@@ -76,6 +80,9 @@ class PlotterOptionsManager(HasTraits):
     #===============================================================================
     # handlers
     #===============================================================================
+    def _save_options_fired(self):
+        self.save()
+
     def _add_options_fired(self):
         info = self.edit_traits(view='new_options_name_view')
         if info.result:
@@ -111,12 +118,15 @@ class PlotterOptionsManager(HasTraits):
                 icon_button_editor('add_options',
                                    'add',
                                    tooltip='Add new plot options',
-                                   show_label=False),
+                ),
                 icon_button_editor('delete_options',
                                    'delete',
                                    tooltip='Delete current plot options',
                                    enabled_when='object.plotter_options.name!="Default"',
-                                   show_label=False)),
+                ),
+                icon_button_editor('save_options', 'save',
+                                   tooltip='Save changes to options',
+                )),
             Item('plotter_options',
                  show_label=False,
                  style='custom'),

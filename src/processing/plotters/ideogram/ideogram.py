@@ -21,11 +21,11 @@ from traits.api import Float, Array
 from numpy import linspace, pi, exp, zeros, ones, array, arange, \
     Inf
 #============= local library imports  ==========================
+from src.graph.tools.limits_tool import LimitOverlay, LimitsTool
 
 from src.processing.plotters.arar_figure import BaseArArFigure
 
 from src.processing.plotters.ideogram.mean_indicator_overlay import MeanIndicatorOverlay
-from src.processing.plotters.points_label_overlay import PointsLabelOverlay
 from src.stats.peak_detection import find_peaks
 from src.stats.core import calculate_weighted_mean
 from src.processing.plotters.point_move_tool import OverlayMoveTool
@@ -38,7 +38,7 @@ class Ideogram(BaseArArFigure):
     xma = Float
     xs = Array
     xes = Array
-    index_key = 'age'
+    index_key = 'uage'
     ytitle = 'Relative Probability'
     #     _reverse_sorted_analyses = True
     _analysis_number_cnt = 0
@@ -63,6 +63,8 @@ class Ideogram(BaseArArFigure):
 
         for pid, (plotobj, po) in enumerate(zip(graph.plots, plots)):
             getattr(self, '_plot_{}'.format(po.name))(po, plotobj, pid)
+            #add limits tool
+            self._add_limits_tool(plotobj)
 
         graph.set_x_limits(min_=self.xmi, max_=self.xma,
                            pad='0.05')
@@ -76,7 +78,7 @@ class Ideogram(BaseArArFigure):
         plot.value_axis.tick_label_formatter = lambda x: ''
         plot.value_axis.tick_visible = False
 
-        #print 'ideo omit', self.group_id, omit
+        #print 'ideo omit', self.group_id, omit, plots
         if omit:
             self._rebuild_ideo(omit)
 
@@ -181,6 +183,13 @@ class Ideogram(BaseArArFigure):
     #===============================================================================
     # overlays
     #===============================================================================
+    def _add_limits_tool(self, plot):
+
+        t = LimitsTool(component=plot)
+        o = LimitOverlay(component=plot, tool=t)
+        plot.tools.append(t)
+        plot.overlays.append(o)
+
     def _add_info(self, g, plot):
         if self.group_id == 0:
             m = self.options.mean_calculation_kind
@@ -221,12 +230,6 @@ class Ideogram(BaseArArFigure):
 
         line.tools.append(OverlayMoveTool(component=m,
                                           constrain='x'))
-
-    def _add_point_labels(self, scatter):
-        labels = ['{:02n}{}'.format(si.aliquot, si.step) for si in self.sorted_analyses]
-        ov = PointsLabelOverlay(component=scatter,
-                                labels=labels)
-        scatter.underlays.append(ov)
 
     def update_index_mapper(self, obj, name, old, new):
         if new:

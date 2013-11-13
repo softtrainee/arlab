@@ -22,6 +22,7 @@ from chaco.tools.data_label_tool import DataLabelTool
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.graph.error_bar_overlay import ErrorBarOverlay
+from src.processing.plotters.points_label_overlay import PointsLabelOverlay
 from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
 from src.stats.core import calculate_mswd, validate_mswd
 from src.helpers.formatting import floatfmt
@@ -64,7 +65,7 @@ class BaseArArFigure(HasTraits):
             pp.x_grid.visible = self.x_grid_visible
             pp.y_grid.visible = self.y_grid_visible
             if po:
-                pp.value_scale=po.scale
+                pp.value_scale = po.scale
 
             if self.use_sparse_ticks:
                 if pp.value_scale == 'log':
@@ -90,7 +91,7 @@ class BaseArArFigure(HasTraits):
 
             p = graph.new_plot(**kw)
             _setup_plot(p, po)
-            
+
     def plot(self, *args, **kw):
         pass
 
@@ -193,6 +194,12 @@ class BaseArArFigure(HasTraits):
     #===============================================================================
     #
     #===============================================================================
+    def _add_point_labels(self, scatter):
+        labels = ['{:02n}{}'.format(si.aliquot, si.step) for si in self.sorted_analyses]
+        ov = PointsLabelOverlay(component=scatter,
+                                labels=labels)
+        scatter.underlays.append(ov)
+
     def _add_error_bars(self, scatter, errors, axis, nsigma,
                         visible=True):
         ebo = ErrorBarOverlay(component=scatter,

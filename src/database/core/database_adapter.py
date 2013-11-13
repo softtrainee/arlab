@@ -487,7 +487,8 @@ host= {}\nurl= {}'.format(self.name, self.username, self.host, self.url))
     def _query_all(self, q):
         try:
             return q.all()
-        except SQLAlchemyError:
+        except SQLAlchemyError, e:
+            print e
             return []
 
     def _retrieve_item(self, table, value, key='name', last=None,

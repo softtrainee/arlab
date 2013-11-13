@@ -15,15 +15,15 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
 import unittest
-from src.experiment.experimentor import Experimentor
 import os
-from src.unittests.database import get_test_database
+
+from src.experiment.experimentor import Experimentor
+from src.unittests.database import isotope_manager_factory
 from src.experiment.tasks.experiment_editor import ExperimentEditor
 from src.experiment.tasks.experiment_task import ExperimentEditorTask
 from src.database.records.isotope_record import IsotopeRecord
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -42,7 +42,7 @@ class BaseExperimentTest(unittest.TestCase):
                 editor.new_queue(qi)
                 qs.append(editor.queue)
 
-#         man.test_queues(qs)
+                #         man.test_queues(qs)
         man.experiment_queues = qs
         man.update_info()
         man.path = path
@@ -52,8 +52,8 @@ class BaseExperimentTest(unittest.TestCase):
     def setUp(self):
         self.experimentor = Experimentor(connect=False,
                                          unique_executor_db=False
-                                         )
-        self.experimentor.db = db = get_test_database().db
+        )
+        self.experimentor.db = db = isotope_manager_factory().db
 
         self._experiment_file = './data/experiment2.txt'
 
@@ -64,7 +64,7 @@ class BaseExperimentTest(unittest.TestCase):
 class ExperimentTest2(BaseExperimentTest):
     def testAliquots(self):
         queue = self._load_queues()[0]
-#         aqs = (46, 46, 47, 47)
+        #         aqs = (46, 46, 47, 47)
         aqs = (46, 46, 47, 46, 46)
         aqs = (1, 46, 46, 47, 46, 46, 2)
         aqs = (1, 46, 46, 45, 46, 46, 2)
@@ -74,17 +74,17 @@ class ExperimentTest2(BaseExperimentTest):
 
     def testSteps(self):
         queue = self._load_queues()[0]
-#         sts = ('A', 'B', '', 'A', 'B', '', '', '', '')
+        #         sts = ('A', 'B', '', 'A', 'B', '', '', '', '')
         sts = ('A', 'B', 'A', 'C', 'D')
         sts = ('', 'A', 'B', 'A', 'C', 'D', '')
         sts = ('', 'A', 'B', 'E', 'C', 'D')
         for i, (st, an) in enumerate(zip(sts, queue.automated_runs)):
-#             if st in ('E', 'F'):
+        #             if st in ('E', 'F'):
             print i, an.labnumber, an.step, st, an.aliquot
             self.assertEqual(an.step, st)
 
-class ExperimentTest(BaseExperimentTest):
 
+class ExperimentTest(BaseExperimentTest):
     def testFile(self):
         p = self._experiment_file
         self.assertTrue(os.path.isfile(p))
@@ -100,19 +100,19 @@ class ExperimentTest(BaseExperimentTest):
 
     def testAliquots(self):
         queue = self._load_queues()[0]
-#         aqs = (31, 31, 2, 32, 32, 200, 201, 3, 40, 41)
-#         aqs = (46, 46, 2, 47, 47, 45, 45, 3, 40, 41)
+        #         aqs = (31, 31, 2, 32, 32, 200, 201, 3, 40, 41)
+        #         aqs = (46, 46, 2, 47, 47, 45, 45, 3, 40, 41)
         aqs = (46, 46, 2, 47, 47, 46, 46, 40, 41, 45, 45, 3, 40, 41)
         for aq, an in zip(aqs, queue.automated_runs):
             self.assertEqual(an.aliquot, aq)
 
     def testSteps(self):
         queue = self._load_queues()[0]
-#         sts = ('A', 'B', '', 'A', 'B', '', '', '', '')
+        #         sts = ('A', 'B', '', 'A', 'B', '', '', '', '')
         sts = ('A', 'B', '', 'A', 'B', 'C', 'D', '', '', 'E', 'F',
                '', '', '', 'C', 'D')
         for i, (st, an) in enumerate(zip(sts, queue.automated_runs)):
-#             if st in ('E', 'F'):
+        #             if st in ('E', 'F'):
             print i, an.labnumber, an.step, st, an.aliquot
             self.assertEqual(an.step, st)
 
@@ -121,7 +121,7 @@ class ExperimentTest(BaseExperimentTest):
         queue = self._load_queues()[0]
         samples = ('NM-779', 'NM-779', '', 'NM-779', 'NM-779', 'NM-779',
                    'NM-779', '', 'NM-791', 'NM-791'
-                   )
+        )
         for sample, an in zip(samples, queue.automated_runs):
             self.assertEqual(an.sample, sample)
 
@@ -135,7 +135,6 @@ class ExperimentTest(BaseExperimentTest):
 
 
 class ExecutorTest(BaseExperimentTest):
-
     def testPreviousBlank(self):
         exp = self.experimentor
         ext = exp.executor
@@ -150,18 +149,19 @@ class ExecutorTest(BaseExperimentTest):
         self.assertTrue(ext._check_for_human_errors())
 
     def testPreExecuteCheck(self):
-
         exp = self.experimentor
         ext = exp.executor
         ext.experiment_queue = exp.experiment_queues[0]
 
         ext._pre_execute_check(inform=False)
 
+
 class HumanErrorCheckerTest(BaseExperimentTest):
     def setUp(self):
         super(HumanErrorCheckerTest, self).setUp()
 
         from src.experiment.utilities.human_error_checker import HumanErrorChecker
+
         hec = HumanErrorChecker()
         self.hec = hec
 
@@ -173,7 +173,8 @@ class HumanErrorCheckerTest(BaseExperimentTest):
     def testNoDuration(self):
         err = self._get_errors()
         self.assertEqual(err['61311-101'], 'no duration')
-#
+
+    #
     def testNoCleanup(self):
         err = self._get_errors()
         self.assertEqual(err['61311-100'], 'no cleanup')
@@ -189,4 +190,5 @@ class HumanErrorCheckerTest(BaseExperimentTest):
         q = exp.experiment_queues[0]
         err = hec.check(q, test_all=True, inform=False)
         return err
-#============= EOF =============================================
+
+        #============= EOF =============================================

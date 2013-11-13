@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+from reportlab.lib.pagesizes import letter
 from traits.api import Any, List, on_trait_change, Instance, Property, Event, File
 from traitsui.api import View, UItem, InstanceEditor
 from src.codetools.simple_timeit import timethis
@@ -45,6 +46,7 @@ class GraphEditor(BaseUnknownsEditor):
     basename = ''
     pickle_path = '_'
     unpack_peaktime = False
+    calculate_age = True
 
     auto_plot = Property
     update_on_unknowns = True
@@ -177,7 +179,7 @@ class GraphEditor(BaseUnknownsEditor):
     def _get_component(self):
         return self.graph.plotcontainer
 
-    def save_file(self, path):
+    def save_file(self, path, force_layout=False):
         _, tail = os.path.splitext(path)
         if tail not in ('.pdf', '.png'):
             path = '{}.pdf'.format(path)
@@ -188,15 +190,14 @@ class GraphEditor(BaseUnknownsEditor):
             chaco becomes less responsive after saving if 
             use_backbuffer is false and using pdf 
         '''
-        c.use_backbuffer = True
+
+        c.do_layout(size=letter, force=force_layout)
 
         _, tail = os.path.splitext(path)
         if tail == '.pdf':
             from chaco.pdf_graphics_context import PdfPlotGraphicsContext
 
-            gc = PdfPlotGraphicsContext(filename=path,
-                                        #                                         pagesize='letter'
-            )
+            gc = PdfPlotGraphicsContext(filename=path)
             gc.render_component(c, valign='center')
             gc.save()
         else:
@@ -234,6 +235,7 @@ class GraphEditor(BaseUnknownsEditor):
                 ans = timethis(self.processor.make_analyses,
                                args=(ans,),
                                kwargs={'exclude': exclude,
+                                       'calculate_age': self.calculate_age,
                                        'unpack': self.unpack_peaktime},
                                msg='MAKE ANALYSES TOTAL')
 

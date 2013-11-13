@@ -112,12 +112,10 @@ class IsotopeAdapter(DatabaseAdapter):
             if labnumber:
                 q = q.join(gen_LabTable)
             if spectrometer:
-                q = q.join(meas_MeasurementTable, gen_MassSpectrometerTable)
+                q = q.join(gen_MassSpectrometerTable)
             if extract_device:
                 q = q.join(meas_ExtractionTable, gen_ExtractionDeviceTable)
 
-            q = q.filter(and_(meas_AnalysisTable.analysis_timestamp <= end,
-                              meas_AnalysisTable.analysis_timestamp >= start))
             if atype:
                 q = q.filter(gen_AnalysisTypeTable.name == atype)
             if labnumber:
@@ -127,6 +125,8 @@ class IsotopeAdapter(DatabaseAdapter):
             if extract_device:
                 q = q.filter(gen_ExtractionDeviceTable.name == extract_device)
 
+            q = q.filter(and_(meas_AnalysisTable.analysis_timestamp <= end,
+                              meas_AnalysisTable.analysis_timestamp >= start))
             if exclude_uuids:
                 q = q.filter(not_(meas_AnalysisTable.uuid.in_(exclude_uuids)))
 
@@ -138,24 +138,21 @@ class IsotopeAdapter(DatabaseAdapter):
 
     #def count_sample_analyses(self, *args, **kw):
     #    return self._get_sample_analyses('count', *args, **kw)
-    def get_labnumber_analyses(self, lns, limit=None, offset=None,
-                               include_invalid=False):
+    def get_labnumber_analyses(self, lns, **kw):
         if not hasattr(lns, '__iter__'):
             lns = (lns, )
         with self.session_ctx() as sess:
             q = sess.query(meas_AnalysisTable)
             q = q.join(gen_LabTable)
             q = q.filter(gen_LabTable.identifier.in_(lns))
-            return self._get_paginated_analyses(q, limit, offset, include_invalid)
+            return self._get_paginated_analyses(q, **kw)
 
-    def _get_paginated_analyses(self, q, limit, offset, include_invalid):
+    def _get_paginated_analyses(self, q, limit=None, offset=None,
+                                include_invalid=False):
         if not include_invalid:
             q = q.filter(meas_AnalysisTable.tag != 'invalid')
 
         q = q.order_by(meas_AnalysisTable.analysis_timestamp.asc())
-
-        if limit:
-            q = q.limit(limit)
 
         tc = int(q.count())
 
@@ -166,7 +163,7 @@ class IsotopeAdapter(DatabaseAdapter):
 
         return self._query_all(q), tc
 
-    def get_sample_analyses(self, samples, projects, *args, **kw):
+    def get_sample_analyses(self, samples, projects, **kw):
         if not isinstance(samples, (list, tuple)):
             samples = (samples,)
 

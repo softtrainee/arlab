@@ -18,24 +18,25 @@
 
 import unittest
 from src.processing.entry.labnumber_entry import LabnumberEntry
-from src.unittests.database import get_test_database
+from src.unittests.database import isotope_manager_factory
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class LabEntryTest(unittest.TestCase):
     def setUp(self):
-        db = get_test_database().db
+        db = isotope_manager_factory().db
         self.le = LabnumberEntry(db=db)
-#         self.le.irradiation = 'NM-251'
-#         self.le.level = 'H'
 
-#     def testNPositions(self):
-#         n = len(self.le.irradiated_positions)
-#         self.assertEqual(n, 12)
-#
-#     def testWrite(self):
-#         le = self.le
-#         le.make_table()
+    #         self.le.irradiation = 'NM-251'
+    #         self.le.level = 'H'
+
+    #     def testNPositions(self):
+    #         n = len(self.le.irradiated_positions)
+    #         self.assertEqual(n, 12)
+    #
+    #     def testWrite(self):
+    #         le = self.le
+    #         le.make_table()
 
     def testLoadFile(self):
         p = './data/irradiation_import.xls'

@@ -15,8 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int, Property
-from traitsui.api import View, Item
+from traits.api import Int, Property
 from traitsui.tabular_adapter import TabularAdapter
 from src.helpers.color_generators import colornames
 from src.helpers.formatting import floatfmt
@@ -31,13 +30,13 @@ class UnknownsAdapter(TabularAdapter):
                (u'\u00b11\u03c3', 'error'),
                ('Tag', 'tag')
     ]
-    
-    record_id_width=Int(80)
-    sample_width=Int(80)
-    age_width=Int(70)
-    error_width=Int(60)
-    tag_width=Int(50)
-    
+
+    record_id_width = Int(80)
+    sample_width = Int(80)
+    age_width = Int(70)
+    error_width = Int(60)
+    tag_width = Int(50)
+
     font = 'arial 12'
     #     record_id_text_color = Property
     #     tag_text_color = Property
@@ -55,20 +54,20 @@ class UnknownsAdapter(TabularAdapter):
     def _get_age_text(self):
         r = ''
         if not isinstance(self.item, IsotopeRecordView):
-            r = floatfmt(self.item.age.nominal_value, n=2)
+            r = floatfmt(self.item.age, n=2)
         return r
 
     def _get_error_text(self):
         r = ''
         if not isinstance(self.item, IsotopeRecordView):
-            r = floatfmt(self.item.age.std_dev, n=3)
+            r = floatfmt(self.item.age_err_wo_j, n=3)
         return r
 
     def get_text_color(self, obj, trait, row, column=0):
-        n=len(colornames)
-        gid=obj.items[row].group_id    
-        cid=gid%n
-    
+        n = len(colornames)
+        gid = obj.items[row].group_id
+        cid = gid % n
+
         return colornames[cid]
 
 #     def _get_record_id_text_color(self):

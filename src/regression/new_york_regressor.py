@@ -132,9 +132,17 @@ class YorkRegressor(OLSRegressor):
         a = self.intercept
         b = self.slope
         x = self.xs
-        y = self.xs
+        y = self.ys
+
         sx = self.xserr
         sy = self.yserr
+        #print a
+        #print b
+        #print x
+        #print y
+        #print sx
+        #print sy
+        #print '----'
         return calculate_mswd2(x, y, sx, sy, a, b)
 
 
@@ -257,8 +265,9 @@ class ReedYorkRegressor(YorkRegressor):
     #         '''
     #         self._degree = 2
     def _get_weights(self):
-        wx = self.xserr
-        wy = self.yserr
+        wx = self.xserr ** -2
+        wy = self.yserr ** -2
+
         return wx, wy
 
     def _calculate(self):

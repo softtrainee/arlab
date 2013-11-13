@@ -37,6 +37,7 @@ class IsotopeEvolutionEditor(GraphEditor):
     pickle_path = 'iso_fits'
     unpack_peaktime = True
     update_on_unknowns = False
+    calculate_age = False
 
     def _tool_default(self):
         t = IsoEvoFitSelector(auto_update=False)
@@ -44,7 +45,7 @@ class IsotopeEvolutionEditor(GraphEditor):
 
     def save(self):
         proc = self.processor
-        prog = proc.open_progress(n=len(self.unknowns) * 2)
+        prog = proc.open_progress(n=len(self.unknowns))
 
         db = proc.db
         for unk in self.unknowns:
@@ -53,12 +54,13 @@ class IsotopeEvolutionEditor(GraphEditor):
             meas_analysis = db.get_analysis_uuid(unk.uuid)
             self._save_fit(unk, meas_analysis)
 
-            prog.change_message('{} Saving ArAr age'.format(unk.record_id))
-            proc.save_arar(unk, meas_analysis)
+            #prog.change_message('{} Saving ArAr age'.format(unk.record_id))
+            #proc.save_arar(unk, meas_analysis)
+        prog.close()
 
     def save_fits(self, fits, filters):
         proc = self.processor
-        prog = proc.open_progress(n=len(self.unknowns) * 2)
+        prog = proc.open_progress(n=len(self.unknowns))
 
         db = proc.db
         for unk in self.unknowns:
@@ -67,15 +69,15 @@ class IsotopeEvolutionEditor(GraphEditor):
             meas_analysis = db.get_analysis_uuid(unk.uuid)
             self._save_fit_dict(unk, meas_analysis, fits, filters)
 
-            if unk.analysis_type in ('cocktail', 'unknown'):
-                msg = '{} Saving ArAr age'.format(unk.record_id)
-                prog.change_message(msg)
+            #if unk.analysis_type in ('cocktail', 'unknown'):
+            #msg = '{} Saving ArAr age'.format(unk.record_id)
+            #prog.change_message(msg)
 
-                #update arar table
-                proc.save_arar(unk, meas_analysis)
+            #update arar table
+            #proc.save_arar(unk, meas_analysis)
 
-            else:
-                prog.increment()
+            #else:
+            #    prog.increment()
 
 
     def _save_fit_dict(self, unk, meas_analysis, fits, filters):
@@ -86,10 +88,10 @@ class IsotopeEvolutionEditor(GraphEditor):
 
             get_iso = lambda: unk.isotopes[name]
             if name.endswith('bs'):
-                name = name[:-2]
-                get_iso = lambda: unk.isotopes[name].baseline
+                fname = name[:-2]
+                get_iso = lambda: unk.isotopes[fname].baseline
 
-            if name in unk.isotopes:
+            if fname in unk.isotopes:
                 iso = get_iso()
                 if 'if n' in fit:
                     fit = eval(fit, {'n': iso.n})
@@ -120,6 +122,7 @@ class IsotopeEvolutionEditor(GraphEditor):
 
     def _save_db_fit(self, unk, meas_analysis, fit_hist, name, fit, filter_dict):
         db = self.processor.db
+        print name
         if name.endswith('bs'):
             name = name[:-2]
             dbfit = unk.get_db_fit(name, meas_analysis, 'baseline')
@@ -135,10 +138,9 @@ class IsotopeEvolutionEditor(GraphEditor):
             iso.filter_outlier_iterations = filter_dict['n']
             iso.filter_outlier_std_devs = filter_dict['std_devs']
 
-        iso.fit = fit
-        v = iso.uvalue
-
         if dbfit != fit:
+            v = iso.uvalue
+            iso.fit = fit
             if fit_hist is None:
                 fit_hist = db.add_fit_history(meas_analysis, user=db.save_username)
 
@@ -156,8 +158,7 @@ class IsotopeEvolutionEditor(GraphEditor):
             db.add_fit(fit_hist, dbiso, fit=fit,
                        filter_outliers=iso.filter_outliers,
                        filter_outlier_iterations=iso.filter_outlier_iterations,
-                       filter_outlier_std_devs=iso.filter_outlier_std_devs
-            )
+                       filter_outlier_std_devs=iso.filter_outlier_std_devs)
             #update isotoperesults
             v, e = float(v.nominal_value), float(v.std_dev)
             db.add_isotope_result(dbiso, fit_hist,

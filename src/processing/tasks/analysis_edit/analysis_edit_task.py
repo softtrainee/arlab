@@ -80,10 +80,12 @@ class AnalysisEditTask(BaseBrowserTask):
                     if prog:
                         prog.change_message(msg)
 
+                    ais = list(ais)
                     ts = [get_datetime(ai.timestamp) for ai in ais]
-                    ms = ais[0].mass_spectrometer
-                    ed = ais[0].extract_device
-
+                    ref = ais[0]
+                    ms = ref.mass_spectrometer
+                    ed = ref.extract_device
+                    self.debug("{} {}".format(ms, ed))
                     for atype in ('blank_unknown', 'blank_air', 'blank_cocktail',
                                   'air', 'cocktail'):
                         self.debug('find {}'.format(atype))
@@ -94,7 +96,8 @@ class AnalysisEditTask(BaseBrowserTask):
                             ans = db.get_date_range_analyses(lpost, hpost,
                                                              atype=atype,
                                                              spectrometer=ms,
-                                                             extract_device=ed if atype == 'blank_unknown' else None)
+                                                             # extract_device=ed if atype == 'blank_unknown' else None
+                            )
 
                             self.debug('{} to {}. nanalyses={}'.format(lpost, hpost, len(ans) if ans else 0))
                             if ans:
@@ -116,7 +119,7 @@ class AnalysisEditTask(BaseBrowserTask):
 
         def func(rec):
         #             rec.load_isotopes()
-            rec.calculate_age()
+        #    rec.calculate_age()
             reditor = RecallEditor(analysis_view=rec.analysis_view)
             self.editor_area.add_editor(reditor)
 
@@ -486,13 +489,17 @@ class AnalysisEditTask(BaseBrowserTask):
     def _do_easy(self, func):
         ep = EasyParser()
         db = self.manager.db
-        with db.session_ctx():
-            func(db, ep)
-        self.information_dialog('Changes saved to the database')
+        with db.session_ctx() as sess:
+            ok = func(db, ep)
+            if not ok:
+                sess.rollback()
+
+        if ok:
+            self.information_dialog('Changes saved to the database')
 
 
 
-        #===============================================================================
+            #===============================================================================
 
 #
 #===============================================================================

@@ -57,10 +57,11 @@ class IsotopeDatabaseManager(Loggable):
             try:
                 self.bind_preferences()
             except AttributeError, e:
-                import traceback
-
-                traceback.print_exc()
-                self.debug('bind exception. {}'.format(e))
+                pass
+                #import traceback
+                #
+                #traceback.print_exc()
+                #self.debug('bind exception. {}'.format(e))
 
                 #         if connect and not self.db.connect(warn=warn):
         if connect:
@@ -115,10 +116,11 @@ class IsotopeDatabaseManager(Loggable):
 
         return filter(lambda x: not x.tag in exclude, ans)
 
-    def make_analysis(self, ai):
-        return self.make_analyses((ai,))[0]
+    def make_analysis(self, ai, **kw):
+        return self.make_analyses((ai,), **kw)[0]
 
-    def make_analyses(self, ans, calculate_age=False,
+    def make_analyses(self, ans, calculate_age=True,
+                      progress=None,
                       unpack=False,
                       exclude=None, **kw):
         if exclude:
@@ -146,9 +148,13 @@ class IsotopeDatabaseManager(Loggable):
                     no_db_ans = list(no_db_ans)
                     n = len(no_db_ans)
                     if n:
-                        progress = None
+                        #progress = None
                         if n > 1:
-                            progress = self._open_progress(n)
+                            if progress is not None:
+                                if progress.max < (n + progress.get_value()):
+                                    progress.increase_max(n)
+                            else:
+                                progress = self._open_progress(n)
 
                         for i, ai in enumerate(no_db_ans):
                             if progress:
@@ -161,6 +167,7 @@ class IsotopeDatabaseManager(Loggable):
 
                             a = self._analysis_factory(ai,
                                                        progress=progress,
+
                                                        calculate_age=calculate_age,
                                                        unpack=unpack,
                                                        **kw)
@@ -346,16 +353,17 @@ class IsotopeDatabaseManager(Loggable):
 
         ai = DBAnalysis(group_id=group_id,
                         graph_id=graph_id)
+
         if atype in ('unknown', 'cocktail'):
-            ai.sync_arar(meas_analysis)
+            #ai.sync_arar(meas_analysis)
 
             if calculate_age:
                 ai.sync(meas_analysis, unpack=True)
                 ai.calculate_age(force=True)
-            elif not ai.persisted_age:
-                ai.sync(meas_analysis, unpack=True)
-                ai.calculate_age()
-                self._add_arar(meas_analysis, ai)
+            #elif not ai.persisted_age:
+            #    ai.sync(meas_analysis, unpack=True)
+            #    ai.calculate_age()
+            #    self._add_arar(meas_analysis, ai)
             #elif calculate_age:
             #    ai.sync(meas_analysis, unpack=True)
             #    ai.calculate_age(force=True)

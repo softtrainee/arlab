@@ -23,6 +23,7 @@ from datetime import datetime
 from uncertainties import ufloat
 from collections import namedtuple
 #============= local library imports  ==========================
+from src.helpers.isotope_utils import extract_mass
 from src.processing.analyses.analysis_view import DBAnalysisView, AnalysisView
 from src.processing.arar_age import ArArAge
 from src.processing.analyses.summary import AnalysisSummary
@@ -31,7 +32,6 @@ from src.experiment.utilities.identifier import make_runid, make_aliquot_step
 from src.processing.isotope import Isotope, Blank, Baseline, Sniff
 from src.pychron_constants import ARGON_KEYS
 from src.helpers.formatting import calc_percent_error
-from src.regex import ISOREGEX
 
 Fit = namedtuple('Fit', 'fit filter_outliers filter_outlier_iterations filter_outlier_std_devs')
 
@@ -177,7 +177,17 @@ class DBAnalysis(Analysis):
     def init(self, meas_analysis):
         pass
 
+    def sync_irradiation(self, ln):
+        """
+            copy irradiation info starting with a labnumber dbrecord
+        """
+        self._sync_irradiation(ln)
+
+
     def sync_arar(self, meas_analysis):
+        self.debug('not using db arar')
+        return
+
         hist = meas_analysis.selected_histories.selected_arar
         if hist:
             result = hist.arar_result
@@ -194,6 +204,190 @@ class DBAnalysis(Analysis):
 
             d['age_err_wo_j'] = result.age_err_wo_j
             self.arar_result.update(d)
+
+    def _sync(self, meas_analysis, unpack=False):
+        '''
+            copy values from meas_AnalysisTable
+            and other associated tables
+        '''
+        # copy meas_analysis attrs
+        nocast = lambda x: x
+        attrs = [
+            ('labnumber', 'labnumber', lambda x: x.identifier),
+            ('aliquot', 'aliquot', int),
+            ('step', 'step', str),
+            #                  ('status', 'status', int),
+            ('comment', 'comment', str),
+            ('uuid', 'uuid', str),
+            ('rundate', 'analysis_timestamp', nocast),
+            ('timestamp', 'analysis_timestamp',
+             lambda x: time.mktime(x.timetuple())
+            ),
+        ]
+        for key, attr, cast in attrs:
+            v = getattr(meas_analysis, attr)
+            setattr(self, key, cast(v))
+
+        self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
+
+        tag = meas_analysis.tag
+        if tag:
+            tag = meas_analysis.tag_item
+            self.set_tag(tag)
+
+        #self.tag = tag or ''
+        #if self.tag:
+        #    self.temp_status = 1
+
+        # copy related table attrs
+        self._sync_irradiation(meas_analysis.labnumber)
+        self._sync_isotopes(meas_analysis, unpack)
+        self._sync_detector_info(meas_analysis)
+        self._sync_extraction(meas_analysis)
+        self._sync_analysis_info(meas_analysis)
+
+        self.analysis_type = self._get_analysis_type(meas_analysis)
+
+    def _sync_irradiation(self, ln):
+        """
+            copy irradiation info starting with a labnumber dbrecord
+        """
+        self._sync_j(ln)
+        pos = ln.irradiation_position
+        if pos:
+            level = pos.level
+            irrad = level.irradiation
+
+            self.irradiation_pos = str(pos.position)
+            self.irradiation_level = level.name
+            self.irradiation = irrad.name
+
+            self._sync_chron_segments(irrad)
+            self._sync_production_ratios(irrad)
+            self._sync_interference_corrections(irrad)
+
+    def _sync_j(self, ln):
+        s, e = 1, 0
+        if ln.selected_flux_history:
+            f = ln.selected_flux_history.flux
+            s = f.j
+            e = f.j_err
+
+        self.j = ufloat(s, e)
+
+    def _sync_production_ratios(self, irradiation):
+        pr = irradiation.production
+        cak, clk = pr.Ca_K, pr.Cl_K
+
+        self.production_ratios = dict(Ca_K=cak, Cl_K=clk)
+
+    def _sync_chron_segments(self, irradiation):
+        chron = irradiation.chronology
+
+        convert_days = lambda x: x.total_seconds() / (60. * 60 * 24)
+        if chron:
+            doses = chron.get_doses()
+            analts = self.timestamp
+            if isinstance(analts, float):
+                analts = datetime.fromtimestamp(analts)
+
+            segments = []
+            for st, en in doses:
+                if st is not None and en is not None:
+                    dur = en - st
+                    dt = analts - st
+                    #                             dt = 45
+                    segments.append((1, convert_days(dur), convert_days(dt)))
+
+            decay_time = 0
+            d_o = doses[0][0]
+            it = 0
+            if d_o is not None:
+                it = time.mktime(d_o.timetuple())
+
+                #decay_time = convert_days(analts - d_o)
+
+            #self.decay_time=decay_time
+            self.irradiation_time = it
+            self.chron_segments = segments
+
+    def _sync_interference_corrections(self, irradiation):
+        pr = irradiation.production
+        prs = dict()
+        for pk in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']:
+            v, e = getattr(pr, pk), getattr(pr, '{}_err'.format(pk))
+            if v is None:
+                v = 0
+            if e is None:
+                e = 0
+
+            prs[pk.lower()] = ufloat(v, e)
+
+        self.interference_corrections = prs
+
+    def _sync_extraction(self, meas_analysis):
+        extraction = meas_analysis.extraction
+        if extraction:
+            self.extract_device = self._get_extraction_device(extraction)
+            self.extract_value = extraction.extract_value
+
+            # add extract units to meas_ExtractionTable
+            #             eu = extraction.extract_units or 'W'
+            #             self.extract_units = eu
+            self.extract_units = 'W'
+
+            self.cleanup = extraction.cleanup_duration
+            self.duration = extraction.extract_duration
+            self.position = self._get_position(extraction)
+
+    def _sync_view(self, av=None):
+        if av is None:
+            av = self.analysis_view
+
+        av.analysis_type = self.analysis_type
+        av.analysis_id = self.record_id
+        av.load(self)
+
+    def _sync_analysis_info(self, meas_analysis):
+        self.sample = self._get_sample(meas_analysis)
+        self.material = self._get_material(meas_analysis)
+        self.project = self._get_project(meas_analysis)
+        self.mass_spectrometer = self._get_mass_spectrometer(meas_analysis)
+
+    def _sync_detector_info(self, meas_analysis):
+
+        #disc_idx=['Ar36','Ar37','Ar38','Ar39','Ar40']
+
+        #discrimination saved as 1amu disc not 4amu
+        discriminations = self._get_discriminations(meas_analysis)
+
+        self.ic_factors = self._get_ic_factors(meas_analysis)
+        for iso in self.isotopes.itervalues():
+            det = iso.detector
+            iso.ic_factor = self.get_ic_factor(det)
+
+            idisc = ufloat(1, 1e-20)
+            if iso.detector in discriminations:
+                mass = extract_mass(iso.name)
+
+                disc, refmass = discriminations[det]
+                n = mass - refmass
+
+                #calculate discrimination
+                idisc = disc ** n
+
+            iso.discrimination = idisc
+
+
+    def _sync_isotopes(self, meas_analysis, unpack):
+        #self.isotopes=timethis(self._get_isotopes, args=(meas_analysis,),
+        #kwargs={'unpack':True},msg='sync-isotopes')
+        self.isotopes = self._get_isotopes(meas_analysis,
+                                           unpack=unpack)
+        self.isotope_fits = self._get_isotope_fits()
+
+        self.peak_center = self._get_peak_center(meas_analysis)
+
 
     def _get_isotope_dict(self, get):
         d = dict()
@@ -242,113 +436,6 @@ class DBAnalysis(Analysis):
             r = ','.join(map(str, pp))
 
         return r
-
-    def _sync_extraction(self, meas_analysis):
-        extraction = meas_analysis.extraction
-        if extraction:
-            self.extract_device = self._get_extraction_device(extraction)
-            self.extract_value = extraction.extract_value
-
-            # add extract units to meas_ExtractionTable
-            #             eu = extraction.extract_units or 'W'
-            #             self.extract_units = eu
-            self.extract_units = 'W'
-
-            self.cleanup = extraction.cleanup_duration
-            self.duration = extraction.extract_duration
-            self.position = self._get_position(extraction)
-
-
-    def _sync(self, meas_analysis, unpack=False):
-        '''
-            copy values from meas_AnalysisTable
-            and other associated tables
-        '''
-        # copy meas_analysis attrs
-        nocast = lambda x: x
-        attrs = [
-            ('labnumber', 'labnumber', lambda x: x.identifier),
-            ('aliquot', 'aliquot', int),
-            ('step', 'step', str),
-            #                  ('status', 'status', int),
-            ('comment', 'comment', str),
-            ('uuid', 'uuid', str),
-            ('rundate', 'analysis_timestamp', nocast),
-            ('timestamp', 'analysis_timestamp',
-             lambda x: time.mktime(x.timetuple())
-            ),
-        ]
-        for key, attr, cast in attrs:
-            v = getattr(meas_analysis, attr)
-            setattr(self, key, cast(v))
-
-        self.record_id = make_runid(self.labnumber, self.aliquot, self.step)
-
-        tag = meas_analysis.tag
-        if tag:
-            tag = meas_analysis.tag_item
-            self.set_tag(tag)
-
-        #self.tag = tag or ''
-        #if self.tag:
-        #    self.temp_status = 1
-
-        # copy related table attrs
-
-
-        self._sync_irradiation(meas_analysis)
-        self._sync_isotopes(meas_analysis, unpack)
-        self._sync_detector_info(meas_analysis)
-        self._sync_extraction(meas_analysis)
-        self._sync_analysis_info(meas_analysis)
-
-        self.analysis_type = self._get_analysis_type(meas_analysis)
-
-    def _sync_view(self, av=None):
-        if av is None:
-            av = self.analysis_view
-
-        av.analysis_type = self.analysis_type
-        av.analysis_id = self.record_id
-        av.load(self)
-
-    def _sync_analysis_info(self, meas_analysis):
-        self.sample = self._get_sample(meas_analysis)
-        self.material = self._get_material(meas_analysis)
-        self.project = self._get_project(meas_analysis)
-        #self.rundate = self._get_rundate(meas_analysis)
-        #self.runtime = self._get_runtime(meas_analysis)
-        self.mass_spectrometer = self._get_mass_spectrometer(meas_analysis)
-
-    def _sync_detector_info(self, meas_analysis):
-        self.discrimination = self._get_discrimination(meas_analysis)
-        self.ic_factors = self._get_ic_factors(meas_analysis)
-        for iso in self.isotopes.itervalues():
-            iso.ic_factor = self.get_ic_factor(iso.detector).nominal_value
-
-    def _sync_irradiation(self, meas_analysis):
-        ln = meas_analysis.labnumber
-        self.irradiation_info = self._get_irradiation_info(ln)
-
-        dbpos = ln.irradiation_position
-        if dbpos:
-            pos = dbpos.position
-            irrad = dbpos.level.irradiation.name
-            level = dbpos.level.name
-            self.irradiation_str = '{} {}{}'.format(irrad, level, pos)
-
-        self.j = self._get_j(ln)
-        self.production_ratios = self._get_production_ratios(ln)
-
-    def _sync_isotopes(self, meas_analysis, unpack):
-
-    #self.isotopes=timethis(self._get_isotopes, args=(meas_analysis,),
-    #kwargs={'unpack':True},msg='sync-isotopes')
-        self.isotopes = self._get_isotopes(meas_analysis,
-                                           unpack=unpack)
-        self.isotope_fits = self._get_isotope_fits()
-
-        self.peak_center = self._get_peak_center(meas_analysis)
 
     def _get_baselines(self, isotopes, meas_analysis, unpack):
         for dbiso in meas_analysis.isotopes:
@@ -419,7 +506,6 @@ class DBAnalysis(Analysis):
                     if not keys:
                         break
 
-
     def _get_signals(self, isodict, meas_analysis, unpack):
         for iso in meas_analysis.isotopes:
             if not iso.kind == 'signal' or not iso.molecular_weight:
@@ -450,7 +536,7 @@ class DBAnalysis(Analysis):
                     fit = self.get_db_fit(meas_analysis, name, 'signal')
 
                     if fit is None:
-                        fit = Fit(fit='linear', filter_outliers=True,
+                        fit = Fit(fit='linear', filter_outliers=False,
                                   filter_outlier_iterations=1,
                                   filter_outlier_std_devs=2)
                     r.set_fit(fit)
@@ -465,9 +551,6 @@ class DBAnalysis(Analysis):
             r = extraction.extraction_device.name
         return r
 
-    #===============================================================================
-    #
-    #===============================================================================
     def _get_analysis_type(self, meas_analysis):
         r = ''
         if meas_analysis:
@@ -477,8 +560,18 @@ class DBAnalysis(Analysis):
     def _get_mass_spectrometer(self, meas_analysis):
         return meas_analysis.measurement.mass_spectrometer.name.lower()
 
-    def _get_discrimination(self, meas_analysis):
-        return ufloat(1, 0)
+    def _get_discriminations(self, meas_analysis):
+        """
+            discriminations should be saved as 1amu not 4amu
+        """
+        selected_hist = meas_analysis.selected_histories.selected_detector_param
+        d = dict()
+        if selected_hist:
+            for dp in selected_hist.detector_params:
+                d[dp.detector.name] = (ufloat(dp.disc, dp.disc_error), dp.refmass)
+                #dp=selected_hist.detector_param
+                #return ufloat(dp.disc, dp.disc_error)
+        return d
 
     def _get_sample(self, meas_analysis):
         ln = meas_analysis.labnumber
@@ -511,111 +604,6 @@ class DBAnalysis(Analysis):
         if meas_analysis.analysis_timestamp:
             ti = meas_analysis.analysis_timestamp.time()
             return ti.strftime('%H:%M:%S')
-            #===============================================================================
-            # irradiation
-            #===============================================================================
-
-    def _get_timestamp(self, ln):
-        ts = self.timestamp
-        if not ts:
-            ts = ArArAge._get_timestamp(self, ln)
-        return ts
-
-
-    def _get_j(self, ln):
-        s, e = 1, 0
-        if ln.selected_flux_history:
-            f = ln.selected_flux_history.flux
-            s = f.j
-            e = f.j_err
-        return ufloat(s, e)
-
-    def _get_production_ratios(self, ln):
-        lev = self._get_irradiation_level(ln)
-        cak = 1
-        clk = 1
-        if lev:
-            ir = lev.irradiation
-            pr = ir.production
-            cak, clk = pr.Ca_K, pr.Cl_K
-
-        return dict(Ca_K=cak, Cl_K=clk)
-
-    def _get_irradiation_level(self, ln):
-        if ln:
-            pos = ln.irradiation_position
-            if pos:
-                self.irradiation_pos = str(pos.position)
-                return pos.level
-
-
-    def _get_irradiation_info(self, ln):
-        '''
-            return k4039, k3839,k3739, ca3937, ca3837, ca3637, cl3638, chronsegments, decay_time
-        '''
-        prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), [], 1
-        irradiation_level = self._get_irradiation_level(ln)
-        if irradiation_level:
-            irradiation = irradiation_level.irradiation
-            if irradiation:
-                self.irradiation = irradiation.name
-                self.irradiation_level = irradiation_level.name
-
-                pr = irradiation.production
-                if pr:
-                    prs = []
-                    for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']:
-                        v, e = getattr(pr, pi), getattr(pr, '{}_err'.format(pi))
-                        prs.append((v if v is not None else 1, e if e is not None else 0))
-
-                        #                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
-                        #                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
-
-                chron = irradiation.chronology
-                #                def convert_datetime(x):
-                #                    try:
-                #                        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-                #                    except ValueError:
-                #                        pass
-                #                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
-
-                convert_days = lambda x: x.total_seconds() / (60. * 60 * 24)
-                if chron:
-                    doses = chron.get_doses()
-                    #                    chronblob = chron.chronology
-                    #
-                    #                    doses = chronblob.split('$')
-                    #                    doses = [di.strip().split('%') for di in doses]
-                    #
-                    #                    doses = [map(convert_datetime, d) for d in doses if d]
-
-                    analts = self.timestamp
-                    #                     print analts
-                    if isinstance(analts, float):
-                        analts = datetime.fromtimestamp(analts)
-
-                    segments = []
-                    for st, en in doses:
-                        if st is not None and en is not None:
-                            dur = en - st
-                            dt = analts - st
-                            #                             dt = 45
-                            segments.append((1, convert_days(dur), convert_days(dt)))
-                            #                             segments.append((1, convert_days(dur), dt))
-
-                    decay_time = 0
-                    d_o = doses[0][0]
-                    if d_o is not None:
-                        decay_time = convert_days(analts - d_o)
-
-                    #                    segments = [(1, convert_days(ti)) for ti in durs]
-                    prs.append(segments)
-                    prs.append(decay_time)
-                    #                     prs.append(45)
-
-                    #         print 'aasfaf', ln, prs
-
-        return prs
 
     def _get_age_string(self):
 
@@ -634,26 +622,141 @@ class DBAnalysis(Analysis):
 
         return r
 
-    def __getattr__(self, attr):
-        lattr = attr.lower()
-        #         print attr, ISOREGEX.match(attr)
-        #         if ISOREGEX.match(attr):
-        if '/' in attr:
-            #treat as ratio
-            n, d = attr.split('/')
-            return getattr(self, n) / getattr(self, d)
-
-        if lattr in ('ar40', 'ar39', 'ar38', 'ar37', 'ar36'):
-            return getattr(self, attr.capitalize())
-
-        if ISOREGEX.match(attr):
-            if attr in self.isotopes:
-                return self.isotopes[attr].uvalue
-
-        self.debug('no attribute {}'.format(attr))
-        raise AttributeError
+        #def __getattr__(self, attr):
+        #    lattr = attr.lower()
+        #    #         print attr, ISOREGEX.match(attr)
+        #    #         if ISOREGEX.match(attr):
+        #    if '/' in attr:
+        #        #treat as ratio
+        #        n, d = attr.split('/')
+        #        return getattr(self, n) / getattr(self, d)
+        #
+        #    if lattr in ('ar40', 'ar39', 'ar38', 'ar37', 'ar36'):
+        #        return getattr(self, attr.capitalize())
+        #
+        #    if ISOREGEX.match(attr):
+        #        if attr in self.isotopes:
+        #            return self.isotopes[attr].uvalue
+        #
+        #    self.debug('no attribute {}'.format(attr))
+        #    raise AttributeError
 
 
 if __name__ == '__main__':
     pass
-#============= EOF =============================================
+    #============= EOF =============================================
+    #def _sync_irradiation(self, meas_analysis):
+    #    ln = meas_analysis.labnumber
+    #    self.irradiation_info = self._get_irradiation_info(ln)
+    #
+    #    dbpos = ln.irradiation_position
+    #    if dbpos:
+    #        pos = dbpos.position
+    #        irrad = dbpos.level.irradiation.name
+    #        level = dbpos.level.name
+    #        self.irradiation_str = '{} {}{}'.format(irrad, level, pos)
+    #
+    #    self.j = self._get_j(ln)
+    #    self.production_ratios = self._get_production_ratios(ln)
+
+    #    def _load_timestamp(self, ln):
+    #        ts = self.timestamp
+    #        if not ts:
+    #            ts = ArArAge._load_timestamp(self, ln)
+    #        return ts
+    #
+    #
+    #    def _get_j(self, ln):
+    #        s, e = 1, 0
+    #        if ln.selected_flux_history:
+    #            f = ln.selected_flux_history.flux
+    #            s = f.j
+    #            e = f.j_err
+    #        return ufloat(s, e)
+    #
+    #    def _get_production_ratios(self, ln):
+    #        lev = self._get_irradiation_level(ln)
+    #        cak = 1
+    #        clk = 1
+    #        if lev:
+    #            ir = lev.irradiation
+    #            pr = ir.production
+    #            cak, clk = pr.Ca_K, pr.Cl_K
+    #
+    #        return dict(Ca_K=cak, Cl_K=clk)
+    #
+    #    def _get_irradiation_level(self, ln):
+    #        if ln:
+    #            pos = ln.irradiation_position
+    #            if pos:
+    #                self.irradiation_pos = str(pos.position)
+    #                return pos.level
+    #
+    #
+    #    def _get_irradiation_info(self, ln):
+    #        '''
+    #            return k4039, k3839,k3739, ca3937, ca3837, ca3637, cl3638, chronsegments, decay_time
+    #        '''
+    #        prs = (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), (1, 0), [], 1
+    #        irradiation_level = self._get_irradiation_level(ln)
+    #        if irradiation_level:
+    #            irradiation = irradiation_level.irradiation
+    #            if irradiation:
+    #                self.irradiation = irradiation.name
+    #                self.irradiation_level = irradiation_level.name
+    #
+    #                pr = irradiation.production
+    #                if pr:
+    #                    prs = []
+    #                    for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']:
+    #                        v, e = getattr(pr, pi), getattr(pr, '{}_err'.format(pi))
+    #                        prs.append((v if v is not None else 1, e if e is not None else 0))
+    #
+    #                        #                    prs = [(getattr(pr, pi), getattr(pr, '{}_err'.format(pi)))
+    #                        #                           for pi in ['K4039', 'K3839', 'K3739', 'Ca3937', 'Ca3837', 'Ca3637', 'Cl3638']]
+    #
+    #                chron = irradiation.chronology
+    #                #                def convert_datetime(x):
+    #                #                    try:
+    #                #                        return datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+    #                #                    except ValueError:
+    #                #                        pass
+    #                #                convert_datetime = lambda x:datetime.datetime.strptime(x, '%Y-%m-%d %H:%M:%S')
+    #
+    #                convert_days = lambda x: x.total_seconds() / (60. * 60 * 24)
+    #                if chron:
+    #                    doses = chron.get_doses()
+    #                    #                    chronblob = chron.chronology
+    #                    #
+    #                    #                    doses = chronblob.split('$')
+    #                    #                    doses = [di.strip().split('%') for di in doses]
+    #                    #
+    #                    #                    doses = [map(convert_datetime, d) for d in doses if d]
+    #
+    #                    analts = self.timestamp
+    #                    #                     print analts
+    #                    if isinstance(analts, float):
+    #                        analts = datetime.fromtimestamp(analts)
+    #
+    #                    segments = []
+    #                    for st, en in doses:
+    #                        if st is not None and en is not None:
+    #                            dur = en - st
+    #                            dt = analts - st
+    #                            #                             dt = 45
+    #                            segments.append((1, convert_days(dur), convert_days(dt)))
+    #                            #                             segments.append((1, convert_days(dur), dt))
+    #
+    #                    decay_time = 0
+    #                    d_o = doses[0][0]
+    #                    if d_o is not None:
+    #                        decay_time = convert_days(analts - d_o)
+    #
+    #                    #                    segments = [(1, convert_days(ti)) for ti in durs]
+    #                    prs.append(segments)
+    #                    prs.append(decay_time)
+    #                    #                     prs.append(45)
+    #
+    #                    #         print 'aasfaf', ln, prs
+    #
+    #        return prs

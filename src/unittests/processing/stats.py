@@ -25,6 +25,7 @@ class MSWDTestCase(unittest.TestCase):
         #a=self.a
         #b=self.b
         x, y, wx, wy = pearson()
+
         b = -0.4807
         a = 5.4806
 
