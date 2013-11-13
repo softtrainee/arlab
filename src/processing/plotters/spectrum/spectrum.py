@@ -226,10 +226,10 @@ class Spectrum(BaseArArFigure):
 
         # provide 1s errors
         platbounds = find_plateaus(ages, errors, k39s, overlap_sigma=2, exclude=exclude)
-        n=0
-        if platbounds:
+        n = 0
+        if platbounds is not None and len(platbounds):
             n = platbounds[1] - platbounds[0] + 1
-        
+
         if n > 1:
             ans = []
 

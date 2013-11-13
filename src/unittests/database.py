@@ -16,26 +16,27 @@
 
 #============= enthought library imports =======================
 from traits.etsconfig.etsconfig import ETSConfig
+
 ETSConfig.toolkit = 'qt4'
-from traits.api import HasTraits
-from traitsui.api import View, Item
 #============= standard library imports ========================
 #============= local library imports  ==========================
 import unittest
 from src.database.isotope_database_manager import IsotopeDatabaseManager
 
-def get_test_database():
+
+def isotope_manager_factory(name='isotopedb_dev'):
     man = IsotopeDatabaseManager(connect=False)
     man.db.kind = 'mysql'
-    man.db.name = 'isotopedb_dev'
+    man.db.name = name
     man.db.password = 'Argon'
     man.db.username = 'root'
     man.db.host = 'localhost'
     return man
 
+
 class IsotopeTestCase(unittest.TestCase):
     def setUp(self):
-        self.isotope_database_manager = get_test_database()
+        self.isotope_database_manager = isotope_manager_factory()
 
     def testUrl(self):
         man = self.isotope_database_manager

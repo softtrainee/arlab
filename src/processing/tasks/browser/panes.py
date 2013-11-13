@@ -45,7 +45,7 @@ class AnalysisAdapter(BrowserAdapter):
                #('Flux', 'flux_fit_status')
     ]
 
-    record_id_width = Int(65)
+    record_id_width = Int(100)
     tag_width = Int(65)
     odd_bg_color = 'lightgray'
     font = 'arial 10'

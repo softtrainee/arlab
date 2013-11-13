@@ -26,19 +26,25 @@ class ColumnSorterMixin(HasTraits):
 
     def _column_clicked_changed(self, event):
         values = event.editor.value
-        field = event.editor.adapter.columns[event.column][1]
+        name, field = event.editor.adapter.columns[event.column]
         self._reverse_sort = not self._reverse_sort
 
-        self._sort_columns(values, field)
+        self._sort_columns(values, name, field)
 
-    def _sort_columns(self, values, field=None):
+    def _sort_columns(self, values, name='', field=None):
         # get the field to sort on
         if field is None:
             field = self._sort_field
             if field is None:
                 return
 
-        values.sort(key=lambda x: getattr(x, field),
+        skey = '_{}_{}_sort_key'.format(name.lower(), field.lower())
+        if hasattr(self, skey):
+            key = getattr(self, skey)
+        else:
+            key = lambda x: getattr(x, field)
+
+        values.sort(key=key,
                     reverse=self._reverse_sort)
         self._sort_field = field
 

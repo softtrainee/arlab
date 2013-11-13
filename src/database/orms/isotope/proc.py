@@ -170,9 +170,8 @@ class proc_DetectorIntercalibrationSetTable(Base, BaseMixin):
 
 
 class proc_DetectorParamHistoryTable(Base, HistoryMixin):
-    detector_param = relationship('proc_DetectorParamTable',
-                                  backref='history',
-                                  uselist=False)
+    detector_params = relationship('proc_DetectorParamTable',
+                                   backref='history')
 
     selected = relationship('proc_SelectedHistoriesTable',
                             backref='selected_detector_param',
@@ -184,6 +183,9 @@ class proc_DetectorParamTable(Base, BaseMixin):
     disc = Column(Float)
     disc_error = Column(Float)
     detector_id = foreignkey('gen_DetectorTable')
+
+    #@todo: add refmass to detector param table
+    refmass = 36
 
 #     selected = relationship('proc_SelectedHistoriesTable',
 #                             backref='selected_detector_param',

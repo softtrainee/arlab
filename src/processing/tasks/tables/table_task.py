@@ -244,7 +244,7 @@ class TableTask(BaseBrowserTask):
             ans = self.manager.make_analyses(ans)
 
             ref = ans[0]
-            irrad_str = ref.irradiation_str
+            irrad_str = ref.irradiation_label
 
             klass = StepHeatingSummary if ref.step else FusionSummary
             ss = klass(

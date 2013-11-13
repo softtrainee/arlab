@@ -15,6 +15,7 @@
 #===============================================================================
 
 #============= enthought library imports =======================
+import re
 from traits.api import List, Str, Bool, Any, Enum, Button, Int
 #============= standard library imports ========================
 from datetime import timedelta, datetime
@@ -67,6 +68,15 @@ class BrowserMixin(ColumnSorterMixin):
 
     #    recent_hours = Int#(48)
     search_criteria = Instance(SearchCriteria, ())
+
+    #column sort mixin interface
+    def _sample_name_sort_key(self, v):
+        v = v.name
+        args = re.split('\D', v)
+        if args:
+            v = [ai for ai in args if ai]
+
+        return v
 
     def set_projects(self, ps, sel):
         self.oprojects = ps
@@ -178,8 +188,7 @@ class BrowserMixin(ColumnSorterMixin):
                      '>': '__gt__',
                      '<=': '__le__',
                      '>=': '__ge__',
-                     'not =': '__ne__'
-        }
+                     'not =': '__ne__'}
         if comp:
             if comp in comp_keys:
                 comp_key = comp_keys[comp]

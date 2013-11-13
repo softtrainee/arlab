@@ -184,6 +184,8 @@ class PlotEditor(HasTraits):
     xauto = Bool
     yauto = Bool
 
+    auto_xpad = Float(0.1)
+
     padding_left = EInt
     padding_right = EInt
     padding_top = EInt
@@ -196,6 +198,7 @@ class PlotEditor(HasTraits):
     selected_renderer_name = Str
     selected_renderer = Instance('RendererEditor')
     renderer_names = List
+
 
     def _selected_renderer_name_changed(self):
         self.selected_renderer = self._get_selected_renderer()
@@ -253,7 +256,13 @@ class PlotEditor(HasTraits):
                 #                renderer=r))
 
         #self.renderers = rs
-        rs = sorted(rs, key=lambda x: int(x.split('-')[1]))
+        def pred(x):
+            if '-' in x:
+                return int(x.split('-')[1])
+            else:
+                return x
+
+        rs = sorted(rs, key=pred)
         self.renderer_names = rs
         if rs:
             self.selected_renderer_name = rs[0]
@@ -307,7 +316,7 @@ class PlotEditor(HasTraits):
     def _xauto_changed(self):
         if self.xauto:
             #p = self.plot
-            dd = [a.age for a in self.analyses]
+            dd = [a.uage for a in self.analyses]
 
             mid = [di.nominal_value - di.std_dev for di in dd]
             mad = [di.nominal_value + di.std_dev for di in dd]
@@ -315,7 +324,7 @@ class PlotEditor(HasTraits):
             #mad=[di.nominal_value for di in dd]
             mi, ma = min(mid), max(mad)
 
-            p = 0.05 * (ma - mi)
+            p = self.auto_xpad * (ma - mi)
             self.xmin = mi - p
             self.xmax = ma + p
 

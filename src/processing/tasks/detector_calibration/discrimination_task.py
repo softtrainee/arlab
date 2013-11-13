@@ -42,6 +42,11 @@ class DiscrimintationTask(InterpolationTask):
 
         prog = self.manager.open_progress(len(ans) + 1)
         for ai in ans:
+            if prog.canceled:
+                return
+            elif prog.accepted:
+                break
+
             rid = '{}-{:02n}{}'.format(ai.labnumber.identifier, ai.aliquot, ai.step)
             prog.change_message('Setting discrimination={} +/-{} detector={} analysis={}'.format(disc, disc_err,
                                                                                                  det, rid))
@@ -53,7 +58,12 @@ class DiscrimintationTask(InterpolationTask):
                                       disc_error=disc_err)
 
             ai.selected_histories.selected_detector_param = history
+
+            #an=self.manager.make_analysis(ai, calculate_age=True)
+            #self.manager.save_arar(an, ai)
+
         prog.increment()
+        return True
 
         #def _default_layout_default(self):
         #    return TaskLayout(

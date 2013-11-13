@@ -23,5 +23,6 @@ from src.processing.plotters.figure_panel import FigurePanel
 #============= local library imports  ==========================
 class IdeogramPanel(FigurePanel):
     _figure_klass = Ideogram
-    _index_attr = 'age'
+    _index_attr = 'uage'
+
 #============= EOF =============================================

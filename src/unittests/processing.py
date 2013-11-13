@@ -15,22 +15,20 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
 import unittest
 from itertools import groupby
 from src.processing.selection.data_selector import FileSelector
 from src.processing.processor import Processor
-from src.unittests.database import get_test_database
+from src.unittests.database import isotope_manager_factory
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class AutoFigureTest(unittest.TestCase):
     def setUp(self):
-        man = get_test_database()
+        man = isotope_manager_factory()
         self.processor = Processor(bind=False,
                                    db=man.db
-                                   )
+        )
 
     def testGetBlanks(self):
         ans = self.processor.load_series('blank_unknown',
@@ -57,6 +55,7 @@ class FileSelectorTest(unittest.TestCase):
         fs = FileSelector()
         fs.open_file(self.path)
         self.fs = fs
+
     def testNRuns(self):
         n = len(self.fs.records)
         self.assertEqual(n, 20)
@@ -74,50 +73,51 @@ class FileSelectorTest(unittest.TestCase):
     def testAge(self):
         fs = self.fs
         for idx, v in (
-                       (0, 27.4394071696971),
-                       (9, 27.7518808469669),
-                       (19, 27.2141624504905)
-                       ):
+            (0, 27.4394071696971),
+            (9, 27.7518808469669),
+            (19, 27.2141624504905)
+        ):
             self.assertAlmostEqual(fs.records[idx].age.nominal_value,
-                             v,
-                             places=7
-                            )
+                                   v,
+                                   places=7
+            )
+
     def testAgeError(self):
         fs = self.fs
         for idx, v in (
-                       (0, 0.758322715007161),
-                        (9, 0.655152263100337),
-                        (19, 0.397634647177263)
-                       ):
+            (0, 0.758322715007161),
+            (9, 0.655152263100337),
+            (19, 0.397634647177263)
+        ):
             self.assertAlmostEqual(fs.records[idx].age.std_dev,
                                    v,
                                    places=7)
+
     def testStatus(self):
         fs = self.fs
         for idx, v in ((0, 1),
-#                        (1, 0)
-                       ):
+                       #                        (1, 0)
+        ):
             self.assertEqual(fs.records[idx].status,
                              v
-                             )
+            )
 
     def testRecordID(self):
         fs = self.fs
         for idx, v in (
-                       (0, '10000-01'),
-                       (1, '10000-02'),
-                       (9, '10000-10'),
+            (0, '10000-01'),
+            (1, '10000-02'),
+            (9, '10000-10'),
 
-                       (10, '10010-01'),
-                       (11, '10011-01'),
+            (10, '10010-01'),
+            (11, '10011-01'),
 
-                       (16, '10002-02B'),
-                       (19, '10002-02E'),
+            (16, '10002-02B'),
+            (19, '10002-02E'),
 
-                       ):
+        ):
             self.assertEqual(fs.records[idx].record_id,
                              v)
-
 
 
 #============= EOF =============================================

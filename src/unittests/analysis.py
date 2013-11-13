@@ -18,26 +18,25 @@
 #============= standard library imports ========================
 import unittest
 #============= local library imports  ==========================
-from src.unittests.database import get_test_database
+from src.unittests.database import isotope_manager_factory
 from src.codetools.simple_timeit import timethis
 
 
 class AnalysisTest(unittest.TestCase):
     def setUp(self):
-        self.manager = get_test_database()
+        self.manager = isotope_manager_factory()
         self.manager.db.connect()
 
     def testMakeAnalysis(self):
-#         ai = self.manager.db.get_analyses(18)
+    #         ai = self.manager.db.get_analyses(18)
         ln = self.manager.db.get_labnumber('61311')
 
         aa = timethis(self.manager.make_analyses, args=(ln.analyses,))
         timethis(self.manager.load_analyses, args=(aa,),
-                 kwargs={'open_progress':False})
+                 kwargs={'open_progress': False})
         na = aa[0]
-#         timethis(na.load_isotopes)
+        #         timethis(na.load_isotopes)
         self.assertEqual(na.labnumber, '61311')
-
 
 
 #============= EOF =============================================

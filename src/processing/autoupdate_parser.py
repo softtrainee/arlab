@@ -15,11 +15,12 @@
 #===============================================================================
 
 #=============enthought library imports=======================
-# from traits.api import HasTraits
+from traits.api import HasTraits, List, Dict
 # from traitsui.api import View, Item
 
 #============= standard library imports ========================
 import csv
+from src.loggable import Loggable
 from src.pychron_constants import ARGON_KEYS, IRRADIATION_KEYS, DECAY_KEYS
 #============= local library imports  ==========================
 # from src.stats import calculate_mswd, calculate_weighted_mean
@@ -31,39 +32,39 @@ from src.pychron_constants import ARGON_KEYS, IRRADIATION_KEYS, DECAY_KEYS
 #            n -= 1
 #        return '{:0.{}f}'.format(f, n)
 
-class Sample(object):
-    analyses = None
+class Analysis(HasTraits):
+    _params = Dict
+
+    def __init__(self, p, *args, **kw):
+        self._params = p
+        super(Analysis, self).__init__(*args, **kw)
+
+    def __getattr__(self, item):
+        return self._params[item]
+
+
+class Sample(HasTraits):
+    analyses = List
     #    info = None
     def __init__(self, name):
         self.name = name
         self.analyses = []
 
-    def add_analysis(self, params, factory):
-        a = factory(params)
+    def add_analysis(self, a):
         self.analyses.append(a)
 
 
-class AutoupdateParser(object):
-    def _get_value(self, key, header, line, cast=float, default=None):
-        try:
-            v = line[header.index(key)]
-            if cast:
-                v = cast(v)
+class AutoupdateParser(Loggable):
+    samples = Dict
 
-        except IndexError:
-            v = default
-
-        return v
-
-    def parse(self, p, factory):
+    def parse(self, p):
         with open(p, 'U') as f:
             reader = csv.reader(f, delimiter='\t')
 
             header = reader.next()
 
             sampleObj = None
-            samples = []
-            print header
+            samples = dict()
             sample_group = 0
             #            sample_idx = header.index('Sample')
             for line in reader:
@@ -75,7 +76,8 @@ class AutoupdateParser(object):
 
                 if sampleObj is None or sampleObj.name != sample:
                     sampleObj = Sample(sample)
-                    samples.append(sampleObj)
+                    samples[sample] = sampleObj
+                    #samples.append(sampleObj)
                     sample_group += 1
 
                 params = dict()
@@ -99,11 +101,26 @@ class AutoupdateParser(object):
                 params['rad40'] = get_value('Ar40Rad_Over_Ar39')
                 params['rad40_err'] = get_value('Ar40Rad_Over_Ar39_Er')
 
+                params['Isoch_39_40'] = get_value('Isoch_39_Over_40')
+                params['Isoch_36_40'] = get_value('Isoch_36_Over_40')
+                params['Isoch_39_40err'] = get_value('Pct_i39_Over_40_Er')
+                params['Isoch_36_40err'] = get_value('Pct_i36_Over_40_Er')
+
                 for si in ARGON_KEYS:
                     params[si] = get_value('{}_'.format(si))
+                    bs_only = '{}_BslnCorOnly'.format(si)
                     params['{}Er'.format(si)] = get_value('{}_Er'.format(si))
-                    params['{}_blank'.format(si)] = get_value('{}_Bkgd'.format(si))
-                    params['{}_blankerr'.format(si)] = get_value('{}_BkgdEr'.format(si))
+                    params[bs_only] = get_value(bs_only)
+
+                    btag = '{}_Bkgd'.format(si)
+                    betag = '{}_BkgdEr'.format(si)
+                    params[btag] = get_value(btag)
+                    params[betag] = get_value(betag)
+
+                    ctag = '{}_DecayCor'.format(si)
+                    cetag = '{}_DecayCor'.format(si)
+                    params[ctag] = get_value(ctag)
+                    params[cetag] = get_value(cetag)
 
                 for attr, key in DECAY_KEYS:
                     params[attr] = float(get_value(key))
@@ -112,9 +129,19 @@ class AutoupdateParser(object):
                     params[attr] = get_value(key)
                     params['{}_err'.format(attr)] = get_value('{}_Er'.format(key))
 
-                sampleObj.add_analysis(params, factory)
+                sampleObj.add_analysis(Analysis(params))
 
-            return samples
+            self.samples = samples
+
+    def _get_value(self, key, header, line, cast=float, default=None):
+        try:
+            v = line[header.index(key)]
+            if cast:
+                v = cast(v)
+        except IndexError:
+            v = default
+
+        return v
 
 
 if __name__ == '__main__':

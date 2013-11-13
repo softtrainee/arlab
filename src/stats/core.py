@@ -91,6 +91,9 @@ def chi_squared(x, y, sx, sy, a, b):
         chi2=Sum((y_i-(a+b*x_i)^2*W_i)
         where W_i=1/(sy_i^2+(b*sx_i)^2)
 
+        a: y intercept
+        b: slope
+
     """
     x = asarray(x)
     y = asarray(y)

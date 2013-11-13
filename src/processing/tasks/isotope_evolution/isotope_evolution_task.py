@@ -199,14 +199,14 @@ class IsotopeEvolutionTask(AnalysisEditTask):
         self.active_editor.unknowns = [ai for proj in projects
                                        for si in db.get_samples(project=proj)
                                        for ln in si.labnumbers
-                                       for ai in ln.analyses]
+                                       for ai in ln.analyses][:10]
 
         self.find_associated_analyses()
         fits = doc['fit_isotopes']
         filters = doc['filter_isotopes']
 
         self.active_editor.save_fits(fits, filters)
-
+        return True
 
         #def _dclicked_sample_changed(self, new):
         #    if self.active_editor:

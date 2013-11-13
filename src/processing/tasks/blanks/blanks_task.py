@@ -72,12 +72,21 @@ class BlanksTask(InterpolationTask):
         ans = [ai for proj in projects
                for si in db.get_samples(project=proj)
                for ln in si.labnumbers
-               for ai in ln.analyses]
+               for ai in ln.analyses][:10]
 
         prog = self.manager.open_progress(len(ans) + 1)
         #bin analyses
         for ais in self._bin_analyses(ans):
+            if prog.canceled:
+                return
+            elif prog.accepted:
+                break
+
             for ai in ais:
+                if prog.canceled:
+                    return
+                elif prog.accepted:
+                    break
                 l, a, s = ai.labnumber.identifier, ai.aliquot, ai.step
                 prog.change_message('Save preceeding blank for {}-{:02n}{}'.format(l, a, s))
                 hist = db.add_history(ai, 'blanks')
@@ -91,6 +100,7 @@ class BlanksTask(InterpolationTask):
                         pass
 
         prog.increment()
+        return True
 
     def _preceeding_correct(self, db, fi, ai, hist):
         pa = db.get_preceeding(ai.analysis_timestamp,
@@ -98,8 +108,11 @@ class BlanksTask(InterpolationTask):
         if pa:
             an_pa = self.manager.make_analysis(pa)
             iso = fi['name']
+            print an_pa.record_id
             if iso in an_pa.isotopes:
                 blank = an_pa.isotopes[iso].get_corrected_value()
+                print iso, blank.nominal_value, blank.std_dev
+
                 dbblank = db.add_blanks(hist,
                                         isotope=iso,
                                         user_value=float(blank.nominal_value),

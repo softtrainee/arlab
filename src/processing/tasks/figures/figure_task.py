@@ -520,13 +520,13 @@ class FigureTask(AnalysisEditTask):
 
             #editor = IdeogramEditor(processor=self.manager)
 
-            for sa in self.selected_samples:
-                ans = self._get_sample_analyses(sa)
-                ans = self.manager.make_analyses(ans)
-                self.new_ideogram(ans, set_ans=False)
+            #for sa in self.selected_samples:
+            ans = self._get_sample_analyses(self.selected_samples)
+            ans = self.manager.make_analyses(ans)
+            self.new_ideogram(ans, set_ans=False)
 
-                #self.unknowns_pane.items=ans
-                #print sa, ans
+            #self.unknowns_pane.items=ans
+            #print sa, ans
         else:
             ans = self._get_sample_analyses(self.selected_samples)
             self.unknowns_pane.items = ans

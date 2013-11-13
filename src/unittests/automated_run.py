@@ -18,7 +18,7 @@
 import unittest
 from src.experiment.automated_run.automated_run import AutomatedRun
 from src.experiment.automated_run.condition import TruncationCondition
-from src.unittests.database import get_test_database
+from src.unittests.database import isotope_manager_factory
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
@@ -26,14 +26,14 @@ class AutomatedRunTest(unittest.TestCase):
     def setUp(self):
         self.arun = AutomatedRun()
 
-        db = get_test_database().db
+        db = isotope_manager_factory().db
         db.connect()
         self.arun.db = db
 
     def testFits1(self):
         fits = 'linear'
         dets = ['H2', 'H1', 'AX']
-#         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
+        #         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
         self.arun._active_detectors = dets
         self.arun.py_set_regress_fits(fits)
 
@@ -42,7 +42,7 @@ class AutomatedRunTest(unittest.TestCase):
     def testFits2(self):
         fits = ('linear', 'linear', 'parabolic')
         dets = ['H2', 'H1', 'AX']
-#         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
+        #         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
         self.arun._active_detectors = dets
         self.arun.py_set_regress_fits(fits)
 
@@ -50,10 +50,10 @@ class AutomatedRunTest(unittest.TestCase):
 
     def testFits3(self):
         fits = (
-                ((0, 100), ('linear', 'linear', 'parabolic')),
-                )
+            ((0, 100), ('linear', 'linear', 'parabolic')),
+        )
         dets = ['H2', 'H1', 'AX']
-#         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
+        #         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
         self.arun._active_detectors = dets
         self.arun.py_set_regress_fits(fits)
         self.assertListEqual(self.arun.fits,
@@ -62,7 +62,7 @@ class AutomatedRunTest(unittest.TestCase):
     def testGetFitBlock1(self):
         fits = ('linear', 'linear', 'parabolic')
         dets = ['H2', 'H1', 'AX']
-#         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
+        #         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
         self.arun._active_detectors = dets
         self.arun.py_set_regress_fits(fits)
         fits = self.arun._get_fit_block(10, self.arun.fits)
@@ -70,10 +70,10 @@ class AutomatedRunTest(unittest.TestCase):
 
     def testGetFitBlock2(self):
         fits = (
-                ((0, 100), ('linear', 'linear', 'parabolic')),
-                )
+            ((0, 100), ('linear', 'linear', 'parabolic')),
+        )
         dets = ['H2', 'H1', 'AX']
-#         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
+        #         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
         self.arun._active_detectors = dets
         self.arun.py_set_regress_fits(fits)
         fits = self.arun._get_fit_block(150, self.arun.fits)
@@ -81,11 +81,11 @@ class AutomatedRunTest(unittest.TestCase):
 
     def testGetFitBlock3(self):
         fits = (
-                ((0, 100), ('linear', 'linear', 'parabolic')),
-                ((100,), ('linear', 'linear', 'linear')),
-                )
+            ((0, 100), ('linear', 'linear', 'parabolic')),
+            ((100,), ('linear', 'linear', 'linear')),
+        )
         dets = ['H2', 'H1', 'AX']
-#         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
+        #         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
         self.arun._active_detectors = dets
         self.arun.py_set_regress_fits(fits)
         fits = self.arun._get_fit_block(10, self.arun.fits)
@@ -93,14 +93,14 @@ class AutomatedRunTest(unittest.TestCase):
 
     def testGetFitBlock4(self):
         fits = (
-                ((0, 100), ('linear', 'linear', 'linear')),
-                ((100, None), ('linear', 'linear', 'parabolic')),
-                )
+            ((0, 100), ('linear', 'linear', 'linear')),
+            ((100, None), ('linear', 'linear', 'parabolic')),
+        )
         dets = ['H2', 'H1', 'AX']
-#         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
+        #         self.arun.py_activate_detectors(('H2', 'H1', 'AX'))
         self.arun._active_detectors = dets
         self.arun.py_set_regress_fits(fits)
-#         print 'fffff', self.arun.fits
+        #         print 'fffff', self.arun.fits
         fits = self.arun._get_fit_block(10, self.arun.fits)
         self.assertListEqual(fits, ['linear', 'linear', 'linear'])
 
@@ -115,10 +115,10 @@ class AutomatedRunTest(unittest.TestCase):
         frequency = 1
 
         conditions = [
-                      TruncationCondition(attr, comp, value,
-                                          start_count,
-                                          frequency)
-                    ]
+            TruncationCondition(attr, comp, value,
+                                start_count,
+                                frequency)
+        ]
 
         cnt = 1
         arun.labnumber = '61311'

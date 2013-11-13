@@ -27,6 +27,10 @@ def rank_func(x):
     return re.sub('\D', '', x)
 
 
+def extract_mass(x):
+    return int(re.split('\w*\D', x)[-1])
+
+
 def sort_isotopes(keys, reverse=True, key=None):
     if key:
         rf = lambda x: rank_func(key(x))

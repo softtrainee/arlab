@@ -17,10 +17,10 @@
 #=============enthought library imports=======================
 
 #============= standard library imports ========================
-from numpy import asarray, argmax, average
-
-from uncertainties import ufloat, umath
 import math
+
+from numpy import asarray, argmax, average
+from uncertainties import ufloat, umath
 # from copy import deepcopy
 from src.processing.arar_constants import ArArConstants
 from src.stats.core import calculate_weighted_mean
@@ -84,16 +84,16 @@ def calculate_decay_time(dc, f):
 
 
 def calculate_decay_factor(dc, segments):
-    '''
-        McDougall and Harrison 
+    """
+        McDougall and Harrison
         p.75 equation 3.22
-        
+
         the book suggests using ti==analysis_time-end of irradiation segment_i
-        
+
         mass spec uses ti==analysis_time-start of irradiation segment_i
-        
+
         using start seems more appropriate
-    '''
+    """
 
     a = sum([pi * ti for pi, ti, _ in segments])
 
@@ -103,101 +103,8 @@ def calculate_decay_factor(dc, segments):
     return a / b
 
 
-def calculate_arar_age(signals, baselines, blanks, backgrounds,
-                       j, irradinfo,
-                       ic_factors=None,
-                       discrimination=None,
-                       abundance_sensitivity=0,
-                       a37decayfactor=None,
-                       a39decayfactor=None,
-                       include_decay_error=False,
-                       arar_constants=None
-):
-    '''
-        signals: measured uncorrected isotope intensities, tuple of value,error pairs
-            value==intensity, error==error in regression coefficient
-        baselines: measured baseline intensity
-        !!!
-            this method will not work if you want to make a time dependent baseline correction
-            mass spec corrects each signal point with a modeled baseline. 
-        !!!
-        blanks: time dependent background, same format as signals
-        background: static spectrometer background, same format as signals
-        j: flux, tuple(value,error)
-        irradinfo: tuple of production ratios + chronology + decay_time
-            production_ratios = k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638
-
-        #changed: 10/13 use ic_factors
-        #ic: CDD correction factor
-
-        ic_factors= dict of detector intercalibration factors.
-                dictionary should contain a key for each Ar isotope
-                values are scalars. ideally one of the values is 1.0 i.e the ref
-                detector, !!but this is not strictly enforced!!
-
-        disc: Multiplier 1amu discrimination
-        
-        return:
-            returns a results dictionary with computed values
-            result keys
-                age_err_wo_j,
-                rad40,
-                tot40,
-                k39,
-                ca37,
-                atm36,
-                cl36,
-                
-                s40,
-                s39,
-                s38,
-                s37,
-                s36,
-                ar39decayfactor,
-                ar37decayfactor
-            
-    '''
-
-    def to_ufloat(v):
-        if isinstance(v, tuple):
-            v = ufloat(*v)
-        return v
-
-    if arar_constants is None:
-        # lazy load constants
-        arar_constants = ArArConstants()
-
-    if ic_factors is None:
-        ic_factors = dict()
-
-    #    if isinstance(signals[0], tuple):
-    s40, s39, s38, s37, s36 = map(to_ufloat, signals)
-
-    #    if isinstance(baselines[0], tuple):
-    s40bs, s39bs, s38bs, s37bs, s36bs = map(to_ufloat, baselines)
-
-    #    if isinstance(blanks[0], tuple):
-    s40bl, s39bl, s38bl, s37bl, s36bl = map(to_ufloat, blanks)
-
-    #    if isinstance(backgrounds[0], tuple):
-    s40bk, s39bk, s38bk, s37bk, s36bk = map(to_ufloat, backgrounds)
-
-    k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638, chronology_segments, decay_time = irradinfo
-
-    ca3637 = to_ufloat(ca3637)
-    ca3937 = to_ufloat(ca3937)
-    ca3837 = to_ufloat(ca3837)
-    k4039 = to_ufloat(k4039)
-    k3839 = to_ufloat(k3839)
-    cl3638 = to_ufloat(cl3638)
-    k3739 = to_ufloat(k3739)
-    #ic = to_ufloat(ic)
-    j = to_ufloat(j)
-    #    temp_ic = ufloat(ic)
-    #    print j, ic, arar_constants.atm4036
-    #===============================================================================
-    #
-    #===============================================================================
+def abundance_sensitivity_correction(isos, abundance_sensitivity):
+    s40, s39, s38, s37, s36 = isos
     # correct for abundance sensitivity
     # assumes symmetric and equal abundant sens for all peaks
     n40 = s40 - abundance_sensitivity * (s39 + s39)
@@ -205,166 +112,147 @@ def calculate_arar_age(signals, baselines, blanks, backgrounds,
     n38 = s38 - abundance_sensitivity * (s39 + s37)
     n37 = s37 - abundance_sensitivity * (s38 + s36)
     n36 = s36 - abundance_sensitivity * (s37 + s37)
-    s40, s39, s38, s37, s36 = n40, n39, n38, n37, n36
-
-    # subtract blanks and baselines (and backgrounds)
-    s40 -= (s40bl + s40bs + s40bk)
-    s39 -= (s39bl + s39bs + s39bk)
-    s38 -= (s38bl + s38bs + s38bk)
-    s37 -= (s37bl + s37bs + s37bk)
-    s36 -= (s36bl + s36bs + s36bk)
-
-    if discrimination:
-        disc = to_ufloat(discrimination)
-        # correct for discrimination
-        s40 = s40 * disc ** 4
-        s39 = s39 * disc ** 3
-        s38 = s38 * disc ** 2
-        s37 = s37 * disc ** 1
-    else:
-        s40 *= ic_factors.get('Ar40', 1)
-        s39 *= ic_factors.get('Ar39', 1)
-        s38 *= ic_factors.get('Ar38', 1)
-        s37 *= ic_factors.get('Ar37', 1)
-        s36 *= ic_factors.get('Ar36', 1)
-
-    if decay_time is None:
-        decay_time = calculate_decay_time(arar_constants.lambda_Ar37.nominal_value,
-                                          a37decayfactor)
-        a37decayfactor = 1
-
-    # calculate decay factor
-    if a37decayfactor is None:
-        try:
-            dc = arar_constants.lambda_Ar37.nominal_value
-            a37decayfactor = calculate_decay_factor(dc, chronology_segments)
-        except ZeroDivisionError:
-            a37decayfactor = 1
-
-    if a39decayfactor is None:
-        try:
-            dc = arar_constants.lambda_Ar39.nominal_value
-            a39decayfactor = calculate_decay_factor(dc, chronology_segments)
-        except ZeroDivisionError:
-            a39decayfactor = 1
+    return [n40, n39, n38, n37, n36]
 
 
-            #     print a39decayfactor, a37decayfactor
-            #    print type(s37), type(a37decayfactor)
-            # calculate interference corrections
-    s37dec_cor = s37 * a37decayfactor
-    s39dec_cor = s39 * a39decayfactor
+def interference_corrections(a40, a39, a38, a37, a36,
+                             production_ratios,
+                             arar_constants=None):
+    if production_ratios is None:
+        production_ratios = {}
+
+    if arar_constants is None:
+        arar_constants = ArArConstants()
+
+    pr = production_ratios
 
     k37 = ufloat(0, 1e-20)
     if arar_constants.k3739_mode.lower() == 'normal':
         # iteratively calculate 37, 39
         for _ in range(5):
-            ca37 = s37dec_cor - k37
-            ca39 = ca3937 * ca37
-            k39 = s39dec_cor - ca39
-            k37 = k3739 * k39
+            ca37 = a37 - k37
+            ca39 = pr.get('ca3937', 0) * ca37
+            k39 = a39 - ca39
+            k37 = pr.get('k3739', 0) * k39
     else:
         '''
             x=ca37/k39
             y=ca37/ca39
             T=s39dec_cor
-            
+
             T=ca39+k39
             T=ca37/y+ca37/x
-            
+
             ca37=(T*x*y)/(x+y)
         '''
         x = arar_constants.fixed_k3739
-        y = 1 / ca3937
+        y = 1 / pr.get('ca3937', 1)
 
-        ca37 = (s39dec_cor * x * y) / (x + y)
-        ca39 = ca3937 * ca37
-        k39 = s39dec_cor - ca39
+        ca37 = (a39 * x * y) / (x + y)
+        ca39 = pr.get('ca3937', 0) * ca37
+        k39 = a39 - ca39
+        k37 = x * k39
 
-    k38 = k3839 * k39
-    ca36 = ca3637 * ca37
-    ca38 = ca3837 * ca37
+    k38 = pr.get('k3839') * k39
+    ca36 = pr.get('ca3637') * ca37
+    ca38 = pr.get('ca3837') * ca37
 
-    '''
+    return k37, k38, k39, ca36, ca37, ca38, ca39
+
+
+def calculate_atmospheric(a38, a36, k38, ca38, ca36, decay_time,
+                          production_ratios=None,
+                          arar_constants=None):
+    """
         McDougall and Harrison
         Roddick 1983
         Foland 1993
-        
-        iteratively calculate atm36
-    '''
 
-    m = cl3638 * arar_constants.lambda_Cl36.nominal_value * decay_time
+        iteratively calculate atm36
+    """
+    if production_ratios is None:
+        production_ratios = {}
+
+    if arar_constants is None:
+        arar_constants = ArArConstants()
+
+    pr = production_ratios
+
+    m = pr.get('cl3638', 0) * arar_constants.lambda_Cl36.nominal_value * decay_time
     atm36 = ufloat(0, 1e-20)
     for _ in range(5):
         ar38atm = arar_constants.atm3836.nominal_value * atm36
-        cl38 = s38 - ar38atm - k38 - ca38
+        cl38 = a38 - ar38atm - k38 - ca38
         cl36 = cl38 * m
-        atm36 = s36 - ca36 - cl36
+        atm36 = a36 - ca36 - cl36
+    return atm36, cl36
+
+
+def calculate_R(isotopes,
+                decay_time,
+                interferences=None,
+                arar_constants=None):
+    """
+        isotope values corrected for blank, baseline, (background)
+        ic_factor, (discrimination), ar37 and ar39 decay
+
+    """
+    a40, a39, a38, a37, a36 = isotopes
+
+    #a37*=113
+
+    if interferences is None:
+        interferences = {}
+
+    if arar_constants is None:
+        arar_constants = ArArConstants()
+
+    #make local copy of interferences
+    pr = dict(((k, v.__copy__()) for k, v in interferences.iteritems()))
+
+    #for k,v in pr.iteritems():
+    #    print k, v
+    k37, k38, k39, ca36, ca37, ca38, ca39 = interference_corrections(a40, a39, a38, a37, a36,
+                                                                     pr, arar_constants)
+    atm36, cl36 = calculate_atmospheric(a38, a36, k38, ca38, ca36,
+                                        decay_time,
+                                        pr,
+                                        arar_constants)
 
     # calculate rodiogenic
     # dont include error in 40/36
     atm40 = atm36 * arar_constants.atm4036.nominal_value
-    k40 = k39 * k4039
+    k40 = k39 * pr.get('k4039', 1)
 
-    ar40rad = s40 - atm40 - k40
-    #     print map(lambda x: x.nominal_value, (ar40rad, s40, atm40, s36, ca36, cl36, atm36))
+    rad40 = a40 - atm40 - k40
+    R = rad40 / k39
 
-    #    age_with_jerr = ufloat(0, 0)
-    #    age_wo_jerr = ufloat(0, 0)
-    try:
-        R = ar40rad / k39
-        # dont include error in decay constant
-        age = age_equation(j, R, include_decay_error=include_decay_error,
-                           arar_constants=arar_constants)
-        #        age = age_equation(j, R)
+    r = ufloat(R.nominal_value, R.std_dev)
 
-        #        age_with_jerr = deepcopy(age)
-        #        print 'j', age
-        # dont include error in decay constant
-        pe = j.std_dev
-        j.std_dev = 0
-        #        j.set_std_dev(0)
-        wo_jerr = age.std_dev
-        #        print 'jo', age
-        j.std_dev = pe
-    #        j.set_std_dev(pe)
+    non_ar_isotopes = dict(k39=k39, k38=k38, k37=k37,
+                           ca36=ca36, ca37=ca37, ca38=ca38, ca39=ca39,
+                           cl36=cl36)
 
-    #        age = age_equation(j, R, include_decay_error=include_decay_error,
-    #                           arar_constants=arar_constants)
-    #        age = age_equation(j, R)
-    #        age_wo_jerr = deepcopy(age)
-
-    except (ZeroDivisionError, ValueError), e:
-        age = ufloat(0, 0)
-        wo_jerr = 0
-
-    #    print s40 / s36
-    result = dict(
-        age=age,
-        age_err_wo_j=wo_jerr,
-        rad40=ar40rad,
-
-        k39=k39,
-        ca37=ca37,
-        atm36=atm36,
-        cl36=cl36,
-
-        Ar40=s40,
-        Ar39=s39,
-        Ar38=s38,
-        Ar37=s37,
-        Ar36=s36,
-
-        s37decay_cor=s37dec_cor,
-        s39decay_cor=s39dec_cor,
-
-        ar39decayfactor=a39decayfactor,
-        ar37decayfactor=a37decayfactor
-    )
-    return result
+    computed = dict(rad40=rad40, rad40_percent=rad40 / a40 * 100)
+    #print 'Ar40', a40-k40, a40, k40
+    #print 'Ar39', a39-k39, a39, k39
 
 
-def age_equation(j, R, scalar=1, include_decay_error=False,
+    interference_corrected = dict(Ar40=a40 - k40,
+                                  Ar39=k39,
+                                  Ar38=a38 - k38 - ca38,
+                                  Ar37=a37 - ca37 - k37,
+                                  Ar36=a36)
+    ##clear errors in irrad
+    for pp in pr.itervalues():
+        pp.std_dev = 0
+    r_wo_irrad = R
+
+    return r, r_wo_irrad, non_ar_isotopes, computed, interference_corrected
+
+
+def age_equation(j, R,
+                 include_decay_error=False,
                  arar_constants=None):
     if isinstance(j, (tuple, str)):
         j = ufloat(j)
@@ -372,135 +260,15 @@ def age_equation(j, R, scalar=1, include_decay_error=False,
         R = ufloat(R)
     if arar_constants is None:
         arar_constants = ArArConstants()
-        #    print constants.lambda_k, 'dec'
-    if include_decay_error:
-        age = (1 / arar_constants.lambda_k) * umath.log(1 + j * R) / float(scalar)
-    else:
-        age = (1 / arar_constants.lambda_k.nominal_value) * umath.log(1 + j * R) / float(scalar)
-    return age
 
-# def calculate_arar_age(signals, baselines, blanks, backgrounds,
-#                       j, irradinfo,
-#                       ic=(1.0, 0),
-#                       a37decayfactor=None,
-#                       a39decayfactor=None
-#                       ):
-# #    s40, s39, s38, s37, s36 = signals
-#    s40bs, s39bs, s38bs, s37bs, s36bs = baselines
-#    s40bl, s39bl, s38bl, s37bl, s36bl = blanks
-#    s40bk, s39bk, s38bk, s37bk, s36bk = backgrounds
-#
-# #    k4039, k3839, ca3937, ca3837, ca3637, cl3638, t = irradinfo
-#    pr, t = irradinfo[:-1], irradinfo[-1]
-#
-#    s40, s39, s38, s37, s36 = map(ufloat, signals)
-#    s40bs, s39bs, s38bs, s37bs, s36bs = map(ufloat, baselines)
-#    s40bl, s39bl, s38bl, s37bl, s36bl = map(ufloat, blanks)
-#    s40bk, s39bk, s38bk, s37bk, s36bk = map(ufloat, blanks)
-#    k4039, k3839, ca3937, ca3837, ca3637, cl3638 = map(ufloat, pr)
-#
-#    j = ufloat(j)
-#    ic = ufloat(ic)
-#
-#    s36 *= ic
-#    s36bs *= ic
-#
-#    #subtract blanks and baselines
-#    s40 -= (s40bl + s40bs + s40bk)
-#    s39 -= (s39bl + s39bs + s39bk)
-#    s38 -= (s38bl + s38bs + s38bk)
-#    s37 -= (s37bl + s37bs + s37bk)
-#    s36 -= (s36bl + s36bs + s36bk)
-#
-#    #calculate decay factors
-#    #2004-11-16 21:16:00
-#    if a37decayfactor is None:
-#        try:
-# #            a37decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
-#            a37decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
-#            #t = umath.log(a39decayfactor) / (constants.lambda_39.nominal_value * 365.25)
-#        except ZeroDivisionError:
-#            a37decayfactor = 1
-#
-#    if a39decayfactor is None:
-#        try:
-# #            a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
-#            a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
-#            #t1 = umath.log(a37decayfactor) / (constants.lambda_37.nominal_value * 365.25)
-#        except ZeroDivisionError:
-#            a39decayfactor = 1
-#
-#    #calculate interference corrections
-#    ca37 = s37 * a37decayfactor
-#    s39 = s39 * a39decayfactor
-#    ca36 = ca3637 * ca37
-#    ca38 = ca3837 * ca37
-#    ca39 = ca3937 * ca37
-#    k39 = s39 - ca39
-#    k38 = k3839 * k39
-#
-#    if constants.lambda_cl36 < 0.1:
-#        m = cl3638 * constants.lambda_cl36 * 365.25 * t
-#    else:
-#        m = cl3638
-#
-#    mcl = m / (m * constants.atm3836 - 1)
-#    cl36 = mcl * (constants.atm3836 * (s36 - ca36) - s38 + k38 + ca38)
-#    atm36 = s36 - ca36 - cl36
-#
-#    #calculate rodiogenic
-#    #dont include error in 40/36
-#    atm40 = atm36 * constants.atm4036.nominal_value
-#    k40 = k39 * k4039
-#    ar40rad = s40 - atm40 - k40
-#
-#    try:
-#        JR = j * ar40rad / k39
-#        #dont include error in decay constant
-#        age = (1 / constants.lambdak.nominal_value) * umath.log(1 + JR)
-#
-# #        j.set_std_dev(0)
-# #        JR = j * ar40rad / k39
-# #        #dont include error in decay constant
-# #        age_wo_jerr = (1 / constants.lambdak.nominal_value) * umath.log(1 + JR)
-#    except (ZeroDivisionError, ValueError):
-#        age = ufloat((0, 0))
-# #        age_wo_jerr = ufloat((0, 0))
-#
-#    result = dict(age=age,
-# #                  age_wo_jerr=age_wo_jerr,
-#                  rad40=ar40rad,
-#                  tot40=s40,
-#                  k39=k39,
-#                  ca37=ca37,
-#                  atm36=atm36,
-#
-#                  s40=s40,
-#                  s39=s39,
-#                  s38=s38,
-#                  s37=s37,
-#                  s36=s36,
-#                  ar39decayfactor=a39decayfactor,
-#                  ar37decayfactor=a37decayfactor
-#                  )
-#    return result
+    scalar = float(arar_constants.age_scalar)
 
-#    try:
-#    except ValueError, e:
-#        print e
-#        return e
-#============= EOF =====================================
+    lk = arar_constants.lambda_k
+    if not include_decay_error:
+        lk = lk.nominal_value
 
-# #=============enthought library imports=======================oup
-#
-##=============standard library imports ========================
-# from uncertainties import ufloat
-# from uncertainties.umath import log, exp
-#
-##=============local library imports  ==========================
-# import constants
-# #from data_adapter import new_unknown
-#
+    return (lk ** -1 * umath.log(1 + j * R)) / scalar
+
 # plateau definition
 plateau_criteria = {'number_steps': 3}
 
@@ -515,9 +283,9 @@ def overlap(a1, a2, e1, e2, overlap_sigma):
 # non-recursive
 #===============================================================================
 def find_plateaus(ages, errors, signals, overlap_sigma=1, exclude=None):
-    '''
+    """
         return list of plateau indices
-    '''
+    """
 
     if exclude is None:
         exclude = []
@@ -666,61 +434,428 @@ def calculate_error_t(F, ssF, j, ssJ):
     return sst ** 0.5
 
 
-ages = [10] * 50
-errors = [1] * 1
-
-
-def time_recursive():
-    find_plateaus_r(ages, errors)
-
-
-def time_non_recursive():
-    find_plateaus(ages, errors)
-
-
-if __name__ == '__main__':
-# 21055-02
-#    signals = ((8.681775, 0.004059),
-#                   (9.557604, 0.003301),
-#                   (0.128056, 0.000320),
-#                   (0.055542, 0.000151), (0.000267, 0.000013))
-#    baselines = ((0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
-#    blanks = ((0.013131, 0.00069),
-#              (0.0008725, 0.00007),
-#              (0.00003314, 0.0000088),
+#def calculate_arar_age2(signals, baselines, blanks, backgrounds,
+#                        j, irradinfo,
+#                        ic_factors=None,
+#                        discrimination=None,
+#                        abundance_sensitivity=0,
+#                        a37decayfactor=None,
+#                        a39decayfactor=None,
+#                        include_decay_error=False,
+#                        arar_constants=None):
+#    '''
+#        signals: measured uncorrected isotope intensities, tuple of value,error pairs
+#            value==intensity, error==error in regression coefficient
+#        baselines: measured baseline intensity
+#        !!!
+#            this method will not work if you want to make a time dependent baseline correction
+#            mass spec corrects each signal point with a modeled baseline.
+#        !!!
+#        blanks: time dependent background, same format as signals
+#        background: static spectrometer background, same format as signals
+#        j: flux, tuple(value,error)
+#        irradinfo: tuple of production ratios + chronology + decay_time
+#            production_ratios = k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638
 #
-#              (0.0002788, 0.000013), (0.00005382, 0.0000048))
-#    t =
-#    print 'asdfs', 1 / umath.exp(-constants.lambda_37 * t)
-#    print 1 / (constants.lambda_37) * umath.log(3.801e1)
-    # 60754-10
-    signals = ((2655.294, 0.12),
-               (377.5964, 0.046),
-               (4.999, 0.012),
-               (0.0853, 0.014),
-               (0.013245, 0.00055)
-    )
-    baselines = ((0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
-    blanks = ((1.5578, 0.023),
-              (0.0043, 0.024),
-              (-0.0198, 0.011),
-              (0.0228, 0.012),
-              (0.00611, 0.00033))
-    backgrounds = ((0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
-    j = (2.2408e-3, 1.7795e-6)
-    irradinfo = ((1e-2, 2e-3),
-                 (1.3e-2, 0),
+#        #changed: 10/13 use ic_factors
+#        #ic: CDD correction factor
+#
+#        ic_factors= dict of detector intercalibration factors.
+#                dictionary should contain a key for each Ar isotope
+#                values are scalars. ideally one of the values is 1.0 i.e the ref
+#                detector, !!but this is not strictly enforced!!
+#
+#        disc: Multiplier 1amu discrimination
+#
+#        return:
+#            returns a results dictionary with computed values
+#            result keys
+#                age_err_wo_j,
+#                rad40,
+#                tot40,
+#                k39,
+#                ca37,
+#                atm36,
+#                cl36,
+#
+#                s40,
+#                s39,
+#                s38,
+#                s37,
+#                s36,
+#                ar39decayfactor,
+#                ar37decayfactor
+#
+#    '''
+#
+#    def to_ufloat(v):
+#        if isinstance(v, tuple):
+#            v = ufloat(*v)
+#        return v
+#
+#    if arar_constants is None:
+#        # lazy load constants
+#        arar_constants = ArArConstants()
+#
+#    if ic_factors is None:
+#        ic_factors = dict()
+#
+#    s40, s39, s38, s37, s36 = map(to_ufloat, signals)
+#    s40bs, s39bs, s38bs, s37bs, s36bs = map(to_ufloat, baselines)
+#    s40bl, s39bl, s38bl, s37bl, s36bl = map(to_ufloat, blanks)
+#    s40bk, s39bk, s38bk, s37bk, s36bk = map(to_ufloat, backgrounds)
+#    #k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638, chronology_segments, decay_time = irradinfo
+#    chronology_segments, decay_time = irradinfo[-2:]
+#    k4039, k3839, k3739, ca3937, ca3837, ca3637, cl3638 = map(to_ufloat, irradinfo[:2])
+#
+#    j = to_ufloat(j)
+#
+#    #===============================================================================
+#    #
+#    #===============================================================================
+#    # correct for abundance sensitivity
+#    # assumes symmetric and equal abundant sens for all peaks
+#    n40 = s40 - abundance_sensitivity * (s39 + s39)
+#    n39 = s39 - abundance_sensitivity * (s40 + s38)
+#    n38 = s38 - abundance_sensitivity * (s39 + s37)
+#    n37 = s37 - abundance_sensitivity * (s38 + s36)
+#    n36 = s36 - abundance_sensitivity * (s37 + s37)
+#    s40, s39, s38, s37, s36 = n40, n39, n38, n37, n36
+#
+#    # subtract blanks and baselines (and backgrounds)
+#    s40 -= (s40bl + s40bs + s40bk)
+#    s39 -= (s39bl + s39bs + s39bk)
+#    s38 -= (s38bl + s38bs + s38bk)
+#    s37 -= (s37bl + s37bs + s37bk)
+#    s36 -= (s36bl + s36bs + s36bk)
+#    #print 'arargon',discrimination
+#    if discrimination:
+#        disc = to_ufloat(discrimination)
+#        # correct for discrimination
+#        s40 = s40 * disc ** 4
+#        s39 = s39 * disc ** 3
+#        s38 = s38 * disc ** 2
+#        s37 = s37 * disc ** 1
+#    else:
+#        s40 *= ic_factors.get('Ar40', 1)
+#        s39 *= ic_factors.get('Ar39', 1)
+#        s38 *= ic_factors.get('Ar38', 1)
+#        s37 *= ic_factors.get('Ar37', 1)
+#        s36 *= ic_factors.get('Ar36', 1)
+#
+#    if decay_time is None:
+#        decay_time = calculate_decay_time(arar_constants.lambda_Ar37.nominal_value,
+#                                          a37decayfactor)
+#        a37decayfactor = 1
+#
+#    # calculate decay factor
+#    if a37decayfactor is None:
+#        try:
+#            dc = arar_constants.lambda_Ar37.nominal_value
+#            a37decayfactor = calculate_decay_factor(dc, chronology_segments)
+#        except ZeroDivisionError:
+#            a37decayfactor = 1
+#
+#    if a39decayfactor is None:
+#        try:
+#            dc = arar_constants.lambda_Ar39.nominal_value
+#            a39decayfactor = calculate_decay_factor(dc, chronology_segments)
+#        except ZeroDivisionError:
+#            a39decayfactor = 1
+#
+#
+#            #     print a39decayfactor, a37decayfactor
+#            #    print type(s37), type(a37decayfactor)
+#            # calculate interference corrections
+#    s37dec_cor = s37 * a37decayfactor
+#    s39dec_cor = s39 * a39decayfactor
+#
+#    k37 = ufloat(0, 1e-20)
+#    if arar_constants.k3739_mode.lower() == 'normal':
+#        # iteratively calculate 37, 39
+#        for _ in range(5):
+#            ca37 = s37dec_cor - k37
+#            ca39 = ca3937 * ca37
+#            k39 = s39dec_cor - ca39
+#            k37 = k3739 * k39
+#    else:
+#        '''
+#            x=ca37/k39
+#            y=ca37/ca39
+#            T=s39dec_cor
+#
+#            T=ca39+k39
+#            T=ca37/y+ca37/x
+#
+#            ca37=(T*x*y)/(x+y)
+#        '''
+#        x = arar_constants.fixed_k3739
+#        y = 1 / ca3937
+#
+#        ca37 = (s39dec_cor * x * y) / (x + y)
+#        ca39 = ca3937 * ca37
+#        k39 = s39dec_cor - ca39
+#
+#    k38 = k3839 * k39
+#    ca36 = ca3637 * ca37
+#    ca38 = ca3837 * ca37
+#
+#    '''
+#        McDougall and Harrison
+#        Roddick 1983
+#        Foland 1993
+#
+#        iteratively calculate atm36
+#    '''
+#
+#    m = cl3638 * arar_constants.lambda_Cl36.nominal_value * decay_time
+#    atm36 = ufloat(0, 1e-20)
+#    for _ in range(5):
+#        ar38atm = arar_constants.atm3836.nominal_value * atm36
+#        cl38 = s38 - ar38atm - k38 - ca38
+#        cl36 = cl38 * m
+#        atm36 = s36 - ca36 - cl36
+#
+#    # calculate rodiogenic
+#    # dont include error in 40/36
+#    atm40 = atm36 * arar_constants.atm4036.nominal_value
+#    k40 = k39 * k4039
+#
+#    ar40rad = s40 - atm40 - k40
+#    #     print map(lambda x: x.nominal_value, (ar40rad, s40, atm40, s36, ca36, cl36, atm36))
+#
+#    #    age_with_jerr = ufloat(0, 0)
+#    #    age_wo_jerr = ufloat(0, 0)
+#    try:
+#        R = ar40rad / k39
+#        # dont include error in decay constant
+#        age = age_equation(j, R, include_decay_error=include_decay_error,
+#                           arar_constants=arar_constants)
+#        #        age = age_equation(j, R)
+#
+#        #        age_with_jerr = deepcopy(age)
+#        #        print 'j', age
+#        # dont include error in decay constant
+#        pe = j.std_dev
+#        j.std_dev = 0
+#        #        j.set_std_dev(0)
+#        wo_jerr = age.std_dev
+#        #        print 'jo', age
+#        j.std_dev = pe
+#    #        j.set_std_dev(pe)
+#
+#    #        age = age_equation(j, R, include_decay_error=include_decay_error,
+#    #                           arar_constants=arar_constants)
+#    #        age = age_equation(j, R)
+#    #        age_wo_jerr = deepcopy(age)
+#
+#    except (ZeroDivisionError, ValueError), e:
+#        age = ufloat(0, 0)
+#        wo_jerr = 0
+#
+#    #    print s40 / s36
+#    result = dict(
+#        age=age,
+#        age_err_wo_j=wo_jerr,
+#        rad40=ar40rad,
+#
+#        k39=k39,
+#        ca37=ca37,
+#        atm36=atm36,
+#        cl36=cl36,
+#
+#        Ar40=s40,
+#        Ar39=s39,
+#        Ar38=s38,
+#        Ar37=s37,
+#        Ar36=s36,
+#
+#        s37decay_cor=s37dec_cor,
+#        s39decay_cor=s39dec_cor,
+#
+#        ar39decayfactor=a39decayfactor,
+#        ar37decayfactor=a37decayfactor
+#    )
+#    return result
 
-                 (7e-4, 2e-6),
-                 (0, 0),
-                 (2.8e-4, 2e-5),
-                 (2.5e2, 0), 0.50429815306)
-    calculate_arar_age(signals, baselines, blanks, backgrounds, j, irradinfo,
+# def calculate_arar_age(signals, baselines, blanks, backgrounds,
+#                       j, irradinfo,
+#                       ic=(1.0, 0),
+#                       a37decayfactor=None,
+#                       a39decayfactor=None
+#                       ):
+# #    s40, s39, s38, s37, s36 = signals
+#    s40bs, s39bs, s38bs, s37bs, s36bs = baselines
+#    s40bl, s39bl, s38bl, s37bl, s36bl = blanks
+#    s40bk, s39bk, s38bk, s37bk, s36bk = backgrounds
+#
+# #    k4039, k3839, ca3937, ca3837, ca3637, cl3638, t = irradinfo
+#    pr, t = irradinfo[:-1], irradinfo[-1]
+#
+#    s40, s39, s38, s37, s36 = map(ufloat, signals)
+#    s40bs, s39bs, s38bs, s37bs, s36bs = map(ufloat, baselines)
+#    s40bl, s39bl, s38bl, s37bl, s36bl = map(ufloat, blanks)
+#    s40bk, s39bk, s38bk, s37bk, s36bk = map(ufloat, blanks)
+#    k4039, k3839, ca3937, ca3837, ca3637, cl3638 = map(ufloat, pr)
+#
+#    j = ufloat(j)
+#    ic = ufloat(ic)
+#
+#    s36 *= ic
+#    s36bs *= ic
+#
+#    #subtract blanks and baselines
+#    s40 -= (s40bl + s40bs + s40bk)
+#    s39 -= (s39bl + s39bs + s39bk)
+#    s38 -= (s38bl + s38bs + s38bk)
+#    s37 -= (s37bl + s37bs + s37bk)
+#    s36 -= (s36bl + s36bs + s36bk)
+#
+#    #calculate decay factors
+#    #2004-11-16 21:16:00
+#    if a37decayfactor is None:
+#        try:
+# #            a37decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
+#            a37decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_37.nominal_value * 365.25))
+#            #t = umath.log(a39decayfactor) / (constants.lambda_39.nominal_value * 365.25)
+#        except ZeroDivisionError:
+#            a37decayfactor = 1
+#
+#    if a39decayfactor is None:
+#        try:
+# #            a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
+#            a39decayfactor = 1 / umath.exp(-t * (1 * constants.lambda_39.nominal_value * 365.25))
+#            #t1 = umath.log(a37decayfactor) / (constants.lambda_37.nominal_value * 365.25)
+#        except ZeroDivisionError:
+#            a39decayfactor = 1
+#
+#    #calculate interference corrections
+#    ca37 = s37 * a37decayfactor
+#    s39 = s39 * a39decayfactor
+#    ca36 = ca3637 * ca37
+#    ca38 = ca3837 * ca37
+#    ca39 = ca3937 * ca37
+#    k39 = s39 - ca39
+#    k38 = k3839 * k39
+#
+#    if constants.lambda_cl36 < 0.1:
+#        m = cl3638 * constants.lambda_cl36 * 365.25 * t
+#    else:
+#        m = cl3638
+#
+#    mcl = m / (m * constants.atm3836 - 1)
+#    cl36 = mcl * (constants.atm3836 * (s36 - ca36) - s38 + k38 + ca38)
+#    atm36 = s36 - ca36 - cl36
+#
+#    #calculate rodiogenic
+#    #dont include error in 40/36
+#    atm40 = atm36 * constants.atm4036.nominal_value
+#    k40 = k39 * k4039
+#    ar40rad = s40 - atm40 - k40
+#
+#    try:
+#        JR = j * ar40rad / k39
+#        #dont include error in decay constant
+#        age = (1 / constants.lambdak.nominal_value) * umath.log(1 + JR)
+#
+# #        j.set_std_dev(0)
+# #        JR = j * ar40rad / k39
+# #        #dont include error in decay constant
+# #        age_wo_jerr = (1 / constants.lambdak.nominal_value) * umath.log(1 + JR)
+#    except (ZeroDivisionError, ValueError):
+#        age = ufloat((0, 0))
+# #        age_wo_jerr = ufloat((0, 0))
+#
+#    result = dict(age=age,
+# #                  age_wo_jerr=age_wo_jerr,
+#                  rad40=ar40rad,
+#                  tot40=s40,
+#                  k39=k39,
+#                  ca37=ca37,
+#                  atm36=atm36,
+#
+#                  s40=s40,
+#                  s39=s39,
+#                  s38=s38,
+#                  s37=s37,
+#                  s36=s36,
+#                  ar39decayfactor=a39decayfactor,
+#                  ar37decayfactor=a37decayfactor
+#                  )
+#    return result
 
-                       #                       a37decayfactor=1.956,
-                       #                       a39decayfactor=1.0
-                       #                       a37decayfactor=3.801e1, a39decayfactor=1.001
-    )
+#    try:
+#    except ValueError, e:
+#        print e
+#        return e
+#============= EOF =====================================
+
+# #=============enthought library imports=======================oup
+#
+##=============standard library imports ========================
+# from uncertainties import ufloat
+# from uncertainties.umath import log, exp
+#
+##=============local library imports  ==========================
+# import constants
+# #from data_adapter import new_unknown
+#
+#
+#ages = [10] * 50
+#errors = [1] * 1
+#
+#
+#def time_recursive():
+#    find_plateaus_r(ages, errors)
+#
+#
+#def time_non_recursive():
+#    find_plateaus(ages, errors)
+#
+#
+##if __name__ == '__main__':
+## 21055-02
+##    signals = ((8.681775, 0.004059),
+##                   (9.557604, 0.003301),
+##                   (0.128056, 0.000320),
+##                   (0.055542, 0.000151), (0.000267, 0.000013))
+##    baselines = ((0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
+##    blanks = ((0.013131, 0.00069),
+##              (0.0008725, 0.00007),
+##              (0.00003314, 0.0000088),
+##
+##              (0.0002788, 0.000013), (0.00005382, 0.0000048))
+##    t =
+##    print 'asdfs', 1 / umath.exp(-constants.lambda_37 * t)
+##    print 1 / (constants.lambda_37) * umath.log(3.801e1)
+#    # 60754-10
+#    signals = ((2655.294, 0.12),
+#               (377.5964, 0.046),
+#               (4.999, 0.012),
+#               (0.0853, 0.014),
+#               (0.013245, 0.00055)
+#    )
+#    baselines = ((0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
+#    blanks = ((1.5578, 0.023),
+#              (0.0043, 0.024),
+#              (-0.0198, 0.011),
+#              (0.0228, 0.012),
+#              (0.00611, 0.00033))
+#    backgrounds = ((0, 0), (0, 0), (0, 0), (0, 0), (0, 0))
+#    j = (2.2408e-3, 1.7795e-6)
+#    irradinfo = ((1e-2, 2e-3),
+#                 (1.3e-2, 0),
+#
+#                 (7e-4, 2e-6),
+#                 (0, 0),
+#                 (2.8e-4, 2e-5),
+#                 (2.5e2, 0), 0.50429815306)
+#    calculate_arar_age(signals, baselines, blanks, backgrounds, j, irradinfo,
+#
+#                       #                       a37decayfactor=1.956,
+#                       #                       a39decayfactor=1.0
+#                       #                       a37decayfactor=3.801e1, a39decayfactor=1.001
+#    )
 #    from timeit import Timer
 #    t = Timer('time_recursive', 'from __main__ import time_recursive')
 #

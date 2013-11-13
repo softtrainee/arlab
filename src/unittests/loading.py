@@ -15,23 +15,21 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits
-from traitsui.api import View, Item
 import unittest
 from src.loading.load_task import LoadingTask
-from src.unittests.database import get_test_database
+from src.unittests.database import isotope_manager_factory
 from src.loading.loading_manager import LoadingManager
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class LoadingTest(unittest.TestCase):
     def setUp(self):
-#         self.t = LoadingTask()
-        db = get_test_database().db
+    #         self.t = LoadingTask()
+        db = isotope_manager_factory().db
         lm = LoadingManager(db=db)
 
-#         lm.irradiation = 'NM-251'
-#         lm.level = 'H'
+        #         lm.irradiation = 'NM-251'
+        #         lm.level = 'H'
         self.t = LoadingTask(manager=lm)
 
     def testSave(self):

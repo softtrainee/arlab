@@ -10,7 +10,8 @@ def pearson(expected=False):
     solutions = dict(reed=dict(slope=-0.4805,
                                slope_err=0.0702,
                                intercept=5.4799,
-                               intercept_err=0.3555
+                               intercept_err=0.3555,
+                               mswd=1.4832
     ))
     if expected:
         if not expected in solutions:

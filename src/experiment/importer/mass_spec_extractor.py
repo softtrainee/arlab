@@ -332,16 +332,14 @@ class MassSpecExtractor(Extractor):
             return q
 
         return self._add_associated(dest, dba, make_labnumber,
-                                    filter_hook=filter_func,
-        )
+                                    filter_hook=filter_func)
 
     def _add_associated(self, dest, dba, make_labnumber,
                         _cache=[],
                         atype=5,
                         analysis_type='blank_unknown',
                         add_hook=None,
-                        **kw
-    ):
+                        **kw):
         added_to_db = False
         post = dba.RunDateTime
         ms = dba.login_session.machine.Label
@@ -358,8 +356,7 @@ class MassSpecExtractor(Extractor):
                 dest.sess.flush()
 
             if self._add_analysis(dest, ln, bi,
-                                  analysis_type=analysis_type,
-            ):
+                                  analysis_type=analysis_type):
                 if add_hook:
                     add_hook(dest, bi)
                 added_to_db = True
@@ -436,8 +433,7 @@ class MassSpecExtractor(Extractor):
                 pass
 
     def _add_analysis(self, dest, dest_labnumber, dbanalysis,
-                      analysis_type='unknown', _ed_cache=[], _an_cache=[],
-    ):
+                      analysis_type='unknown', _ed_cache=[], _an_cache=[]):
 
         #=======================================================================
         # add analysis
@@ -464,8 +460,7 @@ class MassSpecExtractor(Extractor):
                                     comment=changeable.Comment,
                                     step=step,
                                     analysis_timestamp=dbanalysis.RunDateTime,
-                                    status=1 if changeable.StatusLevel == 1 else 0,
-        )
+                                    status=1 if changeable.StatusLevel == 1 else 0)
         if dest_an is None:
             return
 
@@ -477,6 +472,7 @@ class MassSpecExtractor(Extractor):
             iden = dest_labnumber.identifier
 
         identifier = '{}-{}{}'.format(iden, al, step)
+
         self.info('Adding analysis {}'.format(identifier))
 
         #=======================================================================
@@ -542,7 +538,7 @@ class MassSpecExtractor(Extractor):
                 det = dest.get_detector(detname)
                 if det is None:
                     det = dest.add_detector(detname)
-                    dest.sess.flush()
+                    #dest.sess.flush()
             except AttributeError, e:
                 self.debug('mass spec extractor {}', e)
 
@@ -566,14 +562,12 @@ class MassSpecExtractor(Extractor):
                 except Exception:
                     self.debug('failed to read baseline {}'.format(dbbaseline))
 
+                    # add baseline
             data = ''.join([struct.pack('>ff', x, y) for x, y in zip(sx, noncor_y)])
-            # add baseline
-            for data, k in (
-                (baseline, 'baseline'),
-                (data, 'signal')
-            ):
+            for data, k in ((baseline, 'baseline'),
+                            (data, 'signal')):
                 dbiso = dest.add_isotope(dest_an, iso.Label, det, kind=k)
-                dest.sess.flush()
+                #dest.sess.flush()
 
                 dest.add_signal(dbiso, data)
 

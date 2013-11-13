@@ -20,7 +20,7 @@
 from chaco.api import AbstractOverlay
 
 #============= standard library imports ========================
-from numpy import linspace, hstack, sqrt, power, corrcoef, pi, column_stack
+from numpy import linspace, hstack, sqrt, power, corrcoef, column_stack
 from numpy.linalg import eig
 import math
 
@@ -28,31 +28,39 @@ import math
 
 # http://www.earth-time.org/projects/upb/public_docs/ErrorEllipses.pdf
 # 5) To create a 95% confidence ellipse from the 1s error ellipse, we must enlarge it by a factor of 2.4477.
-SCALE_FACTOR = 2.4477 * 10
+
+SCALE_FACTOR = 2.4477
 
 
-def error_ellipse(ox, oy, pxy, aspectratio=1):
+def error_ellipse(sx, sy, pxy, aspectratio=1):
     """
         return  a, b axes and rotation
 
         http://www.earth-time.org/projects/upb/public_docs/ErrorEllipses.pdf
 
     """
-    covar = ox * oy * pxy
-    covmat = [[ox * ox, covar],
-              [covar, oy * oy]]
-    w, _v = eig(covmat)
+    covar = pxy * sx * sy
+    covmat = [[sx * sx, covar],
+              [covar, sy * sy]]
+    w, v = eig(covmat)
 
-    if ox > oy:
-        a = (max(w)) ** 0.5
-        b = (min(w)) ** 0.5
+    #print v
+    mi_w, ma_w = min(w), max(w)
+    #print sx, sy, sx>sy
+    if sx > sy:
+        a = ma_w ** 0.5
+        b = mi_w ** 0.5
     else:
-        a = (min(w)) ** 0.5
-        b = (max(w)) ** 0.5
+        a = mi_w ** 0.5
+        b = ma_w ** 0.5
 
     a, b = a * SCALE_FACTOR, b * SCALE_FACTOR
     #        print aspectratio, dx, dy, width, height
-    rotation = 0.5 * math.atan(1 / aspectratio * (2 * covar) / (ox ** 2 - oy ** 2))
+    rotation = 0.5 * math.atan(1 / aspectratio * (2 * covar) / (sx ** 2 - sy ** 2))
+    #print rotation, math.atan2(v[0][1], v[0][0]), math.atan2(v[0][0], v[1][0])
+    #rotation = 0.5 * math.atan2((2 * covar)/(aspectratio*(sx ** 2 - sy ** 2)))
+
+
     return a, b, rotation
 
 
@@ -70,6 +78,8 @@ class ErrorEllipseOverlay(AbstractOverlay):
         yer = component.yerror.get_data()
 
         pxy = corrcoef(x, y)[0][1]
+        #pxy, _pvalue=pearsonr(x,y)
+        #print pxy, corrcoef(x,y)[0][1]
 
         dx = abs(component.index_mapper.range.low -
                  component.index_mapper.range.high)
@@ -80,10 +90,9 @@ class ErrorEllipseOverlay(AbstractOverlay):
         width = component.width
 
         aspectratio = (dy / height) / (dx / width)
-
         try:
-            for cx, cy, ox, oy in zip(x, y, xer, yer):
-                a, b, rot = error_ellipse(ox, oy, pxy,
+            for cx, cy, sx, sy in zip(x, y, xer, yer):
+                a, b, rot = error_ellipse(sx, sy, pxy,
                                           aspectratio=aspectratio)
                 #print a,b,rot
                 #a, b, rot = self.calculate_ellipse(component, cx, cy, ox, oy, pxy)
@@ -115,11 +124,13 @@ class ErrorEllipseOverlay(AbstractOverlay):
         gc.translate_ctm(scx, scy)
 
         #print math.degrees(rot)
-        #rot*=10
-        gc.rotate_ctm(rot - pi / 2.0)
-        gc.translate_ctm(-scx, -scy)
 
-        gc.translate_ctm(scx - ox, scy - oy)
+        #gc.rotate_ctm(rot)
+        #gc.rotate_ctm(rot-pi/2.9)
+        gc.translate_ctm(-ox, -oy)
+        #gc.translate_ctm(-scx, -scy)
+
+        #gc.translate_ctm(scx - ox, scy - oy)
 
         gc.begin_path()
         gc.lines(pts)
