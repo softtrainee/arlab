@@ -48,7 +48,7 @@ class FluxTool(HasTraits):
     levels = Int(10, auto_set=False, enter_set=True)
     model_kind = Str('Plane')
 
-    data_source = Str('database')
+    data_source = Str('file')
 
     def traits_view(self):
         v = View(
@@ -111,9 +111,6 @@ class FluxEditor(GraphEditor):
 
     def _rebuild_graph(self):
         g = self.graph
-
-        #@todo: add a colorbar
-
         p = g.new_plot(xtitle='X', ytitle='Y')
 
         ito = IrradiationTrayOverlay(component=p,
