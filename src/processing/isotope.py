@@ -16,7 +16,7 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Str, Float, Property, Instance, \
-    Bool, Int, Array, String, Either
+    Bool, Int, Array, String, Either, cached_property
 
 #============= standard library imports ========================
 from uncertainties import ufloat, Variable, AffineScalarFunc
@@ -142,7 +142,7 @@ class IsotopicMeasurement(BaseMeasurement):
     def _set_value(self, v):
         self._value = v
 
-    # @cached_property
+    @cached_property
     def _get_value(self):
         if self.refit and self.xs is not None and len(self.xs) > 1:  # and self.ys is not None:
         #            if len(self.xs) > 2 and len(self.ys) > 2:
@@ -153,7 +153,7 @@ class IsotopicMeasurement(BaseMeasurement):
         else:
             return self._value
 
-    # @cached_property
+    @cached_property
     def _get_error(self):
         if self.refit and self.xs is not None and len(self.xs) > 1:
         #            if len(self.xs) > 2 and len(self.ys) > 2:
@@ -162,7 +162,7 @@ class IsotopicMeasurement(BaseMeasurement):
         else:
             return self._error
 
-    # @cached_property
+    @cached_property
     def _get_regressor(self):
         try:
             if 'average' in self.fit.lower():
@@ -188,7 +188,7 @@ class IsotopicMeasurement(BaseMeasurement):
 
         return reg
 
-    # @cached_property
+    @cached_property
     def _get_uvalue(self):
         return ufloat(self.value, self.error)
 
@@ -284,19 +284,20 @@ class Isotope(IsotopicMeasurement):
             return the discrimination and ic_factor corrected value
         """
         #print self.ic_factor, self.name, self.discrimination
-        return self.get_corrected_value() * self.discrimination * self.ic_factor
+        return self.disc_corrected_value() * self.ic_factor
 
     def disc_corrected_value(self):
-        return self.get_corrected_value() * self.disc_corrected_value()
+        return self.get_corrected_value() * self.discrimination.nominal_value
 
     def ic_corrected_value(self):
         return self.get_corrected_value() * self.ic_factor
 
     def baseline_corrected_value(self):
-        return self.uvalue - self.baseline.uvalue
+        return self.uvalue - self.baseline.uvalue.nominal_value
 
     def get_corrected_value(self):
         v = self.baseline_corrected_value()
+
         if self.correct_for_blank:
             v = v - self.blank.uvalue
 

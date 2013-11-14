@@ -15,19 +15,21 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import on_trait_change, Property
+from collections import namedtuple
+import struct
+from traits.api import on_trait_change
 from traitsui.tabular_adapter import TabularAdapter
 from pyface.tasks.task_layout import TaskLayout, HSplitter, VSplitter, PaneItem, Tabbed
 #============= standard library imports ========================
 from numpy import asarray, average
 #============= local library imports  ==========================
+from uncertainties import ufloat
 from src.processing.tasks.flux.panes import IrradiationPane
 from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
-from src.processing.tasks.analysis_edit.panes import HistoryTablePane, TablePane
+from src.processing.tasks.analysis_edit.panes import TablePane
 from src.processing.argon_calculations import calculate_flux
-from pyface.tasks.task import Task
-from src.envisage.tasks.editor_task import BaseEditorTask
-from pyface.tasks.advanced_editor_area_pane import AdvancedEditorAreaPane
+
+Position = namedtuple('Positon', 'position x y')
 
 
 class LevelAdapter(TabularAdapter):
@@ -91,8 +93,7 @@ class FluxTask(InterpolationTask):
         from src.processing.tasks.flux.flux_editor import FluxEditor
 
         editor = FluxEditor(name='Flux {:03n}'.format(self.flux_editor_count),
-                            processor=self.manager
-        )
+                            processor=self.manager)
 
         self._open_editor(editor)
         self.flux_editor_count += 1
@@ -126,8 +127,8 @@ class FluxTask(InterpolationTask):
 
         # helper funcs
         def calc_j(ai):
-            ar40 = ai.arar_result['rad40']
-            ar39 = ai.arar_result['k39']
+            ar40 = ai.isotopes['Ar40'].get_interference_corrected_value()
+            ar39 = ai.isotopes['Ar39'].get_interference_corrected_value()
             return calculate_flux(ar40, ar39, monitor_age)
 
         def mean_j(ans):
@@ -135,7 +136,7 @@ class FluxTask(InterpolationTask):
             errs = asarray(errs)
             wts = errs ** -2
             m, ss = average(js, weights=wts, returned=True)
-            return m, ss ** -0.5
+            return ufloat(m, ss ** -0.5)
 
         proc = self.manager
         #def func(ai):
@@ -153,28 +154,71 @@ class FluxTask(InterpolationTask):
         db = proc.db
         with db.session_ctx():
             refs = self.references_pane.items
-            #ans=[]
-            #for i, ri in enumerate(refs):
-            #    a=db.get_labnumber_analyses(ri.identifier)
-            for ri in refs:
-                print ri.identifier
-                print db.get_labnumber_analyses(ri.identifier)
+            ans, tcs = zip(*[db.get_labnumber_analyses(ri.identifier) for ri in refs])
+            #print ans
+            #print tcs
+            prog = proc.open_progress(n=sum(tcs))
 
-            ans = [ai for ri in refs
-                   for ai in db.get_labnumber_analyses(ri.identifier)]
-            if ans:
-                ans = proc.make_analyses(ans)
-                irrad = proc.irradiation
-                level = proc.level
-                self._open_ideogram_editor(ans,
-                                           name='Ideo - {}'.format(irrad, level))
+            geom = self._get_geometry()
+            editor = self.active_editor
+            editor.geometry = geom
+            for ais in ans:
+                ref = ais[0]
+                pid = ref.labnumber.irradiation_position.position
+                ident = ref.labnumber.identifier
 
-#        ideo = proc.new_ideogram(ans=analyses)
-#
-#        from src.processing.tasks.analysis_edit.graph_editor import ComponentEditor
-#        editor = ComponentEditor(component=ideo,
-#                                 name='Ideogram')
-#        self._open_editor(editor)
+                x, y, r = geom[pid - 1]
+                aa = proc.make_analyses(ais, progress=prog)
+                j = mean_j(aa)
+                editor.add_monitor_position(int(pid), ident, x, y, j)
 
+            editor.rebuild_graph()
+
+            #for ln, ais in groupby(ans, key=lambda x: x.labnumber):
+            #    print ln, ln.position
+            #aa = proc.make_analyses(ais, progress=prog)
+
+            #print mean_j(aa)
+
+            #m=MonitorPosition()
+            #editor.monitor_positions.append()
+            #ans =[ai for ais, cnt in ans
+            #        for ai in ais]
+            #print mean_j(ans)
+            #    irrad = proc.irradiation
+            #    level = proc.level
+            #    self._open_ideogram_editor(ans,
+            #                               name='Ideo - {}'.format(irrad, level))
+
+
+            #        ideo = proc.new_ideogram(ans=analyses)
+            #
+            #        from src.processing.tasks.analysis_edit.graph_editor import ComponentEditor
+            #        editor = ComponentEditor(component=ideo,
+            #                                 name='Ideogram')
+            #        self._open_editor(editor)
+
+    def _get_geometry(self):
+        man = self.manager
+        db = man.db
+        with db.session_ctx():
+            level = db.get_irradiation_level(man.irradiation, man.level)
+            geom = level.holder.geometry
+            return [struct.unpack('>fff', geom[i:i + 12])
+                    for i in xrange(0, len(geom), 12)]
+            #for i in xrange(0, len(geom), 8):
+            #    positions[k]=struct.unpack('>ff', geom[i:i+8])
+            #    k+=1
+            #return k
+            #    positions = [
+            #        Position(i, x, y)
+            #        for i, (x, y) in enumerate([struct.unpack('>ff', geom[i:i + 8]) for i in xrange(0, len(geom), 8)])]
+            #return positions
+            #    for ri in ans:
+            #        pos = next((pi for pi in positions if pi.position + 1 == ri.position), None)
+            #        if pos:
+            #        #                    print ri.position, pos.x, pos.y, math.atan2(pos.x, pos.y)
+            #            xx.append((pos.x, pos.y))
+            #return xx
 
 #============= EOF =============================================

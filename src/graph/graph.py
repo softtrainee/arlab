@@ -875,7 +875,9 @@ class Graph(Viewable, ContextMenuMixin):
                 rd['type'] = 'line'
 
             elif rd['type'] == 'scatter':
-                rd['outline_color'] = rd['color']
+                if 'outline_color' in rd:
+                    rd['outline_color'] = rd['color']
+
                 rd['selection_color'] = rd['selection_color']
                 rd['selection_outline_color'] = rd['color']
 
@@ -1365,7 +1367,8 @@ class Graph(Viewable, ContextMenuMixin):
                 colorkey = 'face_color'
                 kw['edge_color'] = c
             elif kw['type'] == 'scatter':
-                kw['outline_color'] = c
+                if 'outline_color' not in kw:
+                    kw['outline_color'] = c
 
         for k, v in [
             ('render_style', 'connectedpoints'),

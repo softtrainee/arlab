@@ -62,6 +62,7 @@ class MassSpecPychronTestCase(unittest.TestCase):
         #logger.info('{} {}'.format(k, cnt))
         return ev, cnt
 
+    # ======= ratios
     def test_Ar39_Ar40(self):
         an = self.analysis
         a40 = an.isotopes['Ar40'].get_interference_corrected_value()
@@ -96,6 +97,7 @@ class MassSpecPychronTestCase(unittest.TestCase):
 
         self._almost_equal(r.std_dev / r.nominal_value * 100, 'Isoch_36_40err')
 
+    # ======= signal err
     def test_Ar40_err(self):
         k = 'Ar40'
         self._signal_err(k)
@@ -116,6 +118,7 @@ class MassSpecPychronTestCase(unittest.TestCase):
         k = 'Ar36'
         self._signal_err(k)
 
+    # ======= signal
     def test_Ar40(self):
         k = 'Ar40'
         self._signal(k)
@@ -136,10 +139,7 @@ class MassSpecPychronTestCase(unittest.TestCase):
         k = 'Ar36'
         self._signal(k)
 
-    def test_Ar40_blank_err(self):
-        k = 'Ar40'
-        self._blank_err(k)
-
+    # ======= baseline only
     def test_Ar40_baseline_corrected(self):
         k = 'Ar40'
         self._baseline_corrected(k)
@@ -159,6 +159,32 @@ class MassSpecPychronTestCase(unittest.TestCase):
     def test_Ar36_baseline_corrected(self):
         k = 'Ar36'
         self._baseline_corrected(k)
+
+    # ======= baseline only error
+    def test_Ar40_baseline_corrected_err(self):
+        k = 'Ar40'
+        self._baseline_corrected_err(k)
+
+    def test_Ar39_baseline_corrected_err(self):
+        k = 'Ar39'
+        self._baseline_corrected_err(k)
+
+    def test_Ar38_baseline_corrected_err(self):
+        k = 'Ar38'
+        self._baseline_corrected_err(k)
+
+    def test_Ar37_baseline_corrected_err(self):
+        k = 'Ar37'
+        self._baseline_corrected_err(k)
+
+    def test_Ar36_baseline_corrected_err(self):
+        k = 'Ar36'
+        self._baseline_corrected_err(k)
+
+    # ======= blanks
+    def test_Ar40_blank_err(self):
+        k = 'Ar40'
+        self._blank_err(k)
 
     def test_Ar40_blank(self):
         k = 'Ar40'
@@ -180,6 +206,7 @@ class MassSpecPychronTestCase(unittest.TestCase):
         k = 'Ar36'
         self._blank(k)
 
+    #===============================================
     def _signal(self, k):
         an = self.analysis
         v = an.isotopes[k].get_intensity()
@@ -189,11 +216,6 @@ class MassSpecPychronTestCase(unittest.TestCase):
         an = self.analysis
         v = an.isotopes[k].get_intensity()
         self._almost_equal(v.std_dev, '{}Er'.format(k))
-
-    def _almost_equal(self, v, k):
-        ev, cnt = self.get_expected_value(k)
-        sv = float('{{:0.{}f}}'.format(cnt).format(v))
-        self.assertAlmostEqual(sv, ev, cnt)
 
     def _blank_err(self, k):
         an = self.analysis
@@ -210,8 +232,27 @@ class MassSpecPychronTestCase(unittest.TestCase):
         v = an.isotopes[k].baseline_corrected_value()
         self._almost_equal(v.nominal_value, '{}_BslnCorOnly'.format(k))
 
+    def _baseline_corrected_err(self, k):
+        an = self.analysis
+        v = an.isotopes[k].baseline_corrected_value()
+        self._almost_equal(v.std_dev, '{}_Er_BslnCorOnly'.format(k))
+
     def _interference_corrected(self, k):
         an = self.analysis
         v = an.isotopes[k].get_interference_corrected_value()
         self._almost_equal(v.nominal_value, '{}_DecayCor'.format(k))
 
+
+    def _almost_equal(self, v, k):
+        ev, cnt = self.get_expected_value(k)
+
+        sv = str(v)
+        acnt = 10000
+        if 'e' in sv:
+            acnt = int(round(abs(math.log10(v))))
+        elif '.' in sv:
+            a = sv.split('.')[-1]
+            acnt = len(a)
+
+        cnt = min(acnt, cnt)
+        self.assertAlmostEqual(v, ev, cnt)
