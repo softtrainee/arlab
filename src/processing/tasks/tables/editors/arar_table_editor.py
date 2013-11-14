@@ -15,81 +15,74 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import List, Property, cached_property
+from itertools import groupby
+from traits.api import Property, List, cached_property
 from traitsui.api import View, UItem
-
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.ui.tabular_editor import myTabularEditor
-from src.processing.tasks.tables.editors.adapters import LaserTableAdapter, \
-    LaserTableMeanAdapter
+from src.column_sorter_mixin import ColumnSorterMixin
 from src.processing.analysis_means import Mean
 from src.processing.tasks.tables.editors.base_table_editor import BaseTableEditor
-
-from itertools import groupby
-from src.column_sorter_mixin import ColumnSorterMixin
+from src.ui.tabular_editor import myTabularEditor
 
 
-class LaserTableEditor(BaseTableEditor, ColumnSorterMixin):
+class ArArTableEditor(BaseTableEditor, ColumnSorterMixin):
     means = Property(List, depends_on='items[]')
-    #show_blanks = Bool(False)
-
-    #     refresh_means = Event
+    pdf_writer_klass = None
+    xls_writer_klass = None
+    csv_writer_klass = None
+    adapter_klass = None
+    mean_adapter_klass = None
 
     def _items_items_changed(self):
         self.refresh_needed = True
 
-    def make_pdf_table(self, title):
-        from src.processing.tables.laser_table_pdf_writer import LaserTablePDFWriter
+    def make_pdf_table(self, title, path=None):
 
         ans = self._clean_items()
-        t = LaserTablePDFWriter(
+        t = self.pdf_writer_klass(
             orientation='landscape',
-            use_alternating_background=self.use_alternating_background
-        )
+            use_alternating_background=self.use_alternating_background)
 
         t.col_widths = self._get_column_widths()
         means = self.means
-
-        p = self._get_save_path()
+        path = self._get_save_path(path)
         #         p = '/Users/ross/Sandbox/aaaatable.pdf'
-        if p:
+        if path:
             key = lambda x: x.sample
             ans = groupby(ans, key=key)
-            t.build(p, ans, means, title=title)
-            return p
+            t.build(path, ans, means, title=title)
+            return path
 
-    def make_xls_table(self, title):
+    def make_xls_table(self, title, path=None):
         ans = self._clean_items()
         means = self.means
-        from src.processing.tables.laser_table_xls_writer import LaserTableXLSWriter
 
-        t = LaserTableXLSWriter()
-        p = self._get_save_path(ext='.xls')
+        t = self.xls_writer_klass()
+        path = self._get_save_path(path, ext='.xls')
         #         p = '/Users/ross/Sandbox/aaaatable.xls'
-        if p:
-            t.build(p, ans, means, title)
-            return p
+        if path:
+            t.build(path, ans, means, title)
+            return path
 
-    def make_csv_table(self, title):
+    def make_csv_table(self, title, path=None):
         ans = self._clean_items()
         means = self.means
-        from src.processing.tables.laser_table_csv_writer import LaserTableCSVWriter
 
-        t = LaserTableCSVWriter()
+        t = self.csv_writer_klass()
 
         #         p = '/Users/ross/Sandbox/aaaatable.csv'
-        p = self._get_save_path(ext='.csv')
-        if p:
-            t.build(p, ans, means, title)
-            return p
+        path = self._get_save_path(path, ext='.csv')
+        if path:
+            t.build(path, ans, means, title)
+            return path
 
     def _get_column_widths(self):
-        '''
+        """
             exclude the first column from col widths
             it is displaying in pychron but not in the pdf
-        '''
+        """
         status_width = 6
 
         ac = map(lambda x: x * 0.6, self.col_widths[1:])
@@ -104,50 +97,27 @@ class LaserTableEditor(BaseTableEditor, ColumnSorterMixin):
         ans = self._clean_items()
         ms = [
             Mean(analyses=list(ais),
-                 sample=sam
-            )
+                 sample=sam)
             for sam, ais in groupby(ans, key=key)]
         return ms
 
-    #         return [Mean(analyses=self._clean_items()), ]
-
-    #def refresh_blanks(self):
-    #    self._show_blanks_changed(self.show_blanks)
-    #
-    #def _show_blanks_changed(self, new):
-    #    if new:
-    #        self.items = self.oitems
-    #    else:
-    #        self.items = self._clean_items()
-
     def traits_view(self):
         v = View(
-            #HGroup(spring, Item('show_blanks')),
             UItem('items',
-                  editor=myTabularEditor(adapter=LaserTableAdapter(),
+                  editor=myTabularEditor(adapter=self.adapter_klass(),
                                          #                                               editable=False,
                                          col_widths='col_widths',
                                          selected='selected',
                                          multi_select=True,
                                          auto_update=False,
                                          operations=['delete', 'move'],
-                                         column_clicked='column_clicked'
-                                         #                                               auto_resize=True,
-                                         #                                               stretch_last_section=False
-                  )
-
-            ),
+                                         column_clicked='column_clicked')),
             UItem('means',
-                  editor=myTabularEditor(adapter=LaserTableMeanAdapter(),
+                  editor=myTabularEditor(adapter=self.mean_adapter_klass(),
                                          #                                              auto_resize=True,
                                          editable=False,
                                          auto_update=False,
-                                         refresh='refresh_needed'
-                  )
-            )
-
-
-        )
+                                         refresh='refresh_needed')))
         return v
 
-    #============= EOF =============================================
+        #============= EOF =============================================

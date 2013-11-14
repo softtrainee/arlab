@@ -15,26 +15,38 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, List, Any, Event, Bool
-from src.envisage.tasks.base_editor import BaseTraitsEditor
+from traits.api import List, Any, Event, Bool
+from pyface.file_dialog import FileDialog
+
 from src.processing.tasks.editor import BaseUnknownsEditor
 from src.processing.tasks.tables.editors.adapters import TableBlank, \
     TableSeparator
-from pyface.file_dialog import FileDialog
 from src.helpers.filetools import add_extension
 from src.paths import paths
+
 #============= standard library imports ========================
 #============= local library imports  ==========================
 
 class BaseTableEditor(BaseUnknownsEditor):
     items = List
-    oitems = List
+    #oitems = List
     col_widths = List
     selected = Any
     refresh_needed = Event
     use_alternating_background = Bool(False)
 
     basename = 'table'
+
+    def save_file(self, p, title=''):
+        if p.endswith('.xls'):
+            self.make_xls_table(title, p)
+        elif p.endswith('.pdf'):
+            self.make_pdf_table(title, p)
+        else:
+            self.make_csv_table(title, p)
+
+    def set_items(self, items):
+        self.items = items
 
     def _items_changed(self):
         self._set_name()
@@ -57,10 +69,14 @@ class BaseTableEditor(BaseUnknownsEditor):
         return filter(lambda x: not isinstance(x, (TableBlank, TableSeparator)),
                       self.items)
 
-    def _get_save_path(self, ext='.pdf'):
-        dlg = FileDialog(action='save as', default_directory=paths.processed_dir)
-        if dlg.open():
-            return add_extension(dlg.path, ext)
+    def _get_save_path(self, path, ext='.pdf'):
+        if path is None:
+            dlg = FileDialog(action='save as', default_directory=paths.processed_dir)
+            if dlg.open():
+                path = add_extension(dlg.path, ext)
+
+        return path
+
 
     def make_pdf_table(self, *args, **kw):
         pass
@@ -71,4 +87,6 @@ class BaseTableEditor(BaseUnknownsEditor):
     def make_csv_table(self, *args, **kw):
         pass
 
-    #============= EOF =============================================
+
+
+        #============= EOF =============================================

@@ -93,6 +93,9 @@ class GraphEditor(BaseUnknownsEditor):
         xs = xs / (60. * 60.)
         return xs
 
+    def set_items(self, unks):
+        self.unknowns = unks
+
     @on_trait_change('unknowns[]')
     def _update_unknowns(self, obj, name, old, new):
         #print '11111', len(self.unknowns)

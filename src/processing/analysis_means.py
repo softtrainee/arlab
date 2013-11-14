@@ -17,7 +17,7 @@
 #============= enthought library imports =======================
 from traits.api import HasTraits, List, Property, cached_property, Str
 #============= standard library imports ========================
-from numpy import array, average, ones
+from numpy import array
 #============= local library imports  ==========================
 from uncertainties import ufloat
 from src.processing.analysis import Marker
@@ -28,7 +28,7 @@ class Mean(HasTraits):
     sample = Str
     analyses = List
     nanalyses = Property(depends_on='analyses:[status,temp_status]')
-#    age = Property(depends_on='analyses:[status,temp_status]')
+    #    age = Property(depends_on='analyses:[status,temp_status]')
 
     arith_age = Property(depends_on='analyses:[status,temp_status]')
     weighted_age = Property(depends_on='analyses:[status,temp_status]')
@@ -38,14 +38,14 @@ class Mean(HasTraits):
 
     identifier = Property
 
-#    def _calculate_weighted_mean(self, attr):
-#        vs = array([getattr(ai, attr) for ai in self.analyses
-#                    if ai.status == 0 and ai.temp_status == 0])
-#        return vs.mean()
+    #    def _calculate_weighted_mean(self, attr):
+    #        vs = array([getattr(ai, attr) for ai in self.analyses
+    #                    if ai.status == 0 and ai.temp_status == 0])
+    #        return vs.mean()
     @cached_property
     def _get_mswd(self):
         m = ''
-        args = self._get_values('age')
+        args = self._get_values('uage')
         if args:
             vs, es = args
             m = calculate_mswd(vs, es)
@@ -58,7 +58,7 @@ class Mean(HasTraits):
 
     @cached_property
     def _get_weighted_age(self):
-        return self._calculate_weighted_mean('age')
+        return self._calculate_weighted_mean('uage')
 
     @cached_property
     def _get_weighted_kca(self):
@@ -66,18 +66,18 @@ class Mean(HasTraits):
 
     @cached_property
     def _get_arith_age(self):
-        return self._calculate_arithmetic_mean('age')
+        return self._calculate_arithmetic_mean('uage')
 
     @cached_property
     def _get_nanalyses(self):
 
         return len([ai for ai in self.analyses
-                        if ai.temp_status == 0 and not ai.tag])
+                    if ai.temp_status == 0 and not ai.tag])
 
     def _get_values(self, attr):
         vs = (getattr(ai, attr) for ai in self.analyses
-                                if not isinstance(ai, Marker) and \
-                                    ai.temp_status == 0 and not ai.tag)
+              if not isinstance(ai, Marker) and \
+                 ai.temp_status == 0 and not ai.tag)
 
         vs = [vi for vi in vs if vi is not None]
         if vs:
@@ -117,6 +117,7 @@ class Mean(HasTraits):
     def _calculate_weighted_mean(self, attr):
         return self._calculate_mean(attr, use_weights=True)
 
+
 class AnalysisRatioMean(Mean):
     Ar40_39 = Property
     Ar37_39 = Property
@@ -126,15 +127,18 @@ class AnalysisRatioMean(Mean):
 
     def _get_Ar40_39(self):
         return self._calculate_weighted_mean('Ar40_39')
-#        return self._calculate_weighted_mean('rad40') / self._calculate_weighted_mean('k39')
+
+    #        return self._calculate_weighted_mean('rad40') / self._calculate_weighted_mean('k39')
 
     def _get_Ar37_39(self):
         return self._calculate_weighted_mean('Ar37_39')
-#        return self._calculate_weighted_mean('Ar37') / self._calculate_weighted_mean('Ar39')
+
+    #        return self._calculate_weighted_mean('Ar37') / self._calculate_weighted_mean('Ar39')
 
     def _get_Ar36_39(self):
         return self._calculate_weighted_mean('Ar36_39')
-#        return self._calculate_weighted_mean('Ar36') / self._calculate_weighted_mean('Ar39')
+
+    #        return self._calculate_weighted_mean('Ar36') / self._calculate_weighted_mean('Ar39')
 
     def _get_kca(self):
         return self._calculate_weighted_mean('kca')
@@ -152,12 +156,16 @@ class AnalysisIntensityMean(Mean):
 
     def _get_Ar40(self):
         return self._calculate_weighted_mean('Ar40')
+
     def _get_Ar39(self):
         return self._calculate_weighted_mean('Ar39')
+
     def _get_Ar38(self):
         return self._calculate_weighted_mean('Ar38')
+
     def _get_Ar37(self):
         return self._calculate_weighted_mean('Ar37')
+
     def _get_Ar36(self):
         return self._calculate_weighted_mean('Ar36')
 

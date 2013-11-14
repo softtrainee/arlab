@@ -13,20 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-# from traits.etsconfig.etsconfig import ETSConfig
-# ETSConfig.toolkit = 'qt4'
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Any, Str, Callable, Either, List
+from traits.api import HasTraits, Any, Str, List, Callable, Either
+
 #============= standard library imports ========================
 import csv
 #============= local library imports  ==========================
-from src.processing.tables.laser_table_text_writer import LaserTableTextWriter
 
 
 class CSVCell(HasTraits):
     txt = Any
     fmt = Either(Str, Callable)
+
     def render(self):
         txt = self.txt
         if txt is None:
@@ -36,14 +35,15 @@ class CSVCell(HasTraits):
         if fmt is None:
             fmt = str
 
-
         if isinstance(fmt, str):
             return fmt.format(txt)
         else:
             return fmt(txt)
 
+
 class CSVRow(HasTraits):
     cells = List
+
     def render(self, writer):
         rows = [ci.render() for ci in self.cells]
         writer.writerow(rows)
@@ -59,6 +59,7 @@ class CSVRow(HasTraits):
 class CSVSheet(HasTraits):
     rows = List
     name = Str
+
     def render(self, writer):
         writer.writerow([self.name, ])
         for ri in self.rows:
@@ -94,21 +95,5 @@ class CSVWorkbook(HasTraits):
 
             for sh in self.sheets:
                 sh.render(writer)
-
-
-class LaserTableCSVWriter(LaserTableTextWriter):
-    def _new_workbook(self):
-        return CSVWorkbook()
-
-
-# if __name__ == '__main__':
-#     l = LaserTableCSVWriter()
-#     from src.processing.analyses.analysis import DBAnalysis
-#     ans = [DBAnalysis(sample='foo', labnumber='11111') for i in range(5)]
-#     ans.extend([DBAnalysis(sample='bar',
-#                            labnumber='22222'
-#                            ) for i in range(5)])
-#     p = '/Users/ross/Sandbox/aaaatable.csv'
-#     l.build(p, ans, [], 'foo')
 
 #============= EOF =============================================

@@ -81,9 +81,9 @@ class BasePDFWriter(Loggable):
                               topMargin=self.top_margin * inch,
                               bottomMargin=self.bottom_margin * inch,
                               pagesize=pagesize
-#                                   _pageBreakQuick=0,
-#                                   showBoundary=1
-                              )
+                              #                                   _pageBreakQuick=0,
+                              #                                   showBoundary=1
+        )
         return doc
 
     def build(self, path, *args, **kw):
@@ -118,20 +118,19 @@ class BasePDFWriter(Loggable):
         if cs:
             cn = len(cs)
             dn = max([len(di) for di in rows])
-#             dn = len(data[0])
+            #             dn = len(data[0])
             if cn < dn:
                 cs.extend([40 for _ in range(dn - cn)])
 
             t._argW = cs
 
-#         if extend_last:
-#             print t._argW
-#             tw = sum(t._argW)
-#             d = self._doc
-#             aw = d.width - self._doc.leftMargin - self._doc.rightMargin
-#             print tw, aw
-#             t._argW[-1] = aw - tw
-
+            #         if extend_last:
+            #             print t._argW
+            #             tw = sum(t._argW)
+            #             d = self._doc
+            #             aw = d.width - self._doc.leftMargin - self._doc.rightMargin
+            #             print tw, aw
+            #             t._argW[-1] = aw - tw
 
 
     def _new_table(self, style, data, hAlign='LEFT',
@@ -144,7 +143,7 @@ class BasePDFWriter(Loggable):
 
         # render rows
         rows = [di.render() if hasattr(di, 'render') else di
-                    for di in data]
+                for di in data]
 
         t = Table(rows, hAlign=hAlign,
                   style=style,
@@ -171,8 +170,8 @@ class BasePDFWriter(Loggable):
 
         if header_line_idx is not None:
             ts.add('LINEBELOW', (0, header_line_idx),
-                                (-1, header_line_idx),
-                                header_line_width, header_line_color)
+                   (-1, header_line_idx),
+                   header_line_width, header_line_color)
 
         return ts
 
@@ -216,7 +215,7 @@ class BasePDFWriter(Loggable):
                   start=0, end=-1,
                   color='black',
                   cmd='LINEBELOW'
-                  ):
+    ):
 
         style.add(cmd, (start, idx), (end, idx),
                   weight, getattr(colors, color))
@@ -230,14 +229,19 @@ class BasePDFWriter(Loggable):
                 attr, fmt = args
                 fontsize = default_fontsize
 
-            v = getattr(obj, attr)
+            #if attr in ARGON_KEYS:
+            if attr in obj.isotopes:
+                v = obj.isotopes[attr].get_intensity()
+            else:
+                v = getattr(obj, attr)
+
             row.add_item(value=v, fmt=fmt, fontsize=fontsize)
 
         return row
 
     def _get_idxs(self, rows, klass):
-            return [(i, v) for i, v in enumerate(rows)
-                      if isinstance(v, klass)]
+        return [(i, v) for i, v in enumerate(rows)
+                if isinstance(v, klass)]
 
     def _fmt_attr(self, v, key='nominal_value', n=5, scale=1, **kw):
         if v is None:

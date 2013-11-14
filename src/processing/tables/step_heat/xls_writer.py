@@ -22,11 +22,12 @@ from xlwt.Workbook import Workbook
 from xlwt.Style import XFStyle, default_style
 from xlwt.Formatting import Borders
 from xlwt import Alignment
-from src.processing.tables.laser_table_text_writer import LaserTableTextWriter
+from src.processing.tables.fusion.text_writer import LaserTableTextWriter
 
 
-class LaserTableXLSWriter(LaserTableTextWriter):
+class StepHeatTableXLSWriter(LaserTableTextWriter):
     default_style = default_style
+
     def _new_workbook(self):
         return Workbook()
 
@@ -41,11 +42,7 @@ class LaserTableXLSWriter(LaserTableTextWriter):
         borders.bottom = 2
         s2.borders = borders
 
-        return  s1, s2
-
-
-
-
+        return s1, s2
 
 
 #============= EOF =============================================

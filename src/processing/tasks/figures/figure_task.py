@@ -186,8 +186,8 @@ class FigureTask(AnalysisEditTask):
             klass = IdeogramEditor
 
         if tklass is None:
-            from src.processing.tasks.tables.editors.laser_table_editor \
-                import LaserTableEditor as tklass
+            from src.processing.tasks.tables.editors.fusion_table_editor \
+                import FusionTableEditor as tklass
 
         return self._new_figure(ans, name, klass, tklass,
                                 set_ans=set_ans,
@@ -202,8 +202,8 @@ class FigureTask(AnalysisEditTask):
             klass = SpectrumEditor
 
         if tklass is None:
-            from src.processing.tasks.tables.editors.laser_table_editor \
-                import LaserTableEditor as tklass
+            from src.processing.tasks.tables.editors.fusion_table_editor \
+                import FusionTableEditor as tklass
 
         return self._new_figure(ans, name, klass, tklass,
                                 add_iso=add_iso,
@@ -215,8 +215,8 @@ class FigureTask(AnalysisEditTask):
             klass = InverseIsochronEditor
 
         if tklass is None:
-            from src.processing.tasks.tables.editors.laser_table_editor \
-                import LaserTableEditor as tklass
+            from src.processing.tasks.tables.editors.fusion_table_editor \
+                import FusionTableEditor as tklass
 
         feditor = self._new_figure(ans, name, klass, tklass,
                                    add_iso=False)
@@ -229,8 +229,8 @@ class FigureTask(AnalysisEditTask):
             klass = SeriesEditor
 
         if tklass is None:
-            from src.processing.tasks.tables.editors.laser_table_editor \
-                import LaserTableEditor as tklass
+            from src.processing.tasks.tables.editors.fusion_table_editor \
+                import FusionTableEditor as tklass
 
         return self._new_figure(ans, name, klass, tklass,
                                 add_iso=add_iso,

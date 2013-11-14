@@ -18,15 +18,34 @@
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
-from src.database.isotope_database_manager import IsotopeDatabaseManager
 from src.experiment.easy_parser import EasyParser
+from src.helpers.filetools import unique_path
+from src.processing.easy.base_easy import BaseEasy
+from src.processing.tasks.tables.editors.fusion_table_editor import FusionTableEditor
 
 
-class EasyTables(IsotopeDatabaseManager):
+class EasyTables(BaseEasy):
+    def _save_fusion(self, editor, root, ident):
+        ft = ('pdf', 'xls', 'csv')
+        sft = ', '.join(ft[:-1])
+        sft = '{} or {}'.format(sft, ft[-1])
+        for ext in self._file_types:
+
+            if ext not in ft:
+                self.warning('Invalid file type "{}". Use "{}"'.format(ext, sft))
+            p, _ = unique_path(root, '{}_fusion_table'.format(ident), extension='.{}'.format(ext))
+            editor.save_file(p)
+
     def make_tables(self):
         ep = EasyParser()
         doc = ep.doc('tables')
-        print doc
+        projects = doc['projects']
+        self._file_types = doc['file_types']
+
+        ieditor = FusionTableEditor(processor=self)
+        #seditor=StepHeatTableEditor(processor=self)
+        root = self._make_root(ep)
+        self._make(projects, root, ieditor, ieditor, 'Table')
 
 
 #============= EOF =============================================

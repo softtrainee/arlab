@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,48 +14,35 @@
 # limitations under the License.
 #===============================================================================
 
-
 #============= enthought library imports =======================
-from pyface.action.api import Action
-from pyface.tasks.action.task_action import TaskAction
-
 #============= standard library imports ========================
-
 #============= local library imports  ==========================
 
-
-#============= EOF ====================================
-class EasyFitAction(TaskAction):
-    method = 'do_easy_fit'
-    name = 'Easy Fit'
-
-
-class EasyBlanksAction(TaskAction):
-    method = 'do_easy_blanks'
-    name = 'Easy Blanks'
+from xlwt.Workbook import Workbook
+from xlwt.Style import XFStyle, default_style
+from xlwt.Formatting import Borders
+from xlwt import Alignment
+from src.processing.tables.fusion.text_writer import LaserTableTextWriter
 
 
-class EasyDiscriminationAction(TaskAction):
-    method = 'do_easy_discrimination'
-    name = 'Easy Disc.'
+class FusionTableXLSWriter(LaserTableTextWriter):
+    default_style = default_style
+
+    def _new_workbook(self):
+        return Workbook()
+
+    def _get_header_styles(self):
+        s1 = XFStyle()
+        al = Alignment()
+        al.horz = Alignment.HORZ_CENTER
+        s1.alignment = al
+
+        s2 = XFStyle()
+        borders = Borders()
+        borders.bottom = 2
+        s2.borders = borders
+
+        return s1, s2
 
 
-class EasyFiguresAction(Action):
-    name = 'Easy Figures'
-
-    def perform(self, event):
-        from src.processing.easy.figures import EasyFigures
-
-        e = EasyFigures()
-        e.make_figures()
-
-
-class EasyTablesAction(Action):
-    name = 'Easy Tables'
-
-    def perform(self, event):
-        from src.processing.easy.tables import EasyTables
-
-        e = EasyTables()
-        e.make_tables()
-
+#============= EOF =============================================

@@ -119,6 +119,7 @@ class ArArAge(Loggable):
 
     arar_constants = Instance(ArArConstants)
 
+    moles_Ar40 = Float
     #def __init__(self, *args, **kw):
     #    super(ArArAge, self).__init__(*args, **kw)
     #self.age = ufloat(0, 0)

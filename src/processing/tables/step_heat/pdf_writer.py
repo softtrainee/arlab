@@ -15,30 +15,28 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-from traits.api import HasTraits, Int
+from traits.api import Int
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.pdf.base_pdf_writer import BasePDFWriter
-from src.helpers.formatting import floatfmt
 from src.pdf.items import Row, Subscript, Superscript, NamedParameter, \
     FootNoteRow, FooterRow
 from reportlab.lib.units import inch
 from reportlab.lib import colors
 
-from itertools import groupby
 
 def DefaultInt(value=40):
     return Int(value)
 
 
-class LaserTablePDFWriter(BasePDFWriter):
+class StepHeatTablePDFWriter(BasePDFWriter):
     def _build(self, doc, ans, means, title):
 
         title_para = self._new_paragraph(title)
         flowables = [title_para, self._vspacer(0.1)]
 
         include_footnotes = True
-#         print ans
+        #         print ans
         i = 0
         for _, ais in ans:
             aa = list(ais)
@@ -61,9 +59,9 @@ class LaserTablePDFWriter(BasePDFWriter):
                     double_first_line=True,
                     include_footnotes=False):
         style = self._new_style(
-                                debug_grid=False
-                                )
-#         style.add('GRID', (0, 0), (-1, -1), 0.25, colors.red)
+            debug_grid=False
+        )
+        #         style.add('GRID', (0, 0), (-1, -1), 0.25, colors.red)
 
         style.add('ALIGN', (0, 0), (-1, -1), 'LEFT')
         style.add('LEFTPADDING', (0, 0), (-1, -1), 1)
@@ -94,12 +92,12 @@ class LaserTablePDFWriter(BasePDFWriter):
                 if idx % 2 == 0:
                     style.add('BACKGROUND', (0, idx), (-1, idx),
                               colors.lightgrey,
-                              )
-#         data.extend([self._make_analysis_row(ai)
-#                      for ai in analyses])
+                    )
+                    #         data.extend([self._make_analysis_row(ai)
+                    #                      for ai in analyses])
 
-#         data.extend(header)
-#         data.extend([self._make_blank_row(ai) for ai in analyses])
+                    #         data.extend(header)
+                    #         data.extend([self._make_blank_row(ai) for ai in analyses])
 
         idx = len(data) - 1
         self._new_line(style, idx)
@@ -114,15 +112,16 @@ class LaserTablePDFWriter(BasePDFWriter):
         self._make_footnote_rows(fdata, style)
         self._make_footer_rows(fdata, style)
         ft = self._new_table(style, fdata, extend_last=True)
-#         spec = TableSpec()
-#         self._set_column_widths(t, spec)
+        #         spec = TableSpec()
+        #         self._set_column_widths(t, spec)
         return t, ft
 
     def _make_meta(self, analyses, style, include_footnotes=False):
         ref = analyses[0]
         j = ref.j
 
-        ic = ref.ic_factor
+        #ic = ref.ic_factor
+        ic = (1, 0)
         sample = ref.sample
         labnumber = ref.labnumber
         material = ref.material
@@ -147,7 +146,7 @@ class LaserTablePDFWriter(BasePDFWriter):
                                        'IC Factor',
                                        'H1/CDD intercalibration',
                                        '<b>IC</b>',
-                                       link_extra=': {}'.format(ics))
+                                       link_extra=u': {}'.format(ics))
         else:
             foot = NamedParameter('IC', ics)
 
@@ -157,8 +156,8 @@ class LaserTablePDFWriter(BasePDFWriter):
         line2.add_item(value=NamedParameter('Material', material), span=5)
         line2.add_item(value=NamedParameter('IGSN', igsn), span=2)
 
-#         self._sample_summary_row1 = line1
-#         self._sample_summary_row2 = line2
+        #         self._sample_summary_row1 = line1
+        #         self._sample_summary_row2 = line2
         title = False
         title_row = 0
         sample_row = 0
@@ -171,41 +170,41 @@ class LaserTablePDFWriter(BasePDFWriter):
 
     def _make_header(self, style):
         sigma = u'\u00b1 1\u03c3'
-#         sigma = self._plusminus_sigma()
+        #         sigma = self._plusminus_sigma()
         super_ar = lambda x: '{}Ar'.format(Superscript(x))
 
         _102fa = '(10{} fA)'.format(Superscript(2))
         _103fa = '(10{} fA)'.format(Superscript(3))
         minus_102fa = '(10{} fA)'.format(Superscript(-2))
 
-#         blank = self._make_footnote('BLANK',
-#                                    'Blank Type', 'LR= Linear Regression, AVE= Average',
-#                                    'Blank')
-#         blank = 'Blank Type'
+        #         blank = self._make_footnote('BLANK',
+        #                                    'Blank Type', 'LR= Linear Regression, AVE= Average',
+        #                                    'Blank')
+        #         blank = 'Blank Type'
         line = [
-                ('', ''),
-                ('N', ''),
-                ('Power', '(%)'),
-                (super_ar(40), ''),
-                (super_ar(40), _103fa), (sigma, ''),
-                (super_ar(39), _103fa), (sigma, ''),
-                (super_ar(38), ''), (sigma, ''),
-                (super_ar(37), ''), (sigma, ''),
-                (super_ar(36), ''), (sigma, minus_102fa),
-                ('%{}*'.format(super_ar(40)), ''),
-                ('{}*/{}{}'.format(super_ar(40),
-                                   super_ar(39),
-                                   Subscript('K')), ''),
-                ('Age', '(Ma)'), (sigma, ''),
-                ('K/Ca', ''),
-                (sigma, ''),
-#                 (blank, 'type'),
-#                 (super_ar(40), ''), (sigma, ''),
-#                 (super_ar(39), ''), (sigma, ''),
-#                 (super_ar(38), ''), (sigma, ''),
-#                 (super_ar(37), ''), (sigma, ''),
-#                 (super_ar(36), ''), (sigma, ''),
-              ]
+            ('', ''),
+            ('N', ''),
+            ('Power', '(%)'),
+            (super_ar(40), ''),
+            (super_ar(40), _103fa), (sigma, ''),
+            (super_ar(39), _103fa), (sigma, ''),
+            (super_ar(38), ''), (sigma, ''),
+            (super_ar(37), ''), (sigma, ''),
+            (super_ar(36), ''), (sigma, minus_102fa),
+            ('%{}*'.format(super_ar(40)), ''),
+            ('{}*/{}{}'.format(super_ar(40),
+                               super_ar(39),
+                               Subscript('K')), ''),
+            ('Age', '(Ma)'), (sigma, ''),
+            ('K/Ca', ''),
+            (sigma, ''),
+            #                 (blank, 'type'),
+            #                 (super_ar(40), ''), (sigma, ''),
+            #                 (super_ar(39), ''), (sigma, ''),
+            #                 (super_ar(38), ''), (sigma, ''),
+            #                 (super_ar(37), ''), (sigma, ''),
+            #                 (super_ar(36), ''), (sigma, ''),
+        ]
 
         name_row, unit_row = zip(*line)
 
@@ -230,64 +229,64 @@ class LaserTablePDFWriter(BasePDFWriter):
                   (-1, unit_row_idx), 1.5, colors.black)
 
         return [
-                nrow,
-                urow
-                ]
+            nrow,
+            urow
+        ]
 
     def _make_analysis_row(self, analysis):
         value = self._value
         error = self._error
         attrs = (
-                 ('temp_status', lambda x: '' if x == 0 else 'X'),
-                 ('aliquot_step_str', '{}',),
-                 ('extract_value', '{}'),
-                 ('moles_Ar40', value()),
+            ('temp_status', lambda x: '' if x == 0 else 'X'),
+            ('aliquot_step_str', '{}',),
+            ('extract_value', '{}'),
+            ('moles_Ar40', value()),
 
-                 #==============================================================
-                 # signals
-                 #==============================================================
-                 ('Ar40', value(scale=1e3)),
-                 ('Ar40', error()),
-                 ('Ar39', value(scale=1e3)),
-                 ('Ar39', error()),
-                 ('Ar38', value()),
-                 ('Ar38', error()),
-                 ('Ar37', value()),
-                 ('Ar37', error()),
-                 ('Ar36', value()),
-                 ('Ar36', error(scale=1e-2)),
+            #==============================================================
+            # signals
+            #==============================================================
+            ('Ar40', value(scale=1e3)),
+            ('Ar40', error()),
+            ('Ar39', value(scale=1e3)),
+            ('Ar39', error()),
+            ('Ar38', value()),
+            ('Ar38', error()),
+            ('Ar37', value()),
+            ('Ar37', error()),
+            ('Ar36', value()),
+            ('Ar36', error(scale=1e-2)),
 
-                 #==============================================================
-                 # computed
-                 #==============================================================
-                 ('rad40_percent', value(n=1)),
-                 ('R', value(n=5)),
-                 ('age', value(n=2)),
-                 ('age', error(n=4)),
-                 ('kca', value(n=2)),
-                 ('kca', error(n=2)),
+            #==============================================================
+            # computed
+            #==============================================================
+            ('rad40_percent', value(n=1)),
+            ('R', value(n=5)),
+            ('age', value(n=2)),
+            ('age', error(n=4)),
+            ('kca', value(n=2)),
+            ('kca', error(n=2)),
 
-                 )
+        )
         default_fontsize = 6
 
         row = self._new_row(analysis, attrs, default_fontsize)
 
         battrs = (
-                    #==============================================================
-                    # blanks
-                    #==============================================================
-#                     ('', '{}'),
-#                     ('', '{}'),
-                    ('', '{}'),
-                    ('', '{}'),
-#                     ('blank_fit', '{}'),
-                    ('Ar40', value(scale=1e3)),
-                    ('Ar39', value(scale=1e3)),
-                    ('Ar38',),
-                    ('Ar37',),
-                    ('Ar36', value(scale=1e-2)),
-#
-                )
+            #==============================================================
+            # blanks
+            #==============================================================
+            #                     ('', '{}'),
+            #                     ('', '{}'),
+            ('', '{}'),
+            ('', '{}'),
+            #                     ('blank_fit', '{}'),
+            ('Ar40', value(scale=1e3)),
+            ('Ar39', value(scale=1e3)),
+            ('Ar38',),
+            ('Ar37',),
+            ('Ar36', value(scale=1e-2)),
+            #
+        )
 
         blankrow = Row(fontsize=default_fontsize)
         for args in battrs:
@@ -310,17 +309,15 @@ class LaserTablePDFWriter(BasePDFWriter):
                     s = vfmt(v)
 
                     s = self._new_paragraph('<i>{}</i>'.format(s),
-                                            )
-
+                    )
 
                     e = efmt(v)
                     e = self._new_paragraph('<i>{}</i>'.format(e))
 
             blankrow.add_item(value=s,
-                              )
+            )
             blankrow.add_item(value=e,
-                              )
-
+            )
 
         return row, blankrow
 
@@ -335,9 +332,10 @@ class LaserTablePDFWriter(BasePDFWriter):
                 table._argH[i] = v.height * inch
 
 
-#===============================================================================
-# summary
-#===============================================================================
+                #===============================================================================
+                # summary
+                #===============================================================================
+
     def _make_summary_rows(self, mean, idx, style):
         platrow = Row(fontsize=7, height=0.25)
         platrow.add_item(value='<b>Weighted Mean Age</b>', span=5)
@@ -347,26 +345,29 @@ class LaserTablePDFWriter(BasePDFWriter):
         platrow.add_item(value=self._value()(wa))
         platrow.add_item(value=u' \u00b1{}'.format(self._error()(wa)))
 
-#         for s, e in platrow.spans:
-#             style.add('SPAN', (s, idx), (e, idx))
-#         platrow.add_item(value='Weighted Mean Age')
+        #         for s, e in platrow.spans:
+        #             style.add('SPAN', (s, idx), (e, idx))
+        #         platrow.add_item(value='Weighted Mean Age')
         return [platrow]
-#===============================================================================
-# blanks
-#===============================================================================
 
-#===============================================================================
-# footnotes
-#===============================================================================
+    #===============================================================================
+    # blanks
+    #===============================================================================
+
+    #===============================================================================
+    # footnotes
+    #===============================================================================
     def _make_footnote_rows(self, data, style):
         data.append(Row(height=0.1))
+
         def factory(f):
             r = FootNoteRow(fontsize=6)
             r.add_item(value=f)
             return r
+
         data.extend([factory(fi) for fi in self._footnotes])
 
-#         _get_idxs = lambda x: self._get_idxs(rows, x)
+        #         _get_idxs = lambda x: self._get_idxs(rows, x)
         _get_se = lambda x: (x[0][0], x[-1][0])
         # set for footnot rows
         footnote_idxs = self._get_idxs(data, FootNoteRow)
@@ -374,7 +375,7 @@ class LaserTablePDFWriter(BasePDFWriter):
         style.add('VALIGN', (0, sidx), (-1, eidx), 'MIDDLE')
         for idx, _v in footnote_idxs:
             style.add('SPAN', (0, idx), (-1, idx))
-#            style.add('VALIGN', (1, idx), (-1, idx), 'MIDDLE')
+            #            style.add('VALIGN', (1, idx), (-1, idx), 'MIDDLE')
 
     def _make_footer_rows(self, data, style):
         rows = []
@@ -387,43 +388,43 @@ class LaserTablePDFWriter(BasePDFWriter):
                 row.add_item(value='')
 
         for n, d, v, e, r in (
-                          (40, 36, 295.5, 0.5, 'Nier (1950)'),
-                          (40, 38, 0.1880, 0.5, 'Nier (1950)'),
-                          ):
+            (40, 36, 295.5, 0.5, 'Nier (1950)'),
+            (40, 38, 0.1880, 0.5, 'Nier (1950)'),
+        ):
             row = FooterRow(fontsize=df)
             row.add_item(value='({}Ar/{}Ar){}'.format(
-                                                Superscript(n),
-                                                Superscript(d),
-                                                Subscript('A'),
-                                                ),
+                Superscript(n),
+                Superscript(d),
+                Subscript('A'),
+            ),
                          span=3
-                         )
+            )
             row.add_item(value=u'{} \u00b1{}'.format(v, e),
                          span=2)
             row.add_item(value=r, span=-1)
             rows.append(row)
-#             row.add_item(value='')
-#             rows.append(row)
+            #             row.add_item(value='')
+        #             rows.append(row)
 
         row = FooterRow(fontsize=df)
         row.add_item(value='<b>Interferring isotope production ratios</b>', span=-1)
         rows.append(row)
         for n, d, s, v, e, r in (
-                          (40, 39, 'K'  , 295.5     , 0.5   , 'Nier (1950)'),
-                          (38, 39, 'K'  , 0.1880    , 0.5   , 'Nier (1950)'),
-                          (37, 39, 'K'  , 0.1880    , 0.5   , 'Nier (1950)'),
-                          (39, 37, 'Ca' , 295.5     , 0.5   , 'Nier (1950)'),
-                          (38, 37, 'Ca' , 0.1880    , 0.5   , 'Nier (1950)'),
-                          (36, 37, 'Ca' , 0.1880    , 0.5   , 'Nier (1950)'),
-                          ):
+            (40, 39, 'K', 295.5, 0.5, 'Nier (1950)'),
+            (38, 39, 'K', 0.1880, 0.5, 'Nier (1950)'),
+            (37, 39, 'K', 0.1880, 0.5, 'Nier (1950)'),
+            (39, 37, 'Ca', 295.5, 0.5, 'Nier (1950)'),
+            (38, 37, 'Ca', 0.1880, 0.5, 'Nier (1950)'),
+            (36, 37, 'Ca', 0.1880, 0.5, 'Nier (1950)'),
+        ):
             row = FooterRow(fontsize=df)
             row.add_item(value='({}Ar/{}Ar){}'.format(
-                                                Superscript(n),
-                                                Superscript(d),
-                                                Subscript(s),
-                                                ),
+                Superscript(n),
+                Superscript(d),
+                Subscript(s),
+            ),
                          span=3
-                         )
+            )
             row.add_item(value=u'{} \u00b1{}'.format(v, e),
                          span=2)
             row.add_item(value=r, span=-1)
@@ -434,11 +435,11 @@ class LaserTablePDFWriter(BasePDFWriter):
         rows.append(row)
 
         for i, E, dl, v, e, r in (
-                                  (40, 'K', u'\u03BB\u03B5', 1, 0, 'Foo (1990)'),
-                                  (40, 'K', u'\u03BB\u03B2', 1, 0, 'Foo (1990)'),
-                                  (39, 'Ar', '', 1, 0, 'Foo (1990)'),
-                                  (37, 'Ar', '', 1, 0, 'Foo (1990)'),
-                                  ):
+            (40, 'K', u'\u03BB\u03B5', 1, 0, 'Foo (1990)'),
+            (40, 'K', u'\u03BB\u03B2', 1, 0, 'Foo (1990)'),
+            (39, 'Ar', '', 1, 0, 'Foo (1990)'),
+            (37, 'Ar', '', 1, 0, 'Foo (1990)'),
+        ):
             row = FooterRow(fontsize=df)
             row.add_item(value=u'{}{} {}'.format(Superscript(i), E, dl), span=3)
             row.add_item(value=u'{} \u00b1{} a{}'.format(v, e, Superscript(-1)), span=2)
@@ -454,12 +455,14 @@ class LaserTablePDFWriter(BasePDFWriter):
         sidx, eidx = _get_se(footer_idxs)
         style.add('VALIGN', (0, sidx), (-1, eidx), 'MIDDLE')
 
-#         for idx, v in footer_idxs:
-#             for si, se in v.spans:
-#                 style.add('SPAN', (si, idx), (se, idx))
+        #         for idx, v in footer_idxs:
+        #             for si, se in v.spans:
+        #                 style.add('SPAN', (si, idx), (se, idx))
 
         return rows
-#===============================================================================
+
+        #===============================================================================
+
 #
 #===============================================================================
 
