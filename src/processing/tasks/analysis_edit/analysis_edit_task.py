@@ -315,7 +315,8 @@ class AnalysisEditTask(BaseBrowserTask):
                 self.controls_pane.tool = tool
 
             if self.unknowns_pane:
-                self.unknowns_pane.previous_selection = self.unknowns_pane.previous_selections[0]
+                if hasattr(self.unknowns_pane, 'previous_selections'):
+                    self.unknowns_pane.previous_selection = self.unknowns_pane.previous_selections[0]
                 if hasattr(self.active_editor, 'unknowns'):
                     #if self.active_editor.unknowns:
                     self.unknowns_pane.items = self.active_editor.unknowns

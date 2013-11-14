@@ -23,6 +23,7 @@ from datetime import datetime
 from uncertainties import ufloat
 from collections import namedtuple
 #============= local library imports  ==========================
+from src.helpers.isotope_utils import extract_mass
 from src.processing.analyses.analysis_view import DBAnalysisView, AnalysisView
 from src.processing.arar_age import ArArAge
 from src.processing.analyses.summary import AnalysisSummary
@@ -367,14 +368,22 @@ class DBAnalysis(Analysis):
 
             idisc = ufloat(1, 1e-20)
             if iso.detector in discriminations:
-                #mass = extract_mass(iso.name)
+                mass = extract_mass(iso.name)
 
                 disc, refmass = discriminations[det]
+                ni = mass - round(refmass)
+
                 mass = iso.mass
                 n = mass - refmass
-
+                self.info('{} {} {}'.format(iso.name, n, ni))
                 #calculate discrimination
                 idisc = disc ** n
+
+                #e=disc
+                #for i in range(int(ni)-1):
+                #    e*=disc
+                #
+                #idisc=ufloat(idisc.nominal_value, e.std_dev)
 
             iso.discrimination = idisc
 
@@ -570,6 +579,7 @@ class DBAnalysis(Analysis):
         if selected_hist:
             for dp in selected_hist.detector_params:
                 d[dp.detector.name] = (ufloat(dp.disc, dp.disc_error), dp.refmass)
+                #d[dp.detector.name] = (ufloat(1.004, 0.000145), dp.refmass)
                 #dp=selected_hist.detector_param
                 #return ufloat(dp.disc, dp.disc_error)
         return d

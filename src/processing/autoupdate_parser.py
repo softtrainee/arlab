@@ -109,8 +109,11 @@ class AutoupdateParser(Loggable):
                 for si in ARGON_KEYS:
                     params[si] = get_value('{}_'.format(si))
                     bs_only = '{}_BslnCorOnly'.format(si)
+                    bs_only_err = '{}_Er_BslnCorOnly'.format(si)
                     params['{}Er'.format(si)] = get_value('{}_Er'.format(si))
+
                     params[bs_only] = get_value(bs_only)
+                    params[bs_only_err] = get_value(bs_only_err)
 
                     btag = '{}_Bkgd'.format(si)
                     betag = '{}_BkgdEr'.format(si)

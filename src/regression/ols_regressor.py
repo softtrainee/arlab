@@ -18,8 +18,7 @@ from numpy.lib.twodim_base import diag
 from traits.api import Int, Property
 #============= standard library imports ========================
 from numpy import polyval, asarray, column_stack, ones, \
-    matrix, sqrt, abs, hstack, vstack
-from numpy.core.numeric import ones_like
+    matrix, sqrt, abs
 
 
 try:
@@ -414,17 +413,6 @@ class MultipleLinearRegressor(OLSRegressor):
         return [calc_error(xi, sef) for xi in x]
 
 
-class FluxRegressor(MultipleLinearRegressor):
-    def _get_X(self, xs=None):
-        '''
-        
-        '''
-        if xs is None:
-            xs = self.xs
-        xs = asarray(xs)
-        x1, x2 = xs.T
-        X = column_stack((x1, x2, x1 ** 2, x2 ** 2, x1 * x2, ones_like(x1)))
-        return X
 
         #def predict_error_matrix(self, x, error_calc='sem'):
         #    '''
@@ -470,7 +458,6 @@ class FluxRegressor(MultipleLinearRegressor):
 
 
 if __name__ == '__main__':
-    import numpy as np
     #    xs = np.linspace(0, 10, 20)
     #    bo = 4
     #    b1 = 3
