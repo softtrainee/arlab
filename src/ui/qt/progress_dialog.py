@@ -34,6 +34,13 @@ class myProgressDialog(ProgressDialog):
     height = Int(10)
     _user_accepted = Bool(False)
 
+    def close(self):
+        try:
+            super(myProgressDialog, self).close()
+        except AttributeError:
+            #window already closed
+            pass
+
     def cancel(self):
         self._user_cancelled = True
         self.close()

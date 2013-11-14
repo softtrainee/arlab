@@ -21,40 +21,86 @@ from traits.api import Str
 
 #============= standard library imports ========================
 #============= local library imports  ==========================
+import xlrd
 from src.loggable import Loggable
 
 
-Position = namedtuple('Position', 'hole_id,identifer, j, jerr')
+Position = namedtuple('Position', 'hole_id, identifier, j, je')
 
 
 class FluxParser(Loggable):
     path = Str
 
+    def get_npositions(self):
+        return len(list(self.iterpositions()))
+
     def iterpositions(self):
         return self._iter_positions()
 
-
-class XLSFluxParser(FluxParser):
-    def _iter_positions(self):
-        ps = []
-        return ps
-
-
-class CSVFluxParser(FluxParser):
     def _get_index(self, header, ks):
         if not isinstance(ks, (list, tuple)):
-            ks = (tuple,)
+            ks = (ks,)
 
         for k in ks:
             for ki in (k, k.upper(), k.lower(), k.capitalize(), k.replace('_', '')):
                 try:
                     return header.index(ki)
-                except IndexError:
+                except ValueError:
                     pass
+
+    def get_irradiation(self):
+        """
+         return irradiation, level
+        """
+        return self._get_irradiation()
+
+    def _get_irradiation(self):
+        return '', ''
+
+
+class XLSFluxParser(FluxParser):
+    def _get_irradiation(self):
+        wb = xlrd.open_workbook(self.path)
+        sheet = wb.sheet_by_index(0)
+
+        row = sheet.row_values(0)
+        return row[0], row[1]
+
+    def _iter_positions(self):
+
+        header_offset = 2
+        wb = xlrd.open_workbook(self.path)
+        sheet = wb.sheet_by_index(0)
+
+        header = sheet.row_values(1)
+        hole_idx = self._get_index(header, 'hole')
+        i_idx = self._get_index(header, ('runid', 'labnumber', 'l#', 'identifier'))
+        j_idx = self._get_index(header, 'j')
+        j_err_idx = self._get_index(header, ('j_error', 'j err'))
+
+        for ri in range(sheet.nrows - header_offset):
+            ri += header_offset
+
+            hole = sheet.cell_value(ri, hole_idx)
+            if hole:
+                hole = int(hole)
+                ident = sheet.cell_value(ri, i_idx)
+                j = sheet.cell_value(ri, j_idx)
+                je = sheet.cell_value(ri, j_err_idx)
+                j, je = float(j), float(je)
+                yield Position(hole, '{:n}'.format(ident), j, je)
+
+
+class CSVFluxParser(FluxParser):
+    def _get_irradiation(self):
+        with open(self.path, 'r') as fp:
+            reader = csv.reader(fp)
+            return reader.next()
 
     def _iter_positions(self):
         with open(self.path, 'r') as fp:
             reader = csv.reader(fp)
+            _ = reader.next()
             header = reader.next()
 
             hidx = self._get_index(header, 'hole')

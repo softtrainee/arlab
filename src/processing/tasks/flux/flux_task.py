@@ -16,7 +16,6 @@
 
 #============= enthought library imports =======================
 from collections import namedtuple
-import os
 import struct
 from traits.api import on_trait_change
 from traitsui.tabular_adapter import TabularAdapter
@@ -123,31 +122,51 @@ class FluxTask(InterpolationTask):
     @on_trait_change('active_editor:tool:calculate_button')
     def _calculate_flux(self):
         editor = self.active_editor
+        editor.monitor_positions = {}
+
+        with self.manager.db.session_ctx():
+            geom = self._get_geometry()
+            editor.geometry = geom
+
         if editor.tool.data_source == 'database':
             self._calculate_flux_db(editor)
         else:
             self._calculate_flux_file(editor)
 
-    def _calculate_flux_file(self, editor):
-        p = self.open_file_dialog()
+        editor.rebuild_graph()
 
+    def _calculate_flux_file(self, editor):
+        #p = self.open_file_dialog()
+        p = '/Users/ross/Sandbox/flux_visualizer/Tray I NM-261.xls'
         if p:
             #open flux file parser
-            if os.path.endswith('.xls'):
+            if p.endswith('.xls'):
                 parser = XLSFluxParser(path=p)
             else:
                 parser = CSVFluxParser(path=p)
 
-            #irrad, level=parser.get_irradiation()
-            irrad, level = 'NM-205', 'E'
+            irrad, level = parser.get_irradiation()
+            #irrad, level = 'NM-205', 'E'
+            print irrad, level
             geom = self._get_geometry(irrad=irrad, level=level)
+            editor.geometry = geom
+
+            n = parser.get_npositions()
+            prog = self.manager.open_progress(n=n)
 
             for pos in parser.iterpositions():
+
                 pid = pos.hole_id
 
+                prog.change_message('Loading Position {}'.format(pid))
+
                 #get x,y from geometry
-                x, y, r = geom[pid - 1]
-                editor.add_monitor_position(pid, pos.identifier, x, y, pos.j, pos.je)
+                try:
+                    x, y, r = geom[pid - 1]
+                    editor.add_monitor_position(pid, pos.identifier, x, y, pos.j, pos.je)
+                except IndexError:
+                    self.warning('Skipping hole {}. Only {} in this tray'.format(pid, len(geom)))
+            prog.close()
 
     def _calculate_flux_db(self, editor):
 
@@ -180,6 +199,7 @@ class FluxTask(InterpolationTask):
             geom = self._get_geometry()
             editor = self.active_editor
             editor.geometry = geom
+
             for ais in ans:
                 ref = ais[0]
                 pid = ref.labnumber.irradiation_position.position
@@ -189,8 +209,6 @@ class FluxTask(InterpolationTask):
                 aa = proc.make_analyses(ais, progress=prog)
                 j = mean_j(aa)
                 editor.add_monitor_position(int(pid), ident, x, y, j.nominal_value, j.std_dev)
-
-            editor.rebuild_graph()
 
     def _get_geometry(self, irrad=None, level=None, holder=None):
         man = self.manager
