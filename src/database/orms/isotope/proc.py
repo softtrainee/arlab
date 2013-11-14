@@ -185,7 +185,7 @@ class proc_DetectorParamTable(Base, BaseMixin):
     detector_id = foreignkey('gen_DetectorTable')
 
     #@todo: add refmass to detector param table
-    refmass = 36
+    refmass = 35.9675
 
 #     selected = relationship('proc_SelectedHistoriesTable',
 #                             backref='selected_detector_param',

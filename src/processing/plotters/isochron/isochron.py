@@ -113,15 +113,15 @@ class InverseIsochron(Isochron):
         #    #print ai.record_id, '36/40', a/c
         #    print ai.record_id, '39/40', b/c
 
-        #ans=[(ai.isotopes['Ar39'].get_interference_corrected_value(),
-        #      ai.isotopes['Ar36'].get_interference_corrected_value(),
-        #      ai.isotopes['Ar40'].get_interference_corrected_value())
-        #      for ai in analyses]
-
-        ans = [(ai.isotopes['Ar39'].get_corrected_value(),
-                ai.isotopes['Ar36'].get_corrected_value(),
-                ai.isotopes['Ar40'].get_corrected_value())
+        ans = [(ai.isotopes['Ar39'].get_interference_corrected_value(),
+                ai.isotopes['Ar36'].get_interference_corrected_value(),
+                ai.isotopes['Ar40'].get_interference_corrected_value())
                for ai in analyses]
+
+        #ans = [(ai.isotopes['Ar39'].get_corrected_value(),
+        #        ai.isotopes['Ar36'].get_corrected_value(),
+        #        ai.isotopes['Ar40'].get_corrected_value())
+        #       for ai in analyses]
 
         a39, a36, a40 = array(ans).T
         try:
