@@ -15,20 +15,19 @@
 #===============================================================================
 
 #============= enthought library imports =======================
-import string
+from traits.api import Float, Instance, Str, Tuple
 from chaco.abstract_overlay import AbstractOverlay
 from enable.base_tool import BaseTool
 from enable.colors import ColorTrait
-from traits.api import Float, Instance, Str
-
 #============= standard library imports ========================
+import string
 #============= local library imports  ==========================
 from src.helpers.formatting import floatfmt
 from src.processing.plotters.ideogram.mean_indicator_overlay import XYPlotLabel
 
 
 class LimitsTool(BaseTool):
-    ruler_pos = Float
+    ruler_pos = Tuple
     ruler_data_pos = Float
     orientation = 'x'
     active = False
@@ -36,7 +35,6 @@ class LimitsTool(BaseTool):
     entered_value = Str
 
     def _set_entered_value(self, c):
-
         if c == '.' or c in string.digits:
             self.entered_value += c
         elif c in ('Backspace', 'Delete'):
@@ -46,7 +44,6 @@ class LimitsTool(BaseTool):
         c = event.character
         self._set_entered_value(c)
 
-        print c, self.entered_value
         self.event_state = 'manual_set' if self.entered_value else 'drag'
         self.component.request_redraw()
 
@@ -97,10 +94,8 @@ class LimitsTool(BaseTool):
             self.component.request_redraw()
 
     def _set_ruler_pos(self, v):
-        if not isinstance(v, (float, int)):
-            v = getattr(v, self.orientation)
-
-        self.ruler_pos = v
+        self.ruler_pos = (v.x, v.y)
+        v = getattr(v, self.orientation)
         self.ruler_data_pos = self._map_value(v - 0.25)
 
     def drag_left_up(self, event):
@@ -113,7 +108,7 @@ class LimitsTool(BaseTool):
         self.pointer = 'arrow'
         event.window.set_pointer(self.pointer)
 
-        self._set_ruler_pos(0)
+        self.ruler_pos = tuple()
 
     def drag_mouse_move(self, event):
         self._set_ruler_pos(event)
@@ -139,7 +134,14 @@ class LimitsTool(BaseTool):
             r = self.component.index_range
         else:
             r = self.component.value_range
-        r.trait_set(**{'{}_setting'.format(self._dsign): v})
+
+        if self._dsign == 'low':
+            if getattr(r, 'high') > v:
+                r.trait_set(**{'{}_setting'.format(self._dsign): v})
+        else:
+            if getattr(r, 'low') < v:
+                r.trait_set(**{'{}_setting'.format(self._dsign): v})
+
         self.component.request_redraw()
 
     def _map_value(self, v):
@@ -173,14 +175,14 @@ class LimitOverlay(AbstractOverlay):
         x, x2 = other_component.x, other_component.x2
 
         if tool.ruler_pos:
-            a = tool.ruler_pos
+            a, b = tool.ruler_pos
             if tool.orientation == 'x':
                 x, x2 = a, a
                 self.label.sx = x
-                self.label.sy = y + 10
+                self.label.sy = b + 10
             else:
-                y, y2 = a, a
-                self.label.sx = x + 20
+                y, y2 = b, b
+                self.label.sx = a + 20
                 self.label.sy = y
 
             with gc:

@@ -1,11 +1,15 @@
+import os
+import sys
+
+from numpy import *
+
+
 d = os.path.dirname(os.getcwd())
 sys.path.append(d)
 
 from src.ui import set_toolkit
 
 set_toolkit('qt4')
-
-from numpy import *
 
 from src.graph.graph import Graph
 from src.graph.tools.limits_tool import LimitsTool, LimitOverlay

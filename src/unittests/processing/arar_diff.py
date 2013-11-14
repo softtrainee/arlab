@@ -26,7 +26,7 @@ class MassSpecPychronTestCase(unittest.TestCase):
         db = man.db
 
         cls.sample_id = sid = 'AF-72'
-        cls.analysis_id = aid = string.ascii_uppercase.index('C')
+        cls.analysis_id = aid = string.ascii_uppercase.index('A')
 
         with db.session_ctx():
             ans, tc = db.get_sample_analyses([sid, ], ['Minna Bluff'])
@@ -95,10 +95,6 @@ class MassSpecPychronTestCase(unittest.TestCase):
         r = a36 / a40
 
         self._almost_equal(r.std_dev / r.nominal_value * 100, 'Isoch_36_40err')
-
-    def test_Ar40_decay_(self):
-        k = 'Ar40'
-        self._interference_corrected(k)
 
     def test_Ar40_err(self):
         k = 'Ar40'

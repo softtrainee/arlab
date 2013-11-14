@@ -22,6 +22,7 @@ from chaco.tools.data_label_tool import DataLabelTool
 #============= standard library imports ========================
 #============= local library imports  ==========================
 from src.graph.error_bar_overlay import ErrorBarOverlay
+from src.graph.tools.limits_tool import LimitsTool, LimitOverlay
 from src.processing.plotters.points_label_overlay import PointsLabelOverlay
 from src.processing.plotters.sparse_ticks import SparseLogTicks, SparseTicks
 from src.stats.core import calculate_mswd, validate_mswd
@@ -54,6 +55,15 @@ class BaseArArFigure(HasTraits):
     refresh_unknowns_table = Event
     _suppress_table_update = False
 
+    def _add_limit_tool(self, plot, orientation):
+        t = LimitsTool(component=plot,
+                       orientation=orientation)
+
+        o = LimitOverlay(component=plot, tool=t)
+
+        plot.tools.append(t)
+        plot.overlays.append(o)
+
     def build(self, plots):
         """
             make plots
@@ -61,6 +71,11 @@ class BaseArArFigure(HasTraits):
         self._plots = plots
 
         def _setup_plot(pp, po):
+
+            #add limit tools
+            self._add_limit_tool(pp, 'x')
+            self._add_limit_tool(pp, 'y')
+
             pp.value_range.tight_bounds = False
             pp.x_grid.visible = self.x_grid_visible
             pp.y_grid.visible = self.y_grid_visible
@@ -213,18 +228,17 @@ class BaseArArFigure(HasTraits):
 
     def _add_scatter_inspector(self,
                                # container,
-                               # plot,
                                scatter,
                                add_tool=True,
                                value_format=None,
-                               additional_info=None
-    ):
+                               additional_info=None):
         if add_tool:
             broadcaster = BroadcasterTool()
             scatter.tools.append(broadcaster)
 
             rect_tool = RectSelectionTool(scatter)
-            rect_overlay = RectSelectionOverlay(tool=rect_tool)
+            rect_overlay = RectSelectionOverlay(component=scatter,
+                                                tool=rect_tool)
 
             scatter.overlays.append(rect_overlay)
             broadcaster.tools.append(rect_tool)
@@ -235,13 +249,11 @@ class BaseArArFigure(HasTraits):
                                                      analyses=self.sorted_analyses,
                                                      convert_index=lambda x: '{:0.3f}'.format(x),
                                                      value_format=value_format,
-                                                     additional_info=additional_info
-            )
+                                                     additional_info=additional_info)
 
             pinspector_overlay = PointInspectorOverlay(component=scatter,
-                                                       tool=point_inspector,
-            )
-            #
+                                                       tool=point_inspector)
+
             scatter.overlays.append(pinspector_overlay)
             broadcaster.tools.append(point_inspector)
 
