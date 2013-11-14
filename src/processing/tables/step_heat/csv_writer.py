@@ -1,5 +1,5 @@
 #===============================================================================
-# Copyright 2011 Jake Ross
+# Copyright 2013 Jake Ross
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,49 +13,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #===============================================================================
-
+# from traits.etsconfig.etsconfig import ETSConfig
+# ETSConfig.toolkit = 'qt4'
 
 #============= enthought library imports =======================
-from pyface.action.api import Action
-from pyface.tasks.action.task_action import TaskAction
-
 #============= standard library imports ========================
-
 #============= local library imports  ==========================
+from src.processing.tables.csv_workbook import CSVWorkbook
+from src.processing.tables.fusion.text_writer import LaserTableTextWriter
 
 
-#============= EOF ====================================
-class EasyFitAction(TaskAction):
-    method = 'do_easy_fit'
-    name = 'Easy Fit'
+class StepHeatTableCSVWriter(LaserTableTextWriter):
+    def _new_workbook(self):
+        return CSVWorkbook()
 
 
-class EasyBlanksAction(TaskAction):
-    method = 'do_easy_blanks'
-    name = 'Easy Blanks'
-
-
-class EasyDiscriminationAction(TaskAction):
-    method = 'do_easy_discrimination'
-    name = 'Easy Disc.'
-
-
-class EasyFiguresAction(Action):
-    name = 'Easy Figures'
-
-    def perform(self, event):
-        from src.processing.easy.figures import EasyFigures
-
-        e = EasyFigures()
-        e.make_figures()
-
-
-class EasyTablesAction(Action):
-    name = 'Easy Tables'
-
-    def perform(self, event):
-        from src.processing.easy.tables import EasyTables
-
-        e = EasyTables()
-        e.make_tables()
-
+#============= EOF =============================================

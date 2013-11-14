@@ -20,22 +20,33 @@ from src.loggable import Loggable
 #============= standard library imports ========================
 from itertools import groupby
 #============= local library imports  ==========================
-class LaserTableTextOptions(HasTraits):
+class FusionTableTextOptions(HasTraits):
     use_sample_sheets = Bool(True)
 
+
+def _getattr(x, k):
+    if k in x.isotopes:
+        v = x.isotopes[k].get_intensity()
+    else:
+        v = getattr(x, k)
+    return v
+
+
 def value(x, k):
-    x = getattr(x, k)
+    x = _getattr(x, k)
     if x:
         return x.nominal_value
     else:
         return ''
 
+
 def error(x, k):
-    x = getattr(x, k)
+    x = _getattr(x, k)
     if x:
         return x.std_dev
     else:
         return ''
+
 
 def blank_value(x, k):
     if k in x.isotopes:
@@ -44,6 +55,7 @@ def blank_value(x, k):
     else:
         return ''
 
+
 def blank_error(x, k):
     if k in x.isotopes:
         x = x.isotopes[k]
@@ -51,53 +63,55 @@ def blank_error(x, k):
     else:
         return ''
 
+
 class LaserTableTextWriter(Loggable):
-    options = Instance(LaserTableTextOptions, ())
+    options = Instance(FusionTableTextOptions, ())
     columns = (
-                    ('Status', 'status'),
-                    ('Labnumber', 'labnumber'),
-                    ('N', 'aliquot_step_str'),
-                    ('Sample', 'sample'),
-                    ('Material', 'material'),
-                    ('Irradiation', 'irradiation_label'),
-                    ('Power', 'extract_value'),
+        ('Status', 'status'),
+        ('Labnumber', 'labnumber'),
+        ('N', 'aliquot_step_str'),
+        ('Sample', 'sample'),
+        ('Material', 'material'),
+        ('Irradiation', 'irradiation_label'),
+        ('Power', 'extract_value'),
 
-#                     'Moles_40Ar',
-                    ('Ar40', 'Ar40', value),
-                    ('Ar40Er', 'Ar40', error),
-                    ('Ar39', 'Ar39', value),
-                    ('Ar39Er', 'Ar39', error),
-                    ('Ar38', 'Ar38', value),
-                    ('Ar38Er', 'Ar38', error),
-                    ('Ar37', 'Ar37', value),
-                    ('Ar37Er', 'Ar37', error),
-                    ('Ar36', 'Ar36', value),
-                    ('Ar36Er', 'Ar36', error),
+        #                     'Moles_40Ar',
+        ('Ar40', 'Ar40', value),
+        ('Ar40Er', 'Ar40', error),
+        ('Ar39', 'Ar39', value),
+        ('Ar39Er', 'Ar39', error),
+        ('Ar38', 'Ar38', value),
+        ('Ar38Er', 'Ar38', error),
+        ('Ar37', 'Ar37', value),
+        ('Ar37Er', 'Ar37', error),
+        ('Ar36', 'Ar36', value),
+        ('Ar36Er', 'Ar36', error),
 
-                    # blanks
-                    ('Ar40', 'Ar40', blank_value),
-                    ('Ar40Er', 'Ar40', blank_error),
-                    ('Ar39', 'Ar39', blank_value),
-                    ('Ar39Er', 'Ar39', blank_error),
-                    ('Ar38', 'Ar38', blank_value),
-                    ('Ar38Er', 'Ar38', blank_error),
-                    ('Ar37', 'Ar37', blank_value),
-                    ('Ar37Er', 'Ar37', blank_error),
-                    ('Ar36', 'Ar36', blank_value),
-                    ('Ar36Er', 'Ar36', blank_error),
+        # blanks
+        ('Ar40', 'Ar40', blank_value),
+        ('Ar40Er', 'Ar40', blank_error),
+        ('Ar39', 'Ar39', blank_value),
+        ('Ar39Er', 'Ar39', blank_error),
+        ('Ar38', 'Ar38', blank_value),
+        ('Ar38Er', 'Ar38', blank_error),
+        ('Ar37', 'Ar37', blank_value),
+        ('Ar37Er', 'Ar37', blank_error),
+        ('Ar36', 'Ar36', blank_value),
+        ('Ar36Er', 'Ar36', blank_error),
 
-                    )
+    )
     default_style = None
+
     def build(self, p, ans, means, title):
+        self.info('saving table to {}'.format(p))
         wb = self._new_workbook()
         options = self.options
         if options.use_sample_sheets:
             for sam, ais in self._group_samples(ans):
-
                 sh = self._add_sample_sheet(wb, sam)
-#                 ais = list(ais)
+                #                 ais = list(ais)
 
-#                 self._add_metadata(sh, ais[0])
+                #                 self._add_metadata(sh, ais[0])
                 self._add_header_row(sh, 0)
                 self._add_analyses(sh, ais, start=2)
         wb.save(p)
@@ -123,16 +137,15 @@ class LaserTableTextWriter(Loggable):
             sheet.write(row, j + 1, txt, self.default_style)
 
     def _group_samples(self, ans):
-        key = lambda x:x.sample
+        key = lambda x: x.sample
         return groupby(ans, key=key)
 
 
-
-#     def _add_metadata(self, sh, refans):
-#         for i, c in enumerate(('labnumber', 'sample', 'material')):
-#             sh.write(0, i, getattr(refans, c))
-#         for i, c in enumerate(('irradiation', 'irradiation_level')):
-#             sh.write(1, i, getattr(refans, c))
+    #     def _add_metadata(self, sh, refans):
+    #         for i, c in enumerate(('labnumber', 'sample', 'material')):
+    #             sh.write(0, i, getattr(refans, c))
+    #         for i, c in enumerate(('irradiation', 'irradiation_level')):
+    #             sh.write(1, i, getattr(refans, c))
 
     def _add_sample_sheet(self, wb, sample):
         sh = wb.add_sheet(sample)

@@ -104,21 +104,21 @@ class RowItem(BaseItem):
 
 
 def Superscript(v):
-    return '<super>{}</super>'.format(v)
+    return u'<super>{}</super>'.format(v)
 
 
 def Subscript(v):
-    return '<sub>{}</sub>'.format(v)
+    return u'<sub>{}</sub>'.format(v)
 
 
 def NamedParameter(name, value):
-    return '<b>{}</b>: {}'.format(name, value)
+    return u'<b>{}</b>: {}'.format(name, value)
 
 
 def Anchor(tagname, num, s='Normal'):
     snum = Superscript(num)
-    link = '{{}}<a href="#{}" color="green">{}</a>'.format(tagname, snum)
-    tag = '{{}}{}: {{}}<a name="{}"/>'.format(snum, tagname)
+    link = u'{{}}<a href="#{}" color="green">{}</a>'.format(tagname, snum)
+    tag = u'{{}}{}: {{}}<a name="{}"/>'.format(snum, tagname)
 
     style = STYLES[s]
 

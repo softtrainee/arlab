@@ -16,29 +16,38 @@
 
 #============= enthought library imports =======================
 from traits.api import HasTraits, Int, Str, Property, Any
-from traitsui.api import View, Item
 from traitsui.tabular_adapter import TabularAdapter
 from src.helpers.formatting import floatfmt
 #============= standard library imports ========================
 #============= local library imports  ==========================
 class TableBlank(HasTraits):
     analysis = Any
+
     def __getattr__(self, attr):
         return getattr(self.analysis, attr)
 
+
 class TableSeparator(HasTraits):
     name = Str
+
     def __getattr__(self, attr):
         return ''
 
+
 def swidth(v=60):
     return Int(v)
+
+
 def ewidth(v=50):
     return Int(v)
 
+
 PM = u'\u00b1 1\u03c3'
+
+
 class BaseAdapter(TabularAdapter):
     blank_column_text = Str('')
+
     def _get_value(self, attr, n=3, **kw):
         v = ''
         if isinstance(self.item, TableBlank):
@@ -65,35 +74,36 @@ class BaseAdapter(TabularAdapter):
 
         return v
 
-class LaserTableAdapter(BaseAdapter):
+
+class FusionTableAdapter(BaseAdapter):
     columns = [
-               ('Lab#', 'labnumber'),
-               ('N', 'aliquot_step_str'),
-               ('Power', 'extract_value'),
-               ('Mol. Ar40', 'moles_Ar40'),
-               ('Ar40', 'ar40'),
-               (PM, 'ar40_err'),
+        ('Lab#', 'labnumber'),
+        ('N', 'aliquot_step_str'),
+        ('Power', 'extract_value'),
+        ('Mol. Ar40', 'moles_Ar40'),
+        ('Ar40', 'ar40'),
+        (PM, 'ar40_err'),
 
-               ('Ar39', 'ar39'),
-               (PM, 'ar39_err'),
+        ('Ar39', 'ar39'),
+        (PM, 'ar39_err'),
 
-               ('Ar38', 'ar38'),
-               (PM, 'ar38_err'),
+        ('Ar38', 'ar38'),
+        (PM, 'ar38_err'),
 
-               ('Ar37', 'ar37'),
-               (PM, 'ar37_err'),
+        ('Ar37', 'ar37'),
+        (PM, 'ar37_err'),
 
-               ('Ar36', 'ar36'),
-               (PM, 'ar36_err'),
-               ('%40Ar*', 'rad40_percent'),
+        ('Ar36', 'ar36'),
+        (PM, 'ar36_err'),
+        ('%40Ar*', 'rad40_percent'),
 
-               ('40Ar*/39ArK', 'R'),
-               ('Age', 'age'),
-               (PM, 'age_error'),
-               ('K/Ca', 'kca'),
-               (PM, 'kca_error'),
-               ('', 'blank_column')
-               ]
+        ('40Ar*/39ArK', 'R'),
+        ('Age', 'age'),
+        (PM, 'age_error'),
+        ('K/Ca', 'kca'),
+        (PM, 'kca_error'),
+        ('', 'blank_column')
+    ]
 
     aliquot_step_str_text = Property
     extract_value_text = Property
@@ -116,7 +126,6 @@ class LaserTableAdapter(BaseAdapter):
     age_error_text = Property
     kca_text = Property
     kca_error_text = Property
-
 
     labnumber_width = Int(60)
     aliquot_step_str_width = Int(30)
@@ -165,11 +174,12 @@ class LaserTableAdapter(BaseAdapter):
             v = '{:n}'.format(v)
 
         return v
-#         if self.item.extract_units == 'W':
-#             f = '{:0.2f}'.format(v)
-#         else:
-#         f =
-#         return f.format(v)
+
+    #         if self.item.extract_units == 'W':
+    #             f = '{:0.2f}'.format(v)
+    #         else:
+    #         f =
+    #         return f.format(v)
 
     def _get_moles_Ar40_text(self):
         return self._get_text_value('moles_Ar40')
@@ -182,31 +192,41 @@ class LaserTableAdapter(BaseAdapter):
 
     def _get_ar40_text(self):
         return self._get_value('Ar40')
+
     def _get_ar39_text(self):
         return self._get_value('Ar39')
+
     def _get_ar38_text(self):
         return self._get_value('Ar38')
+
     def _get_ar37_text(self):
         return self._get_value('Ar37')
+
     def _get_ar36_text(self):
         return self._get_value('Ar36')
 
     def _get_ar40_err_text(self):
         return self._get_error('Ar40')
+
     def _get_ar39_err_text(self):
         return self._get_error('Ar39')
+
     def _get_ar38_err_text(self):
         return self._get_error('Ar38')
+
     def _get_ar37_err_text(self):
         return self._get_error('Ar37')
+
     def _get_ar36_err_text(self):
         return self._get_error('Ar36')
 
 
     def _get_rad40_percent_text(self):
         return self._get_value('rad40_percent', n=1)
+
     def _get_R_text(self):
         return self._get_value('R', n=2)
+
     def _get_age_text(self):
         return self._get_value('age')
 
@@ -225,20 +245,19 @@ class LaserTableAdapter(BaseAdapter):
         return self._get_error('kca', n=3)
 
 
-class LaserTableMeanAdapter(BaseAdapter):
-
+class FusionTableMeanAdapter(BaseAdapter):
     columns = [
-               ('Sample', 'sample'),
-               ('N', 'nanalyses'),
-               ('Wtd. Age', 'weighted_age'),
-               ('S.E', 'age_se'),
-               ('MSWD', 'mswd'),
-               ('Wtd. K/Ca', 'weighted_kca_error'),
-               ('S.E', 'weighted_kca'),
-               #('Arith. Age', 'arith_age'),
-               #('S.D', 'age_sd'),
-               ('', 'blank_column')
-               ]
+        ('Sample', 'sample'),
+        ('N', 'nanalyses'),
+        ('Wtd. Age', 'weighted_age'),
+        ('S.E', 'age_se'),
+        ('MSWD', 'mswd'),
+        ('Wtd. K/Ca', 'weighted_kca_error'),
+        ('S.E', 'weighted_kca'),
+        #('Arith. Age', 'arith_age'),
+        #('S.D', 'age_sd'),
+        ('', 'blank_column')
+    ]
 
     nanalyses_width = Int(40)
     sample_width = Int(75)

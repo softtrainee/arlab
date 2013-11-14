@@ -31,7 +31,7 @@ from src.processing.tasks.tables.table_actions import ToggleStatusAction, \
 # from src.processing.tasks.analysis_edit.analysis_edit_task import AnalysisEditTask
 from src.processing.tasks.tables.panes import TableEditorPane
 #from src.processing.tasks.browser.browser_task import BrowserTask
-from src.processing.tasks.tables.editors.laser_table_editor import LaserTableEditor
+from src.processing.tasks.tables.editors.fusion_table_editor import FusionTableEditor
 from src.processing.tasks.tables.table_task_editor import TableTaskEditor
 from src.processing.tasks.tables.editors.adapters import TableSeparator
 from src.processing.tasks.tables.editors.summary_table_editor import SummaryTableEditor
@@ -107,7 +107,7 @@ class TableTask(BaseBrowserTask):
 
 
     def activated(self):
-        editor = LaserTableEditor()
+        editor = FusionTableEditor()
         self._open_editor(editor)
         self.load_projects()
 
@@ -185,7 +185,7 @@ class TableTask(BaseBrowserTask):
             self._append_summary_table()
 
     def append_laser_table(self):
-        if isinstance(self.active_editor, LaserTableEditor):
+        if isinstance(self.active_editor, FusionTableEditor):
         #             do_later(self._append_summary_table)
             self._append_laser_table()
 
