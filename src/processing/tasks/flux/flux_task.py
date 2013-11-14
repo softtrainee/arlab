@@ -16,6 +16,7 @@
 
 #============= enthought library imports =======================
 from collections import namedtuple
+import os
 import struct
 from traits.api import on_trait_change
 from traitsui.tabular_adapter import TabularAdapter
@@ -24,6 +25,7 @@ from pyface.tasks.task_layout import TaskLayout, HSplitter, VSplitter, PaneItem,
 from numpy import asarray, average
 #============= local library imports  ==========================
 from uncertainties import ufloat
+from src.processing.tasks.flux.flux_parser import XLSFluxParser, CSVFluxParser
 from src.processing.tasks.flux.panes import IrradiationPane
 from src.processing.tasks.analysis_edit.interpolation_task import InterpolationTask
 from src.processing.tasks.analysis_edit.panes import TablePane
@@ -120,8 +122,36 @@ class FluxTask(InterpolationTask):
 
     @on_trait_change('active_editor:tool:calculate_button')
     def _calculate_flux(self):
+        editor = self.active_editor
+        if editor.tool.data_source == 'database':
+            self._calculate_flux_db(editor)
+        else:
+            self._calculate_flux_file(editor)
 
-        monitor_age = self.active_editor.tool.monitor_age
+    def _calculate_flux_file(self, editor):
+        p = self.open_file_dialog()
+
+        if p:
+            #open flux file parser
+            if os.path.endswith('.xls'):
+                parser = XLSFluxParser(path=p)
+            else:
+                parser = CSVFluxParser(path=p)
+
+            #irrad, level=parser.get_irradiation()
+            irrad, level = 'NM-205', 'E'
+            geom = self._get_geometry(irrad=irrad, level=level)
+
+            for pos in parser.iterpositions():
+                pid = pos.hole_id
+
+                #get x,y from geometry
+                x, y, r = geom[pid - 1]
+                editor.add_monitor_position(pid, pos.identifier, x, y, pos.j, pos.je)
+
+    def _calculate_flux_db(self, editor):
+
+        monitor_age = editor.tool.monitor_age
         if not monitor_age:
             monitor_age = 28.02e6
 
@@ -139,18 +169,6 @@ class FluxTask(InterpolationTask):
             return ufloat(m, ss ** -0.5)
 
         proc = self.manager
-        #def func(ai):
-        #ai.load_age()
-
-        #analyses = []
-        #for i, ri in enumerate(self.active_editor.references[:1]):
-        #    #ans = [ri for ri in ri.labnumber.analyses
-        #    #            if ri.status == 0 and ri.step == '']
-        #    #ans = proc.make_analyses(ans, group_id=i)
-        #    #proc.load_analyses(ans, func=func)
-        #
-        #    analyses.extend(ans)
-        #    me, sd = mean_j(ans)
         db = proc.db
         with db.session_ctx():
             refs = self.references_pane.items
@@ -170,55 +188,27 @@ class FluxTask(InterpolationTask):
                 x, y, r = geom[pid - 1]
                 aa = proc.make_analyses(ais, progress=prog)
                 j = mean_j(aa)
-                editor.add_monitor_position(int(pid), ident, x, y, j)
+                editor.add_monitor_position(int(pid), ident, x, y, j.nominal_value, j.std_dev)
 
             editor.rebuild_graph()
 
-            #for ln, ais in groupby(ans, key=lambda x: x.labnumber):
-            #    print ln, ln.position
-            #aa = proc.make_analyses(ais, progress=prog)
-
-            #print mean_j(aa)
-
-            #m=MonitorPosition()
-            #editor.monitor_positions.append()
-            #ans =[ai for ais, cnt in ans
-            #        for ai in ais]
-            #print mean_j(ans)
-            #    irrad = proc.irradiation
-            #    level = proc.level
-            #    self._open_ideogram_editor(ans,
-            #                               name='Ideo - {}'.format(irrad, level))
-
-
-            #        ideo = proc.new_ideogram(ans=analyses)
-            #
-            #        from src.processing.tasks.analysis_edit.graph_editor import ComponentEditor
-            #        editor = ComponentEditor(component=ideo,
-            #                                 name='Ideogram')
-            #        self._open_editor(editor)
-
-    def _get_geometry(self):
+    def _get_geometry(self, irrad=None, level=None, holder=None):
         man = self.manager
+
         db = man.db
         with db.session_ctx():
-            level = db.get_irradiation_level(man.irradiation, man.level)
-            geom = level.holder.geometry
+            if holder is None:
+                if irrad is None:
+                    irrad = man.irradiation
+                    level = man.level
+
+                level = db.get_irradiation_level(irrad, level)
+                holder = level.holder
+            else:
+                holder = db.get_irradiation_holder(holder)
+
+            geom = holder.geometry
             return [struct.unpack('>fff', geom[i:i + 12])
                     for i in xrange(0, len(geom), 12)]
-            #for i in xrange(0, len(geom), 8):
-            #    positions[k]=struct.unpack('>ff', geom[i:i+8])
-            #    k+=1
-            #return k
-            #    positions = [
-            #        Position(i, x, y)
-            #        for i, (x, y) in enumerate([struct.unpack('>ff', geom[i:i + 8]) for i in xrange(0, len(geom), 8)])]
-            #return positions
-            #    for ri in ans:
-            #        pos = next((pi for pi in positions if pi.position + 1 == ri.position), None)
-            #        if pos:
-            #        #                    print ri.position, pos.x, pos.y, math.atan2(pos.x, pos.y)
-            #            xx.append((pos.x, pos.y))
-            #return xx
 
 #============= EOF =============================================

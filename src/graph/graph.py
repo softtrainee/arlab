@@ -809,9 +809,7 @@ class Graph(Viewable, ContextMenuMixin):
 
         if contextmenu:
             menu = ContextualMenuTool(parent=weakref.ref(self)(),
-                                      component=pc,
-                                      #                                      plotid=plotid
-            )
+                                      component=pc)
             pc.tools.append(menu)
 
         for t in ['x', 'y']:
@@ -1432,23 +1430,11 @@ class Graph(Viewable, ContextMenuMixin):
                 #        if dest_box is None:
                 #            dest_box = [0.5, 0.5, 0.5, 0.5]
         gc = PdfPlotGraphicsContext(filename=filename,
-                                    pdf_canvas=canvas
-                                    #                                  pd/f_canvas=canvas,
-                                    #                                  pagesize='letter',
-                                    #                                  dest_box=dest_box,
-                                    #                                  dest_box_units='inch'
-        )
-        #        print gc.gc
+                                    pdf_canvas=canvas)
         pc = self.plotcontainer
-        #        print pc.width, pc.height
-        #        ob = pc.bgcolor
-        #        if len(pc.components) == 1:
-        #            gc.render_component(pc.components[0])
-        #        else:
-        #        pc.do_layout(force=True)
+        pc.do_layout(force=True)
         gc.render_component(pc,
-                            valign='center'
-        )
+                            valign='center')
         if save:
             gc.save()
         return gc

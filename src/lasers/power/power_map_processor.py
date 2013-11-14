@@ -22,14 +22,14 @@ from traits.api import Bool, HasTraits, Instance
 #============= standard library imports ========================
 # from tables import openFile
 from numpy import transpose, array, shape, max, linspace, rot90, \
-    fliplr, flipud, zeros_like, pi, sin, cos, min, percentile
+    min
 #============= local library imports  ==========================
 from src.graph.contour_graph import ContourGraph
 from src.managers.data_managers.h5_data_manager import H5DataManager
 
 from scipy.interpolate.ndgriddata import griddata
 # from numpy.lib.function_base import percentile
-import math
+
 
 class PowerMapProcessor(HasTraits):
     '''
@@ -55,67 +55,61 @@ class PowerMapProcessor(HasTraits):
 
     def load_graph(self, reader, window_title=''):
         cg = ContourGraph(
-                        container_dict=dict(kind='h',
-#                                               padding=40,
-#                                               shape=(2, 2),
-#                                               spacing=(12, 12)
-                                            )
-                          )
+            container_dict=dict(kind='h',
+                                #                                               padding=40,
+                                #                                               shape=(2, 2),
+                                #                                               spacing=(12, 12)
+            )
+        )
 
         z, metadata = self._extract_power_map_data(reader)
         self._data = z
         self._metadata = metadata
 
         center_plot = cg.new_plot(
-                            add=False,
-                            padding=0,
-                            width=400,
-                            height=400,
-                            resizable=''
-#                             aspect_ratio=1
-                            )
+            add=False,
+            padding=0,
+            width=400,
+            height=400,
+            resizable=''
+            #                             aspect_ratio=1
+        )
         center_plot.index_axis.visible = False
         center_plot.value_axis.visible = False
 
-#         from skimage.morphology import label
-#         z = label(z)
+        #         from skimage.morphology import label
+        #         z = label(z)
         bounds = metadata['bounds']
-        center_plot, names, rd = cg.new_series(z=z, style='contour',
+        #center_plot, names, rd = cg.new_series(z=z, style='contour',
+        cg.new_series(z=z, style='contour',
                       xbounds=bounds,
-                      ybounds=bounds,
-#                     cmap=self.color_map,
-#                      colorbar=True,
-#                     levels=self.levels
-                      )
+                      ybounds=bounds, )
 
         bottom_plot = cg.new_plot(
-                            add=False,
-                            height=150,
-                            resizable='h',
-                            padding=0,
-                            xtitle='mm',
-                            ytitle='power'
-                            )
+            add=False,
+            height=150,
+            resizable='h',
+            padding=0,
+            xtitle='mm',
+            ytitle='power')
 
         right_plot = cg.new_plot(
-                              add=False,
-                              width=150,
-                              resizable='v',
-                              padding=0,
-                              xtitle='mm',
-                              ytitle='power'
-                              )
+            add=False,
+            width=150,
+            resizable='v',
+            padding=0,
+            xtitle='mm',
+            ytitle='power')
         right_plot.x_axis.orientation = 'right'
-#         right_plot.x_axis.title = 'mm'
+        #         right_plot.x_axis.title = 'mm'
         right_plot.y_axis.orientation = 'top'
-#         right_plot.y_axis.title = 'power'
+        #         right_plot.y_axis.title = 'power'
 
         center = center_plot.plots['plot0'][0]
         options = dict(style='cmap_scatter',
-                     type='cmap_scatter',
-                     marker='circle',
-                     color_mapper=center.color_mapper
-                     )
+                       type='cmap_scatter',
+                       marker='circle',
+                       color_mapper=center.color_mapper)
 
         cg.new_series(plotid=1, render_style='connectedpoints')
         cg.new_series(plotid=1, **options)
@@ -134,19 +128,18 @@ class PowerMapProcessor(HasTraits):
         s.orientation = 'v'
 
         center.index.on_trait_change(cg.metadata_changed,
-                                           'metadata_changed')
+                                     'metadata_changed')
 
         cg.show_crosshairs('blue')
 
-#         z = self._plot_properties(z, metadata, cg)
-#         cg.plots[0].data.set_data('z0', z)
+        #         z = self._plot_properties(z, metadata, cg)
+        #         cg.plots[0].data.set_data('z0', z)
 
 
         gridcontainer = cg._container_factory(kind='g',
                                               padding=40,
                                               shape=(2, 2),
-                                              spacing=(12, 12)
-                                              )
+                                              spacing=(12, 12))
 
         gridcontainer.add(center_plot)
         gridcontainer.add(right_plot)
@@ -164,28 +157,29 @@ class PowerMapProcessor(HasTraits):
 
     def _measure_properties(self, z, metadata, p=25):
         from skimage.measure._regionprops import regionprops
-        nim = z.copy()
-#         nz = z[z > min(z) * 3]
 
-#         for zi in z:
-#             print zi
+        nim = z.copy()
+        #         nz = z[z > min(z) * 3]
+
+        #         for zi in z:
+        #             print zi
 
         mz = min(z)
         r = max(z) - mz
         t = p * 0.01 * r + mz
-#         print 'aaaa', max(z), min(z)
-#         print 'bbbb', t, p
-#         t2 = percentile(nz, p)
-#         t = percentile(z, p)
-#         print 'nz ', t2, 'z ', t1
+        #         print 'aaaa', max(z), min(z)
+        #         print 'bbbb', t, p
+        #         t2 = percentile(nz, p)
+        #         t = percentile(z, p)
+        #         print 'nz ', t2, 'z ', t1
         nim[z < t] = 0
 
         props = None
         try:
             props = regionprops(nim.astype(int), ['EquivDiameter', 'Centroid',
-                                      'MajorAxisLength', 'MinorAxisLength',
-                                      'Orientation'
-                                      ])
+                                                  'MajorAxisLength', 'MinorAxisLength',
+                                                  'Orientation'
+            ])
         except TypeError, e:
             pass
         return props, nim
@@ -194,15 +188,16 @@ class PowerMapProcessor(HasTraits):
         r, c = prop['Centroid']
 
         rr, cc = z.shape
-#         print r, c
+        #         print r, c
         b = metadata['bounds']
         scale = rr / (b[1] - b[0])
 
         cx = c / scale + b[0]
         cy = r / scale + b[0]
-#         print cx, cy
-        radius = prop['EquivDiameter'] / (2.*scale)
+        #         print cx, cy
+        radius = prop['EquivDiameter'] / (2. * scale)
         return cx, cy, radius, scale
+
     def _extract_power_map_data(self, reader):
         '''
         '''
@@ -214,7 +209,7 @@ class PowerMapProcessor(HasTraits):
         return d
 
     def _extract_h5(self, dm):
-#         cells = []
+    #         cells = []
         tab = dm.get_table('power_map', '/')
         metadata = dict()
         try:
@@ -241,11 +236,11 @@ class PowerMapProcessor(HasTraits):
         metadata['power'] = po
 
         xs, ys, power = array([(r['x'], r['y'], r['power'])
-                                for r in tab.iterrows()]).T
+                               for r in tab.iterrows()]).T
 
-#        xs, ys, power = array(xs), array(ys), array(power)
-#        n = power.shape[0]
-#        print n
+        #        xs, ys, power = array(xs), array(ys), array(power)
+        #        n = power.shape[0]
+        #        print n
         xi = linspace(min(xs), max(xs), 50)
         yi = linspace(min(ys), max(ys), 50)
 
@@ -254,35 +249,35 @@ class PowerMapProcessor(HasTraits):
 
         power = griddata((xs, ys), power, (X, Y),
                          fill_value=0,
-#                          method='cubic'
-                         )
+                         #                          method='cubic'
+        )
         return rot90(power, k=2), metadata
 
-#        return flipud(fliplr(power)), metadata
-#        for row in tab.iterrows():
-#            x = int(row['col'])
-#            try:
-#                nr = cells[x]
-#            except IndexError:
-#                cells.append([])
-#                nr = cells[x]
-#
-#            # baseline = self._calc_baseline(table, index) if self.correct_baseline else 0.0
-#            baseline = 0
-#            pwr = row['power']
-#
-#            nr.append(max(pwr - baseline, 0))
-#
-#        d = len(cells[-2]) - len(cells[-1])
-#
-#        if d:
-#            cells[-1] += [0, ] * d
-#
-#        cells = array(cells)
-#        # use interpolation to provide smoother interaction
-#        cells = ndimage.interpolation.zoom(cells, self.interpolation_factor)
-#
-#        return rot90(cells, k=2), metadata
+    #        return flipud(fliplr(power)), metadata
+    #        for row in tab.iterrows():
+    #            x = int(row['col'])
+    #            try:
+    #                nr = cells[x]
+    #            except IndexError:
+    #                cells.append([])
+    #                nr = cells[x]
+    #
+    #            # baseline = self._calc_baseline(table, index) if self.correct_baseline else 0.0
+    #            baseline = 0
+    #            pwr = row['power']
+    #
+    #            nr.append(max(pwr - baseline, 0))
+    #
+    #        d = len(cells[-2]) - len(cells[-1])
+    #
+    #        if d:
+    #            cells[-1] += [0, ] * d
+    #
+    #        cells = array(cells)
+    #        # use interpolation to provide smoother interaction
+    #        cells = ndimage.interpolation.zoom(cells, self.interpolation_factor)
+    #
+    #        return rot90(cells, k=2), metadata
     def _extract_csv(self, reader):
         cells = []
         metadata = []
@@ -332,10 +327,10 @@ class PowerMapProcessor(HasTraits):
             b2 = table.attrs.baseline2
         except:
             b1 = b2 = 0
-#        print b1,b2
-#    ps=[row['power'] for row in table]
-#    b1=ps[0]
-#    b2=ps[-1:][0]
+            #        print b1,b2
+        #    ps=[row['power'] for row in table]
+        #    b1=ps[0]
+        #    b2=ps[-1:][0]
         size = table.attrs.NROWS - 1
 
         bi = (b2 - b1) / size * index + b1
@@ -347,10 +342,10 @@ class PowerMapProcessor(HasTraits):
      
         '''
         z = transpose(z)
-#        print z
+        #        print z
         mx = float(max(z))
 
-#        z = array([100 * x / mx for x in [y for y in z]])
+        #        z = array([100 * x / mx for x in [y for y in z]])
 
         r, c = shape(z)
         x = linspace(0, 1, r)

@@ -18,7 +18,8 @@
 
 #=============enthought library imports=======================
 from chaco.api import ColorBar, LinearMapper
-from chaco.default_colormaps import color_map_name_dict
+from chaco.data_range_1d import DataRange1D
+from chaco.default_colormaps import color_map_name_dict, gray
 #=============standard library imports ========================
 #=============local library imports  ==========================
 from graph import Graph
@@ -26,26 +27,14 @@ from graph import name_generator
 
 
 class ContourGraph(Graph):
-    '''
-    '''
     line_inspectors_write_metadata = True
     editor_enabled = False
 
     def __init__(self, *args, **kw):
-        '''
-        '''
         super(ContourGraph, self).__init__(*args, **kw)
         self.zdataname_generators = [name_generator('z')]
 
-    def get_contextual_menu_save_actions(self):
-        '''
-        '''
-        return [('PNG', 'save_png', {})]
-
     def new_plot(self, add=True, **kw):
-        '''
-
-        '''
         kw['add'] = add
         p = super(ContourGraph, self).new_plot(**kw)
         self.zdataname_generators.append(name_generator('z'))
@@ -53,9 +42,6 @@ class ContourGraph(Graph):
         return p
 
     def new_series(self, x=None, y=None, z=None, colorbar=False, plotid=0, style='xy', **kw):
-        '''
-
-        '''
         plot, names, rd = self._series_factory(x, y, plotid=plotid, **kw)
 
         if style in ['xy', 'cmap_scatter']:
@@ -80,30 +66,13 @@ class ContourGraph(Graph):
             plot.data.set_data(zname, z)
             contour = plot.img_plot(zname, **rd)[0]
             plot.contour_plot(zname, type='poly', **rd)
-#            plot.contour_plot(zname, type='line',
-#                              widths=list(linspace(4.0, 0.1, 15)),
-#                               **rd)[0]
+
             if 'levels' in kw:
                 contour.levels = kw.get('levels')
 
-#        if colorbar:
-#            cb = self._colorbar_factory(contour)
-#            cb.padding_top = plot.padding_top
-#            cb.padding_bottom = plot.padding_bottom
-#            cb.padding_right = 50
-#            cb.padding_left = 25
-#            # cb.plot=p[0]
-#            # expand the plotcontainers shape in col space
-# #            shape=self.plotcontainer.shape
-# #            self.plotcontainer.shape=(shape[0],shape[1]+1)
-#            self.plotcontainer.add(cb)
-
-        # self.refresh_editor()
-        return plot, names, rd
+            return contour, plot
 
     def metadata_changed(self):
-        '''
-        '''
         plot = self.plots[0]
         contour_pp = plot.plots['plot0'][0]
         index = contour_pp.index
@@ -113,7 +82,6 @@ class ContourGraph(Graph):
             x_ndx, y_ndx = index.metadata['selections']
 
             if x_ndx and y_ndx:
-
                 # get horizontal data
                 d1 = data.data[y_ndx, :]
                 # get vertical data
@@ -141,28 +109,37 @@ class ContourGraph(Graph):
                 self.set_data(v, plotid=2, series=1, axis=2)
                 self.plotcontainer.request_redraw()
 
-    def _plotcontainer_default(self):
-        '''
-        '''
-        return self.container_factory()
+    #def _plotcontainer_default(self):
+    #    '''
+    #    '''
+    #    return self.container_factory()
 
-#     def container_factory(self):
-#         '''
-#         '''
-#         return self._container_factory(kind='h', spacing=10)
+    #     def container_factory(self):
+    #         '''
+    #         '''
+    #         return self._container_factory(kind='h', spacing=10)
+    def add_colorbar(self, plot=None, container=None, **kw):
+        if container is None:
+            container = self.plotcontainer
 
-    def make_colorbar(self, cplot):
-        '''
-        '''
-        colormap = cplot.color_mapper
-        colorbar = ColorBar(index_mapper=LinearMapper(range=colormap.range),
-                          color_mapper=colormap,
-                          plot=cplot,
-                          orientation='v',
-                          resizable='v',
-                          width=30,
-                          padding=20
-                          )
+        colorbar = self.make_colorbar(plot, **kw)
+        container.add(colorbar)
+
+    def make_colorbar(self, plot, width=30, padding=20, orientation='v', resizable='v'):
+        cm = gray(DataRange1D())
+        lm = LinearMapper()
+        colorbar = ColorBar(orientation=orientation,
+                            resizable=resizable,
+                            width=width,
+                            padding=padding,
+                            index_mapper=lm,
+                            color_mapper=cm)
+
+        if plot is not None:
+            colorbar.trait_set(index_mapper=LinearMapper(range=plot.color_mapper.range),
+                               color_mapper=plot.color_mapper,
+                               plot=plot)
 
         return colorbar
+
 #============= EOF =============================================
