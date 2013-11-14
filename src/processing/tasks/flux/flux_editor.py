@@ -18,7 +18,8 @@
 from chaco.default_colormaps import color_map_name_dict
 from traits.api import HasTraits, Instance, on_trait_change, Button, Float, Str, \
     Dict, Property, Event, Int, Bool, List
-from traitsui.api import View, UItem, InstanceEditor, TableEditor, VGroup, VSplit, EnumEditor, Item
+from traitsui.api import View, UItem, InstanceEditor, TableEditor, \
+    VGroup, VSplit, EnumEditor, Item, HGroup
 # from src.envisage.tasks.base_editor import BaseTraitsEditor
 # from src.processing.tasks.analysis_edit.graph_editor import GraphEditor
 from traitsui.extras.checkbox_column import CheckboxColumn
@@ -43,13 +44,16 @@ def make_grid(r, n):
 class FluxTool(HasTraits):
     calculate_button = Button('Calculate')
     monitor_age = Float
-    color_map_name = Str('hot')
+    color_map_name = Str('jet')
     levels = Int(10, auto_set=False, enter_set=True)
     model_kind = Str('Plane')
 
+    data_source = Str('database')
+
     def traits_view(self):
         v = View(
-            VGroup(UItem('calculate_button'),
+            VGroup(HGroup(UItem('calculate_button'),
+                          UItem('data_source', editor=EnumEditor(values=['database', 'file']))),
                    VGroup(
                        Item('color_map_name',
                             label='Color Map',
@@ -69,8 +73,8 @@ class MonitorPosition(HasTraits):
     x = Float
     y = Float
     z = Float
-    j = Float
-    jerr = Float
+    j = Float(enter_set=True, auto_set=False)
+    jerr = Float(enter_set=True, auto_set=False)
     use = Bool(True)
 
 
@@ -85,10 +89,10 @@ class FluxEditor(GraphEditor):
     def _get_positions(self):
         return sorted(self.monitor_positions.itervalues(), key=lambda x: x.hole_id)
 
-    def add_monitor_position(self, pid, identifier, x, y, j):
+    def add_monitor_position(self, pid, identifier, x, y, j, je):
         pos = MonitorPosition(identifier=identifier,
                               hole_id=pid,
-                              x=x, y=y, j=j.nominal_value, jerr=j.std_dev)
+                              x=x, y=y, j=j, jerr=je)
 
         self.monitor_positions[identifier] = pos
         self.positions_dirty = True
@@ -96,8 +100,8 @@ class FluxEditor(GraphEditor):
     def _dump_tool(self):
         pass
 
-    @on_trait_change('monitor_positions:use')
-    def _handle_monitor_pos_use(self):
+    @on_trait_change('monitor_positions:[use, j, jerr]')
+    def _handle_monitor_pos_change(self):
         print 'monitor pos change'
         self.rebuild_graph()
 
@@ -111,6 +115,7 @@ class FluxEditor(GraphEditor):
         #@todo: add a colorbar
 
         p = g.new_plot(xtitle='X', ytitle='Y')
+
         ito = IrradiationTrayOverlay(component=p,
                                      geometry=self.geometry)
         p.overlays.append(ito)
@@ -133,12 +138,15 @@ class FluxEditor(GraphEditor):
 
             g.new_series(x, y, type='scatter',
                          marker='circle')
-            g.new_series(z=m,
-                         xbounds=(-r, r),
-                         ybounds=(-r, r),
-                         levels=self.tool.levels,
-                         cmap=self.tool.color_map_name,
-                         style='contour')
+            s, p = g.new_series(z=m,
+                                xbounds=(-r, r),
+                                ybounds=(-r, r),
+                                levels=self.tool.levels,
+                                cmap=self.tool.color_map_name,
+                                colorbar=True,
+                                style='contour')
+            g.add_colorbar(s)
+
 
     def _model_flux(self, n, xx, yy, cell_x, cell_y, z, ze):
 
@@ -158,10 +166,9 @@ class FluxEditor(GraphEditor):
         return nz
 
     def _graph_default(self):
-        g = ContourGraph()
-
+        g = ContourGraph(container_dict={'kind': 'h'})
         g.new_plot(xtitle='X', ytitle='Y')
-
+        g.add_colorbar()
         return g
 
     def traits_view(self):
@@ -173,10 +180,10 @@ class FluxEditor(GraphEditor):
             ObjectColumn(name='y', label='Y', editable=False, format='%0.3f'),
             ObjectColumn(name='j', label='J',
                          format_func=floatfmt,
-                         editable=False),
+                         editable=True),
             ObjectColumn(name='jerr',
                          format_func=floatfmt,
-                         label=u'\u00b1\u03c3', editable=False)]
+                         label=u'\u00b1\u03c3', editable=True)]
         editor = TableEditor(columns=cols, sortable=False, reorderable=False)
 
         v = View(VSplit(

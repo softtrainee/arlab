@@ -16,6 +16,7 @@
 
 
 #============= enthought library imports =======================
+from PySide.QtCore import QPoint
 from traits.api import Any
 from enable.api import Interactor
 # from chaco.base_plot_container import BasePlotContainer
@@ -27,71 +28,36 @@ from chaco.plot import Plot
 
 
 class ContextualMenuTool(Interactor):
-    '''
-    '''
     parent = Any
 
-    def normal_mouse_move(self, event):
-        '''
-        '''
-        if self.parent.plots:
-            comps = self.component.components_at(event.x, event.y)
+    #def normal_mouse_move(self, event):
+    #    if self.parent.plots:
+    #        comps = self.component.components_at(event.x, event.y)
+    #
+    #        if comps and hasattr(comps[0], 'plots') and comps[0].plots:
+    #            xmapper = comps[0].x_mapper
+    #            ymapper = comps[0].y_mapper
+    #
+    #            p = self.component.padding
+    #            xoffset = abs(p[0] - p[1])
+    #            yoffset = abs(p[2] - p[3])
+    #            x = xmapper.map_data(event.x - xoffset)
+    #            y = ymapper.map_data(event.y - yoffset)
+    #
+    #            self.parent.status_text = 'x:%0.2f y:%0.2f' % (x, y)
 
-            if comps and hasattr(comps[0], 'plots') and comps[0].plots:
-                xmapper = comps[0].x_mapper
-                ymapper = comps[0].y_mapper
+    #def normal_mouse_enter(self, event):
+    #    '''
+    #    '''
+    #    self.parent.status_text = ''
 
-                p = self.component.padding
-                xoffset = abs(p[0] - p[1])
-                yoffset = abs(p[2] - p[3])
-                x = xmapper.map_data(event.x - xoffset)
-                y = ymapper.map_data(event.y - yoffset)
-
-                self.parent.status_text = 'x:%0.2f y:%0.2f' % (x, y)
-
-    def normal_mouse_enter(self, event):
-        '''
-        '''
-        self.parent.status_text = ''
-
-    def normal_mouse_leave(self, event):
-        '''
-        '''
-        self.parent.status_text = ''
+    #def normal_mouse_leave(self, event):
+    #    '''
+    #    '''
+    #    self.parent.status_text = ''
 
     def normal_right_down(self, event):
-        '''
-        '''
-        def display_menu(plot):
-            parent = self.parent
 
-            if not parent.use_context_menu:
-                return
-            control = event.window.control
-            ex, ey = event.x, event.y
-            size = control.size()
-            h = size.height()
-            ey = h - ey
-            pw = control
-            offsetx = 0
-            offsety = 0
-            while 1:
-                pw = pw.parentWidget()
-                if not pw:
-                    break
-                x, y = pw.pos().toTuple()
-                if x and y:
-                    break
-                offsetx += x
-                offsety += y
-
-            menu_manager = parent.get_contextual_menu()
-            menu = menu_manager.create_menu(control, None)
-            x += ex + offsetx
-            y += ey + offsety + menu.height()
-
-            menu.show(x, y)
-            menu_manager.destroy()
 
         comps = self.component.components_at(event.x, event.y)
         if comps:
@@ -105,13 +71,30 @@ class ContextualMenuTool(Interactor):
                     break
 
             self.parent.selected_plot = plot
-            self.parent.close_popup()
+            #self.parent.close_popup()
 
-            display_menu(plot)
+            parent = self.parent
+
+            if parent.use_context_menu:
+                self._display_menu(event)
 
         else:
             self.parent.selected_plot = None
 
 
-        event.handled = True
+            #event.handled = True
+
+    def _display_menu(self, event):
+        control = event.window.control
+        ex, ey = event.x, event.y
+        size = control.size()
+        pt = control.mapToGlobal(QPoint(ex, size.height() - ey))
+        x, y = pt.x(), pt.y()
+
+        menu_manager = self.parent.get_contextual_menu()
+        menu = menu_manager.create_menu(control, None)
+
+        menu.show(x, y)
+        menu_manager.destroy()
+
 #============= EOF ====================================
